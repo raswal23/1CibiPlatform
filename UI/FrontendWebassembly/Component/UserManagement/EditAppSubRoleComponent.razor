@@ -6,9 +6,7 @@
 
         @if (!IsLoaded)
         {
-            <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-            </div>
+            <LoaderComponent Height="200px" />
         }
         else
         {
