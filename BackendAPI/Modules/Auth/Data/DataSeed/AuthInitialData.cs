@@ -76,6 +76,21 @@ public class AuthInitialData
 				{
 					AppName = "Settings",
 					Description = "OnePlatform Settings"
+				},
+				new AuthApplication
+				{
+					AppName = "AI",
+					Description = "AI"
+				},
+				new AuthApplication
+				{
+					AppName = "Credit Bureau",
+					Description = "Credit Bureau"
+				},
+				new AuthApplication
+				{
+					AppName = "S&I",
+					Description = "S&I"
 				}
 			};
 	}
@@ -122,6 +137,26 @@ public class AuthInitialData
 				{
 					SubMenuName = "User Management",
 					Description = "Assigning of Application, SubMenus, and Roles"
+				},
+				new AuthSubMenu
+				{
+					SubMenuName = "Chat",
+					Description = "Chat"
+				},
+				new AuthSubMenu
+				{
+					SubMenuName = "CB 2.0",
+					Description = "CB 2.0"
+				},
+				new AuthSubMenu
+				{
+					SubMenuName = "Bulk Processing",
+					Description = "Bulk Processing"
+				},
+				new AuthSubMenu
+				{
+					SubMenuName = "ATS",
+					Description = "ATS"
 				}
 			};
 	}

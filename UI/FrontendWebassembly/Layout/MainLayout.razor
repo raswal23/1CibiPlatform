@@ -311,7 +311,6 @@ else
 
             name = await LocalStorageService.GetItemAsync<string>(_userNameKey) ?? string.Empty;
 
-
             var stored = await LocalStorageService.GetItemAsync<bool?>("isDarkMode");
             
             _isDarkMode = stored ?? false;
