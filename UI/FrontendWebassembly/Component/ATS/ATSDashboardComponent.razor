@@ -1,0 +1,145 @@
+﻿<MudGrid Class="mb-4" JustifyContent="Center" GutterSize="0">
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px;  border: 1px solid gray;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-2"> Job Offer Acceptance Rate</MudText>
+            <MudChart ChartType="ChartType.Donut"
+                      Width="100%"
+                      Height="200px"
+                      ChartOptions="@donutChartOptions"
+                      ChartSeries="@JobAcceptanceRates.AsChartDataSet()"
+                      ChartLabels="@Departments">
+                <CustomGraphics>
+                    <text class="mud-donut-text mud-typography-h3" x="50%" y="50%">@JobAcceptanceRates.Sum()</text>
+                </CustomGraphics>
+            </MudChart>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; border: 1px solid gray; padding: 10px;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-2">Year-To-Date Compliance</MudText>
+            <MudChart ChartType="ChartType.Bar"
+                      ChartSeries="@BarSeries"
+                      Width="100%"
+                      ChartOptions="@barChartOptions"
+                      ChartLabels="@BarLabels"
+                      Height="200px" />
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; border: 1px solid gray; padding: 10px;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-2">Time-To-Hire Trend</MudText>
+            <MudChart ChartType="ChartType.Line"
+                      ChartSeries="@LineSeries"
+                      ChartLabels="@LineLabels"
+                      ChartOptions="@lineChartOptions"
+                      Width="100%"
+                      Height="200px" />
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<!-- Recent transactions -->
+<TableComponent TItem="TransactionRow"
+                @ref="transactionsTable"
+                Title="Recent Transactions"
+                EnableSearch="true"
+                ColumnCount="4"
+                RowsPerPage="10"
+                LoadServerData="LoadTransactionData">
+
+    <HeaderTemplate>
+        <MudTh>Ticket Number</MudTh>
+        <MudTh>Subject Name</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Result</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="tx">
+        <MudTd DataLabel="Ticket">@tx.Ticket</MudTd>
+        <MudTd DataLabel="Subject">@tx.Subject</MudTd>
+        <MudTd DataLabel="Status">@tx.Status</MudTd>
+        <MudTd DataLabel="Result">@tx.Result</MudTd>
+    </RowTemplate>
+
+</TableComponent>
+@code {
+    private TableComponent<TransactionRow>? transactionsTable;
+    private static readonly int[] JobAcceptanceRates = { 85, 70, 92, 60 };
+
+    private readonly List<TransactionRow> _dummyTransactions = new()
+    {
+        new TransactionRow("2025 - 00123456", "Antonio Aguinaldo", "Completed", "Clear"),
+        new TransactionRow("2025 - 00129876", "Teodoro Mabini", "Completed", "Clear"),
+        new TransactionRow("2025 - 00124356", "Maria Quezon", "Completed", "Not Clear"),
+        new TransactionRow("2025 - 00198765", "Angela Osmena", "Pending", "In Progress")
+    };
+
+    private record TransactionRow(string Ticket, string Subject, string Status, string Result);
+
+    private Task<TableData<TransactionRow>> LoadTransactionData(TableState state, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new TableData<TransactionRow>
+        {
+            Items = _dummyTransactions,
+            TotalItems = _dummyTransactions.Count
+        });
+    }
+
+
+    private static readonly string[] Departments = { "IT", "Marketing", "Sales", "HR" };
+
+    private static readonly string[] ChartPalette =
+    {
+        "#102247", // 0%
+        "#2a77ae", // 33%
+        "#68c0d6", // 66%
+        "#a0e0eb"  // 100%
+    };
+
+
+    DonutChartOptions donutChartOptions = new()
+    {
+        ChartPalette = ChartPalette,
+    };
+
+    private List<ChartSeries<double>> BarSeries = new()
+    {
+        new ChartSeries<double>
+        {
+            Name = "Compliance",
+            Data = new double[] { 150, 220, 300, 280, 350 }
+        }
+    };
+
+    private string[] BarLabels = new[] { "Jan", "Feb", "Mar", "Apr", "May" };
+
+    private List<ChartSeries<double>> LineSeries = new()
+    {
+        new ChartSeries<double>
+        {
+            Name = "Tech Hiring",
+            Data = new double[] { 10, 15, 20, 14, 18 }
+        },
+        new ChartSeries<double>
+        {
+            Name = "Operations Hiring",
+            Data = new double[] { 8, 12, 16, 13, 15 }
+        }
+    };
+
+    private string[] LineLabels = new[] { "Week 1", "Week 2", "Week 3", "Week 4", "Week 5" };
+
+    private LineChartOptions lineChartOptions = new()
+    {
+        LineStrokeWidth = 5,
+        ShowDataMarkers = true
+    };
+
+    private BarChartOptions barChartOptions = new()
+    {
+        BarSpacingRatio = 0.05,
+        BarWidthRatio = 10,
+    };
+}

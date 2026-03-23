@@ -278,11 +278,11 @@ code {
 .philsys-custom-tabs .mud-tabs-scroll-button {
     display: none !important;
 }
-.philsys-rounded-input .mud-input-outlined {
+.oneplatform-rounded-input .mud-input-outlined {
     border-radius: 12px !important;
 }
 
-.philsys-rounded-input fieldset {
+.oneplatform-rounded-input fieldset {
     border-radius: 12px !important;
 }
 

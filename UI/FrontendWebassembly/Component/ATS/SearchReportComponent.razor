@@ -1,0 +1,137 @@
+﻿@inject IJSRuntime JS
+@inject IDialogService DialogService
+
+<TableComponent TItem="ReportRow"
+                @ref="reportsTable"
+                Title="Query Results"
+                EnableSearch="true"
+                ColumnCount="8"
+                RowsPerPage="10"
+                LoadServerData="LoadReportData">
+
+    <HeaderTemplate>
+        <MudTh>Selected</MudTh>
+        <MudTh>Subject Name</MudTh>
+        <MudTh>Ticket Number</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Result</MudTh>
+        <MudTh>Date Completed</MudTh>
+        <MudTh>Report Type</MudTh>
+        <MudTh>Directory</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="r">
+        <MudTd>
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Subject">@r.Subject</MudTd>
+        <MudTd DataLabel="Ticket">@r.Ticket</MudTd>
+        <MudTd DataLabel="Status">@r.Status</MudTd>
+        <MudTd DataLabel="Result">@r.Result</MudTd>
+        <MudTd DataLabel="Date">@r.DateCompleted</MudTd>
+        <MudTd DataLabel="Type">@r.ReportType</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" Size="Size.Small" OnClick="@OpenResultTriggerDialog" />
+        </MudTd>
+    </RowTemplate>
+
+</TableComponent>
+
+<MudGrid Class="mt-3" AlignItems="Center">
+    <MudItem xs="12" md="8">
+        <MudButton Class="theme-button theme-button-active mt-4"
+                   Style="width: 120px; border-radius: 4px;"
+                   OnClick="DownloadSelected">Download</MudButton>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudText Typo="Typo.caption" Class="text-right" Color="Color.Primary">
+            <b>IMPORTANT NOTICE!</b><br />
+            For security purposes, all reports downloaded are password protected and in PDF format. Please reach out to your account manager for your quarterly passwords.
+        </MudText>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private TableComponent<ReportRow>? reportsTable;
+    private readonly List<ReportRow> _dummyReports = new()
+    {
+        new ReportRow(false, "Antonio Aguinaldo", "2025 - 00123456", "In Progress", "Pending", "October 25, 2025", "Basic"),
+        new ReportRow(false, "Antonio Aguinaldo", "2025 - 00129876", "Completed", "Clear", "October 21, 2025", "Basic 2"),
+        new ReportRow(false, "Antonio Aguinaldo", "2024 - 00124356", "Completed", "Not Clear", "October 20, 2024", "Lite"),
+        new ReportRow(false, "Antonio Aguinaldo", "2023 - 00198765", "Completed", "Clear", "October 18, 2019", "Package 1"),
+        new ReportRow(false, "Antonio Aguinaldo", "2019 - 00198765", "Completed", "Clear", "October 10, 2018", "AirBNB")
+    };
+
+    private class ReportRow
+    {
+        public bool Selected { get; set; }
+        public string Subject { get; set; }
+        public string Ticket { get; set; }
+        public string Status { get; set; }
+        public string Result { get; set; }
+        public string DateCompleted { get; set; }
+        public string ReportType { get; set; }
+
+        public ReportRow(bool selected, string subject, string ticket, string status, string result, string dateCompleted, string reportType)
+        {
+            Selected = selected;
+            Subject = subject;
+            Ticket = ticket;
+            Status = status;
+            Result = result;
+            DateCompleted = dateCompleted;
+            ReportType = reportType;
+        }
+    }
+
+    private Task<TableData<ReportRow>> LoadReportData(TableState state, CancellationToken cancellationToken)
+    {
+        // For now returns static results filtered by name query (simple contains)
+        var filtered = _dummyReports.ToList();
+
+        return Task.FromResult(new TableData<ReportRow>
+        {
+            Items = filtered,
+            TotalItems = filtered.Count
+        });
+    }
+
+    private async Task DownloadSelected()
+    {
+        var selected = _dummyReports.Where(r => r.Selected).ToList();
+        if (!selected.Any())
+        {
+            // nothing selected - no-op or show message (JS console for now)
+            await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
+            return;
+        }
+
+        // placeholder: log selected items (replace with real download implementation)
+        await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
+    }
+
+    private async Task DownloadReport(ReportRow row)
+    {
+        // placeholder single-download behavior
+        await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
+    }
+
+    private async Task OpenResultDialog<TComponent>(string title)
+    where TComponent : ComponentBase
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = false,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TComponent>(title, options);
+        var result = await dialog.Result;
+    }
+
+    private async Task OpenResultTriggerDialog()
+        => await OpenResultDialog<ATSResultComponent>("Subject Result");
+}

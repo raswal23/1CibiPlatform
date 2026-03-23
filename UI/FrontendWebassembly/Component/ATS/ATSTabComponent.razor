@@ -1,0 +1,29 @@
+﻿<MudGrid AlignItems="Center">
+    <MudItem xs="12" Class="d-flex justify-center">
+        <MudTabs Rounded="false"
+                 Elevation="0"
+                 Class="custom-tabs"
+                 @bind-ActivePanelIndex="_activeIndex"
+                 TabPanelsClass="pt-2 pb-2"
+                 ScrollButtons="Auto"
+                 Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;">
+            <MudTabPanel Text="Dashboard" Onclick="@TabChangedAsync" />
+            <MudTabPanel Text="Dispute Order" Onclick="@TabChangedAsync" />
+            <MudTabPanel Text="New Order" Onclick="@TabChangedAsync" />
+            <MudTabPanel Text="Search Report" Onclick="@TabChangedAsync" />
+            <MudTabPanel Text="Invoice" Onclick="@TabChangedAsync" />
+        </MudTabs>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public EventCallback<int> ActiveTabChanged { get; set; }
+
+    private int _activeIndex = 0;
+
+    private async Task TabChangedAsync()
+    {
+        await ActiveTabChanged.InvokeAsync(_activeIndex);
+    }
+}

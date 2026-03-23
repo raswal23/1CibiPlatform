@@ -1,0 +1,149 @@
+﻿<MudGrid GutterSize="3" Class="mb-4">
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px;  border: 1px solid gray;">
+            <div class="d-flex align-center" style="gap:12px;">
+                <MudText Typo="Typo.caption" Style="min-width:120px;">
+                    Billed Date
+                </MudText>
+
+                <MudTextField @bind-Value="_date"
+                              Label="Billed Date"
+                              InputType="InputType.Date"
+                              FullWidth="true"
+                              Required="true"
+                              ReadOnly
+                              RequiredError="Billed Date is required"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Min="2000-01-01"
+                              Max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                              Class="oneplatform-rounded-input" />
+            </div>
+        </MudPaper>
+
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px;  border: 1px solid gray;">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-2">Summary Details</MudText>
+
+            <MudGrid Spacing="2">
+
+                <MudItem xs="4" class="d-flex align-center">
+                    <MudText>Billing Statement</MudText>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="bill.BillingStatement"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Class="oneplatform-rounded-input" />
+                </MudItem>
+
+                <MudItem xs="4" class="d-flex align-center">
+                    <MudText>Due Date</MudText>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="bill.DueDate"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Class="oneplatform-rounded-input" />
+                </MudItem>
+
+                <MudItem xs="4" class="d-flex align-center">
+                    <MudText>Amount Due</MudText>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="bill.AmountDue"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Class="oneplatform-rounded-input" />
+                </MudItem>
+
+                <MudItem xs="4" class="d-flex align-center">
+                    <MudText>Previous Balance</MudText>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="bill.PreviousBalance"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Class="oneplatform-rounded-input" />
+                </MudItem>
+
+                <MudItem xs="4" class="d-flex align-center">
+                    <MudText>Total Amount Due</MudText>
+                </MudItem>
+                <MudItem xs="8">
+                    <MudTextField @bind-Value="bill.TotalAmountDue"
+                                  Variant="Variant.Outlined"
+                                  FullWidth="true"
+                                  Class="oneplatform-rounded-input" />
+                </MudItem>
+
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download Statement</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Elevation="1" Class="pa-4" Style="height:100%; border-radius: 10px;  border: 1px solid gray;">
+            <MudText Align="Align.Center" Class="mb-2">Payment Options</MudText>
+
+            <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="Center">
+                <!-- Payment via Credit Cards -->
+                <MudItem xs="12" class="d-flex align-center justify-center">
+                    <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
+                    <MudText class="ml-2">via major credit cards</MudText>
+                </MudItem>
+                <MudItem xs="12" class="d-flex justify-center">
+                    <MudImage Src="/images/ats/CreditCard.jpg"
+                              Alt="Credit Cards"
+                              Style="width:60%; height:auto;" />
+                </MudItem>
+
+                <!-- Payment via E-Wallets -->
+                <MudItem xs="12" class="d-flex align-center justify-center">
+                    <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
+                    <MudText class="ml-2">via major e-wallets</MudText>
+                </MudItem>
+                <MudItem xs="12" class="d-flex justify-center">
+                    <MudImage Src="/images/ats/CreditCard.jpg"
+                              Alt="E-Wallets"
+                              Style="width:60%; height:auto;" />
+                </MudItem>
+
+                <!-- Payment via Bank Transfer -->
+                <MudItem xs="12" class="d-flex align-center justify-center">
+                    <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
+                    <MudText class="ml-2">via bank transfer</MudText>
+                </MudItem>
+                <MudItem xs="12" class="d-flex justify-center">
+                    <MudImage Src="/images/ats/CreditCard.jpg"
+                              Alt="Bank Transfer"
+                              Style="width:60%; height:auto;" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private Bill bill = new();
+    private DateTime? _date;
+
+    protected override void OnInitialized()
+    {
+        _date = DateTime.Today;
+    }
+
+    private class Bill
+    {
+        public string BillingStatement { get; set; } = string.Empty;
+        public string DueDate { get; set; } = string.Empty;
+        public string AmountDue { get; set; } = string.Empty;
+        public string PreviousBalance { get; set; } = string.Empty;
+        public string TotalAmountDue { get; set; } = string.Empty;
+    }
+
+    private void ProcessBulkInvite()
+    {
+    }
+}
