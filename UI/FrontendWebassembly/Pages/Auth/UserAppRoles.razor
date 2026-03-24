@@ -501,8 +501,14 @@ else if (_activeIndex == 6)
                 var appSubRoleDto = result.AppSubRole;
                 var notificationDto = result.Notification;
 
-                await AddAppSubRole(appSubRoleDto);
+                var success = await AddAppSubRole(appSubRoleDto);
+                if (!success)
+                {
+                    return; 
+                }
+
                 await UserManagementService.SendNotificationAsync(notificationDto);
+               
             });
     }
 
@@ -636,11 +642,15 @@ else if (_activeIndex == 6)
         return;
     }
 
-    private async Task AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
+    private async Task<bool> AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
     {
-        await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+        var isSuccess = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+        if (!isSuccess)
+        {
+            return false;
+        }
         await appSubRolesTable.TableRef.ReloadServerData();
-        return;
+        return true;
     }
 
     private async Task EditUser(UnApprovedUsersDTO editUserDTO)
