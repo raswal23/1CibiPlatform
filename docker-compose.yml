@@ -53,4 +53,4 @@ services:
 
   postgres:
     container_name: postgres
-    image: postgres:16.5
+    image: pgvector/pgvector:pg16

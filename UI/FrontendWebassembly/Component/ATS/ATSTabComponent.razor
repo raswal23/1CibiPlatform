@@ -7,11 +7,11 @@
                  TabPanelsClass="pt-2 pb-2"
                  ScrollButtons="Auto"
                  Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;">
-            <MudTabPanel Text="Dashboard" Onclick="@TabChangedAsync" />
-            <MudTabPanel Text="Dispute Order" Onclick="@TabChangedAsync" />
-            <MudTabPanel Text="New Order" Onclick="@TabChangedAsync" />
-            <MudTabPanel Text="Search Report" Onclick="@TabChangedAsync" />
-            <MudTabPanel Text="Invoice" Onclick="@TabChangedAsync" />
+            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(0)" Icon="@Icons.Material.Filled.Home" Text="Dashboard" Onclick="@TabChangedAsync" />
+            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(1)" Icon="@Icons.Material.Filled.Warning" Text="Dispute Order" Onclick="@TabChangedAsync" />
+            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(2)" Icon="@Icons.Material.Filled.AddShoppingCart" Text="New Order" Onclick="@TabChangedAsync" />
+            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(3)" Icon="@Icons.Material.Filled.Search" Text="Search Report" Onclick="@TabChangedAsync" />
+            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(4)" Icon="@Icons.Material.Filled.Description" Text="Invoice" Onclick="@TabChangedAsync" />
         </MudTabs>
     </MudItem>
 </MudGrid>
@@ -25,5 +25,12 @@
     private async Task TabChangedAsync()
     {
         await ActiveTabChanged.InvokeAsync(_activeIndex);
+    }
+
+    private string GetTabClass(int index)
+    {
+        return _activeIndex == index
+            ? "philsys-tab-pannel-active"
+            : "philsys-tab-pannel-inactive";
     }
 }
