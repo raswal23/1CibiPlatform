@@ -39,9 +39,9 @@
 
 </TableComponent>
 
-<MudGrid Class="mt-3" AlignItems="Center">
+<MudGrid Class="mt-0" AlignItems="Center">
     <MudItem xs="12" md="8">
-        <MudButton Class="theme-button theme-button-active mt-4"
+        <MudButton Class="theme-button theme-button-active"
                    Style="width: 120px; border-radius: 4px;"
                    OnClick="DownloadSelected">Download</MudButton>
     </MudItem>
@@ -88,7 +88,6 @@
 
     private Task<TableData<ReportRow>> LoadReportData(TableState state, CancellationToken cancellationToken)
     {
-        // For now returns static results filtered by name query (simple contains)
         var filtered = _dummyReports.ToList();
 
         return Task.FromResult(new TableData<ReportRow>
@@ -103,18 +102,15 @@
         var selected = _dummyReports.Where(r => r.Selected).ToList();
         if (!selected.Any())
         {
-            // nothing selected - no-op or show message (JS console for now)
             await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
             return;
         }
 
-        // placeholder: log selected items (replace with real download implementation)
         await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
     }
 
     private async Task DownloadReport(ReportRow row)
     {
-        // placeholder single-download behavior
         await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
     }
 

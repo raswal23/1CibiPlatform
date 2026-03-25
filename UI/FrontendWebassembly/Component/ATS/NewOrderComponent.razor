@@ -56,18 +56,50 @@
                 <MudItem xs="12">
                     <MudFileUpload @ref="@_fileUploadMultiple"
                                    @bind-Files="_filesMultiple"
-                                   SelectedTemplate="@(files => builder => { })"
+                                   Accept=".xls,.xlsx,.csv"
+                                   DragAndDrop="true"
                                    AppendMultipleFiles>
                         <CustomContent>
                             <div style="display: flex; justify-content: center;">
-                                <MudButton Class="oneplatform-rounded-input"
-                                           Style="width:300px; border: 1px solid gray; border-radius: 4px;"
-                                           StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload .xls or .csv file
-                                </MudButton>
+                                <MudFab Class="oneplatform-rounded-input"
+                                        StartIcon="@Icons.Material.Filled.CloudUpload"
+                                        Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                        OnClick="@context.OpenFilePickerAsync"
+                                        Label=" Upload .xls, xlsx, or .csv file" />
                             </div>
                         </CustomContent>
+                        <SelectedTemplate/>
                     </MudFileUpload>
+
+                    <div class="d-flex justify-center">
+                        <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
+                            <MudExpansionPanel Class="bold" Text="@($"({_files.Count}) files")" Expanded="false">
+                                @if (_files.Any())
+                                {
+                                    <MudList T="IBrowserFile" Dense="true">
+                                        @foreach (var file in _files)
+                                        {
+                                            <MudListItem T="IBrowserFile" Value="file" @key="@file">
+                                                <MudStack Row  Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
+                                                    <MudText Align="Align.Center">@file.Name (@($"{file.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small"
+                                                                   Disabled="_uploading"
+                                                                   aria-label="Remove file"
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(file))" />
+                                                </MudStack>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2">No files selected.</MudText>
+                                }
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    </div>
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-center">
@@ -98,6 +130,12 @@
 @code {
     private MudForm? candidateForm;
     private Candidate candidate = new();
+    private IReadOnlyList<IBrowserFile> _filesMultiple = [];
+    private IList<IBrowserFile> _files => (_filesMultiple ?? Enumerable.Empty<IBrowserFile>()).ToList();
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> _fileUploadMultiple = default!;
+    private bool _uploading;
+    private int _progress;
+    private string _statusText = "Waiting for files.";
 
     private class Candidate
     {
@@ -114,30 +152,14 @@
     private async Task SubmitCandidate()
     {
         await candidateForm!.Validate();
-        // Basic client-side check
         if (!candidateForm.IsValid)
         {
             await JS.InvokeVoidAsync("console.warn", "Candidate form invalid");
             return;
         }
 
-        // Replace with actual submit logic (API call)
         await JS.InvokeVoidAsync("console.log", "Candidate submitted", candidate);
     }
-
-    private IReadOnlyList<IBrowserFile> _filesMultiple = [];
-    private IList<IBrowserFile> _files => (_filesMultiple ?? Enumerable.Empty<IBrowserFile>())
-        .Concat(_filesPDF != null ? new[] { _filesPDF } : Enumerable.Empty<IBrowserFile>())
-        .Concat(_filesImages ?? Enumerable.Empty<IBrowserFile>())
-        .ToList();
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> _fileUploadMultiple = default!;
-    private MudFileUpload<IBrowserFile> _fileUploadPDF = default!;
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> _fileUploadImages = default!;
-    private bool _uploading;
-    private int _progress;
-    private IBrowserFile? _filesPDF;
-    private IReadOnlyList<IBrowserFile> _filesImages = [];
-    private string _statusText = "Waiting for files.";
 
     private async Task UploadFilesAsync()
     {
@@ -147,7 +169,6 @@
             return;
         }
 
-        // Create a snapshot of the files to avoid altering the collection during iteration
         var filesSnapshot = _files.ToList();
 
         _uploading = true;
@@ -171,7 +192,7 @@
 
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
-        var fileUploads = new object[] { _fileUploadMultiple, _fileUploadPDF, _fileUploadImages };
+        var fileUploads = new object[] { _fileUploadMultiple};
 
         foreach (var fileUpload in fileUploads)
         {
@@ -187,18 +208,34 @@
         }
     }
 
+    private bool IsValidFile(IBrowserFile file)
+    {
+        var allowedExtensions = new[] { ".xls", ".xlsx", ".csv" };
+        var extension = Path.GetExtension(file.Name).ToLower();
+
+        return allowedExtensions.Contains(extension);
+    }
+
     // Bulk invite
     private IReadOnlyList<IBrowserFile>? uploadedFiles;
 
     private async Task ProcessBulkInvite()
     {
-        if (uploadedFiles == null || !uploadedFiles.Any())
+        if (_filesMultiple == null || !_filesMultiple.Any())
         {
             await JS.InvokeVoidAsync("console.warn", "No files selected for bulk invite");
             return;
         }
 
-        // Placeholder: read first file name and log. Replace with server upload logic.
-        await JS.InvokeVoidAsync("console.log", "Processing bulk invite", uploadedFiles.Select(f => f.Name));
+        var invalidFiles = _filesMultiple.Where(f => !IsValidFile(f)).ToList();
+
+        if (invalidFiles.Any())
+        {
+            await JS.InvokeVoidAsync("alert",
+                $"Invalid file type: {string.Join(", ", invalidFiles.Select(f => f.Name))}");
+            return;
+        }
+
+        await JS.InvokeVoidAsync("console.log", "Processing bulk invite", _filesMultiple.Select(f => f.Name));
     }
 }
