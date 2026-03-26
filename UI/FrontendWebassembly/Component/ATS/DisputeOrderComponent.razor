@@ -29,18 +29,16 @@
     </RowTemplate>
 </TableComponent>
 
-<MudGrid Class="mt-3">
-    <MudItem xs="12" Class="d-flex justify-center">
+<MudGrid Class="mt-3" Justify="Justify.Center">
+    <MudItem xs="12" md="5" Class="d-flex justify-center">
         <MudText Align="Align.Center" Typo="Typo.caption" Color="Color.Primary">
             <b>IMPORTANT NOTICE!</b><br />
             To preserve data and result integrity, dispute process can only be submitted for orders compieted within the last 30 days.
-        </MudText>
-    </MudItem>
-    <MudItem xs="12" Class="d-flex justify-center">
-        <MudText Align="Align.Center" Typo="Typo.caption" Color="Color.Primary">
+            <MudSpacer/>
             Please submit an order if more than 30 days or if reverification is required for the selected individual.
         </MudText>
     </MudItem>
+
 </MudGrid>
 
 @code {

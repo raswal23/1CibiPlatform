@@ -3,7 +3,7 @@
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px;  border: 1px solid gray;">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-2">Candidate Details</MudText>
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5">Candidate Details</MudText>
 
             <MudForm @ref="candidateForm">
                 <MudGrid Spacing="2">
@@ -50,7 +50,7 @@
         </MudPaper>
 
         <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px;  border: 1px solid gray;">
-            <MudText Align="Align.Center" Class="mb-2">Bulk Invite</MudText>
+            <MudText Align="Align.Center" Class="mb-5">Bulk Invite</MudText>
 
             <MudGrid>
                 <MudItem xs="12">
@@ -70,40 +70,49 @@
                         </CustomContent>
                         <SelectedTemplate/>
                     </MudFileUpload>
-
-                    <div class="d-flex justify-center">
-                        <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
-                            <MudExpansionPanel Class="bold" Text="@($"({_files.Count}) files")" Expanded="false">
-                                @if (_files.Any())
-                                {
-                                    <MudList T="IBrowserFile" Dense="true">
-                                        @foreach (var file in _files)
-                                        {
-                                            <MudListItem T="IBrowserFile" Value="file" @key="@file">
-                                                <MudStack Row  Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
-                                                    <MudText Align="Align.Center">@file.Name (@($"{file.Size / 1024d:N1} kB"))</MudText>
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                   Color="Color.Default"
-                                                                   Size="Size.Small"
-                                                                   Disabled="_uploading"
-                                                                   aria-label="Remove file"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(file))" />
-                                                </MudStack>
-                                            </MudListItem>
-                                        }
-                                    </MudList>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.body2">No files selected.</MudText>
-                                }
-                            </MudExpansionPanel>
-                        </MudExpansionPanels>
-                    </div>
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-center">
-                    <MudButton Class="theme-button theme-button-active" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Upload</MudButton>
+                    <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; border: 1px solid gray;">
+                        <MudStack Spacing="2" >
+                            <MudStack Row Justify="Justify.Center">
+                                <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
+                                    <MudExpansionPanel Class="bold" Text="@($"({_files.Count}) files")" Expanded="false">
+                                        @if (_files.Any())
+                                        {
+                                            <MudList T="IBrowserFile" Dense="true">
+                                                @foreach (var file in _files)
+                                                {
+                                                    <MudListItem T="IBrowserFile" Value="file" @key="@file">
+                                                        <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
+                                                            <MudText Align="Align.Center">@file.Name (@($"{file.Size / 1024d:N1} kB"))</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           Disabled="_uploading"
+                                                                           aria-label="Remove file"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(file))" />
+                                                        </MudStack>
+                                                    </MudListItem>
+                                                }
+                                            </MudList>
+                                        }
+                                        else
+                                        {
+                                            <MudText Typo="Typo.body2">No files selected.</MudText>
+                                        }
+                                    </MudExpansionPanel>
+                                </MudExpansionPanels>
+                            </MudStack>
+                            <MudStack Row Justify="Justify.Center">
+                                <MudButton Class="theme-button theme-button-active"
+                                           Style="width: 200px; border-radius: 4px;"
+                                           OnClick="ProcessBulkInvite">
+                                    Upload
+                                </MudButton>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
                 </MudItem>
             </MudGrid>
         </MudPaper>

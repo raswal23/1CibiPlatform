@@ -1,6 +1,18 @@
 ﻿@inject IJSRuntime JS
 @inject IDialogService DialogService
 
+<MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3" >
+    <MudPaper Style="padding: 15px; width: 500px; border-radius: 10px; border: 1px solid gray;">
+        <MudDateRangePicker @bind-DateRange="@_dateRange"
+                            Margin="Margin.Dense"
+                            ReadOnly="false"
+                            Clearable="true"
+                            PlaceholderStart="Start Date"
+                            PlaceholderEnd="End Date"
+                            Label="Date Range" />
+    </MudPaper>
+</MudStack>
+
 <TableComponent TItem="ReportRow"
                 @ref="reportsTable"
                 Title="Query Results"
@@ -55,6 +67,7 @@
 
 @code {
     private TableComponent<ReportRow>? reportsTable;
+    private DateRange? _dateRange { get; set; }
     private readonly List<ReportRow> _dummyReports = new()
     {
         new ReportRow(false, "Antonio Aguinaldo", "2025 - 00123456", "In Progress", "Pending", "October 25, 2025", "Basic"),
