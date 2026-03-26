@@ -16,25 +16,34 @@
 
     <ATSTabComponent ActiveTabChanged="ChangeActiveTab" />
 
-     @if (_activeIndex == 0)
+    @if (_isLoading)
     {
-        <ATSDashboardComponent/>
+        <div class="d-flex justify-center align-center" style="height:300px;">
+            <LoaderComponent />
+        </div>
     }
-    else if (_activeIndex == 1)
+    else
     {
-        <DisputeOrderComponent/>
-    }
-    else if (_activeIndex == 2)
-    {
-        <NewOrderComponent/>
-    }
-    else if (_activeIndex == 3)
-    {
-        <SearchReportComponent />
-    }
-    else if (_activeIndex == 4)
-    {
-        <InvoiceComponent/>
+        @if (_activeIndex == 0)
+        {
+            <ATSDashboardComponent />
+        }
+        else if (_activeIndex == 1)
+        {
+            <DisputeOrderComponent />
+        }
+        else if (_activeIndex == 2)
+        {
+            <NewOrderComponent />
+        }
+        else if (_activeIndex == 3)
+        {
+            <SearchReportComponent />
+        }
+        else if (_activeIndex == 4)
+        {
+            <InvoiceComponent />
+        }
     }
 
 </MudContainer>
@@ -42,8 +51,17 @@
 @code {
     private int _activeIndex = 0;
 
-    private void ChangeActiveTab(int value)
+    private bool _isLoading = false;
+
+    private async Task ChangeActiveTab(int value)
     {
+        _isLoading = true;
+        StateHasChanged(); 
+
+        await Task.Delay(50);
+
         _activeIndex = value;
+
+        _isLoading = false;
     }
 }
