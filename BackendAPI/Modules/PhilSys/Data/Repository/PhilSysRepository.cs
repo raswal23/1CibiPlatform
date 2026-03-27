@@ -34,7 +34,7 @@ public class PhilSysRepository : IPhilSysRepository
 
 		transaction!.FaceLivenessSessionId = FaceLivenessSessionId;
 
-		transaction.ImageinBase64 = Photo;
+		transaction.ImageinByte = Photo;
 
 		transaction.UpdatedLivenessIdAt = DateTime.UtcNow;
 
