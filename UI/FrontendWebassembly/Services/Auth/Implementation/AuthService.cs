@@ -272,34 +272,34 @@ public class AuthService : IAuthService
 		return new OTPResendResponseDTO(true, string.Empty);
 	}
 
-	public async Task<GetUserIdForForgotPasswordResponseDTO> ForgotPasswordGetUserId(GetUserIdForForgotPasswordRequestDTO getUserIdForForgotPasswordRequestDTO)
+	public async Task<SendEmailForgotPasswordResponseDTO> ForgotPasswordSendEmail(SendEmailForgotPasswordRequestDTO sendEmailForgotPasswordRequestDTO)
 	{
-		_logger.LogDebug("Starting Forgot Password - Get User ID request for Email: {Email}...", getUserIdForForgotPasswordRequestDTO.email);
+		_logger.LogDebug("Starting Forgot Password - Get User ID request for Email: {Email}...", sendEmailForgotPasswordRequestDTO.email);
 
 		var payload = new
 		{
-			getUserIdForForgotPasswordRequestDTO = new
+			sendForgotPasswordEmailRequestDTO = new
 			{
-				email = getUserIdForForgotPasswordRequestDTO.email
+				email = sendEmailForgotPasswordRequestDTO.email
 			}
 		};
 
-		_logger.LogDebug("Sending POST to /auth/forgot-password/get-user-id for Email: {Email}", getUserIdForForgotPasswordRequestDTO.email);
+		_logger.LogDebug("Sending POST to /auth/forgot-password-email-send for Email: {Email}", sendEmailForgotPasswordRequestDTO.email);
 
-		var response = await _httpClient.PostAsJsonAsync("/auth/forgot-password/get-user-id", payload);
+		var response = await _httpClient.PostAsJsonAsync("/auth/forgot-password-email-send", payload);
 
 
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Forgot Password - Get User ID failed for {Email}. Reading error content...", getUserIdForForgotPasswordRequestDTO.email);
+			_logger.LogWarning("Forgot Password - Get User ID failed for {Email}. Reading error content...", sendEmailForgotPasswordRequestDTO.email);
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 			_logger.LogError("Error: {Detail}", errorContent!.Detail);
-			return new GetUserIdForForgotPasswordResponseDTO(Guid.Empty, errorContent.Detail);
+			return new SendEmailForgotPasswordResponseDTO(errorContent.Detail);
 		}
 
-		_logger.LogInformation("Forgot Password - Get User ID successful for {Email}. Reading success content...", getUserIdForForgotPasswordRequestDTO.email);
+		_logger.LogInformation("Forgot Password - Get User ID successful for {Email}. Reading success content...", sendEmailForgotPasswordRequestDTO.email);
 
-		var successContent = await response.Content.ReadFromJsonAsync<GetUserIdForForgotPasswordResponseDTO>();
+		var successContent = await response.Content.ReadFromJsonAsync<SendEmailForgotPasswordResponseDTO>();
 
 		return successContent!;
 
@@ -339,24 +339,22 @@ public class AuthService : IAuthService
 
 	public async Task<UpdatePasswordResponseDTO> UpdatePassword(UpdatePasswordRequestDTO updatePasswordRequestDTO)
 	{
-		_logger.LogDebug("Starting Update Password request for UserId: {UserId}...", updatePasswordRequestDTO.userId);
+		_logger.LogDebug("Starting Update Password request", updatePasswordRequestDTO);
 
 		var payload = new
 		{
 			updatePasswordRequestDTO = new
 			{
-				userId = updatePasswordRequestDTO.userId,
 				hashToken = updatePasswordRequestDTO.hashToken,
 				newPassword = updatePasswordRequestDTO.newPassword
 			}
 		};
-		_logger.LogDebug("Sending POST to /auth/forgot-password/change-password for UserId: {UserId}", updatePasswordRequestDTO.userId);
+		_logger.LogDebug("Sending POST to /auth/forgot-password/change-password", updatePasswordRequestDTO);
 
 		var response = await _httpClient.PostAsJsonAsync("/auth/forgot-password/change-password", payload);
 
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Update Password failed for UserId: {UserId}. Reading error content...", updatePasswordRequestDTO.userId);
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 			_logger.LogError("Error: {Detail}", errorContent!.Detail);
 			return new UpdatePasswordResponseDTO(false, errorContent.Detail);

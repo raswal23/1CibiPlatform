@@ -34,11 +34,10 @@
         if (!isNavigationLocked)
         {
             isNavigationLocked = true;
-            await JS.InvokeVoidAsync("eval", @"
-                window.onbeforeunload = function() {
-                    return 'You have an unfinished liveness check session. Leaving now could result in lost progress. Are you sure you want to continue?';
-                };
-            ");
+            await JS.InvokeVoidAsync(
+            "navigationLock.enable",
+            "You have an unfinished liveness check session. Leaving now could result in lost progress. Are you sure you want to continue?"
+            );
         }
     }
 
@@ -47,7 +46,7 @@
         if (isNavigationLocked)
         {
             isNavigationLocked = false;
-            await JS.InvokeVoidAsync("eval", "window.onbeforeunload = null;");
+            await JS.InvokeVoidAsync("navigationLock.disable");
         }
     }
 

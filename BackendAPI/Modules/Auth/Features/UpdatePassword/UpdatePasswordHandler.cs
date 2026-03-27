@@ -9,8 +9,6 @@ public sealed class UpdatePasswordValidator : AbstractValidator<UpdatePasswordCo
 {
 	public UpdatePasswordValidator()
 	{
-		RuleFor(x => x.UpdatePasswordRequestDTO.userId)
-			.NotEmpty().WithMessage("UserId is required.");
 		RuleFor(x => x.UpdatePasswordRequestDTO.hashToken)
 			.NotEmpty().WithMessage("Hash token is required.");
 		RuleFor(x => x.UpdatePasswordRequestDTO.newPassword)
@@ -37,7 +35,6 @@ public class UpdatePasswordHandler : ICommandHandler<UpdatePasswordCommand, Upda
 	public async Task<UpdatePasswordResult> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
 	{
 		var isUpdated = await this._forgotPassword.ResetPasswordAsync(
-			request.UpdatePasswordRequestDTO.userId,
 			request.UpdatePasswordRequestDTO.hashToken,
 			request.UpdatePasswordRequestDTO.newPassword);
 

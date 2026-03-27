@@ -1,3 +1,3 @@
 ﻿namespace Auth.DTO;
 
-public record GetUserIdForForgotPasswordRequestDTO(string email);
+public record SendForgotPasswordEmailRequestDTO(string email);

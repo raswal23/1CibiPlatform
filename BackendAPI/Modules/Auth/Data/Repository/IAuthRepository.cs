@@ -13,7 +13,7 @@ public interface IAuthRepository
 	Task<LoginDTO> GetUserDataAsync(LoginWebCred cred);
 	Task<UserDataDTO> GetNewUserDataAsync(Guid userId);
 	Task<Authusers> GetRawUserAsync(Guid id);
-	Task<PasswordResetToken> GetUserTokenAsync(string token);
+	Task<PasswordResetToken> GetUserTokenAsync(string tokenHash);
 	Task<AuthApplication> GetApplicationAsync(int applicationId);
 	Task<AuthUserAppRole> GetAppSubRoleAsync(int appSubRoleId);
 	Task<AuthSubMenu> GetSubMenuAsync(int applicationId);

@@ -3,7 +3,6 @@ using Auth.Features.IsChangePasswordTokenValid;
 using Auth.Features.UpdatePassword;
 using Auth.Data.Entities;
 using FluentAssertions;
-using BuildingBlocks.Exceptions;
 using Test.BackendAPI.Infrastructure.Auth.Infrastructure;
 
 namespace Test.BackendAPI.Modules.Auth.IntegrationTests;
@@ -34,7 +33,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.PasswordResetToken.Add(passwordToken);
 		await _dbContext.SaveChangesAsync();
 
-		var requestDto = new ForgotPasswordTokenRequestDTO(tokenHash);
+		var requestDto = new ForgotPasswordTokenRequestDTO(user.Id, tokenHash);
 
 		var command = new IsChangePasswordTokenValidCommand(requestDto);
 
@@ -68,7 +67,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 
 		var newPassword = "NewP@ssw0rd!";
 
-		var requestDto = new UpdatePasswordRequestDTO(user.Id, tokenHash, newPassword);
+		var requestDto = new UpdatePasswordRequestDTO(tokenHash, newPassword);
 
 		var command = new UpdatePasswordCommand(requestDto);
 
@@ -91,7 +90,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		// Arrange - no token stored
 		var user = await SeedUserData();
 		var tokenHash = "non-existent-token";
-		var requestDto = new UpdatePasswordRequestDTO(user.Id, tokenHash, "NewPass1!");
+		var requestDto = new UpdatePasswordRequestDTO(tokenHash, "NewPass1!");
 		var command = new UpdatePasswordCommand(requestDto);
 
 		// Act
@@ -118,7 +117,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.PasswordResetToken.Add(passwordToken);
 		await _dbContext.SaveChangesAsync();
 
-		var requestDto = new UpdatePasswordRequestDTO(user.Id, tokenHash, "NewPass1!");
+		var requestDto = new UpdatePasswordRequestDTO(tokenHash, "NewPass1!");
 		var command = new UpdatePasswordCommand(requestDto);
 
 		// Act
@@ -128,44 +127,6 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid or expired token.");
 	}
 
-	[Fact]
-	public async Task UpdatePassword_ShouldThrowNotFound_WhenUserNotFound()
-	{
-		// Arrange
-		var oldNewUser = Guid.NewGuid();
-		var missingUserId = Guid.NewGuid();
-		var tokenHash = Guid.NewGuid().ToString();
-		var oldUserDetaill = new Authusers
-		{
-			Id = oldNewUser,
-			PasswordHash = tokenHash,
-			CreatedAt = DateTime.UtcNow,
-			FirstName = "Old",
-			LastName = "User",
-			Email = "old.user@example.com"
-		};
-
-		var passwordToken = new PasswordResetToken
-		{
-			UserId = oldNewUser,
-			TokenHash = tokenHash,
-			CreatedAt = DateTime.UtcNow,
-			ExpiresAt = DateTime.UtcNow.AddMinutes(30),
-			IsUsed = false
-		};
-		_dbContext.AuthUsers.Add(oldUserDetaill);
-		_dbContext.PasswordResetToken.Add(passwordToken);
-		await _dbContext.SaveChangesAsync();
-
-		var requestDto = new UpdatePasswordRequestDTO(missingUserId, tokenHash, "NewPass1!");
-		var command = new UpdatePasswordCommand(requestDto);
-
-		// Act
-		Func<Task> act = async () => { await _sender.Send(command); };
-
-		// Assert
-		await act.Should().ThrowAsync<NotFoundException>().WithMessage("User not found.");
-	}
 
 	private async Task<Authusers> SeedUserData()
 	{

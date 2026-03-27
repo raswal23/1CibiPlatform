@@ -25,6 +25,6 @@ public class UpdatePasswordEndpoint : ICarterModule
 			.WithTags("Authentication")
 			.Produces<UpdatePasswordResponse>(StatusCodes.Status200OK)
 			.WithSummary("Updates the user's password.")
-			.WithDescription("Updates the user's password using the provided user ID and new password.");
+			.WithDescription("Updates the user's password using the provided Hash and new password.");
 	}
 }

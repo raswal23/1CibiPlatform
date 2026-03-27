@@ -105,9 +105,7 @@
 else
 {
     <!-- Loading -->
-    <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
-        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-    </MudContainer>
+    <LoaderComponent />
 }
 
 @code {
@@ -161,7 +159,6 @@ else
         _isLoading = false;
 
         Navigation.LocationChanged += HandleLocationChanged!;
-        await SetupNavigationLock();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -177,11 +174,10 @@ else
         if (!isNavigationLocked)
         {
             isNavigationLocked = true;
-            await JSRuntime.InvokeVoidAsync("eval", @"
-                window.onbeforeunload = function() {
-                    return 'You have an unverified account. Are you sure you want to leave?';
-                };
-            ");
+            await JSRuntime.InvokeVoidAsync(
+            "navigationLock.enable",
+            "You have an unverified account. Are you sure you want to leave?"
+            );
         }
     }
 
@@ -190,7 +186,7 @@ else
         if (isNavigationLocked)
         {
             isNavigationLocked = false;
-            await JSRuntime.InvokeVoidAsync("eval", "window.onbeforeunload = null;");
+            await JSRuntime.InvokeVoidAsync("navigationLock.disable");
         }
     }
 

@@ -36,26 +36,98 @@
 
                     <!-- Navigation menu that fills remaining space -->
                     <MudNavMenu Class="flex-grow-1">
-                        @for (int i = 0; i < Apps.Count; i++)
-                        {
-                            var appId = Apps[i];
-                            var (path, appDescription, appIcon) = ApplicationListDescriptionIcon.List[appId];
 
-                            var subMenuIds = SubMenus[i];
+                        @{
+                            var combined = Apps
+                            .Select((appId, index) => new
+                            {
+                                AppId = appId,
+                                SubMenus = SubMenus[index]
+                            })
+                            .OrderBy(x =>
+                            {
+                                var(_, _, _) = ApplicationListDescriptionIcon.List[x.AppId];
+                                return AppOrder.ContainsKey(x.AppId) ? AppOrder[x.AppId] : 100;
+                            })
+                            .ToList();
+                        }
+
+                        @foreach (var item in combined)
+                        {
+                            var (path, appDescription, appIcon) =
+                            ApplicationListDescriptionIcon.List[item.AppId];
 
                             <MudNavGroup Title="@appDescription" Expanded="false" Icon="@appIcon">
-                                @foreach (var subId in subMenuIds)
+
+                                @foreach (var subId in item.SubMenus)
                                 {
                                     var (subPath, subDescription, subIcon) = SubMenuList.List[subId];
-                                    <MudNavLink Href="@($"{path.ToLower()}/{subPath.ToLower()}")"
-                                                Match="NavLinkMatch.Prefix"
-                                                Icon="@subIcon"
-                                                ActiveClass="@GetActiveNavClass()">
-                                        @subDescription
-                                    </MudNavLink>
+
+                                    // GENERAL → has children
+                                    if (subDescription == "General")
+                                    {
+                                        <MudNavGroup Title="General" Icon="@subIcon" Expanded="false">
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/general/personal-settings")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.Person">
+                                                Personal Settings
+                                            </MudNavLink>
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/general/users")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.Group">
+                                                Users
+                                            </MudNavLink>
+
+                                        </MudNavGroup>
+                                    }
+                                    // SECURITY CONTROL → has children
+                                    else if (subDescription == "Security Control")
+                                    {
+                                        <MudNavGroup Title="Security Control" Icon="@subIcon" Expanded="false">
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/securitycontrol/profiles")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.Badge">
+                                                Profiles
+                                            </MudNavLink>
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/securitycontrol/territory-management")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.Map">
+                                                Territory Management
+                                            </MudNavLink>
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/securitycontrol/login-history")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.History">
+                                                Login History
+                                            </MudNavLink>
+
+                                            <MudNavLink Href="@($"{path.ToLower()}/securitycontrol/audit-log")"
+                                                        Match="NavLinkMatch.Prefix"
+                                                        Icon="@Icons.Material.Filled.FactCheck">
+                                                Audit Log
+                                            </MudNavLink>
+
+                                        </MudNavGroup>
+                                    }
+                                    // NORMAL submenu
+                                    else
+                                    {
+                                        <MudNavLink Href="@($"{path.ToLower()}/{subPath.ToLower()}")"
+                                                    Match="NavLinkMatch.Prefix"
+                                                    Icon="@subIcon"
+                                                    ActiveClass="@GetActiveNavClass()">
+                                            @subDescription
+                                        </MudNavLink>
+                                    }
                                 }
+
                             </MudNavGroup>
                         }
+
                     </MudNavMenu>
 
                     <!-- Logout at the very bottom -->
@@ -108,14 +180,20 @@
 else
 {
     <!-- Loading -->
-    <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
-        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-    </MudContainer>
+    <LoaderComponent />
 }
 
 @code {
 
-
+    private readonly Dictionary<int, int> AppOrder = new()
+    {
+        { 5, 1 }, // Credit Bureau
+        { 6, 2 }, // S&I
+        { 2, 3 }, // PhilSys
+        { 1, 4 }, // CNX
+        { 4, 5 }, // AI
+        { 3, int.MaxValue } // Settings
+    };
 
     private bool _drawerOpen = true;
     private bool _isDarkMode = false;

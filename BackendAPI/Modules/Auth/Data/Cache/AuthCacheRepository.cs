@@ -169,9 +169,9 @@ public class AuthCacheRepository : IAuthRepository
 		return await _authRepository.GetUserDataAsync(cred);
 	}
 
-	public async Task<PasswordResetToken> GetUserTokenAsync(string token)
+	public async Task<PasswordResetToken> GetUserTokenAsync(string tokenHash)
 	{
-		return await _authRepository.GetUserTokenAsync(token);
+		return await _authRepository.GetUserTokenAsync(tokenHash);
 	}
 
 	public async Task<bool> InsertOtpVerification(OtpVerification otpVerification)
@@ -480,11 +480,11 @@ public class AuthCacheRepository : IAuthRepository
 
 		var result = await _authRepository.DeleteLockedUserAsync(lockedUser);
 
-		if(result)
+		if (result)
 		{
-			await  _hybridCache.RemoveAsync(cacheKeyForAttempt);
+			await _hybridCache.RemoveAsync(cacheKeyForAttempt);
 			await _hybridCache.RemoveByTagAsync(LockedUsersTag);
-		    await _hybridCache.RemoveAsync(cachekeyForDate);
+			await _hybridCache.RemoveAsync(cachekeyForDate);
 		}
 
 		return result;

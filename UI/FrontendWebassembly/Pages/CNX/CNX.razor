@@ -11,9 +11,17 @@
     <MudButton Variant="Variant.Filled"
                StartIcon="@Icons.Material.Filled.Download"
                Class="theme-button theme-button-active mb-4"
-               Style="border-radius: 4px;"
+               Disabled="@isLoading"
                OnClick="DownloadCandidateData">
-        Export
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+        }
+        else
+        {
+            <span>Export</span>
+        }
     </MudButton>
 </div>
 
@@ -112,6 +120,7 @@
     private TableComponent<CandidateResponseDTO>? candidatesTable;
     private List<CandidateResponseDTO> currentPageData = new();
     private string? _searchStringCandidate;
+    private bool isLoading = false;
 
     private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
     {
@@ -128,22 +137,35 @@
         set => UpdateSearch(ref _searchStringCandidate!, value, candidatesTable!);
     }
 
-    private async Task<TableData<CandidateResponseDTO>> LoadCandidatesData(TableState state, CancellationToken cancellationToken)
+    private async Task<TableData<CandidateResponseDTO>> LoadCandidatesData(
+    TableState state,
+    CancellationToken cancellationToken)
     {
-        var pageNumber = (state.Page + 1).ToString();
+        isLoading = true;
+        StateHasChanged(); // refresh UI immediately
 
-        var result = await CandidateService.GetCandidates(
-            searchStringCandidate,
-            pageNumber,
-            cancellationToken);
-
-        currentPageData = result.Candidate ?? new List<CandidateResponseDTO>();
-
-        return new TableData<CandidateResponseDTO>
+        try
         {
-            TotalItems = result.Total,
-            Items = currentPageData
-        };
+            var pageNumber = (state.Page + 1).ToString();
+
+            var result = await CandidateService.GetCandidates(
+                searchStringCandidate,
+                pageNumber,
+                cancellationToken);
+
+            currentPageData = result.Candidate ?? new List<CandidateResponseDTO>();
+
+            return new TableData<CandidateResponseDTO>
+            {
+                TotalItems = result.Total,
+                Items = currentPageData
+            };
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // refresh UI again
+        }
     }
 
     private async Task DownloadCandidateData()

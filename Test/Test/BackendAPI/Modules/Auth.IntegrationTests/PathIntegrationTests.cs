@@ -22,7 +22,7 @@ public class PathIntegrationTests : BaseIntegrationTest
 	[InlineData("/verify/otp", "POST")]
 	[InlineData("/verify/validate/otp", "POST")]
 	[InlineData("/verify/resend-otp", "POST")]
-	[InlineData("/forgot-password/get-user-id", "POST")]
+	[InlineData("/forgot-password-email-send", "POST")]
 	[InlineData("/is-change-password-token-valid", "POST")]
 	[InlineData("/change-password", "POST")]
 	[InlineData("/logout", "POST")]

@@ -37,4 +37,15 @@ COPY --from=publish /app/publish .
 # dotnet publish doesn't include non-compiled files like .yaml by default
 COPY --from=build /src/BackendAPI/Modules/AIAgent/Skills ./Modules/AIAgent/Skills
 
+# --- FIX: Ensure wwwroot and runtime folders are writable by container user ---
+# Temporarily switch to root to fix ownership and permissions
+USER root
+RUN mkdir -p /app/wwwroot/files \
+    && chown -R $APP_UID:$APP_UID /app/wwwroot \
+    && find /app/wwwroot -type d -exec chmod 755 {} + \
+    && find /app/wwwroot -type f -exec chmod 644 {} +
+
+# Switch back to the non-root container user
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "APIs.dll"]

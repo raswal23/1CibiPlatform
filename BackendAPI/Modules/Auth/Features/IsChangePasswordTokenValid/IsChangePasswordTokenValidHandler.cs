@@ -27,7 +27,9 @@ public class IsChangePasswordTokenValidHandler : ICommandHandler<IsChangePasswor
 		IsChangePasswordTokenValidCommand request,
 		CancellationToken cancellationToken)
 	{
-		var isValid = await _forgotPassword.IsTokenValid(request.ForgotPasswordTokenRequestDTO.tokenHash);
+		var isValid = await _forgotPassword.IsTokenValid(
+			request.ForgotPasswordTokenRequestDTO.tokenHash);
+
 		return new IsChangePasswordTokenValidResult(isValid);
 	}
 }

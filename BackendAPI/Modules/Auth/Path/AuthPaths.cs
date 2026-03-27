@@ -106,12 +106,12 @@ public class AuthPaths : IReverseProxyModule
 
 			new RouteDefinitionDTO(
 				RouteId: "ForgotPasswordGetUserIdEntryPoint",
-				MatchPath: "/auth/forgot-password/get-user-id",
+				MatchPath: "auth/forgot-password-email-send",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/forgot-password/get-user-id" }
+					{ "PathSet", "/forgot-password-email-send" }
 				}
 			),
 

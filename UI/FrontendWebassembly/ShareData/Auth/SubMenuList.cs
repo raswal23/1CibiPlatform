@@ -9,7 +9,7 @@ public static class SubMenuList
 		{ 2, ("idv", "IDV" , Icons.Material.Filled.Person) },
 		{ 3, ("usermanagement", "User Management" , Icons.Material.Filled.ManageAccounts) },
 	  	{ 4, ("chat", "Chat", Icons.Material.Filled.Chat) },
-		{ 5,  ("cb2.0", "CB 2.0", Icons.Material.Filled.Score) },
+		{ 5,  ("cb2.0", "CB 2.0", Icons.Material.Filled.Score) },      
 		{ 6,  ("bulkprocessing", "Bulk Processing", Icons.Material.Filled.Dns) },
 		{ 7,  ("ats", "ATS", Icons.Material.Filled.TrackChanges) },
 		{ 8,  ("oms", "OMS", Icons.Material.Filled.Inventory2) },

@@ -115,11 +115,13 @@ public class AuthRepository : IAuthRepository
 						.OrderBy(a => a.UserId)
 						.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 						.Take(paginationRequest.PageSize)
-						.Select(aa => new AuthAttempts { 
-							LockReleaseAt = aa.LockReleaseAt,	
-							CreatedAt = aa.CreatedAt, 
+						.Select(aa => new AuthAttempts
+						{
+							LockReleaseAt = aa.LockReleaseAt,
+							CreatedAt = aa.CreatedAt,
 							Email = aa.Email,
-							UserId = aa.UserId})
+							UserId = aa.UserId
+						})
 						.AsNoTracking()
 						.ToListAsync(cancellationToken);
 
@@ -257,10 +259,11 @@ public class AuthRepository : IAuthRepository
 					.OrderBy(aa => aa.UserId)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
-					.Select(aa => new AuthAttempts {
+					.Select(aa => new AuthAttempts
+					{
 						LockReleaseAt = aa.LockReleaseAt,
 						UserId = aa.UserId,
-						Email = aa.Email, 
+						Email = aa.Email,
 						CreatedAt = aa.CreatedAt
 					})
 					.AsNoTracking()
@@ -562,7 +565,7 @@ public class AuthRepository : IAuthRepository
 
 	public async Task<bool> DeleteLockedUserAsync(AuthAttempts lockedUser)
 	{
-	    await _dbcontext.AuthAttempts.
+		await _dbcontext.AuthAttempts.
 			  Where(aa => aa.UserId == lockedUser.UserId).ExecuteDeleteAsync();
 
 		return true;

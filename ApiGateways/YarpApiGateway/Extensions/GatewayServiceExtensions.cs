@@ -55,7 +55,6 @@ public static class GatewayServiceExtensions
 			options.AddPolicy("CorsPolicy", policy =>
 			{
 				policy.WithOrigins(
-					"http://localhost:5134",
 					"https://apps.cibi.com.ph/oms",
 					"https://apps.cibi.com.ph/oms_uat")
 				.AllowCredentials()

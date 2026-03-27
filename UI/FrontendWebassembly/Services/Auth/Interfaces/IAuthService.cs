@@ -14,7 +14,7 @@ public interface IAuthService
 
 	Task<OTPResendResponseDTO> OtpResendAsync(OTPResendRequestDTO otpResendRequestDTO);
 
-	Task<GetUserIdForForgotPasswordResponseDTO> ForgotPasswordGetUserId(GetUserIdForForgotPasswordRequestDTO getUserIdForForgotPasswordRequestDTO);
+	Task<SendEmailForgotPasswordResponseDTO> ForgotPasswordSendEmail(SendEmailForgotPasswordRequestDTO sendEmailForgotPasswordRequestDTO);
 
 	Task<IsChangePasswordTokenValidResponseDTO> IsForgotPasswordTokenValid(ForgotPasswordTokenRequestDTO forgotPasswordTokenRequestDTO);
 
