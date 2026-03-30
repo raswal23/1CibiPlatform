@@ -5,57 +5,25 @@
     <DialogContent>
         <MudForm @ref="form">
 
-            <MudSelect T="Guid" @bind-Value="AppSubRole.UserId"
-                       Label="Email"
-                       For="@(() => AppSubRole.UserId)">
-                <MudSelectItem Value="Guid.Empty" Disabled="true">Select a User</MudSelectItem>
-                @foreach (var user in Users!)
-                {
-                    <MudSelectItem Value="@user.userId">@user.email</MudSelectItem>
-                }
-            </MudSelect>
+            <MudAutocomplete T="UsersDTO" Label="User" @bind-Value="selectedUser" SearchFunc="@SearchUsers" ToStringFunc="u => u?.email" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showUserError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">User is required</MudText>
             }
 
-            <MudSelect T="int" @bind-Value="AppSubRole.AppId"
-                       Label="Application"
-                       For="@(() => AppSubRole.AppId)">
-                <MudSelectItem Value="0" Disabled="true">Select an Application</MudSelectItem>
-                @foreach (var app in Apps!)
-                {
-                    <MudSelectItem Value="@app.applicationId">@app.applicationName</MudSelectItem>
-                }
-            </MudSelect>
+            <MudAutocomplete T="ApplicationsDTO" Label="Application" @bind-Value="selectedApp" SearchFunc="@SearchApplications" ToStringFunc="a => a?.applicationName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showAppError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">Application is required</MudText>
             }
 
-            <MudSelect T="int" @bind-Value="AppSubRole.SubMenuId"
-                       Label="Submenu"
-                       For="@(() => AppSubRole.SubMenuId)">
-                <MudSelectItem Value="0" Disabled="true">Select a SubMenu</MudSelectItem>
-                @foreach (var sm in SubMenus!)
-                {
-                    <MudSelectItem Value="@sm.subMenuId">@sm.subMenuName</MudSelectItem>
-                }
-            </MudSelect>
+            <MudAutocomplete T="SubMenusDTO" Label="SubMenu" @bind-Value="selectedMenu" SearchFunc="@SearchSubMenus" ToStringFunc="s => s?.subMenuName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showSubMenuError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">SubMenu is required</MudText>
             }
 
-            <MudSelect T="int" @bind-Value="AppSubRole.RoleId"
-                       Label="Role"
-                       For="@(() => AppSubRole.RoleId)">
-                <MudSelectItem Value="0" Disabled="true">Select a Role</MudSelectItem>
-                @foreach (var role in Roles!)
-                {
-                    <MudSelectItem Value="@role.roleId">@role.roleName</MudSelectItem>
-                }
-            </MudSelect>
+            <MudAutocomplete T="RolesDTO" Label="Role" @bind-Value="selectedRole" SearchFunc="@SearchRoles" ToStringFunc="r => r?.roleName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showRoleError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">Role is required</MudText>
@@ -76,16 +44,18 @@
 
 @code {
     private MudForm? form;
-
     private bool showUserError;
     private bool showAppError;
     private bool showSubMenuError;
     private bool showRoleError;
 
-    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    private UsersDTO? selectedUser;
+    private ApplicationsDTO? selectedApp;
+    private SubMenusDTO? selectedMenu;
+    private RolesDTO? selectedRole;
 
-    [Parameter]
-    public AddAppSubRoleDTO AppSubRole { get; set; } = new AddAppSubRoleDTO();
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public AddAppSubRoleDTO AppSubRole { get; set; } = new AddAppSubRoleDTO();
 
     private List<UsersDTO>? Users = new();
     private List<ApplicationsDTO>? Apps = new();
@@ -116,7 +86,7 @@
         if (showUserError || showAppError || showSubMenuError || showRoleError)
             return;
 
-        await form!.Validate();
+        await form!.ValidateAsync();
 
         var notification = new AssignmentNotificationDTO
         {
@@ -126,6 +96,43 @@
             Role = Roles?.FirstOrDefault(r => r.roleId == AppSubRole.RoleId)?.roleName
         };
 
+        AppSubRole.UserId = selectedUser?.userId ?? Guid.Empty;
         MudDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
+    }
+
+    private async Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+
+        if (string.IsNullOrEmpty(value))
+            return Users!;
+        return Users!.Where(u => u.email!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+    
+    private async Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+
+        if (string.IsNullOrEmpty(value))
+            return Apps!;
+        return Apps!.Where(a => a.applicationName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+
+        if (string.IsNullOrEmpty(value))
+            return SubMenus!;
+        return SubMenus!.Where(s => s.subMenuName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
+    {
+        await Task.Delay(1000, token);
+
+        if (string.IsNullOrEmpty(value))
+            return Roles!;
+        return Roles!.Where(s => s.roleName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
     }
 }
