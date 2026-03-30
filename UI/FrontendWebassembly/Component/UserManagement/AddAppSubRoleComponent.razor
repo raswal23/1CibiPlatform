@@ -100,39 +100,31 @@
         MudDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
     }
 
-    private async Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
+    private async Task<IEnumerable<T>> Search<T>(
+    string value,
+    IEnumerable<T> source,
+    Func<T, string?> selector,
+    CancellationToken token)
     {
-        await Task.Delay(1000, token);
+        await Task.Delay(300, token);
 
-        if (string.IsNullOrEmpty(value))
-            return Users!;
-        return Users!.Where(u => u.email!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-    }
-    
-    private async Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
-    {
-        await Task.Delay(1000, token);
+        if (string.IsNullOrWhiteSpace(value))
+            return source;
 
-        if (string.IsNullOrEmpty(value))
-            return Apps!;
-        return Apps!.Where(a => a.applicationName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+        return source.Where(x =>
+            (selector(x) ?? string.Empty)
+            .Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
-    private async Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
-    {
-        await Task.Delay(1000, token);
+    private Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
+    => Search(value, Users!, u => u.email, token);
 
-        if (string.IsNullOrEmpty(value))
-            return SubMenus!;
-        return SubMenus!.Where(s => s.subMenuName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-    }
+    private Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
+    => Search(value, Apps!, a => a.applicationName, token);
 
-    private async Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
-    {
-        await Task.Delay(1000, token);
+    private Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
+    => Search(value, SubMenus!, s => s.subMenuName, token);
 
-        if (string.IsNullOrEmpty(value))
-            return Roles!;
-        return Roles!.Where(s => s.roleName!.Contains(value, StringComparison.InvariantCultureIgnoreCase));
-    }
+    private Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
+    => Search(value, Roles!, r => r.roleName, token);
 }
