@@ -3,7 +3,6 @@
 @inherits SecurePageBase
 @attribute [RequirePermission(6, 7)]
 
-<PageTitle>WFS Talent Suite - Dashboard</PageTitle>
 
 <MudContainer Class="pa-0">
 
@@ -26,22 +25,32 @@
     {
         @if (_activeIndex == 0)
         {
+            <PageTitle>WFS Talent Suite - Dashboard</PageTitle>
+
             <ATSDashboardComponent />
         }
         else if (_activeIndex == 1)
         {
+            <PageTitle>WFS Talent Suite - Dispute Order</PageTitle>
+
             <DisputeOrderComponent />
         }
         else if (_activeIndex == 2)
         {
+            <PageTitle>WFS Talent Suite - New Order</PageTitle>
+
             <NewOrderComponent />
         }
         else if (_activeIndex == 3)
         {
+            <PageTitle>WFS Talent Suite - Search Report</PageTitle>
+
             <SearchReportComponent />
         }
         else if (_activeIndex == 4)
         {
+            <PageTitle>WFS Talent Suite - Invoice</PageTitle>
+
             <InvoiceComponent />
         }
     }
