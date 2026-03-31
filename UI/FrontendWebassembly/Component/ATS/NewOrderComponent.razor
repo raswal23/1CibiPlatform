@@ -3,7 +3,7 @@
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px;  border: 1px solid gray;">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5">Candidate Details</MudText>
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Candidate Details</MudText>
 
             <MudForm @ref="candidateForm">
                 <MudGrid Spacing="2">
@@ -50,7 +50,7 @@
         </MudPaper>
 
         <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px;  border: 1px solid gray;">
-            <MudText Align="Align.Center" Class="mb-5">Bulk Invite</MudText>
+            <MudText Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Bulk Invite</MudText>
 
             <MudGrid>
                 <MudItem xs="12">
@@ -111,6 +111,14 @@
                                     Upload
                                 </MudButton>
                             </MudStack>
+                            <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+                                <MudText Typo="Typo.body2">
+                                    Don’t have a file?
+                                    <MudLink Href="/register" Underline="Underline.Always" Class="ml-1">
+                                        Download template
+                                    </MudLink>
+                                </MudText>
+                            </MudStack>
                         </MudStack>
                     </MudPaper>
                 </MudItem>
@@ -122,7 +130,7 @@
         <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
                   Style="height:100%; border-radius: 10px; border: 1px solid gray;">
 
-            <MudText Align="Align.Center" Class="mb-2">
+            <MudText Align="Align.Center" Class="mb-2" Style="font-size: 20px;">
                 Application Form
             </MudText>
 
