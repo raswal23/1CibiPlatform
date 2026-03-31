@@ -5,18 +5,13 @@
                 Billed Date
             </MudText>
             <div class="d-flex flex-column align-center" style="gap:12px;">
-                <MudTextField @bind-Value="_date"
-                              Label="Billed Date"
-                              InputType="InputType.Date"
-                              Required="true"
-                              ReadOnly
-                              RequiredError="Billed Date is required"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Min="2000-01-01"
-                              Style="width: 200px;"
-                              Max="@DateTime.Today.ToString("yyyy-MM-dd")"
-                              Class="oneplatform-rounded-input" />
+                <MudDatePicker Class="oneplatform-rounded-input" 
+                               Label="Billed Date" 
+                               ReadOnly
+                               @bind-Date="_date" 
+                               Mask="@(new DateMask("MM/dd/yyyy"))" 
+                               DateFormat="MM/dd/yyyy" 
+                               Variant="Variant.Outlined" />
             </div>
         </MudPaper>
 
