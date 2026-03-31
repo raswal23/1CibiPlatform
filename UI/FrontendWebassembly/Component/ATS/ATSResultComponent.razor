@@ -1,293 +1,286 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudGrid GutterSize="3" Class="mb-4">
-            <MudItem xs="12" >
-                <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                          Style="height:100%; border-radius: 10px; border: 1px solid gray;">
-                    
-                    <MudGrid Spacing="2">
-                        <MudItem xs="2" class="d-flex align-center">
-                            <MudText>Subject Name</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="subject.SubjectName"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
 
-                        <MudItem xs="2" class="d-flex align-center">
-                            <MudText>E-Pass Score</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="subject.Score"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            </MudItem>
+        @if (!IsLoaded)
+        {
+            <LoaderComponent Height="200px" />
+        }
+        else
+        {
+            <MudGrid GutterSize="3" Class="mb-4">
+                <MudItem xs="12" class="d-flex justify-center align-center">
+                    <MudPaper Elevation="2" Class="pa-5 d-flex flex-column" Style="border-radius: 12px;  border: 1px solid gray; width: 600px;">
+                        <MudGrid Spacing="3" Justify="Justify.Center">
+                            <MudItem xs="12" sm="6">
+                                <MudText Style="font-size: 20px;" Class="mb-1">
+                                    Subject Name
+                                </MudText>
+                                <MudText Style="font-size: 16px;">
+                                    @subject.SubjectName
+                                </MudText>
+                            </MudItem>
 
-            <MudItem xs="12" md="6">
-                <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                          Style="height:100%; border-radius: 10px; border: 1px solid gray;">
+                            <MudItem xs="12" sm="6">
+                                <MudText Style="font-size: 20px;" Class="mb-1">
+                                    E-Pass Score
+                                </MudText>
+                                <MudText Style="font-size: 16px;">
+                                    @subject.Score
+                                </MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
 
-                    <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
+                              Style="height:100%; border-radius: 10px; border: 1px solid gray;">
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Ticket Number</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.TicketNumber"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                        <MudGrid Spacing="2">
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Status</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.Status"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Ticket Number</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.TicketNumber"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Result</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.Result"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Status</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.Status"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Report Type</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.ReportType"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Result</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.Result"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Aptitude Test</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.AptitudeTest"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Report Type</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.ReportType"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Live Interview</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.LiveInterview"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Aptitude Test</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.AptitudeTest"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Grammar</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.Grammar"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Live Interview</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.LiveInterview"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Comprehension</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.Comprehension"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Grammar</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.Grammar"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Relativeness</MudText>
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudTextField @bind-Value="ticketDetails.Relativeness"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Comprehension</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.Comprehension"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="12" Class="d-flex justify-center">
-                            <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download</MudButton>
-                        </MudItem>
-                    </MudGrid>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Relativeness</MudText>
+                            </MudItem>
+                            <MudItem xs="8">
+                                <MudTextField @bind-Value="ticketDetails.Relativeness"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                </MudPaper>
-            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-center">
+                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download</MudButton>
+                            </MudItem>
+                        </MudGrid>
 
-            <MudItem xs="12" md="6">
-                <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                          Style="height:100%; border-radius: 10px; border: 1px solid gray;">
+                    </MudPaper>
+                </MudItem>
 
-                    <MudGrid Spacing="2">
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Resume / CV</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.Resume"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
+                              Style="height:100%; border-radius: 10px; border: 1px solid gray;">
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>ID Uploaded</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.ID"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                        <MudGrid Spacing="2">
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Resume / CV</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.Resume"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>COE</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.COE"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>ID Uploaded</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.ID"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Diploma / TOR</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.Diploma"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>COE</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.COE"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Biometric Photo</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.BiometricPhoto"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Diploma / TOR</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.Diploma"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Consent Form</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.ConsentForm"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Biometric Photo</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.BiometricPhoto"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                        <MudItem xs="4" class="d-flex align-center">
-                            <MudText>Status</MudText>
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.FinalReport"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                          Variant="Variant.Outlined"
-                                          FullWidth="true"
-                                          ReadOnly
-                                          Class="oneplatform-rounded-input" />
-                        </MudItem>
-                    </MudGrid>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Consent Form</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.ConsentForm"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
 
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+                            <MudItem xs="4" class="d-flex align-center">
+                                <MudText>Status</MudText>
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.FinalReport"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                              Variant="Variant.Outlined"
+                                              FullWidth="true"
+                                              ReadOnly
+                                              Class="oneplatform-rounded-input" />
+                            </MudItem>
+                        </MudGrid>
+
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
     </DialogContent>
-
-    <DialogActions>
-        <MudButton Color="Color.Primary"
-                   OnClick="Okay"
-                   Class="theme-button theme-button-active"
-                   Style="border-radius: 4px;">
-            Okay
-        </MudButton>
-    </DialogActions>
 </MudDialog>
 
 @code {
@@ -295,13 +288,10 @@
     private TicketDetails ticketDetails = new();
     private Subject subject = new();
     private FileDetails fileDetails = new();
-
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    private bool IsLoaded = true;
 
     [Parameter]
     public AddRoleDTO Role { get; set; } = new AddRoleDTO();
-
-    void Okay() => MudDialog.Cancel();
 
     private class Subject
     {

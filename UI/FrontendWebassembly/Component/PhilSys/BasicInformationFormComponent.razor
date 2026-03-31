@@ -93,7 +93,7 @@
 
     private async Task SubmitPersonalInfo()
     {
-        await personalForm!.Validate();
+        await personalForm!.ValidateAsync();
         if (!personalForm.IsValid)
         {
             return;

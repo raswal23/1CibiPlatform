@@ -168,7 +168,7 @@
 
     private async Task SubmitCandidate()
     {
-        await candidateForm!.Validate();
+        await candidateForm!.ValidateAsync();
         if (!candidateForm.IsValid)
         {
             await JS.InvokeVoidAsync("console.warn", "Candidate form invalid");

@@ -270,12 +270,6 @@ else if (_activeIndex == 6)
     private TableComponent<SubMenusDTO> subMenusTable;
     private TableComponent<RolesDTO> rolesTable;
     private TableComponent<AppSubRolesDTO> appSubRolesTable;
-    private int _accountLockDuration;
-
-    protected override void OnInitialized()
-    {
-        _accountLockDuration = Configuration.GetValue<int>("AuthWeb:AccountLockDurationInMinutes");
-    }
 
     private void OnTabChanged(int index)
     {
