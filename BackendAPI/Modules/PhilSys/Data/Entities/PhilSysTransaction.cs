@@ -11,6 +11,7 @@ public class PhilSysTransaction
 	public string? BirthDate { get; set; }
 	public string? PCN { get; set; }
 	public string? FaceLivenessSessionId { get; set; }
+	public byte[]? ImageinByte { get; set; }
 	public string? WebHookUrl { get; set; }
 	public bool IsTransacted { get; set; }
 	public string? HashToken { get; set; }

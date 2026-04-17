@@ -37,7 +37,8 @@ public class UpdateFaceLivenessSessionIntegrationTests_CreateFactoryWithHandler 
 			LastName = "Dela Cruz",
 			Suffix = null,
 			BirthDate = "2001-08-20",
-			WebHookUrl = "/", // noop webhook
+			WebHookUrl = "/",
+			ImageinByte = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 },
 			IsTransacted = false,
 			HashToken = hashed,
 			ExpiresAt = DateTime.UtcNow.AddMinutes(10),
@@ -114,7 +115,7 @@ public class UpdateFaceLivenessSessionIntegrationTests_CreateFactoryWithHandler 
 		using var actionScope = customFactory.Services.CreateScope();
 		var sender = actionScope.ServiceProvider.GetRequiredService<ISender>();
 
-		var command = new UpdateFaceLivenessSessionCommand(transaction.HashToken!, faceSessionId);
+		var command = new UpdateFaceLivenessSessionCommand(transaction.HashToken!, faceSessionId, transaction.ImageinByte);
 		var result = await sender.Send(command);
 
 		// Assert

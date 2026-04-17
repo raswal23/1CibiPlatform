@@ -23,4 +23,3 @@ public static class SubMenuList
 		{ 16, ("dataadministration", "Data Administration", Icons.Material.Filled.Storage) }
 	  };
 }
-
