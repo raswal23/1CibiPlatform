@@ -42,10 +42,12 @@
 		<ProjectReference Include="..\..\Modules\CNX\CNX.csproj" />
 		<ProjectReference Include="..\..\Modules\PhilSys\PhilSys.csproj" />
 		<ProjectReference Include="..\..\Modules\SSO\SSO.csproj" />
+		<ProjectReference Include="..\..\Modules\ATS\ATS.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="Migrations\" />
+		<Folder Include="Migrations\ATS\" />
 	</ItemGroup>
 
 	<ItemGroup>
