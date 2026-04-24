@@ -105,11 +105,12 @@
 
     async Task Submit()
     {
-        await form!.ValidateAsync();
-        if (form.IsValid)
-        {
-            MudDialog!.Close(DialogResult.Ok(AppSubRole));
-        }
+        AppSubRole.UserId = selectedUser!.userId;
+        AppSubRole.AppId = selectedApp!.applicationId;
+        AppSubRole.SubMenuId = selectedMenu!.subMenuId;
+        AppSubRole.RoleId = selectedRole!.roleId;
+
+        MudDialog!.Close(DialogResult.Ok(AppSubRole));
     }
 
     private async Task<IEnumerable<T>> Search<T>(
