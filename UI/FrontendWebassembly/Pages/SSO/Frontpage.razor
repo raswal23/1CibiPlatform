@@ -101,15 +101,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // var isAuthenticated = await SSOService.IsUserAuthenticatedAsync();
+        var isAuthenticated = await SSOService.IsUserAuthenticatedAsync();
 
-        // if (!isAuthenticated)
-        // {
-        //     NavigationManager.NavigateTo("https:console.jumpcloud.com/login");
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("https:console.jumpcloud.com/login");
 
-        //     return;
-        // }
+            return;
+        }
 
-        // isLoading = false;
+        isLoading = false;
     }
 }
