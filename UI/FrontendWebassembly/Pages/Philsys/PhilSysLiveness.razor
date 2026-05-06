@@ -121,12 +121,14 @@
     }
 
     [JSInvokable]
-    public async Task OnLivenessCompleted(string sessionId)
+    public async Task OnLivenessCompleted(string sessionId, string photo)
     {
         showLoader = true;
         StateHasChanged();
 
-        information = await IPhilSysService.UpdateFaceLivenessSessionAsync(HashToken, sessionId);
+        byte[] photoBytes = Convert.FromBase64String(photo);
+
+        information = await IPhilSysService.UpdateFaceLivenessSessionAsync(HashToken, sessionId, photoBytes);
         _completed = true;
 
         if (!string.IsNullOrEmpty(information.error_message))

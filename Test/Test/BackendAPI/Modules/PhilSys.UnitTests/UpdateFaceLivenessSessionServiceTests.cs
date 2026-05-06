@@ -23,6 +23,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var service = _fixture.UpdateFaceLivenessSessionService;
 			var hash_token = "hash-token";
 			var face_liveness_session_id = "valid-session-id";
+			byte[] photo = {137, 80, 78, 71, 13, 10, 26, 10};
 			_fixture.MockPhilSysRepository.Setup(x => x.GetTransactionDataByHashTokenAsync(
 				It.IsAny<string>()
 			)).ReturnsAsync((PhilSysTransaction?)null);
@@ -30,7 +31,8 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			// Act
 			Func<Task> act = async () => await service.UpdateFaceLivenessSessionAsync(
 				hash_token,
-				face_liveness_session_id
+				face_liveness_session_id,
+				photo
 			);
 
 			// Assert
@@ -44,6 +46,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var service = _fixture.UpdateFaceLivenessSessionService;
 			var hash_token = "hash-token";
 			var face_liveness_session_id = "valid-session-id";
+			byte[] photo = {137, 80, 78, 71, 13, 10, 26, 10};
 			var philsysTransaction = new PhilSysTransaction
 			{
 				Tid = Guid.NewGuid(),
@@ -64,7 +67,8 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			// Act
 			Func<Task> act = async () => await service.UpdateFaceLivenessSessionAsync(
 				hash_token,
-				face_liveness_session_id
+				face_liveness_session_id,
+				photo
 			);
 
 			// Assert
@@ -78,15 +82,18 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var service = _fixture.UpdateFaceLivenessSessionService;
 			var hash_token = "hash-token";
 			var face_liveness_session_id = "valid-session-id";
+			byte[] photo = { 137, 80, 78, 71, 13, 10, 26, 10 };
 			_fixture.MockPhilSysRepository.Setup(x => x.UpdateFaceLivenessSessionAsync(
 				hash_token,
-				face_liveness_session_id
+				face_liveness_session_id,
+				photo
 			)).ReturnsAsync((PhilSysTransaction?)null); 
 
 			// Act
 			Func<Task> act = async () => await service.UpdateFaceLivenessSessionAsync(
 				hash_token,
-				face_liveness_session_id
+				face_liveness_session_id,
+				photo
 			);
 			// Assert
 			await act.Should().ThrowAsync<InternalServerException>().WithMessage("No transaction record found for your Token. Face Liveness Session update aborted.");
@@ -99,6 +106,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var service = _fixture.UpdateFaceLivenessSessionService;
 			var hash_token = "hash-token";
 			var face_liveness_session_id = "valid-session-id";
+			byte[] photo = { 137, 80, 78, 71, 13, 10, 26, 10 };
 			var philsysTransaction = new PhilSysTransaction
 			{
 				Tid = Guid.NewGuid(),
@@ -155,7 +163,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 				It.IsAny<PhilSysTransaction>()
 			)).ReturnsAsync(philsysTransaction);
 			_fixture.MockPhilSysRepository
-			.Setup(x => x.UpdateFaceLivenessSessionAsync(hash_token, face_liveness_session_id))
+			.Setup(x => x.UpdateFaceLivenessSessionAsync(hash_token, face_liveness_session_id, photo))
 			.ReturnsAsync(philsysTransaction);
 			_fixture.MockPhilSysService
 			.Setup(x => x.GetPhilsysTokenAsync(It.IsAny<string>(), It.IsAny<string>()))
@@ -179,7 +187,8 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			// Act
 			var result = await service.UpdateFaceLivenessSessionAsync(
 				hash_token,
-				face_liveness_session_id
+				face_liveness_session_id,
+				photo
 			);
 
 			// Assert
