@@ -48,12 +48,21 @@ else
                 </MudCardContent>
             </MudCard>
         </MudItem>
-         <MudItem xs="12" sm="4">
+        <MudItem xs="12" sm="4">
             <MudCard Class="hover-card rounded-xl cursor-pointer"
                      @onclick="@(() => JSRuntime.InvokeVoidAsync("open", "https://pitool.cibi.com.ph/uat/", "_blank"))">
                 <MudCardMedia Image="images/mfa/PI.png" Height="200" />
                 <MudCardContent>
                     <MudText Typo="Typo.h6" Align="Align.Center">PI (UAT)</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudCard Class="hover-card rounded-xl cursor-pointer"
+                     @onclick="@(() => JSRuntime.InvokeVoidAsync("open", " https://dr-pitool.cibi.com.ph/", "_blank"))">
+                <MudCardMedia Image="images/mfa/PI.png" Height="200" />
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">PI (DR)</MudText>
                 </MudCardContent>
             </MudCard>
         </MudItem>
@@ -75,23 +84,32 @@ else
                 </MudCardContent>
             </MudCard>
         </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudCard Class="hover-card rounded-xl cursor-pointer"
+                     @onclick="@(() => JSRuntime.InvokeVoidAsync("open", "https://dr-apps.cibi.com.ph/oms/", "_blank"))">
+                <MudCardMedia Image="images/mfa/OMS.png" Height="200" />
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">OMS (DR)</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
     </MudGrid>
 }
 
 @code {
-    private bool isLoading = true;
+    private bool isLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
-        var isAuthenticated = await SSOService.IsUserAuthenticatedAsync();
+        // var isAuthenticated = await SSOService.IsUserAuthenticatedAsync();
 
-        if (!isAuthenticated)
-        {
-            NavigationManager.NavigateTo("https://console.jumpcloud.com/login");
+        // if (!isAuthenticated)
+        // {
+        //     NavigationManager.NavigateTo("https:console.jumpcloud.com/login");
 
-            return;
-        }
+        //     return;
+        // }
 
-        isLoading = false;
+        // isLoading = false;
     }
 }
