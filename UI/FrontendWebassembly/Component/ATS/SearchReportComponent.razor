@@ -33,18 +33,18 @@
     </HeaderTemplate>
 
     <RowTemplate Context="r">
-        <MudTd>
+        <MudTd DataLabel="Selected">
             <div style="display:flex; justify-content:center; align-items:center;">
                 <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
             </div>
         </MudTd>
-        <MudTd DataLabel="Subject">@r.Subject</MudTd>
-        <MudTd DataLabel="Ticket">@r.Ticket</MudTd>
+        <MudTd DataLabel="Subject Name">@r.Subject</MudTd>
+        <MudTd DataLabel="Ticket Number">@r.Ticket</MudTd>
         <MudTd DataLabel="Status">@r.Status</MudTd>
         <MudTd DataLabel="Result">@r.Result</MudTd>
-        <MudTd DataLabel="Date">@r.DateCompleted</MudTd>
+        <MudTd DataLabel="Date Completed">@r.DateCompleted</MudTd>
         <MudTd DataLabel="Type">@r.ReportType</MudTd>
-        <MudTd>
+        <MudTd DataLabel="Report Directory">
             <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@OpenResultTriggerDialog" />
         </MudTd>
     </RowTemplate>
