@@ -403,6 +403,17 @@ public class AuthPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "CTVIApi",
+				MatchPath: "CTVIAPI",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "webservice/product:35/.xml" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "FrontEndEntryPoint",
 				MatchPath: "/{**catchall}",
 				ClusterId: GatewayConstants.OnePlatformUI
@@ -433,7 +444,17 @@ public class AuthPaths : IReverseProxyModule
 						Address: "http://frontendwebassembly:8080"
 					)
 				}
-			)
+			),
+			new ClusterDefinitionDTO(
+				ClusterId: GatewayConstants.CTVIIntertalAPI,
+				Destinations: new []
+				{
+					new DestinationDefinitionDTO(
+						Id: "d1",
+						Address: "http://192.168.5.10"
+					)
+				}
+			),
 		};
 	}
 }
