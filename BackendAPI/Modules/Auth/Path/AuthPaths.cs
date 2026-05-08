@@ -405,7 +405,7 @@ public class AuthPaths : IReverseProxyModule
 			new RouteDefinitionDTO(
 				RouteId: "CTVIApi",
 				MatchPath: "CTVIAPI",
-				ClusterId: GatewayConstants.OnePlatformApi,
+				ClusterId: GatewayConstants.CTVIIntertalAPI,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
