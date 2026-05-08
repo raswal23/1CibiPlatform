@@ -451,7 +451,7 @@ public class AuthPaths : IReverseProxyModule
 				{
 					new DestinationDefinitionDTO(
 						Id: "d1",
-						Address: "http://192.168.5.10"
+						Address: "http://192.168.5.10:443"
 					)
 				}
 			),
