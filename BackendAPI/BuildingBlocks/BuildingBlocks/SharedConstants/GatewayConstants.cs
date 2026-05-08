@@ -5,6 +5,7 @@ public static class GatewayConstants
 	// Cluster IDs
 	public const string OnePlatformApi = "onePlatformApi";
 	public const string OnePlatformUI = "BlazorUI";
+	public const string CTVIIntertalAPI = "CTVIIntertalAPI";
 
 	// Rate limit policy names
 	public static class RateLimitPolicies
