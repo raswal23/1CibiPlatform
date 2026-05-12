@@ -15,23 +15,23 @@ public class PhilSysPaths : IReverseProxyModule
 		{
 			new RouteDefinitionDTO(
 				RouteId: "PartnerSystemQueryEntryPoint",
-				MatchPath: "philsys/idv",
+				MatchPath: "/philsys/idv",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "partnersystemquery" }
+					{ "PathSet", "/partnersystemquery" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "UpdateFaceLivenessSessionEntryPoint",
-				MatchPath: "philsys/idv/updatefacelivenesssession",
+				MatchPath: "/philsys/idv/updatefacelivenesssession",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "updatefacelivenesssession" }
+					{ "PathSet", "/updatefacelivenesssession" }
 				}
 			),
 
@@ -42,7 +42,7 @@ public class PhilSysPaths : IReverseProxyModule
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "idv/validate/liveness" }
+					{ "PathSet", "/idv/validate/liveness" }
 				}
 			),
 
@@ -59,12 +59,12 @@ public class PhilSysPaths : IReverseProxyModule
 
 			new RouteDefinitionDTO(
 				RouteId: "GetLivenessSDKKeyEntryPoint",
-				MatchPath: "philsys/idv/getlivenesskey",
+				MatchPath: "/philsys/idv/getlivenesskey",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "philsys/getlivenesskey" }
+					{ "PathSet", "/philsys/getlivenesskey" }
 				}
 			)
 		};

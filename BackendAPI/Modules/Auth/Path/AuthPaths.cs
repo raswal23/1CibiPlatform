@@ -151,254 +151,254 @@ public class AuthPaths : IReverseProxyModule
 			// Auth management endpoints
 			new RouteDefinitionDTO(
 				RouteId: "GetUsersEntryPoint",
-				MatchPath: "auth/getusers",
+				MatchPath: "/auth/getusers",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getusers" }
+					{ "PathSet", "/auth/getusers" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetUnApprovedUsersEntryPoint",
-				MatchPath: "auth/getunapprovedusers",
+				MatchPath: "/auth/getunapprovedusers",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getunapprovedusers" }
+					{ "PathSet", "/auth/getunapprovedusers" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "EditUserEntryPoint",
-				MatchPath: "auth/edituser",
+				MatchPath: "/auth/edituser",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/edituser" }
+					{ "PathSet", "/auth/edituser" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "SendApprovalNotificationEntryPoint",
-				MatchPath: "account/approvalnotification",
+				MatchPath: "/account/approvalnotification",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "account/approvalnotification" }
+					{ "PathSet", "/account/approvalnotification" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetApplicationsEntryPoint",
-				MatchPath: "auth/getapplications",
+				MatchPath: "/auth/getapplications",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getapplications" }
+					{ "PathSet", "/auth/getapplications" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "AddApplicationEntryPoint",
-				MatchPath: "auth/addapplication",
+				MatchPath: "/auth/addapplication",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/addapplication" }
+					{ "PathSet", "/auth/addapplication" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "EditApplicationEntryPoint",
-				MatchPath: "auth/editapplication",
+				MatchPath: "/auth/editapplication",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/editapplication" }
+					{ "PathSet", "/auth/editapplication" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "DeleteApplicationEntryPoint",
-				MatchPath: "auth/deleteapplication/{AppId}",
+				MatchPath: "/auth/deleteapplication/{AppId}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Delete },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathRemovePrefix", "auth/" }
+					{ "PathRemovePrefix", "/auth/" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetSubMenusEntryPoint",
-				MatchPath: "auth/getsubmenus",
+				MatchPath: "/auth/getsubmenus",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getsubmenus" }
+					{ "PathSet", "/auth/getsubmenus" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "AddSubMenuEntryPoint",
-				MatchPath: "auth/addsubmenu",
+				MatchPath: "/auth/addsubmenu",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/addsubmenu" }
+					{ "PathSet", "/auth/addsubmenu" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "EditSubMenuEntryPoint",
-				MatchPath: "auth/editsubmenu",
+				MatchPath: "/auth/editsubmenu",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/editsubmenu" }
+					{ "PathSet", "/auth/editsubmenu" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "DeleteSubMenuEntryPoint",
-				MatchPath: "auth/deletesubmenu/{SubMenuId}",
+				MatchPath: "/auth/deletesubmenu/{SubMenuId}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Delete },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathRemovePrefix", "auth/" }
+					{ "PathRemovePrefix", "/auth/" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetUserAppSubRoleEntryPoint",
-				MatchPath: "auth/getappsubroles",
+				MatchPath: "/auth/getappsubroles",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getappsubroles" }
+					{ "PathSet", "/auth/getappsubroles" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "AddUserAppSubRoleEntryPoint",
-				MatchPath: "auth/addappsubrole",
+				MatchPath: "/auth/addappsubrole",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/addappsubrole" }
+					{ "PathSet", "/auth/addappsubrole" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "EditUserAppSubRoleEntryPoint",
-				MatchPath: "auth/editappsubrole",
+				MatchPath: "/auth/editappsubrole",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/editappsubrole" }
+					{ "PathSet", "/auth/editappsubrole" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "DeleteUserAppSubRoleEntryPoint",
-				MatchPath: "auth/deleteappsubrole/{AppSubRoleId}",
+				MatchPath: "/auth/deleteappsubrole/{AppSubRoleId}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Delete },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathRemovePrefix", "auth/" }
+					{ "PathRemovePrefix", "/auth/" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetRolesEntryPoint",
-				MatchPath: "auth/getroles",
+				MatchPath: "/auth/getroles",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getroles" }
+					{ "PathSet", "/auth/getroles" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "AddRoleEntryPoint",
-				MatchPath: "auth/addrole",
+				MatchPath: "/auth/addrole",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/addrole" }
+					{ "PathSet", "/auth/addrole" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "EditRoleEntryPoint",
-				MatchPath: "auth/editrole",
+				MatchPath: "/auth/editrole",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Patch },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/editrole" }
+					{ "PathSet", "/auth/editrole" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "DeleteRoleEntryPoint",
-				MatchPath: "auth/deleterole/{RoleId}",
+				MatchPath: "/auth/deleterole/{RoleId}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Delete },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathRemovePrefix", "auth/" }
+					{ "PathRemovePrefix", "/auth/" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "SendNotificationEntryPoint",
-				MatchPath: "account/notification",
+				MatchPath: "/account/notification",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "account/notification" }
+					{ "PathSet", "/account/notification" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetLockedUserEntryPoint",
-				MatchPath: "auth/getlockedusers",
+				MatchPath: "/auth/getlockedusers",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "auth/getlockedusers" }
+					{ "PathSet", "/auth/getlockedusers" }
 				}
 			),
 
 			new RouteDefinitionDTO(
 				RouteId: "DeleteLockedUserEntryPoint",
-				MatchPath: "auth/deletelockeduser/{lockUserId}",
+				MatchPath: "/auth/deletelockeduser/{lockUserId}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Delete },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathRemovePrefix", "auth/" }
+					{ "PathRemovePrefix", "/auth/" }
 				}
 			),
 
@@ -409,7 +409,7 @@ public class AuthPaths : IReverseProxyModule
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "webservice/product:35/.xml" }
+					{ "PathSet", "/webservice/product:33/.xml" }
 				}
 			),
 
@@ -451,7 +451,7 @@ public class AuthPaths : IReverseProxyModule
 				{
 					new DestinationDefinitionDTO(
 						Id: "d1",
-						Address: "https://192.168.5.10:443"
+						Address: "https://dev.gds.ctvi.com.ph"
 					)
 				}
 			),
