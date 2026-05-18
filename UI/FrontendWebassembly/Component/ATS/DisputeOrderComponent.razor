@@ -1,0 +1,89 @@
+﻿<TableComponent TItem="OrderRow"
+                @ref="ordersTable"
+                Title="Completed Orders (Last 30 Days)"
+                EnableSearch="true"
+                ColumnCount="6"
+                RowsPerPage="10"
+                LoadServerData="LoadOrderData">
+
+    <HeaderTemplate>
+        <MudTh>Ticket Number</MudTh>
+        <MudTh>Subject Name</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Result</MudTh>
+        <MudTh>Date Completed</MudTh>
+        <MudTh>Dispute</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="o">
+        <MudTd DataLabel="Ticket Number">@o.TicketNumber</MudTd>
+        <MudTd DataLabel="Subject Name">@o.SubjectName</MudTd>
+        <MudTd DataLabel="Status">@o.Status</MudTd>
+        <MudTd DataLabel="Result">@o.Result</MudTd>
+        <MudTd DataLabel="Date Completed">@o.DateCompleted</MudTd>
+        <MudTd>
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <MudCheckBox T="bool" @bind-Checked="o.Dispute" Color="Color.Primary" />
+            </div>
+        </MudTd>
+    </RowTemplate>
+</TableComponent>
+
+<MudGrid Class="mt-0" Justify="Justify.Center">
+    <MudItem xs="12" md="5" Class="d-flex justify-center">
+        <MudText Align="Align.Center" Typo="Typo.caption" Color="Color.Primary">
+            <b>IMPORTANT NOTICE!</b><br />
+            To preserve data and result integrity, dispute process can only be submitted for orders compieted within the last 30 days.
+            <MudSpacer/>
+            Please submit an order if more than 30 days or if reverification is required for the selected individual.
+        </MudText>
+    </MudItem>
+
+</MudGrid>
+
+@code {
+    private TableComponent<OrderRow>? ordersTable;
+
+    private readonly List<OrderRow> _dummyOrders = new()
+    {
+        new OrderRow("2025 - 00123456", "Antonio Aguinaldo", "Completed", "Clear", "October 25, 2025", false),
+        new OrderRow("2025 - 00129876", "Teodoro Mabini", "Completed", "Clear", "October 21, 2025", false),
+        new OrderRow("2025 - 00124356", "Maria Quezon", "Completed", "Not Clear", "October 20, 2025", false),
+        new OrderRow("2025 - 00198765", "Leonardo Roxas", "Completed", "Not Clear", "October 18, 2025", false),
+        new OrderRow("2025 - 00198765", "Joseph Escoda", "Completed", "Not Clear", "October 18, 2025", false),
+        new OrderRow("2025 - 00198765", "Francis Macapagal", "Completed", "Clear", "October 10, 2025", false),
+        new OrderRow("2025 - 00198765", "Kris Aquino","Completed", "Not Clear", "October 9, 2025", false)
+    };
+
+    private class OrderRow
+    {
+        public string TicketNumber { get; set; }
+        public string SubjectName { get; set; }
+        public string Status { get; set; }
+        public string Result { get; set; }
+        public string DateCompleted { get; set; }
+        public bool Dispute { get; set; }
+
+        public OrderRow(string ticketNumber, string subjectName, string status, string result, string dateCompleted, bool dispute)
+        {
+            TicketNumber = ticketNumber;
+            SubjectName = subjectName;
+            Status = status;
+            Result = result;
+            DateCompleted = dateCompleted;
+            Dispute = dispute;
+        }
+    }
+
+    private Task<TableData<OrderRow>> LoadOrderData(TableState state, CancellationToken cancellationToken)
+    {
+        // For now returns static results filtered by name query (simple contains)
+        var filtered = _dummyOrders.ToList();
+
+        return Task.FromResult(new TableData<OrderRow>
+        {
+            Items = filtered,
+            TotalItems = filtered.Count
+        });
+    }
+}

@@ -18,7 +18,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
 		<PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.76.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-		<PackageReference Include="MudBlazor" Version="8.13.0" />
+		<PackageReference Include="MudBlazor" Version="9.2.0" />
 		<PackageReference Include="System.IO.Packaging" Version="10.0.0" />
 	</ItemGroup>
 

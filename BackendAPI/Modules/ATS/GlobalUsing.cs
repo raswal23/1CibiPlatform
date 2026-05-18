@@ -1,0 +1,14 @@
+﻿global using ATS.Data.Entities;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using ATS.Data.Context;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.Extensions.DependencyInjection;
+global using System.Threading.Tasks;
+global using BuildingBlocks.Behaviors;
+global using BuildingBlocks.Exceptions.Handler;
+//global using Carter;
+global using FluentValidation;
+global using Microsoft.Extensions.Configuration;
+global using System.Reflection;
+global using System;

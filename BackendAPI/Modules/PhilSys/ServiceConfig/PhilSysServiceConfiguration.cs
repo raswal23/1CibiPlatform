@@ -1,6 +1,4 @@
-﻿using BuildingBlocks.SharedServices.Implementations;
-
-namespace PhilSys.ServiceConfig;
+﻿namespace PhilSys.ServiceConfig;
 public static class PhilSysServiceConfiguration
 {
 	private const string assemblyName = "APIs";

@@ -9,6 +9,7 @@ using System.Threading.RateLimiting;
 using Yarp.ReverseProxy.Configuration;
 using BuildingBlocks.SharedConstants;
 using AIAgent;
+using BackendAPI.Modules.ATS;
 
 namespace ApiGateways.YarpApiGateway.Extensions;
 
@@ -129,7 +130,8 @@ public static class GatewayServiceExtensions
 			typeof(CNXMarker).Assembly,
 			typeof(PhilSysMarker).Assembly,
 			typeof(SSOMarker).Assembly,
-			typeof(AIAgentMarker).Assembly
+			typeof(AIAgentMarker).Assembly,
+			typeof(ATSMarker).Assembly,
 		};
 
 		builder.Services.Scan(scan =>

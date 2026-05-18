@@ -5,23 +5,27 @@
 @inherits SecurePageBase
 @inject IConfiguration Configuration
 @attribute [RequirePermission(3, 3)]
-
-<MudTabs Rounded="false"
-                 Scrollable="true"
-                 Centered="true"
-                 Elevation="0"
-                 AlwaysShowScrollButtons="true"
-                 @bind-ActivePanelIndex="_activeIndex"
-                 OnActivePanelIndexChanged="OnTabChanged"
-                 Class="philsys-custom-tabs mb-5">
-                <MudTabPanel Text="Locked User" Class="@GetTabClass(0)" Style="text-transform:none; min-width:120px;" />
-                <MudTabPanel Text="Approval" Class="@GetTabClass(1)" Style="text-transform:none; min-width:120px;" />
-                <MudTabPanel Text="User" Class="@GetTabClass(2)" Style="text-transform:none; min-width:120px;" />
-                <MudTabPanel Text="Appplication" Class="@GetTabClass(3)"  Style="text-transform:none; min-width: 120px;" />
-                <MudTabPanel Text="SubMenu" Class="@GetTabClass(4)" Style="text-transform:none; min-width: 120px;" />
-                <MudTabPanel Text="Role" Class="@GetTabClass(5)" Style="text-transform:none; min-width: 120px;" />
-                <MudTabPanel Text="User's AppSubRole" Class="@GetTabClass(6)" Style="text-transform:none; min-width: 120px;" />
-</MudTabs>
+<MudGrid AlignItems="Center">
+    <MudItem xs="12" Class="d-flex justify-center">
+        <MudTabs Rounded="false"
+                         ScrollButtons="Auto"
+                         Elevation="0"
+                         AlwaysShowScrollButtons="true"
+                         TabPanelsClass="pt-2 pb-2"
+                         @bind-ActivePanelIndex="_activeIndex"
+                         OnActivePanelIndexChanged="OnTabChanged"
+                         Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;"
+                         Class="custom-tabs">
+                    <MudTabPanel Text="Locked User" Class="@GetTabClass(0)" Style="text-transform:none; min-width:120px; border: 1px solid gray;"/>
+                    <MudTabPanel Text="Approval" Class="@GetTabClass(1)" Style="text-transform:none; min-width:120px; border: 1px solid gray;" />
+                    <MudTabPanel Text="User" Class="@GetTabClass(2)" Style="text-transform:none; min-width:120px; border: 1px solid gray;"  />
+                    <MudTabPanel Text="Appplication" Class="@GetTabClass(3)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
+                    <MudTabPanel Text="SubMenu" Class="@GetTabClass(4)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
+                    <MudTabPanel Text="Role" Class="@GetTabClass(5)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
+                    <MudTabPanel Text="User's AppSubRole" Class="@GetTabClass(6)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;"/>
+        </MudTabs>
+    </MudItem>
+</MudGrid>
 @if (_activeIndex == 0)
 {
     <TableComponent TItem="LockedUsersDTO"
@@ -266,12 +270,6 @@ else if (_activeIndex == 6)
     private TableComponent<SubMenusDTO> subMenusTable;
     private TableComponent<RolesDTO> rolesTable;
     private TableComponent<AppSubRolesDTO> appSubRolesTable;
-    private int _accountLockDuration;
-
-    protected override void OnInitialized()
-    {
-        _accountLockDuration = Configuration.GetValue<int>("AuthWeb:AccountLockDurationInMinutes");
-    }
 
     private void OnTabChanged(int index)
     {
@@ -281,8 +279,8 @@ else if (_activeIndex == 6)
     private string GetTabClass(int index)
     {
         return _activeIndex == index
-            ? "philsys-tab-pannel philsys-tab-pannel-active"
-            : "philsys-tab-pannel philsys-tab-pannel-inactive";
+            ? "philsys-tab-pannel-active"
+            : "philsys-tab-pannel-inactive";
     }
 
     // Generic Functions
@@ -501,8 +499,14 @@ else if (_activeIndex == 6)
                 var appSubRoleDto = result.AppSubRole;
                 var notificationDto = result.Notification;
 
-                await AddAppSubRole(appSubRoleDto);
+                var success = await AddAppSubRole(appSubRoleDto);
+                if (!success)
+                {
+                    return; 
+                }
+
                 await UserManagementService.SendNotificationAsync(notificationDto);
+               
             });
     }
 
@@ -636,11 +640,15 @@ else if (_activeIndex == 6)
         return;
     }
 
-    private async Task AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
+    private async Task<bool> AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
     {
-        await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+        var isSuccess = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+        if (!isSuccess)
+        {
+            return false;
+        }
         await appSubRolesTable.TableRef.ReloadServerData();
-        return;
+        return true;
     }
 
     private async Task EditUser(UnApprovedUsersDTO editUserDTO)

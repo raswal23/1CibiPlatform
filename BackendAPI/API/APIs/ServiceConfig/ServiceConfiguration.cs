@@ -10,6 +10,7 @@ public static class ServiceConfiguration
 	private static readonly Assembly _philsysAssembly = typeof(PhilSysMarker).Assembly;
 	private static readonly Assembly _ssoAssembly = typeof(SSOMarker).Assembly;
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
+	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
 
 
 	#region Logging Config
@@ -196,6 +197,7 @@ public static class ServiceConfiguration
 		services.AddAuthInfrastructure(configuration);
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
+		services.AddATSInfrastructure(configuration);
 		return services;
 	}
 	#endregion
@@ -208,7 +210,8 @@ public static class ServiceConfiguration
 			 _cnxAssembly,
 			 _philsysAssembly,
 			 _ssoAssembly,
-			 _aiAgentAssembly
+			 _aiAgentAssembly,
+			 _atsAssembly
 		 ]));
 
 
@@ -227,6 +230,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysMediaTR(_philsysAssembly);
 		services.AddSSOMediaTR(_ssoAssembly);
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
+		services.AddATSMediaTR(_atsAssembly);
 		return services;
 	}
 
@@ -241,6 +245,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysServices();
 		services.AddSSOServices();
 		services.AddAIAgentServices();
+		services.AddATSServices();
 		return services;
 	}
 	#endregion

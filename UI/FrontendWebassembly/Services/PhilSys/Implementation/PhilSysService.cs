@@ -21,7 +21,6 @@ public class PhilSysService : IPhilSysService
 
 		if (!response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not Update Successfully");
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
 			return new UpdateFaceLivenessSessionResponseDTO
@@ -34,9 +33,6 @@ public class PhilSysService : IPhilSysService
 			};
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<UpdateFaceLivenessSessionResponseDTO>();
-
-		Console.WriteLine("✅ Updated Successfully");
-
 		return successContent!;
 	}
 
@@ -47,7 +43,6 @@ public class PhilSysService : IPhilSysService
 
 		if (!response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not Get the Status");
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 		
 			return new TransactionStatusResponseDTO 
@@ -64,8 +59,6 @@ public class PhilSysService : IPhilSysService
 			successContent!.isExpired = true;
 		}
 		
-		Console.WriteLine("✅ Retrieve the Status Successfully");
-		 
 		return successContent!;
 
 	}
@@ -75,10 +68,8 @@ public class PhilSysService : IPhilSysService
 		var response = await _httpClient.GetFromJsonAsync<string>("philsys/idv/getlivenesskey");
 		if (string.IsNullOrEmpty(response!))
 		{
-			Console.WriteLine("❌ Did not Get Liveness Key");
 			return string.Empty;
 		}
-		Console.WriteLine("✅ Retrieve Liveness Key Successfully");
 		return response;
 	}
 
@@ -87,12 +78,10 @@ public class PhilSysService : IPhilSysService
 		var response = await _httpClient.DeleteAsync($"philsys/deletetransaction/{HashToken}");
 		if (!response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not Delete Successfully");
 			return false!;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		Console.WriteLine("✅ Delete Successfully");
 		return successContent!;
 	}
 
@@ -108,7 +97,6 @@ public class PhilSysService : IPhilSysService
 			var responseInfo = await _httpClient.PostAsJsonAsync("philsys/idv", requestInfo);
 			if (!responseInfo.IsSuccessStatusCode)
 			{
-				Console.WriteLine("❌ Did not Verified Successfully");
 				return "";
 			}
 
@@ -120,7 +108,6 @@ public class PhilSysService : IPhilSysService
 		var responsePCn = await _httpClient.PostAsJsonAsync("philsys/idv", requestPcn);
 		if (!responsePCn.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not Verified Successfully");
 			return "";
 		}
 
