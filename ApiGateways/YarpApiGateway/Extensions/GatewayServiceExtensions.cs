@@ -200,7 +200,17 @@ public static class GatewayServiceExtensions
 		builder.Services.AddSingleton(catalog as ApiGateways.YarpApiGateway.Services.RouteCatalog);
 
 		builder.Services.AddReverseProxy()
-		.LoadFromMemory(yarpRoutes, yarpClusters);
+		.LoadFromMemory(yarpRoutes, yarpClusters)
+		.ConfigureHttpClient((context, handler) =>
+		{
+			if (handler is SocketsHttpHandler socketsHandler && context.ClusterId == GatewayConstants.CTVIIntertalAPI)
+			{
+				socketsHandler.SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+				{
+					RemoteCertificateValidationCallback = (_, _, _, _) => true
+				};
+			}
+		});
 	}
 	#endregion
 }

@@ -1,4 +1,6 @@
-﻿namespace APIs.ServiceConfig;
+﻿using BuildingBlocks.Storage;
+
+namespace APIs.ServiceConfig;
 
 public static class ServiceConfiguration
 {
@@ -251,17 +253,39 @@ public static class ServiceConfiguration
 	#region Hybrid Cache Config
 
 	public static IServiceCollection AddHybridCaches(
-		this IServiceCollection services)
+		this IServiceCollection services,
+		IConfiguration configuration)
 	{
+		var redisConnection = configuration.GetConnectionString("TairRedis");
+
+		services.AddStackExchangeRedisCache(options =>
+		{
+			options.Configuration = redisConnection;
+			options.InstanceName = "oneplatform:";
+		});
+
 		services.AddHybridCache(options =>
 		{
 			options.DefaultEntryOptions = new HybridCacheEntryOptions
 			{
 				Expiration = TimeSpan.FromMinutes(5),
 				LocalCacheExpiration = TimeSpan.FromMinutes(5),
-				Flags = HybridCacheEntryFlags.DisableDistributedCache
+				//Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
+
+		return services;
+	}
+	#endregion
+
+	#region Alibaba Oss Config
+
+	public static IServiceCollection AddAlibabaOssConfiguration(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+
+		services.AddAlibabaStorage(configuration);
 
 		return services;
 	}

@@ -31,5 +31,4 @@ global using AIAgent.ServiceConfig;
 global using AIAgent.Data.Extensions;
 global using ATS.Data.Extensions;
 global using ATS.ServiceConfig;
-
-
+global using Aliyun.OSS;
