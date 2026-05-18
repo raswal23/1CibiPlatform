@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using BuildingBlocks.Storage;
 
 namespace APIs.ServiceConfig;
 
@@ -268,6 +268,19 @@ public static class ServiceConfiguration
 				//Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
+
+		return services;
+	}
+	#endregion
+
+	#region Alibaba Oss Config
+
+	public static IServiceCollection AddAlibabaOssConfiguration(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+
+		services.AddAlibabaStorage(configuration);
 
 		return services;
 	}

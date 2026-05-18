@@ -28,4 +28,4 @@ global using AIAgent;
 global using Serilog.Events;
 global using AIAgent.ServiceConfig;
 global using AIAgent.Data.Extensions;
-
+global using Aliyun.OSS;
