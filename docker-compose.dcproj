@@ -10,6 +10,7 @@
     <DockerServiceName>apis</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".github\copilot-instructions.md" />
     <None Include=".github\workflows\build-test-push-pr.yml" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
@@ -18,6 +19,7 @@
     <None Include=".dockerignore" />
     <None Include="docker\postgres\Dockerfile" />
     <None Include="docker\postgres\init-db.d\01_create_extension.sql" />
+    <None Include="docs\upgrade-net9-to-net10.md" />
     <None Include="monitoring\loki-config.yml" />
     <None Include="monitoring\promtail-config.yml" />
     <None Include="temp_replace_methods.ps1" />
