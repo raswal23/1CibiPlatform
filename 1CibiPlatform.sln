@@ -45,6 +45,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIAgent", "BackendAPI\Modules\AIAgent\AIAgent.csproj", "{6D8B4542-AF60-4B9A-AD16-334AC776CC5D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATS", "BackendAPI\Modules\ATS\ATS.csproj", "{8F399C80-674A-4559-B12B-807A1FD96D02}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBBlue", "BackendAPI\Modules\CBBlue\CBBlue.csproj", "{39925736-8AFF-4EAB-8E50-FF1BFBD06CB2}"
 EndProject
 Global
