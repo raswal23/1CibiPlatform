@@ -2,6 +2,8 @@ services:
   apigateway:
     container_name: apigateway
     image: apigateway
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: ApiGateways/YarpApiGateway/Dockerfile
@@ -9,6 +11,8 @@ services:
   apis:
     container_name: oneplatform-backend
     image: ${DOCKER_REGISTRY-}apis
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: BackendAPI/API/APIs/Dockerfile

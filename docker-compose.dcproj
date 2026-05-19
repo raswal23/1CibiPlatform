@@ -10,6 +10,7 @@
     <DockerServiceName>apis</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".env" />
     <None Include=".github\copilot-instructions.md" />
     <None Include=".github\workflows\build-test-push-pr.yml" />
     <None Include="docker-compose.override.yml">
