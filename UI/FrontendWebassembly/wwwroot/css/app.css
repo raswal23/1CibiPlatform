@@ -414,3 +414,7 @@ code {
     background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
+
+.small-checkbox-label .mud-typography {
+    font-size: 11px;
+}

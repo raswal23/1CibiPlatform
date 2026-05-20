@@ -4,17 +4,15 @@
         <!-- STEP 1 -->
         <MudStep Title="Part 1 - Step 1">
             <MudGrid>
-                <!-- Left column: heading and PSA image -->
                 <MudItem xs="12" sm="7" Class="d-flex justify-center align-center">
                     <div class="d-flex flex-column align-center text-center" style="height:100%; justify-content:center; padding:24px;">
                         <MudText Typo="Typo.h5" Color="Color.Primary">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
                         <div class="mt-4 d-flex" style="align-items:center; gap:16px;  justify-center ">
-                            <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:280px; height:auto;" />
+                            <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:500px; height:auto;" />
                         </div>
                     </div>
                 </MudItem>
 
-                <!-- Right column: important notice card -->
                 <MudItem xs="12" sm="5">
                     <div style="height:100%; display:flex; align-items:center; padding:18px;">
                         <MudPaper Class="pa-4" Style="background:linear-gradient(180deg,#f2fbff,#e6f7fb); width:100%; border-radius:8px;">
@@ -29,7 +27,8 @@
                                              Label="Yes, I agree and wish to proceed." />
                                 <MudButton Class="theme-button theme-button-active mb-4
                                            Disabled="!consent"
-                                            OnClick="ProceedClicked">
+                                           Style="width: 150px; border-radius: 4px;"
+                                           OnClick="ProceedClicked">
                                     Proceed
                                 </MudButton>
 
@@ -50,40 +49,89 @@
 
         <!-- STEP 2 -->
         <MudStep Title="Part 1 - Step 2">
+            <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Primary" Class="mb-4 mt-4">Personal Information</MudText>
             <MudGrid>
                 <!-- Left column: Personal information fields -->
-                <MudItem xs="12" sm="7">
-                    <MudPaper Class="pa-4" Style="background:transparent;">
-                        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Personal Information</MudText>
+                <MudItem xs="12" sm="6">
+                    <MudPaper Class="pa-4" Elevation="0">
                         <MudGrid>
                             <MudItem xs="12">
-                                <MudTextField @bind-Value="PositionAppliedFor" Placeholder="Position Applied For" FullWidth="true" />
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" 
+                                              @bind-Value="PositionAppliedFor" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Position Applied For"/>
                             </MudItem>
 
-                            <MudItem xs="12" sm="4">
-                                <MudTextField @bind-Value="FirstName" Placeholder="First Name*" FullWidth="true" />
+                            <MudItem xs="12">
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" 
+                                              @bind-Value="FirstName" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="First Name"/>
                             </MudItem>
-                            <MudItem xs="12" sm="4">
-                                <MudTextField @bind-Value="MiddleName" Placeholder="Middle Name" FullWidth="true" />
+                            <MudItem xs="12" sm="6">
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense" 
+                                              @bind-Value="MiddleName"
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Middle Name"/>
                             </MudItem>
-                            <MudItem xs="12" sm="4" Class="d-flex align-center">
+                            <MudItem xs="12" sm="6"  Class="d-flex align-center">
                                 <div style="display:flex; align-items:center; gap:8px; width:100%;">
-                                    <MudCheckBox T="bool" @bind-Checked="NoMiddleName" Label="Check if no Middle Name" />
+                                    <MudCheckBox T="bool" 
+                                                 @bind-Checked="NoMiddleName" 
+                                                 LabelPlacement="Placement.Start" 
+                                                 Label="Check if no Middle Name"
+                                                 Class="small-checkbox-label"/>
                                 </div>
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
-                                <MudTextField @bind-Value="LastName" Placeholder="Last Name*" FullWidth="true" />
+                            <MudItem xs="12">
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"  
+                                              @bind-Value="LastName" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Last Name"/>
                             </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudTextField @bind-Value="Suffix" Placeholder="Suffix" FullWidth="true" />
+                            <MudItem xs="12" sm="4">
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"  
+                                              @bind-Value="Suffix" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Suffix"/>
                             </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudDatePicker @bind-Date="DateOfBirth" Placeholder="Date of Birth" DateFormat="MM/dd/yyyy" Class="w-100" />
+                            <MudItem xs="12" sm="4">
+                                <MudDatePicker @bind-Date="DateOfBirth"
+                                               Label="Birth Date"
+                                               Adornment="Adornment.End"
+                                               Required="true"
+                                               RequiredError="Birth Date is required"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               DateFormat="MM/dd/yyyy"
+                                               Class="oneplatform-rounded-input" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="3">
-                                <MudSelect T="string" @bind-Value="Sex" Placeholder="Sex*" FullWidth="true">
+                            <MudItem xs="12" sm="4">
+                                <MudSelect T="string" 
+                                           @bind-Value="Sex" 
+                                           Class="oneplatform-rounded-input" 
+                                           Adornment="Adornment.Start"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" 
+                                           Label="Sex" 
+                                           FullWidth="true">
                                     <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                     <MudSelectItem Value="@("Female")">Female</MudSelectItem>
                                     <MudSelectItem Value="@("Prefer not to say")">Prefer not to say</MudSelectItem>
@@ -91,221 +139,478 @@
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudTextField @bind-Value="AlternateEmail" Placeholder="Alternate Email Address*" FullWidth="true" />
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"  
+                                              @bind-Value="AlternateEmail" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Alternate Email Address"/>
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudTextField @bind-Value="PhoneNumber" Placeholder="Phone Number*" FullWidth="true" />
+                                <MudTextField FullWidth="true"
+                                              Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"  
+                                              @bind-Value="PhoneNumber" 
+                                              Class="oneplatform-rounded-input" 
+                                              Label="Phone Number"/>
                             </MudItem>
                         </MudGrid>
                     </MudPaper>
                 </MudItem>
 
-                <!-- Right column: biometric image and uploads -->
-                <MudItem xs="12" sm="5">
-                    <div style="display:flex; align-items:center; height:100%;">
-                        <MudPaper Class="pa-4" Style="width:100%; border-radius:8px; background:linear-gradient(180deg,#ffffff,#f6fbff);">
+                <MudItem xs="12" sm="6">
+                        <MudPaper Class="pa-4" Elevation="0">
                             <div class="d-flex flex-column align-center" style="gap:12px;">
-                                <MudAvatar Size="Size.Large" Icon="Icons.Material.Filled.Person" Class="mb-2" />
-                                <MudText Typo="Typo.caption">Biometric Image</MudText>
-
-                                <InputFile OnChange="OnBiometricUpload" />
+                                <MudImage Src="images/generic/default_picture.jpg"
+                                          Alt="User Profile"
+                                          Style="height: 200px; width: 200px; object-fit: cover; border-radius: 50%; outline: 2px solid #000;" />
+                                <MudText Typo="Typo.subtitle1">Biometric Image</MudText>
 
                                 <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
-                                    <InputFile OnChange="OnGovtIdUpload" />
-                                    <MudText Typo="Typo.caption">Upload Unexpired Govt Issued ID</MudText>
+                                    <MudFileUpload @ref="@GovernmentUploadIdFile"
+                                                   @bind-Files="GovernmentIdFile"
+                                                   Accept=".xls,.xlsx,.csv"
+                                                   DragAndDrop="true">
+                                        <CustomContent>
+                                            <div style="display: flex; justify-content: center;">
+                                                <MudFab Class="oneplatform-rounded-input"
+                                                        StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                                        OnClick="@context.OpenFilePickerAsync"
+                                                        Label="Upload Unexpired Government ID" />
+                                            </div>
+                                        </CustomContent>
+                                        <SelectedTemplate />
+                                    </MudFileUpload>
 
-                                    <InputFile OnChange="OnNbiUpload" />
-                                    <MudText Typo="Typo.caption">Upload NBI Clearance</MudText>
+                                    <MudFileUpload @ref="@NBIClearanceUploadFile"
+                                                   @bind-Files="NBIClearanceFile"
+                                                   Accept=".xls,.xlsx,.csv"
+                                                   DragAndDrop="true"
+                                                   Class="mt-4">
+                                        <CustomContent>
+                                            <div style="display: flex; justify-content: center;">
+                                                <MudFab Class="oneplatform-rounded-input"
+                                                        StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                                        OnClick="@context.OpenFilePickerAsync"
+                                                        Label="UUpload NBI Clearance"/>
+                                            </div>
+                                        </CustomContent>
+                                        <SelectedTemplate />
+                                    </MudFileUpload>
 
-                                    <InputFile OnChange="OnCvUpload" />
-                                    <MudText Typo="Typo.caption">Upload CV / Resume</MudText>
+                                    <MudFileUpload @ref="@CVOrResumeUploadFile"
+                                                   @bind-Files="CVOrResumeFile"
+                                                   Accept=".xls,.xlsx,.csv"
+                                                   DragAndDrop="true"
+                                                   Class="mt-4">
+                                        <CustomContent>
+                                            <div style="display: flex; justify-content: center;">
+                                                <MudFab Class="oneplatform-rounded-input"
+                                                        StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                                        OnClick="@context.OpenFilePickerAsync"
+                                                        Label="Upload CV / Resume" />
+                                            </div>
+                                        </CustomContent>
+                                        <SelectedTemplate />
+                                    </MudFileUpload>
                                 </div>
 
                                 <div class="d-flex justify-end mt-6">
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAndNextAsync">Save & Next</MudButton>
+                                    <MudButton Class="theme-button theme-button-active"
+                                               Style="width: 150px; border-radius: 4px;" 
+                                               OnClick="SaveAndNextAsync">
+                                        Save & Next
+                                    </MudButton>
                                 </div>
                             </div>
                         </MudPaper>
-                    </div>
                 </MudItem>
             </MudGrid>
         </MudStep>
 
         <!-- STEP 3 -->
         <MudStep Title="Part 1 - Step 3">
+            <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Primary" Class="mb-4 mt-4">Address</MudText>
             <MudGrid>
                 <!-- Address section -->
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Current Address</MudText>
-                </MudItem>
-
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="CurrentAddressLine" Placeholder="Current Address (No., Street, Village, Brgy.)*" FullWidth="true" />
+                <MudItem xs="12" sm="4">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CurrentAddressLine" 
+                                  Label="Current Address (No., Street, Village, Brgy.)" />
                 </MudItem>
                 <MudItem xs="12" sm="2">
-                    <MudTextField @bind-Value="CurrentCity" Placeholder="City*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CurrentCity"
+                                  Label="City" />
                 </MudItem>
                 <MudItem xs="12" sm="2">
-                    <MudTextField @bind-Value="CurrentState" Placeholder="State / Province / Region*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CurrentState" 
+                                  Label="State / Province / Region" />
                 </MudItem>
-                <MudItem xs="6" sm="1">
-                    <MudTextField @bind-Value="CurrentCountry" Placeholder="Country*" FullWidth="true" />
+                <MudItem xs="12" sm="2">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="CurrentCountry" 
+                                  Label="Country" />
                 </MudItem>
-                <MudItem xs="6" sm="1">
-                    <MudTextField @bind-Value="CurrentZip" Placeholder="Zip / Postal Code*" FullWidth="true" />
+                <MudItem xs="12" sm="2">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="CurrentZip" 
+                                  Label="Zip / Postal Code" />
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex align-center">
-                    <MudCheckBox T="bool" @bind-Checked="SameAsPermanent" Label="Check if current address is the same as permanent address"/>
+                    <MudCheckBox T="bool" Class="small-checkbox-label mb-1" @bind-Checked="SameAsPermanent" Label="Check if current address is the same as permanent address" />
                 </MudItem>
 
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Permanent Address</MudText>
-                </MudItem>
-
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="PermanentAddressLine" Placeholder="Permanent Address (No., Street, Village, Brgy.)*" FullWidth="true" />
+                <MudItem xs="12" sm="4">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"  
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="PermanentAddressLine"
+                                  Label="Permanent Address (No., Street, Village, Brgy.)" />
                 </MudItem>
                 <MudItem xs="12" sm="2">
-                    <MudTextField @bind-Value="PermanentCity" Placeholder="City*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"  
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="PermanentCity" 
+                                  Label="City" />
                 </MudItem>
                 <MudItem xs="12" sm="2">
-                    <MudTextField @bind-Value="PermanentState" Placeholder="State / Province / Region*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="PermanentState" 
+                                  Label="State / Province / Region" />
                 </MudItem>
-                <MudItem xs="6" sm="1">
-                    <MudTextField @bind-Value="PermanentCountry" Placeholder="Country*" FullWidth="true" />
+                <MudItem xs="12" sm="2">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="PermanentCountry" 
+                                  Label="Country" />
                 </MudItem>
-                <MudItem xs="6" sm="1">
-                    <MudTextField @bind-Value="PermanentZip" Placeholder="Zip / Postal Code*" FullWidth="true" />
+                <MudItem xs="12" sm="2">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="PermanentZip" 
+                                  Label="Zip / Postal Code" />
                 </MudItem>
 
                 <!-- Ownership -->
-                <MudItem xs="12" Class="mt-3">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-2">Type of Ownership*</MudText>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of Ownership</MudText>
                     <div class="d-flex" style="gap:12px; flex-wrap:wrap;">
-                        <MudCheckBox T="bool" @bind-Checked="OwnershipOwned" Label="Owned" />
-                        <MudCheckBox T="bool" bind-Checked="OwnershipRent" Label="Rent" />
-                        <MudCheckBox T="bool" @bind-Checked="OwnershipLivingWithFamily" Label="Living with family / relatives" />
-                        <MudCheckBox T="bool" @bind-Checked="OwnershipOthers" Label="Others" />
-                        @if (OwnershipOthers)
-                        {
-                            <MudTextField @bind-Value="OwnershipOtherText" Placeholder="Please specify" />
-                        }
+                        <MudCheckBox T="bool" Class="small-checkbox-label" @bind-Checked="OwnershipOwned" Label="Owned"/>
+                        <MudCheckBox T="bool" Class="small-checkbox-label" @bind-Checked="OwnershipRent" Label="Rent"/>
+                        <MudCheckBox T="bool" Class="small-checkbox-label" @bind-Checked="OwnershipLivingWithFamily" Label="Living with family / relatives"/>
+                        <MudCheckBox T="bool" Class="small-checkbox-label" @bind-Checked="OwnershipOthers" Label="Others"/>
+                        <MudTextField Adornment="Adornment.Start"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Style="width:200px;"
+                                      Class="oneplatform-rounded-input ml-2" 
+                                      @bind-Value="OwnershipOtherText" 
+                                      Label="Please specify" />
                     </div>
                 </MudItem>
 
                 <!-- Educational Background -->
-                <MudItem xs="12" Class="mt-6">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Educational Background</MudText>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Educational Background</MudText>
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="HighestEducationalAttainment" Placeholder="Highest Educational Attainment*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"  
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="HighestEducationalAttainment" 
+                                  Label="Highest Educational Attainment"/>
                 </MudItem>
                 <MudItem xs="12" sm="3">
-                    <MudDatePicker @bind-Date="GraduationDate" Placeholder="Graduation Date" DateFormat="MM/dd/yyyy" Class="w-100" />
+                    <MudDatePicker Label="Graduation Date"
+                                   Adornment="Adornment.End"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input"
+                                   @bind-Date="GraduationDate"  
+                                   DateFormat="MM/dd/yyyy"/>
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="DegreeWithMajor" Placeholder="Degree with major*" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="AcademicInstitution" Placeholder="Academic Institution*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"  
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="DegreeWithMajor" 
+                                  Label="Degree with major" />
                 </MudItem>
 
-                <MudItem xs="12" Class="mt-3">
-                    <MudText Typo="Typo.caption">Upload Diploma / TOR</MudText>
-                    <InputFile OnChange="OnDiplomaUpload" />
+                <MudItem xs="12" sm="6">
+                    <MudFileUpload @ref="@DiplomaORTORUploadFile"
+                                   @bind-Files="DiplomaORTORFile"
+                                   Accept=".xls,.xlsx,.csv"
+                                   DragAndDrop="true">
+                        <CustomContent>
+                            <MudFab Class="oneplatform-rounded-input"
+                                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                                    Style="border: 1px solid gray; border-radius: 4px; width: 270px;"
+                                    OnClick="@context.OpenFilePickerAsync"
+                                    Label="Upload Diploma / TOR" />
+                        </CustomContent>
+                        <SelectedTemplate />
+                    </MudFileUpload>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="AcademicInstitution" 
+                                  Label="Academic Institution" />
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-end mt-6">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAndNextAsync">Save & Next</MudButton>
+                    <MudButton Class="theme-button theme-button-active"
+                               Style="width: 150px; border-radius: 4px;" 
+                               OnClick="SaveAndNextAsync">Save & Next</MudButton>
                 </MudItem>
             </MudGrid>
         </MudStep>
 
         <!-- STEP 4 -->
         <MudStep Title="Part 1 - Step 4">
+            <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Credentials &amp; Licenses</MudText>
             <MudGrid>
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Credentials &amp; Licenses</MudText>
+                <MudItem xs="12" sm="8">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="ProfessionalLicense" 
+                                  Label="Professional License"/>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudDatePicker Adornment="Adornment.End"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input"
+                                   @bind-Date="LicenseExpiryDate" 
+                                   Label="License Expiry Date" 
+                                   DateFormat="MM/dd/yyyy"/>
                 </MudItem>
 
                 <MudItem xs="12" sm="8">
-                    <MudTextField @bind-Value="ProfessionalLicense" Placeholder="Professional License*" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" sm="4">
-                    <MudDatePicker @bind-Date="LicenseExpiryDate" Placeholder="License Expiry Date" DateFormat="MM/dd/yyyy" Class="w-100" />
-                </MudItem>
-
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="LicenseNumber" Placeholder="License No.*" FullWidth="true" />
-                </MudItem>
-
-                <MudItem xs="12" Class="mb-4">
-                    <MudText Typo="Typo.caption">Upload Professional License</MudText>
-                    <InputFile OnChange="OnProfessionalLicenseUpload" />
-                </MudItem>
-
-                <MudItem xs="12" Class="mt-4">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Professional Experiences</MudText>
-                </MudItem>
-
-                <MudItem xs="12">
-                    <MudTextField @bind-Value="CompanyName" Placeholder="Company Name*" FullWidth="true" />
-                </MudItem>
-
-                <MudItem xs="12" Class="d-flex" Style="gap:12px;">
-                    <MudCheckBox T="bool" @bind-Checked="CurrentlyEmployed" Label="Currently Employed?" />
-                    <MudCheckBox T="bool" @bind-Checked="WithPermissionToContact" Label="With permission to contact?" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" 
+                                  Class="oneplatform-rounded-input"
+                                  @bind-Value="LicenseNumber" 
+                                  Label="License No."/>
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudTextField @bind-Value="CompanyCity" Placeholder="Company City / Address" FullWidth="true" />
+                    <MudFileUpload @ref="@ProfessionalLicenseUploadFile"
+                                   @bind-Files="ProfessionalLicenseFile"
+                                   Accept=".xls,.xlsx,.csv"
+                                   DragAndDrop="true">
+                        <CustomContent>
+                            <MudFab Class="oneplatform-rounded-input"
+                                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                                    Style="border: 1px solid gray; border-radius: 4px; width: 368px;"
+                                    OnClick="@context.OpenFilePickerAsync"
+                                    Label="Upload Professional License" />
+                        </CustomContent>
+                        <SelectedTemplate />
+                    </MudFileUpload>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Professional Experiences</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CompanyName" 
+                                  Label="Company Name" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
+                    <MudCheckBox T="bool" @bind-Checked="CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                    <MudCheckBox T="bool" @bind-Checked="WithPermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CompanyCity" 
+                                  Label="Company City / Address"/>
                 </MudItem>
                 <MudItem xs="12" sm="3">
-                    <MudTextField @bind-Value="CompanyState" Placeholder="State / Province / Region" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CompanyState" 
+                                  Label="State / Province / Region"/>
                 </MudItem>
                 <MudItem xs="6" sm="2">
-                    <MudTextField @bind-Value="CompanyCountry" Placeholder="Country" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CompanyCountry" 
+                                  Label="Country"/>
                 </MudItem>
                 <MudItem xs="6" sm="1">
-                    <MudTextField @bind-Value="CompanyZip" Placeholder="Zip / Postal Code" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="CompanyZip" 
+                                  Label="Zip / Postal Code"/>
                 </MudItem>
                 <MudItem xs="12" sm="2">
-                    <MudDatePicker @bind-Date="DatePermittedToContact" Placeholder="Date permitted to contact" DateFormat="MM/dd/yyyy" Class="w-100" />
+                    <MudDatePicker @bind-Date="DatePermittedToContact" 
+                                   Label="Date permitted to contact" 
+                                   DateFormat="MM/dd/yyyy"
+                                   Adornment="Adornment.End"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input" />
                 </MudItem>
 
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="JobTitle" Placeholder="Job Title*" FullWidth="true" />
+                <MudItem xs="12" sm="3">
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="JobTitle" 
+                                  Label="Job Title"/>
                 </MudItem>
                 <MudItem xs="12" sm="3">
-                    <MudDatePicker @bind-Date="StartOfEmployment" Placeholder="Start Date of Employment" DateFormat="MM/dd/yyyy" Class="w-100" />
+                    <MudDatePicker DateFormat="MM/dd/yyyy"
+                                   Adornment="Adornment.End"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input"
+                                   Label="Start Date of Employment"/>
                 </MudItem>
                 <MudItem xs="12" sm="3">
-                    <MudDatePicker @bind-Date="EndOfEmployment" Placeholder="End Date of Employment" DateFormat="MM/dd/yyyy" Class="w-100" />
+                    <MudDatePicker @bind-Date="EndOfEmployment" 
+                                   Adornment="Adornment.End"
+                                   Required="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input"
+                                   Label="End Date of Employment" 
+                                   DateFormat="MM/dd/yyyy"/>
+                </MudItem>
+
+                <MudItem xs="12" sm="3" Class="mt-2">
+                    <MudFileUpload @ref="@COEIdUploadFile"
+                                   @bind-Files="COEIdFile"
+                                   Accept=".xls,.xlsx,.csv"
+                                   DragAndDrop="true">
+                        <CustomContent>
+                            <MudFab Class="oneplatform-rounded-input"
+                                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                                    Style="border: 1px solid gray; border-radius: 4px; width: 270px;"
+                                    OnClick="@context.OpenFilePickerAsync"
+                                    Label="Upload COE/ID" />
+                        </CustomContent>
+                        <SelectedTemplate />
+                    </MudFileUpload>
                 </MudItem>
 
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="SupervisorName" Placeholder="Supervisor Name*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input"  
+                                  @bind-Value="SupervisorName" 
+                                  Label="Supervisor Name"/>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="ContactInformation" Placeholder="Contact Information*" FullWidth="true" />
+                    <MudTextField FullWidth="true"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Class="oneplatform-rounded-input" 
+                                  @bind-Value="ContactInformation" 
+                                  Label="Contact Information"/>
                 </MudItem>
 
-                <MudItem xs="12" Class="mt-2">
-                    <MudText Typo="Typo.caption">Upload COE/ID</MudText>
-                    <InputFile OnChange="OnCoeUpload" />
-                </MudItem>
-
-                <MudItem xs="12" Class="d-flex align-center" Style="gap:12px; margin-top:12px;">
+                <MudItem xs="12" Class="d-flex align-center justify-center">
                     <MudText Typo="Typo.body2">Add another employer?</MudText>
                     <MudCheckBox T="bool" @bind-Checked="AddAnotherEmployer" />
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-end mt-6">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAndNextAsync">Save & Next</MudButton>
+                    <MudButton Class="theme-button theme-button-active mb-4"
+                               Style="width: 150px; border-radius: 4px;" 
+                               OnClick="SaveAndNextAsync">Save & Next</MudButton>
                 </MudItem>
             </MudGrid>
         </MudStep>
@@ -314,18 +619,24 @@
         <MudStep Title="Part 1 - Step 5">
             <MudGrid>
                 <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Professional Character Reference</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center" Class="mb-4">Professional Character Reference</MudText>
                 </MudItem>
 
                 <!-- Reference 1 -->
-                <MudItem xs="12" Class="mb-2">
+                <MudItem xs="12">
                     <MudGrid>
                         <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference1FullName" Placeholder="Full Name of Reference #1*" FullWidth="true" />
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input" 
+                                          @bind-Value="Reference1FullName" 
+                                          Label="Full Name of Reference #1"/>
                         </MudItem>
                         <MudItem xs="12" sm="6">
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudText Typo="Typo.body2">Professional Relationship*</MudText>
+                                <MudText Typo="Typo.body2">Professional Relationship</MudText>
                                 <MudCheckBox T="bool" @bind-Checked="Ref1Colleague" Label="Colleague" />
                                 <MudCheckBox T="bool" @bind-Checked="Ref1Superior" Label="Superior" />
                                 <MudCheckBox T="bool" @bind-Checked="Ref1Peer" Label="Peer" />
@@ -333,15 +644,33 @@
                             </div>
                         </MudItem>
 
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference1Company" Placeholder="Affiliated Company*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input"  
+                                          @bind-Value="Reference1Company" 
+                                          Label="Affiliated Company"/>
                         </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference1Email" Placeholder="Email Contact Information*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input"  
+                                          @bind-Value="Reference1Email" 
+                                          Label="Email Contact Information"/>
                         </MudItem>
 
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference1Mobile" Placeholder="Mobile Contact Information*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input" 
+                                          @bind-Value="Reference1Mobile" 
+                                          Label="Mobile Contact Information" />
                         </MudItem>
 
                         <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
@@ -349,6 +678,9 @@
                             <MudCheckBox T="bool" @bind-Checked="Ref1AvailableEmail" Label="Email" />
                             <MudCheckBox T="bool" @bind-Checked="Ref1AvailablePhone" Label="Phone" />
                             <MudCheckBox T="bool" @bind-Checked="Ref1AvailableBoth" Label="Both" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
                             <MudText Typo="Typo.body2">Best time to contact:</MudText>
                             <MudDatePicker @bind-Date="Ref1BestDate" DateFormat="MM/dd/yyyy" Class="w-25" />
                             <MudTimePicker @bind-Time="Ref1BestTime" Class="w-25" />
@@ -356,17 +688,21 @@
                     </MudGrid>
                 </MudItem>
 
-                <MudDivider Class="my-4" />
-
                 <!-- Reference 2 -->
-                <MudItem xs="12" Class="mb-2">
+                <MudItem xs="12">
                     <MudGrid>
                         <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference2FullName" Placeholder="Full Name of Reference #2*" FullWidth="true" />
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input" 
+                                          @bind-Value="Reference2FullName" 
+                                          Label="Full Name of Reference #2"/>
                         </MudItem>
                         <MudItem xs="12" sm="6">
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudText Typo="Typo.body2">Professional Relationship*</MudText>
+                                <MudText Typo="Typo.body2">Professional Relationship</MudText>
                                 <MudCheckBox T="bool" @bind-Checked="Ref2Colleague" Label="Colleague" />
                                 <MudCheckBox T="bool" @bind-Checked="Ref2Superior" Label="Superior" />
                                 <MudCheckBox T="bool" @bind-Checked="Ref2Peer" Label="Peer" />
@@ -374,15 +710,33 @@
                             </div>
                         </MudItem>
 
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference2Company" Placeholder="Affiliated Company*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input"  
+                                          @bind-Value="Reference2Company" 
+                                          Label="Affiliated Company"/>
                         </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference2Email" Placeholder="Email Contact Information*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input" 
+                                          @bind-Value="Reference2Email" 
+                                          Label="Email Contact Information"/>
                         </MudItem>
 
-                        <MudItem xs="12" sm="6">
-                            <MudTextField @bind-Value="Reference2Mobile" Placeholder="Mobile Contact Information*" FullWidth="true" />
+                        <MudItem xs="12" sm="4">
+                            <MudTextField FullWidth="true"
+                                          Adornment="Adornment.Start"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Class="oneplatform-rounded-input"  
+                                          @bind-Value="Reference2Mobile" 
+                                          Label="Mobile Contact Information"/>
                         </MudItem>
 
                         <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
@@ -390,6 +744,9 @@
                             <MudCheckBox T="bool" @bind-Checked="Ref2AvailableEmail" Label="Email" />
                             <MudCheckBox T="bool" @bind-Checked="Ref2AvailablePhone" Label="Phone" />
                             <MudCheckBox T="bool" @bind-Checked="Ref2AvailableBoth" Label="Both" />
+                        </MudItem>
+
+                        <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
                             <MudText Typo="Typo.body2">Best time to contact:</MudText>
                             <MudDatePicker @bind-Date="Ref2BestDate" DateFormat="MM/dd/yyyy" Class="w-25" />
                             <MudTimePicker @bind-Time="Ref2BestTime" Class="w-25" />
@@ -397,36 +754,37 @@
                     </MudGrid>
                 </MudItem>
 
-                <MudItem xs="12" Class="d-flex align-center" Style="gap:12px; margin-top:12px;">
+                <MudItem xs="12" Class="d-flex align-center justify-center">
                     <MudText Typo="Typo.body2">Add another reference?</MudText>
                     <MudCheckBox T="bool" @bind-Checked="AddAnotherReference" />
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-end mt-6">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAndNextAsync">Save & Next</MudButton>
+                    <MudButton Class="theme-button theme-button-active"
+                               Style="width: 150px; border-radius: 4px;" 
+                               OnClick="SaveAndNextAsync">Save & Next</MudButton>
                 </MudItem>
             </MudGrid>
         </MudStep>
 
         <MudStep Title="Part 2 - Application Examination">
-            <MudGrid Class="pa-6">
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-6">Application Examination</MudText>
-                </MudItem>
+            <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Application Examination</MudText>
 
+            <MudGrid Class="pa-6">
                 <MudItem xs="12" sm="4">
-                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center; border-radius:8px;">
-                        <MudImage Src="/images/ats/exam-icon-0.png" Alt="exam icon 0" Style="width:120px; height:120px; object-fit:contain;" />
+                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
+                        <MudImage Src="/images/ats/exam-icon-1.png" Alt="exam icon 0" Style="width:120px; height:120px; object-fit:contain;" />
                         <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                        <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary" Disabled="@ExamStarted[0]" OnClick="() => OnTakeTest(0)">Take Test</MudButton>
+                        <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[0]" OnClick="() => OnTakeTest(0)">Take Test</MudButton>
 
                         <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="Icons.Material.Filled.Schedule" />
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
                                 <MudText Typo="Typo.caption">20:00 minutes</MudText>
                             </div>
+
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="@(ExamStatuses[0] == "Not Started" ? Icons.Material.Filled.RadioButtonUnchecked : Icons.Material.Filled.PlayCircle)" />
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
                                 <MudText Typo="Typo.caption">@ExamStatuses[0]</MudText>
                             </div>
                         </div>
@@ -434,18 +792,19 @@
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center; border-radius:8px;">
-                        <MudImage Src="/images/ats/exam-icon-1.png" Alt="exam icon 1" Style="width:120px; height:120px; object-fit:contain;" />
+                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
+                        <MudImage Src="/images/ats/exam-icon-2.png" Alt="exam icon 1" Style="width:120px; height:120px; object-fit:contain;" />
                         <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                        <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary" Disabled="@ExamStarted[1]" OnClick="() => OnTakeTest(1)">Take Test</MudButton>
+                        <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[1]" OnClick="() => OnTakeTest(1)">Take Test</MudButton>
 
                         <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="Icons.Material.Filled.Schedule" />
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
                                 <MudText Typo="Typo.caption">20:00 minutes</MudText>
                             </div>
+
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="@(ExamStatuses[1] == "Not Started" ? Icons.Material.Filled.RadioButtonUnchecked : Icons.Material.Filled.PlayCircle)" />
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
                                 <MudText Typo="Typo.caption">@ExamStatuses[1]</MudText>
                             </div>
                         </div>
@@ -453,19 +812,20 @@
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center; border-radius:8px;">
-                        <MudImage Src="/images/ats/exam-icon-2.png" Alt="exam icon 2" Style="width:120px; height:120px; object-fit:contain;" />
+                    <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
+                        <MudImage Src="/images/ats/exam-icon-3.png" Alt="exam icon 2" Style="width:120px; height:120px; object-fit:contain;" />
                         <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                        <MudButton Class="mt-3" Variant="Variant.Filled" Color="Color.Primary" Disabled="@ExamStarted[2]" OnClick="() => OnTakeTest(2)">Take Test</MudButton>
+                        <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[2]" OnClick="() => OnTakeTest(2)">Take Test</MudButton>
 
                         <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="Icons.Material.Filled.Schedule" />
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
                                 <MudText Typo="Typo.caption">20:00 minutes</MudText>
                             </div>
+
                             <div class="d-flex" style="gap:8px; align-items:center;">
-                                <MudIcon Icon="@(ExamStatuses[2] == "Not Started" ? Icons.Material.Filled.RadioButtonUnchecked : Icons.Material.Filled.PlayCircle)" />
-                                <MudText Typo="Typo.caption">@ExamStatuses[2]</MudText>
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                                <MudText Typo="Typo.caption">@ExamStatuses[0]</MudText>
                             </div>
                         </div>
                     </MudPaper>
@@ -474,20 +834,20 @@
         </MudStep>
 
         <MudStep Title="Part 3 - Initial Interview">
-            <MudGrid>
+            <MudGrid Style="background:#fff;">
                 <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Initial Interview</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Initial Interview</MudText>
                 </MudItem>
 
                 <MudItem xs="12" sm="8">
-                    <MudPaper Class="pa-4" Style="height:420px; display:flex; align-items:center; justify-content:center; border:6px solid #0b66a3; background:#fff;">
-                        <MudImage Src="/images/ats/interview-photo.png" Alt="Interview photo" Style="max-width:100%; max-height:100%; object-fit:cover;" />
+                    <MudPaper Class="pa-4" Style="height:420px; display:flex; align-items:center; justify-content:center; border:6px solid #0b66a3;" >
+                        <MudImage Src="/images/ats/interview-icon.png" Alt="Interview photo" Style="max-width:100%; max-height:100%; object-fit:cover;" />
                     </MudPaper>
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
                     <div style="display:flex; flex-direction:column; gap:12px; padding:12px;">
-                        <MudText Typo="Typo.body1">Test your microphone and audio<br/>Try moving the bars below</MudText>
+                        <MudText Align="Align.Center" Typo="Typo.body1">Test your microphone and audio<br/>Try moving the bars below</MudText>
 
                         <div class="d-flex" style="align-items:center; gap:12px;">
                             <MudIcon Icon="Icons.Material.Filled.Mic" />
@@ -507,60 +867,127 @@
                             <MudText Typo="Typo.caption">@VolumeLevel% </MudText>
                         </div>
 
-                        <div style="margin-top:18px;">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartInterview">Start Interview</MudButton>
+                        <div style="margin-top:18px;
+                            display:flex;
+                            justify-content:center;
+                            align-items:center;
+                            gap:12px;">
+
+                            <MudButton Class="theme-button theme-button-active mb-4"
+                                       Style="width:150px; border-radius:4px;"
+                                       OnClick="StartInterview">
+                                Start Interview
+                            </MudButton>
+
                         </div>
                     </div>
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-end mt-4">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAndNextAsync">Save & Next</MudButton>
+                    <MudButton Class="theme-button theme-button-active mb-4"
+                               Style="width: 150px; border-radius: 4px;" 
+                               OnClick="SaveAndNextAsync">Save & Next</MudButton>
                 </MudItem>
             </MudGrid>
         </MudStep>
 
         <MudStep Title="Final">
-            <MudGrid>
+            <MudGrid >
                 <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-4">Consent to Collect and Disclose</MudText>
-                </MudItem>
+                    <MudPaper Elevation="0" Style="width:100%;">
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center" Class="mb-4">Consent to Collect and Disclose</MudText>
+                        </MudItem>
 
-                <MudItem xs="12">
-                    <MudPaper Class="pa-4" Style="height:320px; overflow:auto; background:#f9fbfd;">
-                        <MudText Typo="Typo.body2">
-                            I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
-                        </MudText>
-                        <MudText Typo="Typo.body2" Class="mt-2">
-                            I authorize CIBI to obtain and verify information relating to my employment history, education records, licences, civil and criminal records, and to contact listed references or previous employers for purposes related to the background screening and verification process. I understand that such information will be used only for evaluation of my application and will be treated in accordance with applicable privacy laws.
-                        </MudText>
-                        <MudText Typo="Typo.body2" Class="mt-2">
-                            I understand that the information obtained will be kept confidential and will only be disclosed to authorized personnel involved in the recruitment and screening process. I release CIBI and its agents from any liability arising from the lawful collection and use of such information.
-                        </MudText>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.body2">
+                                I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                - Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedinas, collection actions
+                                negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit
+                                record.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                - Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and | hereby authorize any public or private
+                                educational institution to provide and release to CIBI information related to my educational/training record.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                - Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide
+                                and release to CIBI information related to my employment record.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                - References from any professional and personal associates I have provided or will provide, including information on my attendance, technical skills, interpersonal relations and any other
+                                pertinent information and i hereby authorize any professional associations to provide and release to CIBI information related to my employment record.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-2 mb-8">
+                                - Obtain information about myself and actions l am or have been involved in from judicial court, tribunal, regulatory body disciplinary committee of any other legal or quasi-legal authority i
+                                the Philippines and I hereby authorize these judicial or quasi-judicial bodies to provide and release to CIBI information related to my records.
+                            </MudText>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Primary">
+                                Release and Discharge
+                            </MudText>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                Purpose of Consent: Background Screening /Credit (Due Diligence) Check
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-4">
+                                I understand that the information obtained because of this authorization and consent will be held in the strictest of confidentiality by CIBi and/or the Company and will be maintained in
+                                accordance with their respective Privacy Policies. The information obtained will only be used in accordance with and to satisfy the scope for which this authorization/consent has been
+                                signed. I release, waive and forever discharge anyone who provides information in relation to this release, from any and all liability for the disclosure of information to CIBI or the Company. I
+                                certify that the information set out by me in this authorization/consent is correct.
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="mt-4">
+                                You may reach out to the DPO at dpo@cibi.com.ph tor any privacy concerns.
+                            </MudText>
+                        </MudItem>
                     </MudPaper>
                 </MudItem>
 
-                <MudItem xs="12" Class="mt-4">
-                    <MudText Typo="Typo.subtitle2">Release and Discharge</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2">I consent to the release of the information described above and hereby discharge any person or entity from liability for providing such information to CIBI or the Company.</MudText>
-                </MudItem>
+                <MudGrid Spacing="2">
+                    <!-- Left side: Signature -->
+                    <MudItem xs="12" sm="6">
+                        <MudTextField Adornment="Adornment.Start"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input"  
+                                      @bind-Value="SignatureText"
+                                      Label="Signature"
+                                      Lines="4"
+                                      Style="height: 100%; margin-left:24px;" />
+                    </MudItem>
 
-                <MudItem xs="12" Class="mt-4">
-                    <MudGrid>
-                        <MudItem xs="12" sm="4">
-                            <MudTextField @bind-Value="SignatureText" Placeholder="Signature" FullWidth="true" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudTextField @bind-Value="SignerName" Placeholder="Name" FullWidth="true" />
-                        </MudItem>
-                        <MudItem xs="12" sm="4">
-                            <MudDatePicker @bind-Date="SignatureDate" Placeholder="Date" DateFormat="MM/dd/yyyy" Class="w-100" />
-                        </MudItem>
-                    </MudGrid>
-                </MudItem>
+                    <!-- Right side -->
+                    <MudItem xs="12" sm="6">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12">
+                                <MudTextField Adornment="Adornment.Start"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="oneplatform-rounded-input"  
+                                              @bind-Value="SignerName"
+                                              Label="Name"/>
+                            </MudItem>
 
-                <MudItem xs="12" Class="d-flex justify-end mt-6">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(string.IsNullOrWhiteSpace(SignatureText) || string.IsNullOrWhiteSpace(SignerName))" OnClick="SubmitForm">Submit</MudButton>
-                </MudItem>
+                            <MudItem xs="12">
+                                <MudDatePicker @bind-Date="SignatureDate"
+                                               Adornment="Adornment.End"
+                                               Required="true"
+                                               RequiredError="Birth Date is required"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               DateFormat="MM/dd/yyyy"
+                                               Class="oneplatform-rounded-input"
+                                               Label="Date"/>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+                </MudGrid>
             </MudGrid>
         </MudStep>
     </MudStepper>
@@ -574,6 +1001,12 @@
     // Step 1
     private bool consent = false;
     private bool declineConsent = false;
+    private IReadOnlyList<IBrowserFile> GovernmentIdFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> GovernmentUploadIdFile = default!;
+    private IReadOnlyList<IBrowserFile> NBIClearanceFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> NBIClearanceUploadFile = default!;
+    private IReadOnlyList<IBrowserFile> CVOrResumeFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> CVOrResumeUploadFile = default!;
 
     // Step 2 - personal information fields
     private string? PositionAppliedFor;
@@ -582,7 +1015,7 @@
     private bool NoMiddleName;
     private string? LastName;
     private string? Suffix;
-    private DateTime? DateOfBirth;
+    private DateTime? DateOfBirth = DateTime.Today;
     private string? Sex;
     private string? AlternateEmail;
     private string? PhoneNumber;
@@ -611,9 +1044,11 @@
 
     // Educational background
     private string? HighestEducationalAttainment;
-    private DateTime? GraduationDate;
+    private DateTime? GraduationDate = DateTime.Today;
     private string? DegreeWithMajor;
     private string? AcademicInstitution;
+    private IReadOnlyList<IBrowserFile> DiplomaORTORFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> DiplomaORTORUploadFile = default!;
 
     // Uploaded files
     private IBrowserFile? BiometricFile;
@@ -624,10 +1059,13 @@
 
     // Step 4 - credentials & experience
     private string? ProfessionalLicense;
-    private DateTime? LicenseExpiryDate;
+    private DateTime? LicenseExpiryDate = DateTime.Today;
     private string? LicenseNumber;
-    private IBrowserFile? ProfessionalLicenseFile;
-
+    private IReadOnlyList<IBrowserFile> ProfessionalLicenseFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> ProfessionalLicenseUploadFile = default!;
+    private IReadOnlyList<IBrowserFile> COEIdFile = [];
+    private MudFileUpload<IReadOnlyList<IBrowserFile>> COEIdUploadFile = default!;
+    
     private string? CompanyName;
     private bool CurrentlyEmployed;
     private bool WithPermissionToContact;
@@ -635,7 +1073,7 @@
     private string? CompanyState;
     private string? CompanyCountry;
     private string? CompanyZip;
-    private DateTime? DatePermittedToContact;
+    private DateTime? DatePermittedToContact = DateTime.Today;
     private string? JobTitle;
     private DateTime? StartOfEmployment;
     private DateTime? EndOfEmployment;
@@ -753,8 +1191,8 @@
 
     private Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
     {
-        ProfessionalLicenseFile = e.File;
-        statusMessage = ProfessionalLicenseFile?.Name;
+        // ProfessionalLicenseFile = e.File;
+        // statusMessage = ProfessionalLicenseFile?.Name;
         return Task.CompletedTask;
     }
 
