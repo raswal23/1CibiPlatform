@@ -418,3 +418,15 @@ code {
 .small-checkbox-label .mud-typography {
     font-size: 11px;
 }
+
+.gradient-text {
+    background: linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.custom-stepper .mud-step-label-icon.mud-default, .custom-stepper .mud-step-completed .mud-step-label-icon, .custom-stepper .mud-step.active .mud-step-label-icon {
+    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
+    color: white !important;
+}

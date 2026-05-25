@@ -78,16 +78,14 @@
     </MudItem>
 
     <MudItem xs="12" md="6">
-        <MudPaper Elevation="1" Class="pa-4" Style="height:100%; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4" Style="height:635px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Payment Options</MudText>
 
-            <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="Center">
+            <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="Center" Class="height: auto;">
                 <!-- Payment via Credit Cards -->
                 <MudItem xs="12" class="d-flex align-center justify-center">
                     <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
-                    <MudText class="ml-2">via major credit cards</MudText>
-                </MudItem>
-                <MudItem xs="12" class="d-flex justify-center">
+                    <MudText class="ml-2 mb-4">via major credit cards</MudText>
                     <MudImage Src="/images/ats/CreditCard.jpg"
                               Alt="Credit Cards"
                               Style="width:60%; height:auto; padding: 0px;" />
