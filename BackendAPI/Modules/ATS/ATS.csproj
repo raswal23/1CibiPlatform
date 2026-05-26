@@ -34,7 +34,6 @@
     <Folder Include="Data\Cache\" />
     <Folder Include="Data\Repository\" />
     <Folder Include="DTO\" />
-    <Folder Include="Features\" />
     <Folder Include="Path\" />
     <Folder Include="Services\" />
   </ItemGroup>

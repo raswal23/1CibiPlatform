@@ -27,7 +27,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 	protected override void ConfigureWebHost(IWebHostBuilder builder)
 	{
-		builder.UseEnvironment("Testing");
+      builder.UseEnvironment("Testing");
+
+		// Load environment variables from a .env file if present (allows CI/local test overrides)
+		LoadDotEnv();
 
 		// Set environment variables for test configuration
 		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
@@ -61,6 +64,34 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			services.RemoveAll<IEmailService>();
 			services.AddSingleton<IEmailService, FakeEmailSender>();
 		});
+	}
+
+	private static void LoadDotEnv()
+	{
+		var startDir = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
+		var dir = new DirectoryInfo(startDir);
+		while (dir != null)
+		{
+			var envPath = Path.Combine(dir.FullName, ".env");
+			if (File.Exists(envPath))
+			{
+				foreach (var rawLine in File.ReadAllLines(envPath))
+				{
+					var line = rawLine?.Trim();
+					if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
+						continue;
+					var idx = line.IndexOf('=');
+					if (idx <= 0)
+						continue;
+					var key = line.Substring(0, idx).Trim();
+					var val = line.Substring(idx + 1).Trim().Trim('"');
+					if (!string.IsNullOrEmpty(key))
+						Environment.SetEnvironmentVariable(key, val);
+				}
+				break;
+			}
+			dir = dir.Parent;
+		}
 	}
 
 	public async Task InitializeAsync()

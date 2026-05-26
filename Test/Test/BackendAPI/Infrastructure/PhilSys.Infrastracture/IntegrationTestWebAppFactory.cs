@@ -10,25 +10,27 @@ using System.Net;
 using System.Text;
 using Testcontainers.PostgreSql;
 
-namespace Test.BackendAPI.Infrastructure.PhilSys.Infrastracture
-{
-	public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
-	{
-		private readonly PostgreSqlContainer _dbContainer;
+namespace Test.BackendAPI.Infrastructure.PhilSys.Infrastracture;
 
-		public IntegrationTestWebAppFactory()
-		{
-			_dbContainer = new PostgreSqlBuilder()
-				.WithDatabase("test_db")
-				.WithUsername("postgres")
-				.WithPassword("p@ssw0rd!")
-				.WithImage("postgres:16")
-				.Build();
-		}
+public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
+{
+	private readonly PostgreSqlContainer _dbContainer;
+
+	public IntegrationTestWebAppFactory()
+	{
+		_dbContainer = new PostgreSqlBuilder()
+			.WithDatabase("test_db")
+			.WithUsername("postgres")
+			.WithPassword("p@ssw0rd!")
+			.WithImage("postgres:16")
+			.Build();
+	}
 
 	protected override void ConfigureWebHost(IWebHostBuilder builder)
 	{
 		builder.UseEnvironment("Testing");
+
+		LoadDotEnv();
 
 		// Set environment variables for test configuration
 		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
@@ -72,34 +74,62 @@ namespace Test.BackendAPI.Infrastructure.PhilSys.Infrastracture
 				.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<PhilSysTestHandler>());
 		});
 	}
-		public WebApplicationFactory<Program> CreateCustomFactory(Action<IServiceCollection> configureTestServices)
+
+	private static void LoadDotEnv()
+	{
+		var startDir = AppContext.BaseDirectory ?? Directory.GetCurrentDirectory();
+		var dir = new DirectoryInfo(startDir);
+		while (dir != null)
 		{
-			return this.WithWebHostBuilder(builder =>
+			var envPath = Path.Combine(dir.FullName, ".env");
+			if (File.Exists(envPath))
 			{
-				builder.ConfigureTestServices(services =>
+				foreach (var rawLine in File.ReadAllLines(envPath))
 				{
-					configureTestServices?.Invoke(services);
-				});
-			});
+					var line = rawLine?.Trim();
+					if (string.IsNullOrEmpty(line) || line.StartsWith("#"))
+						continue;
+					var idx = line.IndexOf('=');
+					if (idx <= 0)
+						continue;
+					var key = line.Substring(0, idx).Trim();
+					var val = line.Substring(idx + 1).Trim().Trim('"');
+					if (!string.IsNullOrEmpty(key))
+						Environment.SetEnvironmentVariable(key, val);
+				}
+				break;
+			}
+			dir = dir.Parent;
 		}
-		public WebApplicationFactory<Program> CreateFactoryWithHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
-			=> CreateCustomFactory(services =>
+	}
+
+	public WebApplicationFactory<Program> CreateCustomFactory(Action<IServiceCollection> configureTestServices)
+	{
+		return this.WithWebHostBuilder(builder =>
+		{
+			builder.ConfigureTestServices(services =>
 			{
-				services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
+				configureTestServices?.Invoke(services);
 			});
-
-		public async Task InitializeAsync()
+		});
+	}
+	public WebApplicationFactory<Program> CreateFactoryWithHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
+		=> CreateCustomFactory(services =>
 		{
-			await _dbContainer.StartAsync();
+			services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
+		});
 
-			using var scope = Services.CreateScope();
-			var db = scope.ServiceProvider.GetRequiredService<PhilSysDBContext>();
-			await db.Database.MigrateAsync();
-		}
+	public async Task InitializeAsync()
+	{
+		await _dbContainer.StartAsync();
 
-		public async Task DisposeAsync()
-		{
-			await _dbContainer.StopAsync();
-		}
+		using var scope = Services.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<PhilSysDBContext>();
+		await db.Database.MigrateAsync();
+	}
+
+	public async Task DisposeAsync()
+	{
+		await _dbContainer.StopAsync();
 	}
 }
