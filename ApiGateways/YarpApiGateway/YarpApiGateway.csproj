@@ -29,7 +29,7 @@
 		<ProjectReference Include="..\..\BackendAPI\Modules\CNX\CNX.csproj" />
 		<ProjectReference Include="..\..\BackendAPI\Modules\PhilSys\PhilSys.csproj" />
 		<ProjectReference Include="..\..\BackendAPI\Modules\SSO\SSO.csproj" />
-		<!--<ProjectReference Include="..\..\BackendAPI\Modules\ATS\ATS.csproj" />-->
+		<ProjectReference Include="..\..\BackendAPI\Modules\ATS\ATS.csproj" />
 	</ItemGroup>
 
 </Project>
