@@ -6,10 +6,12 @@
     <DockerPublishLocally>False</DockerPublishLocally>
     <ProjectGuid>81dded9d-158b-e303-5f62-77a2896d2a5a</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}</DockerServiceUrl>
+    <!-- DockerServiceUrl removed to avoid Visual Studio Docker SDK null-reference when resolving service URL -->
     <DockerServiceName>apis</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include=".env" />
+    <None Include=".github\copilot-instructions.md" />
     <None Include=".github\workflows\build-test-push-pr.yml" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
@@ -18,6 +20,7 @@
     <None Include=".dockerignore" />
     <None Include="docker\postgres\Dockerfile" />
     <None Include="docker\postgres\init-db.d\01_create_extension.sql" />
+    <None Include="docs\upgrade-net9-to-net10.md" />
     <None Include="monitoring\loki-config.yml" />
     <None Include="monitoring\promtail-config.yml" />
     <None Include="temp_replace_methods.ps1" />

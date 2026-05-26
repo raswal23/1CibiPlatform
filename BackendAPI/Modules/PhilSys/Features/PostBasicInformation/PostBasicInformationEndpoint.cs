@@ -30,7 +30,6 @@ public class PostBasicInformationEndpoint : ICarterModule
 		.WithTags("PhilSys")
 		.Produces<PostBasicInformationResponse>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
-		.ProducesProblem(StatusCodes.Status401Unauthorized)
 		.WithSummary("Submit Basic Information For Identity Verification")
 		.WithDescription("Sends a request to the PhilSys API to submit basic demographic information for identity verification.");
 	}

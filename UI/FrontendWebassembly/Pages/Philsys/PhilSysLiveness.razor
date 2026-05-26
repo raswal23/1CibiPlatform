@@ -1,4 +1,4 @@
-﻿@layout PhilSysLayout
+﻿@layout GenericLayout
 @page "/philsys/idv/liveness/{HashToken}"
 @inject IJSRuntime JS
 @inject IPhilSysService IPhilSysService
@@ -60,7 +60,6 @@
             isExpired = false;
             _completed = true;
             errorMessage = _status.error_message;
-            Console.WriteLine($"❌ No transaction found for HashToken: {_status!.IsTransacted}");
             return;
         }
 
@@ -79,13 +78,12 @@
     {
         _status = await IPhilSysService.GetTransactionStatusAsync(HashToken);
 
-        if (!string.IsNullOrEmpty(_status.trace_id))
+        if (!string.IsNullOrEmpty(_status.error_message))
         {
             isTransacted = false;
             isExpired = false;
             _completed = true;
             errorMessage = _status.error_message!;
-            Console.WriteLine("❌ No transaction found for this TID.");
             StateHasChanged();
             return;
         }
@@ -111,7 +109,6 @@
         {
             _completed = true;
             errorMessage = "Liveness SDK is not configured. Please contact the administrator.";
-            Console.WriteLine("❌ Failed to retrieve Liveness Key.");
             StateHasChanged();
             return;
         }
@@ -137,8 +134,6 @@
         }
 
         showLoader = false;
-
-        Console.WriteLine($"Successully Updated the session ID.");
         StateHasChanged();
     }
 

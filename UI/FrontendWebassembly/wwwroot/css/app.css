@@ -247,6 +247,11 @@ code {
     cursor: pointer !important;
 }
 
+.custom-tabs .mud-tabs-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 .philsys-tab-pannel {
     border-radius: 4px;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -273,11 +278,11 @@ code {
 .philsys-custom-tabs .mud-tabs-scroll-button {
     display: none !important;
 }
-.philsys-rounded-input .mud-input-outlined {
+.oneplatform-rounded-input .mud-input-outlined {
     border-radius: 12px !important;
 }
 
-.philsys-rounded-input fieldset {
+.oneplatform-rounded-input fieldset {
     border-radius: 12px !important;
 }
 
@@ -396,5 +401,32 @@ code {
     overflow-x: auto;
     width: 100%;
     height: 100%;
+    box-shadow: 0 0 10px rgba(42,119,174,0.8);
 }
 
+.ats-result {
+    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+}
+
+.ats-component-boxshadow {
+    padding: 4px;
+    border-radius: 12px;
+    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.small-checkbox-label .mud-typography {
+    font-size: 11px;
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.custom-stepper .mud-step-label-icon.mud-default, .custom-stepper .mud-step-completed .mud-step-label-icon, .custom-stepper .mud-step.active .mud-step-label-icon {
+    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
+    color: white !important;
+}

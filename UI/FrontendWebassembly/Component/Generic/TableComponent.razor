@@ -10,7 +10,7 @@
           RowsPerPage="@(RowsPerPage ?? 10)"
           LoadingContent="@(UseLoadingContentBody ? null : LoadingContent)"
           LoadingContentBody="@(UseLoadingContentBody ? LoadingContentBody : null)"
-          Style="border-radius: 4px; border: 1px solid gray; padding: 10px;">
+          Style="border-radius: 4px; padding: 10px;">
 
         <ToolBarContent>
             @if (!string.IsNullOrWhiteSpace(Title))

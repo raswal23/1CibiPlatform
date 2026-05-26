@@ -1,6 +1,5 @@
 ﻿using Auth.Data.Entities;
 using Auth.Features.UserManagement.Command.DeleteLockedUser;
-using Auth.Features.UserManagement.Query.GetApplications;
 using Auth.Features.UserManagement.Query.GetLockedUsers;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
