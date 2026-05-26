@@ -22,14 +22,14 @@
             @if (EnableSearch)
             {
                 <MudTextField T="string"
-                              @bind-Value="SearchString"
-                              @bind-Value:event="oninput"
+                              Value="SearchString"
+                              ValueChanged="@(EventCallback.Factory.Create<string>(this, SearchChanged))"
+                              ValueExpression="(() => SearchString)"
                               Placeholder="Search"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
                               IconSize="Size.Medium"
-                              Class="mt-0"
-                              ValueChanged="SearchChanged" />
+                              Class="mt-0" />
             }
 
             @if (AddButtonText != null)
