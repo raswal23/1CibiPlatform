@@ -26,52 +26,55 @@ namespace Test.BackendAPI.Infrastructure.PhilSys.Infrastracture
 				.Build();
 		}
 
-	protected override void ConfigureWebHost(IWebHostBuilder builder)
-	{
-		builder.UseEnvironment("Testing");
-
-		// Set environment variables for test configuration
-		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
-		Environment.SetEnvironmentVariable("OpenAI__ApiKey", "test-api-key");
-		Environment.SetEnvironmentVariable("OpenAI__Model", "gpt-4");
-		Environment.SetEnvironmentVariable("OpenAI__EmbeddingModel", "text-embedding-3-small");
-
-		builder.ConfigureTestServices(services =>
+		protected override void ConfigureWebHost(IWebHostBuilder builder)
 		{
-			// Remove existing DbContext registration
-			var descriptor = services
-				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<PhilSysDBContext>));
+			builder.UseEnvironment("Testing");
 
-			if (descriptor is not null)
-				services.Remove(descriptor);
+			var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+			DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
 
-			// Register test DB context
-			services.AddDbContext<PhilSysDBContext>(options =>
-				options.UseNpgsql(_dbContainer.GetConnectionString()));
+			// Set environment variables for test configuration
+			Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
+			Environment.SetEnvironmentVariable("OpenAI__ApiKey", "test-api-key");
+			Environment.SetEnvironmentVariable("OpenAI__Model", "gpt-4");
+			Environment.SetEnvironmentVariable("OpenAI__EmbeddingModel", "text-embedding-3-small");
 
-			// Register HttpContextAccessor (scoped, not singleton)
-			services.RemoveAll<IHttpContextAccessor>();
-			services.AddScoped<IHttpContextAccessor>(_ =>
+			builder.ConfigureTestServices(services =>
 			{
-				var fakeHttpContext = new DefaultHttpContext();
-				fakeHttpContext.Response.Body = new MemoryStream();
-				return new HttpContextAccessor { HttpContext = fakeHttpContext };
-			});
+				// Remove existing DbContext registration
+				var descriptor = services
+					.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<PhilSysDBContext>));
 
-			services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler((req, ct) =>
-			{
-				// default: return BadRequest with null data
-				var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+				if (descriptor is not null)
+					services.Remove(descriptor);
+
+				// Register test DB context
+				services.AddDbContext<PhilSysDBContext>(options =>
+					options.UseNpgsql(_dbContainer.GetConnectionString()));
+
+				// Register HttpContextAccessor (scoped, not singleton)
+				services.RemoveAll<IHttpContextAccessor>();
+				services.AddScoped<IHttpContextAccessor>(_ =>
 				{
-					Content = new StringContent("{\"data\": null}", Encoding.UTF8, "application/json")
-				};
-				return Task.FromResult(resp);
-			}));
+					var fakeHttpContext = new DefaultHttpContext();
+					fakeHttpContext.Response.Body = new MemoryStream();
+					return new HttpContextAccessor { HttpContext = fakeHttpContext };
+				});
 
-			services.AddHttpClient("PhilSys")
-				.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<PhilSysTestHandler>());
-		});
-	}
+				services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler((req, ct) =>
+				{
+					// default: return BadRequest with null data
+					var resp = new HttpResponseMessage(HttpStatusCode.BadRequest)
+					{
+						Content = new StringContent("{\"data\": null}", Encoding.UTF8, "application/json")
+					};
+					return Task.FromResult(resp);
+				}));
+
+				services.AddHttpClient("PhilSys")
+					.ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<PhilSysTestHandler>());
+			});
+		}
 		public WebApplicationFactory<Program> CreateCustomFactory(Action<IServiceCollection> configureTestServices)
 		{
 			return this.WithWebHostBuilder(builder =>

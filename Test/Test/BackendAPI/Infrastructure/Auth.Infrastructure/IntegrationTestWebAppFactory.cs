@@ -29,6 +29,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 	{
 		builder.UseEnvironment("Testing");
 
+		var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+		DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
+
 		// Set environment variables for test configuration
 		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
 		Environment.SetEnvironmentVariable("OpenAI__ApiKey", "test-api-key");
