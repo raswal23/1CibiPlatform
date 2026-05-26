@@ -21,8 +21,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the users successfully");
-
 			return new PaginatedResult<UsersDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -44,8 +42,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			Console.WriteLine("❌ Did not Get the UnApproved Users Successfully");
-
 			return new PaginatedResult<UnApprovedUsersDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -67,8 +63,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the applications successfully");
-
 			return new PaginatedResult<ApplicationsDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -95,8 +89,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the submenus successfully");
-
 			return new PaginatedResult<SubMenusDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -118,8 +110,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the locked users successfully");
-
 			return new PaginatedResult<LockedUsersDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -145,8 +135,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the roles successfully");
-
 			return new PaginatedResult<RolesDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -172,8 +160,6 @@ public class UserManagementService : IUserManagementService
 
 		if (response == null)
 		{
-			_logger.LogWarning("Did not get the appsubroles successfully");
-
 			return new PaginatedResult<AppSubRolesDTO>(
 				pageIndex: PageNumber ?? 1,
 				pageSize: PageSize ?? 10,
@@ -190,12 +176,10 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.DeleteAsync($"auth/deleteapplication/{AppId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not delete the application successfully (AppId: {AppId})", AppId);
 			return false;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Deleted the application successfully (AppId: {AppId})", AppId);
 		return successContent!;
 	}
 
@@ -204,12 +188,10 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.DeleteAsync($"auth/deletesubmenu/{SubMenuId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not delete the submenu successfully (SubMenuId: {SubMenuId})", SubMenuId);
 			return false;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Deleted the submenu successfully (SubMenuId: {SubMenuId})", SubMenuId);
 		return successContent!;
 	}
 
@@ -218,12 +200,10 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.DeleteAsync($"auth/deleterole/{RoleId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not delete the role successfully (RoleId: {RoleId})", RoleId);
 			return false;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Deleted the role successfully (RoleId: {RoleId})", RoleId);
 		return successContent!;
 	}
 
@@ -232,12 +212,10 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.DeleteAsync($"auth/deleteappsubrole/{AppSubRoleId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not delete the AppSubRole successfully (AppSubRoleId: {AppSubRoleId})", AppSubRoleId);
 			return false;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Deleted the AppSubRole successfully (AppSubRoleId: {AppSubRoleId})", AppSubRoleId);
 		return successContent!;
 	}
 
@@ -246,12 +224,10 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.DeleteAsync($"auth/deletelockeduser/{lockedUserId}");
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not delete the Locked User successfully (LockedUserId: {LockedUserId})", lockedUserId);
 			return false;
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Deleted the AppSubRole successfully (LockedUserId: {LockedUserId})", lockedUserId);
 		return successContent!;
 	}
 
@@ -265,11 +241,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync($"auth/addapplication", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not add the application successfully");
 			return false;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Added the application successfully");
 		return successContent;
 	}
 
@@ -283,11 +257,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync($"auth/addsubmenu", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not add the submenu successfully");
 			return false;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Added the submenu successfully");
 		return successContent;
 	}
 
@@ -301,11 +273,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync($"auth/addrole", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not add the role successfully");
 			return false;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Added the role successfully");
 		return successContent;
 	}
 
@@ -319,11 +289,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync($"auth/addappsubrole", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not add the user's appsubrole successfully");
 			return false;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Added the user's appsubrole successfully");
 		return successContent;
 	}
 
@@ -333,11 +301,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync("account/notification", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not able to send the notification to user's email.");
 			return false;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		_logger.LogInformation("Sent the notification successfully to user's email");
 		return successContent;
 	}
 
@@ -347,11 +313,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PostAsJsonAsync("account/approvalnotification", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not able to send the approval notification to user's email.");
 			return false!;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		Console.WriteLine("✅ Sent the approval notification successfully to user's email");
 		return successContent;
 	}
 
@@ -373,11 +337,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editapplication", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not edit the application successfully");
 			return null!;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<EditApplicationDTO>();
-		_logger.LogInformation("Edited the application successfully");
 		if (successContent != null)
 		{
 			return successContent;
@@ -403,11 +365,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editsubmenu", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not edit the submenu successfully");
 			return null!;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<EditSubMenuDTO>();
-		_logger.LogInformation("Edited the submenu successfully");
 		if (successContent != null)
 		{
 			return successContent;
@@ -432,11 +392,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editrole", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Did not edit the role successfully");
 			return null!;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<EditRoleDTO>();
-		_logger.LogInformation("Edited the role successfully");
 		if (successContent != null)
 		{
 			return successContent;
@@ -463,11 +421,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editappsubrole", payload);
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine("❌ Did not Edit the UserAppSubRole Successfully");
             return null!;
         }
         var successContent = await response.Content.ReadFromJsonAsync<EditAppSubRoleDTO>();
-        Console.WriteLine("✅ Added the UserAppSubRole Successfully");
         if (successContent != null)
         {
             return successContent;
@@ -491,11 +447,9 @@ public class UserManagementService : IUserManagementService
 		var response = await _httpClient.PatchAsJsonAsync($"auth/edituser", payload);
 		if (!response.IsSuccessStatusCode)
 		{
-			Console.WriteLine("❌ Did not Edit the User Successfully");
 			return null!;
 		}
 		var successContent = await response.Content.ReadFromJsonAsync<EditUserDTO>();
-		Console.WriteLine("✅ Added the User Successfully");
 
 		if (successContent != null)
 		{

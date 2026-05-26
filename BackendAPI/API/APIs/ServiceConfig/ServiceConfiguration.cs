@@ -1,4 +1,6 @@
-﻿namespace APIs.ServiceConfig;
+﻿using BuildingBlocks.Storage;
+
+namespace APIs.ServiceConfig;
 
 public static class ServiceConfiguration
 {
@@ -8,6 +10,7 @@ public static class ServiceConfiguration
 	private static readonly Assembly _philsysAssembly = typeof(PhilSysMarker).Assembly;
 	private static readonly Assembly _ssoAssembly = typeof(SSOMarker).Assembly;
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
+	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
 
 
 	#region Logging Config
@@ -194,6 +197,7 @@ public static class ServiceConfiguration
 		services.AddAuthInfrastructure(configuration);
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
+		services.AddATSInfrastructure(configuration);
 		return services;
 	}
 	#endregion
@@ -206,7 +210,8 @@ public static class ServiceConfiguration
 			 _cnxAssembly,
 			 _philsysAssembly,
 			 _ssoAssembly,
-			 _aiAgentAssembly
+			 _aiAgentAssembly,
+			 _atsAssembly
 		 ]));
 
 
@@ -225,6 +230,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysMediaTR(_philsysAssembly);
 		services.AddSSOMediaTR(_ssoAssembly);
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
+		services.AddATSMediaTR(_atsAssembly);
 		return services;
 	}
 
@@ -239,6 +245,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysServices();
 		services.AddSSOServices();
 		services.AddAIAgentServices();
+		services.AddATSServices();
 		return services;
 	}
 	#endregion
@@ -246,17 +253,39 @@ public static class ServiceConfiguration
 	#region Hybrid Cache Config
 
 	public static IServiceCollection AddHybridCaches(
-		this IServiceCollection services)
+		this IServiceCollection services,
+		IConfiguration configuration)
 	{
+		var redisConnection = configuration.GetConnectionString("TairRedis");
+
+		services.AddStackExchangeRedisCache(options =>
+		{
+			options.Configuration = redisConnection;
+			options.InstanceName = "oneplatform:";
+		});
+
 		services.AddHybridCache(options =>
 		{
 			options.DefaultEntryOptions = new HybridCacheEntryOptions
 			{
 				Expiration = TimeSpan.FromMinutes(5),
 				LocalCacheExpiration = TimeSpan.FromMinutes(5),
-				Flags = HybridCacheEntryFlags.DisableDistributedCache
+				//Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
+
+		return services;
+	}
+	#endregion
+
+	#region Alibaba Oss Config
+
+	public static IServiceCollection AddAlibabaOssConfiguration(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+
+		services.AddAlibabaStorage(configuration);
 
 		return services;
 	}
