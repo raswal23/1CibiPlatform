@@ -1,5 +1,7 @@
 namespace FrontendWebassembly.ServiceConfig;
 
+using FrontendWebassembly.Services.Shared.Implementation;
+using FrontendWebassembly.Services.Shared.Interfaces;
 
 public static class FrontendServiceConfig
 {
@@ -61,6 +63,8 @@ public static class FrontendServiceConfig
 		services.AddScoped<ICandidateService, CandidateService>();
 		services.AddScoped<ISSOService, SSOService>();
 		services.AddScoped<IAIAgentChatService, AIChatService>();
+		services.AddScoped<IServerTableLoader, ServerTableLoader>();
+		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 
 		return services;
 	}
