@@ -6,15 +6,29 @@ ARG ENVIRONMENT=Production
 
 WORKDIR /src
 
+# Install Python required by the WebAssembly toolchain
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install wasm-tools workload required for Blazor WebAssembly on .NET 10
-RUN dotnet workload install wasm-tools
+RUN dotnet workload install wasm-tools --skip-manifest-update
 
 # Copy project file and restore dependencies
 COPY FrontendWebassembly.csproj ./
 RUN dotnet restore "./FrontendWebassembly.csproj"
+RUN dotnet workload restore "./FrontendWebassembly.csproj"
 
 # Copy all source files
 COPY . ./
+
+# Remove host build outputs that can break Linux restore/publish inside container
+RUN find . -type d \( -name bin -o -name obj \) -prune -exec rm -rf {} +
+
+# Restore again after source copy/cleanup to regenerate Linux assets
+RUN dotnet restore "./FrontendWebassembly.csproj"
+RUN dotnet workload restore "./FrontendWebassembly.csproj"
 
 # Publish Blazor WASM (outputs to wwwroot inside publish folder)
 RUN dotnet publish "./FrontendWebassembly.csproj" \
@@ -61,5 +75,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 
 # Start Nginx in foreground
-CMD ["nginx", "-g", "daemon off;"]
 CMD ["nginx", "-g", "daemon off;"]
