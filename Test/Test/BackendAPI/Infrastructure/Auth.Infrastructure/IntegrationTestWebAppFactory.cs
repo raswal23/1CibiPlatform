@@ -32,6 +32,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		// Load environment variables from a .env file if present (allows CI/local test overrides)
 		LoadDotEnv();
 
+		var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+		DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
+
 		// Set environment variables for test configuration
 		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
 		Environment.SetEnvironmentVariable("OpenAI__ApiKey", "test-api-key");
