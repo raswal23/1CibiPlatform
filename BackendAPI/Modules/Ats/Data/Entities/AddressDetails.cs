@@ -1,5 +1,6 @@
 namespace ATS.Data.Entities;
 
+
 public class AddressDetails
 {
     public Guid Address { get; set; }
