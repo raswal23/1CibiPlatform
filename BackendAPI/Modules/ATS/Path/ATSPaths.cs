@@ -7,7 +7,7 @@ public class ATSPaths : IReverseProxyModule
 		return new[]
 		{
 			new RouteDefinitionDTO(
-				RouteId: "PartnerSystemQueryEntryPoint",
+				RouteId: "AddApplicationFormDataEntryPoint",
 				MatchPath: "/ats/addapplicationformdata",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
