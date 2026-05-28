@@ -11,28 +11,27 @@ public class ATSService : IATSService
 	private readonly IObjectStorageService _objectStorageService;
 
 	public ATSService(ILogger<ATSService> logger, 
-										 IATSRepository atsRepository,
-										 IObjectStorageService objectStorageService)
+					  IATSRepository atsRepository,
+					  IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_objectStorageService = objectStorageService;
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(ApplicationFormDataDTO applicationFormDataDTO, CancellationToken ct = default)
+	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, AddressDetailsDTO addressDetails, EducationalBackgroundDTO educationalBackground, LicensesDetailsDTO licensesDetails, ProfessionalExperiencesDTO professionalExperiences, ReferenceDetailsDTO referenceDetails, CancellationToken ct = default)
 	{
-		await AddPersonalDetailsDataAsync(applicationFormDataDTO.PersonalDetails!, ct);
+		await AddPersonalDetailsDataAsync(personalDetails, ct);
 
-		await AddAddressDataAsync(applicationFormDataDTO.AddressDetails!, ct);
+		await AddAddressDataAsync(addressDetails, ct);
 
-		await AddEducationalBackgroundDataAsync(applicationFormDataDTO.EducationalBackground!, ct);
+		await AddEducationalBackgroundDataAsync(educationalBackground!, ct);
 
-		await AddLicensesDataAsync(applicationFormDataDTO.LicensesDetails!, ct);
+		await AddLicensesDataAsync(licensesDetails!, ct);
 
-		await AddProfessionalExperiencesDataAsync(applicationFormDataDTO.ProfessionalExperiences!, ct);
+		await AddProfessionalExperiencesDataAsync(professionalExperiences!, ct);
 
-		await AddReferenceDetailsDataAsync(applicationFormDataDTO.ReferenceDetails!, ct);
-
+		await AddReferenceDetailsDataAsync(referenceDetails!, ct);
 		return true;
 	}
 

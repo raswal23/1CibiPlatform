@@ -1,4 +1,5 @@
-﻿
+﻿namespace ATS.DTO;
+
 public record LicensesDetailsDTO
 {
 	public Guid LicensesDetailsID { get; set; }

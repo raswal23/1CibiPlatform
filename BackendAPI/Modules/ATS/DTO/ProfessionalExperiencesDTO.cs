@@ -40,6 +40,8 @@ public record ProfessionalExperiencesDTO
 	public string? Emp3JobTitle { get; set; }
 	public string? Emp3SupervisorName { get; set; }
 	public string? Emp3SupervisorContactNumber { get; set; }
-	public byte[]? COEUpload { get; set; }
+	public byte[]? COEUploadFile { get; set; }
+	public string? COEUploadFileName { get; set; }
+
 	public DateTime? CreatedDate { get; set; }
 }
