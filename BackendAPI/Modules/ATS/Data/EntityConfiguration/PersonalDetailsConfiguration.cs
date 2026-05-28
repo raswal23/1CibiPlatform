@@ -54,13 +54,13 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
         builder.Property(p => p.EmailAlternative)
                .HasMaxLength(100);
 
-        builder.Property(p => p.AdditionalGovtID)
+        builder.Property(p => p.AdditionalGovtIDFileKey)
                .HasMaxLength(100);
 
-        builder.Property(p => p.NBIClearance)
+        builder.Property(p => p.NBIClearanceFileKey)
                .HasMaxLength(100);
 
-        builder.Property(p => p.Resume)
+        builder.Property(p => p.ResumeFileKey)
                .HasMaxLength(100);
 
         builder.Property(p => p.CreatedDate)

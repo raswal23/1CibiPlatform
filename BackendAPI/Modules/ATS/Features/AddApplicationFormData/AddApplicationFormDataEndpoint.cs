@@ -1,7 +1,4 @@
-﻿using MediatR;
-using Microsoft.AspNetCore.Http;
-
-namespace ATS.Features.AddApplicationFormData;
+﻿namespace ATS.Features.AddApplicationFormData;
 
 public record AddApplicationFormDataRequest(ApplicationFormDataDTO ApplicationFormDataDTO);
 public record AddApplicationFormDataResponse(bool IsAdded);
@@ -10,7 +7,7 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("addapplicationform", async (AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("addapplicationformdata", async (AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new AddApplicationFormDataCommand(request.ApplicationFormDataDTO);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);

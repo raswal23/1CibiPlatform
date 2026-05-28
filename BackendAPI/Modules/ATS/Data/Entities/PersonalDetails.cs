@@ -4,6 +4,7 @@ public class PersonalDetails
 {
 	public Guid PersonalID { get; set; }
 	public Guid EmailInvitationID { get; set; }
+	public string? PositionAppliedFor { get; set; }
 	public string? FirstName { get; set; }
 	public string? MiddleName { get; set; }
 	public string? LastName { get; set; }
@@ -18,8 +19,8 @@ public class PersonalDetails
 	public string? TelephoneNumber { get; set; }
 	public string? EmailAddress { get; set; }
 	public string? EmailAlternative { get; set; }
-	public string? AdditionalGovtID { get; set; }
-	public string? NBIClearance { get; set; }
-	public string? Resume { get; set; }
+	public string? AdditionalGovtIDFileKey { get; set; }
+	public string? NBIClearanceFileKey { get; set; }
+	public string? ResumeFileKey { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

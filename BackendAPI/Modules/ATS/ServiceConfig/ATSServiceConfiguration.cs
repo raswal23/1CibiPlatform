@@ -1,3 +1,5 @@
+using ATS.Data.Repository;
+
 namespace ATS.ServiceConfig;
 public static class ATSServiceConfiguration
 {
@@ -37,8 +39,10 @@ public static class ATSServiceConfiguration
     #region Services
     public static IServiceCollection AddATSServices(this IServiceCollection services)
     {
-        // register ATS specific services, repositories, etc. Add as needed
-        return services;
+		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IATSRepository, ATSRepository>();
+
+		return services;
     }
     #endregion
 
