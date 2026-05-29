@@ -12,7 +12,7 @@ public class PersonalDetails
 	public string? MaritalStatus { get; set; }
 	public string? Nationality { get; set; }
 	public string? Sex { get; set; }
-	public DateTime? DOB { get; set; }
+	public DateOnly? DOB { get; set; }
 	public string? SSS { get; set; }
 	public string? TIN { get; set; }
 	public string? MobileNumber { get; set; }

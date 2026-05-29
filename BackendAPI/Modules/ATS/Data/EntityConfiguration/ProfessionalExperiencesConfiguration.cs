@@ -20,8 +20,8 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp1CurrentlyEmployed).HasMaxLength(100);
         builder.Property(p => p.Emp1PermissionToContact).HasMaxLength(100);
         builder.Property(p => p.Emp1CompanyAddress).HasMaxLength(100);
-        builder.Property(p => p.Emp1StartDate).HasMaxLength(100);
-        builder.Property(p => p.Emp1EndDate).HasMaxLength(100);
+        builder.Property(p => p.Emp1StartDate).HasColumnType("date");
+        builder.Property(p => p.Emp1EndDate).HasColumnType("date");
         builder.Property(p => p.Emp1JobTitle).HasMaxLength(100);
         builder.Property(p => p.Emp1ReasonForLeaving).HasMaxLength(100);
         builder.Property(p => p.Emp1SupervisorName).HasMaxLength(100);
@@ -33,8 +33,8 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp2CurrentlyEmployed).HasMaxLength(100);
         builder.Property(p => p.Emp2PermissionToContact).HasMaxLength(100);
         builder.Property(p => p.Emp2CompanyAddress).HasMaxLength(100);
-        builder.Property(p => p.Emp2StartDate).HasMaxLength(100);
-        builder.Property(p => p.Emp2EndDate).HasMaxLength(100);
+        builder.Property(p => p.Emp2StartDate).HasColumnType("date");
+        builder.Property(p => p.Emp2EndDate).HasColumnType("date");
         builder.Property(p => p.Emp2JobTitle).HasMaxLength(100);
         builder.Property(p => p.Emp2ReasonForLeaving).HasMaxLength(100);
         builder.Property(p => p.Emp2SupervisorName).HasMaxLength(100);
@@ -46,16 +46,16 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp3CurrentlyEmployed).HasMaxLength(100);
         builder.Property(p => p.Emp3PermissionToContact).HasMaxLength(100);
         builder.Property(p => p.Emp3CompanyAddress).HasMaxLength(100);
-        builder.Property(p => p.Emp3StartDate).HasMaxLength(100);
-        builder.Property(p => p.Emp3EndDate).HasMaxLength(100);
+        builder.Property(p => p.Emp3StartDate).HasColumnType("date");
+        builder.Property(p => p.Emp3EndDate).HasColumnType("date");
         builder.Property(p => p.Emp3JobTitle).HasMaxLength(100);
         builder.Property(p => p.Emp3ReasonForLeaving).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorName).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorContactNumber).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorEmail).HasMaxLength(100);
 
-        builder.Property(p => p.COEUpload).IsRequired(false);
-        builder.Property(p => p.CreatedDate).IsRequired(false);
+        builder.Property(p => p.COEUploadFileKey).HasMaxLength(100);
+		builder.Property(p => p.CreatedDate).IsRequired(true);
 
         // Relationship to EmailInvitationRequest
         builder.HasOne<EmailInvitationRequest>()

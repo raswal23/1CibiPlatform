@@ -55,7 +55,7 @@ public class AddressDetailsConfiguration : IEntityTypeConfiguration<AddressDetai
                .HasMaxLength(100);
 
         builder.Property(a => a.CreatedDate)
-               .IsRequired(false);
+               .IsRequired(true);
 
         builder.HasOne<EmailInvitationRequest>()
                .WithOne(e => e.AddressDetails)

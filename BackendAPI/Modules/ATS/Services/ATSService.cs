@@ -1,6 +1,5 @@
-﻿using ATS.Data.Repository;
-using Mapster;
-using Microsoft.Extensions.Logging;
+﻿
+using BuildingBlocks.Exceptions;
 
 namespace ATS.Services;
 
@@ -8,31 +7,59 @@ public class ATSService : IATSService
 {
 	private readonly ILogger<ATSService> _logger;
 	private readonly IATSRepository _atsRepository;
+	private readonly IUnitOfWork _unitOfWork;
 	private readonly IObjectStorageService _objectStorageService;
 
 	public ATSService(ILogger<ATSService> logger, 
 					  IATSRepository atsRepository,
+					  IUnitOfWork unitOfWork,
 					  IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
+		_unitOfWork = unitOfWork;
 		_objectStorageService = objectStorageService;
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, AddressDetailsDTO addressDetails, EducationalBackgroundDTO educationalBackground, LicensesDetailsDTO licensesDetails, ProfessionalExperiencesDTO professionalExperiences, ReferenceDetailsDTO referenceDetails, CancellationToken ct = default)
 	{
-		await AddPersonalDetailsDataAsync(personalDetails, ct);
+		var logContext = new
+		{
+			Action = "GettingLivenessLink",
+			Step = "StartPostingPcnOrBasicInfo",
+			Identity = personalDetails.EmailInvitationID,
+			Timestamp = DateTime.UtcNow
+		};
 
-		await AddAddressDataAsync(addressDetails, ct);
+		await _unitOfWork.BeginTransactionAsync(ct);
 
-		await AddEducationalBackgroundDataAsync(educationalBackground!, ct);
+		try
+		{
+			await AddPersonalDetailsDataAsync(personalDetails, ct);
 
-		await AddLicensesDataAsync(licensesDetails!, ct);
+			await AddAddressDataAsync(addressDetails, ct);
 
-		await AddProfessionalExperiencesDataAsync(professionalExperiences!, ct);
+			await AddEducationalBackgroundDataAsync(educationalBackground!, ct);
 
-		await AddReferenceDetailsDataAsync(referenceDetails!, ct);
-		return true;
+			await AddLicensesDataAsync(licensesDetails!, ct);
+
+			await AddProfessionalExperiencesDataAsync(professionalExperiences!, ct);
+
+			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
+
+			await _unitOfWork.CommitAsync(ct);
+
+			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+
+			return true;
+		}
+		catch
+		{
+			await _unitOfWork.RollbackAsync(ct);
+			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+			throw new InternalServerException($"Failed to add transaction."); ;
+		}
+
 	}
 
 	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 

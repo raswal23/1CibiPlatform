@@ -10,7 +10,7 @@ public record PersonalDetailsDTO
 	public string? LastName { get; set; }
 	public string? Suffix { get; set; }
 	public string? Sex { get; set; }
-	public DateTime? DOB { get; set; }
+	public DateOnly? DOB { get; set; }
 	public string? EmailAlternative { get; set; }
 	public byte[]? AdditionalGovtIDFile { get; set; }
 	public string? AdditionalGovtIDFileName { get; set; }

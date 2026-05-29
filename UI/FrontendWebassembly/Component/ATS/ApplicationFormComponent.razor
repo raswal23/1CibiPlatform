@@ -1232,30 +1232,6 @@
     private TimeSpan? Ref2BestTime;
     private bool AddAnotherReference;
 
-    // Part 2 - examinations
-    private string[] ExamStatuses = new[] { "Not Started", "Not Started", "Not Started" };
-    private bool[] ExamStarted = new[] { false, false, false };
-
-    private void OnTakeTest(int index)
-    {
-        if (index < 0 || index >= ExamStarted.Length)
-            return;
-        ExamStarted[index] = true;
-        ExamStatuses[index] = "In Progress";
-        // TODO: wire navigation to the actual exam flow or open a modal
-    }
-
-    // Part 3 - initial interview
-    private int MicLevel { get; set; } = 50;
-    private int SpeakerLevel { get; set; } = 25;
-    private int VolumeLevel { get; set; } = 75;
-
-    private void StartInterview()
-    {
-        statusMessage = "Interview started";
-        // TODO: implement interview start behavior (webcam/microphone access, modal, or navigation)
-    }
-
     private async Task SkipStep()
     {
         if (_stepper is not null)
@@ -1360,4 +1336,28 @@
         if (_stepper is not null)
             await _stepper.NextStepAsync();
     }
+
+    // Part 2 - examinations
+    // private string[] ExamStatuses = new[] { "Not Started", "Not Started", "Not Started" };
+    // private bool[] ExamStarted = new[] { false, false, false };
+
+    // private void OnTakeTest(int index)
+    // {
+    //     if (index < 0 || index >= ExamStarted.Length)
+    //         return;
+    //     ExamStarted[index] = true;
+    //     ExamStatuses[index] = "In Progress";
+    //     TODO: wire navigation to the actual exam flow or open a modal
+    // }
+
+    // Part 3 - initial interview
+    // private int MicLevel { get; set; } = 50;
+    // private int SpeakerLevel { get; set; } = 25;
+    // private int VolumeLevel { get; set; } = 75;
+
+    // private void StartInterview()
+    // {
+    //     statusMessage = "Interview started";
+    //     TODO: implement interview start behavior (webcam/microphone access, modal, or navigation)
+    // }
 }

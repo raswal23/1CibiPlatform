@@ -37,9 +37,9 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
                .HasMaxLength(100);
 
         builder.Property(e => e.HashTokenCreated)
-               .IsRequired(false);
+               .IsRequired(true);
 
         builder.Property(e => e.HashTokenExpiration)
-               .IsRequired(false);
+               .IsRequired(true);
     }
 }

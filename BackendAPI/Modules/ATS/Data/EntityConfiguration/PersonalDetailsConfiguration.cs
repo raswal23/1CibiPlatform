@@ -64,7 +64,7 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
                .HasMaxLength(100);
 
         builder.Property(p => p.CreatedDate)
-               .IsRequired(false);
+               .IsRequired(true);
 
         // Relationship to EmailInvitationRequest
         builder.HasOne<EmailInvitationRequest>()

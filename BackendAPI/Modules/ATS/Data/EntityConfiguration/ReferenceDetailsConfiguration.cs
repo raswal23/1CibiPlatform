@@ -39,7 +39,7 @@ public class ReferenceDetailsConfiguration : IEntityTypeConfiguration<ReferenceD
         builder.Property(r => r.Ref3ModeOfContact).HasMaxLength(100);
         builder.Property(r => r.Ref3BestTimeToContact).HasMaxLength(100);
 
-        builder.Property(r => r.CreatedDate).IsRequired(false);
+        builder.Property(r => r.CreatedDate).IsRequired(true);
 
         // Relationship to EmailInvitationRequest
         builder.HasOne<EmailInvitationRequest>()

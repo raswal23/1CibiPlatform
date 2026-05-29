@@ -1,5 +1,3 @@
-using ATS.Data.Repository;
-
 namespace ATS.ServiceConfig;
 public static class ATSServiceConfiguration
 {
@@ -41,6 +39,7 @@ public static class ATSServiceConfiguration
     {
 		services.AddScoped<IATSService, ATSService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 		return services;
     }

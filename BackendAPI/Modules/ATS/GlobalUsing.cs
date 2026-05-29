@@ -19,3 +19,8 @@ global using Microsoft.AspNetCore.Http;
 global using BuildingBlocks.SharedConstants;
 global using BuildingBlocks.SharedDTO;
 global using BuildingBlocks.SharedInterfaces;
+global using ATS.Data.Repository;
+global using ATS.Data.UnitOfWork;
+global using Mapster;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.EntityFrameworkCore.Storage;
