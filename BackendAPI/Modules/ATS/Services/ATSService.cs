@@ -47,13 +47,13 @@ public class ATSService : IATSService
 
 			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
 
-			await _unitOfWork.CommitAsync(ct);
+		await _unitOfWork.CommitAsync(ct);
 
-			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+		_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 
 			return true;
-		}
-		catch
+	}
+		catch (Exception ex)
 		{
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
@@ -143,13 +143,18 @@ public class ATSService : IATSService
 		string licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
+		licensesDetails.LicenseUploadFileKey = licenseKey;
 		bool isAdded = await _atsRepository.AddLicensesDetailsAsync(licensesDetails);
 		return true;
 	}
 
 	private async Task<bool> AddProfessionalExperiencesDataAsync(ProfessionalExperiencesDTO professionalExperiencesDTO, CancellationToken cancellationToken)
 	{
+		using var coeStream = new MemoryStream(professionalExperiencesDTO.COEUploadFile!);
+		string coeKey = await _objectStorageService.UploadAsync(coeStream, professionalExperiencesDTO.COEUploadFileName!, cancellationToken);
+
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
+		professionalExperiences.COEUploadFileKey = coeKey;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return true;
 	}

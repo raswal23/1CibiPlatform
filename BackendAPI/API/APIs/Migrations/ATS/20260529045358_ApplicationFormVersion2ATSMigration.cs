@@ -11,153 +11,93 @@ namespace APIs.Migrations.ATS
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "SeniorHighSchoolGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "SeniorHighSchoolGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("SeniorHighSchoolGraduationDate", '')::timestamptz;
+    """);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "MastersGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "MastersGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("MastersGraduationDate", '')::timestamptz;
+    """);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "HighSchoolGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "HighSchoolGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("HighSchoolGraduationDate", '')::timestamptz;
+    """);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "DoctorateGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "DoctorateGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("DoctorateGraduationDate", '')::timestamptz;
+    """);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CollegeGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "CollegeGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("CollegeGraduationDate", '')::timestamptz;
+    """);
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "BachelorsGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "timestamp with time zone",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
-        }
+			migrationBuilder.Sql("""
+        ALTER TABLE ats."EducationalBackground"
+        ALTER COLUMN "BachelorsGraduationDate"
+        TYPE timestamp with time zone
+        USING NULLIF("BachelorsGraduationDate", '')::timestamptz;
+    """);
+		}
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "SeniorHighSchoolGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "SeniorHighSchoolGraduationDate"
+				TYPE timestamp with time zone
+				USING NULLIF("SeniorHighSchoolGraduationDate", '')::timestamptz;
+			""");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "MastersGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "MastersGraduationDate"
+				TYPE character varying(100)
+				USING "MastersGraduationDate"::text;
+			""");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "HighSchoolGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "HighSchoolGraduationDate"
+				TYPE character varying(100)
+				USING "HighSchoolGraduationDate"::text;
+			""");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "DoctorateGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "DoctorateGraduationDate"
+				TYPE character varying(100)
+				USING "DoctorateGraduationDate"::text;
+			""");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "CollegeGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "CollegeGraduationDate"
+				TYPE character varying(100)
+				USING "CollegeGraduationDate"::text;
+			""");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "BachelorsGraduationDate",
-                schema: "ats",
-                table: "EducationalBackground",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp with time zone",
-                oldMaxLength: 100,
-                oldNullable: true);
-        }
+			migrationBuilder.Sql("""
+				ALTER TABLE ats."EducationalBackground"
+				ALTER COLUMN "BachelorsGraduationDate"
+				TYPE character varying(100)
+				USING "BachelorsGraduationDate"::text;
+			""");
+		}
     }
 }
