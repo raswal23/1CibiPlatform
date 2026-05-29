@@ -57,7 +57,6 @@ public class AddressDetailsConfiguration : IEntityTypeConfiguration<AddressDetai
         builder.Property(a => a.CreatedDate)
                .IsRequired(false);
 
-        // Relationship to EmailInvitationRequest
         builder.HasOne<EmailInvitationRequest>()
                .WithOne(e => e.AddressDetails)
                .HasForeignKey<AddressDetails>(a => a.EmailInvitationID)

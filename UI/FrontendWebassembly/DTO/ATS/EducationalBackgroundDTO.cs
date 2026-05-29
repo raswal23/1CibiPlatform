@@ -1,4 +1,4 @@
-﻿namespace ATS.DTO;
+﻿namespace FrontendWebassembly.DTO.ATS;
 
 public record EducationalBackgroundDTO
 {
