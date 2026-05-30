@@ -1,16 +1,15 @@
-﻿using Auth.Data.Context;
-using BuildingBlocks.SharedServices.Interfaces;
+﻿using ATS.Data.Context;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 
-namespace Test.BackendAPI.Infrastructure.Auth.Infrastructure;
-
+namespace Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
 	private readonly PostgreSqlContainer _dbContainer;
@@ -27,7 +26,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 	protected override void ConfigureWebHost(IWebHostBuilder builder)
 	{
-      builder.UseEnvironment("Testing");
+		builder.UseEnvironment("Testing");
 
 		var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 		DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
@@ -38,17 +37,17 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		Environment.SetEnvironmentVariable("OpenAI__Model", "gpt-4");
 		Environment.SetEnvironmentVariable("OpenAI__EmbeddingModel", "text-embedding-3-small");
 
-		builder.ConfigureTestServices(services =>
+		builder.ConfigureServices(services =>
 		{
 			// Remove existing DbContext registration
 			var descriptor = services
-				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<AuthApplicationDbContext>));
+				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<ATSDBContext>));
 
 			if (descriptor is not null)
 				services.Remove(descriptor);
 
 			// Register test DB context
-			services.AddDbContext<AuthApplicationDbContext>(options =>
+			services.AddDbContext<ATSDBContext>(options =>
 				options.UseNpgsql(_dbContainer.GetConnectionString()));
 
 			// Register HttpContextAccessor (scoped, not singleton)
@@ -59,20 +58,23 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 				fakeHttpContext.Response.Body = new MemoryStream();
 				return new HttpContextAccessor { HttpContext = fakeHttpContext };
 			});
+		});
 
-			// Replace email sender
-			services.RemoveAll<IEmailService>();
-			services.AddSingleton<IEmailService, FakeEmailSender>();
+		builder.ConfigureAppConfiguration((ctx, cb) =>
+		{
+			cb.AddInMemoryCollection(new[]
+			{
+				new KeyValuePair<string,string>("AlibabaOss:TestPrefix", $"uploads/tests/{Guid.NewGuid():N}/")
+			});
 		});
 	}
-
 
 	public async Task InitializeAsync()
 	{
 		await _dbContainer.StartAsync();
 
 		using var scope = Services.CreateScope();
-		var db = scope.ServiceProvider.GetRequiredService<AuthApplicationDbContext>();
+		var db = scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		await db.Database.MigrateAsync();
 	}
 

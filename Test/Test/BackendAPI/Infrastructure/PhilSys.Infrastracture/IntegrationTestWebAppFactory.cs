@@ -89,10 +89,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		});
 	}
 	public WebApplicationFactory<Program> CreateFactoryWithHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
-		=> CreateCustomFactory(services =>
-		{
-			services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
-		});
+	=> CreateCustomFactory(services =>
+	{
+		services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
+	});
 
 	public async Task InitializeAsync()
 	{

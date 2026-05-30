@@ -55,13 +55,13 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
                .HasMaxLength(100);
 
         builder.Property(p => p.AdditionalGovtIDFileKey)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.NBIClearanceFileKey)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.ResumeFileKey)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.CreatedDate)
                .IsRequired(true);

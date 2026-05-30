@@ -53,11 +53,11 @@ public class ATSService : IATSService
 
 			return true;
 	}
-		catch (Exception ex)
+		catch (Exception)
 		{
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction."); ;
+			throw new InternalServerException($"Failed to add transaction."); 
 		}
 
 	}

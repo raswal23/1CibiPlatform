@@ -54,7 +54,7 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp3SupervisorContactNumber).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorEmail).HasMaxLength(100);
 
-        builder.Property(p => p.COEUploadFileKey).HasMaxLength(100);
+        builder.Property(p => p.COEUploadFileKey).HasMaxLength(255);
 		builder.Property(p => p.CreatedDate).IsRequired(true);
 
         // Relationship to EmailInvitationRequest
