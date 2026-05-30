@@ -33,6 +33,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Suffix = "Jr.",
 			Sex = "Male",
 			DOB = sampleDate,
+			MobileNumber = "+639171234567",
 			EmailAlternative = "juan.delacruz@gmail.com",
 			AdditionalGovtIDFile = sampleFileContent,
 			AdditionalGovtIDFileName = "passport.txt",
@@ -78,17 +79,17 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			BachelorsGraduationDate = sampleDate,
 			BachelorsDiplomaFile = sampleFileContent,
 			BachelorsDiplomaFileName = "bachelors_diploma.txt",
-			BachelorsMajor = "Computer Science",
+			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
 			MastersDiplomaFile = Convert.FromBase64String("SGVsbG8gV29ybGQ="),
 			MastersDiplomaFileName = "masters_diploma.txt",
-			MastersMajor = "Information Technology",
+			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
 			DoctorateDiplomaFile = Array.Empty<byte>(),
 			DoctorateDiplomaFileName = string.Empty,
-			DoctorateMajor = string.Empty,
+			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -120,6 +121,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
 			Emp1SupervisorContactNumber = "+639171234567",
+			Emp1COEUploadFile = sampleFileContent,
+			Emp1COEUploadFileName = "coe.txt",
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
 			Emp2PermissionToContact = true,
@@ -132,6 +135,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
 			Emp2SupervisorContactNumber = "+639189876543",
+			Emp2COEUploadFile = sampleFileContent,
+			Emp2COEUploadFileName = "coe.txt",
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
 			Emp3PermissionToContact = true,
@@ -144,8 +149,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "+639155551234",
-			COEUploadFile = sampleFileContent,
-			COEUploadFileName = "coe.txt",
+			Emp3COEUploadFile = sampleFileContent,
+			Emp3COEUploadFileName = "coe.txt",
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -230,17 +235,17 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			BachelorsGraduationDate = sampleDate,
 			BachelorsDiplomaFile = sampleFileContent,
 			BachelorsDiplomaFileName = "bachelors_diploma.txt",
-			BachelorsMajor = "Computer Science",
+			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
 			MastersDiplomaFile = sampleFileContent,
 			MastersDiplomaFileName = "masters_diploma.txt",
-			MastersMajor = "Information Technology",
+			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
 			DoctorateDiplomaFile = Array.Empty<byte>(),
 			DoctorateDiplomaFileName = string.Empty,
-			DoctorateMajor = string.Empty,
+			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -260,7 +265,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		{
 			ProfessionalExperiencesID = Guid.NewGuid(),
 			EmailInvitationID = EmailId,
-
 			Emp1CompanyName = "Accenture Philippines",
 			Emp1CurrentlyEmployed = false,
 			Emp1PermissionToContact = true,
@@ -273,7 +277,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
 			Emp1SupervisorContactNumber = "+639171234567",
-
+			Emp1COEUploadFile = sampleFileContent,
+			Emp1COEUploadFileName = "coe.txt",
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
 			Emp2PermissionToContact = true,
@@ -286,7 +291,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
 			Emp2SupervisorContactNumber = "+639189876543",
-
+			Emp2COEUploadFile = sampleFileContent,
+			Emp2COEUploadFileName = "coe.txt",
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
 			Emp3PermissionToContact = true,
@@ -299,9 +305,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "+639155551234",
-
-			COEUploadFile = sampleFileContent,
-			COEUploadFileName = "coe.txt",
+			Emp3COEUploadFile = sampleFileContent,
+			Emp3COEUploadFileName = "coe.txt", 
 			CreatedDate = DateTime.UtcNow,
 		};
 

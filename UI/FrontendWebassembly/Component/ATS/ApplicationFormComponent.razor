@@ -1,4 +1,6 @@
-﻿<MudPaper Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; min-width:800px; min-height:600px; margin: 5px;">
+﻿@inject IATSService ATSService
+
+<MudPaper Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; min-width:800px; min-height:600px; margin: 5px;">
     @if(!showPhilSys)
     {
         <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper">
@@ -63,7 +65,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="PositionAppliedFor"
+                                                      @bind-Value="personalDetails.PositionAppliedFor"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Position Applied For" />
                                     </MudItem>
@@ -73,7 +75,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="FirstName"
+                                                      @bind-Value="personalDetails.FirstName"
                                                       Class="oneplatform-rounded-input"
                                                       Label="First Name" />
                                     </MudItem>
@@ -82,7 +84,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="MiddleName"
+                                                      @bind-Value="personalDetails.MiddleName"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Middle Name" />
                                     </MudItem>
@@ -100,7 +102,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="LastName"
+                                                      @bind-Value="personalDetails.LastName"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Last Name" />
                                     </MudItem>
@@ -109,7 +111,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="Suffix"
+                                                      @bind-Value="personalDetails.Suffix"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Suffix" />
                                     </MudItem>
@@ -127,7 +129,7 @@
 
                                     <MudItem xs="12" sm="4">
                                         <MudSelect T="string"
-                                                   @bind-Value="Sex"
+                                                   @bind-Value="personalDetails.Sex"
                                                    Class="oneplatform-rounded-input"
                                                    Adornment="Adornment.Start"
                                                    Variant="Variant.Outlined"
@@ -145,7 +147,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="AlternateEmail"
+                                                      @bind-Value="personalDetails.EmailAlternative"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Alternate Email Address" />
                                     </MudItem>
@@ -155,7 +157,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      @bind-Value="PhoneNumber"
+                                                      @bind-Value="personalDetails.MobileNumber"
                                                       Class="oneplatform-rounded-input"
                                                       Label="Phone Number" />
                                     </MudItem>
@@ -173,6 +175,7 @@
 
                                     <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                         <MudFileUpload @ref="@GovernmentUploadIdFile"
+                                                       T="IBrowserFile"
                                                        @bind-Files="GovernmentIdFile"
                                                        Accept=".xls,.xlsx,.csv"
                                                        DragAndDrop="true">
@@ -239,7 +242,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CurrentAddressLine"
+                                          @bind-Value="addressDetails.CurrentAddress"
                                           Label="Current Address (No., Street, Village, Brgy.)" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -248,7 +251,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CurrentCity"
+                                          @bind-Value="addressDetails.CurrentCity"
                                           Label="City" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -257,7 +260,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CurrentState"
+                                          @bind-Value="addressDetails.CurrentProvince"
                                           Label="State / Province / Region" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -266,7 +269,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CurrentCountry"
+                                          @bind-Value="addressDetails.CurrentCountry"
                                           Label="Country" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -275,7 +278,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CurrentZip"
+                                          @bind-Value="addressDetails.CurrentPostalCode"
                                           Label="Zip / Postal Code" />
                         </MudItem>
 
@@ -289,7 +292,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="PermanentAddressLine"
+                                          @bind-Value="addressDetails.PermanentAddress"
                                           Label="Permanent Address (No., Street, Village, Brgy.)" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -298,7 +301,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="PermanentCity"
+                                          @bind-Value="addressDetails.PermanentCity"
                                           Label="City" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -307,7 +310,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="PermanentState"
+                                          @bind-Value="addressDetails.PermanentProvince"
                                           Label="State / Province / Region" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -316,7 +319,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="PermanentCountry"
+                                          @bind-Value="addressDetails.PermanentCountry"
                                           Label="Country" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -325,7 +328,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="PermanentZip"
+                                          @bind-Value="addressDetails.PermanentPostalCode"
                                           Label="Zip / Postal Code" />
                         </MudItem>
 
@@ -334,7 +337,7 @@
                             <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of Ownership</MudText>
                             <div class="d-flex" style="gap:12px; flex-wrap:wrap;">
                                 <MudRadioGroup T="string"
-                                               @bind-Value="OwnershipType"
+                                               @bind-Value="addressDetails.TypeOfOwnership"
                                                Class="d-flex flex-wrap"
                                                Style="gap:12px;">
 
@@ -350,7 +353,7 @@
                                     <MudRadio T="string" Class="small-checkbox-label" Value="@("Others")">
                                         Others
                                     </MudRadio>
-                                    @if (OwnershipType == "Others")
+                                    @if (addressDetails.TypeOfOwnership == "Others")
                                     {
                                         <MudTextField Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
@@ -375,7 +378,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="HighestEducationalAttainment"
+                                          @bind-Value="educationalBackground.HighestEducationalAttainment"
                                           Label="Highest Educational Attainment" />
                         </MudItem>
                         <MudItem xs="12" sm="3">
@@ -437,7 +440,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="ProfessionalLicense"
+                                          @bind-Value="licensesDetails.LicenseName"
                                           Label="Professional License" />
                         </MudItem>
                         <MudItem xs="12" sm="4">
@@ -457,7 +460,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="LicenseNumber"
+                                          @bind-Value="licensesDetails.LicenseNumber"
                                           Label="License No." />
                         </MudItem>
 
@@ -487,13 +490,13 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CompanyName"
+                                          @bind-Value="professionalExperiences.Emp1CompanyName"
                                           Label="Company Name" />
                         </MudItem>
 
                         <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
-                            <MudCheckBox T="bool" @bind-Checked="CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
-                            <MudCheckBox T="bool" @bind-Checked="WithPermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
+                            <MudCheckBox T="bool" @bind-Checked="professionalExperiences.Emp1CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                            <MudCheckBox T="bool" @bind-Checked="professionalExperiences.Emp1PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
                         </MudItem>
 
                         <MudItem xs="12" sm="4">
@@ -502,7 +505,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CompanyCity"
+                                          @bind-Value="professionalExperiences.Emp1CompanyCity"
                                           Label="Company City / Address" />
                         </MudItem>
                         <MudItem xs="12" sm="3">
@@ -511,7 +514,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CompanyState"
+                                          @bind-Value="professionalExperiences.Emp1CompanyProvince"
                                           Label="State / Province / Region" />
                         </MudItem>
                         <MudItem xs="6" sm="2">
@@ -520,7 +523,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CompanyCountry"
+                                          @bind-Value="professionalExperiences.Emp1CompanyCountry"
                                           Label="Country" />
                         </MudItem>
                         <MudItem xs="6" sm="1">
@@ -529,7 +532,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="CompanyZip"
+                                          @bind-Value="professionalExperiences.Emp1CompanyPostalCode"
                                           Label="Zip / Postal Code" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
@@ -549,11 +552,12 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="JobTitle"
+                                          @bind-Value="professionalExperiences.Emp1JobTitle"
                                           Label="Job Title" />
                         </MudItem>
                         <MudItem xs="12" sm="3">
                             <MudDatePicker DateFormat="MM/dd/yyyy"
+                                           @bind-Date="StartOfEmployment"
                                            Adornment="Adornment.End"
                                            Required="true"
                                            Variant="Variant.Outlined"
@@ -594,7 +598,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="SupervisorName"
+                                          @bind-Value="professionalExperiences.Emp1SupervisorName"
                                           Label="Supervisor Name" />
                         </MudItem>
                         <MudItem xs="12" sm="6">
@@ -603,7 +607,7 @@
                                           Variant="Variant.Outlined"
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
-                                          @bind-Value="ContactInformation"
+                                          @bind-Value="professionalExperiences.Emp1SupervisorContactNumber"
                                           Label="Contact Information" />
                         </MudItem>
 
@@ -631,14 +635,14 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference1FullName"
+                                                  @bind-Value="referenceDetails.Ref1FullName"
                                                   Label="Full Name of Reference #1" />
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
                                     <div class="d-flex" style="gap:8px; align-items:center;">
                                         <MudText Typo="Typo.body2">Professional Relationship</MudText>
                                         <MudRadioGroup T="string"
-                                                       @bind-Value="ProfessionalRelationship1"
+                                                       @bind-Value="referenceDetails.Ref1ProfessionalRelationship"
                                                        Class="d-flex flex-wrap"
                                                        Style="gap:12px;">
 
@@ -664,7 +668,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference1Company"
+                                                  @bind-Value="referenceDetails.Ref1AffiliatedCompany"
                                                   Label="Affiliated Company" />
                                 </MudItem>
                                 <MudItem xs="12" sm="4">
@@ -673,7 +677,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference1Email"
+                                                  @bind-Value="referenceDetails.Ref1Email"
                                                   Label="Email Contact Information" />
                                 </MudItem>
 
@@ -683,14 +687,14 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference1Mobile"
+                                                  @bind-Value="referenceDetails.Ref1ContactNumber"
                                                   Label="Mobile Contact Information" />
                                 </MudItem>
 
                                 <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
                                     <MudText Typo="Typo.body2">Available to reach on:</MudText>
                                     <MudRadioGroup T="string"
-                                                   @bind-Value="AvailableOn1"
+                                                   @bind-Value="referenceDetails.Ref1ModeOfContact"
                                                    Class="d-flex flex-wrap"
                                                    Style="gap:12px;">
 
@@ -739,14 +743,14 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference2FullName"
+                                                  @bind-Value="referenceDetails.Ref2FullName"
                                                   Label="Full Name of Reference #2" />
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
                                     <div class="d-flex" style="gap:8px; align-items:center;">
                                         <MudText Typo="Typo.body2">Professional Relationship</MudText>
                                         <MudRadioGroup T="string"
-                                                       @bind-Value="ProfessionalRelationship2"
+                                                       @bind-Value="referenceDetails.Ref2ProfessionalRelationship"
                                                        Class="d-flex flex-wrap"
                                                        Style="gap:12px;">
 
@@ -772,7 +776,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference2Company"
+                                                  @bind-Value="referenceDetails.Ref2AffiliatedCompany"
                                                   Label="Affiliated Company" />
                                 </MudItem>
                                 <MudItem xs="12" sm="4">
@@ -781,7 +785,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference2Email"
+                                                  @bind-Value="referenceDetails.Ref2Email"
                                                   Label="Email Contact Information" />
                                 </MudItem>
 
@@ -791,14 +795,14 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
-                                                  @bind-Value="Reference2Mobile"
+                                                  @bind-Value="referenceDetails.Ref2ContactNumber"
                                                   Label="Mobile Contact Information" />
                                 </MudItem>
 
                                 <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
                                     <MudText Typo="Typo.body2">Available to reach on:</MudText>
                                     <MudRadioGroup T="string"
-                                                   @bind-Value="AvailableOn2"
+                                                   @bind-Value="referenceDetails.Ref2ModeOfContact"
                                                    Class="d-flex flex-wrap"
                                                    Style="gap:12px;">
 
@@ -845,136 +849,6 @@
 
                     </MudGrid>
                 </MudStep>
-
-                @* <MudStep Title="Part 2 - Application Examination">
-                <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center" Class="mt-4">Application Examination</MudText>
-
-                <MudGrid Class="pa-6">
-                    <MudItem xs="12" sm="4">
-                        <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
-                            <MudImage Src="/images/ats/exam-icon-1.png" Alt="exam icon 0" Style="width:120px; height:120px; object-fit:contain;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                            <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[0]" OnClick="() => OnTakeTest(0)">Take Test</MudButton>
-
-                            <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
-                                    <MudText Typo="Typo.caption">20:00 minutes</MudText>
-                                </div>
-
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-                                    <MudText Typo="Typo.caption">@ExamStatuses[0]</MudText>
-                                </div>
-                            </div>
-                        </MudPaper>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="4">
-                        <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
-                            <MudImage Src="/images/ats/exam-icon-2.png" Alt="exam icon 1" Style="width:120px; height:120px; object-fit:contain;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                            <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[1]" OnClick="() => OnTakeTest(1)">Take Test</MudButton>
-
-                            <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
-                                    <MudText Typo="Typo.caption">20:00 minutes</MudText>
-                                </div>
-
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-                                    <MudText Typo="Typo.caption">@ExamStatuses[1]</MudText>
-                                </div>
-                            </div>
-                        </MudPaper>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="4">
-                        <MudPaper Class="pa-6 d-flex flex-column align-center" Style="text-align:center;" Elevation="0">
-                            <MudImage Src="/images/ats/exam-icon-3.png" Alt="exam icon 2" Style="width:120px; height:120px; object-fit:contain;" />
-                            <MudText Typo="Typo.subtitle2" Class="mt-3">Application Examination</MudText>
-                            <MudButton Class="theme-button mt-3 theme-button-active mb-4" Style="width: 150px; border-radius: 4px;" Disabled="@ExamStarted[2]" OnClick="() => OnTakeTest(2)">Take Test</MudButton>
-
-                            <div class="d-flex flex-column mt-4" style="gap:8px; align-items:center;">
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" />
-                                    <MudText Typo="Typo.caption">20:00 minutes</MudText>
-                                </div>
-
-                                <div class="d-flex" style="gap:8px; align-items:center;">
-                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-                                    <MudText Typo="Typo.caption">@ExamStatuses[0]</MudText>
-                                </div>
-                            </div>
-                        </MudPaper>
-                    </MudItem>
-                </MudGrid>
-            </MudStep>
-
-            <MudStep Title="Part 3 - Initial Interview">
-                <MudGrid Style="background:#fff;">
-                    <MudItem xs="12">
-                        <MudText Typo="Typo.h6" Color="Color.Primary" Align="Align.Center">Initial Interview</MudText>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="6"
-                             Class="d-flex justify-center">
-
-                        <MudPaper Class="pa-4"
-                                  Style="width:500px; display:flex; align-items:center; justify-content:center; border:6px solid #0b66a3; overflow:hidden;">
-
-                            <MudImage Src="/images/ats/interview-icon.png"
-                                      Alt="Interview photo"
-                                      Style="width:100%; height:100%; object-fit:contain;" />
-                        </MudPaper>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="6" >
-                        <div style="display:flex; flex-direction:column; gap:12px; padding:12px;">
-                            <MudText Align="Align.Center" Typo="Typo.body1">Test your microphone and audio<br/>Try moving the bars below</MudText>
-
-                            <div class="d-flex" style="align-items:center; gap:12px;">
-                                <MudIcon Icon="Icons.Material.Filled.Mic" />
-                                <MudSlider @bind-Value="MicLevel" Min="0" Max="100" Step="1" Style="flex:1" />
-                                <MudText Typo="Typo.caption">@MicLevel% </MudText>
-                            </div>
-
-                            <div class="d-flex" style="align-items:center; gap:12px;">
-                                <MudIcon Icon="Icons.Material.Filled.SpeakerPhone" />
-                                <MudSlider @bind-Value="SpeakerLevel" Min="0" Max="100" Step="1" Style="flex:1" />
-                                <MudText Typo="Typo.caption">@SpeakerLevel% </MudText>
-                            </div>
-
-                            <div class="d-flex" style="align-items:center; gap:12px;">
-                                <MudIcon Icon="Icons.Material.Filled.VolumeUp" />
-                                <MudSlider @bind-Value="VolumeLevel" Min="0" Max="100" Step="1" Style="flex:1" />
-                                <MudText Typo="Typo.caption">@VolumeLevel% </MudText>
-                            </div>
-
-                            <div style="margin-top:18px;
-                                display:flex;
-                                justify-content:center;
-                                align-items:center;
-                                gap:12px;">
-
-                                <MudButton Class="theme-button theme-button-active mb-4"
-                                           Style="width:150px; border-radius:4px;"
-                                           OnClick="StartInterview">
-                                    Start Interview
-                                </MudButton>
-
-                            </div>
-                        </div>
-                    </MudItem>
-
-                    <MudItem xs="12" Class="d-flex justify-end mt-4">
-                        <MudButton Class="theme-button theme-button-active mb-4"
-                                   Style="width: 150px; border-radius: 4px;" 
-                                   OnClick="SaveAndNextAsync">Save & Next</MudButton>
-                    </MudItem>
-                </MudGrid>
-            </MudStep> *@
 
                 <MudStep Title="Final">
                     <MudGrid>
@@ -1124,110 +998,53 @@
     // Stepper and general
     private MudStepper? _stepper;
     private int _activeStep;
-    private string? statusMessage;
     private bool showPhilSys = false;
 
-    // Step 1
+    // Personal Detials
     private bool consent { get; set; } = false;
     private bool declineConsent = false;
-    private IReadOnlyList<IBrowserFile> GovernmentIdFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> GovernmentUploadIdFile = default!;
-    private IReadOnlyList<IBrowserFile> NBIClearanceFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> NBIClearanceUploadFile = default!;
-    private IReadOnlyList<IBrowserFile> CVOrResumeFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> CVOrResumeUploadFile = default!;
+    private PersonalDetailsDTO personalDetails = new();
+    private bool NoMiddleName = false;
+    private DateTime? DateOfBirth;
+    private IBrowserFile? GovernmentIdFile;
+    private MudFileUpload<IBrowserFile> GovernmentUploadIdFile = default!;
+    private IBrowserFile? NBIClearanceFile;
+    private MudFileUpload<IBrowserFile> NBIClearanceUploadFile = default!;
+    private IBrowserFile? CVOrResumeFile;
+    private MudFileUpload<IBrowserFile> CVOrResumeUploadFile = default!;
 
-    // Step 2 - personal information fields
-    private string? PositionAppliedFor;
-    private string? FirstName;
-    private string? MiddleName;
-    private bool NoMiddleName;
-    private string? LastName;
-    private string? Suffix;
-    private DateTime? DateOfBirth = DateTime.Today;
-    private string? Sex;
-    private string? AlternateEmail;
-    private string? PhoneNumber;
-
-    // Step 3 - address and education
-    private string? CurrentAddressLine;
-    private string? CurrentCity;
-    private string? CurrentState;
-    private string? CurrentCountry;
-    private string? CurrentZip;
-
+    // AddressDetials
+    private AddressDetailsDTO addressDetails = new();
     private bool SameAsPermanent;
-
-    private string? PermanentAddressLine;
-    private string? PermanentCity;
-    private string? PermanentState;
-    private string? PermanentCountry;
-    private string? PermanentZip;
-
-    // Ownership
-    private string? OwnershipType;
     private string? OwnershipOtherText;
 
     // Educational background
+    private EducationalBackgroundDTO educationalBackground = new();
     private string? HighestEducationalAttainment;
-    private DateTime? GraduationDate = DateTime.Today;
+    private DateTime? GraduationDate;
     private string? DegreeWithMajor;
     private string? AcademicInstitution;
-    private IReadOnlyList<IBrowserFile> DiplomaORTORFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> DiplomaORTORUploadFile = default!;
-
-    // Uploaded files
-    private IBrowserFile? BiometricFile;
-    private IBrowserFile? GovtIdFile;
-    private IBrowserFile? NbiFile;
-    private IBrowserFile? CvFile;
-    private IBrowserFile? DiplomaFile;
+    private IBrowserFile? DiplomaORTORFile;
+    private MudFileUpload<IBrowserFile> DiplomaORTORUploadFile = default!;
 
     // Step 4 - credentials & experience
-    private string? ProfessionalLicense;
-    private DateTime? LicenseExpiryDate = DateTime.Today;
-    private string? LicenseNumber;
-    private IReadOnlyList<IBrowserFile> ProfessionalLicenseFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> ProfessionalLicenseUploadFile = default!;
-    private IReadOnlyList<IBrowserFile> COEIdFile = [];
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> COEIdUploadFile = default!;
+    private LicensesDetailsDTO licensesDetails = new();
+    private DateTime? LicenseExpiryDate;
+    private IBrowserFile? ProfessionalLicenseFile;
+    private MudFileUpload<IBrowserFile>ProfessionalLicenseUploadFile = default!;
 
-    private string? CompanyName;
-    private bool CurrentlyEmployed;
-    private bool WithPermissionToContact;
-    private string? CompanyCity;
-    private string? CompanyState;
-    private string? CompanyCountry;
-    private string? CompanyZip;
-    private DateTime? DatePermittedToContact = DateTime.Today;
-    private string? JobTitle;
+    private ProfessionalExperiencesDTO professionalExperiences = new();
+    private DateTime? DatePermittedToContact;
     private DateTime? StartOfEmployment;
     private DateTime? EndOfEmployment;
-    private string? SupervisorName;
-    private string? ContactInformation;
-    private IBrowserFile? CoeFile;
     private bool AddAnotherEmployer;
+    private IBrowserFile? COEIdFile;
+    private MudFileUpload<IBrowserFile> COEIdUploadFile = default!;
 
     // Step 5 - references
-    private string? Reference1FullName;
-    private string? ProfessionalRelationship1;
-    private string? Reference1Company;
-    private string? Reference1Email;
-    private string? Reference1Mobile;
-    private string? AvailableOn1;
+    private ReferenceDetailsDTO referenceDetails = new();
     private DateTime? Ref1BestDate;
     private TimeSpan? Ref1BestTime;
-
-    private string? Reference2FullName;
-    private bool Ref2Colleague;
-    private bool Ref2Superior;
-    private bool Ref2Peer;
-    private bool Ref2Subordinate;
-    private string? ProfessionalRelationship2;
-    private string? Reference2Company;
-    private string? Reference2Email;
-    private string? Reference2Mobile;
-    private string? AvailableOn2;
     private DateTime? Ref2BestDate;
     private TimeSpan? Ref2BestTime;
     private bool AddAnotherReference;
@@ -1252,55 +1069,42 @@
 
     private async Task ProceedClicked()
     {
-     showPhilSys = true;
-    }
-
-    private Task OnBiometricUpload(InputFileChangeEventArgs e)
-    {
-        BiometricFile = e.File;
-        statusMessage = BiometricFile?.Name;
-        return Task.CompletedTask;
+        showPhilSys = true;
     }
 
     private Task OnGovtIdUpload(InputFileChangeEventArgs e)
     {
-        GovtIdFile = e.File;
-        statusMessage = GovtIdFile?.Name;
+        GovernmentIdFile = e.File;
         return Task.CompletedTask;
     }
 
     private Task OnNbiUpload(InputFileChangeEventArgs e)
     {
-        NbiFile = e.File;
-        statusMessage = NbiFile?.Name;
+        NBIClearanceFile = e.File;
         return Task.CompletedTask;
     }
 
     private Task OnCvUpload(InputFileChangeEventArgs e)
     {
-        CvFile = e.File;
-        statusMessage = CvFile?.Name;
+        CVOrResumeFile = e.File;
         return Task.CompletedTask;
     }
 
     private Task OnDiplomaUpload(InputFileChangeEventArgs e)
     {
-        DiplomaFile = e.File;
-        statusMessage = DiplomaFile?.Name;
+        DiplomaORTORFile = e.File;
         return Task.CompletedTask;
     }
 
     private Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
     {
-        // ProfessionalLicenseFile = e.File;
-        // statusMessage = ProfessionalLicenseFile?.Name;
+        ProfessionalLicenseFile = e.File;
         return Task.CompletedTask;
     }
 
     private Task OnCoeUpload(InputFileChangeEventArgs e)
     {
-        CoeFile = e.File;
-        statusMessage = CoeFile?.Name;
+        COEIdFile = e.File;
         return Task.CompletedTask;
     }
 
@@ -1308,18 +1112,16 @@
     {
         if (SameAsPermanent)
         {
-            PermanentAddressLine = CurrentAddressLine;
-            PermanentCity = CurrentCity;
-            PermanentState = CurrentState;
-            PermanentCountry = CurrentCountry;
-            PermanentZip = CurrentZip;
+            addressDetails.PermanentAddress = addressDetails.CurrentAddress;
+            addressDetails.PermanentCity = addressDetails.CurrentCity;
+            addressDetails.PermanentProvince = addressDetails.CurrentProvince;
+            addressDetails.PermanentCountry = addressDetails.CurrentCountry;
+            addressDetails.PermanentPostalCode = addressDetails.CurrentPostalCode;
         }
     }
 
     private async Task SaveAndNextAsync()
     {
-        // TODO: add validation and save logic here
-        statusMessage = "Saved";
         if (_stepper is not null)
             await _stepper.NextStepAsync();
     }
@@ -1331,33 +1133,124 @@
 
     private async Task SubmitForm()
     {
-        // TODO: send form data to backend API
-        statusMessage = "Form submitted";
+        //Step 1
+        personalDetails.DOB = DateOnly.FromDateTime(DateOfBirth!.Value);
+
+        if (NoMiddleName)
+        {
+            personalDetails.MiddleName = "";
+        }
+
+        if (CVOrResumeFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await CVOrResumeFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.ResumeFile = ms.ToArray(); 
+        }
+
+        if (NBIClearanceFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await NBIClearanceFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.NBIClearanceFile = ms.ToArray();
+        }
+
+        if (CVOrResumeFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await CVOrResumeFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.ResumeFile = ms.ToArray();
+        }
+
+        addressDetails.TypeOfOwnership = OwnershipOtherText;
+
+        if (DiplomaORTORFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await DiplomaORTORFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
+            {
+                educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
+            {
+                educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
+            {
+                educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.BachelorsDegree = DegreeWithMajor;
+                educationalBackground.BachelorsDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
+            {
+                educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.MastersDegree = DegreeWithMajor;            
+                educationalBackground.MastersDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
+            {
+                educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.DoctorateDegree = DegreeWithMajor;
+                educationalBackground.DoctorateDiplomaFile = ms.ToArray();
+            }
+            else {}
+        }
+
+        licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
+        if (ProfessionalLicenseFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await ProfessionalLicenseFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            licensesDetails.LicenseUploadFile = ms.ToArray();
+        }
+
+        professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact!.Value);
+        professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment!.Value);
+        professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment!.Value);
+        if (COEIdFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await COEIdFile
+                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            professionalExperiences.Emp1COEUploadFile = ms.ToArray();
+        }
+
+        if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
+        {
+            referenceDetails.Ref1BestTimeToContact = Ref1BestDate.Value.Date + Ref1BestTime.Value;
+        }
+        if (Ref2BestDate.HasValue && Ref2BestTime.HasValue)
+        {
+            referenceDetails.Ref2BestTimeToContact = Ref2BestDate.Value.Date + Ref2BestTime.Value;
+        }
+
         if (_stepper is not null)
             await _stepper.NextStepAsync();
     }
-
-    // Part 2 - examinations
-    // private string[] ExamStatuses = new[] { "Not Started", "Not Started", "Not Started" };
-    // private bool[] ExamStarted = new[] { false, false, false };
-
-    // private void OnTakeTest(int index)
-    // {
-    //     if (index < 0 || index >= ExamStarted.Length)
-    //         return;
-    //     ExamStarted[index] = true;
-    //     ExamStatuses[index] = "In Progress";
-    //     TODO: wire navigation to the actual exam flow or open a modal
-    // }
-
-    // Part 3 - initial interview
-    // private int MicLevel { get; set; } = 50;
-    // private int SpeakerLevel { get; set; } = 25;
-    // private int VolumeLevel { get; set; } = 75;
-
-    // private void StartInterview()
-    // {
-    //     statusMessage = "Interview started";
-    //     TODO: implement interview start behavior (webcam/microphone access, modal, or navigation)
-    // }
 }

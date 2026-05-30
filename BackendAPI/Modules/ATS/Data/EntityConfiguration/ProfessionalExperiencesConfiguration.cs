@@ -27,9 +27,10 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp1SupervisorName).HasMaxLength(100);
         builder.Property(p => p.Emp1SupervisorContactNumber).HasMaxLength(100);
         builder.Property(p => p.Emp1SupervisorEmail).HasMaxLength(100);
+		builder.Property(p => p.Emp1COEUploadFileKey).HasMaxLength(255);
 
-        // Emp2
-        builder.Property(p => p.Emp2CompanyName).HasMaxLength(100);
+		// Emp2
+		builder.Property(p => p.Emp2CompanyName).HasMaxLength(100);
         builder.Property(p => p.Emp2CurrentlyEmployed).HasMaxLength(100);
         builder.Property(p => p.Emp2PermissionToContact).HasMaxLength(100);
         builder.Property(p => p.Emp2CompanyAddress).HasMaxLength(100);
@@ -40,9 +41,10 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp2SupervisorName).HasMaxLength(100);
         builder.Property(p => p.Emp2SupervisorContactNumber).HasMaxLength(100);
         builder.Property(p => p.Emp2SupervisorEmail).HasMaxLength(100);
+		builder.Property(p => p.Emp2COEUploadFileKey).HasMaxLength(255);
 
-        // Emp3
-        builder.Property(p => p.Emp3CompanyName).HasMaxLength(100);
+		// Emp3
+		builder.Property(p => p.Emp3CompanyName).HasMaxLength(100);
         builder.Property(p => p.Emp3CurrentlyEmployed).HasMaxLength(100);
         builder.Property(p => p.Emp3PermissionToContact).HasMaxLength(100);
         builder.Property(p => p.Emp3CompanyAddress).HasMaxLength(100);
@@ -53,8 +55,9 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(p => p.Emp3SupervisorName).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorContactNumber).HasMaxLength(100);
         builder.Property(p => p.Emp3SupervisorEmail).HasMaxLength(100);
+		builder.Property(p => p.Emp3COEUploadFileKey).HasMaxLength(255);
 
-        builder.Property(p => p.COEUploadFileKey).HasMaxLength(255);
+		builder.Property(p => p.COEUploadFileKey).HasMaxLength(255);
 		builder.Property(p => p.CreatedDate).IsRequired(true);
 
         // Relationship to EmailInvitationRequest

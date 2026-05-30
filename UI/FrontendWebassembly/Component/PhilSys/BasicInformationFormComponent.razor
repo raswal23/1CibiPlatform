@@ -99,7 +99,7 @@
             return;
         }
 
-        var livenessLink = await PhilSysService.PostBasicInformationOrPCN("name_dob", identityData!);
+        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
             Navigation.NavigateTo(livenessLink, forceLoad: true);

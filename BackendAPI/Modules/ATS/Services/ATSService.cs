@@ -150,11 +150,20 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddProfessionalExperiencesDataAsync(ProfessionalExperiencesDTO professionalExperiencesDTO, CancellationToken cancellationToken)
 	{
-		using var coeStream = new MemoryStream(professionalExperiencesDTO.COEUploadFile!);
-		string coeKey = await _objectStorageService.UploadAsync(coeStream, professionalExperiencesDTO.COEUploadFileName!, cancellationToken);
+		
+		using var emp1COEStream = new MemoryStream(professionalExperiencesDTO.Emp1COEUploadFile!);
+		string emp1COEKey = await _objectStorageService.UploadAsync(emp1COEStream, professionalExperiencesDTO.Emp1COEUploadFileName!, cancellationToken);
+
+		using var emp2COEStream = new MemoryStream(professionalExperiencesDTO.Emp2COEUploadFile!);
+		string emp2COEKey = await _objectStorageService.UploadAsync(emp2COEStream, professionalExperiencesDTO.Emp2COEUploadFileName!, cancellationToken);
+
+		using var emp3COEStream = new MemoryStream(professionalExperiencesDTO.Emp3COEUploadFile!);
+		string emp3COEKey = await _objectStorageService.UploadAsync(emp3COEStream, professionalExperiencesDTO.Emp3COEUploadFileName!, cancellationToken);
 
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
-		professionalExperiences.COEUploadFileKey = coeKey;
+		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
+		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
+		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return true;
 	}

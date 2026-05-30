@@ -85,7 +85,7 @@ public class PhilSysService : IPhilSysService
 		return successContent!;
 	}
 
-	public async Task<string> PostBasicInformationOrPCN(string inquiry_type, IdentityData identity_data)
+	public async Task<string> PostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data)
 	{
 		if (DateTime.TryParse(identity_data.birth_date, out var parsedDate))
 		{

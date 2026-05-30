@@ -17,16 +17,16 @@ public record EducationalBackgroundDTO
 	public DateOnly? BachelorsGraduationDate { get; set; }
 	public byte[]? BachelorsDiplomaFile { get; set; }
 	public string? BachelorsDiplomaFileName { get; set; }
-	public string? BachelorsMajor { get; set; }
+	public string? BachelorsDegree { get; set; }
 	public string? MastersSchoolName { get; set; }
 	public DateOnly? MastersGraduationDate { get; set; }
 	public byte[]? MastersDiplomaFile { get; set; }
 	public string? MastersDiplomaFileName { get; set; }
-	public string? MastersMajor { get; set; }
+	public string? MastersDegree { get; set; }
 	public string? PhDSchoolName { get; set; }
 	public DateOnly? DoctorateGraduationDate { get; set; }
 	public byte[]? DoctorateDiplomaFile { get; set; }
 	public string? DoctorateDiplomaFileName { get; set; }
-	public string? DoctorateMajor { get; set; }
+	public string? DoctorateDegree { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }
