@@ -22,5 +22,6 @@ public class PersonalDetails
 	public string? AdditionalGovtIDFileKey { get; set; }
 	public string? NBIClearanceFileKey { get; set; }
 	public string? ResumeFileKey { get; set; }
+	public string? PhilSysImageKey { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

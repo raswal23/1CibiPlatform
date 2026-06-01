@@ -63,6 +63,9 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
         builder.Property(p => p.ResumeFileKey)
                .HasMaxLength(255);
 
+		builder.Property(p => p.PhilSysImageKey) 
+			   .HasMaxLength(255);
+
         builder.Property(p => p.CreatedDate)
                .IsRequired(true);
 

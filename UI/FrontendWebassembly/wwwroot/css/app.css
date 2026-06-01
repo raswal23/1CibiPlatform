@@ -430,3 +430,17 @@ code {
     background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
     color: white !important;
 }
+
+.ats-signature {
+    width: auto;
+    border: 2px solid grey;
+    border-radius: 4px;
+}
+
+.ats-signature-button {
+    margin-top: 12px;
+    background: linear-gradient(90deg, #102247 0%, #2a77ae 50%);
+    color: white;
+    border-radius: 4px;
+    padding: 4px;
+}
