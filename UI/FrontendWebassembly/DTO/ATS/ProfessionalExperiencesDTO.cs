@@ -17,7 +17,7 @@ public record ProfessionalExperiencesDTO
 	public string? Emp1JobTitle { get; set; }
 	public string? Emp1SupervisorName { get; set; }
 	public string? Emp1SupervisorContactNumber { get; set; }
-	public byte[]? Emp1COEUploadFile { get; set; }
+	public IBrowserFile? Emp1COEUploadFile { get; set; }
 	public string? Emp1COEUploadFileName { get; set; }
 	public string? Emp2CompanyName { get; set; }
 	public bool? Emp2CurrentlyEmployed { get; set; }
@@ -32,7 +32,7 @@ public record ProfessionalExperiencesDTO
 	public string? Emp2JobTitle { get; set; }
 	public string? Emp2SupervisorName { get; set; }
 	public string? Emp2SupervisorContactNumber { get; set; }
-	public byte[]? Emp2COEUploadFile { get; set; }
+	public IBrowserFile? Emp2COEUploadFile { get; set; }
 	public string? Emp2COEUploadFileName { get; set; }
 	public string? Emp3CompanyName { get; set; }
 	public bool? Emp3CurrentlyEmployed { get; set; }
@@ -47,7 +47,7 @@ public record ProfessionalExperiencesDTO
 	public string? Emp3JobTitle { get; set; }
 	public string? Emp3SupervisorName { get; set; }
 	public string? Emp3SupervisorContactNumber { get; set; }
-	public byte[]? Emp3COEUploadFile { get; set; }
+	public IBrowserFile? Emp3COEUploadFile { get; set; }
 	public string? Emp3COEUploadFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

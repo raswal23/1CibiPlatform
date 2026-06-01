@@ -21,7 +21,13 @@ public class ATSService : IATSService
 		_objectStorageService = objectStorageService;
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, AddressDetailsDTO addressDetails, EducationalBackgroundDTO educationalBackground, LicensesDetailsDTO licensesDetails, ProfessionalExperiencesDTO professionalExperiences, ReferenceDetailsDTO referenceDetails, CancellationToken ct = default)
+	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, 
+												        AddressDetailsDTO addressDetails, 
+														EducationalBackgroundDTO educationalBackground, 
+														LicensesDetailsDTO licensesDetails, 
+														ProfessionalExperiencesDTO professionalExperiences, 
+														ReferenceDetailsDTO referenceDetails,
+														CancellationToken ct = default)
 	{
 		var logContext = new
 		{
@@ -53,25 +59,38 @@ public class ATSService : IATSService
 
 			return true;
 	}
-		catch (Exception)
+		catch (Exception ex)
 		{
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction."); 
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException.Message}"); 
 		}
 
 	}
 
 	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 
 	{
-		using var resumeStream = new MemoryStream(personalDetailsDTO.ResumeFile!);
-		string resumeFileKey = await _objectStorageService.UploadAsync(resumeStream, personalDetailsDTO.ResumeFileName!, cancellationToken);
+		string resumeFileKey = "";
+		string nbiKey = "";
+		string govtIdKey = "";
 
-		using var nbiStream = new MemoryStream(personalDetailsDTO.NBIClearanceFile!);
-		string nbiKey = await _objectStorageService.UploadAsync(nbiStream, personalDetailsDTO.NBIClearanceFileName!, cancellationToken);
+		if (personalDetailsDTO.ResumeFile != null)
+		{
+			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
+			resumeFileKey = await _objectStorageService.UploadAsync(resumeStream, personalDetailsDTO.ResumeFile.FileName, cancellationToken);
+		}
 
-		using var govtIdStream = new MemoryStream(personalDetailsDTO.AdditionalGovtIDFile!);
-		string govtIdKey = await _objectStorageService.UploadAsync(govtIdStream, personalDetailsDTO.AdditionalGovtIDFileName!, cancellationToken);
+		if (personalDetailsDTO.NBIClearanceFile != null)
+		{
+			await using var nbiStream = personalDetailsDTO.NBIClearanceFile.OpenReadStream();
+			nbiKey = await _objectStorageService.UploadAsync(nbiStream, personalDetailsDTO.NBIClearanceFile.FileName, cancellationToken);
+		}
+
+		if (personalDetailsDTO.AdditionalGovtIDFile != null)
+		{
+			await using var govtIdStream = personalDetailsDTO.AdditionalGovtIDFile.OpenReadStream();
+			govtIdKey = await _objectStorageService.UploadAsync(govtIdStream, personalDetailsDTO.AdditionalGovtIDFile.FileName, cancellationToken);
+		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
 		personalDetails.ResumeFileKey = resumeFileKey;
@@ -102,27 +121,27 @@ public class ATSService : IATSService
 
 		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("HighSchool Graduate", StringComparison.OrdinalIgnoreCase))
 		{
-			using var highSchoolDiplomaStream = new MemoryStream(educationalBackgroundDTO.HighSchoolDiplomaFile!);
+			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
 			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(highSchoolDiplomaStream, educationalBackgroundDTO.HighSchoolDiplomaFileName!, cancellationToken);
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Senior High School Graduate", StringComparison.OrdinalIgnoreCase))
 		{
-			using var seniorHighSchoolDiplomaStream = new MemoryStream(educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!);
+			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
 			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(seniorHighSchoolDiplomaStream, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, cancellationToken);
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Bachelor's Degree", StringComparison.OrdinalIgnoreCase))
 		{
-			using var bachelorsDiplomaStream = new MemoryStream(educationalBackgroundDTO.BachelorsDiplomaFile!);
+			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
 			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(bachelorsDiplomaStream, educationalBackgroundDTO.BachelorsDiplomaFileName!, cancellationToken);
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Degree", StringComparison.OrdinalIgnoreCase))
 		{
-			using var mastersDiplomaStream = new MemoryStream(educationalBackgroundDTO.MastersDiplomaFile!);
+			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
 			mastersDiplomaKey = await _objectStorageService.UploadAsync(mastersDiplomaStream, educationalBackgroundDTO.MastersDiplomaFileName!, cancellationToken);
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Degree", StringComparison.OrdinalIgnoreCase))
 		{
-			using var doctorateDiplomaStream = new MemoryStream(educationalBackgroundDTO.DoctorateDiplomaFile!);
+			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
 			doctorateDiplomaKey = await _objectStorageService.UploadAsync(doctorateDiplomaStream, educationalBackgroundDTO.DoctorateDiplomaFileName!, cancellationToken);
 		}
 
@@ -139,7 +158,7 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddLicensesDataAsync(LicensesDetailsDTO licensesDetailsDTO, CancellationToken cancellationToken)
 	{
-		using var licenseStream = new MemoryStream(licensesDetailsDTO.LicenseUploadFile!);
+		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
 		string licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
@@ -150,15 +169,25 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddProfessionalExperiencesDataAsync(ProfessionalExperiencesDTO professionalExperiencesDTO, CancellationToken cancellationToken)
 	{
-		
-		using var emp1COEStream = new MemoryStream(professionalExperiencesDTO.Emp1COEUploadFile!);
-		string emp1COEKey = await _objectStorageService.UploadAsync(emp1COEStream, professionalExperiencesDTO.Emp1COEUploadFileName!, cancellationToken);
+		string emp1COEKey = "";
+		string emp2COEKey = "";
+		string emp3COEKey = "";
 
-		using var emp2COEStream = new MemoryStream(professionalExperiencesDTO.Emp2COEUploadFile!);
-		string emp2COEKey = await _objectStorageService.UploadAsync(emp2COEStream, professionalExperiencesDTO.Emp2COEUploadFileName!, cancellationToken);
-
-		using var emp3COEStream = new MemoryStream(professionalExperiencesDTO.Emp3COEUploadFile!);
-		string emp3COEKey = await _objectStorageService.UploadAsync(emp3COEStream, professionalExperiencesDTO.Emp3COEUploadFileName!, cancellationToken);
+		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
+		{
+			await using var emp1COEStream = professionalExperiencesDTO.Emp1COEUploadFile!.OpenReadStream();
+			emp1COEKey = await _objectStorageService.UploadAsync(emp1COEStream, professionalExperiencesDTO.Emp1COEUploadFileName!, cancellationToken);
+		}
+		if (professionalExperiencesDTO.Emp2COEUploadFile! != null)
+		{
+			await using var emp2COEStream = professionalExperiencesDTO.Emp2COEUploadFile!.OpenReadStream();
+			emp2COEKey = await _objectStorageService.UploadAsync(emp2COEStream, professionalExperiencesDTO.Emp2COEUploadFileName!, cancellationToken);
+		}
+		if (professionalExperiencesDTO.Emp3COEUploadFile! != null)
+		{
+			await using var emp3COEStream = professionalExperiencesDTO.Emp3COEUploadFile!.OpenReadStream();
+			emp3COEKey = await _objectStorageService.UploadAsync(emp3COEStream, professionalExperiencesDTO.Emp3COEUploadFileName!, cancellationToken);
+		}
 
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
 		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;

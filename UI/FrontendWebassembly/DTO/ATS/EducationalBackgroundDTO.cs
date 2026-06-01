@@ -7,25 +7,25 @@ public record EducationalBackgroundDTO
 	public string? HighestEducationalAttainment { get; set; }
 	public string? HighSchoolName { get; set; }
 	public DateOnly? HighSchoolGraduationDate { get; set; }
-	public byte[]? HighSchoolDiplomaFile { get; set; }
+	public IBrowserFile? HighSchoolDiplomaFile { get; set; }
 	public string? HighSchoolDiplomaFileName { get; set; }
 	public string? SeniorHighSchoolName { get; set; }
 	public DateOnly? SeniorHighSchoolGraduationDate { get; set; }
-	public byte[]? SeniorHighSchoolDiplomaFile { get; set; }
+	public IBrowserFile? SeniorHighSchoolDiplomaFile { get; set; }
 	public string? SeniorHighSchoolDiplomaFileName { get; set; }
 	public string? BachelorsSchoolName { get; set; }
 	public DateOnly? BachelorsGraduationDate { get; set; }
-	public byte[]? BachelorsDiplomaFile { get; set; }
+	public IBrowserFile? BachelorsDiplomaFile { get; set; }
 	public string? BachelorsDiplomaFileName { get; set; }
 	public string? BachelorsDegree { get; set; }
 	public string? MastersSchoolName { get; set; }
 	public DateOnly? MastersGraduationDate { get; set; }
-	public byte[]? MastersDiplomaFile { get; set; }
+	public IBrowserFile? MastersDiplomaFile { get; set; }
 	public string? MastersDiplomaFileName { get; set; }
 	public string? MastersDegree { get; set; }
 	public string? PhDSchoolName { get; set; }
 	public DateOnly? DoctorateGraduationDate { get; set; }
-	public byte[]? DoctorateDiplomaFile { get; set; }
+	public IBrowserFile? DoctorateDiplomaFile { get; set; }
 	public string? DoctorateDiplomaFileName { get; set; }
 	public string? DoctorateDegree { get; set; }
 	public DateTime? CreatedDate { get; set; }

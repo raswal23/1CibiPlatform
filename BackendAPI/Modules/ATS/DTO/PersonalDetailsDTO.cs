@@ -13,11 +13,11 @@ public record PersonalDetailsDTO
 	public DateOnly? DOB { get; set; }
 	public string? MobileNumber { get; set; }
 	public string? EmailAlternative { get; set; }
-	public byte[]? AdditionalGovtIDFile { get; set; }
+	public IFormFile? AdditionalGovtIDFile { get; set; }
 	public string? AdditionalGovtIDFileName { get; set; }
-	public byte[]? NBIClearanceFile { get; set; }
+	public IFormFile? NBIClearanceFile { get; set; }
 	public string? NBIClearanceFileName { get; set; }
-	public byte[]? ResumeFile { get; set; }
+	public IFormFile? ResumeFile { get; set; }
 	public string? ResumeFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

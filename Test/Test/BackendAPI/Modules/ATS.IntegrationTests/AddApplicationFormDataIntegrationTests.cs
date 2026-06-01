@@ -2,14 +2,32 @@
 using ATS.DTO;
 using ATS.Features.AddApplicationFormData;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
+	private readonly string _atsTestFolder;
+
 	public AddApplicationFormDataIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
+		_atsTestFolder = _configuration
+						.GetSection("AlibabaOss")
+						.GetValue<string>("ATSTestFolder") ?? string.Empty;
+
+	}
+
+	private IFormFile CreateFakeFormFile(byte[] content, string fileName)
+	{
+		var stream = new MemoryStream(content);
+		return new FormFile(stream, 0, content.Length, "file", fileName)
+		{
+			Headers = new HeaderDictionary(),
+			ContentType = "text/plain"
+		};
 	}
 
 	Guid EmailId = Guid.NewGuid();
@@ -21,6 +39,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
 		DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
+		string genericFileName = "generic.txt";
 
 		var personal = new PersonalDetailsDTO
 		{
@@ -35,12 +54,12 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			DOB = sampleDate,
 			MobileNumber = "+639171234567",
 			EmailAlternative = "juan.delacruz@gmail.com",
-			AdditionalGovtIDFile = sampleFileContent,
-			AdditionalGovtIDFileName = "passport.txt",
-			NBIClearanceFile = sampleFileContent,
-			NBIClearanceFileName = "nbi_clearance.txt",
-			ResumeFile = sampleFileContent,
-			ResumeFileName = "juan_delacruz_resume.txt",
+			AdditionalGovtIDFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			AdditionalGovtIDFileName = genericFileName,
+			NBIClearanceFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			NBIClearanceFileName = genericFileName,
+			ResumeFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			ResumeFileName = genericFileName,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -69,26 +88,26 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
 			HighSchoolGraduationDate = sampleDate,
-			HighSchoolDiplomaFile = sampleFileContent,
-			HighSchoolDiplomaFileName = "highschool_diploma.txt",
+			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			HighSchoolDiplomaFileName = genericFileName,
 			SeniorHighSchoolName = "UST Senior High School",
 			SeniorHighSchoolGraduationDate = sampleDate,
-			SeniorHighSchoolDiplomaFile = sampleFileContent,
-			SeniorHighSchoolDiplomaFileName = "shs_diploma.txt",
+			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			SeniorHighSchoolDiplomaFileName = genericFileName,
 			BachelorsSchoolName = "University of Santo Tomas",
 			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = sampleFileContent,
-			BachelorsDiplomaFileName = "bachelors_diploma.txt",
+			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			BachelorsDiplomaFileName = genericFileName,
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = Convert.FromBase64String("SGVsbG8gV29ybGQ="),
-			MastersDiplomaFileName = "masters_diploma.txt",
+			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			MastersDiplomaFileName = genericFileName,
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = Array.Empty<byte>(),
-			DoctorateDiplomaFileName = string.Empty,
+			DoctorateDiplomaFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			DoctorateDiplomaFileName = genericFileName,
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -100,8 +119,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
 			LicenseExpiryDate = sampleDate,
-			LicenseUploadFile = Convert.FromBase64String("SGVsbG8gV29ybGQ="),
-			LicenseUploadFileName = "aws_certificate.txt",
+			LicenseUploadFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			LicenseUploadFileName = genericFileName,
 			CreatedDate = DateTime.UtcNow
 		};
 
@@ -121,8 +140,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
 			Emp1SupervisorContactNumber = "+639171234567",
-			Emp1COEUploadFile = sampleFileContent,
-			Emp1COEUploadFileName = "coe.txt",
+			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			Emp1COEUploadFileName = genericFileName,
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
 			Emp2PermissionToContact = true,
@@ -135,8 +154,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
 			Emp2SupervisorContactNumber = "+639189876543",
-			Emp2COEUploadFile = sampleFileContent,
-			Emp2COEUploadFileName = "coe.txt",
+			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			Emp2COEUploadFileName = genericFileName,
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
 			Emp3PermissionToContact = true,
@@ -149,8 +168,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "+639155551234",
-			Emp3COEUploadFile = sampleFileContent,
-			Emp3COEUploadFileName = "coe.txt",
+			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, genericFileName),
+			Emp3COEUploadFileName = genericFileName,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -190,6 +209,11 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.IsAdded.Should().BeTrue();
+
+		if (result.IsAdded == true)
+		{
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{genericFileName}");
+		}
 	}
 
 	[Fact]
@@ -225,26 +249,26 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
 			HighSchoolGraduationDate = sampleDate,
-			HighSchoolDiplomaFile = sampleFileContent,
+			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, "highschool_diploma.txt"),
 			HighSchoolDiplomaFileName = "highschool_diploma.txt",
 			SeniorHighSchoolName = "UST Senior High School",
 			SeniorHighSchoolGraduationDate = sampleDate,
-			SeniorHighSchoolDiplomaFile = sampleFileContent,
+			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, "shs_diploma.txt"),
 			SeniorHighSchoolDiplomaFileName = "shs_diploma.txt",
 			BachelorsSchoolName = "University of Santo Tomas",
 			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = sampleFileContent,
+			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, "bachelors_diploma.txt"),
 			BachelorsDiplomaFileName = "bachelors_diploma.txt",
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = sampleFileContent,
+			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, "masters_diploma.txt"),
 			MastersDiplomaFileName = "masters_diploma.txt",
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = Array.Empty<byte>(),
-			DoctorateDiplomaFileName = string.Empty,
+			DoctorateDiplomaFile = CreateFakeFormFile(Array.Empty<byte>(), "doctorate_diploma.txt"),
+			DoctorateDiplomaFileName = "doctorate_diploma.txt",
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -256,7 +280,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
 			LicenseExpiryDate = sampleDate,
-			LicenseUploadFile = sampleFileContent,
+			LicenseUploadFile = CreateFakeFormFile(sampleFileContent, "aws_certificate.txt"),
 			LicenseUploadFileName = "aws_certificate.txt",
 			CreatedDate = DateTime.UtcNow
 		};
@@ -277,7 +301,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
 			Emp1SupervisorContactNumber = "+639171234567",
-			Emp1COEUploadFile = sampleFileContent,
+			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp1COEUploadFileName = "coe.txt",
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
@@ -291,7 +315,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
 			Emp2SupervisorContactNumber = "+639189876543",
-			Emp2COEUploadFile = sampleFileContent,
+			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp2COEUploadFileName = "coe.txt",
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
@@ -305,7 +329,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "+639155551234",
-			Emp3COEUploadFile = sampleFileContent,
+			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp3COEUploadFileName = "coe.txt", 
 			CreatedDate = DateTime.UtcNow,
 		};

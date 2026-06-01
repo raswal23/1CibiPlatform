@@ -10,17 +10,19 @@
                     <MudPaper Style="margin:100px;" Elevation="0">
                         <MudGrid Justify="Justify.Center"
                                  AlignItems="AlignItems.Center">
-                            <MudItem xs="12" sm="7" Class="d-flex justify-center align-center">
+                            <MudItem xs="12" sm="6" Class="d-flex justify-center align-content-center">
+                            <MudPaper Elevation="0" Style="width: 100%;">
                                 <div class="d-flex flex-column align-center text-center" style="height:100%; justify-content:center; padding:24px;">
                                     <MudText Typo="Typo.h5" Style="font-weight:700;" Class="gradient-text">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
                                     <div class="mt-4 d-flex" style="align-items:center; gap:16px; justify-content:center ">
                                         <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:500px; height:auto;" />
                                     </div>
                                 </div>
+                            </MudPaper>
+  
                             </MudItem>
-
-                            <MudItem xs="12" sm="5">
-                                <div style=" display:flex; align-items:center; padding:18px;">
+                            <MudItem xs="12" sm="6" Class="d-flex justify-center align-center">
+                                <div style="padding:18px;">
                                     <MudPaper Class="pa-4" Style="background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
                                         <MudText Typo="Typo.subtitle1" Style="font-weight:700;" Class="mb-2 gradient-text">IMPORTANT NOTICE!</MudText>
                                         <MudText Typo="Typo.body2" Class="mb-3">
@@ -166,7 +168,7 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="6">
-                            <MudPaper Class="pa-10" Elevation="0" Style=" height: 540px; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
+                            <MudPaper Class="pa-10" Elevation="0" Style=" height: auto; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
                                 <div class="d-flex flex-column align-center" style="gap:12px;">
                                     <MudImage Src="images/generic/default_picture.jpg"
                                               Alt="User Profile"
@@ -176,7 +178,7 @@
                                     <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                         <MudFileUpload @ref="@GovernmentUploadIdFile"
                                                        T="IBrowserFile"
-                                                       @bind-Files="GovernmentIdFile"
+                                                       @bind-Files="personalDetails.AdditionalGovtIDFile"
                                                        Accept=".xls,.xlsx,.csv"
                                                        DragAndDrop="true">
                                             <CustomContent>
@@ -188,11 +190,25 @@
                                                             Label="Upload Unexpired Government ID" />
                                                 </div>
                                             </CustomContent>
-                                            <SelectedTemplate />
+                                            <SelectedTemplate>
+                                                @if (context != null)
+                                                {
+                                                    <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                            <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           aria-label="Remove file"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                        </MudStack>
+                                                    </div>
+                                                }
+                                            </SelectedTemplate>
                                         </MudFileUpload>
 
-                                        <MudFileUpload @ref="@NBIClearanceUploadFile"
-                                                       @bind-Files="NBIClearanceFile"
+                                        <MudFileUpload T="IBrowserFile" @ref="@NBIClearanceUploadFile"
+                                                       @bind-File="personalDetails.NBIClearanceFile"
                                                        Accept=".xls,.xlsx,.csv"
                                                        DragAndDrop="true"
                                                        Class="mt-4">
@@ -205,11 +221,25 @@
                                                             Label="Upload NBI Clearance" />
                                                 </div>
                                             </CustomContent>
-                                            <SelectedTemplate />
+                                            <SelectedTemplate>
+                                                @if (context != null)
+                                                {
+                                                    <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                            <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           aria-label="Remove file"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                        </MudStack>
+                                                    </div>
+                                                }
+                                            </SelectedTemplate>
                                         </MudFileUpload>
 
-                                        <MudFileUpload @ref="@CVOrResumeUploadFile"
-                                                       @bind-Files="CVOrResumeFile"
+                                        <MudFileUpload T="IBrowserFile" @ref="@CVOrResumeUploadFile"
+                                                       @bind-File="personalDetails.ResumeFile"
                                                        Accept=".xls,.xlsx,.csv"
                                                        DragAndDrop="true"
                                                        Class="mt-4">
@@ -222,7 +252,21 @@
                                                             Label="Upload CV / Resume" />
                                                 </div>
                                             </CustomContent>
-                                            <SelectedTemplate />
+                                            <SelectedTemplate>
+                                                @if (context != null)
+                                                {
+                                                    <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                            <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           aria-label="Remove file"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                        </MudStack>
+                                                    </div>
+                                                }
+                                            </SelectedTemplate>
                                         </MudFileUpload>
                                     </div>
                                 </div>
@@ -283,7 +327,12 @@
                         </MudItem>
 
                         <MudItem xs="12" Style="margin-bottom:-10px;">
-                            <MudCheckBox T="bool" Class="small-checkbox-label" Style="margin-bottom:-12px;" @bind-Checked="SameAsPermanent" Label="Check if current address is the same as permanent address" />
+                            <MudCheckBox T="bool" 
+                                         Class="small-checkbox-label" 
+                                         Style="margin-bottom:-12px;" 
+                                         Checked="SameAsPermanent"
+                                         CheckedChanged="OnSameAsPermanentChanged" 
+                                         Label="Check if current address is the same as permanent address" />
                         </MudItem>
 
                         <MudItem xs="12" sm="4">
@@ -373,14 +422,24 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="6">
-                            <MudTextField FullWidth="true"
-                                          Adornment="Adornment.Start"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Class="oneplatform-rounded-input"
-                                          @bind-Value="educationalBackground.HighestEducationalAttainment"
-                                          Label="Highest Educational Attainment" />
+                            <MudSelect T="string"
+                                        @bind-Value="educationalBackground.HighestEducationalAttainment"
+                                        Class="oneplatform-rounded-input"
+                                        Adornment="Adornment.Start"
+                                        Variant="Variant.Outlined"
+                                        Margin="Margin.Dense"
+                                        Label="Highest Educational Attainment"
+                                        FullWidth="true">
+                                <MudSelectItem Value="@("None")">None</MudSelectItem>
+                                <MudSelectItem Value="@("Elementary Graduate")">Elementary Graduate</MudSelectItem>
+                                <MudSelectItem Value="@("High School Graduate")">High School Graduate</MudSelectItem>
+                                <MudSelectItem Value="@("Senior High School Graduate")">Senior High School Graduate</MudSelectItem>
+                                <MudSelectItem Value="@("College Graduate")">College Graduate</MudSelectItem>
+                                <MudSelectItem Value="@("Master's Graduate")">Master's Graduate</MudSelectItem>
+                                <MudSelectItem Value="@("Doctorate Graduate")">Doctorate Graduate</MudSelectItem>
+                            </MudSelect>
                         </MudItem>
+
                         <MudItem xs="12" sm="3">
                             <MudDatePicker Label="Graduation Date"
                                            Adornment="Adornment.End"
@@ -403,8 +462,8 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="6">
-                            <MudFileUpload @ref="@DiplomaORTORUploadFile"
-                                           @bind-Files="DiplomaORTORFile"
+                            <MudFileUpload T="IBrowserFile" @ref="@DiplomaORTORUploadFile"
+                                           @bind-File="DiplomaORTORFile"
                                            Accept=".xls,.xlsx,.csv"
                                            DragAndDrop="true">
                                 <CustomContent>
@@ -414,7 +473,21 @@
                                             OnClick="@context.OpenFilePickerAsync"
                                             Label="Upload Diploma / TOR" />
                                 </CustomContent>
-                                <SelectedTemplate />
+                                <SelectedTemplate>
+                                    @if (context != null)
+                                    {
+                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Color="Color.Default"
+                                                               Size="Size.Small"
+                                                               aria-label="Remove file"
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                            </MudStack>
+                                        </div>
+                                    }
+                                </SelectedTemplate>
                             </MudFileUpload>
                         </MudItem>
 
@@ -443,6 +516,7 @@
                                           @bind-Value="licensesDetails.LicenseName"
                                           Label="Professional License" />
                         </MudItem>
+
                         <MudItem xs="12" sm="4">
                             <MudDatePicker Adornment="Adornment.End"
                                            Required="true"
@@ -465,8 +539,8 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="4">
-                            <MudFileUpload @ref="@ProfessionalLicenseUploadFile"
-                                           @bind-Files="ProfessionalLicenseFile"
+                            <MudFileUpload T="IBrowserFile" @ref="@ProfessionalLicenseUploadFile"
+                                           @bind-File="licensesDetails.LicenseUploadFile"
                                            Accept=".xls,.xlsx,.csv"
                                            DragAndDrop="true">
                                 <CustomContent>
@@ -476,7 +550,21 @@
                                             OnClick="@context.OpenFilePickerAsync"
                                             Label="Upload Professional License" />
                                 </CustomContent>
-                                <SelectedTemplate />
+                                <SelectedTemplate>
+                                    @if (context != null)
+                                    {
+                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Color="Color.Default"
+                                                               Size="Size.Small"
+                                                               aria-label="Remove file"
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                            </MudStack>
+                                        </div>
+                                    }
+                                </SelectedTemplate>
                             </MudFileUpload>
                         </MudItem>
 
@@ -533,7 +621,7 @@
                                           Margin="Margin.Dense"
                                           Class="oneplatform-rounded-input"
                                           @bind-Value="professionalExperiences.Emp1CompanyPostalCode"
-                                          Label="Zip / Postal Code" />
+                                          Label="Zip Code" />
                         </MudItem>
                         <MudItem xs="12" sm="2">
                             <MudDatePicker @bind-Date="DatePermittedToContact"
@@ -577,8 +665,8 @@
                         </MudItem>
 
                         <MudItem xs="12" sm="3" Class="mt-2">
-                            <MudFileUpload @ref="@COEIdUploadFile"
-                                           @bind-Files="COEIdFile"
+                            <MudFileUpload T="IBrowserFile" @ref="@COEIdUploadFile"
+                                           @bind-File="professionalExperiences.Emp1COEUploadFile"
                                            Accept=".xls,.xlsx,.csv"
                                            DragAndDrop="true">
                                 <CustomContent>
@@ -588,7 +676,21 @@
                                             OnClick="@context.OpenFilePickerAsync"
                                             Label="Upload COE/ID" />
                                 </CustomContent>
-                                <SelectedTemplate />
+                                <SelectedTemplate>
+                                    @if (context != null)
+                                    {
+                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Color="Color.Default"
+                                                               Size="Size.Small"
+                                                               aria-label="Remove file"
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                            </MudStack>
+                                        </div>
+                                    }
+                                </SelectedTemplate>
                             </MudFileUpload>
                         </MudItem>
 
@@ -995,6 +1097,8 @@
     </MudPaper>
 
 @code {
+    private static readonly Guid FixedGuid = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     // Stepper and general
     private MudStepper? _stepper;
     private int _activeStep;
@@ -1049,6 +1153,23 @@
     private TimeSpan? Ref2BestTime;
     private bool AddAnotherReference;
 
+    private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
+    {
+        if (await GovernmentUploadIdFile.RemoveFileAsync(file))
+            return; // removed from single-upload
+        if (await NBIClearanceUploadFile.RemoveFileAsync(file))
+            return;
+        if (await CVOrResumeUploadFile.RemoveFileAsync(file))
+            return;
+        if (await DiplomaORTORUploadFile.RemoveFileAsync(file))
+            return;
+        if (await ProfessionalLicenseUploadFile.RemoveFileAsync(file))
+            return;
+        if (await COEIdUploadFile.RemoveFileAsync(file))
+            return;
+    }
+
+
     private async Task SkipStep()
     {
         if (_stepper is not null)
@@ -1072,6 +1193,7 @@
         showPhilSys = true;
     }
 
+    // These handlers convert single InputFile event to a single-item IReadOnlyList
     private Task OnGovtIdUpload(InputFileChangeEventArgs e)
     {
         GovernmentIdFile = e.File;
@@ -1108,8 +1230,10 @@
         return Task.CompletedTask;
     }
 
-    private void OnSameAsPermanentChanged()
+    private void OnSameAsPermanentChanged(bool value)
     {
+        SameAsPermanent = value;
+
         if (SameAsPermanent)
         {
             addressDetails.PermanentAddress = addressDetails.CurrentAddress;
@@ -1119,6 +1243,7 @@
             addressDetails.PermanentPostalCode = addressDetails.CurrentPostalCode;
         }
     }
+
 
     private async Task SaveAndNextAsync()
     {
@@ -1133,113 +1258,68 @@
 
     private async Task SubmitForm()
     {
+        personalDetails.EmailInvitationID = FixedGuid;
+        addressDetails.EmailInvitationID = FixedGuid;
+        educationalBackground.EmailInvitationID = FixedGuid;
+        licensesDetails.EmailInvitationID = FixedGuid;
+        professionalExperiences.EmailInvitationID = FixedGuid;
+        referenceDetails.EmailInvitationID = FixedGuid;
+
+        personalDetails.CreatedDate = DateTime.Now;
+        addressDetails.CreatedDate = DateTime.Now;
+        educationalBackground.CreatedDate = DateTime.Now;
+        licensesDetails.CreatedDate = DateTime.Now;
+        professionalExperiences.CreatedDate = DateTime.Now;
+        referenceDetails.CreatedDate = DateTime.Now;
+
         //Step 1
         personalDetails.DOB = DateOnly.FromDateTime(DateOfBirth!.Value);
 
-        if (NoMiddleName)
+        if (NoMiddleName && string.IsNullOrEmpty(personalDetails.MiddleName))
         {
-            personalDetails.MiddleName = "";
-        }
-
-        if (CVOrResumeFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await CVOrResumeFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.ResumeFile = ms.ToArray(); 
-        }
-
-        if (NBIClearanceFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await NBIClearanceFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.NBIClearanceFile = ms.ToArray();
-        }
-
-        if (CVOrResumeFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await CVOrResumeFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.ResumeFile = ms.ToArray();
+            personalDetails.MiddleName = string.Empty;
         }
 
         addressDetails.TypeOfOwnership = OwnershipOtherText;
 
-        if (DiplomaORTORFile != null)
+        if (DiplomaORTORFile is not null)
         {
-            using var ms = new MemoryStream();
-
-            await DiplomaORTORFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
             if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
             {
                 educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
+                educationalBackground.HighSchoolDiplomaFile = DiplomaORTORFile;
             }
             else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
             {
                 educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
+                educationalBackground.SeniorHighSchoolDiplomaFile = DiplomaORTORFile;
             }
             else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
             {
                 educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
                 educationalBackground.BachelorsDegree = DegreeWithMajor;
-                educationalBackground.BachelorsDiplomaFile = ms.ToArray();
+                educationalBackground.BachelorsDiplomaFile = DiplomaORTORFile;
             }
             else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
             {
                 educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
                 educationalBackground.MastersDegree = DegreeWithMajor;            
-                educationalBackground.MastersDiplomaFile = ms.ToArray();
+                educationalBackground.MastersDiplomaFile = DiplomaORTORFile;
             }
             else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
             {
                 educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
                 educationalBackground.DoctorateDegree = DegreeWithMajor;
-                educationalBackground.DoctorateDiplomaFile = ms.ToArray();
+                educationalBackground.DoctorateDiplomaFile = DiplomaORTORFile;
             }
-            else {}
         }
 
         licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
-        if (ProfessionalLicenseFile != null)
-        {
-            using var ms = new MemoryStream();
 
-            await ProfessionalLicenseFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            licensesDetails.LicenseUploadFile = ms.ToArray();
-        }
 
         professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact!.Value);
         professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment!.Value);
         professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment!.Value);
-        if (COEIdFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await COEIdFile
-                .OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            professionalExperiences.Emp1COEUploadFile = ms.ToArray();
-        }
 
         if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
         {
@@ -1250,7 +1330,8 @@
             referenceDetails.Ref2BestTimeToContact = Ref2BestDate.Value.Date + Ref2BestTime.Value;
         }
 
-        if (_stepper is not null)
-            await _stepper.NextStepAsync();
+        await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails);
+
+
     }
 }

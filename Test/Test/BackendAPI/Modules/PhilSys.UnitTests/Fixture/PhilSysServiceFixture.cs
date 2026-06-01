@@ -60,9 +60,10 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 				{
 					new KeyValuePair<string,string>("PhilSys:LivenessSessionExpiryInMinutes","5"),
 					new KeyValuePair<string,string>("PhilSys:LivenessBaseUrl","http://localhost:5134"),
-					new KeyValuePair<string,string>("PhilSys:ClientID","9ffe0ab6-1be1-47a8-bd3a-8560f1652a1a"),
-					new KeyValuePair<string,string>("PhilSys:ClientSecret","YnQpGs34mdlH2bumAzzEhRc0pJXAjfcX8qBSDZyMtdiU4HDVwx4SAsIFLuLxHt51"),
-					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKey","eyJpdiI6Im9YTTRTTXpwbDF0ZlRvakFHRG1HTnc9PSIsInZhbHVlIjoiUlo3WFJmM1dZUEVSdmNNbDJrU3o2Zz09IiwibWFjIjoiZjJmNWQxN2M4ZjgxMDQ1NDE5MzYzNTU1ZWNiMzU0MDk3Y2ZkNjc5NDA1Y2VlOTViOTQ5NmJhMWIzN2NiMzIxZCIsInRhZyI6IiJ9"),
+					new KeyValuePair<string,string>("PhilSys:ClientID","client-id"),
+					new KeyValuePair<string,string>("PhilSys:ClientSecret","client-secret"),
+					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKey","test-key"),
+					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKeyEmpty",""),
 				})
 				.Build();
 

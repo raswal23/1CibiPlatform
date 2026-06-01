@@ -1,5 +1,4 @@
-﻿using Aliyun.OSS;
-using ATS.Data.Context;
+﻿using ATS.Data.Context;
 using BuildingBlocks.SharedServices.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -18,9 +17,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IHttpContextAccessor _httpContextAccessor;
 	protected readonly IConfiguration _configuration;
 	protected readonly ISecureToken _generateToken;
-	private readonly OssClient? _ossClient;
-	private readonly string? _ossBucket;
-	private readonly List<string> _uploadedKeys = new();
+	protected readonly IObjectStorageService _objectStorageService;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
 	{
@@ -31,15 +28,11 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_dbContext = _scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		_httpContextAccessor = _scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
-		_ossClient = _scope.ServiceProvider.GetService<OssClient>();
-		_ossBucket = _configuration.GetValue<string>("AlibabaOss:BucketName");
-	}
-	protected void RegisterUploadedObject(string key)
-	{
-		if (!string.IsNullOrEmpty(key)) _uploadedKeys.Add(key);
+		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
+
 	}
 
-	// Runs before each test. Ensures database tables used in tests are cleaned to avoid cross-test pollution.
+
 	public async Task InitializeAsync()
 	{
 		try
@@ -68,25 +61,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 
 	public Task DisposeAsync()
 	{
-		if (_ossClient is not null && !string.IsNullOrEmpty(_ossBucket))
-		{
-			var prefix = _configuration.GetValue<string>("AlibabaOss:TestPrefix");
-			if (!string.IsNullOrEmpty(prefix))
-			{
-				var req = new ListObjectsRequest(_ossBucket) { Prefix = prefix };
-				ObjectListing listing;
-				do
-				{
-					listing = _ossClient.ListObjects(req);
-					foreach (var s in listing.ObjectSummaries)
-					{
-						try { _ossClient.DeleteObject(_ossBucket, s.Key); }
-						catch { }
-					}
-					req.Marker = listing.NextMarker;
-				} while (listing.IsTruncated);
-			}
-		}
 		_scope.Dispose();
 		return Task.CompletedTask;
 	}

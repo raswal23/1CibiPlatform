@@ -7,7 +7,7 @@ public record LicensesDetailsDTO
 	public string? LicenseName { get; set; }
 	public string? LicenseNumber { get; set; }
 	public DateOnly? LicenseExpiryDate { get; set; }
-	public byte[]? LicenseUploadFile { get; set; }
+	public IFormFile? LicenseUploadFile { get; set; }
 	public string? LicenseUploadFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

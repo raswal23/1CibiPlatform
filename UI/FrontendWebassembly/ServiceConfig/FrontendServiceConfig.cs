@@ -1,8 +1,5 @@
 namespace FrontendWebassembly.ServiceConfig;
 
-using FrontendWebassembly.Services.Shared.Implementation;
-using FrontendWebassembly.Services.Shared.Interfaces;
-
 public static class FrontendServiceConfig
 {
 	public static IServiceCollection AddFrontEndServices(this IServiceCollection services, IConfiguration configuration, Microsoft.AspNetCore.Components.WebAssembly.Hosting.IWebAssemblyHostEnvironment env)
@@ -65,6 +62,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAIAgentChatService, AIChatService>();
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
+		services.AddScoped<IATSService, ATSService>();
 
 		return services;
 	}

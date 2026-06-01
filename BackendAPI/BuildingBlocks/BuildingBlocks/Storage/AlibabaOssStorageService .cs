@@ -8,8 +8,7 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 	private readonly OssClient _client;
 	private readonly IConfiguration _configuration;
 	private readonly string OssBucket = string.Empty;
-	private readonly string _testPrefix;
-
+	private readonly string _atsTestFolder;
 	public AlibabaOssStorageService(
 		OssClient client,
 		IConfiguration configuration)
@@ -19,7 +18,9 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 		OssBucket = _configuration
 					 .GetSection("AlibabaOss")
 					 .GetValue<string>("BucketName") ?? "one-cibi";
-		_testPrefix = _configuration.GetValue<string>("AlibabaOss:TestPrefix") ?? string.Empty;
+		_atsTestFolder = _configuration
+						.GetSection("AlibabaOss")
+						.GetValue<string>("ATSTestFolder") ?? string.Empty;
 	}
 
 	public async Task<string> UploadAsync(
@@ -29,9 +30,9 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 	{
 		ArgumentNullException.ThrowIfNull(stream);
 
-		var objectKey = string.IsNullOrEmpty(_testPrefix)
+		var objectKey = string.IsNullOrEmpty(_atsTestFolder)
 			? $"uploads/{Guid.NewGuid():N}-{fileName}"
-			: $"{_testPrefix.TrimEnd('/')}/{Guid.NewGuid():N}-{fileName}";
+			: $"{_atsTestFolder.TrimEnd('/')}/{fileName}";
 
 		await Task.Run(() => { 
 			ct.ThrowIfCancellationRequested(); 
