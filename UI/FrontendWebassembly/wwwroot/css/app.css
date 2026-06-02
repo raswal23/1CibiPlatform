@@ -432,15 +432,25 @@ code {
 }
 
 .ats-signature {
-    width: auto;
+    height: 200px;
+    width: 50%;
     border: 2px solid grey;
     border-radius: 4px;
+    display: flex;
+    flex-direction: column;
 }
-
 .ats-signature-button {
     margin-top: 12px;
     background: linear-gradient(90deg, #102247 0%, #2a77ae 50%);
     color: white;
     border-radius: 4px;
-    padding: 4px;
+    padding: 8px;
+}
+
+.centered-upload .mud-input-helper-text .me-auto{
+    text-align: center;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }

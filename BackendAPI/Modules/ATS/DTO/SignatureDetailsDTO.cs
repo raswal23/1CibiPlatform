@@ -1,6 +1,6 @@
-﻿namespace FrontendWebassembly.DTO.ATS;
+﻿namespace ATS.DTO;
 
-public record SignatureDetailsDTO
+public class SignatureDetailsDTO
 {
 	public Guid SignatureDetailsID { get; set; }
 	public Guid EmailInvitationID { get; set; }

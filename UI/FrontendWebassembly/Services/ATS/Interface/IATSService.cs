@@ -7,5 +7,6 @@ public interface IATSService
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,
 											ProfessionalExperiencesDTO ProfessionalExperiences,
-											ReferenceDetailsDTO ReferenceDetails);
+											ReferenceDetailsDTO ReferenceDetails,
+											SignatureDetailsDTO SignatureDetails);
 }
