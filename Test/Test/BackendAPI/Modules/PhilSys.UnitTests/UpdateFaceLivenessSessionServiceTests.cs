@@ -174,7 +174,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 				It.IsAny<string>()
 				))
 			.ReturnsAsync(BasicInfoOrResponse);
-			_fixture.MockPhilSysResultRepository.Setup(x => x.AddTransactionResultDataAsync(It.IsAny<PhilSysTransactionResult>())).ReturnsAsync(true);
+			_fixture.MockPhilSysRepository.Setup(x => x.AddTransactionResultDataAsync(It.IsAny<PhilSysTransactionResult>())).ReturnsAsync(true);
 
 			// Act
 			var result = await service.UpdateFaceLivenessSessionAsync(

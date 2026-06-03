@@ -16,18 +16,6 @@ public class PhilSysRepository : IPhilSysRepository
 		return true;
 	}
 
-	public async Task<PhilSysTransaction> UpdateTransactionDataAsync(PhilSysTransaction transaction)
-	{
-		transaction.IsTransacted = true;
-		transaction.TransactedAt = DateTime.UtcNow;
-
-		_dbcontext.PhilSysTransactions.Update(transaction);
-
-		await _dbcontext.SaveChangesAsync();
-
-		return transaction;
-	}
-
 	public async Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId)
 	{
 		var transaction = await _dbcontext.PhilSysTransactions.FirstOrDefaultAsync(x => x.HashToken == HashToken);
@@ -70,6 +58,24 @@ public class PhilSysRepository : IPhilSysRepository
 	{
 		_dbcontext.PhilSysTransactions.Remove(transaction!);
 		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<PhilSysTransaction> UpdateTransactionDataAsync(PhilSysTransaction transaction)
+	{
+		transaction.IsTransacted = true;
+		transaction.TransactedAt = DateTime.UtcNow;
+
+		_dbcontext.PhilSysTransactions.Update(transaction);
+
+		await _dbcontext.SaveChangesAsync();
+
+		return transaction;
+	}
+
+	public async Task<bool> AddTransactionResultDataAsync(PhilSysTransactionResult philSysTransactionResult)
+	{
+		await _dbcontext.PhilSysTransactionResults.AddAsync(philSysTransactionResult);
 		return true;
 	}
 }

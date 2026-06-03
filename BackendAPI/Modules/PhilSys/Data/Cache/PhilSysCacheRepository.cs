@@ -3,46 +3,51 @@ namespace PhilSys.Data.Cache;
 
 public class PhilSysCacheRepository : IPhilSysRepository
 {
-	private readonly IPhilSysRepository philSysRepository;
-	private readonly HybridCache hybridCache;
+	private readonly IPhilSysRepository _philSysRepository;
+	private readonly HybridCache _hybridCache;
 
 	public PhilSysCacheRepository(IPhilSysRepository philSysRepository, HybridCache hybridCache)
 	{
-		this.philSysRepository = philSysRepository;
-		this.hybridCache = hybridCache;
+		_philSysRepository = philSysRepository;
+		_hybridCache = hybridCache;
 	}
 
 	public async Task<bool> AddTransactionDataAsync(PhilSysTransaction PhilSysTransaction)
 	{
-		return await philSysRepository.AddTransactionDataAsync(PhilSysTransaction);
+		return await _philSysRepository.AddTransactionDataAsync(PhilSysTransaction);
+	}
+
+	public async Task<bool> AddTransactionResultDataAsync(PhilSysTransactionResult PhilSysTransactionResult)
+	{
+		return await _philSysRepository.AddTransactionResultDataAsync(PhilSysTransactionResult);
 	}
 
 	public async Task<bool> DeleteTransactionDataAsync(PhilSysTransaction HashToken)
 	{
-		return await philSysRepository.DeleteTransactionDataAsync(HashToken);
+		return await _philSysRepository.DeleteTransactionDataAsync(HashToken);
 	}
 
 	public async Task<TransactionStatusResponse> GetLivenessSessionStatusAsync(string HashToken)
 	{
 		var cacheKey = $"PhilSys_LivenessSessionStatus_{HashToken}";
 
-		return await hybridCache.GetOrCreateAsync<TransactionStatusResponse>(
+		return await _hybridCache.GetOrCreateAsync<TransactionStatusResponse>(
 			cacheKey,
-			async status => await philSysRepository.GetLivenessSessionStatusAsync(HashToken));
+			async status => await _philSysRepository.GetLivenessSessionStatusAsync(HashToken));
 	}
 
 	public async Task<PhilSysTransaction> GetTransactionDataByHashTokenAsync(string HashToken)
 	{
-		return await philSysRepository.GetTransactionDataByHashTokenAsync(HashToken);
+		return await _philSysRepository.GetTransactionDataByHashTokenAsync(HashToken);
 	}
 
 	public async Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId)
 	{
-		return await philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId);
+		return await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId);
 	}
 
-	public Task<PhilSysTransaction> UpdateTransactionDataAsync(PhilSysTransaction transaction)
+	public Task<PhilSysTransaction> UpdateTransactionDataAsync(PhilSysTransaction Transaction)
 	{
-		return philSysRepository.UpdateTransactionDataAsync(transaction);
+		return _philSysRepository.UpdateTransactionDataAsync(Transaction);
 	}
 }

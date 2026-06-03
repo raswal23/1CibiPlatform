@@ -53,17 +53,17 @@ public class ATSService : IATSService
 
 			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
 
-		await _unitOfWork.CommitAsync(ct);
+			await _unitOfWork.CommitAsync(ct);
 
 		_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 
 			return true;
-	}
+		}
 		catch (Exception ex)
 		{
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction. {ex.InnerException.Message}"); 
+			throw new InternalServerException($"Failed to add transaction. {ex.Message}"); 
 		}
 
 	}
