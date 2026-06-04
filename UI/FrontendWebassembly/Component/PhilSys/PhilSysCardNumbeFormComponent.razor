@@ -27,6 +27,7 @@
 @code {
     private IdentityData identityData  = new();
     private MudForm? pcnForm;
+    [Parameter] public string? HashToken { get; set; }
 
     private async Task SubmitPCN()
     {
@@ -39,7 +40,7 @@
         var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
-            Navigation.NavigateTo(livenessLink, forceLoad: true);
+            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
         }
     }
 

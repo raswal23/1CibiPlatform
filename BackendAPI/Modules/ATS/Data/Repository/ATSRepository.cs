@@ -51,4 +51,12 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.SignatureDetails.AddAsync(signatureDetails);
 		return true;
 	}
+
+	public async Task<Guid> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+						.Where(af => af.HashToken == hashToken)
+						.Select(af => af.EmailInvitationID)
+						.FirstOrDefaultAsync(cancellationToken);
+	}
 }

@@ -10,4 +10,7 @@ public interface IATSService
 										   ReferenceDetailsDTO referenceDetails, 
 										   SignatureDetailsDTO signatureDetails,
 										   CancellationToken ct = default);
+
+	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, 
+																				 CancellationToken ct = default);
 }

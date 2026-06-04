@@ -1,24 +1,26 @@
-﻿
-using BuildingBlocks.Exceptions;
-
-namespace ATS.Services;
+﻿namespace ATS.Services;
 
 public class ATSService : IATSService
 {
 	private readonly ILogger<ATSService> _logger;
 	private readonly IATSRepository _atsRepository;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
+	private readonly string _applicationFormPath;
 
 	public ATSService(ILogger<ATSService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
+					  IConfiguration configuration,
 					  IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_unitOfWork = unitOfWork;
+		_configuration = configuration;
 		_objectStorageService = objectStorageService;
+		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] ?? "";
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, 
@@ -220,4 +222,15 @@ public class ATSService : IATSService
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return true;
 	}
+
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken ct = default)
+	{
+		Guid emailId = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
+		return new EmailIdAndApplicationFormPathDTO
+		{
+			EmailId = emailId,
+			ApplicationFormPath = _applicationFormPath
+		};
+	}
 }
+	

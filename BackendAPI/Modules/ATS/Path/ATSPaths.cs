@@ -15,6 +15,17 @@ public class ATSPaths : IReverseProxyModule
 				{
 					{ "PathSet", "/addapplicationformdata" }
 				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetEmailIdandApplicationFormPathEntryPoint",
+				MatchPath: "/ats/getemailidandapplicationformpath",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/addapplicationformdata" }
+				}
 			)
 		};
 	}

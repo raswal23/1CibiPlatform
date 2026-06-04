@@ -1,7 +1,7 @@
 ﻿@layout GenericLayout
 @inject NavigationManager Navigation
 @page "/s&i/ats/applicationform"
-
+@* @page "/s&i/ats/applicationform/{HashToken}" *@
 
 <div class="philsys-liveness-container">
 
@@ -87,13 +87,21 @@
     else
     {
         //Application Form
-        <ApplicationFormComponent/>
+        <ApplicationFormComponent ActiveStep="stepActive" ShowsPhilSys="philSysShow" HashToken="HashToken" />
     }
 </div>
 
 
 @code {
     private bool _showApplicationForm = false;
+    // [Parameter]
+    // public string? HashToken { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "philSysShow")]
+    public bool philSysShow { get; set; } 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "stepActive")]
+    public int stepActive { get; set; }
 
     private void Proceed()
     {

@@ -24,3 +24,4 @@ global using ATS.Data.UnitOfWork;
 global using Mapster;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.EntityFrameworkCore.Storage;
+global using BuildingBlocks.Exceptions;

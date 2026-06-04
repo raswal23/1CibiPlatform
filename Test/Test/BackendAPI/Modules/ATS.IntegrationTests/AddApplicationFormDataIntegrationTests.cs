@@ -12,6 +12,21 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
 	Guid EmailId = Guid.NewGuid();
+	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
+	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
+	string govermentIdFileName = $"{Guid.NewGuid}-govId.txt";
+	string nbiFileName = $"{Guid.NewGuid}-nbiId.txt";
+	string resumeFileName = $"{Guid.NewGuid}-govId.txt";
+	string highSchoolDiplomaFileName = $"{Guid.NewGuid}-highSchoolDiploma.txt";
+	string seniorHighSchoolDiplomaFileName = $"{Guid.NewGuid}-seniorHighSchoolDiplomaFileName.txt";
+	string bachelorDiplomaFileName = $"{Guid.NewGuid}-bachelorSchoolDiplomaFileName.txt";
+	string masterDiplomaFileName = $"{Guid.NewGuid}-masterSchoolDiplomaFileName.txt";
+	string doctorateDiplomaFileName = $"{Guid.NewGuid}-doctorateSchoolDiplomaFileName.txt";
+	string licenseFileName = $"{Guid.NewGuid}-licenseFileName.txt";
+	string emp1COEFileName = $"{Guid.NewGuid}-emp1COEFileName.txt";
+	string emp2COEFileName = $"{Guid.NewGuid}-emp2COEFileName.txt";
+	string emp3COEFileName = $"{Guid.NewGuid}-emp3COEFileName.txt";
+	string signatureFileName = $"{Guid.NewGuid}-signature.txt";
 
 	public AddApplicationFormDataIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
@@ -34,21 +49,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	public async Task AddApplicationFormData_WithSamplePayload_ShouldReturnTrue()
 	{
 		await SeedEmailInvitationRequestData();
-
-		byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
-		DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
-		var govermentIdFileName = $"{Guid.NewGuid}-govId.txt";
-		var nbiFileName = $"{Guid.NewGuid}-nbiId.txt";
-		var resumeFileName = $"{Guid.NewGuid}-govId.txt";
-		var highSchoolDiplomaFileName = $"{Guid.NewGuid}-highSchoolDiploma.txt";
-		var seniorHighSchoolDiplomaFileName = $"{Guid.NewGuid}-seniorHighSchoolDiplomaFileName.txt";
-		var bachelorSchoolDiplomaFileName = $"{Guid.NewGuid}-bachelorSchoolDiplomaFileName.txt";
-		var masterSchoolDiplomaFileName = $"{Guid.NewGuid}-masterSchoolDiplomaFileName.txt";
-		var doctorateSchoolDiplomaFileName = $"{Guid.NewGuid}-doctorateSchoolDiplomaFileName.txt";
-		var licenseFileName = $"{Guid.NewGuid}-licenseFileName.txt";
-		var emp1COEFileName = $"{Guid.NewGuid}-emp1COEFileName.txt";
-		var emp2COEFileName = $"{Guid.NewGuid}-emp2COEFileName.txt";
-		var emp3COEFileName = $"{Guid.NewGuid}-emp3COEFileName.txt";
 
 		var personal = new PersonalDetailsDTO
 		{
@@ -105,18 +105,18 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			SeniorHighSchoolDiplomaFileName = highSchoolDiplomaFileName,
 			BachelorsSchoolName = "University of Santo Tomas",
 			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, bachelorSchoolDiplomaFileName),
-			BachelorsDiplomaFileName = bachelorSchoolDiplomaFileName,
+			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, bachelorDiplomaFileName),
+			BachelorsDiplomaFileName = bachelorDiplomaFileName,
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, masterSchoolDiplomaFileName),
-			MastersDiplomaFileName = masterSchoolDiplomaFileName,
+			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, masterDiplomaFileName),
+			MastersDiplomaFileName = masterDiplomaFileName,
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = CreateFakeFormFile(sampleFileContent, doctorateSchoolDiplomaFileName),
-			DoctorateDiplomaFileName = doctorateSchoolDiplomaFileName,
+			DoctorateDiplomaFile = CreateFakeFormFile(sampleFileContent, doctorateDiplomaFileName),
+			DoctorateDiplomaFileName = doctorateDiplomaFileName,
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -210,7 +210,14 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			CreatedDate = DateTime.UtcNow
 		};
 
-		var command = new AddApplicationFormDataCommand(personal, address, education, licenses, experiences, reference);
+		var signature = new SignatureDetailsDTO
+		{
+			SignatureDetailsID = Guid.NewGuid(),
+			EmailInvitationID = EmailId,
+			Signature = CreateFakeFormFile(sampleFileContent, signatureFileName),
+		};
+
+		var command = new AddApplicationFormDataCommand(personal, address, education, licenses, experiences, reference, signature);
 
 		// Act
 		var result = await _sender.Send(command);
@@ -226,13 +233,14 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{resumeFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{highSchoolDiplomaFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{seniorHighSchoolDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bachelorSchoolDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{masterSchoolDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{doctorateSchoolDiplomaFileName}");			
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bachelorDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{masterDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{doctorateDiplomaFileName}");			
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{licenseFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp1COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp2COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp3COEFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{signatureFileName}");
 		}
 	}
 
@@ -269,26 +277,26 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
 			HighSchoolGraduationDate = sampleDate,
-			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, "highschool_diploma.txt"),
-			HighSchoolDiplomaFileName = "highschool_diploma.txt",
+			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, highSchoolDiplomaFileName),
+			HighSchoolDiplomaFileName = highSchoolDiplomaFileName,
 			SeniorHighSchoolName = "UST Senior High School",
 			SeniorHighSchoolGraduationDate = sampleDate,
-			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, "shs_diploma.txt"),
-			SeniorHighSchoolDiplomaFileName = "shs_diploma.txt",
+			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, seniorHighSchoolDiplomaFileName),
+			SeniorHighSchoolDiplomaFileName = seniorHighSchoolDiplomaFileName,
 			BachelorsSchoolName = "University of Santo Tomas",
 			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, "bachelors_diploma.txt"),
-			BachelorsDiplomaFileName = "bachelors_diploma.txt",
+			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, bachelorDiplomaFileName),
+			BachelorsDiplomaFileName = bachelorDiplomaFileName,
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, "masters_diploma.txt"),
-			MastersDiplomaFileName = "masters_diploma.txt",
+			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, masterDiplomaFileName),
+			MastersDiplomaFileName = masterDiplomaFileName,
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = CreateFakeFormFile(Array.Empty<byte>(), "doctorate_diploma.txt"),
-			DoctorateDiplomaFileName = "doctorate_diploma.txt",
+			DoctorateDiplomaFile = CreateFakeFormFile(Array.Empty<byte>(), doctorateDiplomaFileName),
+			DoctorateDiplomaFileName = doctorateDiplomaFileName,
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -386,14 +394,15 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			CreatedDate = DateTime.UtcNow
 		};
 
-		var command = new AddApplicationFormDataCommand(
-			PersonalDetails: null!,
-			AddressDetails: address,
-			EducationalBackground: education,
-			LicensesDetails: licenses,
-			ProfessionalExperiences: experiences,
-			ReferenceDetails: reference
-		);
+		var signature = new SignatureDetailsDTO
+		{
+			SignatureDetailsID = Guid.NewGuid(),
+			EmailInvitationID = EmailId,
+			Signature = CreateFakeFormFile(sampleFileContent, "signature.txt"),
+		};
+
+
+		var command = new AddApplicationFormDataCommand( null!, address, education, licenses, experiences,reference, signature);
 
 		// Act & Assert
 		await Assert.ThrowsAsync<NullReferenceException>(() =>

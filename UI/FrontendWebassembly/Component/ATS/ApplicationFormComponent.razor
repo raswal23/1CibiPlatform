@@ -1,4 +1,5 @@
 ﻿@inject IATSService ATSService
+@inject LocalStorageService LocalStorageService
 @using SigPad
 
 <MudPaper Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
@@ -188,7 +189,7 @@
                             <MudItem xs="12" sm="6">
                                 <MudPaper Class="pa-10" Elevation="0" Style=" height: auto; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
                                     <div class="d-flex flex-column align-center" style="gap:12px;">
-                                        <MudImage Src="images/generic/default_picture.jpg"
+                                        <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
                                                   Alt="User Profile"
                                                   Style="height: 200px; width: 200px; object-fit: cover; border-radius: 50%; outline: 2px solid #000;" />
                                         <MudText Typo="Typo.subtitle1">Biometric Image</MudText>
@@ -198,6 +199,7 @@
                                                            MaxFileSize="26214400"
                                                            @bind-Files="AdditionalGovtIDFile"
                                                            Accept=".pdf"
+                                                           OnFilesChanged="OnGovtIdUpload"
                                                            Required="true"
                                                            RequiredError="Government Id is required"
                                                            Class="centered-upload"
@@ -232,6 +234,7 @@
                                                            DragAndDrop="true"
                                                            Required="true"
                                                            @bind-Files="NBIClearanceFile"
+                                                           OnFilesChanged="OnNbiUpload"
                                                            RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
                                                            Class="mt-4 centered-upload">
@@ -265,6 +268,7 @@
                                                            DragAndDrop="true"
                                                            MaxFileSize="26214400"
                                                            Required="true"
+                                                           OnFilesChanged="OnCvUpload"
                                                            @bind-Files="ResumeFile"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
@@ -517,6 +521,7 @@
                                                Required="true"
                                                @bind-Files="DiplomaORTORFile"
                                                Class="centered-upload"
+                                               OnFilesChanged="OnDiplomaUpload"
                                                DragAndDrop="true">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
@@ -599,6 +604,7 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
+                                               OnFilesChanged="OnDiplomaUpload"
                                                Required="true"
                                                @bind-Files="LicenseFile"
                                                Class="centered-upload"
@@ -740,6 +746,7 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
+                                               OnFilesChanged="OnCoeUpload"
                                                Required="true"
                                                class="centered-upload"
                                                @bind-Files="Emp1COEFile"
@@ -1194,13 +1201,20 @@
    else
     {
         <div style="margin: 100px;">
-            <PhilSysComponent></PhilSysComponent>
+            <PhilSysComponent HashToken="HashToken"></PhilSysComponent>
         </div>
     }
 </MudPaper>
 
     @code {
     private MudForm _form;
+    [Parameter]
+    public bool ShowsPhilSys { get; set; } = false;
+    [Parameter]
+    public int ActiveStep { get; set; } = 1;
+    [Parameter]
+    public string? HashToken { get; set; }
+    private string? FaceUrl;
     private static readonly Guid FixedGuid = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     // Stepper and general
@@ -1276,6 +1290,27 @@
         LineWidth = 20
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_firstName") ?? string.Empty;
+        personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_middleName") ?? string.Empty;
+        personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_lastName") ?? string.Empty;
+        personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_suffix") ?? string.Empty;
+        string? dobString = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_birthDate");
+        personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_sex") ?? string.Empty;
+        personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_emailAddress") ?? string.Empty;
+        personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_phoneNumber") ?? string.Empty;
+        FaceUrl = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_profilePicture") ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(dobString))
+        {
+            if (DateTime.TryParse(dobString, out var dobDateTime))
+            {
+                personalDetails.DOB = DateOnly.FromDateTime(dobDateTime);
+            }
+        }
+    }
+
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
         if (await AdditionalGovtIDFileUpload.RemoveFileAsync(file))
@@ -1291,7 +1326,6 @@
         if (await Emp1COEUploadFileUpload.RemoveFileAsync(file))
             return;
     }
-
 
     private async Task SkipStep()
     {
@@ -1336,39 +1370,118 @@
         return;
     }
 
-    private Task OnNbiUpload(InputFileChangeEventArgs e)
+    private async Task OnNbiUpload(InputFileChangeEventArgs e)
     {
         NBIClearanceFile = e.File;
         personalDetails.NBIClearanceFileName = e.File.Name;
-        return Task.CompletedTask;
+
+        if (NBIClearanceFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await NBIClearanceFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.NBIClearanceFile = ms.ToArray();
+        }
+        return;
     }
 
-    private Task OnCvUpload(InputFileChangeEventArgs e)
+    private async Task OnCvUpload(InputFileChangeEventArgs e)
     {
         ResumeFile = e.File;
         personalDetails.ResumeFileName = e.File.Name;
-        return Task.CompletedTask;
+        if (ResumeFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await ResumeFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.ResumeFile = ms.ToArray();
+        }
+        return;
     }
 
-    private Task OnDiplomaUpload(InputFileChangeEventArgs e)
+    private async Task OnDiplomaUpload(InputFileChangeEventArgs e)
     {
         DiplomaORTORFile = e.File;
         DiplomaORTORFileName = e.File.Name;
-        return Task.CompletedTask;
+        if (DiplomaORTORFile is not null)
+        {
+            using var ms = new MemoryStream();
+
+            await DiplomaORTORFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
+            {
+                educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
+            {
+                educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
+            {
+                educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.BachelorsDegree = DegreeWithMajor;
+                educationalBackground.BachelorsDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
+            {
+                educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.MastersDegree = DegreeWithMajor;
+                educationalBackground.MastersDiplomaFile = ms.ToArray();
+            }
+            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
+            {
+                educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+                educationalBackground.DoctorateDegree = DegreeWithMajor;
+                educationalBackground.DoctorateDiplomaFile = ms.ToArray();
+            }
+        }
+        return;
     }
 
-    private Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
+    private async Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
     {
         LicenseFile = e.File;
         licensesDetails.LicenseUploadFileName = e.File.Name;
-        return Task.CompletedTask;
+        if (LicenseFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await LicenseFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            licensesDetails.LicenseUploadFile = ms.ToArray();
+        }
+        return;
     }
 
-    private Task OnCoeUpload(InputFileChangeEventArgs e)
+    private async Task OnCoeUpload(InputFileChangeEventArgs e)
     {
         Emp1COEFile = e.File;
         professionalExperiences.Emp1COEUploadFileName = e.File.Name;
-        return Task.CompletedTask;
+        if (Emp1COEFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await Emp1COEFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            professionalExperiences.Emp1COEUploadFile = ms.ToArray();
+        }
+
+        return;
     }
 
     private void OnSameAsPermanentChanged(bool value)
@@ -1445,95 +1558,21 @@
         }
 
 
-        if (NBIClearanceFile != null)
-        {
-            using var ms = new MemoryStream();
 
-            await NBIClearanceFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.NBIClearanceFile = ms.ToArray();
-        }
-
-        if (ResumeFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await ResumeFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.ResumeFile = ms.ToArray();
-        }
+    
 
         addressDetails.TypeOfOwnership = OwnershipOtherText;
 
-        if (DiplomaORTORFile is not null)
-        {
-            using var ms = new MemoryStream();
-
-            await DiplomaORTORFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
-            {
-                educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
-            }
-            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
-            {
-                educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
-            }
-            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
-            {
-                educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.BachelorsDegree = DegreeWithMajor;
-                educationalBackground.BachelorsDiplomaFile = ms.ToArray();
-            }
-            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
-            {
-                educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.MastersDegree = DegreeWithMajor;            
-                educationalBackground.MastersDiplomaFile = ms.ToArray();
-            }
-            else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
-            {
-                educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-                educationalBackground.DoctorateDegree = DegreeWithMajor;
-                educationalBackground.DoctorateDiplomaFile = ms.ToArray();
-            }
-        }
+        
 
         licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
-        if (LicenseFile != null)
-        {
-            using var ms = new MemoryStream();
 
-            await LicenseFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            licensesDetails.LicenseUploadFile = ms.ToArray();
-        }
 
         professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact!.Value);
         professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment!.Value);
         professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment!.Value);
 
-        if (Emp1COEFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await Emp1COEFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            professionalExperiences.Emp1COEUploadFile = ms.ToArray();
-        }
-
+ 
         if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
         {
             referenceDetails.Ref1BestTimeToContact = Ref1BestDate.Value.Date + Ref1BestTime.Value;
@@ -1545,6 +1584,14 @@
 
         await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 
-
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_firstName");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_middleName");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_lastName");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_suffix");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_birthDate");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_sex");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_emailAddress");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_phoneNumber");
+        await LocalStorageService.RemoveItemAsync($"{HashToken}_profilePicture");
     }
 }
