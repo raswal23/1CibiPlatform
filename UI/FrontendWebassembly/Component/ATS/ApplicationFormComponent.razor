@@ -1316,11 +1316,24 @@
         showPhilSys = true;
     }
 
-    private Task OnGovtIdUpload(InputFileChangeEventArgs e)
+    private async Task OnGovtIdUpload(InputFileChangeEventArgs e)
     {
         AdditionalGovtIDFile = e.File;
         personalDetails.AdditionalGovtIDFileName = e.File.Name;
-        return Task.CompletedTask;
+
+
+        if (AdditionalGovtIDFile != null)
+        {
+            using var ms = new MemoryStream();
+
+            await AdditionalGovtIDFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            personalDetails.ResumeFile = ms.ToArray();
+        }
+
+        return;
     }
 
     private Task OnNbiUpload(InputFileChangeEventArgs e)
@@ -1431,16 +1444,6 @@
             personalDetails.MiddleName = string.Empty;
         }
 
-        if (AdditionalGovtIDFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await AdditionalGovtIDFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            personalDetails.ResumeFile = ms.ToArray();
-        }
 
         if (NBIClearanceFile != null)
         {
