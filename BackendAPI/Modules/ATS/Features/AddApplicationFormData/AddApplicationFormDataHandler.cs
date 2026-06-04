@@ -5,7 +5,8 @@ public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
 											EducationalBackgroundDTO EducationalBackground, 
 											LicensesDetailsDTO LicensesDetails, 
 											ProfessionalExperiencesDTO ProfessionalExperiences, 
-											ReferenceDetailsDTO ReferenceDetails) : ICommand<AddApplicationFormDataResult>;
+											ReferenceDetailsDTO ReferenceDetails,
+											SignatureDetailsDTO SignatureDetails) : ICommand<AddApplicationFormDataResult>;
 public record AddApplicationFormDataResult(bool IsAdded);
 public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormDataCommand, AddApplicationFormDataResult>
 {
@@ -22,6 +23,7 @@ public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormD
 																   request.LicensesDetails, 
 																   request.ProfessionalExperiences,
 																   request.ReferenceDetails,
+																   request.SignatureDetails,
 																   cancellationToken);
 		return new AddApplicationFormDataResult(result);
 	}

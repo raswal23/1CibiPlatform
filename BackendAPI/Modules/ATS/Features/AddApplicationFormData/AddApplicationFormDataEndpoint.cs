@@ -5,7 +5,8 @@ public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails,
 											EducationalBackgroundDTO EducationalBackground, 
 											LicensesDetailsDTO LicensesDetails, 
 											ProfessionalExperiencesDTO ProfessionalExperiences, 
-											ReferenceDetailsDTO ReferenceDetails);
+											ReferenceDetailsDTO ReferenceDetails,
+											SignatureDetailsDTO SignatureDetials);
 public record AddApplicationFormDataResponse(bool IsAdded);
 
 public class AddApplicationFormDataEndpoint : ICarterModule
@@ -19,7 +20,8 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 															request.EducationalBackground, 
 															request.LicensesDetails, 
 															request.ProfessionalExperiences, 
-															request.ReferenceDetails);
+															request.ReferenceDetails,
+															request.SignatureDetials);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);
 			var response = new AddApplicationFormDataResponse(result.IsAdded);
 			return Results.Ok(response);

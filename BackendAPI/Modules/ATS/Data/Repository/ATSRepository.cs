@@ -45,4 +45,10 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.ReferenceDetails.AddAsync(referenceDetails);
 		return true;
 	}
+
+	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)
+	{
+		await _dbcontext.SignatureDetails.AddAsync(signatureDetails);
+		return true;
+	}
 }

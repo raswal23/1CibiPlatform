@@ -27,6 +27,7 @@ public class ATSService : IATSService
 														LicensesDetailsDTO licensesDetails, 
 														ProfessionalExperiencesDTO professionalExperiences, 
 														ReferenceDetailsDTO referenceDetails,
+														SignatureDetailsDTO signatureDetails,
 														CancellationToken ct = default)
 	{
 		var logContext = new
@@ -52,6 +53,8 @@ public class ATSService : IATSService
 			await AddProfessionalExperiencesDataAsync(professionalExperiences!, ct);
 
 			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
+
+			await AddSignatureDetailsDataAsync(signatureDetails!, ct);
 
 			await _unitOfWork.CommitAsync(ct);
 
@@ -201,6 +204,20 @@ public class ATSService : IATSService
 	{
 		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
 		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
+		return true;
+	}
+
+	private async Task<bool> AddSignatureDetailsDataAsync(SignatureDetailsDTO signatureDetailsDTO, CancellationToken cancellationToken)
+	{
+		string signatureKey = "";
+		if (signatureDetailsDTO.Signature != null)
+		{
+			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
+			signatureKey = await _objectStorageService.UploadAsync(signatureStream, signatureDetailsDTO.SignatureFileName!, cancellationToken);
+		}
+		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
+		signatureDetails.SignatureFileKey = signatureKey;
+		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return true;
 	}
 }

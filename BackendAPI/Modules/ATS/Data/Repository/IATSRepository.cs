@@ -8,5 +8,6 @@ public interface IATSRepository
 	Task<bool> AddLicensesDetailsAsync(LicensesDetails licensesDetails);
 	Task<bool> AddProfessionalExperiencesAsync(ProfessionalExperiences professionalExperiences);
 	Task<bool> AddReferenceDetailsAsync(ReferenceDetails referenceDetails);
+	Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails);
 
 }
