@@ -93,8 +93,6 @@
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.MiddleName"
-                                                          Required="true"
-                                                          RequiredError="Middle Name is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Middle Name" />
                                         </MudItem>
@@ -125,8 +123,6 @@
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.Suffix"
-                                                          Required="true"
-                                                          RequiredError="Suffix is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Suffix" />
                                         </MudItem>
@@ -200,9 +196,8 @@
                                         <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                             <MudFileUpload T="IBrowserFile"
                                                            MaxFileSize="26214400"
-                                                           OnFilesChanged="@OnGovtIdUpload"
                                                            @bind-Files="AdditionalGovtIDFile"
-                                                           Accept=".xls,.xlsx,.txt"
+                                                           Accept=".pdf"
                                                            Required="true"
                                                            RequiredError="Government Id is required"
                                                            Class="centered-upload"
@@ -225,7 +220,6 @@
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               aria-label="Remove file"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                             </MudStack>
                                                         </div>
@@ -234,8 +228,7 @@
                                             </MudFileUpload>
 
                                             <MudFileUpload T="IBrowserFile" 
-                                                           OnFilesChanged="@OnNbiUpload"
-                                                           Accept=".xls,.xlsx,.txt"
+                                                           Accept=".pdf"
                                                            DragAndDrop="true"
                                                            Required="true"
                                                            @bind-Files="NBIClearanceFile"
@@ -260,7 +253,6 @@
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               aria-label="Remove file"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                             </MudStack>
                                                         </div>
@@ -269,8 +261,7 @@
                                             </MudFileUpload>
 
                                             <MudFileUpload T="IBrowserFile" 
-                                                           OnFilesChanged="@OnCvUpload"
-                                                           Accept=".xls,.xlsx,.txt"
+                                                           Accept=".pdf"
                                                            DragAndDrop="true"
                                                            MaxFileSize="26214400"
                                                            Required="true"
@@ -295,7 +286,6 @@
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               aria-label="Remove file"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                             </MudStack>
                                                         </div>
@@ -522,9 +512,8 @@
 
                             <MudItem xs="12" sm="6">
                                 <MudFileUpload T="IBrowserFile" 
-                                               OnFilesChanged="@OnDiplomaUpload"
                                                MaxFileSize="26214400"
-                                               Accept=".xls,.xlsx,.txt"
+                                               Accept=".pdf"
                                                Required="true"
                                                @bind-Files="DiplomaORTORFile"
                                                Class="centered-upload"
@@ -545,7 +534,6 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   aria-label="Remove file"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                 </MudStack>
                                             </div>
@@ -609,9 +597,8 @@
 
                             <MudItem xs="12" sm="4">
                                 <MudFileUpload T="IBrowserFile" 
-                                               OnFilesChanged="@OnProfessionalLicenseUpload"
                                                MaxFileSize="26214400"
-                                               Accept=".xls,.xlsx,.txt"
+                                               Accept=".pdf"
                                                Required="true"
                                                @bind-Files="LicenseFile"
                                                Class="centered-upload"
@@ -632,7 +619,6 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   aria-label="Remove file"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                 </MudStack>
                                             </div>
@@ -746,14 +732,14 @@
                                                Required="true"
                                                Class="oneplatform-rounded-input"
                                                Label="End Date of Employment"
+                                               MinDate="@StartOfEmployment?.AddDays(1)"
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
 
                             <MudItem xs="12" sm="3" Class="mt-2">
                                 <MudFileUpload T="IBrowserFile" 
-                                               OnFilesChanged="@OnCoeUpload"
                                                MaxFileSize="26214400"
-                                               Accept=".xls,.xlsx,.txt"
+                                               Accept=".pdf"
                                                Required="true"
                                                class="centered-upload"
                                                @bind-Files="Emp1COEFile"
@@ -774,7 +760,6 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   aria-label="Remove file"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
                                                 </MudStack>
                                             </div>
@@ -890,7 +875,7 @@
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref1ContactNumber"
                                                       Required="true"
-                                                      InputType="InputType.Number"
+                                                      Mask="@(new PatternMask("00000000000"))"
                                                       RequiredError="Mobile Contact Information is required"
                                                       Label="Mobile Contact Information" />
                                     </MudItem>
@@ -1008,7 +993,7 @@
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref2ContactNumber"
                                                       Required="true"
-                                                      InputType="InputType.Number"
+                                                       Mask="@(new PatternMask("00000000000"))"
                                                       RequiredError="Mobile Contact Information is required"
                                                       Label="Mobile Contact Information" />
                                     </MudItem>
@@ -1281,7 +1266,7 @@
 
     //Final
     private SignatureDetailsDTO signatureDetails = new();
-    private DateTime? SignatureDate;
+    private DateTime? SignatureDate = DateTime.Now;
 
 
     private SignaturePadOptions _options = new SignaturePadOptions
