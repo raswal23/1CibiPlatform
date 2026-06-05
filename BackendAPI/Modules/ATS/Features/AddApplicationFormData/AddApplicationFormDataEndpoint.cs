@@ -8,7 +8,7 @@ public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails,
 											LicensesDetailsDTO LicensesDetails, 
 											ProfessionalExperiencesDTO ProfessionalExperiences, 
 											ReferenceDetailsDTO ReferenceDetails,
-											SignatureDetailsDTO SignatureDetials);
+											SignatureDetailsDTO SignatureDetails);
 public record AddApplicationFormDataResponse(bool IsAdded);
 
 public class AddApplicationFormDataEndpoint : ICarterModule
@@ -23,11 +23,12 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 															request.LicensesDetails, 
 															request.ProfessionalExperiences, 
 															request.ReferenceDetails,
-															request.SignatureDetials);
+															request.SignatureDetails);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);
 			var response = new AddApplicationFormDataResponse(result.IsAdded);
 			return Results.Ok(response);
 		})
+			   .DisableAntiforgery()
 		  .WithName("AddApplicationFormData")
 		  .WithTags("ATS")
 		  .Produces<AddApplicationFormDataResponse>()

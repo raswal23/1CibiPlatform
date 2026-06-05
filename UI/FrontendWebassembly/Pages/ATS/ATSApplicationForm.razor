@@ -125,9 +125,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
-        Status = response?.Status;
-        IsExpired = response!.IsExpired;
+        // var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
+        // Status = response?.Status;
+        // IsExpired = response!.IsExpired;
     }
 
     private void Proceed()
