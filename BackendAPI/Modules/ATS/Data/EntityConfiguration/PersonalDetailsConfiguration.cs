@@ -16,43 +16,43 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
                .IsRequired();
 
         builder.Property(p => p.FirstName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MiddleName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.LastName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Suffix)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MaritalStatus)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Nationality)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Sex)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.SSS)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.TIN)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MobileNumber)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.TelephoneNumber)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.EmailAddress)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.EmailAlternative)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.AdditionalGovtIDFileKey)
                .HasMaxLength(255);

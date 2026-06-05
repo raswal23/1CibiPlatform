@@ -15,41 +15,42 @@ public class EducationalBackgroundConfiguration : IEntityTypeConfiguration<Educa
         builder.Property(e => e.EmailInvitationID)
                .IsRequired();
 
-        builder.Property(e => e.HighestEducationalAttainment).HasMaxLength(100);
-        builder.Property(e => e.HighSchoolName).HasMaxLength(100);
-        builder.Property(e => e.HighSchoolAddress).HasMaxLength(100);
+        builder.Property(e => e.HighestEducationalAttainment).HasMaxLength(255);
+        builder.Property(e => e.HighSchoolName).HasMaxLength(255);
+        builder.Property(e => e.HighSchoolAddress).HasMaxLength(255);
         builder.Property(e => e.HighSchoolGraduationDate).HasColumnType("date");
         builder.Property(e => e.HighSchoolDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.SeniorHighSchoolName).HasMaxLength(100);
-        builder.Property(e => e.SeniorHighSchoolAddress).HasMaxLength(100);
+        builder.Property(e => e.SeniorHighSchoolName).HasMaxLength(255);
+        builder.Property(e => e.SeniorHighSchoolAddress).HasMaxLength(255);
         builder.Property(e => e.SeniorHighSchoolGraduationDate).HasColumnType("date");
         builder.Property(e => e.SeniorHighSchoolDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.CollegeSchoolName).HasMaxLength(100);
-        builder.Property(e => e.CollegeAddress).HasMaxLength(100);
+        builder.Property(e => e.CollegeSchoolName).HasMaxLength(255);
+        builder.Property(e => e.CollegeAddress).HasMaxLength(255);
         builder.Property(e => e.CollegeGraduationDate).HasColumnType("date");
         builder.Property(e => e.CollegeDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.CollegeDegree).HasMaxLength(100);
-        builder.Property(e => e.CollegeMajor).HasMaxLength(100);
-        builder.Property(e => e.BachelorsSchoolName).HasMaxLength(100);
-        builder.Property(e => e.BachelorsAddress).HasMaxLength(100);
+        builder.Property(e => e.CollegeDegree).HasMaxLength(255);
+        builder.Property(e => e.CollegeMajor).HasMaxLength(255);
+        builder.Property(e => e.BachelorsSchoolName).HasMaxLength(255);
+        builder.Property(e => e.BachelorsAddress).HasMaxLength(255);
         builder.Property(e => e.BachelorsGraduationDate).HasColumnType("date");
         builder.Property(e => e.BachelorsDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.BachelorsDegree).HasMaxLength(100);
-        builder.Property(e => e.BachelorsMajor).HasMaxLength(100);
-        builder.Property(e => e.MastersSchoolName).HasMaxLength(100);
-        builder.Property(e => e.MastersAddress).HasMaxLength(100);
+        builder.Property(e => e.BachelorsDegree).HasMaxLength(255);
+        builder.Property(e => e.BachelorsMajor).HasMaxLength(255);
+        builder.Property(e => e.MastersSchoolName).HasMaxLength(255);
+        builder.Property(e => e.MastersAddress).HasMaxLength(255);
         builder.Property(e => e.MastersGraduationDate).HasColumnType("date");
         builder.Property(e => e.MastersDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.MastersDegree).HasMaxLength(100);
-        builder.Property(e => e.MastersMajor).HasMaxLength(100);
-        builder.Property(e => e.PhDSchoolName).HasMaxLength(100);
-        builder.Property(e => e.DoctorateAddress).HasMaxLength(100);
+        builder.Property(e => e.MastersDegree).HasMaxLength(255);
+        builder.Property(e => e.MastersMajor).HasMaxLength(255);
+        builder.Property(e => e.PhDSchoolName).HasMaxLength(255);
+        builder.Property(e => e.DoctorateAddress).HasMaxLength(255);
         builder.Property(e => e.DoctorateGraduationDate).HasColumnType("date");
         builder.Property(e => e.DoctorateDiplomaFileKey).HasMaxLength(255);
-        builder.Property(e => e.DoctorateDegree).HasMaxLength(100);
-        builder.Property(e => e.DoctorateMajor).HasMaxLength(100);
+        builder.Property(e => e.DoctorateDegree).HasMaxLength(255);
+        builder.Property(e => e.DoctorateMajor).HasMaxLength(255);
 
         builder.Property(e => e.SchoolSpecificLOAFileKey)
+			   .HasMaxLength(255)
                .IsRequired(false);
 
         builder.Property(e => e.CreatedDate)

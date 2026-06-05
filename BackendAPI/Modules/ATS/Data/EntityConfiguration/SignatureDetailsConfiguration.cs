@@ -16,7 +16,7 @@ public class SignatureDetailsConfiguration : IEntityTypeConfiguration<SignatureD
 			   .IsRequired();
 
 		builder.Property(p => p.SignerName)
-			   .HasMaxLength(100);
+			   .HasMaxLength(255);
 
 		builder.Property(e => e.SignatureDate)
 			   .HasColumnType("date");

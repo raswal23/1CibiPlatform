@@ -15,14 +15,14 @@ public class LicensesDetailsConfiguration : IEntityTypeConfiguration<LicensesDet
         builder.Property(l => l.EmailInvitationID)
                .IsRequired();
 
-        builder.Property(l => l.LicenseName).HasMaxLength(100);
-        builder.Property(l => l.LicenseNumber).HasMaxLength(100);
+        builder.Property(l => l.LicenseName).HasMaxLength(255);
+        builder.Property(l => l.LicenseNumber).HasMaxLength(255);
         builder.Property(l => l.LicenseExpiryDate).HasColumnType("date");
 
         builder.Property(l => l.LicenseUploadFileKey)
-               .IsRequired(true);
+			   .HasMaxLength(255);
 
-        builder.Property(l => l.CreatedDate)
+		builder.Property(l => l.CreatedDate)
                .IsRequired(true);
 
         builder.HasOne<EmailInvitationRequest>()

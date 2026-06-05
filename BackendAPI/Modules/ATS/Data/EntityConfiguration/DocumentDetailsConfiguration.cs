@@ -15,8 +15,8 @@ public class DocumentDetailsConfiguration : IEntityTypeConfiguration<DocumentDet
         builder.Property(d => d.EmailInvitationID)
                .IsRequired();
 
-        builder.Property(d => d.DocumentName).HasMaxLength(100);
-        builder.Property(d => d.DocumentValue).HasMaxLength(100);
+        builder.Property(d => d.DocumentName).HasMaxLength(255);
+        builder.Property(d => d.DocumentValue).HasMaxLength(255);
         builder.Property(d => d.CreatedDate).IsRequired(false);
 
         // Relationship to EmailInvitationRequest
