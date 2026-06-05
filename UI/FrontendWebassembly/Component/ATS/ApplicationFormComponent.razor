@@ -606,7 +606,7 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
-                                               OnFilesChanged="OnDiplomaUpload"
+                                               OnFilesChanged="OnProfessionalLicenseUpload"
                                                Required="true"
                                                @bind-Files="LicenseFile"
                                                Class="centered-upload"
@@ -1283,7 +1283,7 @@
 
     //Final
     private SignatureDetailsDTO signatureDetails = new();
-    private DateTime? SignatureDate = DateTime.Now;
+    private DateTime? SignatureDate = DateTime.UtcNow;
 
 
     private SignaturePadOptions _options = new SignaturePadOptions

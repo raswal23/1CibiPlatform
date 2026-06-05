@@ -194,10 +194,10 @@ public class ATSService : IATSService
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 
-		var response = await _httpClient.PostAsJsonAsync("ats/addapplicationformdata", content);
+		var response = await _httpClient.PostAsync("ats/addapplicationformdata", content);
 
-		var successContentInfo = await response.Content.ReadFromJsonAsync<bool?>();
-		return successContentInfo ?? response.IsSuccessStatusCode;
+		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+		return successContentInfo;
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)

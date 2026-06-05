@@ -1,4 +1,6 @@
-﻿namespace ATS.Features.AddApplicationFormData;
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace ATS.Features.AddApplicationFormData;
 
 public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails, 
 											AddressDetailsDTO AddressDetails, 
@@ -6,14 +8,14 @@ public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails,
 											LicensesDetailsDTO LicensesDetails, 
 											ProfessionalExperiencesDTO ProfessionalExperiences, 
 											ReferenceDetailsDTO ReferenceDetails,
-											SignatureDetailsDTO SignatureDetials);
+											SignatureDetailsDTO SignatureDetails);
 public record AddApplicationFormDataResponse(bool IsAdded);
 
 public class AddApplicationFormDataEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("addapplicationformdata", async (AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("addapplicationformdata", async ([FromForm] AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new AddApplicationFormDataCommand(request.PersonalDetails, 
 															request.AddressDetails, 
@@ -21,11 +23,12 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 															request.LicensesDetails, 
 															request.ProfessionalExperiences, 
 															request.ReferenceDetails,
-															request.SignatureDetials);
+															request.SignatureDetails);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);
 			var response = new AddApplicationFormDataResponse(result.IsAdded);
 			return Results.Ok(response);
 		})
+			   .DisableAntiforgery()
 		  .WithName("AddApplicationFormData")
 		  .WithTags("ATS")
 		  .Produces<AddApplicationFormDataResponse>()
