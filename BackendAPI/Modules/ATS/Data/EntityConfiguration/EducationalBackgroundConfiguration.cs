@@ -50,6 +50,7 @@ public class EducationalBackgroundConfiguration : IEntityTypeConfiguration<Educa
         builder.Property(e => e.DoctorateMajor).HasMaxLength(255);
 
         builder.Property(e => e.SchoolSpecificLOAFileKey)
+			   .HasMaxLength(255)
                .IsRequired(false);
 
         builder.Property(e => e.CreatedDate)
