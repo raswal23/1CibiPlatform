@@ -48,8 +48,8 @@ public class ATSService : IATSService
 		AddString(PersonalDetails.LastName, "PersonalDetails.LastName");
 		AddString(PersonalDetails.Suffix, "PersonalDetails.Suffix");
 		AddString(PersonalDetails.Sex, "PersonalDetails.Sex");
-		AddString(PersonalDetails.DOB is not null ? PersonalDetails.DOB.Value.ToString("MM-dd-yyyy") : null, "PersonalDetails.DOB");
-		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");
+		AddString(PersonalDetails.DOB?.ToString("MM-dd-yyyy"), "PersonalDetails.DOB");
+		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");	
 		AddString(PersonalDetails.EmailAlternative, "PersonalDetails.EmailAlternative");
 		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile");
 		AddString(PersonalDetails.AdditionalGovtIDFileName, "PersonalDetails.AdditionalGovtIDFileName");
@@ -106,7 +106,7 @@ public class ATSService : IATSService
 		AddString(LicensesDetails.EmailInvitationID.ToString(), "LicensesDetails.EmailInvitationID");
 		AddString(LicensesDetails.LicenseName, "LicensesDetails.LicenseName");
 		AddString(LicensesDetails.LicenseNumber, "LicensesDetails.LicenseNumber");
-		AddString(LicensesDetails.LicenseExpiryDate!.Value.ToString("MM-dd-yyyy"), "LicensesDetails.LicenseExpiryDate");
+		AddString(LicensesDetails.LicenseExpiryDate?.ToString("MM-dd-yyyy"), "LicensesDetails.LicenseExpiryDate");
 		AddFile(LicensesDetails.LicenseUploadFile, "LicensesDetails.LicenseUploadFile");
 		AddString(LicensesDetails.LicenseUploadFileName, "LicensesDetails.LicenseUploadFileName");
 
@@ -131,8 +131,8 @@ public class ATSService : IATSService
 
 		AddString(ProfessionalExperiences.Emp2CompanyName, "ProfessionalExperiences.Emp2CompanyName");
 		AddString(ProfessionalExperiences.Emp2JobTitle, "ProfessionalExperiences.Emp2JobTitle");
-		AddString(ProfessionalExperiences.Emp2CurrentlyEmployed!.Value.ToString(), "ProfessionalExperiences.Emp2CurrentlyEmployed");
-		AddString(ProfessionalExperiences.Emp2PermissionToContact!.Value.ToString(), "ProfessionalExperiences.Emp2PermissionToContact");
+		AddString(ProfessionalExperiences.Emp2CurrentlyEmployed?.ToString(), "ProfessionalExperiences.Emp2CurrentlyEmployed");
+		AddString(ProfessionalExperiences.Emp2PermissionToContact?.ToString(), "ProfessionalExperiences.Emp2PermissionToContact");
 		AddString(ProfessionalExperiences.Emp2CompanyCity, "ProfessionalExperiences.Emp2CompanyCity");
 		AddString(ProfessionalExperiences.Emp2CompanyProvince, "ProfessionalExperiences.Emp2CompanyProvince");
 		AddString(ProfessionalExperiences.Emp2CompanyCountry, "ProfessionalExperiences.Emp2CompanyCountry");
@@ -147,8 +147,8 @@ public class ATSService : IATSService
 
 		AddString(ProfessionalExperiences.Emp3CompanyName, "ProfessionalExperiences.Emp3CompanyName");
 		AddString(ProfessionalExperiences.Emp3JobTitle, "ProfessionalExperiences.Emp3JobTitle");
-		AddString(ProfessionalExperiences.Emp3CurrentlyEmployed!.Value.ToString(), "ProfessionalExperiences.Emp3CurrentlyEmployed");
-		AddString(ProfessionalExperiences.Emp3PermissionToContact!.Value.ToString(), "ProfessionalExperiences.Emp3PermissionToContact");
+		AddString(ProfessionalExperiences.Emp3CurrentlyEmployed?.ToString(), "ProfessionalExperiences.Emp3CurrentlyEmployed");
+		AddString(ProfessionalExperiences.Emp3PermissionToContact?.ToString(), "ProfessionalExperiences.Emp3PermissionToContact");
 		AddString(ProfessionalExperiences.Emp3CompanyCity, "ProfessionalExperiences.Emp3CompanyCity");
 		AddString(ProfessionalExperiences.Emp3CompanyProvince, "ProfessionalExperiences.Emp3CompanyProvince");
 		AddString(ProfessionalExperiences.Emp3CompanyCountry, "ProfessionalExperiences.Emp3CompanyCountry");
@@ -170,21 +170,21 @@ public class ATSService : IATSService
 		AddString(ReferenceDetails.Ref1Email, "ReferenceDetails.Ref1Email");
 		AddString(ReferenceDetails.Ref1ContactNumber, "ReferenceDetails.Ref1ContactNumber");
 		AddString(ReferenceDetails.Ref1ModeOfContact, "ReferenceDetails.Ref1ModeOfContact");
-		AddString(ReferenceDetails.Ref1BestTimeToContact is not null ? ReferenceDetails.Ref1BestTimeToContact.Value.ToString("o") : null, "ReferenceDetails.Ref1BestTimeToContact");
+		AddString(ReferenceDetails.Ref1BestTimeToContact?.ToString("o"), "ReferenceDetails.Ref1BestTimeToContact");
 		AddString(ReferenceDetails.Ref2FullName, "ReferenceDetails.Ref2FullName");
 		AddString(ReferenceDetails.Ref2ProfessionalRelationship, "ReferenceDetails.Ref2ProfessionalRelationship");
 		AddString(ReferenceDetails.Ref2AffiliatedCompany, "ReferenceDetails.Ref2AffiliatedCompany");
 		AddString(ReferenceDetails.Ref2Email, "ReferenceDetails.Ref2Email");
 		AddString(ReferenceDetails.Ref2ContactNumber, "ReferenceDetails.Ref2ContactNumber");
 		AddString(ReferenceDetails.Ref2ModeOfContact, "ReferenceDetails.Ref2ModeOfContact");
-		AddString(ReferenceDetails.Ref2BestTimeToContact is not null ? ReferenceDetails.Ref2BestTimeToContact.Value.ToString("o") : null, "ReferenceDetails.Ref2BestTimeToContact");
+		AddString(ReferenceDetails.Ref2BestTimeToContact?.ToString("o"), "ReferenceDetails.Ref2BestTimeToContact");
 		AddString(ReferenceDetails.Ref3FullName, "ReferenceDetails.Ref3FullName");
 		AddString(ReferenceDetails.Ref3ProfessionalRelationship, "ReferenceDetails.Ref3ProfessionalRelationship");
 		AddString(ReferenceDetails.Ref3AffiliatedCompany, "ReferenceDetails.Ref3AffiliatedCompany");
 		AddString(ReferenceDetails.Ref3Email, "ReferenceDetails.Ref3Email");
 		AddString(ReferenceDetails.Ref3ContactNumber, "ReferenceDetails.Ref3ContactNumber");
 		AddString(ReferenceDetails.Ref3ModeOfContact, "ReferenceDetails.Ref3ModeOfContact");
-		AddString(ReferenceDetails.Ref3BestTimeToContact is not null ? ReferenceDetails.Ref3BestTimeToContact.Value.ToString("o") : null, "ReferenceDetails.Ref3BestTimeToContact");
+		AddString(ReferenceDetails.Ref3BestTimeToContact?.ToString("o"), "ReferenceDetails.Ref3BestTimeToContact");
 
 		// Post
 		AddString(SignatureDetails.SignatureDetailsID.ToString(), "SignatureDetails.SignatureDetailsID");
