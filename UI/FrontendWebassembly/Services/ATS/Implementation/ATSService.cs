@@ -78,25 +78,25 @@ public class ATSService : IATSService
 		AddString(EducationalBackground.EmailInvitationID.ToString(), "EducationalBackground.EmailInvitationID");
 		AddString(EducationalBackground.HighestEducationalAttainment, "EducationalBackground.HighestEducationalAttainment");
 		AddString(EducationalBackground.HighSchoolName, "EducationalBackground.HighSchoolName");
-		AddString(EducationalBackground.HighSchoolGraduationDate!.Value.ToString("yyyy-MM-dd"), "EducationalBackground.HighSchoolGraduationDate");
+		AddString(EducationalBackground.HighSchoolGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.HighSchoolGraduationDate");
 		AddFile(EducationalBackground.HighSchoolDiplomaFile, "EducationalBackground.HighSchoolDiplomaFile");
 		AddString(EducationalBackground.HighSchoolDiplomaFileName, "EducationalBackground.HighSchoolDiplomaFileName");
 		AddString(EducationalBackground.SeniorHighSchoolName, "EducationalBackground.SeniorHighSchoolName");
-		AddString(EducationalBackground.SeniorHighSchoolGraduationDate!.Value.ToString("yyyy-MM-dd"), "EducationalBackground.SeniorHighSchoolGraduationDate");
+		AddString(EducationalBackground.SeniorHighSchoolGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.SeniorHighSchoolGraduationDate");
 		AddFile(EducationalBackground.SeniorHighSchoolDiplomaFile, "EducationalBackground.SeniorHighSchoolDiplomaFile");
 		AddString(EducationalBackground.SeniorHighSchoolDiplomaFileName, "EducationalBackground.SeniorHighSchoolDiplomaFileName");
 		AddString(EducationalBackground.BachelorsSchoolName, "EducationalBackground.BachelorsSchoolName");
-		AddString(EducationalBackground.BachelorsGraduationDate!.Value.ToString("yyyy-MM-dd"), "EducationalBackground.BachelorsGraduationDate");
+		AddString(EducationalBackground.BachelorsGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.BachelorsGraduationDate");
 		AddString(EducationalBackground.BachelorsDegree, "EducationalBackground.BachelorsDegree");
 		AddFile(EducationalBackground.BachelorsDiplomaFile, "EducationalBackground.BachelorsDiplomaFile");
 		AddString(EducationalBackground.BachelorsDiplomaFileName, "EducationalBackground.BachelorsDiplomaFileName");
 		AddString(EducationalBackground.MastersSchoolName, "EducationalBackground.MastersSchoolName");
-		AddString(EducationalBackground.MastersGraduationDate!.Value.ToString("yyyy-MM-dd"), "EducationalBackground.MastersGraduationDate");
+		AddString(EducationalBackground.MastersGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.MastersGraduationDate");
 		AddString(EducationalBackground.MastersDegree, "EducationalBackground.MastersDegree");
 		AddFile(EducationalBackground.MastersDiplomaFile, "EducationalBackground.MastersDiplomaFile");
 		AddString(EducationalBackground.MastersDiplomaFileName, "EducationalBackground.MastersDiplomaFileName");
 		AddString(EducationalBackground.PhDSchoolName, "EducationalBackground.PhDSchoolName");
-		AddString(EducationalBackground.DoctorateGraduationDate!.Value.ToString("yyyy-MM-dd"), "EducationalBackground.DoctorateGraduationDate");
+		AddString(EducationalBackground.DoctorateGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.DoctorateGraduationDate");
 		AddString(EducationalBackground.DoctorateDegree, "EducationalBackground.DoctorateDegree");
 		AddFile(EducationalBackground.DoctorateDiplomaFile, "EducationalBackground.DoctorateDiplomaFile");
 		AddString(EducationalBackground.DoctorateDiplomaFileName, "EducationalBackground.DoctorateDiplomaFileName");
@@ -115,15 +115,15 @@ public class ATSService : IATSService
 		AddString(ProfessionalExperiences.EmailInvitationID.ToString(), "ProfessionalExperiences.EmailInvitationID");
 		AddString(ProfessionalExperiences.Emp1CompanyName, "ProfessionalExperiences.Emp1CompanyName");
 		AddString(ProfessionalExperiences.Emp1JobTitle, "ProfessionalExperiences.Emp1JobTitle");
-		AddString(ProfessionalExperiences.Emp1CurrentlyEmployed!.Value.ToString(), "ProfessionalExperiences.Emp1CurrentlyEmployed");
-		AddString(ProfessionalExperiences.Emp1PermissionToContact!.Value.ToString(), "ProfessionalExperiences.Emp1PermissionToContact");
+		AddString(ProfessionalExperiences.Emp1CurrentlyEmployed?.ToString(), "ProfessionalExperiences.Emp1CurrentlyEmployed");
+		AddString(ProfessionalExperiences.Emp1PermissionToContact?.ToString(), "ProfessionalExperiences.Emp1PermissionToContact");
 		AddString(ProfessionalExperiences.Emp1CompanyCity, "ProfessionalExperiences.Emp1CompanyCity");
 		AddString(ProfessionalExperiences.Emp1CompanyProvince, "ProfessionalExperiences.Emp1CompanyProvince");
 		AddString(ProfessionalExperiences.Emp1CompanyCountry, "ProfessionalExperiences.Emp1CompanyCountry");
 		AddString(ProfessionalExperiences.Emp1CompanyPostalCode, "ProfessionalExperiences.Emp1CompanyPostalCode");
-		AddString(ProfessionalExperiences.Emp1StartDate is not null ? ProfessionalExperiences.Emp1StartDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp1StartDate");
-		AddString(ProfessionalExperiences.Emp1EndDate is not null ? ProfessionalExperiences.Emp1EndDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp1EndDate");
-		AddString(ProfessionalExperiences.Emp1DatePermittedToContact is not null ? ProfessionalExperiences.Emp1DatePermittedToContact.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp1DatePermittedToContact");
+		AddString(ProfessionalExperiences.Emp1StartDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1StartDate");
+		AddString(ProfessionalExperiences.Emp1EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1EndDate");
+		AddString(ProfessionalExperiences.Emp1DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp1SupervisorName, "ProfessionalExperiences.Emp1SupervisorName");
 		AddString(ProfessionalExperiences.Emp1SupervisorContactNumber, "ProfessionalExperiences.Emp1SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp1COEUploadFile, "ProfessionalExperiences.Emp1COEUploadFile");
@@ -137,9 +137,9 @@ public class ATSService : IATSService
 		AddString(ProfessionalExperiences.Emp2CompanyProvince, "ProfessionalExperiences.Emp2CompanyProvince");
 		AddString(ProfessionalExperiences.Emp2CompanyCountry, "ProfessionalExperiences.Emp2CompanyCountry");
 		AddString(ProfessionalExperiences.Emp2CompanyPostalCode, "ProfessionalExperiences.Emp2CompanyPostalCode");
-		AddString(ProfessionalExperiences.Emp2StartDate is not null ? ProfessionalExperiences.Emp2StartDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp2StartDate");
-		AddString(ProfessionalExperiences.Emp2EndDate is not null ? ProfessionalExperiences.Emp2EndDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp2EndDate");
-		AddString(ProfessionalExperiences.Emp2DatePermittedToContact is not null ? ProfessionalExperiences.Emp2DatePermittedToContact.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp2DatePermittedToContact");
+		AddString(ProfessionalExperiences.Emp2StartDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2StartDate");
+		AddString(ProfessionalExperiences.Emp2EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2EndDate");
+		AddString(ProfessionalExperiences.Emp2DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp2SupervisorName, "ProfessionalExperiences.Emp2SupervisorName");
 		AddString(ProfessionalExperiences.Emp2SupervisorContactNumber, "ProfessionalExperiences.Emp2SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp2COEUploadFile, "ProfessionalExperiences.Emp2COEUploadFile");
@@ -153,9 +153,9 @@ public class ATSService : IATSService
 		AddString(ProfessionalExperiences.Emp3CompanyProvince, "ProfessionalExperiences.Emp3CompanyProvince");
 		AddString(ProfessionalExperiences.Emp3CompanyCountry, "ProfessionalExperiences.Emp3CompanyCountry");
 		AddString(ProfessionalExperiences.Emp3CompanyPostalCode, "ProfessionalExperiences.Emp3CompanyPostalCode");
-		AddString(ProfessionalExperiences.Emp3StartDate is not null ? ProfessionalExperiences.Emp3StartDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp3StartDate");
-		AddString(ProfessionalExperiences.Emp3EndDate is not null ? ProfessionalExperiences.Emp3EndDate.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp3EndDate");
-		AddString(ProfessionalExperiences.Emp3DatePermittedToContact is not null ? ProfessionalExperiences.Emp3DatePermittedToContact.Value.ToString("yyyy-MM-dd") : null, "ProfessionalExperiences.Emp3DatePermittedToContact");
+		AddString(ProfessionalExperiences.Emp3StartDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3StartDate");
+		AddString(ProfessionalExperiences.Emp3EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3EndDate");
+		AddString(ProfessionalExperiences.Emp3DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp3SupervisorName, "ProfessionalExperiences.Emp3SupervisorName");
 		AddString(ProfessionalExperiences.Emp3SupervisorContactNumber, "ProfessionalExperiences.Emp3SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp3COEUploadFile, "ProfessionalExperiences.Emp3COEUploadFile");
@@ -198,5 +198,16 @@ public class ATSService : IATSService
 
 		var successContentInfo = await response.Content.ReadFromJsonAsync<bool?>();
 		return successContentInfo ?? response.IsSuccessStatusCode;
+	}
+
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)
+	{
+		var response = await _httpClient.GetFromJsonAsync<EmailIdAndApplicationFormPathDTO>($"getemailidandapplicationformpath?hashToken={HashToken}");
+		if (response!.ExpiresAt < DateTime.UtcNow)
+		{
+			response!.IsExpired = true;
+		}
+
+		return response;
 	}
 }

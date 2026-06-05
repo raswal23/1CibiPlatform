@@ -180,7 +180,7 @@
                                                           RequiredError="Phone Number is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Phone Number"
-                                                          Mask="@(new PatternMask("00000000000"))"s/>
+                                                          Mask="@(new PatternMask("00000000000"))"/>
                                         </MudItem>
                                     </MudGrid>
                                 </MudPaper>
@@ -360,6 +360,7 @@
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="addressDetails.CurrentPostalCode"
                                               Required="true"
+                                              Mask="@(new PatternMask("00000000000"))"
                                               RequiredError="Zip / Postal Code is required"
                                               Label="Zip / Postal Code" />
                             </MudItem>
@@ -425,6 +426,7 @@
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="addressDetails.PermanentPostalCode"
                                               Required="true"
+                                              Mask="@(new PatternMask("00000000000"))"
                                               RequiredError="Zip / Postal Code is required"
                                               Label="Zip / Postal Code" />
                             </MudItem>
@@ -693,6 +695,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
+                                              Mask="@(new PatternMask("00000000000"))"
                                               RequiredError="Zip Code is required"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="professionalExperiences.Emp1CompanyPostalCode"

@@ -9,4 +9,6 @@ public interface IATSService
 											ProfessionalExperiencesDTO ProfessionalExperiences,
 											ReferenceDetailsDTO ReferenceDetails,
 											SignatureDetailsDTO SignatureDetails);
+
+	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken);
 }

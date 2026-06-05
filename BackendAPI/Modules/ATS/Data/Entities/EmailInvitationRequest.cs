@@ -13,6 +13,7 @@ public class EmailInvitationRequest
 	public string? HashToken { get; set; }
 	public DateTime? HashTokenCreated { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
+	public string? Status { get; set; }
 
 	// Navigation properties
 	public PersonalDetails? PersonalDetails { get; set; }

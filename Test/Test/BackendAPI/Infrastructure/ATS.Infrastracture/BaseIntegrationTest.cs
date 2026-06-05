@@ -48,7 +48,8 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 								ats.""LicensesDetails"", 
 								ats.""PersonalDetails"", 
 								ats.""ProfessionalExperiences"", 
-								ats.""ReferenceDetails"" 
+								ats.""ReferenceDetails"",
+								ats.""SignatureDetails""
 						  RESTART IDENTITY CASCADE;";
 				await _dbContext.Database.ExecuteSqlRawAsync(sql);
 			}
@@ -61,7 +62,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 
 	public Task DisposeAsync()
 	{
-		_scope.Dispose();
 		return Task.CompletedTask;
 	}
 }

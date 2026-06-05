@@ -1,5 +1,6 @@
 ﻿@layout GenericLayout
 @inject NavigationManager Navigation
+@inject IATSService ATSService
 @page "/s&i/ats/applicationform"
 @* @page "/s&i/ats/applicationform/{HashToken}" *@
 
@@ -92,16 +93,42 @@
 </div>
 
 
+@* @if(Status == "Success")
+{
+    <CompletedComponent/>
+}
+else if(IsExpired)
+{
+    <ExpiredComponent/>
+}
+else
+{
+    //Show the applicaitonform
+} *@
+
+
+<ExpiredComponent />
+
 @code {
     private bool _showApplicationForm = false;
-    // [Parameter]
-    // public string? HashToken { get; set; }
+    private string? Status = string.Empty;
+    private bool IsExpired = false;
+    private string status = string.Empty;
+    [Parameter]
+    public string? HashToken { get; set; }
     [Parameter]
     [SupplyParameterFromQuery(Name = "philSysShow")]
     public bool philSysShow { get; set; } 
     [Parameter]
     [SupplyParameterFromQuery(Name = "stepActive")]
     public int stepActive { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
+        Status = response?.Status;
+        IsExpired = response!.IsExpired;
+    }
 
     private void Proceed()
     {

@@ -225,12 +225,26 @@ public class ATSService : IATSService
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken ct = default)
 	{
-		Guid emailId = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
-		return new EmailIdAndApplicationFormPathDTO
+		var logContext = new
 		{
-			EmailId = emailId,
-			ApplicationFormPath = _applicationFormPath
+			Action = "GettingEmailIdAndApplicationFormPath",
+			Step = "StartFetchingEmailIdAndApplicationFormPath",
+			Identity = hashToken,
+			Timestamp = DateTime.UtcNow
 		};
+
+		EmailIdAndApplicationFormPathDTO emailIdAndApplicationFormPath = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
+
+		if (emailIdAndApplicationFormPath == null)
+		{
+			_logger.LogError("Failed Transaction: Failed to fetch EmailId and Application Form Path for {HashToken}: {@Context}", hashToken, logContext);
+			throw new NotFoundException("No record found for the provided hash token.");
+		}
+
+		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);
+
+		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormPath;
+		return emailIdAndApplicationFormPath;
 	}
 }
 	
