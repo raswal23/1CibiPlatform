@@ -26,7 +26,7 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 															request.SignatureDetails);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);
 			var response = new AddApplicationFormDataResponse(result.IsAdded);
-			return Results.Ok(response);
+			return Results.Ok(response.IsAdded);
 		})
 			   .DisableAntiforgery()
 		  .WithName("AddApplicationFormData")
