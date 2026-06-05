@@ -196,8 +196,8 @@ public class ATSService : IATSService
 
 		var response = await _httpClient.PostAsJsonAsync("ats/addapplicationformdata", content);
 
-		var successContentInfo = await response.Content.ReadFromJsonAsync<bool?>();
-		return successContentInfo ?? response.IsSuccessStatusCode;
+		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+		return successContentInfo;
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)

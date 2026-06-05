@@ -1578,11 +1578,11 @@
  
         if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
         {
-            referenceDetails.Ref1BestTimeToContact = Ref1BestDate.Value.Date + Ref1BestTime.Value;
+            referenceDetails.Ref1BestTimeToContact = DateTime.SpecifyKind(Ref1BestDate.Value.Date + Ref1BestTime.Value, DateTimeKind.Utc);
         }
         if (Ref2BestDate.HasValue && Ref2BestTime.HasValue)
         {
-            referenceDetails.Ref2BestTimeToContact = Ref2BestDate.Value.Date + Ref2BestTime.Value;
+            referenceDetails.Ref2BestTimeToContact = DateTime.SpecifyKind(Ref2BestDate.Value.Date + Ref2BestTime.Value, DateTimeKind.Utc);
         }
 
         await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);

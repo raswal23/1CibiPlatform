@@ -1,4 +1,6 @@
-﻿namespace ATS.Features.AddApplicationFormData;
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace ATS.Features.AddApplicationFormData;
 
 public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails, 
 											AddressDetailsDTO AddressDetails, 
@@ -13,7 +15,7 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("addapplicationformdata", async (AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("addapplicationformdata", async ([FromForm] AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new AddApplicationFormDataCommand(request.PersonalDetails, 
 															request.AddressDetails, 
