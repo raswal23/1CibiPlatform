@@ -101,6 +101,7 @@ public class ATSService : IATSService
 		personalDetails.ResumeFileKey = resumeFileKey;
 		personalDetails.NBIClearanceFileKey = nbiKey;
 		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
+		personalDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddPersonalDetailsAsync(personalDetails);
 
@@ -110,6 +111,7 @@ public class ATSService : IATSService
 	private async Task<bool> AddAddressDataAsync(AddressDetailsDTO addressDetailsDTO, CancellationToken cancellationToken)
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
+		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
 
@@ -156,6 +158,7 @@ public class ATSService : IATSService
 		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
 		educationalBackground.MastersDiplomaFileKey = mastersDiplomaKey;
 		educationalBackground.DoctorateDiplomaFileKey = doctorateDiplomaKey;
+		educationalBackground.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddEducationalBackgroundAsync(educationalBackground);
 		return true;
@@ -168,6 +171,7 @@ public class ATSService : IATSService
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
+		licensesDetails.CreatedDate = DateTime.UtcNow;
 		bool isAdded = await _atsRepository.AddLicensesDetailsAsync(licensesDetails);
 		return true;
 	}
@@ -198,6 +202,7 @@ public class ATSService : IATSService
 		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
 		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
 		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
+		professionalExperiences.CreatedDate = DateTime.UtcNow;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return true;
 	}
@@ -205,6 +210,23 @@ public class ATSService : IATSService
 	private async Task<bool> AddReferenceDetailsDataAsync(ReferenceDetailsDTO referenceDetailsDTO, CancellationToken cancellationToken)
 	{
 		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
+
+		// Ensure all DateTime values are UTC
+		if (referenceDetails.Ref1BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref1BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref1BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+		if (referenceDetails.Ref2BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref2BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref2BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+		if (referenceDetails.Ref3BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref3BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref3BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+
+		referenceDetails.CreatedDate = DateTime.UtcNow;
+
 		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
 		return true;
 	}

@@ -1283,7 +1283,7 @@
 
     //Final
     private SignatureDetailsDTO signatureDetails = new();
-    private DateTime? SignatureDate = DateTime.Now;
+    private DateTime? SignatureDate = DateTime.UtcNow;
 
 
     private SignaturePadOptions _options = new SignaturePadOptions
