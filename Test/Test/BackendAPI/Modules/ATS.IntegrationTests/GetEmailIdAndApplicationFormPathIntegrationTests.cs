@@ -62,7 +62,9 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 		await act.Should().ThrowAsync<NotFoundException>().WithMessage("No record found for the provided hash token.");
 	}
 
-	private async Task SeedEmailInvitationRequestData(Guid emailInvitationId, string hashToken)
+	private async Task SeedEmailInvitationRequestData(
+		Guid emailInvitationId,
+		string hashToken)
 	{
 		var emailInvitationRequest = new EmailInvitationRequest
 		{

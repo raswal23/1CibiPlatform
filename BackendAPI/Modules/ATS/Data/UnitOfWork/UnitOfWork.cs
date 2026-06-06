@@ -1,5 +1,4 @@
-﻿
-namespace ATS.Data.UnitOfWork;
+﻿namespace ATS.Data.UnitOfWork;
 
 public class UnitOfWork : IUnitOfWork
 {

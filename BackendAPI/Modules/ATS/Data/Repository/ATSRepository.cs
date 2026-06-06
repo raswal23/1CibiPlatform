@@ -62,6 +62,6 @@ public class ATSRepository : IATSRepository
 							EmailId = af.EmailInvitationID,
 							ExpiresAt = af.HashTokenExpiration
 						})
-						.FirstOrDefaultAsync(cancellationToken);
+						.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
 }

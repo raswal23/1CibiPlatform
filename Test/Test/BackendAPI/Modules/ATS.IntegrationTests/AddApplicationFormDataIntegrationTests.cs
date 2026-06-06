@@ -235,7 +235,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{seniorHighSchoolDiplomaFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bachelorDiplomaFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{masterDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{doctorateDiplomaFileName}");			
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{doctorateDiplomaFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{licenseFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp1COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp2COEFileName}");
@@ -245,7 +245,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task AddApplicationFormData_MissingPersonal_ShouldThrow()
+	public async Task AddApplicationFormData_MissingPersonal_ShouldThrowNullReferenceException()
 	{
 		await SeedEmailInvitationRequestData();
 
@@ -358,7 +358,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "+639155551234",
 			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
-			Emp3COEUploadFileName = "coe.txt", 
+			Emp3COEUploadFileName = "coe.txt",
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -402,7 +402,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		};
 
 
-		var command = new AddApplicationFormDataCommand( null!, address, education, licenses, experiences,reference, signature);
+		var command = new AddApplicationFormDataCommand(null!, address, education, licenses, experiences, reference, signature);
 
 		// Act & Assert
 		await Assert.ThrowsAsync<NullReferenceException>(() =>

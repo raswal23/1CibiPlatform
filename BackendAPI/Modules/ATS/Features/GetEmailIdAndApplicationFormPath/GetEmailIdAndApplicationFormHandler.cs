@@ -2,7 +2,8 @@
 
 public record GetEmailIdAndApplicationFormHandlerRequest(string HashToken) : IQuery<GetEmailIdAndApplicationFormResult>;
 
-public record GetEmailIdAndApplicationFormResult(EmailIdAndApplicationFormPathDTO EmailIdAndApplicationFormPath);	
+public record GetEmailIdAndApplicationFormResult(EmailIdAndApplicationFormPathDTO EmailIdAndApplicationFormPath);
+
 public class GetEmailIdAndApplicationFormHandler : IQueryHandler<GetEmailIdAndApplicationFormHandlerRequest, GetEmailIdAndApplicationFormResult>
 {
 	private readonly IATSService _atsService;

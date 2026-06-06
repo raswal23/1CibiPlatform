@@ -1189,7 +1189,7 @@
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
                                            Style="width: 150px; border-radius: 4px; "
-                                           OnClick="SubmitForm">
+                                           OnClick="OnSubmitForm">
                                     Submit
                                 </MudButton>
                             }
@@ -1197,7 +1197,7 @@
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
                                            Style="width: 150px; border-radius: 4px; "
-                                           OnClick="SaveAndNextAsync">
+                                           OnClick="OnSaveAndNextAsync">
                                     Save & Next
                                 </MudButton>
                             }
@@ -1538,7 +1538,7 @@
     }
 
 
-    private async Task SaveAndNextAsync()
+    private async Task OnSaveAndNextAsync()
     {
         await _form.ValidateAsync();
         if (_form.IsValid)
@@ -1548,7 +1548,7 @@
         }
     }
 
-    private async Task SubmitForm()
+    private async Task OnSubmitForm()
     {
         personalDetails.EmailInvitationID = FixedGuid;
         addressDetails.EmailInvitationID = FixedGuid;
@@ -1567,16 +1567,9 @@
             personalDetails.MiddleName = string.Empty;
         }
 
-
-
-    
-
         addressDetails.TypeOfOwnership = OwnershipOtherText;
 
-        
-
         licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
-
 
         professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact!.Value);
         professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment!.Value);

@@ -22,7 +22,7 @@ public class ATSService : IATSService
 	private string licenseKey = "";
 	private string signatureKey = "";
 
-	public ATSService(ILogger<ATSService> logger, 
+	public ATSService(ILogger<ATSService> logger,
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,
@@ -36,11 +36,11 @@ public class ATSService : IATSService
 		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] ?? "";
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, 
-												        AddressDetailsDTO addressDetails, 
-														EducationalBackgroundDTO educationalBackground, 
-														LicensesDetailsDTO licensesDetails, 
-														ProfessionalExperiencesDTO professionalExperiences, 
+	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
+														AddressDetailsDTO addressDetails,
+														EducationalBackgroundDTO educationalBackground,
+														LicensesDetailsDTO licensesDetails,
+														ProfessionalExperiencesDTO professionalExperiences,
 														ReferenceDetailsDTO referenceDetails,
 														SignatureDetailsDTO signatureDetails,
 														CancellationToken ct = default)
@@ -73,7 +73,7 @@ public class ATSService : IATSService
 
 			await _unitOfWork.CommitAsync(ct);
 
-		_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 
 			return true;
 		}
@@ -111,12 +111,12 @@ public class ATSService : IATSService
 			}
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction. {ex.InnerException.Message}"); 
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException!.Message}");
 		}
 
 	}
 
-	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 
+	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken)
 	{
 		if (personalDetailsDTO.ResumeFile != null)
 		{
@@ -144,20 +144,24 @@ public class ATSService : IATSService
 
 		bool isAdded = await _atsRepository.AddPersonalDetailsAsync(personalDetails);
 
-		return true;
+		return isAdded;
 	}
 
-	private async Task<bool> AddAddressDataAsync(AddressDetailsDTO addressDetailsDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddAddressDataAsync(
+		AddressDetailsDTO addressDetailsDTO,
+		CancellationToken cancellationToken)
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
 		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
 
-		return true;
+		return isAdded;
 	}
 
-	private async Task<bool> AddEducationalBackgroundDataAsync(EducationalBackgroundDTO educationalBackgroundDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddEducationalBackgroundDataAsync(
+		EducationalBackgroundDTO educationalBackgroundDTO,
+		CancellationToken cancellationToken)
 	{
 		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("HighSchool Graduate", StringComparison.OrdinalIgnoreCase))
 		{
@@ -194,22 +198,30 @@ public class ATSService : IATSService
 		educationalBackground.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddEducationalBackgroundAsync(educationalBackground);
-		return true;
+
+		return isAdded;
 	}
 
-	private async Task<bool> AddLicensesDataAsync(LicensesDetailsDTO licensesDetailsDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddLicensesDataAsync(
+		LicensesDetailsDTO licensesDetailsDTO,
+		CancellationToken cancellationToken)
 	{
 		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
+
 		licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
 		licensesDetails.CreatedDate = DateTime.UtcNow;
+
 		bool isAdded = await _atsRepository.AddLicensesDetailsAsync(licensesDetails);
-		return true;
+
+		return isAdded;
 	}
 
-	private async Task<bool> AddProfessionalExperiencesDataAsync(ProfessionalExperiencesDTO professionalExperiencesDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddProfessionalExperiencesDataAsync(
+		ProfessionalExperiencesDTO professionalExperiencesDTO,
+		CancellationToken cancellationToken)
 	{
 		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
 		{
@@ -233,10 +245,12 @@ public class ATSService : IATSService
 		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
 		professionalExperiences.CreatedDate = DateTime.UtcNow;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
-		return true;
+		return isAdded;
 	}
 
-	private async Task<bool> AddReferenceDetailsDataAsync(ReferenceDetailsDTO referenceDetailsDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddReferenceDetailsDataAsync(
+		ReferenceDetailsDTO referenceDetailsDTO,
+		CancellationToken cancellationToken)
 	{
 		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
 
@@ -257,10 +271,12 @@ public class ATSService : IATSService
 		referenceDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
-		return true;
+		return isAdded;
 	}
 
-	private async Task<bool> AddSignatureDetailsDataAsync(SignatureDetailsDTO signatureDetailsDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddSignatureDetailsDataAsync(
+		SignatureDetailsDTO signatureDetailsDTO,
+		CancellationToken cancellationToken)
 	{
 		if (signatureDetailsDTO.Signature != null)
 		{
@@ -270,10 +286,12 @@ public class ATSService : IATSService
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
 		signatureDetails.SignatureFileKey = signatureKey;
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
-		return true;
+		return isAdded;
 	}
 
-	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken ct = default)
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(
+		string hashToken,
+		CancellationToken ct = default)
 	{
 		var logContext = new
 		{
@@ -297,4 +315,3 @@ public class ATSService : IATSService
 		return emailIdAndApplicationFormPath;
 	}
 }
-	
