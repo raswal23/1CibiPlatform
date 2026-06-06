@@ -13,7 +13,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="philsys-rounded-input philsys-uppercase-input" />
+                          Class="oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
       
         <MudItem xs="12" sm="4">
@@ -23,7 +23,7 @@
                         Adornment="Adornment.Start"
                         Variant="Variant.Outlined"
                         Margin="Margin.Dense"
-                        Class="philsys-rounded-input">
+                        Class="oneplatform-rounded-input">
                 <MudSelectItem Value=@("")>N/A</MudSelectItem>
                 <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
                 <MudSelectItem Value=@("Sr.")>Sr.</MudSelectItem>
@@ -48,7 +48,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="philsys-rounded-input philsys-uppercase-input" />
+                          Class="oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
 
         <MudItem xs="12">
@@ -61,7 +61,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="philsys-rounded-input philsys-uppercase-input" />
+                          Class="oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
 
         <MudItem xs="12">
@@ -76,7 +76,7 @@
                           Margin="Margin.Dense"
                           Min="1900-01-01"
                           Max="@DateTime.Today.ToString("yyyy-MM-dd")"
-                          Class="philsys-rounded-input" />
+                          Class="oneplatform-rounded-input" />
         </MudItem>
     </MudGrid>
 
@@ -90,19 +90,20 @@
 @code {
     private IdentityData identityData = new();
     private MudForm? personalForm;
+    [Parameter] public string? HashToken { get; set; }
 
     private async Task SubmitPersonalInfo()
     {
-        await personalForm!.Validate();
+        await personalForm!.ValidateAsync();
         if (!personalForm.IsValid)
         {
             return;
         }
 
-        var livenessLink = await PhilSysService.PostBasicInformationOrPCN("name_dob", identityData!);
+        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
-            Navigation.NavigateTo(livenessLink, forceLoad: true);
+            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
         }
     }
 }

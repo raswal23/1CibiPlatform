@@ -5,7 +5,6 @@ using Auth.Features.UserManagement.Command.AddAppSubRole;
 using Auth.Features.UserManagement.Command.DeleteAppSubRole;
 using Auth.Features.UserManagement.Command.EditAppSubRole;
 using Auth.Features.UserManagement.Query.GetAppSubRoles;
-using Auth.Features.VerifyOtp;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

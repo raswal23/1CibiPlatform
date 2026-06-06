@@ -17,7 +17,7 @@ public class PartnerSystemEndpoint : ICarterModule
 		  .Produces<PartnerSystemResponse>()
 		  .ProducesProblem(StatusCodes.Status400BadRequest)
 		  .WithSummary("Initiate Partner System Identity Verification")
-		  .WithDescription("Initializes a new PhilSys Partner System identity verification transaction and generates a unique liveness verification link.")
-		  .RequireAuthorization();
+		  .WithDescription("Initializes a new PhilSys Partner System identity verification transaction and generates a unique liveness verification link.");
+		  //.RequireAuthorization();
 	}
 }

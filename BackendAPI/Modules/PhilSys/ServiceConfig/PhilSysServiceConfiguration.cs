@@ -1,6 +1,4 @@
-﻿using BuildingBlocks.SharedServices.Implementations;
-
-namespace PhilSys.ServiceConfig;
+﻿namespace PhilSys.ServiceConfig;
 public static class PhilSysServiceConfiguration
 {
 	private const string assemblyName = "APIs";
@@ -55,7 +53,7 @@ public static class PhilSysServiceConfiguration
 		services.AddScoped<IHashService, HashService>();
 		services.AddScoped<ISecureToken, SecureToken>();
 		services.AddScoped<IPhilSysRepository, PhilSysRepository>();
-		services.AddScoped<IPhilSysResultRepository, PhilSysResultRepository>();
+		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		return services;
 	}
 	#endregion

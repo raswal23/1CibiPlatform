@@ -31,3 +31,10 @@ global using FrontendWebassembly.Services.AIAgentChat.Interface;
 global using Microsoft.AspNetCore.SignalR.Client;
 global using FrontendWebassembly.Services.AIAgentChat.Implementation;
 global using FrontendWebassembly.Services.CNX.Implementation;
+global using FrontendWebassembly.DTO.ATS;
+global using FrontendWebassembly.Services.ATS.Interface;
+global using FrontendWebassembly.Services.ATS.Implementation;
+global using FrontendWebassembly.Services.Shared.Implementation;
+global using FrontendWebassembly.Services.Shared.Interfaces;
+global using Microsoft.AspNetCore.Components.Forms;
+

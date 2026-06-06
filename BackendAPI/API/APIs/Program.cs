@@ -9,12 +9,13 @@ builder.Services
 	.AddLoggingConfiguration(builder.Configuration)
 	.AddModuleMediaTR()
 	.AddModuleCarter()
-	.AddHybridCaches()
+	.AddHybridCaches(builder.Configuration)
 	.AddModuleServices()
 	.AddJwtAuthentication(builder.Configuration, builder.Environment)
 	.AddModuleInfrastructure(builder.Configuration)
 	.AddAIAgentConfiguration(builder.Configuration)
 	.AddAIAgentSkills(builder.Configuration)
+	.AddAlibabaOssConfiguration(builder.Configuration)
 	.AddEndpointsApiExplorer()
 	.AddSwaggerGen();
 

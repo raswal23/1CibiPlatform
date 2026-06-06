@@ -11,47 +11,45 @@
         else
         {
             <MudForm @ref="form">
+                <MudAutocomplete T="UsersDTO" 
+                                 Label="User" 
+                                 @bind-Value="selectedUser" 
+                                 SearchFunc="@SearchUsers" 
+                                 ToStringFunc="u => u?.email" 
+                                 Variant="Variant.Outlined" 
+                                 ProgressIndicatorColor="Color.Default" 
+                                 ShowProgressIndicator="true" 
+                                 Class="oneplatform-rounded-input" />
 
-                <MudSelect @bind-Value="AppSubRole.UserId"
-                           Label="Email"
-                           Required="true"
-                           Placeholder="Select a user...">
-                    @foreach (var user in Users!)
-                    {
-                        <MudSelectItem Value="@user.userId">@user.email</MudSelectItem>
-                    }
-                </MudSelect>
+                <MudAutocomplete T="ApplicationsDTO" 
+                                 Label="Application" 
+                                 @bind-Value="selectedApp" 
+                                 SearchFunc="@SearchApplications" 
+                                 ToStringFunc="a => a?.applicationName" 
+                                 Variant="Variant.Outlined" 
+                                 ProgressIndicatorColor="Color.Default" 
+                                 ShowProgressIndicator="true" 
+                                 Class="oneplatform-rounded-input" />
 
-                <MudSelect @bind-Value="AppSubRole.AppId"
-                           Label="Application"
-                           Required="true"
-                           Placeholder="Select an application...">
-                    @foreach (var app in Apps!)
-                    {
-                        <MudSelectItem Value="@app.applicationId">@app.applicationName</MudSelectItem>
-                    }
-                </MudSelect>
+                <MudAutocomplete T="SubMenusDTO" 
+                                 Label="SubMenu" 
+                                 @bind-Value="selectedMenu" 
+                                 SearchFunc="@SearchSubMenus" 
+                                 ToStringFunc="s => s?.subMenuName" 
+                                 Variant="Variant.Outlined" 
+                                 ProgressIndicatorColor="Color.Default" 
+                                 ShowProgressIndicator="true" 
+                                 Class="oneplatform-rounded-input" />
 
-                <MudSelect @bind-Value="AppSubRole.SubMenuId"
-                           Label="Submenu"
-                           Required="true"
-                           Placeholder="Select a submenu...">
-                    @foreach (var sm in SubMenus!)
-                    {
-                        <MudSelectItem Value="@sm.subMenuId">@sm.subMenuName</MudSelectItem>
-                    }
-                </MudSelect>
-
-                <MudSelect @bind-Value="AppSubRole.RoleId"
-                           Label="Role"
-                           Required="true"
-                           Placeholder="Select a role...">
-                    @foreach (var role in Roles!)
-                    {
-                        <MudSelectItem Value="@role.roleId">@role.roleName</MudSelectItem>
-                    }
-                </MudSelect>
-
+                <MudAutocomplete T="RolesDTO" 
+                                 Label="Role" 
+                                 @bind-Value="selectedRole" 
+                                 SearchFunc="@SearchRoles" 
+                                 ToStringFunc="r => r?.roleName" 
+                                 Variant="Variant.Outlined" 
+                                 ProgressIndicatorColor="Color.Default" 
+                                 ShowProgressIndicator="true" 
+                                 Class="oneplatform-rounded-input" />
             </MudForm>
         }
 
@@ -74,6 +72,10 @@
 @code {
     private MudForm? form;
     private bool IsLoaded = false;
+    private UsersDTO? selectedUser;
+    private ApplicationsDTO? selectedApp;
+    private SubMenusDTO? selectedMenu;
+    private RolesDTO? selectedRole;
     [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
 
     [Parameter]
@@ -93,15 +95,49 @@
         SubMenus = (await UserManagementService.GetSubMenusAsync(1, int.MaxValue)).Data.ToList();
         Roles = (await UserManagementService.GetRolesAsync(1, int.MaxValue)).Data.ToList();
 
+        selectedUser = Users?.FirstOrDefault(u => u.email == AppSubRole.UserEmail);
+        selectedApp = Apps?.FirstOrDefault(a => a.applicationName == AppSubRole.AppName);
+        selectedMenu = SubMenus?.FirstOrDefault(s => s.subMenuName == AppSubRole.SubMenuName);
+        selectedRole = Roles?.FirstOrDefault(r => r.roleName == AppSubRole.RoleName);
+
         IsLoaded = true;
     }
 
     async Task Submit()
     {
-        await form!.Validate();
-        if (form.IsValid)
-        {
-            MudDialog!.Close(DialogResult.Ok(AppSubRole));
-        }
+        AppSubRole.UserId = selectedUser!.userId;
+        AppSubRole.AppId = selectedApp!.applicationId;
+        AppSubRole.SubMenuId = selectedMenu!.subMenuId;
+        AppSubRole.RoleId = selectedRole!.roleId;
+
+        MudDialog!.Close(DialogResult.Ok(AppSubRole));
     }
+
+    private async Task<IEnumerable<T>> Search<T>(
+    string value,
+    IEnumerable<T> source,
+    Func<T, string?> selector,
+    CancellationToken token)
+    {
+        await Task.Delay(300, token);
+
+        if (string.IsNullOrWhiteSpace(value))
+            return source;
+
+        return source.Where(x =>
+            (selector(x) ?? string.Empty)
+            .Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
+    => Search(value, Users!, u => u.email, token);
+
+    private Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
+    => Search(value, Apps!, a => a.applicationName, token);
+
+    private Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
+    => Search(value, SubMenus!, s => s.subMenuName, token);
+
+    private Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
+    => Search(value, Roles!, r => r.roleName, token);
 }

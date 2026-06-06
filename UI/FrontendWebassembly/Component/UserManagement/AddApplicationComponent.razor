@@ -9,7 +9,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="philsys-rounded-input philsys-uppercase-input" />
+                          Class="oneplatform-rounded-input philsys-uppercase-input" />
 
             <MudTextField @bind-Value="Application.Description"
                           Label="Description"
@@ -19,7 +19,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="philsys-rounded-input philsys-uppercase-input" />
+                          Class="oneplatform-rounded-input philsys-uppercase-input" />
 
             <MudCheckBox T="bool"
                          @bind-Value="Application.IsActive"
@@ -54,7 +54,7 @@
 
     async Task Submit()
     {
-        await form.Validate();
+        await form.ValidateAsync();
         if (form.IsValid)
         {
             MudDialog.Close(DialogResult.Ok(Application));

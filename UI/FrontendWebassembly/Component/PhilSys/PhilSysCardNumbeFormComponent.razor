@@ -13,7 +13,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           Validation="ValidatePCN"
-                          Class="philsys-rounded-input" />
+                          Class="oneplatform-rounded-input" />
         </MudItem>
     </MudGrid>
 
@@ -27,6 +27,7 @@
 @code {
     private IdentityData identityData  = new();
     private MudForm? pcnForm;
+    [Parameter] public string? HashToken { get; set; }
 
     private async Task SubmitPCN()
     {
@@ -36,10 +37,10 @@
             return;
         }
 
-        var livenessLink = await PhilSysService.PostBasicInformationOrPCN("pcn", identityData!);
+        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
-            Navigation.NavigateTo(livenessLink, forceLoad: true);
+            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
         }
     }
 

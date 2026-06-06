@@ -15,10 +15,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Setup .NET 9 SDK
+      - name: Setup .NET 10 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
       
       - name: Cache NuGet packages
         uses: actions/cache@v3
@@ -28,6 +28,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
       
+      # Install wasm-tools workload required for Blazor WebAssembly on .NET 10
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       # Restore each project explicitly
       - name: Restore API Gateway
         run: dotnet restore ApiGateways/YarpApiGateway/YarpApiGateway.csproj

@@ -9,6 +9,7 @@ using System.Threading.RateLimiting;
 using Yarp.ReverseProxy.Configuration;
 using BuildingBlocks.SharedConstants;
 using AIAgent;
+using BackendAPI.Modules.ATS;
 
 namespace ApiGateways.YarpApiGateway.Extensions;
 
@@ -129,7 +130,8 @@ public static class GatewayServiceExtensions
 			typeof(CNXMarker).Assembly,
 			typeof(PhilSysMarker).Assembly,
 			typeof(SSOMarker).Assembly,
-			typeof(AIAgentMarker).Assembly
+			typeof(AIAgentMarker).Assembly,
+			typeof(ATSMarker).Assembly,
 		};
 
 		builder.Services.Scan(scan =>
@@ -198,7 +200,17 @@ public static class GatewayServiceExtensions
 		builder.Services.AddSingleton(catalog as ApiGateways.YarpApiGateway.Services.RouteCatalog);
 
 		builder.Services.AddReverseProxy()
-		.LoadFromMemory(yarpRoutes, yarpClusters);
+		.LoadFromMemory(yarpRoutes, yarpClusters)
+		.ConfigureHttpClient((context, handler) =>
+		{
+			if (handler is SocketsHttpHandler socketsHandler && context.ClusterId == GatewayConstants.CTVIIntertalAPI)
+			{
+				socketsHandler.SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+				{
+					RemoteCertificateValidationCallback = (_, _, _, _) => true
+				};
+			}
+		});
 	}
 	#endregion
 }

@@ -1,0 +1,28 @@
+﻿<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="10" md="8" lg="6">
+
+        <PhilSysFormTabComponent ActiveTabChanged="ChangeActiveTab"></PhilSysFormTabComponent>
+
+        <MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
+            @if (_activeIndex == 0)
+            {
+                <BasicInformationFormComponent HashToken="HashToken"/>
+            }
+            else if (_activeIndex == 1)
+            {
+                <PhilSysCardNumbeFormComponent HashToken="HashToken" />
+            }
+        </MudPaper>
+
+    </MudItem>
+</MudGrid>
+
+@code {
+    private int _activeIndex = 0;
+    [Parameter] public string? HashToken { get; set; }
+
+    private void ChangeActiveTab(int value)
+    {
+        _activeIndex = value;
+    }
+}
