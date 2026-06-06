@@ -47,8 +47,8 @@ public class ATSService : IATSService
 	{
 		var logContext = new
 		{
-			Action = "GettingLivenessLink",
-			Step = "StartPostingPcnOrBasicInfo",
+			Action = "AddingApplicationFormData",
+			Step = "StartAddingApplicationFormData",
 			Identity = personalDetails.EmailInvitationID,
 			Timestamp = DateTime.UtcNow
 		};
