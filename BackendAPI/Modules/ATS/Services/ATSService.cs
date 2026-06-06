@@ -8,6 +8,19 @@ public class ATSService : IATSService
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _applicationFormPath;
+	private string resumeFileKey = "";
+	private string nbiKey = "";
+	private string govtIdKey = "";
+	private string highSchoolDiplomaKey = "";
+	private string seniorHighSchoolDiplomaKey = "";
+	private string bachelorsDiplomaKey = "";
+	private string mastersDiplomaKey = "";
+	private string doctorateDiplomaKey = "";
+	private string emp1COEKey = "";
+	private string emp2COEKey = "";
+	private string emp3COEKey = "";
+	private string licenseKey = "";
+	private string signatureKey = "";
 
 	public ATSService(ILogger<ATSService> logger, 
 					  IATSRepository atsRepository,
@@ -66,6 +79,36 @@ public class ATSService : IATSService
 		}
 		catch (Exception ex)
 		{
+
+			var keys = new[]
+			{
+				resumeFileKey,
+				nbiKey,
+				govtIdKey,
+				highSchoolDiplomaKey,
+				seniorHighSchoolDiplomaKey,
+				bachelorsDiplomaKey,
+				mastersDiplomaKey,
+				doctorateDiplomaKey,
+				emp1COEKey,
+				emp2COEKey,
+				emp3COEKey,
+				licenseKey,
+				signatureKey
+			};
+
+			foreach (var key in keys.Where(k => !string.IsNullOrWhiteSpace(k)))
+			{
+				try
+				{
+					await _objectStorageService.DeleteAsync(key, ct);
+				}
+				catch (Exception deleteEx)
+				{
+					_logger.LogWarning(deleteEx,
+						"Failed to delete file with key {Key}", key);
+				}
+			}
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 			throw new InternalServerException($"Failed to add transaction. {ex.InnerException.Message}"); 
@@ -75,10 +118,6 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 
 	{
-		string resumeFileKey = "";
-		string nbiKey = "";
-		string govtIdKey = "";
-
 		if (personalDetailsDTO.ResumeFile != null)
 		{
 			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
@@ -120,12 +159,6 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddEducationalBackgroundDataAsync(EducationalBackgroundDTO educationalBackgroundDTO, CancellationToken cancellationToken)
 	{
-		string highSchoolDiplomaKey = "";
-		string seniorHighSchoolDiplomaKey = "";
-		string bachelorsDiplomaKey = "";
-		string mastersDiplomaKey = "";
-		string doctorateDiplomaKey = "";
-
 		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("HighSchool Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
@@ -167,7 +200,7 @@ public class ATSService : IATSService
 	private async Task<bool> AddLicensesDataAsync(LicensesDetailsDTO licensesDetailsDTO, CancellationToken cancellationToken)
 	{
 		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
-		string licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
+		licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
@@ -178,10 +211,6 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddProfessionalExperiencesDataAsync(ProfessionalExperiencesDTO professionalExperiencesDTO, CancellationToken cancellationToken)
 	{
-		string emp1COEKey = "";
-		string emp2COEKey = "";
-		string emp3COEKey = "";
-
 		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
 		{
 			await using var emp1COEStream = professionalExperiencesDTO.Emp1COEUploadFile!.OpenReadStream();
@@ -233,7 +262,6 @@ public class ATSService : IATSService
 
 	private async Task<bool> AddSignatureDetailsDataAsync(SignatureDetailsDTO signatureDetailsDTO, CancellationToken cancellationToken)
 	{
-		string signatureKey = "";
 		if (signatureDetailsDTO.Signature != null)
 		{
 			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
