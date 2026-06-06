@@ -22,8 +22,6 @@ public class PhilSysRepository : IPhilSysRepository
 
 		transaction!.FaceLivenessSessionId = FaceLivenessSessionId;
 
-		transaction.ImageinByte = Photo;
-
 		transaction.UpdatedLivenessIdAt = DateTime.UtcNow;
 
 		await _dbcontext.SaveChangesAsync();

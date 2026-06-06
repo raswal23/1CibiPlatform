@@ -41,7 +41,7 @@ public class PhilSysCacheRepository : IPhilSysRepository
 		return await _philSysRepository.GetTransactionDataByHashTokenAsync(HashToken);
 	}
 
-	public async Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId, byte[] Photo)
+	public async Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId)
 	{
 		return await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId);
 	}

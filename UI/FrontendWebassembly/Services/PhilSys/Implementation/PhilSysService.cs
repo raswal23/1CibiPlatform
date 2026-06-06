@@ -9,13 +9,12 @@ public class PhilSysService : IPhilSysService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<UpdateFaceLivenessSessionResponseDTO> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSession, byte[] photo)
+	public async Task<UpdateFaceLivenessSessionResponseDTO> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSession)
 	{
 		var payload = new
 		{
 			HashToken,
-			FaceLivenessSessionId = FaceLivenessSession,
-			photo
+			FaceLivenessSessionId = FaceLivenessSession
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync("philsys/idv/updatefacelivenesssession", payload);

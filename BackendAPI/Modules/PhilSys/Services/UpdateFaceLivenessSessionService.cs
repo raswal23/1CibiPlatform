@@ -31,8 +31,7 @@ public class UpdateFaceLivenessSessionService
 
 	public async Task<VerificationResponseDTO> UpdateFaceLivenessSessionAsync(
 		string HashToken,
-		string FaceLivenessSessionId,
-		byte[] Photo
+		string FaceLivenessSessionId
 		)
 	{
 		string accessToken = string.Empty;
@@ -49,7 +48,7 @@ public class UpdateFaceLivenessSessionService
 
 		_logger.LogInformation("Updating Face Liveness Session for Token: {@Context}", logContext);
 
-		var result = await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId, Photo);
+		var result = await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId);
 		if (result == null)
 		{
 			_logger.LogError("No transaction found for {HashToken}: {@Context}", HashToken, logContext);

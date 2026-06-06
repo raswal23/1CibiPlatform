@@ -303,7 +303,7 @@ public class ATSService : IATSService
 
 		EmailIdAndApplicationFormPathDTO emailIdAndApplicationFormPath = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
 
-		if (emailIdAndApplicationFormPath == null)
+		if (emailIdAndApplicationFormPath.EmailId == Guid.Empty)
 		{
 			_logger.LogError("Failed Transaction: Failed to fetch EmailId and Application Form Path for {HashToken}: {@Context}", hashToken, logContext);
 			throw new NotFoundException("No record found for the provided hash token.");

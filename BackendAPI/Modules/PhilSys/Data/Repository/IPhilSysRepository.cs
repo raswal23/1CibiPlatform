@@ -5,7 +5,7 @@ public interface IPhilSysRepository
 
 	Task<PhilSysTransaction> UpdateTransactionDataAsync(PhilSysTransaction Transaction);
 
-	Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId, byte[] Photo);
+	Task<PhilSysTransaction> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSessionId);
 
 	Task<PhilSysTransaction> GetTransactionDataByHashTokenAsync(string HashToken);
 
