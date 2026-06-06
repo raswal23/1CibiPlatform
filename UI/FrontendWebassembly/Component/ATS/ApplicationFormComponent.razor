@@ -511,8 +511,6 @@
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="DegreeWithMajor"
-                                              Required="true"
-                                              RequiredError="Degree with major is required"
                                               Label="Degree with major" />
                             </MudItem>
 
@@ -709,6 +707,7 @@
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
+                                               MinDate="@DateTime.Now"
                                                Class="oneplatform-rounded-input" />
                             </MudItem>
 
@@ -741,6 +740,7 @@
                                                Required="true"
                                                Class="oneplatform-rounded-input"
                                                Label="End Date of Employment"
+                                               Disabled="@(!StartOfEmployment.HasValue)"
                                                MinDate="@StartOfEmployment?.AddDays(1)"
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
@@ -1123,41 +1123,47 @@
                                     <!-- LEFT: Signature -->
                                     <MudItem xs="12">
                                         <MudPaper Elevation="0" 
-                                                  Style="padding:8px;">
-                                            <MudGrid Justify="Justify.Center">
+                                                  Style="padding:8px; margin-bottom: 30px;">
+                                            <MudGrid>
                                                  <MudItem xs="12">
+                                                    <div style="text-align: center;">
                                                     <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                    <div style="display:flex; justify-content:center;">
                                                         <SignaturePad @bind-Value="signatureDetails.Signature"
                                                                       ClearButtonClass="theme-button theme-button-active ats-signature-button"
                                                                       Class="ats-signature mb-2" />
-                                                    </div>
+                                                     </div>
+                                                </MudItem>
 
+                                               <MudItem xs="12">
+                                                    <div style="display:flex; justify-content:center;">
+                                                        <div style="width:40%;">
+                                                            <MudTextField T="string"
+                                                                          Label="Name"
+                                                                          @bind-Value="signatureDetails.SignerName"
+                                                                          Required="true"
+                                                                          RequiredError="Name is required"
+                                                                          Adornment="Adornment.Start"
+                                                                          Variant="Variant.Outlined"
+                                                                          Margin="Margin.Dense"
+                                                                          Class="oneplatform-rounded-input" />
+                                                        </div>
+                                                    </div>
                                                 </MudItem>
 
                                                 <MudItem xs="12">
-                                                    <MudTextField T="string"
-                                                                  Label="Name"
-                                                                  @bind-Value="signatureDetails.SignerName"
-                                                                  Required="true"
-                                                                  RequiredError="Name is required"
-                                                                  Adornment="Adornment.Start"
-                                                                  Variant="Variant.Outlined"
-                                                                  Margin="Margin.Dense"
-                                                                  Class="oneplatform-rounded-input w-50" />
-                                                </MudItem>
-
-                                                <MudItem xs="12"> 
-                                                    <MudDatePicker @bind-Date="SignatureDate"
-                                                                   Label="Date"
-                                                                   Required="true"
-                                                                   RequiredError="Date is required"
-                                                                   Adornment="Adornment.End"
-                                                                   Variant="Variant.Outlined"
-                                                                   Margin="Margin.Dense"
-                                                                   DateFormat="MM/dd/yyyy"
-                                                                   ReadOnly
-                                                                   Class="oneplatform-rounded-input w-50" />
+                                                    <div style="display:flex; justify-content:center;">
+                                                        <div style="width:40%;">
+                                                            <MudDatePicker @bind-Date="SignatureDate"
+                                                                           Label="Date"
+                                                                           Required="true"
+                                                                           RequiredError="Date is required"
+                                                                           Variant="Variant.Outlined"
+                                                                           Margin="Margin.Dense"
+                                                                           Class="oneplatform-rounded-input" 
+                                                                           DateFormat="MM/dd/yyyy"
+                                                                           ReadOnly />
+                                                        </div>
+                                                    </div>
                                                 </MudItem>
                                             </MudGrid>
                                         </MudPaper>
