@@ -1,5 +1,5 @@
 ﻿namespace PhilSys.Features.PostFaceLivenessSession;
-public record UpdateFaceLivenessSessionRequest(string HashToken, string FaceLivenessSessionId, byte[] Photo);
+public record UpdateFaceLivenessSessionRequest(string HashToken, string FaceLivenessSessionId);
 public record UpdateFaceLivenessSessionResponse(VerificationResponseDTO VerificationResponseDTO);
 public class UpdateFaceLivenessSessionEndpoint : ICarterModule
 {
@@ -9,8 +9,7 @@ public class UpdateFaceLivenessSessionEndpoint : ICarterModule
 		{
 			var command = new UpdateFaceLivenessSessionCommand(
 				request.HashToken,
-				request.FaceLivenessSessionId,
-				request.Photo
+				request.FaceLivenessSessionId
 				);
 			UpdateFaceLivenessSessionResult result = await sender.Send(command, cancellationToken);
 

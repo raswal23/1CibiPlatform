@@ -16,55 +16,58 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
                .IsRequired();
 
         builder.Property(p => p.FirstName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MiddleName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.LastName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Suffix)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MaritalStatus)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Nationality)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.Sex)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.SSS)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.TIN)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.MobileNumber)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.TelephoneNumber)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.EmailAddress)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(p => p.EmailAlternative)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
-        builder.Property(p => p.AdditionalGovtID)
-               .HasMaxLength(100);
+        builder.Property(p => p.AdditionalGovtIDFileKey)
+               .HasMaxLength(255);
 
-        builder.Property(p => p.NBIClearance)
-               .HasMaxLength(100);
+        builder.Property(p => p.NBIClearanceFileKey)
+               .HasMaxLength(255);
 
-        builder.Property(p => p.Resume)
-               .HasMaxLength(100);
+        builder.Property(p => p.ResumeFileKey)
+               .HasMaxLength(255);
+
+		builder.Property(p => p.PhilSysImageKey) 
+			   .HasMaxLength(255);
 
         builder.Property(p => p.CreatedDate)
-               .IsRequired(false);
+               .IsRequired(true);
 
         // Relationship to EmailInvitationRequest
         builder.HasOne<EmailInvitationRequest>()

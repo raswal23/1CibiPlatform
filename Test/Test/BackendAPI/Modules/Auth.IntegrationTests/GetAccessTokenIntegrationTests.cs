@@ -19,7 +19,6 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange
 		var nonExistentUserId = Guid.NewGuid();
-		var refreshToken = "some-random-token";
 
 		var command = new GetNewAccessTokenCommand(nonExistentUserId);
 

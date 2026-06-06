@@ -22,7 +22,7 @@ public class PartnerSystemService
 		_hashService = hashService;
 		_securetoken = securetoken;
 		_livenessExpiryMinutes = int.Parse(_configuration["PhilSys:LivenessSessionExpiryInMinutes"] ?? "10");
-		_livenessBaseUrl = _configuration["PhilSys:LivenessBaseUrl"]!;
+		_livenessBaseUrl = _configuration["PhilSys:LivenessBaseUrl"] ?? "";
 	}
 	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
 	{

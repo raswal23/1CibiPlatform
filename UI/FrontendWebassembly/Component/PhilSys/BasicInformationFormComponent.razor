@@ -90,6 +90,7 @@
 @code {
     private IdentityData identityData = new();
     private MudForm? personalForm;
+    [Parameter] public string? HashToken { get; set; }
 
     private async Task SubmitPersonalInfo()
     {
@@ -99,10 +100,10 @@
             return;
         }
 
-        var livenessLink = await PhilSysService.PostBasicInformationOrPCN("name_dob", identityData!);
+        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
-            Navigation.NavigateTo(livenessLink, forceLoad: true);
+            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
         }
     }
 }

@@ -17,7 +17,7 @@ namespace APIs.Migrations.PhilSys
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -51,9 +51,6 @@ namespace APIs.Migrations.PhilSys
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<byte[]>("ImageinByte")
-                        .HasColumnType("bytea");
 
                     b.Property<string>("InquiryType")
                         .IsRequired()

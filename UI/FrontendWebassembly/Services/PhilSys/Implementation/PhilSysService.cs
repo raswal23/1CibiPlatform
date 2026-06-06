@@ -9,13 +9,12 @@ public class PhilSysService : IPhilSysService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<UpdateFaceLivenessSessionResponseDTO> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSession, byte[] photo)
+	public async Task<UpdateFaceLivenessSessionResponseDTO> UpdateFaceLivenessSessionAsync(string HashToken, string FaceLivenessSession)
 	{
 		var payload = new
 		{
 			HashToken,
-			FaceLivenessSessionId = FaceLivenessSession,
-			photo
+			FaceLivenessSessionId = FaceLivenessSession
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync("philsys/idv/updatefacelivenesssession", payload);
@@ -86,7 +85,7 @@ public class PhilSysService : IPhilSysService
 		return successContent!;
 	}
 
-	public async Task<string> PostBasicInformationOrPCN(string inquiry_type, IdentityData identity_data)
+	public async Task<string> PostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data)
 	{
 		if (DateTime.TryParse(identity_data.birth_date, out var parsedDate))
 		{
