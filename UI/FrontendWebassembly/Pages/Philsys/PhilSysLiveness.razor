@@ -2,6 +2,8 @@
 @page "/philsys/idv/liveness/{HashToken}"
 @inject IJSRuntime JS
 @inject IPhilSysService IPhilSysService
+@inject NavigationManager Navigation
+@inject LocalStorageService LocalStorageService
 
 <PageTitle>Face Liveness Session</PageTitle>
 
@@ -31,7 +33,7 @@
 
     @if (showLoader)
     {
-        <PhilSysLoaderComponent></PhilSysLoaderComponent>
+        <PhilSysLoaderComponent/>
     }
 
 </div>
@@ -49,6 +51,9 @@
     private string? livenessKey;
     private string errorMessage = string.Empty;
     private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "atsSession")]
+    public string atsSession { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,14 +123,12 @@
     }
 
     [JSInvokable]
-    public async Task OnLivenessCompleted(string sessionId, string photo)
+    public async Task OnLivenessCompleted(string sessionId)
     {
         showLoader = true;
         StateHasChanged();
 
-        byte[] photoBytes = Convert.FromBase64String(photo);
-
-        information = await IPhilSysService.UpdateFaceLivenessSessionAsync(HashToken, sessionId, photoBytes);
+        information = await IPhilSysService.UpdateFaceLivenessSessionAsync(HashToken, sessionId);
         _completed = true;
 
         if (!string.IsNullOrEmpty(information.error_message))
@@ -134,6 +137,21 @@
         }
 
         showLoader = false;
+        if (!string.IsNullOrEmpty(atsSession))
+        {
+            await LocalStorageService.SetItemAsync($"{atsSession}_firstName", information.data_subject!.first_name);
+            await LocalStorageService.SetItemAsync($"{atsSession}_middleName", information.data_subject!.middle_name);
+            await LocalStorageService.SetItemAsync($"{atsSession}_lastName", information.data_subject!.last_name);
+            await LocalStorageService.SetItemAsync($"{atsSession}_suffix", information.data_subject!.suffix);
+            await LocalStorageService.SetItemAsync($"{atsSession}_birthDate", information.data_subject!.birth_date);
+            await LocalStorageService.SetItemAsync($"{atsSession}_sex", information.data_subject!.gender);
+            await LocalStorageService.SetItemAsync($"{atsSession}_emailAddress", information.data_subject!.email);
+            await LocalStorageService.SetItemAsync($"{atsSession}_phoneNumber", information.data_subject!.mobile_number);
+            await LocalStorageService.SetItemAsync($"{atsSession}_profilePicture", information.data_subject!.face_url);
+
+            Navigation.NavigateTo($"http://localhost:5134/s&i/ats/applicationform/{atsSession}?philSysShow=true&stepActive=2", forceLoad: true);
+        }
+
         StateHasChanged();
     }
 

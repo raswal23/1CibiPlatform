@@ -1,5 +1,5 @@
 ﻿namespace PhilSys.Features.UpdateFaceLivenessSession;
-public record UpdateFaceLivenessSessionCommand(string HashToken, string FaceLivenessSessionId, byte[] Photo) : ICommand<UpdateFaceLivenessSessionResult>;
+public record UpdateFaceLivenessSessionCommand(string HashToken, string FaceLivenessSessionId) : ICommand<UpdateFaceLivenessSessionResult>;
 
 public record UpdateFaceLivenessSessionResult(VerificationResponseDTO VerificationResponseDTO);
 public class UpdateFaceLivenessSessionHandler : ICommandHandler<UpdateFaceLivenessSessionCommand, UpdateFaceLivenessSessionResult>
@@ -13,8 +13,7 @@ public class UpdateFaceLivenessSessionHandler : ICommandHandler<UpdateFaceLivene
 	{
 		var result = await _updateFaceLivenessSessionService.UpdateFaceLivenessSessionAsync(
 				command.HashToken,
-				command.FaceLivenessSessionId,
-				command.Photo
+				command.FaceLivenessSessionId
 			);
 		return new UpdateFaceLivenessSessionResult(result);
 	}

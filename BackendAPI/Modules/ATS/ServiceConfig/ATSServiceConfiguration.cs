@@ -37,8 +37,11 @@ public static class ATSServiceConfiguration
     #region Services
     public static IServiceCollection AddATSServices(this IServiceCollection services)
     {
-        // register ATS specific services, repositories, etc. Add as needed
-        return services;
+		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+		return services;
     }
     #endregion
 

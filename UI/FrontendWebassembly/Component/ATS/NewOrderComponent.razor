@@ -214,7 +214,7 @@
         foreach (var fileUpload in fileUploads)
         {
             if (fileUpload is MudFileUpload<IReadOnlyList<IBrowserFile>> multipleUpload && await multipleUpload.RemoveFileAsync(file))
-            {
+            {   
                 return; // File removed from multiple files upload
             }
 

@@ -13,33 +13,36 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
                .ValueGeneratedNever();
 
         builder.Property(e => e.LastName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.FirstName)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.MiddleInitial)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.EmailAddress)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.MobileNumber)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.SelectPackage)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.RushNormal)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.HashToken)
-               .HasMaxLength(100);
+               .HasMaxLength(255);
 
         builder.Property(e => e.HashTokenCreated)
-               .IsRequired(false);
+               .IsRequired(true);
 
         builder.Property(e => e.HashTokenExpiration)
-               .IsRequired(false);
-    }
+               .IsRequired(true);
+
+		builder.Property(pt => pt.Status)
+			   .HasMaxLength(255);
+	}
 }

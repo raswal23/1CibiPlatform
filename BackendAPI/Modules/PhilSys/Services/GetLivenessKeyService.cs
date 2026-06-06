@@ -4,12 +4,13 @@ public class GetLivenessKeyService
 {
 	private readonly ILogger<GetLivenessKeyService> _logger;
 	private readonly IConfiguration _configuration;
-	private string _livenessKey => _configuration["PhilSys:LivenessSDKPublicKey"] ?? "";
+	private string _livenessKey;
 
 	public GetLivenessKeyService(ILogger<GetLivenessKeyService> logger, IConfiguration configuration)
 	{
 		_logger = logger;
 		_configuration = configuration;
+		_livenessKey = _configuration["PhilSys:LivenessSDKPublicKey"] ?? "";
 	}
 	public Task<string> GetLivenessKey()
 	{

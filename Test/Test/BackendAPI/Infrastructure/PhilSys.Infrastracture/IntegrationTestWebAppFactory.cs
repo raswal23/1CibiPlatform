@@ -34,12 +34,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 		DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
 
-		// Set environment variables for test configuration
-		Environment.SetEnvironmentVariable("OpenAI__Endpoint", "https://test.openai.com");
-		Environment.SetEnvironmentVariable("OpenAI__ApiKey", "test-api-key");
-		Environment.SetEnvironmentVariable("OpenAI__Model", "gpt-4");
-		Environment.SetEnvironmentVariable("OpenAI__EmbeddingModel", "text-embedding-3-small");
-
 		builder.ConfigureTestServices(services =>
 		{
 			// Remove existing DbContext registration
@@ -89,10 +83,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		});
 	}
 	public WebApplicationFactory<Program> CreateFactoryWithHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
-		=> CreateCustomFactory(services =>
-		{
-			services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
-		});
+	=> CreateCustomFactory(services =>
+	{
+		services.AddTransient<PhilSysTestHandler>(_ => new PhilSysTestHandler(responder));
+	});
 
 	public async Task InitializeAsync()
 	{

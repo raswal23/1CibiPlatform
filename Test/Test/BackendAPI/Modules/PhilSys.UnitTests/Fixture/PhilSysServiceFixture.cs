@@ -4,7 +4,7 @@ using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Caching.Hybrid;
+using PhilSys.Data.UnitOfWork;
 
 namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 {
@@ -14,9 +14,9 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 		public Mock<IHashService> MockHashService { get; private set; }
 		public Mock<ISecureToken> MockSecureToken { get; private set; }
 		public Mock<IPhilSysRepository> MockPhilSysRepository { get; private set; }
-		public Mock<IPhilSysResultRepository> MockPhilSysResultRepository { get; private set; }
 		public Mock<IHttpClientFactory> MockHttpClientFactory { get; private set; }
 		public Mock<IPhilSysService> MockPhilSysService { get; private set; }
+		public Mock<IUnitOfWork> MockUnitOfWork { get; private set; }
 
 		// Loggers
 		public Mock<ILogger<DeleteTransactionService>> MockDeleteTransactionLogger { get; private set; }
@@ -42,10 +42,10 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			// init mocks
 			MockHashService = new Mock<IHashService>();
 			MockPhilSysRepository = new Mock<IPhilSysRepository>();
-			MockPhilSysResultRepository = new Mock<IPhilSysResultRepository>();
 			MockHttpClientFactory = new Mock<IHttpClientFactory>();
 			MockPhilSysService = new Mock<IPhilSysService>();
 			MockSecureToken = new Mock<ISecureToken>();
+			MockUnitOfWork = new Mock<IUnitOfWork>();
 
 			MockDeleteTransactionLogger = new Mock<ILogger<DeleteTransactionService>>();
 			MockGetLivenessKeyLogger = new Mock<ILogger<GetLivenessKeyService>>();
@@ -60,9 +60,10 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 				{
 					new KeyValuePair<string,string>("PhilSys:LivenessSessionExpiryInMinutes","5"),
 					new KeyValuePair<string,string>("PhilSys:LivenessBaseUrl","http://localhost:5134"),
-					new KeyValuePair<string,string>("PhilSys:ClientID","9ffe0ab6-1be1-47a8-bd3a-8560f1652a1a"),
-					new KeyValuePair<string,string>("PhilSys:ClientSecret","YnQpGs34mdlH2bumAzzEhRc0pJXAjfcX8qBSDZyMtdiU4HDVwx4SAsIFLuLxHt51"),
-					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKey","eyJpdiI6Im9YTTRTTXpwbDF0ZlRvakFHRG1HTnc9PSIsInZhbHVlIjoiUlo3WFJmM1dZUEVSdmNNbDJrU3o2Zz09IiwibWFjIjoiZjJmNWQxN2M4ZjgxMDQ1NDE5MzYzNTU1ZWNiMzU0MDk3Y2ZkNjc5NDA1Y2VlOTViOTQ5NmJhMWIzN2NiMzIxZCIsInRhZyI6IiJ9"),
+					new KeyValuePair<string,string>("PhilSys:ClientID","client-id"),
+					new KeyValuePair<string,string>("PhilSys:ClientSecret","client-secret"),
+					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKey","test-key"),
+					new KeyValuePair<string,string>("PhilSys:LivenessSDKPublicKeyEmpty",""),
 				})
 				.Build();
 
@@ -99,9 +100,9 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			UpdateFaceLivenessSessionService = new UpdateFaceLivenessSessionService(
 				MockHttpClientFactory.Object,
 				MockPhilSysRepository.Object,
-				MockPhilSysResultRepository.Object,
 				MockUpdateFaceLivenessSessionLogger.Object,
 				MockPhilSysService.Object,
+				MockUnitOfWork.Object,
 				Configuration
 			);
 		}

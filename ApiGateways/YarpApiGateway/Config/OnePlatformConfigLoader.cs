@@ -1,6 +1,5 @@
 using BuildingBlocks.SharedConstants;
 using BuildingBlocks.SharedDTO;
-using Microsoft.Extensions.Configuration;
 
 namespace ApiGateways.YarpApiGateway.Config;
 

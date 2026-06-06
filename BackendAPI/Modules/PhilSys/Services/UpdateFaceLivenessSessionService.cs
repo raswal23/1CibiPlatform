@@ -4,9 +4,9 @@ public class UpdateFaceLivenessSessionService
 {
 	private readonly HttpClient _httpClient;
 	private readonly IPhilSysRepository _philSysRepository;
-	private readonly IPhilSysResultRepository _philSysResultRepository;
 	private readonly ILogger<UpdateFaceLivenessSessionService> _logger;
 	private readonly IPhilSysService _philSysService;
+	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly string client_id;
 	private readonly string client_secret;
@@ -14,16 +14,16 @@ public class UpdateFaceLivenessSessionService
 	public UpdateFaceLivenessSessionService(
 		IHttpClientFactory httpClientFactory,
 		IPhilSysRepository philSysRepository,
-		IPhilSysResultRepository philSysResultRepository,
 		ILogger<UpdateFaceLivenessSessionService> logger,
 		IPhilSysService philsysService,
+		IUnitOfWork unitOfWork,
 		IConfiguration configuration)
 	{
 		_httpClient = httpClientFactory.CreateClient("IDVClient");
 		_philSysRepository = philSysRepository;
-		_philSysResultRepository = philSysResultRepository;
 		_logger = logger;
 		_philSysService = philsysService;
+		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		client_id = _configuration["PhilSys:ClientID"] ?? "";
 		client_secret = _configuration["PhilSys:ClientSecret"] ?? "";
@@ -31,8 +31,7 @@ public class UpdateFaceLivenessSessionService
 
 	public async Task<VerificationResponseDTO> UpdateFaceLivenessSessionAsync(
 		string HashToken,
-		string FaceLivenessSessionId,
-		byte[] Photo
+		string FaceLivenessSessionId
 		)
 	{
 		string accessToken = string.Empty;
@@ -49,7 +48,7 @@ public class UpdateFaceLivenessSessionService
 
 		_logger.LogInformation("Updating Face Liveness Session for Token: {@Context}", logContext);
 
-		var result = await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId, Photo);
+		var result = await _philSysRepository.UpdateFaceLivenessSessionAsync(HashToken, FaceLivenessSessionId);
 		if (result == null)
 		{
 			_logger.LogError("No transaction found for {HashToken}: {@Context}", HashToken, logContext);
@@ -67,11 +66,26 @@ public class UpdateFaceLivenessSessionService
 		
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
 
-			await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
-
 			await UpdateTransactionStatus(HashToken);
 
-			await AddConvertedResponseToDbAsync(convertedResponse);
+
+			try
+			{
+				await AddConvertedResponseToDbAsync(convertedResponse);
+
+				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
+
+				await _unitOfWork.CommitAsync();
+
+				_logger.LogInformation("Successfully updated the session status and added the result in table for {HashToken}: {@Context}", HashToken, logContext);
+
+			}
+			catch (Exception ex)
+			{
+				await _unitOfWork.RollbackAsync();
+				_logger.LogError("Failed to update the session status and failed to add the result in table for {HashToken}: {@Context}", HashToken, logContext);
+				throw new InternalServerException($"Failed to add transaction. {ex.Message}");
+			}
 
 			return convertedResponse!;
 		}
@@ -82,11 +96,23 @@ public class UpdateFaceLivenessSessionService
 		
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
 
-			await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
+			try
+			{
+				await AddConvertedResponseToDbAsync(convertedResponse);
 
-			await UpdateTransactionStatus(HashToken);
+				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
 
-			await AddConvertedResponseToDbAsync(convertedResponse);
+				await _unitOfWork.CommitAsync();
+
+				_logger.LogInformation("Successfully updated the session status and added the result in table for {HashToken}: {@Context}", HashToken, logContext);
+
+			}
+			catch (Exception ex)
+			{
+				await _unitOfWork.RollbackAsync();
+				_logger.LogError("Failed to update the session status and failed to add the result in table for {HashToken}: {@Context}", HashToken, logContext);
+				throw new InternalServerException($"Failed to add transaction. {ex.Message}");
+			}
 
 			return convertedResponse!;
 		}
@@ -163,7 +189,7 @@ public class UpdateFaceLivenessSessionService
 		_logger.LogInformation("Adding the Converted Response in PhilSys Transaction Results' Table: {@Context}", logContext);
 
 		var philsysTransactionResult = VerificationResponseDTO.Adapt<PhilSysTransactionResult>();
-		var result = await _philSysResultRepository.AddTransactionResultDataAsync(philsysTransactionResult);
+		var result = await _philSysRepository.AddTransactionResultDataAsync(philsysTransactionResult);
 		if (result == false)
 		{
 			_logger.LogError("Saved Transaction Failed: Failed to Add the Converted Response in PhilSys Transaction Results' Table: {@Context}", logContext);
