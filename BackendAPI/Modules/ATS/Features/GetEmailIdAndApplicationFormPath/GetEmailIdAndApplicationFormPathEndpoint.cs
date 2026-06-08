@@ -13,7 +13,7 @@ public class GetEmailIdAndApplicationFormPathEndpoint : ICarterModule
 			var command = new GetEmailIdAndApplicationFormHandlerRequest(hashToken);
 			GetEmailIdAndApplicationFormResult result = await sender.Send(command, cancellationToken);
 			var response = new GetEmailIdAndApplicationFormResponse(result.EmailIdAndApplicationFormPath);
-			return Results.Ok(response);
+			return Results.Ok(response.EmailIdAndApplicationFormPath);
 		})
 		  .WithName("GetEmailIdAndApplicationFormPath")
 		  .WithTags("ATS")

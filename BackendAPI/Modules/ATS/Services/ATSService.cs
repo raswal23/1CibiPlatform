@@ -246,6 +246,20 @@ public class ATSService : IATSService
 		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
 		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
 		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
+
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp1CompanyCity))
+		{
+			professionalExperiences.Emp1CompanyAddress = $"{professionalExperiencesDTO.Emp1CompanyCity}, {professionalExperiencesDTO.Emp1CompanyProvince}, {professionalExperiencesDTO.Emp1CompanyPostalCode}, {professionalExperiencesDTO.Emp1CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp2CompanyCity))
+		{
+			professionalExperiences.Emp2CompanyAddress = $"{professionalExperiencesDTO.Emp2CompanyCity}, {professionalExperiencesDTO.Emp2CompanyProvince}, {professionalExperiencesDTO.Emp2CompanyPostalCode}, {professionalExperiencesDTO.Emp2CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp3CompanyCity))
+		{
+			professionalExperiences.Emp3CompanyAddress = $"{professionalExperiencesDTO.Emp3CompanyCity}, {professionalExperiencesDTO.Emp3CompanyProvince}, {professionalExperiencesDTO.Emp3CompanyPostalCode}, {professionalExperiencesDTO.Emp3CompanyCountry}";
+		}
+
 		professionalExperiences.CreatedDate = DateTime.UtcNow;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return isAdded;

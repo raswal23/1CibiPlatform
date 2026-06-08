@@ -34,7 +34,7 @@ public class DeleteTransactionIntegrationTests : BaseIntegrationTest
             // Arrange
             var transaction = new PhilSysTransaction
             {
-                Tid = Guid.NewGuid(),
+                Tid = Guid.CreateVersion7(),
                 InquiryType = "pcn",
                 PCN = "9700018324631576",
                 WebHookUrl = "/",

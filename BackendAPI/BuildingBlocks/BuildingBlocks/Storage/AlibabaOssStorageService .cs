@@ -31,7 +31,9 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 	{
 		ArgumentNullException.ThrowIfNull(stream);
 
-		var objectKey = $"{folderName}/{Guid.NewGuid():N}-{fileName}";
+		var objectKey = string.IsNullOrEmpty(_atsTestFolder)
+			? $"uploads/{Guid.CreateVersion7():N}-{fileName}"
+			: $"{_atsTestFolder.TrimEnd('/')}/{fileName}";
 
 		await Task.Run(() => { 
 			ct.ThrowIfCancellationRequested(); 

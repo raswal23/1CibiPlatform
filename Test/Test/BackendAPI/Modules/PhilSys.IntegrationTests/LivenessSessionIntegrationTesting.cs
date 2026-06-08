@@ -37,7 +37,7 @@ public class LivenessSessionIntegrationTesting : BaseIntegrationTest
 
 		var transaction = new PhilSysTransaction
 		{
-			Tid = Guid.NewGuid(),
+			Tid = Guid.CreateVersion7(),
 			InquiryType = "pcn",
 			PCN = "9700018324631576",
 			WebHookUrl = "/callback",

@@ -30,7 +30,7 @@ public class JWTServiceTests
 		// Arrange
 		var cfg = BuildConfiguration();
 		var service = new JWTService(cfg);
-		var dto = new LoginDTO(Guid.NewGuid(), "hash", "user@example.com", "First", "Last", null, true, new List<int>(), new List<List<int>>(), new List<int>());
+		var dto = new LoginDTO(Guid.CreateVersion7(), "hash", "user@example.com", "First", "Last", null, true, new List<int>(), new List<List<int>>(), new List<int>());
 
 		// Act
 		var token = service.GetAccessToken(dto);

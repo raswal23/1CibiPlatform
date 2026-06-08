@@ -25,7 +25,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		public async Task GetPhilsysTokenAsync_ShouldThrow_WhenRequestFails()
 		{
 			// Arrange
-			var client_id = Guid.NewGuid().ToString();
+			var client_id = Guid.CreateVersion7().ToString();
 			var client_secret = "YnQpGs34mdlH24234234EhRc0pJXAjQASDdASdjvihbujtuLxHt51";
 			_fixture.MockHttpClientFactory.Setup(f => f.CreateClient("PhilSys")).Returns(() =>
 			{
@@ -57,7 +57,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		public async Task GetPhilsysTokenAsync_ShouldReturnToken_WhenResponseIsSuccessful()
 		{
 			// Arrange
-			var client_id = Guid.NewGuid().ToString();
+			var client_id = Guid.CreateVersion7().ToString();
 			var client_secret = "YnQpGs34mdlH24234234EhRc0pJXAjQASDdASdjvihbujtuLxHt51";
 			var expectedToken = "fake-token";
 			_fixture.MockHttpClientFactory.Setup(f => f.CreateClient("PhilSys")).Returns(() =>

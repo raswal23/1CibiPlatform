@@ -99,8 +99,8 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 	public async Task AddAppSubRole_ShouldAddNewAppSubRoleSuccessfully()
 	{
 		// Arrange
-		var assignedByUser = new Authusers { Id = Guid.NewGuid(), Email = "admin@test.com" };
-		var targetUser = new Authusers { Id = Guid.NewGuid(), Email = "user@test.com" };
+		var assignedByUser = new Authusers { Id = Guid.CreateVersion7(), Email = "admin@test.com" };
+		var targetUser = new Authusers { Id = Guid.CreateVersion7(), Email = "user@test.com" };
 
 		_dbContext.AuthUsers.AddRange(assignedByUser, targetUser);
 		_dbContext.AuthApplications.Add(new AuthApplication { AppId = 1, AppName = "App 1" });
@@ -133,7 +133,7 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 	public async Task EditAppSubRole_ShouldUpdateExistingAppSubRoleSuccessfully()
 	{
 		// Arrange
-		await SeedAppSubRoleData(); 
+		await SeedAppSubRoleData();
 
 		var existingAppSubRole = await _dbContext.AuthUserAppRoles
 			.AsNoTracking()
@@ -173,7 +173,7 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 		var editDto = new EditAppSubRoleDTO
 		{
 			AppSubRoleId = 999, // Non-existent ID
-			UserId = Guid.NewGuid(),
+			UserId = Guid.CreateVersion7(),
 			AppId = 1,
 			SubMenuId = 1,
 			RoleId = 1
@@ -194,7 +194,7 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 	public async Task DeleteAppSubRole_ShouldRemoveAppSubRoleSuccessfully()
 	{
 		// Arrange
-		await SeedAppSubRoleData(); 
+		await SeedAppSubRoleData();
 
 		var command = new DeleteAppSubRoleCommand(1);
 
@@ -245,14 +245,14 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 		// Seed Users (required!)
 		var assignedByUser = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = "admin@test.com",
 			FirstName = "Admin"
 		};
 
-		var user1 = new Authusers { Id = Guid.NewGuid(), Email = "u1@test.com" };
-		var user2 = new Authusers { Id = Guid.NewGuid(), Email = "u2@test.com" };
-		var user3 = new Authusers { Id = Guid.NewGuid(), Email = "u3@test.com" };
+		var user1 = new Authusers { Id = Guid.CreateVersion7(), Email = "u1@test.com" };
+		var user2 = new Authusers { Id = Guid.CreateVersion7(), Email = "u2@test.com" };
+		var user3 = new Authusers { Id = Guid.CreateVersion7(), Email = "u3@test.com" };
 
 		_dbContext.AuthUsers.AddRange(assignedByUser, user1, user2, user3);
 
@@ -277,7 +277,7 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 			new AuthRole { RoleId = 3, RoleName = "Role 3" }
 		);
 
-		await _dbContext.SaveChangesAsync(); 
+		await _dbContext.SaveChangesAsync();
 
 		// Seed AuthUserAppRoles
 		_dbContext.AuthUserAppRoles.AddRange(
