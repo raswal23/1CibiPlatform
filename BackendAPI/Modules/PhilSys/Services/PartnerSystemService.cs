@@ -26,7 +26,7 @@ public class PartnerSystemService
 	}
 	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
 	{
-		PhilSysTransaction transaction = new PhilSysTransaction { } ;
+		PhilSysTransaction transaction = new();
 
 		var identifier = !string.IsNullOrWhiteSpace(identity_data.PCN)
 							 ? identity_data.PCN
@@ -45,18 +45,18 @@ public class PartnerSystemService
 
 		var token = _securetoken.GenerateSecureToken();
 
-		if (token == null)
+		if (string.IsNullOrEmpty(token))
 		{
 			_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}", logContext);
-			throw new Exception("Failed to generate Token.");
+			throw new InternalServerException("Failed to generate Token.");
 		}
 
 		var HashToken = _hashService.Hash(token);
 
-		if (HashToken == null)
+		if (string.IsNullOrEmpty(HashToken))
 		{
 			_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}", logContext);
-			throw new Exception("Failed to hash Token.");
+			throw new InternalServerException("Failed to hash Token.");
 		}
 
 		if (inquiry_type.Equals("name_dob", StringComparison.OrdinalIgnoreCase))

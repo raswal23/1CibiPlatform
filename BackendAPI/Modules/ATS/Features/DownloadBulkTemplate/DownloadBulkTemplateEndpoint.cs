@@ -10,16 +10,17 @@ public class DownloadBulkTemplateEndpoint : ICarterModule
 	{
 		app.MapGet("downloadbulktemplate", async (ISender sender, CancellationToken cancellationToken) =>
 		{
-			var command = new DownloadBulkTemplateCommand();
+			var command = new DownloadBulkTemplateHandlerRequest();
 			DownloadBulkTemplateResult result = await sender.Send(command, cancellationToken);
 			var response = new DownloadBulkTemplateResponse(result.templateLink);
-			return Results.Json(response);
+			return Results.Json(response.templateLink);
 		})
 		  .WithName("DownloadBulkTemplate")
 		  .WithTags("ATS")
 		  .Produces<DownloadBulkTemplateResponse>()
 		  .ProducesProblem(StatusCodes.Status400BadRequest)
 		  .WithSummary("Download Bulk Template")
-		  .WithDescription("Downloads the bulk template for inserting multiple subject entries.");
+		  .WithDescription("Downloads the bulk template for inserting multiple subject entries.")
+		  .RequireAuthorization();
 	}
 }
