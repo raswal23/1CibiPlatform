@@ -52,11 +52,11 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 	}
 
-	public async Task<Guid> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"ATS_ApplicationFormStatus_{hashToken}";
 
-		return await _hybridCache.GetOrCreateAsync<Guid>(
+		return await _hybridCache.GetOrCreateAsync<EmailIdAndApplicationFormPathDTO>(
 			cacheKey,
 			async id => await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, cancellationToken));
 	}

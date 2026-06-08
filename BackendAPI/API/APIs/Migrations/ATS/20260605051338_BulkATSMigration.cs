@@ -11,13 +11,6 @@ namespace APIs.Migrations.ATS
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Status",
-                schema: "ats",
-                table: "EmailInvitationRequest",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "FileDetails",
@@ -42,10 +35,6 @@ namespace APIs.Migrations.ATS
                 name: "FileDetails",
                 schema: "ats");
 
-            migrationBuilder.DropColumn(
-                name: "Status",
-                schema: "ats",
-                table: "EmailInvitationRequest");
         }
     }
 }
