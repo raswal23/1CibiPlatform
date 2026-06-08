@@ -11,7 +11,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 	private readonly string _applicationFormPath;
 	public GetEmailIdAndApplicationFormPathIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
-		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] = "application-forms";
+		_applicationFormPath = _configuration["ATS:ApplicationFormBaseUrl"] = "application-forms";
 	}
 
 	[Fact]

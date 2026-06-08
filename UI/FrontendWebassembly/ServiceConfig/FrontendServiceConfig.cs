@@ -62,7 +62,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAIAgentChatService, AIChatService>();
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
-		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 
 		return services;

@@ -41,7 +41,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return bulkTemplateLink;
 	}
 
-	public async Task<bool> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
+	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
 	{
 		var subjectName = $"{emailInvitationRequestDTO.FirstName} {emailInvitationRequestDTO.LastName}";
 
@@ -84,10 +84,10 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			await _atsRepository.AddEmailInvitationRequestAsync(emailInvitationRequest);
 
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
 			_logger.LogError("Failed Transaction: Failed to add Email Invitation Request record for {Tid}: {@Context}", logContext.Identity, logContext);
-			throw new InternalServerException($"Failed to add transaction."); ;
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}"); ;
 		}
 
 		var applicationFormLink = $"{_applicationformBaseUrl}?hashToken={HashToken}";
@@ -96,6 +96,54 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		return true;
 	}
+
+	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default)
+	{
+
+		_logger.LogInformation("Starting uploading process for file {FileName}", bulkUploadFileDetailsDTO.FileName);
+
+		string bulkFileKey = "";
+		string folderName = "ATS Objects";
+
+		var logContext = new
+		{
+			Action = "UploadFile",
+			Step = "StartUploading",
+			Identity = bulkUploadFileDetailsDTO.FileID,
+			Timestamp = DateTime.UtcNow
+		};
+
+		if (bulkUploadFileDetailsDTO.BulkFile != null)
+		{
+			await using var fileStream = bulkUploadFileDetailsDTO.BulkFile.OpenReadStream();
+
+			bulkFileKey = await _objectStorageService.UploadAsync(
+				folderName,
+				bulkUploadFileDetailsDTO.BulkFile.FileName,
+				fileStream,
+				ct);
+		}
+
+		bulkUploadFileDetailsDTO.FileID = Guid.CreateVersion7();
+		bulkUploadFileDetailsDTO.Status = "Pending";
+		bulkUploadFileDetailsDTO.DateCreated = DateTime.UtcNow;
+
+		BulkUploadFileDetails bulkUploadFileDetails = bulkUploadFileDetailsDTO.Adapt<BulkUploadFileDetails>();
+
+		try
+		{
+			await _atsRepository.AddBulkUploadFileDetailsAsync(bulkUploadFileDetails);
+			_logger.LogInformation("Successfully added the file info in the database and object storage - {FileID}: {@Context}", bulkUploadFileDetailsDTO.FileID, logContext);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Failed to insert data for Bulk File Information {FileID} : {@Context}", bulkUploadFileDetailsDTO.FileID, logContext);
+			throw new InternalServerException($"Failed insert data to the database. {ex.InnerException?.Message ?? ex.Message}");
+		}
+
+		return true;
+	}
+
 
 	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink)
 	{

@@ -2,7 +2,7 @@
 
 public record EmailInvitationRequestCommand(EmailInvitationRequestDTO emailInvitationRequestDTO) : ICommand<EmailInvitationRequestResult>;
 
-public record EmailInvitationRequestResult(Guid EmailInvitationID);
+public record EmailInvitationRequestResult(bool isAdded);
 	
 public class EmailInvitationRequestCommandValidator : AbstractValidator<EmailInvitationRequestCommand>
 {
@@ -35,16 +35,16 @@ public class EmailInvitationRequestCommandValidator : AbstractValidator<EmailInv
 
 	}
 }
-public class EmailInvitationRequestHandler : ICommandHandler<EmailInvitationRequestCommand, EmailInvitationRequestResult>
+public class InsertEmailInvitationRequestHandler : ICommandHandler<EmailInvitationRequestCommand, EmailInvitationRequestResult>
 {
-	private readonly IInsertEmailInvitationRequestService _emailInvitationRequestService;
-	public EmailInvitationRequestHandler(IInsertEmailInvitationRequestService emailInvitationRequestService)
+	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
+	public InsertEmailInvitationRequestHandler(IEndorsementSubmissionService endorsementSubmissionService)
 	{
-		_emailInvitationRequestService = emailInvitationRequestService;
+		_endorsementSubmissionService = endorsementSubmissionService;
 	}
 	public async Task<EmailInvitationRequestResult> Handle(EmailInvitationRequestCommand request, CancellationToken cancellationToken)
 	{
-		var id = await _emailInvitationRequestService.InsertEmailInvitationRequest(request.emailInvitationRequestDTO, cancellationToken);
-		return new EmailInvitationRequestResult(id);
+		var isAdded = await _endorsementSubmissionService.InsertEmailInvitationRequestAsync(request.emailInvitationRequestDTO, cancellationToken);
+		return new EmailInvitationRequestResult(isAdded);
 	}
 }

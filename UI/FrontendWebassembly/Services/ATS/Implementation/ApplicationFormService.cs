@@ -1,11 +1,11 @@
 ﻿
 namespace FrontendWebassembly.Services.ATS.Implementation;
 
-public class ATSService : IATSService
+public class ApplicationFormService : IApplicationFormService
 {
     private readonly HttpClient _httpClient;
 
-	public ATSService(IHttpClientFactory httpClientFactory)
+	public ApplicationFormService(IHttpClientFactory httpClientFactory)
 	{
 		_httpClient = httpClientFactory.CreateClient("API");
 	}

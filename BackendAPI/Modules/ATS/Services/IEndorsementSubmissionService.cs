@@ -3,6 +3,7 @@
 public interface IEndorsementSubmissionService
 {
 	Task<string> GetBulkTemplateFileUrlAsync();
-	Task<bool> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default);
+	Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default);
+	Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default);
 
 }

@@ -1,6 +1,6 @@
 ﻿namespace ATS.Services;
 
-public interface IATSService
+public interface IApplicationFormService
 {
 	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails, 
 										   AddressDetailsDTO addressDetails, 

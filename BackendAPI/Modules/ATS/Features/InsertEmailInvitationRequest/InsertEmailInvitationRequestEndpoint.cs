@@ -2,9 +2,9 @@
 
 public record EmailInvitationRequestRequest(EmailInvitationRequestDTO emailInvitationRequestDTO);
 
-public record EmailInvitationRequestResponse(Guid EmailInvitationID);
+public record EmailInvitationRequestResponse(bool isAdded);
 
-public class EmailInvitationRequestEndpoint : ICarterModule
+public class InsertEmailInvitationRequestEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
@@ -12,8 +12,8 @@ public class EmailInvitationRequestEndpoint : ICarterModule
 			{
 				var command = new EmailInvitationRequestCommand(request.emailInvitationRequestDTO);
 				EmailInvitationRequestResult result = await sender.Send(command, cancellationToken);
-				var response = new EmailInvitationRequestResponse(result.EmailInvitationID);
-				return Results.Created(string.Empty, response);
+				var response = new EmailInvitationRequestResponse(result.isAdded);
+				return Results.Ok(response.isAdded);
 
 			})
 		  .WithName("InsertEmailInvitationRequest")
@@ -21,6 +21,7 @@ public class EmailInvitationRequestEndpoint : ICarterModule
 		  .Produces<EmailInvitationRequestResponse>()
 		  .ProducesProblem(StatusCodes.Status400BadRequest)
 		  .WithSummary("Insert Subject")
-		  .WithDescription("Inserts a new subject entry to the database.");
+		  .WithDescription("Inserts a new subject entry to the database.")
+		  .RequireAuthorization();
 	}
 }

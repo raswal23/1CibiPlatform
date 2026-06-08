@@ -17,4 +17,7 @@ public class FakeEmailSender : IEmailService
 
 	public string SendApprovalNotificationBody(string gmail)
 		=> $"Hello {gmail}, your account has been approved.";
+
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
+		=> $"Hello {name}/{gmail}, please complete your application form using this link: {applicationFormLink}";
 }

@@ -1,7 +1,7 @@
 ﻿namespace ATS.Features.InsertBulkSubject;
 
 public record InsertBulkSubjectRequest(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO);
-public record InsertBulkSubjectResponse(Guid FiledID);
+public record InsertBulkSubjectResponse(bool isAdded);
 
 public class InsertBulkSubjectEndpoint : ICarterModule
 {
@@ -11,7 +11,7 @@ public class InsertBulkSubjectEndpoint : ICarterModule
 		{
 			var command = new InsertBulkSubjectCommand(request.bulkUploadFileDetailsDTO);
 			InsertBulkSubjectResult result = await sender.Send(command, cancellationToken);
-			var response = new InsertBulkSubjectResponse(result.FiledID);
+			var response = new InsertBulkSubjectResponse(result.isAdded);
 			return Results.Json(response);
 		})
 		  .WithName("InsertBulkSubject")
@@ -19,6 +19,7 @@ public class InsertBulkSubjectEndpoint : ICarterModule
 		  .Produces<InsertBulkSubjectResponse>()
 		  .ProducesProblem(StatusCodes.Status400BadRequest)
 		  .WithSummary("Insert Bulk Subject")
-		  .WithDescription("Uploads a file and inserts its metadata to the database in a transactional manner.");
+		  .WithDescription("Uploads a file and inserts its metadata to the database in a transactional manner.")
+		  .RequireAuthorization();
 	}
 }

@@ -1,18 +1,35 @@
-﻿using FluentAssertions;
-using FluentValidation;
-using ATS.Data.DTO;
+﻿using ATS.Data.DTO;
 using ATS.Features.InsertBulkSubject;
+using FluentAssertions;
+using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 {
+	private readonly string _atsTestFolder;
+	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
+	string bulkFileName = $"{Guid.CreateVersion7()}-bulkfile.txt";
+
 	public InsertBulkSubjectIntegrationTest(IntegrationTestWebAppFactory factory) : base(factory)
 	{
-
+		_atsTestFolder = _configuration
+				.GetSection("AlibabaOss")
+				.GetValue<string>("ATSTestFolder") ?? string.Empty;
 	}
-	#region Positive Path
+
+	private IFormFile CreateFakeFormFile(byte[] content, string fileName)
+	{
+		var stream = new MemoryStream(content);
+		return new FormFile(stream, 0, content.Length, "file", fileName)
+		{
+			Headers = new HeaderDictionary(),
+			ContentType = "text/plain"
+		};
+	}
 
 	[Fact]
 
@@ -21,25 +38,24 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.NewGuid(),
-			FileName = "testfile.csv",
+			FileID = Guid.CreateVersion7(),
+			BulkFile = CreateFakeFormFile(sampleFileContent, bulkFileName),
+			FileName = bulkFileName,
 			Status = "Pending",
 		};
 
 		var command = new InsertBulkSubjectCommand(dto);
 		// Act
 		var result = await _sender.Send(command);
+
 		// Assert
-		result.Should().NotBe(Guid.Empty);
+		result.isAdded.Should().BeTrue();
 
-		var persisted = await _dbContext.BulkUploadFileDetails.FindAsync(result);
-
-		persisted.Should().NotBeNull();
-		persisted!.FileName.Should().Be(dto.FileName);
+		if (result.isAdded == true)
+		{
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bulkFileName}");
+		}
 	}
-	#endregion
-
-	#region Negative Path
 
 	[Fact]
 	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenFileIdIsEmpty()
@@ -71,7 +87,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.NewGuid(),
+			FileID = Guid.CreateVersion7(),
 			FileName = string.Empty,
 			Status = "Pending"
 		};
@@ -95,7 +111,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.NewGuid(),
+			FileID = Guid.CreateVersion7(),
 			FileName = "testfile.csv",
 			Status = string.Empty
 		};
@@ -135,5 +151,4 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 
 		exception.Which.Errors.Should().HaveCount(3);
 	}
-	#endregion
 }

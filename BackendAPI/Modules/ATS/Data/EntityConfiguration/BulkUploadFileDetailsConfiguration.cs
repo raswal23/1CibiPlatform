@@ -16,6 +16,10 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(255);
 
+		builder.Property(a => a.FileKey)
+			   .IsRequired()
+			   .HasMaxLength(255);
+
 		builder.Property(a => a.Status)
 			   .IsRequired()
 			   .HasMaxLength(50);

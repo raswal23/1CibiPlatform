@@ -1,8 +1,8 @@
 ﻿namespace ATS.Services;
 
-public class ATSService : IATSService
+public class ApplicationFormService : IApplicationFormService
 {
-	private readonly ILogger<ATSService> _logger;
+	private readonly ILogger<ApplicationFormService> _logger;
 	private readonly IATSRepository _atsRepository;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
@@ -24,7 +24,7 @@ public class ATSService : IATSService
 	private string licenseKey = "";
 	private string signatureKey = "";
 
-	public ATSService(ILogger<ATSService> logger, 
+	public ApplicationFormService(ILogger<ApplicationFormService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,

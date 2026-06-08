@@ -37,10 +37,10 @@ public static class ATSServiceConfiguration
     #region Services
     public static IServiceCollection AddATSServices(this IServiceCollection services)
     {
-		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
-		services.AddScoped<IInsertBulkSubjectService, InsertBulkSubjectService>();
+		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 	
 
 		// register ATS specific services, repositories, etc. Add as needed

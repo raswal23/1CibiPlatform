@@ -1,7 +1,7 @@
 ﻿namespace ATS.Features.InsertBulkSubject;
 
 public record InsertBulkSubjectCommand(BulkUploadFileDetailsDTO file) : ICommand<InsertBulkSubjectResult>;
-public record InsertBulkSubjectResult(Guid FiledID);
+public record InsertBulkSubjectResult(bool isAdded);
 
 public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSubjectCommand>
 {
@@ -22,16 +22,16 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 }
 public class InsertBulkSubjectHandler : ICommandHandler<InsertBulkSubjectCommand, InsertBulkSubjectResult>
 {
-	private readonly IInsertBulkSubjectService _insertBulkSubjectService;
-	public InsertBulkSubjectHandler(IInsertBulkSubjectService insertBulkSubjectService)
+	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
+	public InsertBulkSubjectHandler(IEndorsementSubmissionService endorsementSubmissionService)
 	{
-		_insertBulkSubjectService = insertBulkSubjectService;
+		_endorsementSubmissionService = endorsementSubmissionService;
 	}
 	public async Task<InsertBulkSubjectResult> Handle(
 		InsertBulkSubjectCommand request, 
 		CancellationToken cancellationToken)
 	{
-		var id = await _insertBulkSubjectService.InsertBulkSubjectAsync(request.file, cancellationToken);
-		return new InsertBulkSubjectResult(id);
+		var isAdded = await _endorsementSubmissionService.InsertBulkSubjectAsync(request.file, cancellationToken);
+		return new InsertBulkSubjectResult(isAdded);
 	}
 }

@@ -14,19 +14,19 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	Guid EmailId = Guid.CreateVersion7();
 	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
 	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
-	string govermentIdFileName = $"{Guid.NewGuid}-govId.txt";
-	string nbiFileName = $"{Guid.NewGuid}-nbiId.txt";
-	string resumeFileName = $"{Guid.NewGuid}-govId.txt";
-	string highSchoolDiplomaFileName = $"{Guid.NewGuid}-highSchoolDiploma.txt";
-	string seniorHighSchoolDiplomaFileName = $"{Guid.NewGuid}-seniorHighSchoolDiplomaFileName.txt";
-	string bachelorDiplomaFileName = $"{Guid.NewGuid}-bachelorSchoolDiplomaFileName.txt";
-	string masterDiplomaFileName = $"{Guid.NewGuid}-masterSchoolDiplomaFileName.txt";
-	string doctorateDiplomaFileName = $"{Guid.NewGuid}-doctorateSchoolDiplomaFileName.txt";
-	string licenseFileName = $"{Guid.NewGuid}-licenseFileName.txt";
-	string emp1COEFileName = $"{Guid.NewGuid}-emp1COEFileName.txt";
-	string emp2COEFileName = $"{Guid.NewGuid}-emp2COEFileName.txt";
-	string emp3COEFileName = $"{Guid.NewGuid}-emp3COEFileName.txt";
-	string signatureFileName = $"{Guid.NewGuid}-signature.txt";
+	string govermentIdFileName = $"{Guid.CreateVersion7()}-govId.txt";
+	string nbiFileName = $"{Guid.CreateVersion7()}-nbiId.txt";
+	string resumeFileName = $"{Guid.CreateVersion7()}-govId.txt";
+	string highSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-highSchoolDiploma.txt";
+	string seniorHighSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-seniorHighSchoolDiplomaFileName.txt";
+	string bachelorDiplomaFileName = $"{Guid.CreateVersion7()}-bachelorSchoolDiplomaFileName.txt";
+	string masterDiplomaFileName = $"{Guid.CreateVersion7()}-masterSchoolDiplomaFileName.txt";
+	string doctorateDiplomaFileName = $"{Guid.CreateVersion7()}-doctorateSchoolDiplomaFileName.txt";
+	string licenseFileName = $"{Guid.CreateVersion7()}-licenseFileName.txt";
+	string emp1COEFileName = $"{Guid.CreateVersion7()}-emp1COEFileName.txt";
+	string emp2COEFileName = $"{Guid.CreateVersion7()}-emp2COEFileName.txt";
+	string emp3COEFileName = $"{Guid.CreateVersion7()}-emp3COEFileName.txt";
+	string signatureFileName = $"{Guid.CreateVersion7()}-signature.txt";
 
 	public AddApplicationFormDataIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
