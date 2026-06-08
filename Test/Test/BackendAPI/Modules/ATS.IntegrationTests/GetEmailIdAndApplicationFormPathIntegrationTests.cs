@@ -18,7 +18,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 	public async Task GetEmailIdAndApplicationFormPath_WithValidHashToken_ShouldReturnEmailIdAndPath()
 	{
 		// Arrange
-		Guid emailId = Guid.NewGuid();
+		Guid emailId = Guid.CreateVersion7();
 		string _hashToken = "valid-hash-token-xyz";
 
 		await SeedEmailInvitationRequestData(emailId, _hashToken);

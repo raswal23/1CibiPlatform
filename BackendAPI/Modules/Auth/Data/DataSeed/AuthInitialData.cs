@@ -9,7 +9,7 @@ public class AuthInitialData
 	public AuthInitialData(IPasswordHasherService passwordHasherService)
 	{
 		this._passwordHasherService = passwordHasherService;
-		this._Id = Guid.NewGuid();
+		this._Id = Guid.CreateVersion7();
 	}
 	public IEnumerable<Authusers> GetUsers()
 	{

@@ -63,7 +63,7 @@ public class PartnerSystemService
 		{
 			transaction = new PhilSysTransaction
 			{
-				Tid = Guid.NewGuid(),
+				Tid = Guid.CreateVersion7(),
 				InquiryType = "name_dob",
 				FirstName = identity_data.FirstName,
 				MiddleName = identity_data.MiddleName,
@@ -82,7 +82,7 @@ public class PartnerSystemService
 		{
 			transaction = new PhilSysTransaction
 			{
-				Tid = Guid.NewGuid(),
+				Tid = Guid.CreateVersion7(),
 				InquiryType = "pcn",
 				PCN = identity_data.PCN,
 				IsTransacted = false,

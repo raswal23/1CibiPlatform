@@ -11,7 +11,7 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
-	Guid EmailId = Guid.NewGuid();
+	Guid EmailId = Guid.CreateVersion7();
 	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
 	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
 	string govermentIdFileName = $"{Guid.NewGuid}-govId.txt";
@@ -53,7 +53,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var personal = new PersonalDetailsDTO
 		{
 			EmailInvitationID = EmailId,
-			PersonalID = Guid.NewGuid(),
+			PersonalID = Guid.CreateVersion7(),
 			PositionAppliedFor = "Senior Software Engineer",
 			FirstName = "Juan",
 			MiddleName = "Santos",
@@ -74,7 +74,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var address = new AddressDetailsDTO
 		{
-			Address = Guid.NewGuid(),
+			Address = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			CurrentCity = "Manila",
 			CurrentProvince = "Metro Manila",
@@ -92,7 +92,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var education = new EducationalBackgroundDTO
 		{
-			EducationalBackgroundID = Guid.NewGuid(),
+			EducationalBackgroundID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
@@ -123,7 +123,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var licenses = new LicensesDetailsDTO
 		{
-			LicensesDetailsID = Guid.NewGuid(),
+			LicensesDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
@@ -135,7 +135,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var experiences = new ProfessionalExperiencesDTO
 		{
-			ProfessionalExperiencesID = Guid.NewGuid(),
+			ProfessionalExperiencesID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Emp1CompanyName = "Accenture Philippines",
 			Emp1CurrentlyEmployed = false,
@@ -184,7 +184,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var reference = new ReferenceDetailsDTO
 		{
-			ReferenceDetailsID = Guid.NewGuid(),
+			ReferenceDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Ref1FullName = "Michael Tan",
 			Ref1ProfessionalRelationship = "Former Team Lead",
@@ -212,7 +212,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var signature = new SignatureDetailsDTO
 		{
-			SignatureDetailsID = Guid.NewGuid(),
+			SignatureDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Signature = CreateFakeFormFile(sampleFileContent, signatureFileName),
 		};
@@ -254,7 +254,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var address = new AddressDetailsDTO
 		{
-			Address = Guid.NewGuid(),
+			Address = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			CurrentCity = "Manila",
 			CurrentProvince = "Metro Manila",
@@ -272,7 +272,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var education = new EducationalBackgroundDTO
 		{
-			EducationalBackgroundID = Guid.NewGuid(),
+			EducationalBackgroundID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
@@ -303,7 +303,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var licenses = new LicensesDetailsDTO
 		{
-			LicensesDetailsID = Guid.NewGuid(),
+			LicensesDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
@@ -315,7 +315,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var experiences = new ProfessionalExperiencesDTO
 		{
-			ProfessionalExperiencesID = Guid.NewGuid(),
+			ProfessionalExperiencesID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Emp1CompanyName = "Accenture Philippines",
 			Emp1CurrentlyEmployed = false,
@@ -364,7 +364,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var reference = new ReferenceDetailsDTO
 		{
-			ReferenceDetailsID = Guid.NewGuid(),
+			ReferenceDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 
 			Ref1FullName = "Michael Tan",
@@ -396,7 +396,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var signature = new SignatureDetailsDTO
 		{
-			SignatureDetailsID = Guid.NewGuid(),
+			SignatureDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Signature = CreateFakeFormFile(sampleFileContent, "signature.txt"),
 		};
