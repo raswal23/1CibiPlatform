@@ -16,7 +16,7 @@ public class DownloadBulkTemplateIntegrationTests : BaseIntegrationTest
 	public async Task DownloadBulkTemplate_ShouldReturnTemplateLink()
 	{
 		// Arrange
-		var command = new DownloadBulkTemplateCommand();
+		var command = new DownloadBulkTemplateHandlerRequest();
 
 		// Act
 		var result = await _sender.Send(command);

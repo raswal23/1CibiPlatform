@@ -1,21 +1,20 @@
 ﻿namespace ATS.Features.DownloadBulkTemplate;
 
-public record DownloadBulkTemplateCommand() : ICommand<DownloadBulkTemplateResult>;
+public record DownloadBulkTemplateHandlerRequest() : IQuery<DownloadBulkTemplateResult>;
 
 public record DownloadBulkTemplateResult(string templateLink);
 
-public class DownloadBulkTemplateHandler : ICommandHandler<DownloadBulkTemplateCommand, DownloadBulkTemplateResult>
+public class DownloadBulkTemplateHandler : IQueryHandler<DownloadBulkTemplateHandlerRequest, DownloadBulkTemplateResult>
 {
-	private readonly IDownloadBulkTemplateService _downloadBulkTemplateService;
-	public DownloadBulkTemplateHandler(IDownloadBulkTemplateService downloadBulkTemplateService)
+	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
+	public DownloadBulkTemplateHandler(IEndorsementSubmissionService endorsementSubmissionService)
 	{
-		_downloadBulkTemplateService = downloadBulkTemplateService;
+		_endorsementSubmissionService = endorsementSubmissionService;
 	}
 
-	public async Task<DownloadBulkTemplateResult> Handle(DownloadBulkTemplateCommand request, CancellationToken cancellationToken)
+	public async Task<DownloadBulkTemplateResult> Handle(DownloadBulkTemplateHandlerRequest request, CancellationToken cancellationToken)
 	{
-		// Call the service to ensure the template is retrievable
-		string templateLink = await _downloadBulkTemplateService.GetBulkTemplateFileUrlAsync();
+		string templateLink = await _endorsementSubmissionService.GetBulkTemplateFileUrlAsync();
 		return new DownloadBulkTemplateResult(templateLink);
 	}
 }
