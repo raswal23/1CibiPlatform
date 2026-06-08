@@ -134,7 +134,6 @@ public class EmailService : IEmailService
 		string resetLink,
 		int expireMins)
 	{
-		string subject = "Password Reset Request";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -242,7 +241,6 @@ public class EmailService : IEmailService
 
 	public string SendApprovalNotificationBody(string gmail)
 	{
-		string subject = "OnePlatform Account Approval Notification";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -275,15 +273,64 @@ public class EmailService : IEmailService
                         <div class='content'>
                             <p>Hello {gmail},</p>
 							<p>Your account has been successfully approved.</p>
-						<p>You can now access the approved account.</p>
-						<a href='{_onePlatformLink}' class='button'>Go to OnePlatform</a>
-					</div>
+							<p>You can now access the approved account.</p>
+							<a href='{_onePlatformLink}' class='button'>Go to OnePlatform</a>
+						</div>
 					<div class='footer'>
 						<p>&copy; 2026 NoSent. All rights reserved.</p>
 					</div>
-            </div>
-        </body>
-        </html>";
+				</div>
+			</body>
+			</html>";
+
+		return body;
+	}
+
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
+	{
+		string body = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
+                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .content {{background-color: #f9f9f9; }}
+                        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>CIBI | Background Verification Information Request</h1>
+                        </div>
+                        <div class='content'>
+                            <p>Dear {name},</p>
+							<p>
+								Princess Espiritu, TaskUs has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
+								<a href='{applicationFormLink}'>Application Form</a> 
+							</p>
+							<p>Please comply <strong>within the next 42 hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
+						    <p><strong>REMINDERS IN ANSWERING THE FORM </strong></p>
+							<ol>
+								<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
+								<li>In case you have a portion to input the Email Address of HR POC, kindly input your HR person of contact on the company you are applying to.</li>
+							</ol>
+                            <p>
+								For any questions or concerns, please do not hesitate to reach out to
+								<a href=""mailto:pre-workteam@cibi.com.ph"">pre-workteam@cibi.com.ph</a>
+								and
+								<a href=""mailto:ceteam@cibi.com.ph"">ceteam@cibi.com.ph</a>
+								or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
+							</p>
+						</div>
+						<div class='footer'>
+							<p>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</p>
+						</div>
+					</div>
+				</body>
+				</html>";
 
 		return body;
 	}

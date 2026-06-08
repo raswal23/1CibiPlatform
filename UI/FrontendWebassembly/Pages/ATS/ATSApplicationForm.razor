@@ -2,7 +2,7 @@
 @inject NavigationManager Navigation
 @inject IATSService ATSService
 @page "/s&i/ats/applicationform"
-@* @page "/s&i/ats/applicationform/{HashToken}" *@
+@* @page "/s&i/ats/applicationform" *@
 
 <div class="philsys-liveness-container">
 
@@ -111,8 +111,9 @@ else
     private bool _showApplicationForm = false;
     private string? Status = string.Empty;
     private bool IsExpired = false;
-    [Parameter]
-    public string? HashToken { get; set; }
+    // [SupplyParameterFromQuery(Name = "hashToken")]
+    // [Parameter]
+    // public string? HashToken { get; set; }
     [Parameter]
     [SupplyParameterFromQuery(Name = "philSysShow")]
     public bool philSysShow { get; set; } 

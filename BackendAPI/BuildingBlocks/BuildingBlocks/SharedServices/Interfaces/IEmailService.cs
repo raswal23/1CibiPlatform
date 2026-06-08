@@ -11,4 +11,7 @@ public interface IEmailService
 	string SendNotificationBody(string gmail, string application, string submenu, string role);
 
 	string SendApprovalNotificationBody(string gmail);
+
+	string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink);
+
 }

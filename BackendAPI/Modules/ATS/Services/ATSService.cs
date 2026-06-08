@@ -7,7 +7,7 @@ public class ATSService : IATSService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
-	private readonly string _applicationFormPath;
+	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 
 	private string resumeFileKey = "";
@@ -35,8 +35,8 @@ public class ATSService : IATSService
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] ?? "";
-		_folderName = _configuration["ATS:ATSFolderName"] ?? "";
+		_applicationFormBaseUrl = _configuration["ATS:ApplicationFormBaseUrl"] ?? "";
+		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
@@ -328,7 +328,7 @@ public class ATSService : IATSService
 
 		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);
 
-		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormPath;
+		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormBaseUrl;
 		return emailIdAndApplicationFormPath;
 	}
 }

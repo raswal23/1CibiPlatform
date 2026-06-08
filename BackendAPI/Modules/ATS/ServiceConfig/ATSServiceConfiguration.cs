@@ -40,10 +40,8 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSService, ATSService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
-
 		services.AddScoped<IInsertBulkSubjectService, InsertBulkSubjectService>();
-		services.AddScoped<IDownloadBulkTemplateService, DownloadBulkTemplateService>();
-		services.AddScoped<IInsertEmailInvitationRequestService, InsertEmailInvitationRequestService>();
+	
 
 		// register ATS specific services, repositories, etc. Add as needed
 		//services.AddHostedService<BulkSubmissionBackgroundService>();

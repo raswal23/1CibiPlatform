@@ -1,16 +1,16 @@
-﻿using DocumentFormat.OpenXml.Vml.Office;
-
-namespace ATS.Services;
+﻿namespace ATS.Services;
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
 	private readonly ILogger<EndorsementSubmissionService> _logger;
 	private readonly IHashService _hashService;
+	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
 	private readonly ISecureToken _secureToken;
 	private readonly IATSRepository _atsRepository;
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _templateFileName;
+	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
 	
 	public EndorsementSubmissionService(
@@ -18,15 +18,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IATSRepository atsRepository,
 		IConfiguration configuration,
 		IHashService hashService,
+		IEmailService emailService,
 		ISecureToken secureToken,
 		IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
 		_hashService = hashService;
+		_emailService = emailService;
 		_secureToken = secureToken;
 		_configuration = configuration;
 		_atsRepository = atsRepository;
 		_objectStorageService = objectStorageService;
+		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
@@ -40,15 +43,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 	public async Task<bool> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
 	{
-		_logger.LogInformation("Inserting Email invitaion request {EmailInvitationID}", emailInvitationRequestDTO.EmailInvitationID);
+		var subjectName = $"{emailInvitationRequestDTO.FirstName} {emailInvitationRequestDTO.LastName}";
+
 
 		var logContext = new
 		{
 			Action = "InsertData",
 			Step = "StartInserting",
-			Identity = $"{emailInvitationRequestDTO.FirstName} {emailInvitationRequestDTO.LastName}",
+			Identity = subjectName,
 			Timestamp = DateTime.UtcNow
 		};
+
+		_logger.LogInformation("Inserting Email invitaion request {@Context}", logContext);
 
 		var token = _secureToken.GenerateSecureToken();
 
@@ -80,13 +86,44 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 		catch (Exception)
 		{
-			_logger.LogError("Failed Transaction: Failed to add transaction data record for {Tid}: {@Context}", transaction.Tid, logContext);
+			_logger.LogError("Failed Transaction: Failed to add Email Invitation Request record for {Tid}: {@Context}", logContext.Identity, logContext);
 			throw new InternalServerException($"Failed to add transaction."); ;
 		}
 
+		var applicationFormLink = $"{_applicationformBaseUrl}?hashToken={HashToken}";
+
+		await SendApplicationFormToUserEmailAsync(emailInvitationRequestDTO.EmailAddress!, subjectName, applicationFormLink);
 
 		return true;
+	}
 
+	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink)
+	{
+		var logContext = new
+		{
+			Action = "SendApplicationFormEmail",
+			Step = "SendEmail",
+			Email = gmail,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Sending notification for email: {@Context}", logContext);
+
+		var otpBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink);
+
+		var isSent = await _emailService.SendEmailAsync(
+			toEmail: gmail!,
+			subject: "CIBI | Background Verification Information Request",
+			body: otpBody
+		);
+
+		if (!isSent)
+		{
+			_logger.LogError("Failed to send Notification email to: {@Context}", logContext);
+			throw new InternalServerException("Failed to send Notification email.");
+		}
+
+		return isSent;
 	}
 
 }
