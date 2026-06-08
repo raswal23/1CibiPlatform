@@ -46,12 +46,19 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<Guid> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, 
+																							  CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
+						.AsNoTracking()
 						.Where(af => af.HashToken == hashToken)
-						.Select(af => af.EmailInvitationID)
-						.FirstOrDefaultAsync(cancellationToken);
+						.Select(af => new EmailIdAndApplicationFormPathDTO
+						{
+							EmailId = af.EmailInvitationID,
+							ExpiresAt = af.HashTokenExpiration,
+							Status = af.Status
+						})
+						.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
 
 	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)

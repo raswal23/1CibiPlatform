@@ -9,6 +9,21 @@ public class ATSService : IATSService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _applicationFormPath;
 	private readonly string _folderName;
+
+	private string resumeFileKey = "";
+	private string nbiKey = "";
+	private string govtIdKey = "";
+	private string highSchoolDiplomaKey = "";
+	private string seniorHighSchoolDiplomaKey = "";
+	private string bachelorsDiplomaKey = "";
+	private string mastersDiplomaKey = "";
+	private string doctorateDiplomaKey = "";
+	private string emp1COEKey = "";
+	private string emp2COEKey = "";
+	private string emp3COEKey = "";
+	private string licenseKey = "";
+	private string signatureKey = "";
+
 	public ATSService(ILogger<ATSService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
@@ -140,6 +155,7 @@ public class ATSService : IATSService
 		CancellationToken cancellationToken)
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
+		addressDetails.CurrentTypeOfOwnership = addressDetailsDTO.TypeOfOwnership;
 		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
@@ -195,7 +211,7 @@ public class ATSService : IATSService
 		CancellationToken cancellationToken)
 	{
 		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
-		string licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
+		string licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
 		licensesDetails.LicenseUploadFileKey = licenseKey;

@@ -8,7 +8,7 @@ public interface IATSRepository
 	Task<bool> AddLicensesDetailsAsync(LicensesDetails licensesDetails);
 	Task<bool> AddProfessionalExperiencesAsync(ProfessionalExperiences professionalExperiences);
 	Task<bool> AddReferenceDetailsAsync(ReferenceDetails referenceDetails);
-	Task<Guid> GetEmailIdAndApplicationFormPathAsync(string hashToken,
+	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
 												 CancellationToken cancellationToken);
 	Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails);
 	Task<bool> AddEmailInvitationRequestAsync(EmailInvitationRequest emailInvitationRequest);
