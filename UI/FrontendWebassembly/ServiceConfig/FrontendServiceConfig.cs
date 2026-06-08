@@ -63,7 +63,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IATSService, ATSService>();
-		services.AddScoped<IInsertEmailInvitationRequestService, InsertEmailInvitationRequestService>();
+		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 
 		return services;
 	}
