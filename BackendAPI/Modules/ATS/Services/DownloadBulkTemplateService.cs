@@ -16,13 +16,13 @@ public class DownloadBulkTemplateService : IDownloadBulkTemplateService
 		_objectStorageService = objectStorageService;
 	}
 
-	public Task<string> GetBulkTemplateFileUrlAsync()
+	public async Task<string> GetBulkTemplateFileUrlAsync()
 	{
 		// Use Alibaba OSS to generate a presigned URL for the template file stored under templates/
 		
 		
 		var objectKey = _templateFileName;
-		var bulkTemplateLink = _objectStorageService.GenerateDownloadUrlAsync(objectKey, TimeSpan.FromMinutes(15));
+		var bulkTemplateLink = await _objectStorageService.GenerateDownloadUrlAsync(objectKey, TimeSpan.FromMinutes(15));
 
 
 		// 15 minute expiry for download links
@@ -37,8 +37,6 @@ public class DownloadBulkTemplateService : IDownloadBulkTemplateService
 
 		await using var stream = await _objectStorageService.DownloadAsync(objectKey);
 
-		// No-op: consumer can use GetBulkTemplateFileUrlAsync to download directly.
-		// Here we just verify the object exists and is retrievable.
 		_logger.LogInformation("Successfully retrieved bulk template stream for {ObjectKey}", objectKey);
 		return true;
 	}

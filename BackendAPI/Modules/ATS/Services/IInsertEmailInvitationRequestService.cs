@@ -2,6 +2,6 @@
 
 public interface IInsertEmailInvitationRequestService
 {
-	Task<Guid> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default);
+	Task<Guid> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default);
 
 }

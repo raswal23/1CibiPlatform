@@ -8,7 +8,6 @@ public class InsertEmailInvitationRequestService : IInsertEmailInvitationRequest
 	private readonly ISecureToken _securetoken;
 	private readonly IConfiguration _configuration;
 	private readonly IHashService _hashService;
-	private readonly IUnitOfWork _unitOfWork;
 	private readonly double _emailInvitationRequestExpiryMinutes;
 
 	public InsertEmailInvitationRequestService(
@@ -26,7 +25,6 @@ public class InsertEmailInvitationRequestService : IInsertEmailInvitationRequest
 		_configuration = configuration; 
 		_securetoken = secureToken;
 		_hashService = hashService;
-		_unitOfWork = unitOfWork;
 		
 		var expiryRaw = _configuration["ATS:EmailRequestInvitationExpiryInMinutes"];
 		double parsedExpiry;
@@ -39,7 +37,7 @@ public class InsertEmailInvitationRequestService : IInsertEmailInvitationRequest
 
 	}
 
-	public async Task<Guid> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
+	public async Task<Guid> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
 	{
 		_logger.LogInformation("Inserting Email invitaion request {EmailInvitationID}", emailInvitationRequestDTO.EmailInvitationID);
 
