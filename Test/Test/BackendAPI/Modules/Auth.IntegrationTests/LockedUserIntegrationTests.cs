@@ -55,7 +55,7 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 	public async Task DeleteLockedUser_ShouldRemoveLockedUserSuccessfully()
 	{
 		// Arrange
-		var id = Guid.NewGuid();
+		var id = Guid.CreateVersion7();
 		var locked = new AuthAttempts
 		{
 			UserId = id,
@@ -84,7 +84,7 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 	public async Task DeleteLockedUser_ShouldThrow_WhenLockedUserDoesNotExist()
 	{
 		// Arrange
-		var id = Guid.NewGuid();
+		var id = Guid.CreateVersion7();
 		var command = new DeleteLockedUserCommand(id);
 
 		// Act
@@ -99,9 +99,9 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 	{
 		var attempts = new List<AuthAttempts>
 		{
-			new AuthAttempts { UserId = Guid.NewGuid(), Message = "Account is locked due to too many failed attempts.", Email = "a@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(40) },
-			new AuthAttempts { UserId = Guid.NewGuid(), Message = "Account is locked due to too many failed attempts.", Email = "b@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(30) },
-			new AuthAttempts { UserId = Guid.NewGuid(), Message = "Account is locked due to too many failed attempts.", Email = "c@example.com", Attempts = 5, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(20) }
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Message = "Account is locked due to too many failed attempts.", Email = "a@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(40) },
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Message = "Account is locked due to too many failed attempts.", Email = "b@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(30) },
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Message = "Account is locked due to too many failed attempts.", Email = "c@example.com", Attempts = 5, CreatedAt = DateTime.UtcNow, LockReleaseAt = DateTime.UtcNow.AddMinutes(20) }
 		};
 
 		_dbContext.AuthAttempts.AddRange(attempts);

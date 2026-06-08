@@ -221,9 +221,9 @@ public class RegisterServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task ManualResendOtpCodeAsync_ShouldReturnTrue_WhenSuccessful()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var email = "manresend@example.com";
-		var otpRecord = new OtpVerification { Email = email, OtpId = Guid.NewGuid(), FirstName = "F", LastName = "L" };
+		var otpRecord = new OtpVerification { Email = email, OtpId = Guid.CreateVersion7(), FirstName = "F", LastName = "L" };
 
 		_fixture.MockAuthRepository.Setup(x => x.IsUserEmailExistInOtpVerificationAsync(email, false))
 			.ReturnsAsync(otpRecord);
@@ -251,7 +251,7 @@ public class RegisterServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task ManualResendOtpCodeAsync_ShouldThrow_WhenNoRecord()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var email = "missing@example.com";
 		_fixture.MockAuthRepository.Setup(x => x.IsUserEmailExistInOtpVerificationAsync(email, false))
 			.ReturnsAsync((OtpVerification?)null);
@@ -267,7 +267,7 @@ public class RegisterServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task IsOtpSessionValidAsync_ShouldReturnFalse_WhenNoRecord()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var email = "novalid@example.com";
 		_fixture.MockAuthRepository.Setup(x => x.OtpVerificationUserData(It.IsAny<OtpVerificationRequestDTO>()))
 			.ReturnsAsync((OtpVerification?)null);
@@ -283,7 +283,7 @@ public class RegisterServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task IsOtpSessionValidAsync_ShouldReturnFalse_WhenUsed()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var email = "usedsession@example.com";
 		var record = new OtpVerification { Email = email, IsUsed = true };
 		_fixture.MockAuthRepository.Setup(x => x.OtpVerificationUserData(It.IsAny<OtpVerificationRequestDTO>()))
@@ -300,7 +300,7 @@ public class RegisterServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task IsOtpSessionValidAsync_ShouldReturnTrue_WhenValid()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var email = "validsession@example.com";
 		var record = new OtpVerification { Email = email, IsUsed = false };
 		_fixture.MockAuthRepository.Setup(x => x.OtpVerificationUserData(It.IsAny<OtpVerificationRequestDTO>()))

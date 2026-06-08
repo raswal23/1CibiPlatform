@@ -37,7 +37,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "F", "L", null, true, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);
@@ -57,7 +57,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "John", "Doe", null, true, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);
@@ -79,7 +79,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "John", "Doe", null, true, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 
 		// Setup a dictionary to simulate cache persistence across calls
@@ -174,7 +174,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "John", "Doe", null, true, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 		var lockedUser = new AuthAttempts
 		{
@@ -203,7 +203,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "John", "Doe", null, true, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 		var expiredLockedUser = new AuthAttempts
 		{
@@ -235,7 +235,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.LoginService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var loginDto = new LoginDTO(userId, "hash", "email@example.com", "John", "Doe", null, false, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
 
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);

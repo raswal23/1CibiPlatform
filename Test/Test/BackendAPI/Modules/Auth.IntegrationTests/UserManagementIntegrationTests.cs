@@ -239,7 +239,7 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		{
 			new Authusers
 			{
-				Id = Guid.NewGuid(),
+				Id = Guid.CreateVersion7(),
 				Email = "john@example1.com",
 				PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 				FirstName = "Admin1",
@@ -248,7 +248,7 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 			},
 			new Authusers
 			{
-				Id = Guid.NewGuid(),
+				Id = Guid.CreateVersion7(),
 				Email = "john@example2.com",
 				PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 				FirstName = "Admin2",
@@ -257,7 +257,7 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 			},
 			new Authusers
 			{
-				Id = Guid.NewGuid(),
+				Id = Guid.CreateVersion7(),
 				Email = "john@example3.com",
 				PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 				FirstName = "Admin3",
@@ -266,7 +266,7 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 			},
 			new Authusers
 			{
-				Id = Guid.NewGuid(),
+				Id = Guid.CreateVersion7(),
 				Email = "john@example4.com",
 				PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 				FirstName = "Admin4",

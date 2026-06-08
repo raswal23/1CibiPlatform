@@ -36,7 +36,7 @@ namespace Test.BackendAPI.Modules.Philys.UnitTests
 			// Arrange
 			var service = _fixture.DeleteTransactionService;
 			var transaction = new PhilSysTransaction {
-				Tid = Guid.NewGuid(),
+				Tid = Guid.CreateVersion7(),
 				InquiryType = "pcn",
 				PCN = "9700018324631576",
 				WebHookUrl = "/",
@@ -60,7 +60,7 @@ namespace Test.BackendAPI.Modules.Philys.UnitTests
 		{
 			// Arrange
 			var service = _fixture.DeleteTransactionService;
-			var transactionId = Guid.NewGuid();
+			var transactionId = Guid.CreateVersion7();
 			var hashToken = "HabaL5avPCryiszlRKNU7Q9xClqKEq5h2FWNLdMNEpo";
 			var transaction = new PhilSysTransaction
 			{

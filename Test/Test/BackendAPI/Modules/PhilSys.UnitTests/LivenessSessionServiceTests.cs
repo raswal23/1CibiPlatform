@@ -49,7 +49,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		public async Task LivenessSessionService_ShouldThrow_WhenTokenIsInvalid()
 		{
 			var service = _fixture.LivenessSessionService;
-			var Tid = Guid.NewGuid();
+			var Tid = Guid.CreateVersion7();
 			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = DateTime.UtcNow };
 			var transactionRecord = new PhilSysTransaction { Tid = Tid, InquiryType = "pcn", PCN = "6786785465456459"};
 			_fixture.MockPhilSysRepository.Setup(x => x.GetLivenessSessionStatusAsync(It.IsAny<string>())).ReturnsAsync(transactionStatus);
@@ -67,7 +67,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		public async Task LivenessSessionService_ShouldReturnTransactionResponseDTO_WhenSuccessful()
 		{
 			var service = _fixture.LivenessSessionService;
-			var Tid = Guid.NewGuid();
+			var Tid = Guid.CreateVersion7();
 			var FixedUtcNow = new DateTime(2025, 11, 9, 0, 0, 0, DateTimeKind.Utc);
 			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = FixedUtcNow };
 			var transactionStatusDTO = new TransactionStatusResponseDTO { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = FixedUtcNow }; 

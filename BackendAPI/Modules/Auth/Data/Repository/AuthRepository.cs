@@ -493,7 +493,7 @@ public class AuthRepository : IAuthRepository
 	{
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = userDto.Email,
 			PasswordHash = userDto.PasswordHash,
 			FirstName = userDto.FirstName,

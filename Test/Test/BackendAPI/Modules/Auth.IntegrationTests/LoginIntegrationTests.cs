@@ -279,7 +279,7 @@ public class LoginIntegrationTests : BaseIntegrationTest
 
 	private async Task SeedUserData()
 	{
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 
 		var user = new Authusers
 		{
@@ -373,7 +373,7 @@ public class LoginIntegrationTests : BaseIntegrationTest
 
 	private async Task SeedUserOnlyData()
 	{
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 
 		var user = new Authusers
 		{
@@ -392,7 +392,7 @@ public class LoginIntegrationTests : BaseIntegrationTest
 
 	private async Task SeedUserDataWithLockedAccount()
 	{
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 
 		var user = new Authusers
 		{
