@@ -19,7 +19,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		// Arrange
 		var user = await SeedUserData();
 
-		var tokenHash = Guid.NewGuid().ToString();
+		var tokenHash = Guid.CreateVersion7().ToString();
 
 		var passwordToken = new PasswordResetToken
 		{
@@ -51,7 +51,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		// Arrange
 		var user = await SeedUserData();
 
-		var tokenHash = Guid.NewGuid().ToString();
+		var tokenHash = Guid.CreateVersion7().ToString();
 
 		var passwordToken = new PasswordResetToken
 		{
@@ -105,7 +105,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange - create expired token
 		var user = await SeedUserData();
-		var tokenHash = Guid.NewGuid().ToString();
+		var tokenHash = Guid.CreateVersion7().ToString();
 		var passwordToken = new PasswordResetToken
 		{
 			UserId = user.Id,
@@ -132,7 +132,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 	{
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = "jane2@example.com",
 			PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 			FirstName = "Test",

@@ -46,7 +46,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var face_liveness_session_id = "valid-session-id";
 			var philsysTransaction = new PhilSysTransaction
 			{
-				Tid = Guid.NewGuid(),
+				Tid = Guid.CreateVersion7(),
 				InquiryType = "pcn",
 				PCN = "6786785465456459",
 				HashToken = "hash-token",
@@ -101,7 +101,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var face_liveness_session_id = "valid-session-id";
 			var philsysTransaction = new PhilSysTransaction
 			{
-				Tid = Guid.NewGuid(),
+				Tid = Guid.CreateVersion7(),
 				InquiryType = "pcn",
 				PCN = "6786785465456459",
 				HashToken = "hash-token",

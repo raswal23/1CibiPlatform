@@ -54,7 +54,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		_fixture.MockAuthRepository.Setup(x => x.GetNewUserDataAsync(userId)).ReturnsAsync((UserDataDTO?)null);
 
 		// Act
@@ -69,7 +69,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		// stored hash is for a different token
 		var storedHash = service.HashToken("storedtoken");
 		var userData = new UserDataDTO(userId, "pw", "email@example.com", "F", "L", null, string.Empty, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
@@ -94,7 +94,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var refreshToken = "refreshtoken";
 		var storedHash = service.HashToken(refreshToken);
 		var userData = new UserDataDTO(userId, "pw", "email@example.com", "F", "L", null, storedHash, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
@@ -135,7 +135,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var refreshToken = "refreshtoken";
 		var storedHash = service.HashToken(refreshToken);
 		var userData = new UserDataDTO(userId, "pw", "email@example.com", "F", "L", null, storedHash, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });

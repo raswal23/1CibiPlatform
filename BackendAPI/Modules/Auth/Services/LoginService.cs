@@ -360,7 +360,7 @@ public class LoginService : ILoginService
 		{
 			bool IsSaved = await _authRepository.SaveLockedUserAsync(lockedUser);
 			return true;
-		}	
+		}
 
 		if (lockedUserfromDB is not null)
 		{
@@ -517,7 +517,7 @@ public class LoginService : ILoginService
 			Action = "AuthenticateUser",
 			Step = "StartAuthentication",
 			RefreshToken = GetRefreshTokenFromCookie(),
-			RequestId = Guid.NewGuid(),
+			RequestId = Guid.CreateVersion7(),
 			Timestamp = DateTime.UtcNow
 		};
 

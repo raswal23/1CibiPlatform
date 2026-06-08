@@ -32,7 +32,7 @@ public class AIChatService : IAIAgentChatService
 		CancellationToken cancellationToken)
 	{
 		// Resolve user id (adjust to your LocalStorageService API)
-		var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.NewGuid().ToString();
+		var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.CreateVersion7().ToString();
 
 		await EnsureHubConnectionStartedAsync(userId, cancellationToken);
 

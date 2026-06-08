@@ -29,8 +29,8 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 
 		var data = new List<AppSubRolesDTO>
 			{
-				new AppSubRolesDTO ( 1, Guid.NewGuid(), "john@example.com", 1, "PhilSys", 1, "IDV", 1, "SuperAdmin" ),
-				new AppSubRolesDTO ( 2, Guid.NewGuid(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
+				new AppSubRolesDTO ( 1, Guid.CreateVersion7(), "john@example.com", 1, "PhilSys", 1, "IDV", 1, "SuperAdmin" ),
+				new AppSubRolesDTO ( 2, Guid.CreateVersion7(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
 			};
 
 		var expectedResult = new PaginatedResult<AppSubRolesDTO>(1, 1, 10, data);
@@ -63,8 +63,8 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 
 		var data = new List<AppSubRolesDTO>
 			{
-				new AppSubRolesDTO ( 1, Guid.NewGuid(), "john@example.com", 1, "PhilSys", 1, "IDV", 1, "SuperAdmin" ),
-				new AppSubRolesDTO ( 2, Guid.NewGuid(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
+				new AppSubRolesDTO ( 1, Guid.CreateVersion7(), "john@example.com", 1, "PhilSys", 1, "IDV", 1, "SuperAdmin" ),
+				new AppSubRolesDTO ( 2, Guid.CreateVersion7(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
 			};
 
 		var expectedResult = new PaginatedResult<AppSubRolesDTO>(1, 1, 10, data);
@@ -88,7 +88,7 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task AddAppSubRoleAsync_ShouldReturnTrue_WhenSuccessful()
 	{
 		// Arrange
-		var appSubRole = new AddAppSubRoleDTO { UserId = Guid.NewGuid(), AppId = 1, SubMenuId = 1, RoleId = 1, AssignedBy = Guid.NewGuid() };
+		var appSubRole = new AddAppSubRoleDTO { UserId = Guid.CreateVersion7(), AppId = 1, SubMenuId = 1, RoleId = 1, AssignedBy = Guid.CreateVersion7() };
 
 		_fixture.MockAuthRepository
 			.Setup(x => x.AddAppSubRoleAsync(appSubRole))
@@ -105,7 +105,7 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task EditAppSubRolesync_ShouldThrow_WhenAppSubRoleNotFound()
 	{
 		// Arrange
-		var editDto = new EditAppSubRoleDTO { AppSubRoleId = 1, UserId = Guid.NewGuid(), AppId = 1, SubMenuId = 1, RoleId = 1 };
+		var editDto = new EditAppSubRoleDTO { AppSubRoleId = 1, UserId = Guid.CreateVersion7(), AppId = 1, SubMenuId = 1, RoleId = 1 };
 
 		_fixture.MockAuthRepository
 			.Setup(x => x.GetAppSubRoleAsync(editDto.AppSubRoleId))
@@ -123,9 +123,9 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task EditAppSubRolesync_ShouldReturnUpdatedDto_WhenSuccessful()
 	{
 		// Arrange
-		var editDto = new EditAppSubRoleDTO { AppSubRoleId = 1, UserId = Guid.NewGuid(), AppId = 2, SubMenuId = 2, RoleId = 2 };
-		var existingAppSubRole = new AuthUserAppRole { AppRoleId = 1, UserId = Guid.NewGuid(), AppId = 1, Submenu = 1, RoleId = 1 };
-		var updatedAppSubRole = new AuthUserAppRole { AppRoleId = 1, UserId = Guid.NewGuid(), AppId = 2, Submenu = 2, RoleId = 2 };
+		var editDto = new EditAppSubRoleDTO { AppSubRoleId = 1, UserId = Guid.CreateVersion7(), AppId = 2, SubMenuId = 2, RoleId = 2 };
+		var existingAppSubRole = new AuthUserAppRole { AppRoleId = 1, UserId = Guid.CreateVersion7(), AppId = 1, Submenu = 1, RoleId = 1 };
+		var updatedAppSubRole = new AuthUserAppRole { AppRoleId = 1, UserId = Guid.CreateVersion7(), AppId = 2, Submenu = 2, RoleId = 2 };
 
 		_fixture.MockAuthRepository
 			.Setup(x => x.GetAppSubRoleAsync(editDto.AppSubRoleId))
@@ -169,7 +169,7 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var appSubRoleId = 1;
-		var existingAppSubRole= new AuthUserAppRole { AppRoleId = appSubRoleId, UserId = Guid.NewGuid(), AppId = 1, Submenu = 1, RoleId = 1 };
+		var existingAppSubRole = new AuthUserAppRole { AppRoleId = appSubRoleId, UserId = Guid.CreateVersion7(), AppId = 1, Submenu = 1, RoleId = 1 };
 
 		_fixture.MockAuthRepository
 			.Setup(x => x.GetAppSubRoleAsync(appSubRoleId))
@@ -198,7 +198,7 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 			Role = "SuperAdmin"
 		};
 
-	
+
 		_fixture.MockEmailService.Setup(x => x.SendNotificationBody(request.Gmail, request.Application, request.SubMenu, request.Role)).Returns("body");
 		_fixture.MockEmailService
 			.Setup(x => x.SendEmailAsync(request.Gmail, "Account Assignment Notification", It.IsAny<string>(), It.IsAny<bool>()))

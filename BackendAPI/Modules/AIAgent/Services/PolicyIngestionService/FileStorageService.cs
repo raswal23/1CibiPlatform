@@ -20,7 +20,7 @@ public class FileStorageService : IFileStorageService
 
 	public async Task<string> SaveFileAsync(byte[] fileBytes, string fileName, CancellationToken cancellationToken = default)
 	{
-		var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+		var uniqueFileName = $"{Guid.CreateVersion7()}_{fileName}";
 		var filePath = System.IO.Path.Combine(_storageDirectory, uniqueFileName);
 
 		await File.WriteAllBytesAsync(filePath, fileBytes, cancellationToken);

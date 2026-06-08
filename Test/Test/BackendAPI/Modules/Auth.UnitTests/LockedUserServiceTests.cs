@@ -19,7 +19,7 @@ public class LockedUserServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task DeleteLockedUserAsync_ShouldDeleteLockedUser_WhenLockedUserExists()
 	{
 		// Arrange
-		var lockedUserId = Guid.NewGuid();
+		var lockedUserId = Guid.CreateVersion7();
 		var lockedUser = new AuthAttempts { UserId = lockedUserId };
 		_fixture.MockAuthRepository
 			.Setup(x => x.GetLockedUserAsync(lockedUserId))
@@ -37,7 +37,7 @@ public class LockedUserServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task DeleteLockedUserAsync_ShouldThrow_WhenLockedUserNotFound()
 	{
 		// Arrange
-		var lockedUserId = Guid.NewGuid();
+		var lockedUserId = Guid.CreateVersion7();
 		_fixture.MockAuthRepository
 			.Setup(x => x.GetLockedUserAsync(lockedUserId))
 			.ReturnsAsync((AuthAttempts?)null);
@@ -63,8 +63,8 @@ public class LockedUserServiceTests : IClassFixture<AuthServiceFixture>
 
 		var attempts = new List<AuthAttempts>
 		{
-			new AuthAttempts { UserId = Guid.NewGuid(), Attempts = 1, CreatedAt = DateTime.UtcNow },
-			new AuthAttempts { UserId = Guid.NewGuid(), Attempts = 2, CreatedAt = DateTime.UtcNow }
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Attempts = 1, CreatedAt = DateTime.UtcNow },
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Attempts = 2, CreatedAt = DateTime.UtcNow }
 		};
 
 		var expectedResult = new PaginatedResult<AuthAttempts>(1, 10, attempts.Count, attempts);
@@ -97,7 +97,7 @@ public class LockedUserServiceTests : IClassFixture<AuthServiceFixture>
 
 		var attempts = new List<AuthAttempts>
 		{
-			new AuthAttempts { UserId = Guid.NewGuid(), Email = "test@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow }
+			new AuthAttempts { UserId = Guid.CreateVersion7(), Email = "test@example.com", Attempts = 4, CreatedAt = DateTime.UtcNow }
 		};
 
 		var expectedResult = new PaginatedResult<AuthAttempts>(1, 10, attempts.Count, attempts);

@@ -39,7 +39,7 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 		// Arrange: seed user but do not set cookie and do not add refresh token
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = "nocookie@example.com",
 			PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 			FirstName = "No",
@@ -66,7 +66,7 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 	public async Task Logout_ShouldThrowNotFound_WhenUserHasNoRefreshRecord()
 	{
 		// Arrange
-		var userId = Guid.NewGuid();
+		var userId = Guid.CreateVersion7();
 		var user = new Authusers
 		{
 			Id = userId,
@@ -98,7 +98,7 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 	{
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = "logoutuser@example.com",
 			PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 			FirstName = "Test",

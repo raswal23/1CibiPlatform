@@ -40,7 +40,7 @@ public class PhilSysServiceIntegrationTests : BaseIntegrationTest
 		using var scope = customFactory.Services.CreateScope();
 		var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-		var command = new GetPhilSysTokenCommand(Guid.NewGuid().ToString(), "secret");
+		var command = new GetPhilSysTokenCommand(Guid.CreateVersion7().ToString(), "secret");
 
 		// Act
 		var result = await sender.Send(command);
@@ -65,7 +65,7 @@ public class PhilSysServiceIntegrationTests : BaseIntegrationTest
 		using var scope = customFactory.Services.CreateScope();
 		var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 
-		var command = new GetPhilSysTokenCommand(Guid.NewGuid().ToString(), "secret");
+		var command = new GetPhilSysTokenCommand(Guid.CreateVersion7().ToString(), "secret");
 
 		// Act
 		Func<Task> act = async () => await sender.Send(command);

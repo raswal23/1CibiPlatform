@@ -90,7 +90,7 @@ public class RegisterService : IRegisterService
 		var user = new OtpVerification
 		{
 			Email = registerRequestDTO.Email,
-			OtpId = Guid.NewGuid(),
+			OtpId = Guid.CreateVersion7(),
 			FirstName = registerRequestDTO.FirstName,
 			LastName = registerRequestDTO.LastName,
 			MiddleName = registerRequestDTO.MiddleName!,
@@ -188,7 +188,7 @@ public class RegisterService : IRegisterService
 
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = existingOtpRecord.Email,
 			PasswordHash = existingOtpRecord.PasswordHash,
 			FirstName = existingOtpRecord.FirstName,
