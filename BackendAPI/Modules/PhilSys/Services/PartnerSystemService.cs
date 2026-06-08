@@ -41,7 +41,7 @@ public class PartnerSystemService
 			Timestamp = DateTime.UtcNow
 		};
 
-		_logger.LogInformation("Partner system query initiated: {@Context}", logContext); ;
+		_logger.LogInformation("Partner system query initiated: {@Context}", logContext);
 
 		var token = _securetoken.GenerateSecureToken();
 

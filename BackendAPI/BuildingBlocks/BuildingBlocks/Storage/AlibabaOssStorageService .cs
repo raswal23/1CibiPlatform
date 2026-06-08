@@ -24,15 +24,14 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 	}
 
 	public async Task<string> UploadAsync(
-		Stream stream, 
-		string fileName, 
+		string folderName,
+		string fileName,
+		Stream stream,		
 		CancellationToken ct = default)
 	{
 		ArgumentNullException.ThrowIfNull(stream);
 
-		var objectKey = string.IsNullOrEmpty(_atsTestFolder)
-			? $"uploads/{Guid.NewGuid():N}-{fileName}"
-			: $"{_atsTestFolder.TrimEnd('/')}/{fileName}";
+		var objectKey = $"{folderName}/{Guid.NewGuid():N}-{fileName}";
 
 		await Task.Run(() => { 
 			ct.ThrowIfCancellationRequested(); 

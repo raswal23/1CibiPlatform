@@ -24,9 +24,40 @@ public class ATSPaths : IReverseProxyModule
 				Methods: new [] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/addapplicationformdata" }
+					{ "PathSet", "/getemailidandapplicationformpath" }
+				}
+			),
+			new RouteDefinitionDTO(
+				RouteId: "InsertBulkSubject",
+				MatchPath: "/ats/insertbulksubject",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/insertbulksubject" }
+				}
+			),
+			new RouteDefinitionDTO(
+				RouteId: "InsertEmailInvitationRequest",
+				MatchPath: "/ats/insertEmailInvitationRequest",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/insertEmailInvitationRequest" }
+				}
+			),
+			new RouteDefinitionDTO(
+				RouteId: "DownloadBulkTemplate",
+				MatchPath: "/ats/downloadbulktemplate",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/downloadbulktemplate" }
 				}
 			)
+
 		};
 	}
 	public IEnumerable<ClusterDefinitionDTO> GetClusters()

@@ -46,22 +46,31 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
+	public async Task<Guid> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+						.Where(af => af.HashToken == hashToken)
+						.Select(af => af.EmailInvitationID)
+						.FirstOrDefaultAsync(cancellationToken);
+	}
+
 	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)
 	{
 		await _dbcontext.SignatureDetails.AddAsync(signatureDetails);
 		return true;
 	}
 
-	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, CancellationToken cancellationToken)
+	public async Task<bool> AddEmailInvitationRequestAsync(EmailInvitationRequest emailInvitationRequest)
 	{
-		return await _dbcontext.EmailInvitationRequests
-						.AsNoTracking()
-						.Where(af => af.HashToken == hashToken)
-						.Select(af => new EmailIdAndApplicationFormPathDTO
-						{
-							EmailId = af.EmailInvitationID,
-							ExpiresAt = af.HashTokenExpiration
-						})
-						.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
+		await _dbcontext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
+		await _dbcontext.SaveChangesAsync();
+		return true;
 	}
+
+	public async Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
+	{
+		await _dbcontext.BulkUploadFileDetails.AddAsync(bulkUploadFileDetails);
+		return true;
+	}
+
 }

@@ -11,9 +11,9 @@ public class EmailInvitationRequest
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
+	public string? Status { get; set; }
 	public DateTime? HashTokenCreated { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
-	public string? Status { get; set; }
 
 	// Navigation properties
 	public PersonalDetails? PersonalDetails { get; set; }

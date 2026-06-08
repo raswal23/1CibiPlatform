@@ -41,6 +41,14 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+		services.AddScoped<IInsertBulkSubjectService, InsertBulkSubjectService>();
+		services.AddScoped<IDownloadBulkTemplateService, DownloadBulkTemplateService>();
+		services.AddScoped<IInsertEmailInvitationRequestService, InsertEmailInvitationRequestService>();
+
+		// register ATS specific services, repositories, etc. Add as needed
+		//services.AddHostedService<BulkSubmissionBackgroundService>();
+		//services.AddHostedService<EmailNotificaitonService>();
+
 		return services;
     }
     #endregion
@@ -60,5 +68,6 @@ public static class ATSServiceConfiguration
 
         return services;
     }
-    #endregion
+	#endregion
+
 }
