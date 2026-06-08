@@ -30,7 +30,7 @@ public class UpdateFaceLivenessSessionIntegrationTests_CreateFactoryWithHandler 
 
 		var transaction = new PhilSysTransaction
 		{
-			Tid = Guid.NewGuid(),
+			Tid = Guid.CreateVersion7(),
 			InquiryType = "name_dob",
 			FirstName = "Juan",
 			MiddleName = "Bitaw",

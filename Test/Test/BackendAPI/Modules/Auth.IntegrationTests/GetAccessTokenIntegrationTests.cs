@@ -18,7 +18,7 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 	public async Task GetNewAccessToken_ShouldThrowNotFound_WhenUserDoesNotExist()
 	{
 		// Arrange
-		var nonExistentUserId = Guid.NewGuid();
+		var nonExistentUserId = Guid.CreateVersion7();
 
 		var command = new GetNewAccessTokenCommand(nonExistentUserId);
 
@@ -35,7 +35,7 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		// Arrange - seed user and refresh token in DB
 		var user = new Authusers
 		{
-			Id = Guid.NewGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = "refreshuser@example.com",
 			PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
 			FirstName = "Refresh",

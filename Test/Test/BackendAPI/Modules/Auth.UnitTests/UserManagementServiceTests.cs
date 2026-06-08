@@ -31,8 +31,8 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.NewGuid(), "user1@example.com", "sample1" , "sample2" , null, false),
-				new UsersDTO(Guid.NewGuid(), "user2@example.com", "sample3" , "sample4" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false),
+				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false)
 			};
 
 		var expectedResult = new PaginatedResult<UsersDTO>(1, 2, 10, userData);
@@ -67,7 +67,7 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.NewGuid(), "user1@example.com", "sample1" , "sample2" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false)
 			};
 
 		var expectedResult = new PaginatedResult<UsersDTO>(1, 2, 10, userData);
@@ -102,8 +102,8 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.NewGuid(), "user1@example.com", "sample1" , "sample2" , null, false),
-				new UsersDTO(Guid.NewGuid(), "user2@example.com", "sample3" , "sample4" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false),
+				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false)
 			};
 
 		var expectedResult = new PaginatedResult<UsersDTO>(1, 2, 10, userData);
@@ -138,7 +138,7 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.NewGuid(), "user1@example.com", "sample1" , "sample2" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false)
 			};
 
 		var expectedResult = new PaginatedResult<UsersDTO>(1, 2, 10, userData);
