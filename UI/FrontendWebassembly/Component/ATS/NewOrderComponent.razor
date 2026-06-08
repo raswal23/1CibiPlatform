@@ -1,4 +1,5 @@
 ﻿@inject IJSRuntime JS
+@inject IEndorsementSubmissionService EndorsementSubmissionService
 
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
@@ -8,27 +9,27 @@
             <MudForm @ref="candidateForm">
                 <MudGrid Spacing="2">
                     <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="candidate.LastName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.FirstName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
                     </MudItem>
 
                     <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="candidate.LastName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.LastName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
                     </MudItem>
 
                     <MudItem xs="12" sm="2">
-                        <MudTextField @bind-Value="candidate.MiddleInitial" Placeholder="M.I." Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.MiddleInitial" Placeholder="M.I." Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="candidate.Email" Label="Email Address" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.EmailAddress" Label="Email Address" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="candidate.Mobile" Label="Mobile Number" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.MobileNumber" Label="Mobile Number" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudSelect @bind-Value="candidate.Package" Label="Select Package" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input">
+                        <MudSelect @bind-Value="subject.SelectPackage" Label="Select Package" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input">
                             <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
                             <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
                             <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
@@ -38,7 +39,7 @@
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex align-center" Style="gap:12px;">
-                        <MudRadioGroup @bind-Value="candidate.IsRush">
+                        <MudRadioGroup @bind-Value="subject.RushNormal">
                             <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
@@ -114,7 +115,7 @@
                             <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
                                 <MudText Typo="Typo.body2">
                                     Don’t have a file?
-                                    <MudLink Href="/register" Underline="Underline.Always" Class="ml-1">
+                                    <MudLink Href="@templateLink" Underline="Underline.Always" Class="ml-1">
                                         Download template
                                     </MudLink>
                                 </MudText>
@@ -146,36 +147,24 @@
 
 @code {
     private MudForm? candidateForm;
-    private Candidate candidate = new();
+    private EmailInvitationRequestDTO subject = new();
     private IReadOnlyList<IBrowserFile> _filesMultiple = [];
     private IList<IBrowserFile> _files => (_filesMultiple ?? Enumerable.Empty<IBrowserFile>()).ToList();
     private MudFileUpload<IReadOnlyList<IBrowserFile>> _fileUploadMultiple = default!;
+    private string? templateLink;
     private bool _uploading;
     private int _progress;
     private string _statusText = "Waiting for files.";
-
-    private class Candidate
-    {
-        public string LastName { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string MiddleInitial { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Mobile { get; set; } = string.Empty;
-        public string Package { get; set; } = string.Empty;
-        public string IsRush { get; set; } = string.Empty;
-    }
-
 
     private async Task SubmitCandidate()
     {
         await candidateForm!.ValidateAsync();
         if (!candidateForm.IsValid)
         {
-            await JS.InvokeVoidAsync("console.warn", "Candidate form invalid");
             return;
         }
 
-        await JS.InvokeVoidAsync("console.log", "Candidate submitted", candidate);
+        var isSent = await EndorsementSubmissionService.InsertEmailInvitationRequest(subject);
     }
 
     private async Task UploadFilesAsync()
@@ -201,10 +190,16 @@
             _statusText = index + 1 == total ? "Upload complete." : $"Uploading {index + 1} of {total}...";
             await RemoveFileFromUploadsAsync(file);
             await InvokeAsync(StateHasChanged);
+            
         }
 
         _uploading = false;
         await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
     }
 
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
