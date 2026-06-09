@@ -77,6 +77,7 @@ public class ATSRepository : IATSRepository
 	public async Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
 	{
 		await _dbcontext.BulkUploadFileDetails.AddAsync(bulkUploadFileDetails);
+		await _dbcontext.SaveChangesAsync();
 		return true;
 	}
 

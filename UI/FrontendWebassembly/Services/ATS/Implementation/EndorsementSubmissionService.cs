@@ -13,7 +13,8 @@
 		public async Task<string> DownloadBulkTemplateAsync()
 		{
 			var response = await _httpClient.GetFromJsonAsync<string>("ats/downloadbulktemplate");
-			if (string.IsNullOrEmpty(response)) {
+			if (string.IsNullOrEmpty(response))
+			{
 				return string.Empty;
 			}
 			Console.WriteLine(response);
@@ -22,11 +23,42 @@
 
 		public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
 		{
-			var request = new {emailInvitationRequestDTO};
+			var request = new { emailInvitationRequestDTO };
 			var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
-			response.EnsureSuccessStatusCode();
-			var result = true;
-			return result;
+			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+			return successContentInfo;
+		}
+
+		public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetails)
+		{
+			using var content = new MultipartFormDataContent();
+
+				void AddString(string? value, string name)
+				{
+					if (!string.IsNullOrWhiteSpace(value))
+					{
+						content.Add(new StringContent(value), name);
+					}
+				}
+
+				void AddFile(byte[]? file, string name)
+				{
+					if (file != null)
+					{
+						var stream = new MemoryStream(file);
+						var fileContent = new StreamContent(stream);
+						fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+						content.Add(fileContent, name, name);
+					}
+				}
+
+				AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
+				AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
+
+			var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
+			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+			return successContentInfo;
+
 		}
 	}
 }
