@@ -164,7 +164,7 @@
             return;
         }
 
-        var isSent = await EndorsementSubmissionService.InsertEmailInvitationRequest(subject);
+        var isSent = await EndorsementSubmissionService.InsertEmailInvitationRequestAsync(subject);
     }
 
     private async Task UploadFilesAsync()

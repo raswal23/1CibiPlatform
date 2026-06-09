@@ -39,7 +39,7 @@ public class ATSPaths : IReverseProxyModule
 			),
 			new RouteDefinitionDTO(
 				RouteId: "InsertEmailInvitationRequest",
-				MatchPath: "/ats/insertEmailInvitationRequest",
+				MatchPath: "/ats/insertemailinvitationrequest",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>

@@ -3,5 +3,5 @@
 public interface IEndorsementSubmissionService
 {
 	Task<string> DownloadBulkTemplateAsync();
-	Task<bool> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO);
+	Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO);
 }

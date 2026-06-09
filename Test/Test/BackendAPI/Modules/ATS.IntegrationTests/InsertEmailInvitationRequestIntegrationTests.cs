@@ -1,53 +1,153 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using Test.BackendAPI.Infrastructure.Auth.Infrastructure;
+using ATS.DTO;
+using ATS.Features.EmailInvitationRequest;
+using FluentAssertions;
+using FluentValidation;
+using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
-public class InsertEmailInvitationRequestIntegrationTests : IClassFixture<IntegrationTestWebAppFactory>
+public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 {
-	private readonly HttpClient _client;
-
-	public InsertEmailInvitationRequestIntegrationTests(IntegrationTestWebAppFactory factory)
+	public InsertEmailInvitationRequestIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
-		_client = factory.CreateClient();
+
 	}
 
-	//[Fact]
-	//public async Task InsertEmailInvitationRequest_ReturnsCreatedAndEmailInvitationId()
-	//{
-	//	var body = new
-	//	{
-	//		emailInvitationRequestDTO = new
-	//		{
-	//			LastName = "Doe",
-	//			FirstName = "Jane",
-	//			MiddleInitial = "A",
-	//			EmailAddress = "jane.doe@example.com",
-	//			MobileNumber = "+15555551234",
-	//			SelectPackage = "Standard",
-	//			RushNormal = "Normal"
-	//		}
-	//	};
+	#region Positive Path
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldReturnCreatedIdAndPersist()
+	{
+		// Arrange
+		var dto = new EmailInvitationRequestDTO
+		{
+			EmailInvitationID = Guid.Empty,
+			FirstName = "Integration",
+			LastName = "Tester",
+			MiddleInitial = "A",
+			EmailAddress = "integration.tester@example.com",
+			MobileNumber = "+639171234567",
+			SelectPackage = "Standard",
+			RushNormal = "Normal"
+		};
 
-	//	var response = await _client.PostAsJsonAsync("/insertEmailInvitationRequest", body);
+		var command = new EmailInvitationRequestCommand(dto);
 
-	//	Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+		// Act
+		var result = await _sender.Send(command);
 
-	//	var content = await response.Content.ReadAsStringAsync();
-	//	var doc = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content, new JsonSerializerOptions
-	//	{
-	//		PropertyNameCaseInsensitive = true
-	//	});
+		// Assert
+		result.Should().NotBeNull();
+		result.isAdded.Should().BeTrue();
 
-	//	Assert.NotNull(doc);
+		var persisted = _dbContext.EmailInvitationRequests
+			.SingleOrDefault(x => x.EmailAddress == dto.EmailAddress);
+		persisted.Should().NotBeNull();
+		persisted!.EmailAddress.Should().Be(dto.EmailAddress);
+		persisted.FirstName.Should().Be(dto.FirstName);
+		persisted.LastName.Should().Be(dto.LastName);
+	}
+	#endregion
 
-	//	// Look for EmailInvitationID in the response (case-insensitive)
-	//	var found = doc!.FirstOrDefault(kv => kv.Key.Equals("EmailInvitationID", StringComparison.OrdinalIgnoreCase));
-	//	Assert.False(string.IsNullOrEmpty(found.Key), "Response did not contain EmailInvitationID");
+	#region Negative Path
 
-	//	var idString = found.Value.GetString();
-	//	Assert.True(Guid.TryParse(idString, out _), "EmailInvitationID is not a valid GUID");
-	//}
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldThrowValidationException_WhenFirstNameIsEmpty()
+	{
+		// Arrange
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "",
+			LastName = "Tester",
+			EmailAddress = "integration.tester@example.com",
+			MobileNumber = "+639171234567",
+			SelectPackage = "Standard",
+			RushNormal = "Normal"
+		};
+
+		var command = new EmailInvitationRequestCommand(dto);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<ValidationException>();
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldThrowValidationException_WhenEmailIsInvalid()
+	{
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "Integration",
+			LastName = "Tester",
+			EmailAddress = "invalid-email",
+			MobileNumber = "+639171234567",
+			SelectPackage = "Standard",
+			RushNormal = "Normal"
+		};
+
+		var command = new EmailInvitationRequestCommand(dto);
+
+		Func<Task> act = async () => await _sender.Send(command);
+
+		await act.Should().ThrowAsync<ValidationException>();
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldThrow_WhenEmailIsMissing()
+	{
+		// Arrange
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "Integration",
+			LastName = "Tester",
+			EmailAddress = "",
+			MobileNumber = "+123456789",
+			SelectPackage = "Standard",
+			RushNormal = "Normal"
+		};
+
+		var command = new EmailInvitationRequestCommand(dto);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<ValidationException>();
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldThrowValidationException_WhenMobileNumberIsEmpty()
+	{
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "Integration",
+			LastName = "Tester",
+			EmailAddress = "integration.tester@example.com",
+			MobileNumber = "",
+			SelectPackage = "Standard",
+			RushNormal = "Normal"
+		};
+
+		var command = new EmailInvitationRequestCommand(dto);
+
+		Func<Task> act = async () => await _sender.Send(command);
+
+		await act.Should().ThrowAsync<ValidationException>();
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldThrow_WhenDtoIsNull()
+	{
+		// Arrange
+		var command = new EmailInvitationRequestCommand(null!);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<ArgumentNullException>().WithMessage("All data in the field is required");
+	}
+
+	#endregion
 }

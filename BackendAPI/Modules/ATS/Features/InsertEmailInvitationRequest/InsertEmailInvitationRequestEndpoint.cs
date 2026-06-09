@@ -8,7 +8,7 @@ public class InsertEmailInvitationRequestEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-			app.MapPost("insertEmailInvitationRequest", async (EmailInvitationRequestRequest request, ISender sender, CancellationToken cancellationToken) =>
+			app.MapPost("insertemailinvitationrequest", async (EmailInvitationRequestRequest request, ISender sender, CancellationToken cancellationToken) =>
 			{
 				var command = new EmailInvitationRequestCommand(request.emailInvitationRequestDTO);
 				EmailInvitationRequestResult result = await sender.Send(command, cancellationToken);

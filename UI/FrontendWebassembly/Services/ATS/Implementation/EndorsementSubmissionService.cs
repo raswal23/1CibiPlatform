@@ -20,9 +20,10 @@
 			return response;
 		}
 
-		public async Task<bool> InsertEmailInvitationRequest(EmailInvitationRequestDTO emailInvitationRequestDTO)
+		public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
 		{
-			var response = await _httpClient.PostAsJsonAsync("ats/insertEmailInvitationRequest", emailInvitationRequestDTO);
+			var request = new {emailInvitationRequestDTO};
+			var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
 			response.EnsureSuccessStatusCode();
 			var result = true;
 			return result;
