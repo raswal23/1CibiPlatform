@@ -208,6 +208,7 @@
                                             <MudFileUpload T="IBrowserFile"
                                                            MaxFileSize="26214400"
                                                            @bind-Files="AdditionalGovtIDFile"
+                                                           @ref="AdditionalGovtIDFileUpload"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
                                                            Required="true"
@@ -244,6 +245,7 @@
                                                            DragAndDrop="true"
                                                            Required="true"
                                                            @bind-Files="NBIClearanceFile"
+                                                           @ref="NBIClearanceFileUpload"
                                                            OnFilesChanged="OnNbiUpload"
                                                            RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
@@ -279,6 +281,7 @@
                                                            MaxFileSize="26214400"
                                                            Required="true"
                                                            OnFilesChanged="OnCvUpload"
+                                                           @ref="ResumeFileUpload"
                                                            @bind-Files="ResumeFile"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
@@ -530,6 +533,7 @@
                                                Accept=".pdf"
                                                Required="true"
                                                @bind-Files="DiplomaORTORFile"
+                                               @ref="DiplomaORTORUploadFile"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload"
                                                DragAndDrop="true">
@@ -616,6 +620,7 @@
                                                Accept=".pdf"
                                                OnFilesChanged="OnProfessionalLicenseUpload"
                                                Required="true"
+                                               @ref="LicenseUploadFile"
                                                @bind-Files="LicenseFile"
                                                Class="centered-upload"
                                                DragAndDrop="true">
@@ -762,6 +767,7 @@
                                                OnFilesChanged="OnCoeUpload"
                                                Required="true"
                                                class="centered-upload"
+                                               @ref="Emp1COEFileUpload"
                                                @bind-Files="Emp1COEFile"
                                                DragAndDrop="true">
                                     <CustomContent>
@@ -1220,7 +1226,7 @@
 
 </MudPaper>
 
-    @code {
+@code {
     private MudForm _form;
     [Parameter]
     public bool ShowsPhilSys { get; set; } = false;
@@ -1283,7 +1289,7 @@
     private DateTime? EndOfEmployment;
     private bool AddAnotherEmployer;
     private IBrowserFile? Emp1COEFile;
-    private MudFileUpload<IBrowserFile> Emp1COEUploadFileUpload = default!;
+    private MudFileUpload<IBrowserFile> Emp1COEFileUpload = default!;
 
     // Step 5 - references
     private ReferenceDetailsDTO referenceDetails = new();
@@ -1329,17 +1335,35 @@
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
         if (await AdditionalGovtIDFileUpload.RemoveFileAsync(file))
-            return; // removed from single-upload
+        {
+            LicenseFile = null;
+            return;
+        }
         if (await NBIClearanceFileUpload.RemoveFileAsync(file))
+        {
+            NBIClearanceFile = null;
             return;
+        }
         if (await ResumeFileUpload.RemoveFileAsync(file))
+        {
+            ResumeFile = null;
             return;
+        }
         if (await DiplomaORTORUploadFile.RemoveFileAsync(file))
+        {
+            DiplomaORTORFile = null;
             return;
+        }
         if (await LicenseUploadFile.RemoveFileAsync(file))
+        {
+            LicenseFile = null;
             return;
-        if (await Emp1COEUploadFileUpload.RemoveFileAsync(file))
+        }
+        if (await Emp1COEFileUpload.RemoveFileAsync(file))
+        {
+            Emp1COEFile = null;
             return;
+        }
     }
 
     private async Task SkipStep()
