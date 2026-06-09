@@ -207,7 +207,8 @@
                                         <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                             <MudFileUpload T="IBrowserFile"
                                                            MaxFileSize="26214400"
-                                                           @bind-Files="AdditionalGovtIDFile"
+                                                           @bind-File="AdditionalGovtIDFile"
+                                                           @ref="AdditionalGovtIDFileUpload"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
                                                            Required="true"
@@ -243,7 +244,8 @@
                                                            Accept=".pdf"
                                                            DragAndDrop="true"
                                                            Required="true"
-                                                           @bind-Files="NBIClearanceFile"
+                                                           @bind-File="NBIClearanceFile"
+                                                           @ref="NBIClearanceFileUpload"
                                                            OnFilesChanged="OnNbiUpload"
                                                            RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
@@ -279,7 +281,8 @@
                                                            MaxFileSize="26214400"
                                                            Required="true"
                                                            OnFilesChanged="OnCvUpload"
-                                                           @bind-Files="ResumeFile"
+                                                           @ref="ResumeFileUpload"
+                                                           @bind-File="ResumeFile"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
                                                 <CustomContent>
@@ -529,7 +532,8 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                Required="true"
-                                               @bind-Files="DiplomaORTORFile"
+                                               @bind-File="DiplomaORTORFile"
+                                               @ref="DiplomaORTORUploadFile"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload"
                                                DragAndDrop="true">
@@ -616,7 +620,8 @@
                                                Accept=".pdf"
                                                OnFilesChanged="OnProfessionalLicenseUpload"
                                                Required="true"
-                                               @bind-Files="LicenseFile"
+                                               @ref="LicenseUploadFile"
+                                               @bind-File="LicenseFile"
                                                Class="centered-upload"
                                                DragAndDrop="true">
                                     <CustomContent>
@@ -762,7 +767,8 @@
                                                OnFilesChanged="OnCoeUpload"
                                                Required="true"
                                                class="centered-upload"
-                                               @bind-Files="Emp1COEFile"
+                                               @ref="Emp1COEFileUpload"
+                                               @bind-File="Emp1COEFile"
                                                DragAndDrop="true">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
@@ -1220,7 +1226,7 @@
 
 </MudPaper>
 
-    @code {
+@code {
     private MudForm _form;
     [Parameter]
     public bool ShowsPhilSys { get; set; } = false;
@@ -1283,7 +1289,7 @@
     private DateTime? EndOfEmployment;
     private bool AddAnotherEmployer;
     private IBrowserFile? Emp1COEFile;
-    private MudFileUpload<IBrowserFile> Emp1COEUploadFileUpload = default!;
+    private MudFileUpload<IBrowserFile> Emp1COEFileUpload = default!;
 
     // Step 5 - references
     private ReferenceDetailsDTO referenceDetails = new();
@@ -1329,17 +1335,35 @@
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
         if (await AdditionalGovtIDFileUpload.RemoveFileAsync(file))
-            return; // removed from single-upload
+        {
+            LicenseFile = null;
+            return;
+        }
         if (await NBIClearanceFileUpload.RemoveFileAsync(file))
+        {
+            NBIClearanceFile = null;
             return;
+        }
         if (await ResumeFileUpload.RemoveFileAsync(file))
+        {
+            ResumeFile = null;
             return;
+        }
         if (await DiplomaORTORUploadFile.RemoveFileAsync(file))
+        {
+            DiplomaORTORFile = null;
             return;
+        }
         if (await LicenseUploadFile.RemoveFileAsync(file))
+        {
+            LicenseFile = null;
             return;
-        if (await Emp1COEUploadFileUpload.RemoveFileAsync(file))
+        }
+        if (await Emp1COEFileUpload.RemoveFileAsync(file))
+        {
+            Emp1COEFile = null;
             return;
+        }
     }
 
     private async Task SkipStep()
