@@ -4,7 +4,7 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 {
 	public void Configure(EntityTypeBuilder<BulkUploadFileDetails> builder)
 	{
-		builder.ToTable("FileDetails", "ats");
+		builder.ToTable("BulkUploadFileDetails", "ats");
 
 		builder.HasKey(a => a.FileID);
 

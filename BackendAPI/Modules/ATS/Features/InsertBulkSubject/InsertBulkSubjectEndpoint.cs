@@ -1,4 +1,6 @@
-﻿namespace ATS.Features.InsertBulkSubject;
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace ATS.Features.InsertBulkSubject;
 
 public record InsertBulkSubjectRequest(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO);
 public record InsertBulkSubjectResponse(bool isAdded);
@@ -7,13 +9,14 @@ public class InsertBulkSubjectEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("insertbulksubject", async (InsertBulkSubjectRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("insertbulksubject", async ([FromForm] InsertBulkSubjectRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new InsertBulkSubjectCommand(request.bulkUploadFileDetailsDTO);
 			InsertBulkSubjectResult result = await sender.Send(command, cancellationToken);
 			var response = new InsertBulkSubjectResponse(result.isAdded);
-			return Results.Json(response);
+			return Results.Ok(response.isAdded);
 		})
+			.DisableAntiforgery()
 		  .WithName("InsertBulkSubject")
 		  .WithTags("ATS")
 		  .Produces<InsertBulkSubjectResponse>()

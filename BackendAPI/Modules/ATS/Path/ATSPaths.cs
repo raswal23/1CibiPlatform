@@ -31,7 +31,7 @@ public class ATSPaths : IReverseProxyModule
 				RouteId: "InsertBulkSubject",
 				MatchPath: "/ats/insertbulksubject",
 				ClusterId: GatewayConstants.OnePlatformApi,
-				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/insertbulksubject" }
@@ -44,7 +44,7 @@ public class ATSPaths : IReverseProxyModule
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/insertEmailInvitationRequest" }
+					{ "PathSet", "/insertemailinvitationrequest" }
 				}
 			),
 			new RouteDefinitionDTO(

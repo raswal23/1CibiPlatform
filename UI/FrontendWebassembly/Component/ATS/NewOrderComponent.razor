@@ -9,27 +9,60 @@
             <MudForm @ref="candidateForm">
                 <MudGrid Spacing="2">
                     <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="subject.FirstName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.FirstName" 
+                                        Placeholder="Last Name" 
+                                        Variant="Variant.Outlined" 
+                                        Class="oneplatform-rounded-input" 
+                                        Required="true"
+                                        RequiredError="First Name is required"/>
                     </MudItem>
 
                     <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="subject.LastName" Placeholder="Last Name" Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.LastName" 
+                                    Placeholder="Last Name" 
+                                    Variant="Variant.Outlined" 
+                                    Class="oneplatform-rounded-input" 
+                                    Required="true"
+                                    RequiredError="Last Name is required"/>
                     </MudItem>
 
                     <MudItem xs="12" sm="2">
-                        <MudTextField @bind-Value="subject.MiddleInitial" Placeholder="M.I." Variant="Variant.Outlined" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.MiddleInitial" 
+                                    Placeholder="M.I." 
+                                    Variant="Variant.Outlined" 
+                                    Class="oneplatform-rounded-input" 
+                                    Required="true"
+                                    RequiredError="Middle Initial is required"/>
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="subject.EmailAddress" Label="Email Address" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.EmailAddress" 
+                                    Label="Email Address" 
+                                    Variant="Variant.Outlined" 
+                                    FullWidth="true" 
+                                    Class="oneplatform-rounded-input"
+                                    Required="true"
+                                    RequiredError="Email Address is required"/>
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudTextField @bind-Value="subject.MobileNumber" Label="Mobile Number" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input" />
+                        <MudTextField @bind-Value="subject.MobileNumber" 
+                                    Label="Mobile Number" 
+                                    Variant="Variant.Outlined" 
+                                    FullWidth="true" 
+                                    Class="oneplatform-rounded-input" 
+                                    Required="true"
+                                    RequiredError="Mobile Number is required"/>
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudSelect @bind-Value="subject.SelectPackage" Label="Select Package" Variant="Variant.Outlined" FullWidth="true" Class="oneplatform-rounded-input">
+                        <MudSelect @bind-Value="subject.SelectPackage" 
+                                    Label="Select Package" 
+                                    Variant="Variant.Outlined" 
+                                    FullWidth="true" 
+                                    Class="oneplatform-rounded-input"
+                                    Required="true"
+                                    RequiredError="Package is required">
                             <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
                             <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
                             <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
@@ -39,7 +72,7 @@
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex align-center" Style="gap:12px;">
-                        <MudRadioGroup @bind-Value="subject.RushNormal">
+                        <MudRadioGroup @bind-Value="subject.RushNormal" Required="true">
                             <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
@@ -53,77 +86,79 @@
         <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Bulk Invite</MudText>
 
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudFileUpload @ref="@_fileUploadMultiple"
-                                   @bind-Files="_filesMultiple"
-                                   Accept=".xls,.xlsx,.csv"
-                                   DragAndDrop="true"
-                                   AppendMultipleFiles>
-                        <CustomContent>
-                            <div style="display: flex; justify-content: center;">
-                                <MudFab Class="oneplatform-rounded-input"
-                                        StartIcon="@Icons.Material.Filled.CloudUpload"
-                                        Style="width:300px; border: 1px solid gray; border-radius: 4px;"
-                                        OnClick="@context.OpenFilePickerAsync"
-                                        Label=" Upload .xls, xlsx, or .csv file" />
-                            </div>
-                        </CustomContent>
-                        <SelectedTemplate/>
-                    </MudFileUpload>
-                </MudItem>
+            <MudForm @ref="bulkForm">   
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudFileUpload @ref="@bulkFileUpload"
+                                       @bind-Files="bulkFile"
+                                       Accept=".xls,.xlsx,.csv"
+                                       DragAndDrop="true"
+                                       OnFilesChanged="OnBulkFileUpload"
+                                       AppendMultipleFiles
+                                       Required="true">
+                            <CustomContent>
+                                <div style="display: flex; justify-content: center;">
+                                    <MudFab Class="oneplatform-rounded-input"
+                                            StartIcon="@Icons.Material.Filled.CloudUpload"
+                                            Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                            OnClick="@context.OpenFilePickerAsync"
+                                            Label=" Upload .xls, xlsx, or .csv file" />
+                                </div>
+                            </CustomContent>
+                            <SelectedTemplate/>
+                        </MudFileUpload>
+                    </MudItem>
 
-                <MudItem xs="12" Class="d-flex justify-center">
-                    <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
-                        <MudStack Spacing="2" >
-                            <MudStack Row Justify="Justify.Center">
-                                <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
-                                    <MudExpansionPanel Class="bold" Text="@($"({_files.Count}) files")" Expanded="false">
-                                        @if (_files.Any())
-                                        {
-                                            <MudList T="IBrowserFile" Dense="true">
-                                                @foreach (var file in _files)
-                                                {
-                                                    <MudListItem T="IBrowserFile" Value="file" @key="@file">
+                    <MudItem xs="12" Class="d-flex justify-center">
+                        <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+                            <MudStack Spacing="2" >
+                                <MudStack Row Justify="Justify.Center">
+                                    <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
+                                        <MudExpansionPanel Class="bold" Expanded="true">
+                                            @if (bulkFile is not null)
+                                            {
+                                                <MudList T="IBrowserFile" Dense="true">
+                                                    <MudListItem T="IBrowserFile" Value="bulkFile" @key="@bulkFile">
                                                         <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
-                                                            <MudText Align="Align.Center">@file.Name (@($"{file.Size / 1024d:N1} kB"))</MudText>
+                                                            <MudText Align="Align.Center">@bulkFile!.Name (@($"{bulkFile.Size / 1024d:N1} kB"))</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
                                                                            Size="Size.Small"
                                                                            Disabled="_uploading"
                                                                            aria-label="Remove file"
-                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(file))" />
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(bulkFile!))" />
                                                         </MudStack>
                                                     </MudListItem>
-                                                }
-                                            </MudList>
-                                        }
-                                        else
-                                        {
-                                            <MudText Typo="Typo.body2">No files selected.</MudText>
-                                        }
-                                    </MudExpansionPanel>
-                                </MudExpansionPanels>
+                                                </MudList>
+                                            }
+                                            else
+                                            {
+                                                <MudText Typo="Typo.body2">No files selected.</MudText>
+                                            }
+                                        </MudExpansionPanel>
+                                    </MudExpansionPanels>
+                                </MudStack>
+                                <MudStack Row Justify="Justify.Center">
+                                    <MudButton Class="theme-button theme-button-active"
+                                               Style="width: 200px; border-radius: 4px;"
+                                               OnClick="SubmitBulk">
+                                        Upload
+                                    </MudButton>
+                                </MudStack>
+                                <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+                                    <MudText Typo="Typo.body2">
+                                        Don’t have a file?
+                                        <MudLink Href="@templateLink" Underline="Underline.Always" Class="ml-1">
+                                            Download template
+                                        </MudLink>
+                                    </MudText>
+                                </MudStack>
                             </MudStack>
-                            <MudStack Row Justify="Justify.Center">
-                                <MudButton Class="theme-button theme-button-active"
-                                           Style="width: 200px; border-radius: 4px;"
-                                           OnClick="ProcessBulkInvite">
-                                    Upload
-                                </MudButton>
-                            </MudStack>
-                            <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
-                                <MudText Typo="Typo.body2">
-                                    Don’t have a file?
-                                    <MudLink Href="@templateLink" Underline="Underline.Always" Class="ml-1">
-                                        Download template
-                                    </MudLink>
-                                </MudText>
-                            </MudStack>
-                        </MudStack>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+
         </MudPaper>
     </MudItem>
 
@@ -147,10 +182,11 @@
 
 @code {
     private MudForm? candidateForm;
+    private MudForm? bulkForm;
     private EmailInvitationRequestDTO subject = new();
-    private IReadOnlyList<IBrowserFile> _filesMultiple = [];
-    private IList<IBrowserFile> _files => (_filesMultiple ?? Enumerable.Empty<IBrowserFile>()).ToList();
-    private MudFileUpload<IReadOnlyList<IBrowserFile>> _fileUploadMultiple = default!;
+    private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
+    private IBrowserFile? bulkFile;
+    private MudFileUpload<IBrowserFile>bulkFileUpload = default!;
     private string? templateLink;
     private bool _uploading;
     private int _progress;
@@ -167,34 +203,34 @@
         var isSent = await EndorsementSubmissionService.InsertEmailInvitationRequestAsync(subject);
     }
 
-    private async Task UploadFilesAsync()
+    private async Task SubmitBulk()
     {
-        if (!_files.Any())
+        await bulkForm!.ValidateAsync();
+        if (!bulkForm.IsValid)
         {
-            _statusText = "No files to upload.";
             return;
         }
 
-        var filesSnapshot = _files.ToList();
+        var isSent = await EndorsementSubmissionService.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
+    }
 
-        _uploading = true;
-        _progress = 0;
-        _statusText = "Uploading...";
+    private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
+    {
+        bulkFile = e.File;
+        bulkUploadFileDetailsDTO.FileName = e.File.Name;
 
-        var total = filesSnapshot.Count;
-        for (var index = 0; index < total; index++)
+        if (bulkFile != null)
         {
-            var file = filesSnapshot[index];
-            await Task.Delay(1000); // Simulate file upload
-            _progress = (int)Math.Round((index + 1d) / total * 100);
-            _statusText = index + 1 == total ? "Upload complete." : $"Uploading {index + 1} of {total}...";
-            await RemoveFileFromUploadsAsync(file);
-            await InvokeAsync(StateHasChanged);
-            
+            using var ms = new MemoryStream();
+
+            await bulkFile
+                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+                .CopyToAsync(ms);
+
+            bulkUploadFileDetailsDTO.BulkFile = ms.ToArray();
         }
 
-        _uploading = false;
-        await InvokeAsync(StateHasChanged);
+        return;
     }
 
     protected override async Task OnInitializedAsync()
@@ -202,52 +238,18 @@
         templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
     }
 
+
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
-        var fileUploads = new object[] { _fileUploadMultiple};
 
-        foreach (var fileUpload in fileUploads)
+        if (await bulkFileUpload.RemoveFileAsync(file))
         {
-            if (fileUpload is MudFileUpload<IReadOnlyList<IBrowserFile>> multipleUpload && await multipleUpload.RemoveFileAsync(file))
-            {   
-                return; // File removed from multiple files upload
-            }
-
-            if (fileUpload is MudFileUpload<IBrowserFile> singleUpload && await singleUpload.RemoveFileAsync(file))
-            {
-                return; // File removed from single file upload
-            }
+            bulkFile = null;
+            return;
         }
+        
     }
 
-    private bool IsValidFile(IBrowserFile file)
-    {
-        var allowedExtensions = new[] { ".xls", ".xlsx", ".csv" };
-        var extension = Path.GetExtension(file.Name).ToLower();
-
-        return allowedExtensions.Contains(extension);
-    }
-
-    // Bulk invite
     private IReadOnlyList<IBrowserFile>? uploadedFiles;
 
-    private async Task ProcessBulkInvite()
-    {
-        if (_filesMultiple == null || !_filesMultiple.Any())
-        {
-            await JS.InvokeVoidAsync("console.warn", "No files selected for bulk invite");
-            return;
-        }
-
-        var invalidFiles = _filesMultiple.Where(f => !IsValidFile(f)).ToList();
-
-        if (invalidFiles.Any())
-        {
-            await JS.InvokeVoidAsync("alert",
-                $"Invalid file type: {string.Join(", ", invalidFiles.Select(f => f.Name))}");
-            return;
-        }
-
-        await JS.InvokeVoidAsync("console.log", "Processing bulk invite", _filesMultiple.Select(f => f.Name));
-    }
 }

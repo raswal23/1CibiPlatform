@@ -119,7 +119,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 			bulkFileKey = await _objectStorageService.UploadAsync(
 				folderName,
-				bulkUploadFileDetailsDTO.BulkFile.FileName,
+				bulkUploadFileDetailsDTO.FileName!,
 				fileStream,
 				ct);
 		}
@@ -129,6 +129,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		bulkUploadFileDetailsDTO.DateCreated = DateTime.UtcNow;
 
 		BulkUploadFileDetails bulkUploadFileDetails = bulkUploadFileDetailsDTO.Adapt<BulkUploadFileDetails>();
+		bulkUploadFileDetails.FileKey = bulkFileKey;
 
 		try
 		{
