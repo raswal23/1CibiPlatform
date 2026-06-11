@@ -13,4 +13,10 @@ public interface IATSRepository
 	Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails);
 	Task<bool> AddEmailInvitationRequestAsync(EmailInvitationRequest emailInvitationRequest);
 	Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails);
+
+	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync();
+	Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests);
+
 }

@@ -80,4 +80,44 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
+	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync()
+	{
+		return await _dbcontext.BulkUploadFileDetails
+			.AsNoTracking()
+			.Where(bf => bf.Status == "Pending")
+			.OrderBy(bf => bf.FileID)
+			.Take(10)
+			.ToListAsync();
+	}
+
+	public async Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		 await _dbcontext.EmailInvitationRequests.AddRangeAsync(emailInvitationRequests);
+		await _dbcontext.SaveChangesAsync();	
+		return true;
+	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID);
+
+		await _dbcontext.EmailInvitationRequests
+			.Where(x => ids.Contains(x.EmailInvitationID))
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => "Done"));
+
+		return true;
+	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID);
+
+		await _dbcontext.EmailInvitationRequests
+			.Where(x => ids.Contains(x.EmailInvitationID))
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => "Error"));
+
+		return true;
+	}
 }

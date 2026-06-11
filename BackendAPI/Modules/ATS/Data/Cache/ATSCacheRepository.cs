@@ -66,5 +66,23 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddBulkUploadFileDetailsAsync(bulkUploadFileDetails);
 	}
 
+	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync()
+	{
+		return await _atsRepository.GetBulkUploadFileDetailsAsync();
+	}
 
+	public async Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		return await _atsRepository.UpdateBulkEmailInvitationRequestAsync(emailInvitationRequests);
+	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		return await _atsRepository.UpdateEmailInvitationRequestForSuccessAsync(emailInvitationRequests);
+	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		return await _atsRepository.UpdateEmailInvitationRequestForErrorAsync(emailInvitationRequests);
+	}
 }
