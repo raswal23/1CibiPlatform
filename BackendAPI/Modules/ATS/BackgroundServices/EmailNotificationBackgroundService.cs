@@ -129,15 +129,14 @@ public class EmailNotificationBackgroundService : BackgroundService
 				successList.Count,
 				errorList.Count);
 
-			if (!successList.Any())
+			if (successList.Any())
 			{
 				await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
 			}
 
-			if (!errorList.Any())
+			if (errorList.Any())
 			{
 				await repository.UpdateEmailInvitationRequestForErrorAsync(errorList);
-
 			}
 
 			await _hybridCache.RemoveAsync("BulkUpload_Subjects");

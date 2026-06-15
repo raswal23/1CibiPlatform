@@ -70,24 +70,10 @@ else
                   @ref="TableRef"
                   Items="Items"
                   Hover="true"
+                  Class="responsive-title"
+                  Style="border-radius: 4px; padding: 10px;"
                   RowsPerPage="@(RowsPerPage ?? 10)"
                   HorizontalScrollbar="true">
-
-            <ToolBarContent>
-                <MudText Typo="Typo.h6" Class="responsive-title gradient-text" Style="font-size: 20px; font-weight: 700;">@Title</MudText>
-
-                <MudSpacer />
-
-                <MudTextField T="string"
-                                Value="SearchString"
-                                ValueChanged="@(EventCallback.Factory.Create<string>(this, SearchChanged))"
-                                ValueExpression="(() => SearchString)"
-                                Placeholder="Search"
-                                Adornment="Adornment.Start"
-                                AdornmentIcon="@Icons.Material.Filled.Search"
-                                IconSize="Size.Medium"
-                                Class="mt-0" />
-            </ToolBarContent>
 
             <HeaderContent>
                 @HeaderTemplate
