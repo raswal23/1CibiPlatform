@@ -1,6 +1,4 @@
-﻿
-
-namespace ATS.BackgroundServices;
+﻿namespace ATS.BackgroundServices;
 
 public class EmailNotificationBackgroundService : BackgroundService
 {
@@ -35,7 +33,7 @@ public class EmailNotificationBackgroundService : BackgroundService
 				.GetRequiredService<IATSRepository>();
 
 			var cached = await _hybridCache.GetOrCreateAsync(
-				"BulkUpload_Subjects",
+				CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey,
 				async entry =>
 				{
 					return new List<List<EmailInvitationRequest>>();
@@ -46,7 +44,6 @@ public class EmailNotificationBackgroundService : BackgroundService
 			List<EmailInvitationRequest> successList = new();
 			List<EmailInvitationRequest> errorList = new();
 
-			// Initial processing
 			foreach (var request in allRequests)
 			{
 				try
@@ -77,7 +74,6 @@ public class EmailNotificationBackgroundService : BackgroundService
 				}
 			}
 
-			// Retry failed emails
 			const int maxRetries = 3;
 
 			for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
@@ -122,7 +118,6 @@ public class EmailNotificationBackgroundService : BackgroundService
 					}
 				}
 
-				// Optional delay before next retry round
 				if (errorList.Any())
 				{
 					await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
@@ -134,13 +129,17 @@ public class EmailNotificationBackgroundService : BackgroundService
 				successList.Count,
 				errorList.Count);
 
-			// - Update DB status for successList
-			await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
+			if (!successList.Any())
+			{
+				await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
+			}
 
-			// - Update DB status for errorList
-			await repository.UpdateEmailInvitationRequestForErrorAsync(successList);
+			if (!errorList.Any())
+			{
+				await repository.UpdateEmailInvitationRequestForErrorAsync(errorList);
 
-			// - Remove successfully processed items from cache if needed
+			}
+
 			await _hybridCache.RemoveAsync("BulkUpload_Subjects");
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

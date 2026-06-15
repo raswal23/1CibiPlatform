@@ -92,10 +92,11 @@
                     <MudItem xs="12">
                         <MudFileUpload @ref="@bulkFileUpload"
                                        @bind-Files="bulkFile"
-                                       Accept=".xls,.xlsx,.csv"
+                                       Accept=".csv"
                                        DragAndDrop="true"
                                        OnFilesChanged="OnBulkFileUpload"
                                        AppendMultipleFiles
+                                       MaxFileSize="26214400"
                                        Required="true">
                             <CustomContent>
                                 <div style="display: flex; justify-content: center;">
@@ -103,7 +104,7 @@
                                             StartIcon="@Icons.Material.Filled.CloudUpload"
                                             Style="width:300px; border: 1px solid gray; border-radius: 4px;"
                                             OnClick="@context.OpenFilePickerAsync"
-                                            Label=" Upload .xls, xlsx, or .csv file" />
+                                            Label=" Upload.csv file" />
                                 </div>
                             </CustomContent>
                             <SelectedTemplate/>
@@ -250,7 +251,4 @@
         }
         
     }
-
-    private IReadOnlyList<IBrowserFile>? uploadedFiles;
-
 }

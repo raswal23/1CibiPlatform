@@ -45,7 +45,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	{
 		var subjectName = $"{emailInvitationRequestDTO.FirstName} {emailInvitationRequestDTO.LastName}";
 
-
 		var logContext = new
 		{
 			Action = "InsertData",

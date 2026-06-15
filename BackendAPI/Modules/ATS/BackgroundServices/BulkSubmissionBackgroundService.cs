@@ -1,4 +1,5 @@
 ﻿
+
 namespace ATS.BackgroundServices;
 
 public class BulkSubmissionBackgroundService : BackgroundService
@@ -45,6 +46,14 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 			var tasks = pendingFiles.Select(async file =>
 			{
+				var logContext = new
+				{
+					Action = "BulkInsert",
+					Step = "StartBulkInserting",
+					Identity = file.FileID,
+					Timestamp = DateTime.UtcNow
+				};
+
 				await semaphore.WaitAsync(stoppingToken);
 
 				try
@@ -54,16 +63,21 @@ public class BulkSubmissionBackgroundService : BackgroundService
 					await using var stream =
 						await uploadFiles.DownloadAsync(file.FileKey!, stoppingToken);
 
-					using var workbook = new XLWorkbook(stream);
-					var worksheet = workbook.Worksheet(1);
+					using var reader = new StreamReader(stream);
 
-					foreach (var row in worksheet.RowsUsed().Skip(1))
+					using var csv = new CsvReader(
+						reader,
+						CultureInfo.InvariantCulture);
+
+					var records = csv.GetRecords<BulkUploadCsvRecord>();
+
+					foreach (var row in records)
 					{
 						var token = secureToken.GenerateSecureToken();
 
 						if (string.IsNullOrEmpty(token))
 						{
-							_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}");
+							_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}", logContext);
 							throw new InternalServerException("Failed to generate Token.");
 						}
 
@@ -71,7 +85,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 						if (string.IsNullOrEmpty(HashToken))
 						{
-							_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}");
+							_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}", logContext);
 							throw new InternalServerException("Failed to hash Token.");
 						}
 
@@ -81,11 +95,11 @@ public class BulkSubmissionBackgroundService : BackgroundService
 							HashToken = HashToken,
 							HashTokenCreated = DateTime.UtcNow,
 							HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
-							LastName = row.Cell(1).GetString(),
-							FirstName = row.Cell(2).GetString(),
-							MiddleInitial = row.Cell(3).GetString(),
-							EmailAddress = row.Cell(4).GetString(),
-							MobileNumber = row.Cell(5).GetString(),
+							LastName = row.LastName,
+							FirstName = row.FirstName,
+							MiddleInitial = row.MiddleInitial,
+							EmailAddress = row.EmailAddress,
+							MobileNumber = row.MobileNumber,
 							SelectPackage = file.PackageType,
 							RushNormal = file.OrderType
 						});
@@ -105,11 +119,11 @@ public class BulkSubmissionBackgroundService : BackgroundService
 			var listOfListOfSubjects = results.ToList();
 
 			await _hybridCache.SetAsync(
-					"BulkUpload_Subjects",
+					CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey,
 					listOfListOfSubjects,
 					new HybridCacheEntryOptions
 					{
-						Expiration = TimeSpan.FromMinutes(10)
+						Expiration = TimeSpan.FromMinutes(30)
 					});
 
 
