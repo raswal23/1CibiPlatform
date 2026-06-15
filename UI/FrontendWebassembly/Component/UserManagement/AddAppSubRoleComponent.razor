@@ -3,7 +3,7 @@
 
 <MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddAppSubRoleForm">
 
             <MudAutocomplete T="UsersDTO" Label="User" @bind-Value="selectedUser" SearchFunc="@SearchUsers" ToStringFunc="u => u?.email" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showUserError)
@@ -43,7 +43,7 @@
 </MudDialog>
 
 @code {
-    private MudForm? form;
+    private MudForm? AddAppSubRoleForm;
     private bool showUserError;
     private bool showAppError;
     private bool showSubMenuError;
@@ -54,7 +54,7 @@
     private SubMenusDTO? selectedMenu;
     private RolesDTO? selectedRole;
 
-    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? AddAppSubRoleDialog { get; set; }
     [Parameter] public AddAppSubRoleDTO AppSubRole { get; set; } = new AddAppSubRoleDTO();
 
     private List<UsersDTO>? Users = new();
@@ -62,7 +62,7 @@
     private List<SubMenusDTO>? SubMenus = new();
     private List<RolesDTO>? Roles = new();
 
-    void Cancel() => MudDialog!.Cancel();
+    void Cancel() => AddAppSubRoleDialog!.Cancel();
 
     protected override async Task OnInitializedAsync()
     {
@@ -89,7 +89,7 @@
         AppSubRole.SubMenuId = selectedMenu?.subMenuId ?? 0;
         AppSubRole.RoleId = selectedRole?.roleId ?? 0;
 
-        MudDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
+        AddAppSubRoleDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
     }
 
     private async Task<IEnumerable<T>> Search<T>(

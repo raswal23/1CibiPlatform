@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="EditUserApprovalForm">
             <MudTextField @bind-Value="User.email"
                           Label="Email"
                           ReadOnly
@@ -29,21 +29,21 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? EditUserApprovalForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? EditUserApprovalDialog { get; set; }
 
     [Parameter] public UnApprovedUsersDTO User { get; set; } = new UnApprovedUsersDTO();
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => EditUserApprovalDialog!.Cancel();
 
     async Task Submit()
     {
         User.isApproved = true;
-        await form.ValidateAsync();
-        if (form.IsValid)
+        await EditUserApprovalForm!.ValidateAsync();
+        if (EditUserApprovalForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(User));
+            EditUserApprovalDialog!.Close(DialogResult.Ok(User));
         }
     }
 }

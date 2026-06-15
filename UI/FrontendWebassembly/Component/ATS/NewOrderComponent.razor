@@ -125,7 +125,6 @@
                                        DragAndDrop="true"
                                        OnFilesChanged="OnBulkFileUpload"
                                        AppendMultipleFiles
-                                       Class="centered-upload"
                                        MaxFileSize="26214400"
                                        Required="true"
                                        Class="centered-upload">
@@ -155,8 +154,6 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                     Color="Color.Default"
                                                                     Size="Size.Small"
-                                                                    Disabled="_uploading"
-                                                                    aria-label="Remove file"
                                                                     OnClick="@(() => RemoveFileFromUploadsAsync(bulkFile!))" />
                                                 </MudStack>
                                             </MudListItem>
@@ -216,9 +213,11 @@
     private IBrowserFile? bulkFile;
     private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
     private string? templateLink;
-    private bool _uploading;
-    private int _progress;
-    private string _statusText = "Waiting for files.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+    }
 
     private async Task SubmitCandidate()
     {
@@ -233,19 +232,12 @@
 
     private async Task SubmitBulk()
     {
-        // await bulkForm!.ValidateAsync();
-        // if (!bulkForm.IsValid)
-        // {
-        //     return;
-        // }
-
-        // var isSent = await EndorsementSubmissionService.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
         await bulkForm!.ValidateAsync();
 
         if (!bulkForm.IsValid)
             return;
 
-        var previewData = BuildPreviewData();
+        var previewData = BuildCsvPreview();
 
         var parameters = new DialogParameters
         {
@@ -255,7 +247,7 @@
 
         var options = new DialogOptions
         {
-            MaxWidth = MaxWidth.ExtraLarge,
+            MaxWidth = MaxWidth.Large,
             FullWidth = true,
             CloseButton = true
         };
@@ -267,7 +259,7 @@
 
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (!result!.Canceled)
         {
             var isSent = await EndorsementSubmissionService
                 .InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
@@ -280,22 +272,6 @@
         }
     }
 
-    private ExcelPreviewData BuildPreviewData()
-    {
-        var extension = Path.GetExtension(bulkUploadFileDetailsDTO.FileName)
-            .ToLowerInvariant();
-
-        return extension switch
-        {
-            ".csv" => BuildCsvPreview(),
-            ".xls" => BuildExcelPreview(),
-            ".xlsx" => BuildExcelPreview(),
-            _ => throw new NotSupportedException(
-                $"Unsupported file type: {extension}")
-        };
-    }
-
-    
     public class ExcelPreviewData
     {
         public List<string> Headers { get; set; } = [];
@@ -307,7 +283,7 @@
         var result = new ExcelPreviewData();
 
         var csvContent = Encoding.UTF8.GetString(
-            bulkUploadFileDetailsDTO.BulkFile);
+            bulkUploadFileDetailsDTO.BulkFile!);
 
         var lines = csvContent
             .Split(new[] { "\r\n", "\n" },
@@ -316,63 +292,17 @@
         if (lines.Length == 0)
             return result;
 
-        // First row = headers
         result.Headers = lines[0]
             .Split(',')
             .Select(x => x.Trim())
             .ToList();
 
-        // Remaining rows
         foreach (var line in lines.Skip(1))
         {
             result.Rows.Add(
                 line.Split(',')
                     .Select(x => x.Trim())
                     .ToList());
-        }
-
-        return result;
-    }
-
-    private ExcelPreviewData BuildExcelPreview()
-    {
-        var result = new ExcelPreviewData();
-
-        Encoding.RegisterProvider(
-            CodePagesEncodingProvider.Instance);
-
-        using var stream =
-            new MemoryStream(bulkUploadFileDetailsDTO.BulkFile);
-
-        using var reader =
-            ExcelReaderFactory.CreateReader(stream);
-
-        var dataSet = reader.AsDataSet(
-            new ExcelDataSetConfiguration
-            {
-                ConfigureDataTable = _ =>
-                    new ExcelDataTableConfiguration
-                    {
-                        UseHeaderRow = true
-                    }
-            });
-
-        if (dataSet.Tables.Count == 0)
-            return result;
-
-        var table = dataSet.Tables[0];
-
-        foreach (DataColumn column in table.Columns)
-        {
-            result.Headers.Add(column.ColumnName);
-        }
-
-        foreach (DataRow row in table.Rows)
-        {
-            result.Rows.Add(
-                row.ItemArray
-                   .Select(x => x?.ToString() ?? string.Empty)
-                   .ToList());
         }
 
         return result;
@@ -397,21 +327,12 @@
         return;
     }
 
-
-    protected override async Task OnInitializedAsync()
-    {
-        templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
-    }
-
-
     private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
     {
-
         if (await bulkFileUpload.RemoveFileAsync(file))
         {
             bulkFile = null;
             return;
         }
-        
     }
 }

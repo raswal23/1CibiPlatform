@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddSubMenuForm">
             <MudTextField @bind-Value="SubMenu.SubMenuName"
                           Label="SubMenu Name"
                           Required="true"
@@ -43,21 +43,21 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? AddSubMenuForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
 
     [Parameter]
     public AddSubMenuDTO SubMenu { get; set; } = new AddSubMenuDTO { IsActive = true };
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => MudDialog!.Cancel();
 
     async Task Submit()
     {
-        await form.Validate();
-        if (form.IsValid)
+        await AddSubMenuForm!.ValidateAsync();
+        if (AddSubMenuForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(SubMenu));
+            MudDialog!.Close(DialogResult.Ok(SubMenu));
         }
     }
 }

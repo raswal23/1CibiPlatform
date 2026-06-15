@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="EditRoleForm">
             <MudTextField @bind-Value="Role.roleId"
                           Label="Role Id"
                           ReadOnly
@@ -48,20 +48,20 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? EditRoleForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? EditRoleDialog { get; set; }
 
     [Parameter] public RolesDTO Role { get; set; } = new RolesDTO();
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => EditRoleDialog!.Cancel();
 
     async Task Submit()
     {
-        await form.Validate();
-        if (form.IsValid)
+        await EditRoleForm!.ValidateAsync();
+        if (EditRoleForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(Role));
+            EditRoleDialog!.Close(DialogResult.Ok(Role));
         }
     }
 }

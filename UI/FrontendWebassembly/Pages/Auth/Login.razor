@@ -12,7 +12,7 @@
                <div class="login-logo">
                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: white;" />
                </div>
-               <div class="login-title">One Platform</div>
+               <div class="login-title gradient-text">One Platform</div>
                <div class="login-subtitle">Sign in to your account to continue</div>
            </div>
    
@@ -53,7 +53,7 @@
    
                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                        <MudCheckBox @bind-Value="rememberMe" Label="Remember me" Color="Color.Primary" Dense="true" />
-                       <MudLink Href="/forgot-password" Color="Color.Primary" Typo="Typo.body2">Forgot password?</MudLink>
+                       <MudLink Href="/forgot-password" Class="gradient-text" Typo="Typo.body2">Forgot password?</MudLink>
                    </MudStack>
               
                    <ButtonComponent ButtonType="ButtonType.Submit"
@@ -72,7 +72,7 @@
                </MudForm>
    
                <div class="footer-links">
-                   Don't have an account? <a href="/register">Sign up</a>
+                    Don't have an account? <a class="gradient-text" href="/register">Sign up</a>
                </div>
            </div>
        </MudPaper>

@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddApplicationForm">
             <MudTextField @bind-Value="Application.AppName"
                           Label="Application Name"
                           Required="true"
@@ -43,21 +43,21 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? AddApplicationForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? AddApplicationDialog { get; set; }
 
     [Parameter]
-    public AddApplicationDTO Application { get; set; } = new AddApplicationDTO{IsActive = true};
+    public AddApplicationDTO Application { get; set; } = new AddApplicationDTO {IsActive = true};
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => AddApplicationDialog!.Cancel();
 
     async Task Submit()
     {
-        await form.ValidateAsync();
-        if (form.IsValid)
+        await AddApplicationForm!.ValidateAsync();
+        if (AddApplicationForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(Application));
+            AddApplicationDialog!.Close(DialogResult.Ok(Application));
         }
     }
 }

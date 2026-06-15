@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="EditSubMenuForm">
             <MudTextField @bind-Value="SubMenu.subMenuId"
                           Label="SubMenu Id"
                           ReadOnly
@@ -52,20 +52,20 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? EditSubMenuForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? EditSubMenuDialog { get; set; }
 
     [Parameter] public SubMenusDTO SubMenu { get; set; } = new SubMenusDTO();
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => EditSubMenuDialog!.Cancel();
 
     async Task Submit()
     {
-        await form.ValidateAsync();
-        if (form.IsValid)
+        await EditSubMenuForm!.ValidateAsync();
+        if (EditSubMenuForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(SubMenu));
+            EditSubMenuDialog!.Close(DialogResult.Ok(SubMenu));
         }
     }
 }

@@ -10,7 +10,7 @@
         }
         else
         {
-            <MudForm @ref="form">
+            <MudForm @ref="EditAppSubRoleForm">
                 <MudAutocomplete T="UsersDTO" 
                                  Label="User" 
                                  @bind-Value="selectedUser" 
@@ -70,13 +70,13 @@
 </MudDialog>
 
 @code {
-    private MudForm? form;
+    private MudForm? EditAppSubRoleForm;
     private bool IsLoaded = false;
     private UsersDTO? selectedUser;
     private ApplicationsDTO? selectedApp;
     private SubMenusDTO? selectedMenu;
     private RolesDTO? selectedRole;
-    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? EditAppSubRoleDialog { get; set; }
 
     [Parameter]
     public AppSubRolesDTO AppSubRole { get; set; } = new AppSubRolesDTO();
@@ -86,7 +86,7 @@
     private List<SubMenusDTO>? SubMenus = new();
     private List<RolesDTO>? Roles = new();
 
-    void Cancel() => MudDialog!.Cancel();
+    void Cancel() => EditAppSubRoleDialog!.Cancel();
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,7 +110,7 @@
         AppSubRole.SubMenuId = selectedMenu!.subMenuId;
         AppSubRole.RoleId = selectedRole!.roleId;
 
-        MudDialog!.Close(DialogResult.Ok(AppSubRole));
+        EditAppSubRoleDialog!.Close(DialogResult.Ok(AppSubRole));
     }
 
     private async Task<IEnumerable<T>> Search<T>(

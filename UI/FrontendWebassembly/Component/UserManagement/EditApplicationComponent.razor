@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="EditApplicationForm">
             <MudTextField @bind-Value="Application.applicationId"
                           Label="Application Id"
                           ReadOnly
@@ -52,20 +52,20 @@
 </MudDialog>
 
 @code {
-    private MudForm form;
+    private MudForm? EditApplicationForm;
 
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance? EditApplicationDialog { get; set; }
 
     [Parameter] public ApplicationsDTO Application { get; set; } = new ApplicationsDTO();
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => EditApplicationDialog!.Cancel();
 
     async Task Submit()
     {
-        await form.ValidateAsync();
-        if (form.IsValid)
+        await EditApplicationForm!.ValidateAsync();
+        if (EditApplicationForm!.IsValid)
         {
-            MudDialog.Close(DialogResult.Ok(Application));
+            EditApplicationDialog!.Close(DialogResult.Ok(Application));
         }
     }
 }

@@ -28,12 +28,16 @@
 
     <DialogActions>
 
-        <MudButton OnClick="Cancel">
+        <MudButton Color="Color.Default"
+                   OnClick="Cancel"
+                   Style="border-radius: 4px;">
             Cancel
         </MudButton>
 
         <MudButton Color="Color.Primary"
-                   OnClick="Confirm">
+                   OnClick="Confirm"
+                   Class="theme-button theme-button-active"
+                   Style="border-radius: 4px;">
             Confirm Upload
         </MudButton>
 
@@ -43,7 +47,7 @@
 @code {
 
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance BulkPreviewDialog { get; set; } = default!;
 
     [Parameter]
     public List<string> Headers { get; set; } = [];
@@ -53,11 +57,11 @@
 
     private void Confirm()
     {
-        MudDialog.Close(DialogResult.Ok(true));
+        BulkPreviewDialog.Close(DialogResult.Ok(true));
     }
 
     private void Cancel()
     {
-        MudDialog.Cancel();
+        BulkPreviewDialog.Cancel();
     }
 }
