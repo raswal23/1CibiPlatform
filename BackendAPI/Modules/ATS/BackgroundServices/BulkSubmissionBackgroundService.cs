@@ -1,6 +1,4 @@
-﻿
-
-namespace ATS.BackgroundServices;
+﻿namespace ATS.BackgroundServices;
 
 public class BulkSubmissionBackgroundService : BackgroundService
 {

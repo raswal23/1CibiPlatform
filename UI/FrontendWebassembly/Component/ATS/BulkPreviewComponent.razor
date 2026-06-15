@@ -1,0 +1,63 @@
+﻿@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+
+        <MudTable T="List<string>"
+                  Items="Rows"
+                  Dense="true"
+                  Hover="true">
+
+            <HeaderContent>
+                @foreach (var header in Headers)
+                {
+                    <MudTh>@header</MudTh>
+                }
+            </HeaderContent>
+
+            <RowTemplate>
+                @foreach (var cell in context)
+                {
+                    <MudTd>@cell</MudTd>
+                }
+            </RowTemplate>
+
+        </MudTable>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Cancel
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   OnClick="Confirm">
+            Confirm Upload
+        </MudButton>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public List<string> Headers { get; set; } = [];
+
+    [Parameter]
+    public List<List<string>> Rows { get; set; } = [];
+
+    private void Confirm()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
