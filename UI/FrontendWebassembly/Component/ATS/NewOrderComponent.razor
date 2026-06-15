@@ -10,16 +10,16 @@
                 <MudGrid Spacing="2">
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.FirstName" 
-                                        Placeholder="Last Name" 
-                                        Variant="Variant.Outlined" 
-                                        Class="oneplatform-rounded-input" 
-                                        Required="true"
-                                        RequiredError="First Name is required"/>
+                                      Label="Last Name"
+                                      Variant="Variant.Outlined" 
+                                      Class="oneplatform-rounded-input" 
+                                      Required="true"
+                                      RequiredError="First Name is required"/>
                     </MudItem>
 
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.LastName" 
-                                    Placeholder="Last Name" 
+                                    Label="Last Name" 
                                     Variant="Variant.Outlined" 
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
@@ -28,7 +28,7 @@
 
                     <MudItem xs="12" sm="2">
                         <MudTextField @bind-Value="subject.MiddleInitial" 
-                                    Placeholder="M.I." 
+                                      Label="M.I."
                                     Variant="Variant.Outlined" 
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
@@ -52,6 +52,7 @@
                                     FullWidth="true" 
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
+                                    Mask="@(new PatternMask("00000000000"))"
                                     RequiredError="Mobile Number is required"/>
                     </MudItem>
 

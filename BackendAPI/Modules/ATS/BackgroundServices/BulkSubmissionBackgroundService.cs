@@ -38,7 +38,6 @@ public class BulkSubmissionBackgroundService : BackgroundService
 			var hashToken = scope.ServiceProvider
 				.GetRequiredService<IHashService>();
 
-
 			var pendingFiles =
 				await repository.GetBulkUploadFileDetailsAsync();
 
@@ -87,8 +86,8 @@ public class BulkSubmissionBackgroundService : BackgroundService
 							MiddleInitial = row.Cell(3).GetString(),
 							EmailAddress = row.Cell(4).GetString(),
 							MobileNumber = row.Cell(5).GetString(),
-							SelectPackage = row.Cell(6).GetString(),
-							RushNormal = row.Cell(7).GetString()
+							SelectPackage = file.PackageType,
+							RushNormal = file.OrderType
 						});
 					}
 
