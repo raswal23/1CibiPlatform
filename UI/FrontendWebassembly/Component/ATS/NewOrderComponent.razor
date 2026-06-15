@@ -4,7 +4,7 @@
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Candidate Details</MudText>
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Candidate Details</MudText>
 
             <MudForm @ref="candidateForm">
                 <MudGrid Spacing="2">
@@ -85,10 +85,35 @@
         </MudPaper>
 
         <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
-            <MudText Align="Align.Center" Class="mb-5" Style="font-size: 20px;">Bulk Invite</MudText>
+            <MudText Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Bulk Invite</MudText>
 
             <MudForm @ref="bulkForm">   
                 <MudGrid>
+
+                    <MudItem xs="12">
+                        <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
+                                   Label="Select Package"
+                                   Variant="Variant.Outlined"
+                                   FullWidth="true"
+                                   Class="oneplatform-rounded-input"
+                                   Required="true"
+                                   RequiredError="Package is required">
+                            <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
+                            <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
+                            <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
+                            <MudSelectItem Value="@("Package 1")">Package 1</MudSelectItem>
+                            <MudSelectItem Value="@("AirBNB")">AirBNB</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+
+                    <MudItem xs="12" Class="d-flex justify-center align-center centered-upload"
+                                    Style="gap:12px;">
+                        <MudRadioGroup @bind-Value="bulkUploadFileDetailsDTO.OrderType" Required="true">
+                            <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
+                            <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
+                        </MudRadioGroup>
+                    </MudItem>
+
                     <MudItem xs="12">
                         <MudFileUpload @ref="@bulkFileUpload"
                                        @bind-Files="bulkFile"
@@ -96,6 +121,7 @@
                                        DragAndDrop="true"
                                        OnFilesChanged="OnBulkFileUpload"
                                        AppendMultipleFiles
+                                       Class="centered-upload"
                                        MaxFileSize="26214400"
                                        Required="true">
                             <CustomContent>
@@ -112,33 +138,29 @@
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex justify-center">
-                        <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+                        <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8); height: auto;">
                             <MudStack Spacing="2" >
                                 <MudStack Row Justify="Justify.Center">
-                                    <MudExpansionPanels Elevation="0" Style="width:250px; margin-top: 2px;">
-                                        <MudExpansionPanel Class="bold" Expanded="true">
-                                            @if (bulkFile is not null)
-                                            {
-                                                <MudList T="IBrowserFile" Dense="true">
-                                                    <MudListItem T="IBrowserFile" Value="bulkFile" @key="@bulkFile">
-                                                        <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
-                                                            <MudText Align="Align.Center">@bulkFile!.Name (@($"{bulkFile.Size / 1024d:N1} kB"))</MudText>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                           Color="Color.Default"
-                                                                           Size="Size.Small"
-                                                                           Disabled="_uploading"
-                                                                           aria-label="Remove file"
-                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(bulkFile!))" />
-                                                        </MudStack>
-                                                    </MudListItem>
-                                                </MudList>
-                                            }
-                                            else
-                                            {
-                                                <MudText Typo="Typo.body2">No files selected.</MudText>
-                                            }
-                                        </MudExpansionPanel>
-                                    </MudExpansionPanels>
+                                    @if (bulkFile is not null)
+                                    {
+                                        <MudList T="IBrowserFile" Dense="true">
+                                            <MudListItem T="IBrowserFile" Value="bulkFile" @key="@bulkFile">
+                                                <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
+                                                    <MudText Align="Align.Center">@bulkFile!.Name (@($"{bulkFile.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                    Color="Color.Default"
+                                                                    Size="Size.Small"
+                                                                    Disabled="_uploading"
+                                                                    aria-label="Remove file"
+                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(bulkFile!))" />
+                                                </MudStack>
+                                            </MudListItem>
+                                        </MudList>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.body2">No files selected.</MudText>
+                                    }
                                 </MudStack>
                                 <MudStack Row Justify="Justify.Center">
                                     <MudButton Class="theme-button theme-button-active"
@@ -147,7 +169,7 @@
                                         Upload
                                     </MudButton>
                                 </MudStack>
-                                <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2">
+                                <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2 mb-2">
                                     <MudText Typo="Typo.body2">
                                         Don’t have a file?
                                         <MudLink Href="@templateLink" Underline="Underline.Always" Class="ml-1">
@@ -160,22 +182,21 @@
                     </MudItem>
                 </MudGrid>
             </MudForm>
-
         </MudPaper>
     </MudItem>
 
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                  Style="max-height: 775px; min-height: 775px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+                  Style="height: auto; min-height: 851px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
 
-            <MudText Align="Align.Center" Class="mb-2" Style="font-size: 20px;">
+            <MudText Align="Align.Center" Class="mb-2 gradient-text" Style="font-size: 20px; font-weight: 700;">
                 Application Form
             </MudText>
 
             <div style="flex:1; overflow:auto;">
                 <MudImage Src="/images/ats/ApplicationForm.png"
                           Alt="Application Form"
-                          Style="width:100%; height:100%; object-fit:contain;" />
+                          Style="width:100%; height:auto; object-fit:contain; min-height: 851px;" />
             </div>
 
         </MudPaper>
@@ -188,7 +209,7 @@
     private EmailInvitationRequestDTO subject = new();
     private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
     private IBrowserFile? bulkFile;
-    private MudFileUpload<IBrowserFile>bulkFileUpload = default!;
+    private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
     private string? templateLink;
     private bool _uploading;
     private int _progress;
