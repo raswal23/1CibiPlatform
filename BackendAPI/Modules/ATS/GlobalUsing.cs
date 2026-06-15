@@ -1,7 +1,7 @@
 ﻿global using ATS.Data.Entities;
 global using ATS.Data.Context;
 global using ATS.Services;
-//global using ATS.BackgroundServices;
+global using ATS.BackgroundServices;
 global using ATS.Data.Repository;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
@@ -27,11 +27,13 @@ global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Extensions.Caching.Hybrid;
 
 global using MediatR;
 global using Carter;
 global using FluentValidation;
 global using System.Reflection;
 global using Mapster;
+global using ClosedXML.Excel;
 
 

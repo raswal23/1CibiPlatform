@@ -41,11 +41,9 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
-	
 
-		// register ATS specific services, repositories, etc. Add as needed
-		//services.AddHostedService<BulkSubmissionBackgroundService>();
-		//services.AddHostedService<EmailNotificaitonService>();
+		services.AddHostedService<BulkSubmissionBackgroundService>();
+		services.AddHostedService<EmailNotificationBackgroundService>();
 
 		return services;
     }

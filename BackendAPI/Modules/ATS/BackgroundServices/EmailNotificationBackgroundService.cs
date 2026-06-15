@@ -1,17 +1,17 @@
-﻿using Microsoft.Extensions.Caching.Hybrid;
+﻿
 
 namespace ATS.BackgroundServices;
 
-public class EmailNotificaitonBackgroundService : BackgroundService
+public class EmailNotificationBackgroundService : BackgroundService
 {
-	private readonly ILogger<EmailNotificaitonBackgroundService> _logger;
+	private readonly ILogger<EmailNotificationBackgroundService> _logger;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
 	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
 
-	public EmailNotificaitonBackgroundService(
-		ILogger<EmailNotificaitonBackgroundService> logger,
+	public EmailNotificationBackgroundService(
+		ILogger<EmailNotificationBackgroundService> logger,
 		IServiceScopeFactory scopeFactory, 
 		IConfiguration configuration,
 		HybridCache hybridCache)

@@ -1,28 +1,20 @@
-﻿using ClosedXML.Excel;
-using Microsoft.Extensions.Caching.Hybrid;
-
+﻿
 namespace ATS.BackgroundServices;
 
 public class BulkSubmissionBackgroundService : BackgroundService
 {
 	private readonly ILogger<BulkSubmissionBackgroundService> _logger;
 	private readonly IServiceScopeFactory _scopeFactory;
-	private readonly ISecureToken _secureToken;
-	private readonly IHashService _hashService;
 	private readonly IConfiguration _configuration;
 	private readonly HybridCache _hybridCache;
 	private readonly int _applicationFormExpiryInHours;
 
 	public BulkSubmissionBackgroundService(IServiceScopeFactory scopeFactory,
-										   ISecureToken secureToken,
-										   IHashService hashService,
 										   IConfiguration configuration,
 										   ILogger<BulkSubmissionBackgroundService> logger,
 										   HybridCache hybridCache)
 	{
 		_scopeFactory = scopeFactory;
-		_secureToken = secureToken;
-		_hashService = hashService;
 		_configuration = configuration;
 		_logger = logger;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -39,6 +31,12 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 			var uploadFiles = scope.ServiceProvider
 				.GetRequiredService<IObjectStorageService>();
+
+			var secureToken = scope.ServiceProvider
+				.GetRequiredService<ISecureToken>();
+
+			var hashToken = scope.ServiceProvider
+				.GetRequiredService<IHashService>();
 
 
 			var pendingFiles =
@@ -62,7 +60,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 					foreach (var row in worksheet.RowsUsed().Skip(1))
 					{
-						var token = _secureToken.GenerateSecureToken();
+						var token = secureToken.GenerateSecureToken();
 
 						if (string.IsNullOrEmpty(token))
 						{
@@ -70,7 +68,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 							throw new InternalServerException("Failed to generate Token.");
 						}
 
-						var HashToken = _hashService.Hash(token);
+						var HashToken = hashToken.Hash(token);
 
 						if (string.IsNullOrEmpty(HashToken))
 						{
