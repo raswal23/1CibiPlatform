@@ -12,6 +12,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
+	private readonly string _folderName;
 	
 	public EndorsementSubmissionService(
 		ILogger<EndorsementSubmissionService> logger,
@@ -32,6 +33,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
+		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
 	}
 
 	public Task<string> GetBulkTemplateFileUrlAsync()
@@ -98,11 +100,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default)
 	{
-
-		_logger.LogInformation("Starting uploading process for file {FileName}", bulkUploadFileDetailsDTO.FileName);
-
 		string bulkFileKey = "";
-		string folderName = "ATS Objects";
 
 		var logContext = new
 		{
@@ -112,12 +110,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			Timestamp = DateTime.UtcNow
 		};
 
+		_logger.LogInformation("Starting uploading process for file {FileName}", bulkUploadFileDetailsDTO.FileName);
+
+
 		if (bulkUploadFileDetailsDTO.BulkFile != null)
 		{
 			await using var fileStream = bulkUploadFileDetailsDTO.BulkFile.OpenReadStream();
 
 			bulkFileKey = await _objectStorageService.UploadAsync(
-				folderName,
+				_folderName,
 				bulkUploadFileDetailsDTO.FileName!,
 				fileStream,
 				ct);
