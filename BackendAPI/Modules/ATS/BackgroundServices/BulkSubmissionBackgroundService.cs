@@ -103,7 +103,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 						});
 					}
 
-					await repository.UpdateBulkEmailInvitationRequestAsync(subjects);
+					await repository.AddBulkEmailInvitationRequestAsync(subjects);
 					return subjects;
 				}
 				finally
@@ -113,6 +113,8 @@ public class BulkSubmissionBackgroundService : BackgroundService
 			});
 
 			List<EmailInvitationRequest>[] results = await Task.WhenAll(tasks);
+
+			await repository.UpdateBulkFileDetailsStatusAsync(pendingFiles);
 
 			var listOfListOfSubjects = results.ToList();
 

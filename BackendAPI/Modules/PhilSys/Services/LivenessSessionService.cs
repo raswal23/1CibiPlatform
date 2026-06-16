@@ -24,7 +24,6 @@ public class LivenessSessionService
 			Timestamp = DateTime.UtcNow
 		};
 
-
 		_logger.LogInformation("Checking Transaction Status for HashToken: {@Context}", logContext);
 
 		var status = await _philSysRepository.GetLivenessSessionStatusAsync(HashToken);

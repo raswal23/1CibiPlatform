@@ -11,8 +11,8 @@
                           FullWidth="true"
                           Adornment="Adornment.Start"
                           Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
                           Validation="ValidatePCN"
+                          Margin="Margin.Dense"
                           Class="oneplatform-rounded-input" />
         </MudItem>
     </MudGrid>
@@ -29,21 +29,6 @@
     private MudForm? pcnForm;
     [Parameter] public string? HashToken { get; set; }
 
-    private async Task SubmitPCN()
-    {
-        await pcnForm!.Validate();
-        if (!pcnForm.IsValid)
-        {
-            return;
-        }
-
-        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
-        if (!string.IsNullOrEmpty(livenessLink))
-        {
-            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
-        }
-    }
-
     private string? ValidatePCN(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -57,5 +42,20 @@
             return "PhilSys Card Number must be exactly 16 digits";
 
         return null;
+    }
+
+    private async Task SubmitPCN()
+    {
+        await pcnForm!.ValidateAsync();
+        if (!pcnForm.IsValid)
+        {
+            return;
+        }
+
+        var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
+        if (!string.IsNullOrEmpty(livenessLink))
+        {
+            Navigation.NavigateTo(livenessLink);
+        }
     }
 }

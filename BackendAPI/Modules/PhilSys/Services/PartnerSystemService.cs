@@ -93,7 +93,7 @@ public class PartnerSystemService
 			};
 		}
 
-		var livenessUrl = $"{_livenessBaseUrl}/philsys/idv/liveness?philsysSession={transaction.HashToken}";
+		var livenessUrl = $"{_livenessBaseUrl}/philsys/idv/liveness/{transaction.HashToken}";
 
 		try
 		{

@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Hybrid;
-
-namespace ATS.Data.Cache;
+﻿namespace ATS.Data.Cache;
 
 public class ATSCacheRepository : IATSRepository
 {
@@ -71,9 +69,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.GetBulkUploadFileDetailsAsync();
 	}
 
-	public async Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		return await _atsRepository.UpdateBulkEmailInvitationRequestAsync(emailInvitationRequests);
+		return await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
 	}
 
 	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
@@ -84,5 +82,10 @@ public class ATSCacheRepository : IATSRepository
 	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		return await _atsRepository.UpdateEmailInvitationRequestForErrorAsync(emailInvitationRequests);
+	}
+
+	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
+	{
+		return await _atsRepository.UpdateBulkFileDetailsStatusAsync(bulkUploadFileDetails);
 	}
 }

@@ -1,5 +1,5 @@
 ﻿@layout GenericLayout
-@page "/philsys/idv/liveness"
+@page "/philsys/idv/liveness/{HashToken}"
 @inject IJSRuntime JS
 @inject IPhilSysService IPhilSysService
 @inject NavigationManager Navigation
@@ -40,7 +40,6 @@
 
 @code {
     [Parameter] 
-    [SupplyParameterFromQuery(Name = "philsysSession")]
     public required string HashToken { get; set; }
     private UpdateFaceLivenessSessionResponseDTO? information;
     private TransactionStatusResponseDTO? _status;
@@ -52,9 +51,8 @@
     private string? livenessKey;
     private string errorMessage = string.Empty;
     private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "atsSession")]
-    public string atsSession { get; set; } = string.Empty;
+    //From db
+    public string? atsSession { get; set; } = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,7 +148,7 @@
             await LocalStorageService.SetItemAsync($"{atsSession}_phoneNumber", information.data_subject!.mobile_number);
             await LocalStorageService.SetItemAsync($"{atsSession}_profilePicture", information.data_subject!.face_url);
 
-            Navigation.NavigateTo($"http://localhost:5134/s&i/ats/applicationform?hashToken={atsSession}&philSysShow=true&stepActive=2", forceLoad: true);
+            Navigation.NavigateTo($"http://localhost:5134/s&i/ats/{atsSession}?philSysShow=true&stepActive=2", forceLoad: true);
         }
 
         StateHasChanged();

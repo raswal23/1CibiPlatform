@@ -46,7 +46,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, 
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
 																							  CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
@@ -74,7 +74,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
+	public async Task<bool> AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
 	{
 		await _dbcontext.BulkUploadFileDetails.AddAsync(bulkUploadFileDetails);
 		await _dbcontext.SaveChangesAsync();
@@ -91,16 +91,16 @@ public class ATSRepository : IATSRepository
 			.ToListAsync();
 	}
 
-	public async Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		 await _dbcontext.EmailInvitationRequests.AddRangeAsync(emailInvitationRequests);
-		await _dbcontext.SaveChangesAsync();	
+		await _dbcontext.EmailInvitationRequests.AddRangeAsync(emailInvitationRequests);
+		await _dbcontext.SaveChangesAsync();
 		return true;
 	}
 
 	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID);
+		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
@@ -112,12 +112,24 @@ public class ATSRepository : IATSRepository
 
 	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID);
+		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
 				.SetProperty(x => x.Status, x => "Error"));
+
+		return true;
+	}
+
+	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
+	{
+		var fileIds = bulkUploadFileDetails.Select(x => x.FileID).ToList();
+
+		await _dbcontext.BulkUploadFileDetails
+			.Where(x => fileIds.Contains(x.FileID))
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => "Done"));
 
 		return true;
 	}

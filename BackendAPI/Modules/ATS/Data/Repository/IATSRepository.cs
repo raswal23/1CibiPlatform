@@ -15,8 +15,9 @@ public interface IATSRepository
 	Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails);
 
 	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync();
-	Task<bool> UpdateBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests);
 	Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests);
 	Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails);
 
 }

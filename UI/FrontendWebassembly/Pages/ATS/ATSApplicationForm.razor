@@ -2,7 +2,7 @@
 @inject NavigationManager Navigation
 @inject IApplicationFormService ATSService
 @page "/s&i/ats/applicationform"
-@* @page "/s&i/ats/applicationform" *@
+@* @page "/s&i/ats/applicationform/{HashToken}" *@
 
 <div class="philsys-liveness-container">
 
@@ -111,7 +111,6 @@ else
     private bool _showApplicationForm = false;
     private string? Status = string.Empty;
     private bool IsExpired = false;
-    // [SupplyParameterFromQuery(Name = "hashToken")]
     // [Parameter]
     // public string? HashToken { get; set; }
     [Parameter]

@@ -103,7 +103,7 @@
         var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {
-            Navigation.NavigateTo($"{livenessLink}?atsSession={HashToken}", forceLoad: true);
+            Navigation.NavigateTo(livenessLink);
         }
     }
 }
