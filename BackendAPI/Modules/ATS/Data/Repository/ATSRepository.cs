@@ -133,4 +133,13 @@ public class ATSRepository : IATSRepository
 
 		return true;
 	}
+
+	public async Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status)
+	{
+		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => status));
+
+		return true;
+	}
 }

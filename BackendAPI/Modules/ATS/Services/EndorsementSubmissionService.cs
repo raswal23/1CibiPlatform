@@ -76,6 +76,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequestDTO.EmailInvitationID = Guid.CreateVersion7();
 		emailInvitationRequestDTO.HashToken =HashToken;
 		emailInvitationRequestDTO.HashTokenCreated = DateTime.UtcNow;
+		emailInvitationRequestDTO.Status = "Pending";
 		emailInvitationRequestDTO.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		EmailInvitationRequest emailInvitationRequest = emailInvitationRequestDTO.Adapt<EmailInvitationRequest>();
@@ -87,13 +88,29 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError("Failed Transaction: Failed to add Email Invitation Request record for {Tid}: {@Context}", logContext.Identity, logContext);
+			_logger.LogError("Failed Transaction: Failed to add Email Invitation Request: {@Context}, {Exception}", logContext, ex);
 			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}"); ;
 		}
 
 		var applicationFormLink = $"{_applicationformBaseUrl}?hashToken={HashToken}";
 
-		await SendApplicationFormToUserEmailAsync(emailInvitationRequestDTO.EmailAddress!, subjectName, applicationFormLink);
+		try
+		{
+			await SendApplicationFormToUserEmailAsync(
+				emailInvitationRequestDTO.EmailAddress!,
+				subjectName,
+				applicationFormLink);
+
+			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Sent");
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError("Failed to send email: {@Context}, {Exception}", logContext, ex);
+
+			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Error");
+
+			throw new InternalServerException("Failed to send email.");
+		}
 
 		return true;
 	}

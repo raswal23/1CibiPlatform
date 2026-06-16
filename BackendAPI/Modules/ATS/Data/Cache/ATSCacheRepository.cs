@@ -88,4 +88,9 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.UpdateBulkFileDetailsStatusAsync(bulkUploadFileDetails);
 	}
+
+	public async Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status)
+	{
+		return await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationId, status);
+	}
 }
