@@ -20,5 +20,5 @@ public interface IATSRepository
 	Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests);
 	Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails);
 	Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status);
-
+	Task<string?> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken);
 }

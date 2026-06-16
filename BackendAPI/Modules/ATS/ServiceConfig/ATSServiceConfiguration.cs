@@ -44,6 +44,7 @@ public static class ATSServiceConfiguration
 
 		services.AddHostedService<BulkSubmissionBackgroundService>();
 		services.AddHostedService<EmailNotificationBackgroundService>();
+		services.AddScoped<IATSQueries, ATSQueries>();
 
 		return services;
     }

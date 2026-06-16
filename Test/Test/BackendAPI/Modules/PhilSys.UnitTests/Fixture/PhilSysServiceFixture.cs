@@ -81,6 +81,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			LivenessSessionService = new LivenessSessionService(
 				MockPhilSysRepository.Object,
 				MockHashService.Object,
+				Configuration,
 				MockLivenessSessionLogger.Object
 			);
 

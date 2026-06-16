@@ -52,6 +52,7 @@
             return;
         }
 
+        identityData!.ats_session = HashToken;
         var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
         if (!string.IsNullOrEmpty(livenessLink))
         {

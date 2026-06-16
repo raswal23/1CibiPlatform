@@ -93,4 +93,13 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationId, status);
 	}
+
+	public async Task<string?> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"ATS_ApplicationFormStatus_{hashToken}";
+
+		return await _hybridCache.GetOrCreateAsync<string?>(
+			cacheKey,
+			async id => await _atsRepository.IsHashTokenValidAsync(hashToken, cancellationToken));
+	}
 }

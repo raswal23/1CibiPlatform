@@ -31,4 +31,4 @@ global using BuildingBlocks.SharedInterfaces;
 global using Microsoft.Extensions.Caching.Hybrid;
 global using BuildingBlocks.SharedServices.Implementations;
 global using PhilSys.Data.UnitOfWork;
-
+global using PhilSys.Features.InternalSystemQuery;

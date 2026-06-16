@@ -6,6 +6,8 @@ global using ATS.Data.Repository;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
 global using ATS.Data.DTO;
+global using ATS.Shared.Contracts;
+global using ATS.Shared.Implementations;
 
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;

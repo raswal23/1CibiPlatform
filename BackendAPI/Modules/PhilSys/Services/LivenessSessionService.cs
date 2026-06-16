@@ -4,14 +4,19 @@ public class LivenessSessionService
 {
 	private readonly IPhilSysRepository _philSysRepository;
 	private readonly IHashService _hashService;
+	private IConfiguration _configuration;
 	private readonly ILogger<LivenessSessionService> _logger;
+	private readonly string? _applicationFormPath;
 
 	public LivenessSessionService(IPhilSysRepository philSysRepository,
 								  IHashService hashService,
+								  IConfiguration configuration,
 								  ILogger<LivenessSessionService> logger)
 	{
 		_philSysRepository = philSysRepository;
 		_hashService = hashService;
+		_configuration = configuration;
+		_applicationFormPath = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_logger = logger;
 	}
 	public async Task<TransactionStatusResponseDTO> IsLivenessUsedAsync(string HashToken)
@@ -52,6 +57,8 @@ public class LivenessSessionService
 
 		_logger.LogInformation("Successfully received the transaction record for HashToken: {@Context}", logContext);
 
-		return status.Adapt<TransactionStatusResponseDTO>();
+		var transactionStatusResponseDTO = status.Adapt<TransactionStatusResponseDTO>();
+		transactionStatusResponseDTO.ATSApplicationFormPath = _applicationFormPath;
+		return transactionStatusResponseDTO;
 	}
 }

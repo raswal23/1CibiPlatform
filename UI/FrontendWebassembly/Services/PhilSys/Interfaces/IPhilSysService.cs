@@ -11,4 +11,5 @@ public interface IPhilSysService
 
 	Task<string> PostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data);
 
+	Task<string> InternalPostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data);
 }

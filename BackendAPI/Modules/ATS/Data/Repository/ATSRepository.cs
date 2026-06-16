@@ -127,8 +127,8 @@ public class ATSRepository : IATSRepository
 		var fileIds = bulkUploadFileDetails.Select(x => x.FileID).ToList();
 
 		await _dbcontext.BulkUploadFileDetails
-			.Where(x => fileIds.Contains(x.FileID))
-			.ExecuteUpdateAsync(setters => setters
+				.Where(x => fileIds.Contains(x.FileID))
+				.ExecuteUpdateAsync(setters => setters
 				.SetProperty(x => x.Status, x => "Done"));
 
 		return true;
@@ -137,9 +137,18 @@ public class ATSRepository : IATSRepository
 	public async Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status)
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
-			.ExecuteUpdateAsync(setters => setters
+				.ExecuteUpdateAsync(setters => setters
 				.SetProperty(x => x.Status, x => status));
 
 		return true;
+	}
+
+	public async Task<string?> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => eir.HashToken == hashToken && eir.HashTokenExpiration > DateTime.UtcNow)
+			.Select(eir => eir.HashToken)
+			.FirstOrDefaultAsync(cancellationToken) ?? null;
 	}
 }
