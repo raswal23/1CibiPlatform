@@ -5,6 +5,20 @@
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject IDialogService DialogService
 
+<MudOverlay Visible="@isBusy"
+            DarkBackground="true"
+            AutoClose="false"
+            ZIndex="9999">
+    <MudPaper Class="pa-6 d-flex flex-column align-center">
+        <MudProgressCircular Indeterminate="true"
+                             Size="Size.Large" />
+
+        <MudText Class="mt-4">
+            Saving information...
+        </MudText>
+    </MudPaper>
+</MudOverlay>
+
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
@@ -46,7 +60,8 @@
                                     FullWidth="true" 
                                     Class="oneplatform-rounded-input"
                                     Required="true"
-                                    RequiredError="Email Address is required"/>
+                                    RequiredError="Email Address is required"
+                                    Validation="@ValidateEmailAlternative"/>
                     </MudItem>
 
                     <MudItem xs="12">
@@ -82,7 +97,11 @@
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
                         <MudSpacer />
-                        <MudButton Class="theme-button theme-button-active mt-4" Style="width:120px; border-radius: 4px;" OnClick="SubmitCandidate">Send</MudButton>
+                        <MudButton Class="theme-button theme-button-active mt-4" 
+                                   Style="width:120px; border-radius: 4px;" 
+                                   OnClick="SubmitCandidate">
+                                Send
+                        </MudButton>
                     </MudItem>
                 </MudGrid>
             </MudForm>
@@ -213,6 +232,7 @@
     private IBrowserFile? bulkFile;
     private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
     private string? templateLink;
+    private bool isBusy = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,12 +242,60 @@
     private async Task SubmitCandidate()
     {
         await candidateForm!.ValidateAsync();
+
         if (!candidateForm.IsValid)
-        {
             return;
+
+        var confirmParam = new DialogParameters
+        {
+            { nameof(ConfirmationDialogComponent.Message),
+              "Do you want to save the candidate's information?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
+            "Confirmation",
+            confirmParam);
+
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+            return;
+
+        try
+        {
+            isBusy = true;
+
+            await InvokeAsync(StateHasChanged);
+            await Task.Yield();
+
+            var isSent =
+            await EndorsementSubmissionService
+                .InsertEmailInvitationRequestAsync(subject);
+
+            if (isSent)
+            {
+                var successParam = new DialogParameters
+            {
+                {
+                    nameof(SuccessSaveComponent.Message),
+                    "Successfully saved the candidate's information."
+                }
+            };
+
+                await DialogService.ShowAsync<SuccessSaveComponent>(
+                    "Success",
+                    successParam);
+
+                subject = new EmailInvitationRequestDTO();
+                await candidateForm.ResetAsync();
+            }
+        }
+        finally
+        {
+            isBusy = false;
+            await InvokeAsync(StateHasChanged);
         }
 
-        var isSent = await EndorsementSubmissionService.InsertEmailInvitationRequestAsync(subject);
     }
 
     private async Task SubmitBulk()
@@ -259,17 +327,45 @@
 
         var result = await dialog.Result;
 
-        if (!result!.Canceled)
+        if (result!.Canceled)
+            return;
+
+
+        try
         {
+            isBusy = true;
+
+            await InvokeAsync(StateHasChanged);
+            await Task.Yield();
+
             var isSent = await EndorsementSubmissionService
-                .InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
+            .InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
 
             if (isSent)
             {
+                var successParams = new DialogParameters
+            {
+                {
+                    nameof(SuccessSaveComponent.Message),
+                    "Successfully uploaded the bulk candidates' information."
+                }
+            };
+
+                await DialogService.ShowAsync<SuccessSaveComponent>(
+                    "Success",
+                    successParams);
+
                 bulkFile = null;
                 bulkUploadFileDetailsDTO = new();
+
+                await bulkForm.ResetAsync();
             }
         }
+        finally
+        {
+            isBusy = false;
+        }
+       
     }
 
     public class ExcelPreviewData
@@ -334,5 +430,20 @@
             bulkFile = null;
             return;
         }
+    }
+
+    private string? ValidateEmailAlternative(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return null;
+
+        if (!value.Contains("@"))
+            return "Invalid email format";
+
+        var regex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(value, regex))
+            return "Invalid email format";
+
+        return null!;
     }
 }
