@@ -10,6 +10,4 @@ public interface IPhilSysService
 	Task<bool> DeleteTransactionAsync(string HashToken);
 
 	Task<string> PostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data);
-
-	Task<string> InternalPostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data);
 }

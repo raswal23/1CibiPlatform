@@ -91,10 +91,15 @@ public class PhilSysService : IPhilSysService
 		{
 			identity_data.birth_date = parsedDate.ToString("yyyy-MM-dd");
 		}
+
+		var endpoint = string.IsNullOrEmpty(identity_data.ats_session)
+			? "philsys/idv"
+			: "philsys/internal";
+
 		if (inquiry_type == "name_dob")
 		{
 			var requestInfo = new { callback_url = "/", inquiry_type = "name_dob", identity_data };
-			var responseInfo = await _httpClient.PostAsJsonAsync("philsys/idv", requestInfo);
+			var responseInfo = await _httpClient.PostAsJsonAsync(endpoint, requestInfo);
 			if (!responseInfo.IsSuccessStatusCode)
 			{
 				return "";
@@ -105,7 +110,7 @@ public class PhilSysService : IPhilSysService
 		}
 
 		var requestPcn = new { callback_url = "/", inquiry_type = "pcn", identity_data };
-		var responsePCn = await _httpClient.PostAsJsonAsync("philsys/idv", requestPcn);
+		var responsePCn = await _httpClient.PostAsJsonAsync(endpoint, requestPcn);
 		if (!responsePCn.IsSuccessStatusCode)
 		{
 			return "";
@@ -114,35 +119,5 @@ public class PhilSysService : IPhilSysService
 		var successContentPcn = await responsePCn.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();
 		return successContentPcn!.liveness_link!;
 
-	}
-
-	public async Task<string> InternalPostBasicInformationOrPCNAsync(string inquiry_type, IdentityData identity_data)
-	{
-		if (DateTime.TryParse(identity_data.birth_date, out var parsedDate))
-		{
-			identity_data.birth_date = parsedDate.ToString("yyyy-MM-dd");
-		}
-		if (inquiry_type == "name_dob")
-		{
-			var requestInfo = new { callback_url = "/", inquiry_type = "name_dob", identity_data };
-			var responseInfo = await _httpClient.PostAsJsonAsync("philsys/internal", requestInfo);
-			if (!responseInfo.IsSuccessStatusCode)
-			{
-				return "";
-			}
-
-			var successContentInfo = await responseInfo.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();
-			return successContentInfo!.liveness_link!;
-		}
-
-		var requestPcn = new { callback_url = "/", inquiry_type = "pcn", identity_data };
-		var responsePCn = await _httpClient.PostAsJsonAsync("philsys/internal", requestPcn);
-		if (!responsePCn.IsSuccessStatusCode)
-		{
-			return "";
-		}
-
-		var successContentPcn = await responsePCn.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();
-		return successContentPcn!.liveness_link!;
 	}
 }

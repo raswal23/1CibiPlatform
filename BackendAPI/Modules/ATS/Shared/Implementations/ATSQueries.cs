@@ -2,9 +2,9 @@
 
 internal class ATSQueries : IATSQueries
 {
-	private readonly ATSRepository _atsRepository;
+	private readonly IATSRepository _atsRepository;
 
-	public ATSQueries(ATSRepository atsRepository)
+	public ATSQueries(IATSRepository atsRepository)
 	{
 		_atsRepository = atsRepository;
 	}
