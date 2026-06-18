@@ -16,7 +16,7 @@ namespace APIs.Migrations.PhilSys
                 table: "PhilSysTransaction",
                 type: "character varying(100)",
                 maxLength: 100,
-                nullable: false,
+                nullable: true,
                 defaultValue: "");
         }
 

@@ -28,7 +28,7 @@ namespace APIs.Migrations.PhilSys
                         .HasColumnType("uuid");
 
                     b.Property<string>("ATSSession")
-                        .IsRequired()
+                        .IsRequired(false)
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 

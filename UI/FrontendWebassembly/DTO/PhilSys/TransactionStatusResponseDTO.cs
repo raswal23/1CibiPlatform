@@ -9,6 +9,4 @@ public record TransactionStatusResponseDTO
 	public bool IsTransacted { get; set; }
 	public bool isExpired { get; set; } 
 	public DateTime ExpiresAt { get; set; }
-	public string? trace_id { get; set; }
-	public string? error_message { get; set; }
 }

@@ -55,21 +55,11 @@
     public string? atsSession { get; set; } = null;
     public string? applicationFormPath { get; set; }
 
-        protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         _status = await IPhilSysService.GetTransactionStatusAsync(HashToken);
         atsSession = _status.ATSSession;
         applicationFormPath = _status.ATSApplicationFormPath;
-
-        if (!string.IsNullOrEmpty(_status.error_message))
-        {
-            isTransacted = false;
-            isExpired = false;
-            _completed = true;
-            errorMessage = _status.error_message;
-            return;
-        }
-
         webHookUrl = _status.WebHookUrl;
         isTransacted = _status.IsTransacted;
         isExpired = _status.isExpired;
@@ -84,16 +74,6 @@
     private async Task StartLiveness()
     {
         _status = await IPhilSysService.GetTransactionStatusAsync(HashToken);
-
-        if (!string.IsNullOrEmpty(_status.error_message))
-        {
-            isTransacted = false;
-            isExpired = false;
-            _completed = true;
-            errorMessage = _status.error_message!;
-            StateHasChanged();
-            return;
-        }
 
         if (_status.isExpired)
         {

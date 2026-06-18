@@ -1,5 +1,4 @@
-﻿using ATS.Shared.Contracts;
-
+﻿
 namespace PhilSys.Services;
 
 public class PartnerSystemService
@@ -31,7 +30,6 @@ public class PartnerSystemService
 	}
 	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
 	{
-
 		PhilSysTransaction transaction = new();
 
 		if (!string.IsNullOrEmpty(identity_data.ATSSession))
@@ -116,10 +114,10 @@ public class PartnerSystemService
 		{
 			var result = await _repository.AddTransactionDataAsync(transaction);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
 			_logger.LogError("Failed Transaction: Failed to add transaction data record for {Tid}: {@Context}", transaction.Tid, logContext);
-			throw new InternalServerException($"Failed to add transaction.");;
+			throw new InternalServerException($"Failed to add transaction. {ex}" );;
 		}
 
 		_logger.LogInformation("Succcessfully added the transaction data record for {Tid}: {@Context}", transaction.Tid, logContext);
