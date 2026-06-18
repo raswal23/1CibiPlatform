@@ -139,7 +139,7 @@ public class EmailNotificationBackgroundService : BackgroundService
 				await repository.UpdateEmailInvitationRequestForErrorAsync(errorList);
 			}
 
-			await _hybridCache.RemoveAsync("BulkUpload_Subjects");
+			await _hybridCache.RemoveAsync(CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey);
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 		}
