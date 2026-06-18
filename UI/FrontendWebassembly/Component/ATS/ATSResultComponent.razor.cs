@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-
-namespace FrontendWebassembly.Component.ATS;
+﻿namespace FrontendWebassembly.Component.ATS;
 
 public partial class ATSResultComponent
 {

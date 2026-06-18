@@ -1,6 +1,4 @@
-﻿using FrontendWebassembly.Component.Generic;
-
-namespace FrontendWebassembly.Component.ATS;
+﻿namespace FrontendWebassembly.Component.ATS;
 
 public partial class ATSDashboardComponent
 {

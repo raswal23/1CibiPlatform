@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-
-namespace FrontendWebassembly.Component.Generic;
+﻿namespace FrontendWebassembly.Component.Generic;
 
 public partial class LoaderComponent
 {
