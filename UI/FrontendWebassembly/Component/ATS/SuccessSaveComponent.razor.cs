@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 
-namespace FrontendWebassembly.Component.ATSk;
+namespace FrontendWebassembly.Component.ATS;
 
 public partial class SuccessSaveComponent
 {
