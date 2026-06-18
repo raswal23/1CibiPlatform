@@ -5,26 +5,12 @@
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject IDialogService DialogService
 
-<MudOverlay Visible="@isBusy"
-            DarkBackground="true"
-            AutoClose="false"
-            ZIndex="9999">
-    <MudPaper Class="pa-6 d-flex flex-column align-center">
-        <MudProgressCircular Indeterminate="true"
-                             Size="Size.Large" />
-
-        <MudText Class="mt-4">
-            Saving information...
-        </MudText>
-    </MudPaper>
-</MudOverlay>
-
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Candidate Details</MudText>
 
-            <MudForm @ref="candidateForm">
+            <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
                 <MudGrid Spacing="2">
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.FirstName" 
@@ -100,7 +86,16 @@
                         <MudButton Class="theme-button theme-button-active mt-4" 
                                    Style="width:120px; border-radius: 4px;" 
                                    OnClick="SubmitCandidate">
-                                Send
+                            @if (isSavingCandidate)
+                            {
+                                <MudProgressCircular Size = "Size.Small" Indeterminate = "true" />
+                                
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Send</span>
+                            }
                         </MudButton>
                     </MudItem>
                 </MudGrid>
@@ -110,7 +105,7 @@
         <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Bulk Invite</MudText>
 
-            <MudForm @ref="bulkForm">   
+            <MudForm @ref="bulkForm" Disabled="@isUploadingBulk">
                 <MudGrid>
 
                     <MudItem xs="12">
@@ -187,7 +182,19 @@
                                     <MudButton Class="theme-button theme-button-active"
                                                Style="width: 200px; border-radius: 4px;"
                                                OnClick="SubmitBulk">
-                                        Upload
+
+
+                                        @if (isUploadingBulk)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+
+                                            <span>Uploading...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Upload</span>
+                                        }
+                                        
                                     </MudButton>
                                 </MudStack>
                                 <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2 mb-2">
@@ -224,226 +231,3 @@
     </MudItem>
 </MudGrid>
 
-@code {
-    private MudForm? candidateForm;
-    private MudForm? bulkForm;
-    private EmailInvitationRequestDTO subject = new();
-    private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
-    private IBrowserFile? bulkFile;
-    private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
-    private string? templateLink;
-    private bool isBusy = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
-    }
-
-    private async Task SubmitCandidate()
-    {
-        await candidateForm!.ValidateAsync();
-
-        if (!candidateForm.IsValid)
-            return;
-
-        var confirmParam = new DialogParameters
-        {
-            { nameof(ConfirmationDialogComponent.Message),
-              "Do you want to save the candidate's information?" }
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-            "Confirmation",
-            confirmParam);
-
-        var result = await dialog.Result;
-
-        if (result.Canceled)
-            return;
-
-        try
-        {
-            isBusy = true;
-
-            await InvokeAsync(StateHasChanged);
-            await Task.Yield();
-
-            var isSent =
-            await EndorsementSubmissionService
-                .InsertEmailInvitationRequestAsync(subject);
-
-            if (isSent)
-            {
-                var successParam = new DialogParameters
-            {
-                {
-                    nameof(SuccessSaveComponent.Message),
-                    "Successfully saved the candidate's information."
-                }
-            };
-
-                await DialogService.ShowAsync<SuccessSaveComponent>(
-                    "Success",
-                    successParam);
-
-                subject = new EmailInvitationRequestDTO();
-                await candidateForm.ResetAsync();
-            }
-        }
-        finally
-        {
-            isBusy = false;
-            await InvokeAsync(StateHasChanged);
-        }
-
-    }
-
-    private async Task SubmitBulk()
-    {
-        await bulkForm!.ValidateAsync();
-
-        if (!bulkForm.IsValid)
-            return;
-
-        var previewData = BuildCsvPreview();
-
-        var parameters = new DialogParameters
-        {
-            { nameof(BulkPreviewComponent.Headers), previewData.Headers },
-            { nameof(BulkPreviewComponent.Rows), previewData.Rows }
-        };
-
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Large,
-            FullWidth = true,
-            CloseButton = true
-        };
-
-        var dialog = await DialogService.ShowAsync<BulkPreviewComponent>(
-            "Preview Upload",
-            parameters,
-            options);
-
-        var result = await dialog.Result;
-
-        if (result!.Canceled)
-            return;
-
-
-        try
-        {
-            isBusy = true;
-
-            await InvokeAsync(StateHasChanged);
-            await Task.Yield();
-
-            var isSent = await EndorsementSubmissionService
-            .InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
-
-            if (isSent)
-            {
-                var successParams = new DialogParameters
-            {
-                {
-                    nameof(SuccessSaveComponent.Message),
-                    "Successfully uploaded the bulk candidates' information."
-                }
-            };
-
-                await DialogService.ShowAsync<SuccessSaveComponent>(
-                    "Success",
-                    successParams);
-
-                bulkFile = null;
-                bulkUploadFileDetailsDTO = new();
-
-                await bulkForm.ResetAsync();
-            }
-        }
-        finally
-        {
-            isBusy = false;
-        }
-       
-    }
-
-    public class ExcelPreviewData
-    {
-        public List<string> Headers { get; set; } = [];
-        public List<List<string>> Rows { get; set; } = [];
-    }
-
-    private ExcelPreviewData BuildCsvPreview()
-    {
-        var result = new ExcelPreviewData();
-
-        var csvContent = Encoding.UTF8.GetString(
-            bulkUploadFileDetailsDTO.BulkFile!);
-
-        var lines = csvContent
-            .Split(new[] { "\r\n", "\n" },
-                StringSplitOptions.RemoveEmptyEntries);
-
-        if (lines.Length == 0)
-            return result;
-
-        result.Headers = lines[0]
-            .Split(',')
-            .Select(x => x.Trim())
-            .ToList();
-
-        foreach (var line in lines.Skip(1))
-        {
-            result.Rows.Add(
-                line.Split(',')
-                    .Select(x => x.Trim())
-                    .ToList());
-        }
-
-        return result;
-    }
-
-    private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-    {
-        bulkFile = e.File;
-        bulkUploadFileDetailsDTO.FileName = e.File.Name;
-
-        if (bulkFile != null)
-        {
-            using var ms = new MemoryStream();
-
-            await bulkFile
-                .OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-                .CopyToAsync(ms);
-
-            bulkUploadFileDetailsDTO.BulkFile = ms.ToArray();
-        }
-
-        return;
-    }
-
-    private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
-    {
-        if (await bulkFileUpload.RemoveFileAsync(file))
-        {
-            bulkFile = null;
-            return;
-        }
-    }
-
-    private string? ValidateEmailAlternative(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return null;
-
-        if (!value.Contains("@"))
-            return "Invalid email format";
-
-        var regex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(value, regex))
-            return "Invalid email format";
-
-        return null!;
-    }
-}
