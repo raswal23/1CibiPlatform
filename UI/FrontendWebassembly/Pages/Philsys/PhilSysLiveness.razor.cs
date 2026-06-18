@@ -1,0 +1,104 @@
+﻿namespace FrontendWebassembly.Pages.Philsys;
+
+public partial class PhilSysLiveness
+{
+	[Parameter]
+	public required string HashToken { get; set; }
+	private UpdateFaceLivenessSessionResponseDTO? information;
+	private TransactionStatusResponseDTO? _status;
+	private bool _completed = false;
+	private bool isTransacted = false;
+	private bool isExpired = false;
+	private bool showLoader = false;
+	private string? webHookUrl;
+	private string? livenessKey;
+	private string errorMessage = string.Empty;
+	private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
+	//From db
+	public string? atsSession { get; set; } = null;
+	public string? applicationFormPath { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		_status = await IPhilSysService.GetTransactionStatusAsync(HashToken);
+		atsSession = _status.ATSSession;
+		applicationFormPath = _status.ATSApplicationFormPath;
+		webHookUrl = _status.WebHookUrl;
+		isTransacted = _status.IsTransacted;
+		isExpired = _status.isExpired;
+
+		if (_status.isExpired)
+		{
+			await IPhilSysService.DeleteTransactionAsync(HashToken);
+			return;
+		}
+	}
+
+	private async Task StartLiveness()
+	{
+		_status = await IPhilSysService.GetTransactionStatusAsync(HashToken);
+
+		if (_status.isExpired)
+		{
+			isExpired = true;
+			await IPhilSysService.DeleteTransactionAsync(HashToken);
+			StateHasChanged();
+			return;
+		}
+
+		if (_status.IsTransacted)
+		{
+			isTransacted = true;
+			StateHasChanged();
+			return;
+		}
+
+		livenessKey = await IPhilSysService.GetLivenessKeyAsync();
+
+		if (string.IsNullOrEmpty(livenessKey))
+		{
+			_completed = true;
+			errorMessage = "Liveness SDK is not configured. Please contact the administrator.";
+			StateHasChanged();
+			return;
+		}
+
+		_dotNetRef = DotNetObjectReference.Create(this);
+		await JS.InvokeVoidAsync("startLivenessInterop", HashToken, _dotNetRef, livenessKey);
+	}
+
+	[JSInvokable]
+	public async Task OnLivenessCompleted(string sessionId)
+	{
+		showLoader = true;
+		StateHasChanged();
+
+		information = await IPhilSysService.UpdateFaceLivenessSessionAsync(HashToken, sessionId);
+		_completed = true;
+
+		if (!string.IsNullOrEmpty(information.error_message))
+		{
+			errorMessage = information.error_message!;
+		}
+
+		showLoader = false;
+		if (!string.IsNullOrEmpty(atsSession))
+		{
+			await LocalStorageService.SetItemAsync($"{atsSession}_firstName", information.data_subject!.first_name);
+			await LocalStorageService.SetItemAsync($"{atsSession}_middleName", information.data_subject!.middle_name);
+			await LocalStorageService.SetItemAsync($"{atsSession}_lastName", information.data_subject!.last_name);
+			await LocalStorageService.SetItemAsync($"{atsSession}_suffix", information.data_subject!.suffix);
+			await LocalStorageService.SetItemAsync($"{atsSession}_birthDate", information.data_subject!.birth_date);
+			await LocalStorageService.SetItemAsync($"{atsSession}_sex", information.data_subject!.gender);
+			await LocalStorageService.SetItemAsync($"{atsSession}_emailAddress", information.data_subject!.email);
+			await LocalStorageService.SetItemAsync($"{atsSession}_phoneNumber", information.data_subject!.mobile_number);
+			await LocalStorageService.SetItemAsync($"{atsSession}_profilePicture", information.data_subject!.face_url);
+
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=2");
+		}
+
+		StateHasChanged();
+	}
+
+	public void Dispose() => _dotNetRef?.Dispose();
+}
