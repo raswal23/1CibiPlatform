@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-using SigPad;
-
-namespace FrontendWebassembly.Component.ATS;
+﻿namespace FrontendWebassembly.Component.ATS;
 
 public partial class ApplicationFormComponent
 {

@@ -24,12 +24,3 @@
     </ButtonComponent>
 </MudPaper>
 
-@code {
-    [Parameter]
-    public string? WebHookUrl { get; set; }
-
-    private void GoBack()
-    {
-        NavigationManager.NavigateTo("/philsys/idv"); 
-    }
-}
