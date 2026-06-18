@@ -1,0 +1,230 @@
+﻿namespace FrontendWebassembly.Component.ATS;
+
+public partial class NewOrderComponent
+{
+	
+
+	private MudForm? candidateForm;
+	private MudForm? bulkForm;
+	private EmailInvitationRequestDTO subject = new();
+	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
+	private IBrowserFile? bulkFile;
+	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
+	private string? templateLink;
+	private bool isSavingCandidate = false;
+	private bool isUploadingBulk = false;
+	protected override async Task OnInitializedAsync()
+	{
+		templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+	}
+
+	private async Task SubmitCandidate()
+	{
+		await candidateForm!.ValidateAsync();
+
+		if (!candidateForm.IsValid)
+			return;
+
+		var confirmParam = new DialogParameters
+	{
+		{ nameof(ConfirmationDialogComponent.Message),
+		  "Do you want to save the candidate's information?" }
+	};
+
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
+			"Confirmation",
+			confirmParam);
+
+		var result = await dialog.Result;
+
+		if (result.Canceled)
+			return;
+
+		try
+		{
+			isSavingCandidate = true;
+
+			await InvokeAsync(StateHasChanged);
+			await Task.Yield();
+
+			var isSent =
+			await EndorsementSubmissionService
+				.InsertEmailInvitationRequestAsync(subject);
+
+			if (isSent)
+			{
+				var successParam = new DialogParameters
+		{
+			{
+				nameof(SuccessSaveComponent.Message),
+				"Successfully saved the candidate's information."
+			}
+		};
+
+				await DialogService.ShowAsync<SuccessSaveComponent>(
+					"Success",
+					successParam);
+
+				subject = new EmailInvitationRequestDTO();
+				await candidateForm.ResetAsync();
+			}
+		}
+		finally
+		{
+			isSavingCandidate = false;
+
+
+		}
+
+	}
+
+	private async Task SubmitBulk()
+	{
+		await bulkForm!.ValidateAsync();
+
+		if (!bulkForm.IsValid)
+			return;
+
+		var previewData = BuildCsvPreview();
+
+		var parameters = new DialogParameters
+	{
+		{ nameof(BulkPreviewComponent.Headers), previewData.Headers },
+		{ nameof(BulkPreviewComponent.Rows), previewData.Rows }
+	};
+
+		var options = new DialogOptions
+		{
+			MaxWidth = MaxWidth.Large,
+			FullWidth = true,
+			CloseButton = true
+		};
+
+		var dialog = await DialogService.ShowAsync<BulkPreviewComponent>(
+			"Preview Upload",
+			parameters,
+			options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
+
+		try
+		{
+			isUploadingBulk = true;
+			await InvokeAsync(StateHasChanged);
+
+			await Task.Yield();
+
+			var isSent = await EndorsementSubmissionService
+			.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
+
+			if (isSent)
+			{
+				var successParams = new DialogParameters
+		{
+			{
+				nameof(SuccessSaveComponent.Message),
+				"Successfully uploaded the bulk candidates' information."
+			}
+		};
+
+				await DialogService.ShowAsync<SuccessSaveComponent>(
+					"Success",
+					successParams);
+
+				bulkFile = null;
+				bulkUploadFileDetailsDTO = new();
+
+				await bulkForm.ResetAsync();
+			}
+		}
+		finally
+		{
+			isUploadingBulk = false;
+
+		}
+
+	}
+
+	public class ExcelPreviewData
+	{
+		public List<string> Headers { get; set; } = [];
+		public List<List<string>> Rows { get; set; } = [];
+	}
+
+	private ExcelPreviewData BuildCsvPreview()
+	{
+		var result = new ExcelPreviewData();
+
+		var csvContent = Encoding.UTF8.GetString(
+			bulkUploadFileDetailsDTO.BulkFile!);
+
+		var lines = csvContent
+			.Split(new[] { "\r\n", "\n" },
+				StringSplitOptions.RemoveEmptyEntries);
+
+		if (lines.Length == 0)
+			return result;
+
+		result.Headers = lines[0]
+			.Split(',')
+			.Select(x => x.Trim())
+			.ToList();
+
+		foreach (var line in lines.Skip(1))
+		{
+			result.Rows.Add(
+				line.Split(',')
+					.Select(x => x.Trim())
+					.ToList());
+		}
+
+		return result;
+	}
+
+	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
+	{
+		bulkFile = e.File;
+		bulkUploadFileDetailsDTO.FileName = e.File.Name;
+
+		if (bulkFile != null)
+		{
+			using var ms = new MemoryStream();
+
+			await bulkFile
+				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+				.CopyToAsync(ms);
+
+			bulkUploadFileDetailsDTO.BulkFile = ms.ToArray();
+		}
+
+		return;
+	}
+
+	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
+	{
+		if (await bulkFileUpload.RemoveFileAsync(file))
+		{
+			bulkFile = null;
+			return;
+		}
+	}
+
+	private string? ValidateEmailAlternative(string? value)
+	{
+		if (string.IsNullOrEmpty(value))
+			return null;
+
+		if (!value.Contains("@"))
+			return "Invalid email format";
+
+		var regex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+		if (!System.Text.RegularExpressions.Regex.IsMatch(value, regex))
+			return "Invalid email format";
+
+		return null!;
+	}
+}

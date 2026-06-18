@@ -17,12 +17,3 @@
     </MudItem>
 </MudGrid>
 
-@code {
-    private int _activeIndex = 0;
-    [Parameter] public string? HashToken { get; set; }
-
-    private void ChangeActiveTab(int value)
-    {
-        _activeIndex = value;
-    }
-}
