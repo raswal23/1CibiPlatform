@@ -44,6 +44,12 @@ public class EmailNotificationBackgroundService : BackgroundService
 			List<EmailInvitationRequest> successList = new();
 			List<EmailInvitationRequest> errorList = new();
 
+			if (!allRequests.Any())
+			{
+				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				continue;
+			}
+
 			foreach (var request in allRequests)
 			{
 				try

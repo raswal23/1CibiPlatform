@@ -40,85 +40,89 @@ public class BulkSubmissionBackgroundService : BackgroundService
 			var pendingFiles =
 				await globalRepository.GetBulkUploadFileDetailsAsync();
 
-			var semaphore = new SemaphoreSlim(3); 
-
-			if (pendingFiles.Any())
+			if (!pendingFiles.Any())
 			{
+				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				continue;
+			}
 
-				var tasks = pendingFiles.Select(async file =>
+			var semaphore = new SemaphoreSlim(3);
+
+			var tasks = pendingFiles.Select(async file =>
+			{
+				var logContext = new
 				{
-					var logContext = new
+					Action = "BulkInsert",
+					Step = "StartBulkInserting",
+					Identity = file.FileID,
+					Timestamp = DateTime.UtcNow
+				};
+
+				await semaphore.WaitAsync(stoppingToken);
+
+				try
+				{
+					using var scope = _scopeFactory.CreateScope();
+
+					var scopedRepository = scope.ServiceProvider
+						.GetRequiredService<IATSRepository>();
+
+					List<EmailInvitationRequest> subjects = new();
+
+					await using var stream =
+						await uploadFiles.DownloadAsync(file.FileKey!, stoppingToken);
+
+					using var reader = new StreamReader(stream);
+
+					using var csv = new CsvReader(
+						reader,
+						CultureInfo.InvariantCulture);
+
+					var records = csv.GetRecords<BulkUploadCsvRecord>();
+
+					foreach (var row in records)
 					{
-						Action = "BulkInsert",
-						Step = "StartBulkInserting",
-						Identity = file.FileID,
-						Timestamp = DateTime.UtcNow
-					};
+						var token = secureToken.GenerateSecureToken();
 
-					await semaphore.WaitAsync(stoppingToken);
-
-					try
-					{
-						using var scope = _scopeFactory.CreateScope();
-
-						var scopedRepository = scope.ServiceProvider
-							.GetRequiredService<IATSRepository>();
-
-						List<EmailInvitationRequest> subjects = new();
-
-						await using var stream =
-							await uploadFiles.DownloadAsync(file.FileKey!, stoppingToken);
-
-						using var reader = new StreamReader(stream);
-
-						using var csv = new CsvReader(
-							reader,
-							CultureInfo.InvariantCulture);
-
-						var records = csv.GetRecords<BulkUploadCsvRecord>();
-
-						foreach (var row in records)
+						if (string.IsNullOrEmpty(token))
 						{
-							var token = secureToken.GenerateSecureToken();
-
-							if (string.IsNullOrEmpty(token))
-							{
-								_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}", logContext);
-								throw new InternalServerException("Failed to generate Token.");
-							}
-
-							var HashToken = hashToken.Hash(token);
-
-							if (string.IsNullOrEmpty(HashToken))
-							{
-								_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}", logContext);
-								throw new InternalServerException("Failed to hash Token.");
-							}
-
-							subjects.Add(new EmailInvitationRequest
-							{
-								EmailInvitationID = Guid.CreateVersion7(),
-								HashToken = HashToken,
-								HashTokenCreated = DateTime.UtcNow,
-								HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
-								LastName = row.LastName,
-								FirstName = row.FirstName,
-								MiddleInitial = row.MiddleInitial,
-								EmailAddress = row.EmailAddress,
-								MobileNumber = row.MobileNumber,
-								SelectPackage = file.PackageType,
-								RushNormal = file.OrderType
-							});
+							_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}", logContext);
+							throw new InternalServerException("Failed to generate Token.");
 						}
 
-						await scopedRepository.AddBulkEmailInvitationRequestAsync(subjects);
-						return subjects;
+						var HashToken = hashToken.Hash(token);
+
+						if (string.IsNullOrEmpty(HashToken))
+						{
+							_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}", logContext);
+							throw new InternalServerException("Failed to hash Token.");
+						}
+
+						subjects.Add(new EmailInvitationRequest
+						{
+							EmailInvitationID = Guid.CreateVersion7(),
+							HashToken = HashToken,
+							HashTokenCreated = DateTime.UtcNow,
+							HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
+							LastName = row.LastName,
+							FirstName = row.FirstName,
+							MiddleInitial = row.MiddleInitial,
+							EmailAddress = row.EmailAddress,
+							MobileNumber = row.MobileNumber,
+							SelectPackage = file.PackageType,
+							Status = "Pending",
+							RushNormal = file.OrderType
+						});
 					}
-					finally
-					{
-						semaphore.Release();
-					}
-				});
+
+					await scopedRepository.AddBulkEmailInvitationRequestAsync(subjects);
+					return subjects;
+				}
+				finally
+				{
+					semaphore.Release();
+				}
+			});
 
 			List<EmailInvitationRequest>[] results = await Task.WhenAll(tasks);
 
@@ -136,7 +140,6 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-			}
 		}
 	}
 }
