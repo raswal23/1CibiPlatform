@@ -8,6 +8,7 @@ global using ATS.Data.UnitOfWork;
 global using ATS.Data.DTO;
 global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
+global using ATS.Hubs;
 
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;
@@ -30,6 +31,7 @@ global using Microsoft.Extensions.Configuration;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Caching.Hybrid;
+global using Microsoft.AspNetCore.SignalR;
 
 global using MediatR;
 global using Carter;
@@ -38,4 +40,5 @@ global using System.Reflection;
 global using Mapster;
 global using CsvHelper;
 global using System.Globalization;
+global using System.Security.Claims;
 

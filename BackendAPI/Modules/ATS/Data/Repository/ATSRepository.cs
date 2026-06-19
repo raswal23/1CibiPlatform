@@ -105,7 +105,8 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => "Done"));
+				.SetProperty(x => x.Status, x => "Done")
+				.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
 
 		return true;
 	}

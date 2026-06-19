@@ -3,6 +3,7 @@
 public class BulkSubmissionBackgroundService : BackgroundService
 {
 	private readonly ILogger<BulkSubmissionBackgroundService> _logger;
+	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
 	private readonly HybridCache _hybridCache;
@@ -11,11 +12,13 @@ public class BulkSubmissionBackgroundService : BackgroundService
 	public BulkSubmissionBackgroundService(IServiceScopeFactory scopeFactory,
 										   IConfiguration configuration,
 										   ILogger<BulkSubmissionBackgroundService> logger,
+										   IHubContext<ATSHub, IATSClient> hubContext,
 										   HybridCache hybridCache)
 	{
 		_scopeFactory = scopeFactory;
 		_configuration = configuration;
 		_logger = logger;
+		_hubContext = hubContext;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 		_hybridCache = hybridCache;
 	}
@@ -116,6 +119,12 @@ public class BulkSubmissionBackgroundService : BackgroundService
 					}
 
 					await scopedRepository.AddBulkEmailInvitationRequestAsync(subjects);
+
+					await _hubContext
+							.Clients
+							.Group(file.UploadedByUserId.ToString())
+							.ReceiveATSResponse($"Bulk upload completed for {file.FileName}.");
+
 					return subjects;
 				}
 				finally

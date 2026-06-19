@@ -27,6 +27,7 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/getemailidandapplicationformpath" }
 				}
 			),
+
 			new RouteDefinitionDTO(
 				RouteId: "InsertBulkSubject",
 				MatchPath: "/ats/insertbulksubject",
@@ -37,6 +38,7 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/insertbulksubject" }
 				}
 			),
+
 			new RouteDefinitionDTO(
 				RouteId: "InsertEmailInvitationRequest",
 				MatchPath: "/ats/insertemailinvitationrequest",
@@ -47,6 +49,7 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/insertemailinvitationrequest" }
 				}
 			),
+
 			new RouteDefinitionDTO(
 				RouteId: "DownloadBulkTemplate",
 				MatchPath: "/ats/downloadbulktemplate",
@@ -56,7 +59,16 @@ public class ATSPaths : IReverseProxyModule
 				{
 					{ "PathSet", "/downloadbulktemplate" }
 				}
-			)
+			),
+
+
+			new RouteDefinitionDTO(
+				RouteId: "GetBulkInsertResponseEntryPoint",
+				MatchPath: "/shubs/atsbulk/{**catch-all}",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get, GatewayConstants.HttpMethod.Post }
+			),
+
 
 		};
 	}

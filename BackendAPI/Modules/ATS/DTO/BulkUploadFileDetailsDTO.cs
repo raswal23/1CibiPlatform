@@ -3,6 +3,7 @@
 public record BulkUploadFileDetailsDTO
 {
 	public Guid FileID { get; set; }
+	public Guid UploadedByUserId { get; set; }
 	public string? FileName { get; set; }
 	public string? Status { get; set; }
 	public string? PackageType { get; set; }

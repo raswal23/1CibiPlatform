@@ -12,6 +12,9 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .ValueGeneratedNever();
 
+		builder.Property(a => a.UploadedByUserId)
+			   .IsRequired();
+
 		builder.Property(a => a.FileName)
 			   .IsRequired()
 			   .HasMaxLength(255);

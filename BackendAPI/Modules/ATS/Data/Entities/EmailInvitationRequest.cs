@@ -12,6 +12,7 @@ public class EmailInvitationRequest
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
 	public string? Status { get; set; }
+	public DateTime? EmailSentAt { get; set; }
 	public DateTime? HashTokenCreated { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
 

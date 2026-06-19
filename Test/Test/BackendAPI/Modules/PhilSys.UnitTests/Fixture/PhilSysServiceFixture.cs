@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Extensions.Configuration;
 using PhilSys.Data.UnitOfWork;
+using ATS.Shared.Contracts;
 
 namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 {
@@ -17,6 +18,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 		public Mock<IHttpClientFactory> MockHttpClientFactory { get; private set; }
 		public Mock<IPhilSysService> MockPhilSysService { get; private set; }
 		public Mock<IUnitOfWork> MockUnitOfWork { get; private set; }
+		public Mock<IATSQueries> MockATSQueries { get; private set; }
 
 		// Loggers
 		public Mock<ILogger<DeleteTransactionService>> MockDeleteTransactionLogger { get; private set; }
@@ -46,6 +48,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			MockPhilSysService = new Mock<IPhilSysService>();
 			MockSecureToken = new Mock<ISecureToken>();
 			MockUnitOfWork = new Mock<IUnitOfWork>();
+			MockATSQueries = new Mock<IATSQueries>();
 
 			MockDeleteTransactionLogger = new Mock<ILogger<DeleteTransactionService>>();
 			MockGetLivenessKeyLogger = new Mock<ILogger<GetLivenessKeyService>>();
@@ -88,6 +91,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			PartnerSystemService = new PartnerSystemService(
 				MockPartnerSystemLogger.Object,
 				MockPhilSysRepository.Object,
+				MockATSQueries.Object,
 				Configuration,
 				MockHashService.Object,
 				MockSecureToken.Object

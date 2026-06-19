@@ -1,4 +1,6 @@
-﻿namespace ATS.Services;
+﻿
+
+namespace ATS.Services;
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
@@ -7,6 +9,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
 	private readonly ISecureToken _secureToken;
+	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IATSRepository _atsRepository;
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _templateFileName;
@@ -21,12 +24,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IHashService hashService,
 		IEmailService emailService,
 		ISecureToken secureToken,
+		IHttpContextAccessor httpContextAccessor,
 		IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
 		_hashService = hashService;
 		_emailService = emailService;
 		_secureToken = secureToken;
+		_httpContextAccessor = httpContextAccessor;
 		_configuration = configuration;
 		_atsRepository = atsRepository;
 		_objectStorageService = objectStorageService;
@@ -118,6 +123,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default)
 	{
 		string bulkFileKey = "";
+		bulkUploadFileDetailsDTO.UploadedByUserId = Guid.Parse(_httpContextAccessor!.HttpContext!
+		   .User
+		   .FindFirst(ClaimTypes.NameIdentifier)!
+		   .Value);
+
 
 		var logContext = new
 		{

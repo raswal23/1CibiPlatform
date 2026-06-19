@@ -16,6 +16,7 @@ public partial class NewOrderComponent
 	protected override async Task OnInitializedAsync()
 	{
 		templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+		//await EndorsementSubmissionService.StartAsync();
 	}
 
 	private async Task SubmitCandidate()

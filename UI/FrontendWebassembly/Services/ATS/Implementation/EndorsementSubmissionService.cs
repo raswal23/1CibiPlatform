@@ -2,11 +2,74 @@
 {
 	public class EndorsementSubmissionService : IEndorsementSubmissionService
 	{
+		private readonly string _userIdKey;
 		private readonly HttpClient _httpClient;
+		private readonly ILogger<EndorsementSubmissionService> _logger;
+		private readonly ISnackbar _snackbar;
+		private readonly LocalStorageService _localStorageService;
+		private HubConnection _hubConnection;
+		private NavigationManager _navigation;
 
-		public EndorsementSubmissionService(IHttpClientFactory httpClientFactory)
+		public event Action<string> ATSResponseReceived;
+
+		public EndorsementSubmissionService(
+			IHttpClientFactory httpClientFactory,
+			ILogger<EndorsementSubmissionService> logger,
+			ISnackbar snackbar,
+			NavigationManager navigationManager,
+			LocalStorageService localStorageService)
 		{
 			_httpClient = httpClientFactory.CreateClient("API");
+			_logger = logger;
+			_snackbar = snackbar;
+			_navigation = navigationManager;
+			_localStorageService = localStorageService;
+			_userIdKey = "UserId";
+		}
+
+		public async Task StartAsync()
+		{
+			if (_hubConnection is not null && _hubConnection.State == HubConnectionState.Connected)
+			{
+				return;
+			}
+			var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.CreateVersion7().ToString();
+			var baseUri = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
+			var hubUrl = _navigation.ToAbsoluteUri($"/hubs/atsbulk?userId={userId}");
+
+			Console.WriteLine(hubUrl);
+
+			_hubConnection = new HubConnectionBuilder()
+				.WithUrl(hubUrl)
+				.WithAutomaticReconnect()
+				.Build();
+
+			// Centralized handlers that raise public events
+			_hubConnection.On<string>("ReceiveATSResponse", (message) =>
+			{
+				try
+				{
+					_snackbar.Add(message, Severity.Success);
+				}
+				catch { }
+			});
+
+			_hubConnection.On("SessionCleared", () =>
+			{
+				try
+				{
+					ATSResponseReceived?.Invoke(string.Empty);
+				}
+				catch { }
+			});
+
+			_hubConnection.Closed += async (ex) =>
+			{
+				_logger.LogWarning(ex, "ATS hub connection closed.");
+				await Task.CompletedTask;
+			};
+
+			await _hubConnection.StartAsync();
 		}
 
 		public async Task<string> DownloadBulkTemplateAsync()
