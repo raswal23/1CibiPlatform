@@ -13,10 +13,22 @@ public partial class NewOrderComponent
 	private string? templateLink;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
+
 	protected override async Task OnInitializedAsync()
 	{
 		templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
-		//await EndorsementSubmissionService.StartAsync();
+		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
+		await EndorsementSubmissionService.StartAsync();
+
+	}
+
+	private async void OnATSResponse(string message)
+	{
+		await InvokeAsync(() =>
+		{
+			Snackbar.Add(message, Severity.Success);
+			StateHasChanged();
+		});
 	}
 
 	private async Task SubmitCandidate()
@@ -38,7 +50,7 @@ public partial class NewOrderComponent
 
 		var result = await dialog.Result;
 
-		if (result.Canceled)
+		if (result!.Canceled)
 			return;
 
 		try

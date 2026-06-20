@@ -64,7 +64,7 @@ public class ATSPaths : IReverseProxyModule
 
 			new RouteDefinitionDTO(
 				RouteId: "GetBulkInsertResponseEntryPoint",
-				MatchPath: "/shubs/atsbulk/{**catch-all}",
+				MatchPath: "/hubs/atsbulk/{**catch-all}",
 				ClusterId: GatewayConstants.OnePlatformApi,
 				Methods: new [] { GatewayConstants.HttpMethod.Get, GatewayConstants.HttpMethod.Post }
 			),

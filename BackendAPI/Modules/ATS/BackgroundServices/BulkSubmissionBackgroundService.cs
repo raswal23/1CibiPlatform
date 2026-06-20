@@ -123,7 +123,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 					await _hubContext
 							.Clients
 							.Group(file.UploadedByUserId.ToString())
-							.ReceiveATSResponse($"Bulk upload completed for {file.FileName}.");
+							.ReceiveATSResponse($"Your bulk upload \"{file.FileName}\" has been received and is now being processed.");
 
 					return subjects;
 				}

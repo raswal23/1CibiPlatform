@@ -4,7 +4,6 @@ namespace ATS.Hubs;
 public interface IATSClient
 {
 	Task ReceiveATSResponse(string message);
-	Task ReceiveTyping(bool isTyping);
 	Task SessionCleared();
 }
 public class ATSHub : Hub<IATSClient>

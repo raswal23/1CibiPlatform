@@ -59,7 +59,7 @@ public partial class MainLayout
 		},
 		LayoutProperties = new LayoutProperties()
 		{
-			DefaultBorderRadius = "30px",
+			DefaultBorderRadius = "4px",
 			DrawerWidthLeft = "260px",
 			AppbarHeight = "69px"
 		}
