@@ -1,8 +1,8 @@
 ﻿namespace ATS.BackgroundServices;
 
-public class EmailNotificationBackgroundService : BackgroundService
+public class EmailNotificationBackgroundServiceForPending : BackgroundService
 {
-	private readonly ILogger<EmailNotificationBackgroundService> _logger;
+	private readonly ILogger<EmailNotificationBackgroundServiceForPending> _logger;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
 	private readonly IConnectionMultiplexer _redis;
@@ -12,8 +12,8 @@ public class EmailNotificationBackgroundService : BackgroundService
 	private readonly string _batchesError;
 
 
-	public EmailNotificationBackgroundService(
-		ILogger<EmailNotificationBackgroundService> logger,
+	public EmailNotificationBackgroundServiceForPending(
+		ILogger<EmailNotificationBackgroundServiceForPending> logger,
 		IServiceScopeFactory scopeFactory, 
 		IConfiguration configuration,
 		IConnectionMultiplexer redis,
