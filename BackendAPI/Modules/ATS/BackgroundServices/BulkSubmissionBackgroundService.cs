@@ -1,8 +1,8 @@
 ﻿namespace ATS.BackgroundServices;
 
-public class BulkSubmissionBackgroundServiceForPending : BackgroundService
+public class BulkSubmissionBackgroundService : BackgroundService
 {
-	private readonly ILogger<BulkSubmissionBackgroundServiceForPending> _logger;
+	private readonly ILogger<BulkSubmissionBackgroundService> _logger;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
@@ -11,10 +11,10 @@ public class BulkSubmissionBackgroundServiceForPending : BackgroundService
 	private readonly int _applicationFormExpiryInHours;
 	private readonly string _batchesPending;
 
-	public BulkSubmissionBackgroundServiceForPending(IServiceScopeFactory scopeFactory,
+	public BulkSubmissionBackgroundService(IServiceScopeFactory scopeFactory,
 										   IConfiguration configuration,
 										   IConnectionMultiplexer redis,
-										   ILogger<BulkSubmissionBackgroundServiceForPending> logger,
+										   ILogger<BulkSubmissionBackgroundService> logger,
 										   IHubContext<ATSHub, IATSClient> hubContext,
 										   HybridCache hybridCache)
 	{
