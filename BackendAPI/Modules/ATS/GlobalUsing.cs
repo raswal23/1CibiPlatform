@@ -41,4 +41,5 @@ global using Mapster;
 global using CsvHelper;
 global using System.Globalization;
 global using System.Security.Claims;
+global using StackExchange.Redis;
 

@@ -1,24 +1,29 @@
 ﻿namespace ATS.BackgroundServices;
 
-public class BulkSubmissionBackgroundService : BackgroundService
+public class BulkSubmissionBackgroundServiceForPending : BackgroundService
 {
-	private readonly ILogger<BulkSubmissionBackgroundService> _logger;
+	private readonly ILogger<BulkSubmissionBackgroundServiceForPending> _logger;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
+	private readonly IConnectionMultiplexer _redis;
 	private readonly HybridCache _hybridCache;
 	private readonly int _applicationFormExpiryInHours;
+	private readonly string _batchesPending;
 
-	public BulkSubmissionBackgroundService(IServiceScopeFactory scopeFactory,
+	public BulkSubmissionBackgroundServiceForPending(IServiceScopeFactory scopeFactory,
 										   IConfiguration configuration,
-										   ILogger<BulkSubmissionBackgroundService> logger,
+										   IConnectionMultiplexer redis,
+										   ILogger<BulkSubmissionBackgroundServiceForPending> logger,
 										   IHubContext<ATSHub, IATSClient> hubContext,
 										   HybridCache hybridCache)
 	{
 		_scopeFactory = scopeFactory;
 		_configuration = configuration;
+		_redis = redis;
 		_logger = logger;
 		_hubContext = hubContext;
+		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 		_hybridCache = hybridCache;
 	}
@@ -26,6 +31,8 @@ public class BulkSubmissionBackgroundService : BackgroundService
 	{
 		while (!stoppingToken.IsCancellationRequested)
 		{
+			var dbRedis = _redis.GetDatabase();
+
 			using var scope = _scopeFactory.CreateScope();
 
 			var globalRepository = scope.ServiceProvider
@@ -139,14 +146,17 @@ public class BulkSubmissionBackgroundService : BackgroundService
 
 			var listOfListOfSubjects = results.ToList();
 
+			var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+
 			await _hybridCache.SetAsync(
-					CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey,
+					batchId,
 					listOfListOfSubjects,
 					new HybridCacheEntryOptions
 					{
 						Expiration = TimeSpan.FromMinutes(30)
 					});
 
+			await dbRedis.ListRightPushAsync(_batchesPending, batchId);
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 		}

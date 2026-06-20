@@ -1,6 +1,4 @@
-﻿using BuildingBlocks.Storage;
-
-namespace APIs.ServiceConfig;
+﻿namespace APIs.ServiceConfig;
 
 public static class ServiceConfiguration
 {
@@ -273,6 +271,9 @@ public static class ServiceConfiguration
 				//Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
+
+		services.AddSingleton<IConnectionMultiplexer>
+			(ConnectionMultiplexer.Connect(redisConnection!));
 
 		return services;
 	}

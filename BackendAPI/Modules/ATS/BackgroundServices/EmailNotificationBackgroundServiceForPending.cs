@@ -5,18 +5,26 @@ public class EmailNotificationBackgroundService : BackgroundService
 	private readonly ILogger<EmailNotificationBackgroundService> _logger;
 	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IConfiguration _configuration;
+	private readonly IConnectionMultiplexer _redis;
 	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
+	private readonly string _batchesPending;
+	private readonly string _batchesError;
+
 
 	public EmailNotificationBackgroundService(
 		ILogger<EmailNotificationBackgroundService> logger,
 		IServiceScopeFactory scopeFactory, 
 		IConfiguration configuration,
+		IConnectionMultiplexer redis,
 		HybridCache hybridCache)
 	{
 		_logger = logger;
 		_scopeFactory = scopeFactory;
 		_configuration = configuration;
+		_redis = redis;
+		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
+		_batchesError = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesError") ?? string.Empty;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_hybridCache = hybridCache;
 	}
@@ -24,6 +32,8 @@ public class EmailNotificationBackgroundService : BackgroundService
 	{
 		while (!stoppingToken.IsCancellationRequested)
 		{
+			var dbRedis = _redis.GetDatabase();
+
 			using var scope = _scopeFactory.CreateScope();
 
 			var sendEmail = scope.ServiceProvider
@@ -32,8 +42,10 @@ public class EmailNotificationBackgroundService : BackgroundService
 			var repository = scope.ServiceProvider
 				.GetRequiredService<IATSRepository>();
 
+			var cacheKey = await dbRedis.ListLeftPopAsync(_batchesPending);
+
 			var cached = await _hybridCache.GetOrCreateAsync(
-				CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey,
+				cacheKey!,
 				async entry =>
 				{
 					return new List<List<EmailInvitationRequest>>();
@@ -140,12 +152,24 @@ public class EmailNotificationBackgroundService : BackgroundService
 				await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
 			}
 
+			var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+
 			if (errorList.Any())
 			{
 				await repository.UpdateEmailInvitationRequestForErrorAsync(errorList);
-			}
 
-			await _hybridCache.RemoveAsync(CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey);
+				await _hybridCache.SetAsync(
+						batchId,
+						errorList,
+						new HybridCacheEntryOptions
+						{
+							Expiration = TimeSpan.FromMinutes(30)
+						});
+					}
+
+				await dbRedis.ListRightPushAsync(_batchesError, batchId);
+
+			//await _hybridCache.RemoveAsync(CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey);
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 		}

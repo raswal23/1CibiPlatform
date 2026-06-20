@@ -43,7 +43,8 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 
 		services.AddHostedService<BulkSubmissionBackgroundService>();
-		services.AddHostedService<EmailNotificationBackgroundService>();
+		services.AddHostedService<EmailNotificationBackgroundServiceForPending>();
+		services.AddHostedService<EmailNotificationBackgroundServiceForError>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddSignalR();
 
