@@ -8,7 +8,7 @@ public class GetEmailIdAndApplicationFormPathEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapGet("getemailidandapplicationformpath", async (string hashToken, ISender sender, CancellationToken cancellationToken) =>
+		app.MapGet("getemailidandapplicationformpath", async ([FromQuery] string hashToken, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new GetEmailIdAndApplicationFormHandlerRequest(hashToken);
 			GetEmailIdAndApplicationFormResult result = await sender.Send(command, cancellationToken);

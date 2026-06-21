@@ -98,27 +98,25 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => "Done")
-				.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
+			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
 
 		return true;
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)
 	{
-		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
 		await _dbcontext.EmailInvitationRequests
-			.Where(x => ids.Contains(x.EmailInvitationID))
+			.Where(x => x.EmailInvitationID == emailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => "Error"));
+			.SetProperty(x => x.Status, x => "Done"));
 
 		return true;
 	}

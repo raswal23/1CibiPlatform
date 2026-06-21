@@ -1,5 +1,6 @@
 ﻿@inject IApplicationFormService ATSService
 @inject LocalStorageService LocalStorageService
+@inject EmailValidationService EmailValidationService
 @using SigPad
 
 <MudPaper Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
@@ -11,11 +12,16 @@
     {
         <div style="margin: 100px;">
             <PhilSysComponent HashToken="HashToken"></PhilSysComponent>
+            <MudButton Style="width: 150px; border-radius: 4px; border: 2px solid gray;"
+                       Class="mt-3 mb-4"
+                       OnClick="@DisablePhilSys">
+                Previous
+            </MudButton>
         </div>
     }
     else
     {
-        <MudForm @ref="_form" >
+        <MudForm @ref="ApplicationForm">
             <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper">
                 <ChildContent>
                     <!-- STEP 1 -->
@@ -176,9 +182,9 @@
                                                           Required="true"
                                                           RequiredError="Alternate Email Address is required"
                                                           Class="oneplatform-rounded-input"
-                                                          Validation="@ValidateEmailAlternative"
+                                                          Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                                           Label="Alternate Email Address" />
-                                        </MudItem>
+                                        </MudItem>s
 
                                         <MudItem xs="12">
                                             <MudTextField FullWidth="true"
@@ -764,7 +770,7 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
-                                               OnFilesChanged="OnCoeUpload"
+                                               OnFilesChanged="OnCoe1Upload"
                                                Required="true"
                                                class="centered-upload"
                                                @ref="Emp1COEFileUpload"
@@ -890,6 +896,7 @@
                                                       @bind-Value="referenceDetails.Ref1Email"
                                                       Required="true"
                                                       RequiredError="Email Contact Information is required"
+                                                      Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                                       Label="Email Contact Information" />
                                     </MudItem>
 
@@ -936,6 +943,7 @@
                                                        Required="true"
                                                        Variant="Variant.Outlined"
                                                        Margin="Margin.Dense"
+                                                       MinDate="@DateTime.Now"
                                                        Label="Date"
                                                        DateFormat="MM/dd/yyyy" />
                                         <MudTimePicker @bind-Time="Ref1BestTime"
@@ -1008,6 +1016,7 @@
                                                       @bind-Value="referenceDetails.Ref2Email"
                                                       Required="true"
                                                       RequiredError="Email Contact Information is required"
+                                                      Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                                       Label="Email Contact Information" />
                                     </MudItem>
 
@@ -1054,6 +1063,7 @@
                                                        Class="w-25 oneplatform-rounded-input"
                                                        Adornment="Adornment.End"
                                                        Required="true"
+                                                       MinDate="@DateTime.Now"
                                                        Variant="Variant.Outlined"
                                                        Label="Date"
                                                        Margin="Margin.Dense" />

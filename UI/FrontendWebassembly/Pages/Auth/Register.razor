@@ -3,6 +3,7 @@
 @inject NavigationManager Navigation
 @inject IAuthService IAuthService
 @inject LocalStorageService LocalStorageService
+@inject EmailValidationService EmailValidationService
 
 @if (!_isLoading)
 {
@@ -64,7 +65,7 @@
                                   Required="true"
                                   RequiredError="Email is required"
                                   InputType="InputType.Email"
-                                  Validation="@(new Func<string, string>(ValidateEmail))"
+                                  Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                   Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Email"
                                   Class="mb-3" />

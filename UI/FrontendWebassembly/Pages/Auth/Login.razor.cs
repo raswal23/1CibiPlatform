@@ -45,18 +45,6 @@ public partial class Login
 		passwordIcon = isPasswordVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
 	}
 
-	private string ValidateEmail(string email)
-	{
-		if (string.IsNullOrWhiteSpace(email))
-			return "Email is required";
-
-		if (!email.Contains("@"))
-			return "Invalid email format";
-
-		return null;
-	}
-
-
 	private async Task HandleLogin()
 	{
 		isLoading = true;

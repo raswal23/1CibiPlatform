@@ -12,15 +12,6 @@ public partial class ForgotPassword
 	private string errorMessage = "";
 	private string successMessage = "";
 
-	private string ValidateEmail(string email)
-	{
-		if (string.IsNullOrWhiteSpace(email))
-			return "Email is required";
-		if (!email.Contains("@"))
-			return "Invalid email format";
-		return null;
-	}
-
 	private async Task HandleForgotPassword()
 	{
 		isButtonLoading = true;

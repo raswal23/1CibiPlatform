@@ -8,5 +8,5 @@ public record BulkUploadFileDetailsDTO
 	public string? PackageType { get; set; }
 	public string? OrderType { get; set; }
 	public DateTime DateCreated { get; set; }
-	public byte[]? BulkFile { get; set; }
+	public IBrowserFile? BulkFile { get; set; }
 }

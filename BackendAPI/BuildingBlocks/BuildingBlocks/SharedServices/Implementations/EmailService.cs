@@ -15,6 +15,7 @@ public class EmailService : IEmailService
 	private readonly int _smtpPort;
 	private readonly int _expirationInMinutes;
 	private readonly string _onePlatformLink;
+	private readonly int _atsApplicationFormExpirationInHours;
 
 	public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
 	{
@@ -31,6 +32,7 @@ public class EmailService : IEmailService
 		_expirationInMinutes = int.Parse(_configuration["Email:OtpExpirationInMinutes"] ?? "15");
 		_onePlatformLink = _configuration["PhilSys:LivenessBaseUrl"]
 			?? throw new InvalidOperationException("OnePlatformLink not configured"); ;
+		_atsApplicationFormExpirationInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	public async Task<bool> SendEmailAsync(
@@ -311,7 +313,7 @@ public class EmailService : IEmailService
 								Princess Espiritu, TaskUs has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
 								<a href='{applicationFormLink}'>Application Form</a> 
 							</p>
-							<p>Please comply <strong>within the next 42 hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
+							<p>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
 						    <p><strong>REMINDERS IN ANSWERING THE FORM </strong></p>
 							<ol>
 								<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>

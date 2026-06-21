@@ -76,7 +76,10 @@ public class ApplicationFormService : IApplicationFormService
 
 			await _unitOfWork.CommitAsync(ct);
 
+
 			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+
+			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
 
 			return true;
 		}
@@ -140,6 +143,7 @@ public class ApplicationFormService : IApplicationFormService
 		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
+		personalDetails.PersonalID = Guid.CreateVersion7();
 		personalDetails.ResumeFileKey = resumeFileKey;
 		personalDetails.NBIClearanceFileKey = nbiKey;
 		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
@@ -156,6 +160,7 @@ public class ApplicationFormService : IApplicationFormService
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
 		addressDetails.CurrentTypeOfOwnership = addressDetailsDTO.TypeOfOwnership;
+		addressDetails.Address = Guid.CreateVersion7();
 		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
@@ -194,6 +199,7 @@ public class ApplicationFormService : IApplicationFormService
 		}
 
 		EducationalBackground educationalBackground = educationalBackgroundDTO.Adapt<EducationalBackground>();
+		educationalBackground.EducationalBackgroundID = Guid.CreateVersion7();
 		educationalBackground.HighSchoolDiplomaFileKey = highSchoolDiplomaKey;
 		educationalBackground.SeniorHighSchoolDiplomaFileKey = seniorHighSchoolDiplomaKey;
 		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
@@ -214,6 +220,7 @@ public class ApplicationFormService : IApplicationFormService
 		string licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
 
 		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
+		licensesDetails.LicensesDetailsID = Guid.CreateVersion7();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
 		licensesDetails.CreatedDate = DateTime.UtcNow;
 
@@ -243,9 +250,11 @@ public class ApplicationFormService : IApplicationFormService
 		}
 
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
+		professionalExperiences.ProfessionalExperiencesID = Guid.CreateVersion7();
 		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
 		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
 		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
+		professionalExperiences.CreatedDate = DateTime.UtcNow;
 
 		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp1CompanyCity))
 		{
@@ -260,7 +269,6 @@ public class ApplicationFormService : IApplicationFormService
 			professionalExperiences.Emp3CompanyAddress = $"{professionalExperiencesDTO.Emp3CompanyCity}, {professionalExperiencesDTO.Emp3CompanyProvince}, {professionalExperiencesDTO.Emp3CompanyPostalCode}, {professionalExperiencesDTO.Emp3CompanyCountry}";
 		}
 
-		professionalExperiences.CreatedDate = DateTime.UtcNow;
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return isAdded;
 	}
@@ -270,8 +278,9 @@ public class ApplicationFormService : IApplicationFormService
 		CancellationToken cancellationToken)
 	{
 		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
+		referenceDetails.ReferenceDetailsID = Guid.CreateVersion7();
+		referenceDetails.CreatedDate = DateTime.UtcNow;
 
-		// Ensure all DateTime values are UTC
 		if (referenceDetails.Ref1BestTimeToContact.HasValue)
 		{
 			referenceDetails.Ref1BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref1BestTimeToContact.Value, DateTimeKind.Utc);
@@ -284,8 +293,6 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			referenceDetails.Ref3BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref3BestTimeToContact.Value, DateTimeKind.Utc);
 		}
-
-		referenceDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
 		return isAdded;
@@ -300,8 +307,11 @@ public class ApplicationFormService : IApplicationFormService
 			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
 			signatureKey = await _objectStorageService.UploadAsync(_folderName, signatureDetailsDTO.SignatureFileName!, signatureStream, cancellationToken);
 		}
+
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
+		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
 		signatureDetails.SignatureFileKey = signatureKey;
+
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return isAdded;
 	}

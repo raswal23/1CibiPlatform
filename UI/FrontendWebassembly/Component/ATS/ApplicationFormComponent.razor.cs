@@ -3,7 +3,9 @@
 public partial class ApplicationFormComponent
 {
 
-	private MudForm _form;
+	private MudForm? ApplicationForm;
+	[Parameter]
+	public Guid EmailId { get; set; }
 	[Parameter]
 	public bool ShowsPhilSys { get; set; } = false;
 	[Parameter]
@@ -12,17 +14,11 @@ public partial class ApplicationFormComponent
 	public string? HashToken { get; set; }
 	private string? FaceUrl;
 	private bool IsSuccess = false;
-	private static readonly Guid FixedGuid = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
 	// Stepper and general
 	private MudStepper? _stepper;
 	private int _activeStep;
 	private bool showPhilSys = false;
-
-	private void ClearSignature()
-	{
-		signatureDetails.Signature = null;
-	}
 
 	// Personal Detials
 	private bool consent { get; set; } = false;
@@ -36,7 +32,6 @@ public partial class ApplicationFormComponent
 	private MudFileUpload<IBrowserFile> AdditionalGovtIDFileUpload = default!;
 	private MudFileUpload<IBrowserFile> NBIClearanceFileUpload = default!;
 	private MudFileUpload<IBrowserFile> ResumeFileUpload = default!;
-	private string? CVOrResumeFileName;
 
 	// AddressDetials
 	private AddressDetailsDTO addressDetails = new();
@@ -79,14 +74,6 @@ public partial class ApplicationFormComponent
 	private SignatureDetailsDTO signatureDetails = new();
 	private DateTime? SignatureDate = DateTime.UtcNow;
 
-
-	private SignaturePadOptions _options = new SignaturePadOptions
-	{
-		LineCap = LineCap.Round,
-		LineJoin = LineJoin.Round,
-		LineWidth = 20
-	};
-
 	protected override async Task OnInitializedAsync()
 	{
 		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_firstName") ?? string.Empty;
@@ -108,36 +95,67 @@ public partial class ApplicationFormComponent
 		}
 	}
 
+	private void DisablePhilSys()
+	{
+		showPhilSys = false;
+		ActiveStep = 2; 
+	}
+
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
 	{
 		if (await AdditionalGovtIDFileUpload.RemoveFileAsync(file))
 		{
-			LicenseFile = null;
+			AdditionalGovtIDFile = null;
+			personalDetails.AdditionalGovtIDFile = null;
+			personalDetails.AdditionalGovtIDFileName = null;
+
 			return;
 		}
 		if (await NBIClearanceFileUpload.RemoveFileAsync(file))
 		{
 			NBIClearanceFile = null;
+			personalDetails.NBIClearanceFile = null;
+			personalDetails.NBIClearanceFileName = null;
 			return;
 		}
 		if (await ResumeFileUpload.RemoveFileAsync(file))
 		{
 			ResumeFile = null;
+			personalDetails.ResumeFile = null;
+			personalDetails.ResumeFileName = null;
 			return;
 		}
 		if (await DiplomaORTORUploadFile.RemoveFileAsync(file))
 		{
 			DiplomaORTORFile = null;
+			educationalBackground.HighSchoolDiplomaFile = null;
+			educationalBackground.HighSchoolDiplomaFileName = null;
+
+			educationalBackground.SeniorHighSchoolDiplomaFile = null;
+			educationalBackground.SeniorHighSchoolDiplomaFileName = null;
+
+			educationalBackground.BachelorsDiplomaFile = null;
+			educationalBackground.BachelorsDiplomaFileName = null;
+
+			educationalBackground.MastersDiplomaFile = null;
+			educationalBackground.MastersDiplomaFileName = null;
+
+			educationalBackground.DoctorateDiplomaFile = null;
+			educationalBackground.DoctorateDiplomaFileName = null;
 			return;
 		}
 		if (await LicenseUploadFile.RemoveFileAsync(file))
 		{
 			LicenseFile = null;
+			licensesDetails.LicenseUploadFile = null;
+			licensesDetails.LicenseUploadFileName = null;
 			return;
 		}
 		if (await Emp1COEFileUpload.RemoveFileAsync(file))
 		{
 			Emp1COEFile = null;
+			professionalExperiences.Emp1COEUploadFile = null;
+			professionalExperiences.Emp1COEUploadFileName = null;
 			return;
 		}
 	}
@@ -152,12 +170,6 @@ public partial class ApplicationFormComponent
 	{
 		if (_stepper is not null)
 			await _stepper.ResetAsync();
-	}
-
-	private async Task PreviousStepper()
-	{
-		if (_stepper is not null)
-			await _stepper.PreviousStepAsync();
 	}
 
 	private async Task ProceedClicked()
@@ -281,7 +293,7 @@ public partial class ApplicationFormComponent
 		return;
 	}
 
-	private async Task OnCoeUpload(InputFileChangeEventArgs e)
+	private async Task OnCoe1Upload(InputFileChangeEventArgs e)
 	{
 		Emp1COEFile = e.File;
 		professionalExperiences.Emp1COEUploadFileName = e.File.Name;
@@ -331,23 +343,10 @@ public partial class ApplicationFormComponent
 		}
 	}
 
-	private string ValidateEmailAlternative(string value)
-	{
-		if (!value.Contains("@"))
-			return "Invalid email format";
-
-		var regex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-		if (!System.Text.RegularExpressions.Regex.IsMatch(value, regex))
-			return "Invalid email format";
-
-		return null!;
-	}
-
-
 	private async Task OnSaveAndNextAsync()
 	{
-		await _form.ValidateAsync();
-		if (_form.IsValid)
+		await ApplicationForm!.ValidateAsync();
+		if (ApplicationForm.IsValid)
 		{
 			if (_stepper is not null)
 				await _stepper.NextStepAsync();
@@ -356,13 +355,13 @@ public partial class ApplicationFormComponent
 
 	private async Task OnSubmitForm()
 	{
-		personalDetails.EmailInvitationID = FixedGuid;
-		addressDetails.EmailInvitationID = FixedGuid;
-		educationalBackground.EmailInvitationID = FixedGuid;
-		licensesDetails.EmailInvitationID = FixedGuid;
-		professionalExperiences.EmailInvitationID = FixedGuid;
-		referenceDetails.EmailInvitationID = FixedGuid;
-		signatureDetails.EmailInvitationID = FixedGuid;
+		personalDetails.EmailInvitationID = EmailId;
+		addressDetails.EmailInvitationID = EmailId;
+		educationalBackground.EmailInvitationID = EmailId;
+		licensesDetails.EmailInvitationID = EmailId;
+		professionalExperiences.EmailInvitationID = EmailId;
+		referenceDetails.EmailInvitationID = EmailId;
+		signatureDetails.EmailInvitationID = EmailId;
 
 		personalDetails.DOB = DateOnly.FromDateTime(DateOfBirth!.Value);
 		signatureDetails.SignatureDate = DateOnly.FromDateTime(SignatureDate!.Value);

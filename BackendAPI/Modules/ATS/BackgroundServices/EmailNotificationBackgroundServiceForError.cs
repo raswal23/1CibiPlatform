@@ -42,6 +42,13 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 
 			var cacheKey = await dbRedis.ListLeftPopAsync(_batchesError);
 
+
+			if (string.IsNullOrEmpty(cacheKey))
+			{
+				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				continue;
+			}
+
 			var cached = await _hybridCache.GetOrCreateAsync(
 				cacheKey!,
 				async entry =>
@@ -49,16 +56,18 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 					return new List<EmailInvitationRequest>();
 				});
 
-			if (!cached.Any())
-			{
-				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-				continue;
-			}
-
 			List<EmailInvitationRequest> successList = new();
 
 			foreach (var request in cached)
 			{
+				var logContext = new
+				{
+					Action = "ApplicationFormEmailSendingForDeadLetter",
+					Step = "SendEmail",
+					Identity = request.EmailInvitationID,
+					Timestamp = DateTime.UtcNow
+				};
+
 				try
 				{
 					var subjectName = $"{request.FirstName} {request.LastName}";
@@ -73,10 +82,7 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 
 				catch (Exception ex)
 				{
-					_logger.LogError(
-						ex,
-						"Failed to send email to {Email}",
-						request.EmailAddress);
+					_logger.LogError(ex, "Failed to send email to {Email}: {@Context}", request.EmailAddress, logContext);
 				}
 			}
 
@@ -84,7 +90,7 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 
 			if (successList.Any())
 			{
-				await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
+				await repository.UpdateEmailInvitationRequestForSentEmailAsync(successList);
 			}
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);

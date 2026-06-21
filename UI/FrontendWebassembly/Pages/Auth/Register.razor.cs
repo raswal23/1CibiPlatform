@@ -2,7 +2,7 @@
 
 public partial class Register
 {
-	private MudForm form;
+	private MudForm? form;
 	private bool success;
 	private bool isLoading = false;
 	private bool _isLoading = true;
@@ -52,18 +52,7 @@ public partial class Register
 		confirmPasswordIcon = isConfirmPasswordVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
 	}
 
-	private string ValidateEmail(string email)
-	{
-		if (string.IsNullOrWhiteSpace(email))
-			return "Email is required";
-
-		if (!email.Contains("@"))
-			return "Invalid email format";
-
-		return null;
-	}
-
-	private string ValidatePassword(string password)
+	private string? ValidatePassword(string password)
 	{
 		if (string.IsNullOrWhiteSpace(password))
 			return "Password is required";
@@ -74,7 +63,7 @@ public partial class Register
 		return null;
 	}
 
-	private string ValidateConfirmPassword(string confirmPassword)
+	private string? ValidateConfirmPassword(string confirmPassword)
 	{
 		if (string.IsNullOrWhiteSpace(confirmPassword))
 			return "Please confirm your password";

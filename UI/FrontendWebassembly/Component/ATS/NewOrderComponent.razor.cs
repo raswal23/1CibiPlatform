@@ -8,7 +8,6 @@ public partial class NewOrderComponent
 	private MudForm? bulkForm;
 	private EmailInvitationRequestDTO subject = new();
 	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
-	private IBrowserFile? bulkFile;
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
 	private string? templateLink;
 	private bool isSavingCandidate = false;
@@ -29,6 +28,14 @@ public partial class NewOrderComponent
 			Snackbar.Add(message, Severity.Success);
 			StateHasChanged();
 		});
+	}
+
+	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
+	{
+		bulkUploadFileDetailsDTO.BulkFile = e.File;
+		bulkUploadFileDetailsDTO.FileName = e.File.Name;
+
+		return;
 	}
 
 	private async Task SubmitCandidate()
@@ -90,7 +97,7 @@ public partial class NewOrderComponent
 		}
 
 	}
-
+	
 	private async Task SubmitBulk()
 	{
 		await bulkForm!.ValidateAsync();
@@ -98,13 +105,13 @@ public partial class NewOrderComponent
 		if (!bulkForm.IsValid)
 			return;
 
-		var previewData = BuildCsvPreview();
+		var previewData = await BuildCsvPreview();
 
 		var parameters = new DialogParameters
-	{
-		{ nameof(BulkPreviewComponent.Headers), previewData.Headers },
-		{ nameof(BulkPreviewComponent.Rows), previewData.Rows }
-	};
+		{
+			{ nameof(BulkPreviewComponent.Headers), previewData.Headers },
+			{ nameof(BulkPreviewComponent.Rows), previewData.Rows }
+		};
 
 		var options = new DialogOptions
 		{
@@ -137,18 +144,17 @@ public partial class NewOrderComponent
 			if (isSent)
 			{
 				var successParams = new DialogParameters
-		{
 			{
-				nameof(SuccessSaveComponent.Message),
-				"Successfully uploaded the bulk candidates' information."
-			}
-		};
+				{
+					nameof(SuccessSaveComponent.Message),
+					"Successfully uploaded the bulk candidates' information."
+				}
+			};
 
 				await DialogService.ShowAsync<SuccessSaveComponent>(
 					"Success",
 					successParams);
 
-				bulkFile = null;
 				bulkUploadFileDetailsDTO = new();
 
 				await bulkForm.ResetAsync();
@@ -168,12 +174,15 @@ public partial class NewOrderComponent
 		public List<List<string>> Rows { get; set; } = [];
 	}
 
-	private ExcelPreviewData BuildCsvPreview()
+	private async Task<ExcelPreviewData> BuildCsvPreview()
 	{
 		var result = new ExcelPreviewData();
 
-		var csvContent = Encoding.UTF8.GetString(
-			bulkUploadFileDetailsDTO.BulkFile!);
+		using var stream = bulkUploadFileDetailsDTO.BulkFile!.OpenReadStream();
+
+		using var reader = new StreamReader(stream);
+
+		var csvContent = await reader.ReadToEndAsync();
 
 		var lines = csvContent
 			.Split(new[] { "\r\n", "\n" },
@@ -198,46 +207,13 @@ public partial class NewOrderComponent
 		return result;
 	}
 
-	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-	{
-		bulkFile = e.File;
-		bulkUploadFileDetailsDTO.FileName = e.File.Name;
-
-		if (bulkFile != null)
-		{
-			using var ms = new MemoryStream();
-
-			await bulkFile
-				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
-				.CopyToAsync(ms);
-
-			bulkUploadFileDetailsDTO.BulkFile = ms.ToArray();
-		}
-
-		return;
-	}
-
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
 	{
 		if (await bulkFileUpload.RemoveFileAsync(file))
 		{
-			bulkFile = null;
+			bulkUploadFileDetailsDTO.BulkFile = null;
+			bulkUploadFileDetailsDTO.FileName = null;
 			return;
 		}
-	}
-
-	private string? ValidateEmailAlternative(string? value)
-	{
-		if (string.IsNullOrEmpty(value))
-			return null;
-
-		if (!value.Contains("@"))
-			return "Invalid email format";
-
-		var regex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-		if (!System.Text.RegularExpressions.Regex.IsMatch(value, regex))
-			return "Invalid email format";
-
-		return null!;
 	}
 }

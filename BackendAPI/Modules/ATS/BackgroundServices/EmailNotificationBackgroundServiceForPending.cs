@@ -44,6 +44,12 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 
 			var cacheKey = await dbRedis.ListLeftPopAsync(_batchesPending);
 
+			if (string.IsNullOrEmpty(cacheKey))
+			{
+				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				continue;
+			}
+
 			var cached = await _hybridCache.GetOrCreateAsync(
 				cacheKey!,
 				async entry =>
@@ -56,14 +62,16 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 			List<EmailInvitationRequest> successList = new();
 			List<EmailInvitationRequest> errorList = new();
 
-			if (!allRequests.Any())
-			{
-				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-				continue;
-			}
-
 			foreach (var request in allRequests)
 			{
+				var logContext = new
+				{
+					Action = "ApplicationFormEmailSending",
+					Step = "SendEmail",
+					Identity = request.EmailInvitationID,
+					Timestamp = DateTime.UtcNow
+				};
+
 				try
 				{
 					if (string.IsNullOrWhiteSpace(request.EmailAddress))
@@ -77,68 +85,62 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 					await sendEmail.SendApplicationFormToUserEmailAsync(
 						request.EmailAddress,
 						subjectName,
-						_applicationformBaseUrl);
+						$"{_applicationformBaseUrl}/{request.HashToken}");
 
 					successList.Add(request);
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError(
-						ex,
-						"Failed to send email to {Email}",
-						request.EmailAddress);
+					_logger.LogError(ex, "Failed to send email to {Email}: {@Context}", request.EmailAddress, logContext);
 
 					errorList.Add(request);
 				}
 			}
 
-			const int maxRetries = 3;
-
-			for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
+			if (errorList.Any())
 			{
-				_logger.LogInformation(
-					"Retry round {Retry}. Failed emails count: {Count}",
-					retry,
-					errorList.Count);
+				const int maxRetries = 3;
 
-				var failedItems = errorList.ToList();
-
-				errorList.Clear();
-
-				foreach (var request in failedItems)
+				for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
 				{
-					try
+					var failedItems = errorList.ToList();
+
+					errorList.Clear();
+
+					foreach (var request in failedItems)
 					{
-						if (string.IsNullOrWhiteSpace(request.EmailAddress))
+						var logContext = new
 						{
-							errorList.Add(request);
-							continue;
+							Action = "RetryApplicationFormEmailSending",
+							Step = "SendEmail",
+							Identity = request.EmailInvitationID,
+							Timestamp = DateTime.UtcNow
+						};
+
+						try
+						{
+							if (string.IsNullOrWhiteSpace(request.EmailAddress))
+							{
+								errorList.Add(request);
+								continue;
+							}
+
+							var subjectName = $"{request.FirstName} {request.LastName}";
+
+							await sendEmail.SendApplicationFormToUserEmailAsync(
+								request.EmailAddress,
+								subjectName,
+								_applicationformBaseUrl);
+
+							successList.Add(request);
 						}
+						catch (Exception ex)
+						{
+							_logger.LogError(ex, "Retry {Retry} failed for {Email}: {@Context}", retry, request.EmailAddress, logContext);
 
-						var subjectName = $"{request.FirstName} {request.LastName}";
-
-						await sendEmail.SendApplicationFormToUserEmailAsync(
-							request.EmailAddress,
-							subjectName,
-							_applicationformBaseUrl);
-
-						successList.Add(request);
+							errorList.Add(request);
+						}
 					}
-					catch (Exception ex)
-					{
-						_logger.LogWarning(
-							ex,
-							"Retry {Retry} failed for {Email}",
-							retry,
-							request.EmailAddress);
-
-						errorList.Add(request);
-					}
-				}
-
-				if (errorList.Any())
-				{
-					await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
 				}
 			}
 
@@ -149,15 +151,13 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 
 			if (successList.Any())
 			{
-				await repository.UpdateEmailInvitationRequestForSuccessAsync(successList);
+				await repository.UpdateEmailInvitationRequestForSentEmailAsync(successList);
 			}
-
-			var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
 			if (errorList.Any())
 			{
-				await repository.UpdateEmailInvitationRequestForErrorAsync(errorList);
-
+				var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+				
 				await _hybridCache.SetAsync(
 						batchId,
 						errorList,
@@ -165,11 +165,11 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 						{
 							Expiration = TimeSpan.FromMinutes(30)
 						});
-					}
 
 				await dbRedis.ListRightPushAsync(_batchesError, batchId);
+			}
 
-			//await _hybridCache.RemoveAsync(CacheKeys.ATSCacheKeys.BulkSubjectsCacheKey);
+			await _hybridCache.RemoveAsync(cacheKey!);
 
 			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 		}

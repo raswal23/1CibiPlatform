@@ -74,14 +74,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForSuccessAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestForSuccessAsync(emailInvitationRequests);
-	}
-
-	public async Task<bool> UpdateEmailInvitationRequestForErrorAsync(List<EmailInvitationRequest> emailInvitationRequests)
-	{
-		return await _atsRepository.UpdateEmailInvitationRequestForErrorAsync(emailInvitationRequests);
+		return await _atsRepository.UpdateEmailInvitationRequestForSentEmailAsync(emailInvitationRequests);
 	}
 
 	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
@@ -98,8 +93,14 @@ public class ATSCacheRepository : IATSRepository
 	{
 		var cacheKey = $"ATS_ApplicationFormStatus_{hashToken}";
 
-		return await _hybridCache.GetOrCreateAsync<string?>(
+		return await _hybridCache.GetOrCreateAsync(
 			cacheKey,
 			async id => await _atsRepository.IsHashTokenValidAsync(hashToken, cancellationToken));
 	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)
+	{
+		return await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+	}
 }
+

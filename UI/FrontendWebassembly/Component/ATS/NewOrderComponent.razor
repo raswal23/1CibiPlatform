@@ -5,6 +5,7 @@
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject EmailValidationService EmailValidationService
 
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
@@ -48,7 +49,7 @@
                                     Class="oneplatform-rounded-input"
                                     Required="true"
                                     RequiredError="Email Address is required"
-                                    Validation="@ValidateEmailAlternative"/>
+                                    Validation="@((string value) => EmailValidationService.ValidateEmail(value))" />
                     </MudItem>
 
                     <MudItem xs="12">
@@ -135,11 +136,10 @@
 
                     <MudItem xs="12">
                         <MudFileUpload @ref="@bulkFileUpload"
-                                       @bind-Files="bulkFile"
+                                       @bind-Files="bulkUploadFileDetailsDTO.BulkFile"
+                                       OnFilesChanged="OnBulkFileUpload"
                                        Accept=".csv"
                                        DragAndDrop="true"
-                                       OnFilesChanged="OnBulkFileUpload"
-                                       AppendMultipleFiles
                                        MaxFileSize="26214400"
                                        Required="true"
                                        Class="centered-upload">
@@ -160,16 +160,16 @@
                         <MudPaper Class="pa-4" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8); height: auto;">
                             <MudStack Spacing="2" >
                                 <MudStack Row Justify="Justify.Center">
-                                    @if (bulkFile is not null)
+                                    @if (bulkUploadFileDetailsDTO.BulkFile is not null)
                                     {
                                         <MudList T="IBrowserFile" Dense="true">
-                                            <MudListItem T="IBrowserFile" Value="bulkFile" @key="@bulkFile">
+                                            <MudListItem T="IBrowserFile" Value="bulkUploadFileDetailsDTO.BulkFile" @key="@bulkUploadFileDetailsDTO.BulkFile">
                                                 <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
-                                                    <MudText Align="Align.Center">@bulkFile!.Name (@($"{bulkFile.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudText Align="Align.Center">@bulkUploadFileDetailsDTO.BulkFile!.Name (@($"{bulkUploadFileDetailsDTO.BulkFile!.Size / 1024d:N1} kB"))</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                     Color="Color.Default"
                                                                     Size="Size.Small"
-                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(bulkFile!))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(bulkUploadFileDetailsDTO.BulkFile!))" />
                                                 </MudStack>
                                             </MudListItem>
                                         </MudList>

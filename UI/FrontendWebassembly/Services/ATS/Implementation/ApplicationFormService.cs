@@ -202,7 +202,7 @@ public class ApplicationFormService : IApplicationFormService
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)
 	{
-		var response = await _httpClient.GetFromJsonAsync<EmailIdAndApplicationFormPathDTO>($"getemailidandapplicationformpath?hashToken={HashToken}");
+		var response = await _httpClient.GetFromJsonAsync<EmailIdAndApplicationFormPathDTO>($"ats/getemailidandapplicationformpath?hashToken={HashToken}");
 		if (response!.ExpiresAt < DateTime.UtcNow)
 		{
 			response!.IsExpired = true;

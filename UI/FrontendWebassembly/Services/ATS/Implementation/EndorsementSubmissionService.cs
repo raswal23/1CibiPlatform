@@ -36,7 +36,6 @@
 				.WithAutomaticReconnect()
 				.Build();
 
-			// Centralized handlers that raise public events
 			_hubConnection.On<string>("ReceiveATSResponse", (message) =>
 			{
 				try
@@ -99,12 +98,12 @@
 					}
 				}
 
-				void AddFile(byte[]? file, string name)
+				void AddFile(IBrowserFile? file, string name)
 				{
 					if (file != null)
 					{
-						var stream = new MemoryStream(file);
-						var fileContent = new StreamContent(stream);
+						var fileStream = file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
+						var fileContent = new StreamContent(fileStream);
 						fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 						content.Add(fileContent, name, name);
 					}

@@ -97,7 +97,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}"); ;
 		}
 
-		var applicationFormLink = $"{_applicationformBaseUrl}?hashToken={HashToken}";
+		var applicationFormLink = $"{_applicationformBaseUrl}/{HashToken}";
 
 		try
 		{
