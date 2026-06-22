@@ -1,0 +1,67 @@
+﻿@using MudBlazor
+
+<MudDialog Style="padding: 8px;">
+    <DialogContent>
+
+        <TableComponent TItem="List<string>"
+                        Items="Rows">
+
+            <HeaderTemplate>
+                <MudTh>#</MudTh>
+
+                @foreach (var header in Headers)
+                {
+                    <MudTh>@header</MudTh>
+                }
+            </HeaderTemplate>
+
+            <RowTemplate Context="row">
+                <MudTd>@(Rows.IndexOf(row) + 2)</MudTd>
+
+                @foreach (var cell in row)
+                {
+                    <MudTd Style="@(string.IsNullOrWhiteSpace(cell)
+                                       ? "color:#c62828;font-weight:bold;"
+                                       : "")">
+                        @(string.IsNullOrWhiteSpace(cell) ? "(Blank)" : cell)
+                    </MudTd>
+                }
+
+            </RowTemplate>
+
+        </TableComponent>
+
+        <MudDivider Class="my-4" />
+
+        @if (InvalidRows.Any())
+        {
+            <MudAlert 
+                Severity="Severity.Error" 
+                Dense="true"
+                Class="mb-4">
+                    Blank values found in row(s):
+                    @string.Join(", ", InvalidRows)
+            </MudAlert>
+        }
+
+        <MudStack Row
+                  Justify="Justify.FlexEnd"
+                  Spacing="2">
+
+            <MudButton Color="Color.Default"
+                       OnClick="Cancel"
+                       Style="border-radius:4px;">
+                Cancel
+            </MudButton>
+
+            <MudButton Color="Color.Primary"
+                       OnClick="Confirm"
+                       Class="theme-button theme-button-active"
+                       Style="border-radius:4px;">
+                Confirm Upload
+            </MudButton>
+
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+

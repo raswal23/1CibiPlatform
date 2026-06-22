@@ -1,6 +1,6 @@
 ﻿namespace FrontendWebassembly.Component.ATS;
 
-public partial class BulkPreviewComponent
+public partial class PreviewComponent
 {
 	[CascadingParameter]
 	private IMudDialogInstance BulkPreviewDialog { get; set; } = default!;
@@ -20,4 +20,11 @@ public partial class BulkPreviewComponent
 	{
 		BulkPreviewDialog.Cancel();
 	}
+
+	private List<int> InvalidRows =>
+	Rows
+		.Select((row, index) => new { row, index })
+		.Where(x => x.row.Any(string.IsNullOrWhiteSpace))
+		.Select(x => x.index + 2)
+		.ToList();
 }

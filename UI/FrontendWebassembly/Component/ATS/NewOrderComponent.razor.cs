@@ -107,10 +107,22 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
+		var hasData = previewData.Rows.Any(row => 
+					row.Any(cell => !string.IsNullOrWhiteSpace(cell)));
+
+		if (!hasData)
+		{
+			await DialogService.ShowMessageBoxAsync(
+				"Empty Excel File",
+				"The Excel file is empty.");
+
+			return;
+		}
+
 		var parameters = new DialogParameters
 		{
-			{ nameof(BulkPreviewComponent.Headers), previewData.Headers },
-			{ nameof(BulkPreviewComponent.Rows), previewData.Rows }
+			{ nameof(PreviewComponent.Headers), previewData.Headers },
+			{ nameof(PreviewComponent.Rows), previewData.Rows }
 		};
 
 		var options = new DialogOptions
@@ -120,7 +132,7 @@ public partial class NewOrderComponent
 			CloseButton = true
 		};
 
-		var dialog = await DialogService.ShowAsync<BulkPreviewComponent>(
+		var dialog = await DialogService.ShowAsync<PreviewComponent>(
 			"Preview Upload",
 			parameters,
 			options);
