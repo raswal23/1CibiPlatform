@@ -70,6 +70,8 @@ public partial class MainLayout
 	{
 		_isDarkMode = !_isDarkMode;
 		await LocalStorageService.SetItemAsync("isDarkMode", _isDarkMode);
+		await JS.InvokeVoidAsync("setStartupTheme", _isDarkMode);
+
 	}
 
 	private string GetAppBarStyle()
@@ -131,6 +133,8 @@ public partial class MainLayout
 			var stored = await LocalStorageService.GetItemAsync<bool?>("isDarkMode");
 
 			_isDarkMode = stored ?? false;
+
+			await JS.InvokeVoidAsync("setStartupTheme", _isDarkMode);
 
 			_isLoading = false;
 		}
