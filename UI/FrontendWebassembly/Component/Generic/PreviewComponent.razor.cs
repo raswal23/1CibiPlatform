@@ -1,9 +1,11 @@
-﻿namespace FrontendWebassembly.Component.Generic;
+﻿using FrontendWebassembly.Component.ATS;
+
+namespace FrontendWebassembly.Component.Generic;
 
 public partial class PreviewComponent
 {
 	[CascadingParameter]
-	private IMudDialogInstance BulkPreviewDialog { get; set; } = default!;
+	private IMudDialogInstance PreviewDialog { get; set; } = default!;
 
 	[Parameter]
 	public List<string> Headers { get; set; } = [];
@@ -11,14 +13,36 @@ public partial class PreviewComponent
 	[Parameter]
 	public List<List<string>> Rows { get; set; } = [];
 
-	private void Confirm()
+	private async Task Confirm()
 	{
-		BulkPreviewDialog.Close(DialogResult.Ok(true));
+		if (InvalidRows.Any())
+		{
+			var confirmParam = new DialogParameters
+			{
+				{ nameof(ConfirmationDialogComponent.Message),
+				  "Do you want to upload the template information with blank details?" }
+
+			};
+
+			var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
+				"Confirmation",
+				confirmParam);
+
+			var result = await dialog.Result;
+
+			if (result.Canceled)
+				return;
+		}
+
+
+
+
+		PreviewDialog.Close(DialogResult.Ok(true));
 	}
 
 	private void Cancel()
 	{
-		BulkPreviewDialog.Cancel();
+		PreviewDialog.Cancel();
 	}
 
 	private List<int> InvalidRows =>

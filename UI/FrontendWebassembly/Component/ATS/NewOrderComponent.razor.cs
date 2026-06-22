@@ -46,10 +46,10 @@ public partial class NewOrderComponent
 			return;
 
 		var confirmParam = new DialogParameters
-	{
-		{ nameof(ConfirmationDialogComponent.Message),
-		  "Do you want to save the candidate's information?" }
-	};
+		{
+			{ nameof(ConfirmationDialogComponent.Message),
+			  "Do you want to save the candidate's information?" }
+		};
 
 		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
 			"Confirmation",
