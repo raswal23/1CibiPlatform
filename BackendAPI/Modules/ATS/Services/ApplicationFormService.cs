@@ -160,7 +160,7 @@ public class ApplicationFormService : IApplicationFormService
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
 		addressDetails.CurrentTypeOfOwnership = addressDetailsDTO.TypeOfOwnership;
-		addressDetails.Address = Guid.CreateVersion7();
+		addressDetails.AddressId = Guid.CreateVersion7();
 		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);

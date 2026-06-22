@@ -10,13 +10,11 @@
     }
     else if (showPhilSys)
     {
-        <div style="margin: 100px;">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@DisablePhilSys" />
+        <div style="margin: 200px;">
             <PhilSysComponent HashToken="HashToken"></PhilSysComponent>
-            <MudButton Style="width: 150px; border-radius: 4px; border: 2px solid gray;"
-                       Class="mt-3 mb-4"
-                       OnClick="@DisablePhilSys">
-                Previous
-            </MudButton>
         </div>
     }
     else

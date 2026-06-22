@@ -53,7 +53,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var personal = new PersonalDetailsDTO
 		{
 			EmailInvitationID = EmailId,
-			PersonalID = Guid.CreateVersion7(),
 			PositionAppliedFor = "Senior Software Engineer",
 			FirstName = "Juan",
 			MiddleName = "Santos",
@@ -74,7 +73,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var address = new AddressDetailsDTO
 		{
-			Address = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			CurrentCity = "Manila",
 			CurrentProvince = "Metro Manila",
@@ -92,7 +90,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var education = new EducationalBackgroundDTO
 		{
-			EducationalBackgroundID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
@@ -123,7 +120,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var licenses = new LicensesDetailsDTO
 		{
-			LicensesDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
@@ -135,7 +131,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var experiences = new ProfessionalExperiencesDTO
 		{
-			ProfessionalExperiencesID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Emp1CompanyName = "Accenture Philippines",
 			Emp1CurrentlyEmployed = false,
@@ -184,7 +179,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var reference = new ReferenceDetailsDTO
 		{
-			ReferenceDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Ref1FullName = "Michael Tan",
 			Ref1ProfessionalRelationship = "Former Team Lead",
@@ -212,7 +206,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var signature = new SignatureDetailsDTO
 		{
-			SignatureDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Signature = CreateFakeFormFile(sampleFileContent, signatureFileName),
 		};
@@ -254,7 +247,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var address = new AddressDetailsDTO
 		{
-			Address = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			CurrentCity = "Manila",
 			CurrentProvince = "Metro Manila",
@@ -272,7 +264,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var education = new EducationalBackgroundDTO
 		{
-			EducationalBackgroundID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
@@ -303,7 +294,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var licenses = new LicensesDetailsDTO
 		{
-			LicensesDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
@@ -315,7 +305,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var experiences = new ProfessionalExperiencesDTO
 		{
-			ProfessionalExperiencesID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Emp1CompanyName = "Accenture Philippines",
 			Emp1CurrentlyEmployed = false,
@@ -364,9 +353,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var reference = new ReferenceDetailsDTO
 		{
-			ReferenceDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
-
 			Ref1FullName = "Michael Tan",
 			Ref1ProfessionalRelationship = "Former Team Lead",
 			Ref1AffiliatedCompany = "Accenture Philippines",
@@ -396,7 +383,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		var signature = new SignatureDetailsDTO
 		{
-			SignatureDetailsID = Guid.CreateVersion7(),
 			EmailInvitationID = EmailId,
 			Signature = CreateFakeFormFile(sampleFileContent, "signature.txt"),
 		};
@@ -419,7 +405,6 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			MiddleInitial = "S",
 			EmailAddress = "jsdelacruz@cibi.com.ph",
 			MobileNumber = "+639171234567",
-			HashTokenCreated = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
 		};
 

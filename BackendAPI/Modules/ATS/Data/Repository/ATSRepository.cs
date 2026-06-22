@@ -56,7 +56,7 @@ public class ATSRepository : IATSRepository
 						{
 							EmailId = af.EmailInvitationID,
 							ExpiresAt = af.HashTokenExpiration,
-							Status = af.Status
+							Status = af.IsFormCompleted
 						})
 						.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
@@ -105,7 +105,20 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
+			.SetProperty(x => x.EmailSentStatus, x => "Done")
 			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
+
+		return true;
+	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
+
+		await _dbcontext.EmailInvitationRequests
+			.Where(x => ids.Contains(x.EmailInvitationID))
+			.ExecuteUpdateAsync(setters => setters
+			.SetProperty(x => x.EmailSentStatus, x => "Error"));
 
 		return true;
 	}
@@ -116,7 +129,8 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == emailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.Status, x => "Done"));
+			.SetProperty(x => x.IsFormCompleted, x => true)
+			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow));
 
 		return true;
 	}
@@ -137,7 +151,7 @@ public class ATSRepository : IATSRepository
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => status));
+				.SetProperty(x => x.EmailSentStatus, x => status));
 
 		return true;
 	}

@@ -38,7 +38,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.CreateVersion7(),
 			BulkFile = CreateFakeFormFile(sampleFileContent, bulkFileName),
 			FileName = bulkFileName,
 			Status = "Pending",
@@ -63,7 +62,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.Empty,
 			FileName = "testfile.csv",
 			Status = "Pending"
 		};
@@ -87,7 +85,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.CreateVersion7(),
 			FileName = string.Empty,
 			Status = "Pending"
 		};
@@ -111,7 +108,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.CreateVersion7(),
 			FileName = "testfile.csv",
 			Status = string.Empty
 		};
@@ -135,7 +131,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		// Arrange
 		var dto = new BulkUploadFileDetailsDTO
 		{
-			FileID = Guid.Empty,
 			FileName = string.Empty,
 			Status = string.Empty
 		};

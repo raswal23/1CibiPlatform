@@ -20,7 +20,6 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 		// Arrange
 		var dto = new EmailInvitationRequestDTO
 		{
-			EmailInvitationID = Guid.Empty,
 			FirstName = "Integration",
 			LastName = "Tester",
 			MiddleInitial = "A",

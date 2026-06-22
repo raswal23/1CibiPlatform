@@ -41,7 +41,6 @@ public class ApplicationFormService : IApplicationFormService
 
 		// PersonalDetails
 		AddString(PersonalDetails.EmailInvitationID.ToString(), "PersonalDetails.EmailInvitationID");
-		AddString(PersonalDetails.PersonalID.ToString(), "PersonalDetails.PersonalID");
 		AddString(PersonalDetails.PositionAppliedFor, "PersonalDetails.PositionAppliedFor");
 		AddString(PersonalDetails.FirstName, "PersonalDetails.FirstName");
 		AddString(PersonalDetails.MiddleName, "PersonalDetails.MiddleName");
@@ -59,7 +58,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.ResumeFileName, "PersonalDetails.ResumeFileName");
 
 		// AddressDetails
-		AddString(AddressDetails.Address.ToString(), "PersonalDetaAddressDetailsils.Address");
 		AddString(AddressDetails.EmailInvitationID.ToString(), "AddressDetails.EmailInvitationID");
 		AddString(AddressDetails.CurrentAddress, "AddressDetails.CurrentAddress");
 		AddString(AddressDetails.CurrentCity, "AddressDetails.CurrentCity");
@@ -74,7 +72,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(AddressDetails.PermanentPostalCode, "AddressDetails.PermanentPostalCode");
 
 		// EducationalBackground
-		AddString(EducationalBackground.EducationalBackgroundID.ToString(), "EducationalBackground.EducationalBackgroundID");
 		AddString(EducationalBackground.EmailInvitationID.ToString(), "EducationalBackground.EmailInvitationID");
 		AddString(EducationalBackground.HighestEducationalAttainment, "EducationalBackground.HighestEducationalAttainment");
 		AddString(EducationalBackground.HighSchoolName, "EducationalBackground.HighSchoolName");
@@ -102,7 +99,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(EducationalBackground.DoctorateDiplomaFileName, "EducationalBackground.DoctorateDiplomaFileName");
 
 		// LicensesDetails
-		AddString(LicensesDetails.LicensesDetailsID.ToString(), "LicensesDetails.LicensesDetailsID");
 		AddString(LicensesDetails.EmailInvitationID.ToString(), "LicensesDetails.EmailInvitationID");
 		AddString(LicensesDetails.LicenseName, "LicensesDetails.LicenseName");
 		AddString(LicensesDetails.LicenseNumber, "LicensesDetails.LicenseNumber");
@@ -111,7 +107,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(LicensesDetails.LicenseUploadFileName, "LicensesDetails.LicenseUploadFileName");
 
 		// ProfessionalExperiences
-		AddString(ProfessionalExperiences.ProfessionalExperiencesID.ToString(), "ProfessionalExperiences.ProfessionalExperiencesID");
 		AddString(ProfessionalExperiences.EmailInvitationID.ToString(), "ProfessionalExperiences.EmailInvitationID");
 		AddString(ProfessionalExperiences.Emp1CompanyName, "ProfessionalExperiences.Emp1CompanyName");
 		AddString(ProfessionalExperiences.Emp1JobTitle, "ProfessionalExperiences.Emp1JobTitle");
@@ -162,7 +157,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp3COEUploadFileName, "ProfessionalExperiences.Emp3COEUploadFileName");
 
 		// ReferenceDetails
-		AddString(ReferenceDetails.ReferenceDetailsID.ToString(), "ReferenceDetails.ReferenceDetailsID");
 		AddString(ReferenceDetails.EmailInvitationID.ToString(), "ReferenceDetails.EmailInvitationID");
 		AddString(ReferenceDetails.Ref1FullName, "ReferenceDetails.Ref1FullName");
 		AddString(ReferenceDetails.Ref1ProfessionalRelationship, "ReferenceDetails.Ref1ProfessionalRelationship");
@@ -187,7 +181,6 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ReferenceDetails.Ref3BestTimeToContact?.ToString("o"), "ReferenceDetails.Ref3BestTimeToContact");
 
 		// Post
-		AddString(SignatureDetails.SignatureDetailsID.ToString(), "SignatureDetails.SignatureDetailsID");
 		AddString(SignatureDetails.EmailInvitationID.ToString(), "SignatureDetails.EmailInvitationID");
 		AddFile(SignatureDetails.Signature, "SignatureDetails.Signature");
 		AddString(SignatureDetails.SignatureFileName, "SignatureDetails.SignatureFileName");

@@ -112,7 +112,7 @@ public class BulkSubmissionBackgroundService : BackgroundService
 						{
 							EmailInvitationID = Guid.CreateVersion7(),
 							HashToken = HashToken,
-							HashTokenCreated = DateTime.UtcNow,
+							HashTokenCreatedAt = DateTime.UtcNow,
 							HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
 							LastName = row.LastName,
 							FirstName = row.FirstName,
@@ -120,7 +120,8 @@ public class BulkSubmissionBackgroundService : BackgroundService
 							EmailAddress = row.EmailAddress,
 							MobileNumber = row.MobileNumber,
 							SelectPackage = file.PackageType,
-							Status = "Pending",
+							EmailSentStatus = "Pending",
+							IsFormCompleted = false,
 							RushNormal = file.OrderType
 						});
 					}

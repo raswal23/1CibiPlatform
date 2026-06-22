@@ -2,7 +2,6 @@
 
 public record LicensesDetailsDTO
 {
-	public Guid LicensesDetailsID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? LicenseName { get; set; }
 	public string? LicenseNumber { get; set; }

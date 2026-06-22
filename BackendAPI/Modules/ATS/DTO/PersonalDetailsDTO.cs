@@ -3,7 +3,6 @@
 public record PersonalDetailsDTO
 {
 	public Guid EmailInvitationID { get; set; }
-	public Guid PersonalID { get; set; }
 	public string? PositionAppliedFor { get; set; }
 	public string? FirstName { get; set; }
 	public string? MiddleName { get; set; }

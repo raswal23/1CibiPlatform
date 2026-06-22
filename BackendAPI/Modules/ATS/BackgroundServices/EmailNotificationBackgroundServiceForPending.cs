@@ -157,7 +157,9 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 			if (errorList.Any())
 			{
 				var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-				
+
+				await repository.UpdateEmailInvitationRequestForNotSentEmailAsync(errorList);
+
 				await _hybridCache.SetAsync(
 						batchId,
 						errorList,

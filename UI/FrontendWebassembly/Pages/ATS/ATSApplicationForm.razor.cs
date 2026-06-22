@@ -3,7 +3,7 @@
 public partial class ATSApplicationForm
 {
 	private bool _showApplicationForm = false;
-	private string? Status = string.Empty;
+	private bool Status;
 	private bool IsExpired = false;
 	[Parameter]
 	public string? HashToken { get; set; }
@@ -18,7 +18,7 @@ public partial class ATSApplicationForm
 	protected override async Task OnInitializedAsync()
 	{
 		var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
-		Status = response?.Status;
+		Status = response.Status;
 		IsExpired = response!.IsExpired;
 		EmailId = response.EmailId;
 		//if expired clear localstorage

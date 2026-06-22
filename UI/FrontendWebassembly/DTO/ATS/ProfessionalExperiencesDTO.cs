@@ -2,7 +2,6 @@
 
 public record ProfessionalExperiencesDTO
 {
-	public Guid ProfessionalExperiencesID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? Emp1CompanyName { get; set; }
 	public bool? Emp1CurrentlyEmployed { get; set; }
@@ -49,5 +48,4 @@ public record ProfessionalExperiencesDTO
 	public string? Emp3SupervisorContactNumber { get; set; }
 	public byte[]? Emp3COEUploadFile { get; set; }
 	public string? Emp3COEUploadFileName { get; set; }
-	public DateTime? CreatedDate { get; set; }
 }

@@ -1,6 +1,4 @@
-﻿
-
-namespace ATS.Services;
+﻿namespace ATS.Services;
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
@@ -22,7 +20,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IATSRepository atsRepository,
 		IConfiguration configuration,
 		IHashService hashService,
-		IEmailService emailService,
+		[FromKeyedServices("ats")] IEmailService emailService,
 		ISecureToken secureToken,
 		IHttpContextAccessor httpContextAccessor,
 		IObjectStorageService objectStorageService)
@@ -78,13 +76,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException("Failed to hash Token.");
 		}
 
-		emailInvitationRequestDTO.EmailInvitationID = Guid.CreateVersion7();
-		emailInvitationRequestDTO.HashToken =HashToken;
-		emailInvitationRequestDTO.HashTokenCreated = DateTime.UtcNow;
-		emailInvitationRequestDTO.Status = "Pending";
-		emailInvitationRequestDTO.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
-
 		EmailInvitationRequest emailInvitationRequest = emailInvitationRequestDTO.Adapt<EmailInvitationRequest>();
+		emailInvitationRequest.EmailInvitationID = Guid.CreateVersion7();
+		emailInvitationRequest.HashToken =HashToken;
+		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
+		emailInvitationRequest.EmailSentStatus = "Pending";
+		emailInvitationRequest.IsFormCompleted = false;
+		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
+
 		
 		try
 		{
@@ -106,7 +105,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				subjectName,
 				applicationFormLink);
 
-			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Sent");
+			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Pending");
 		}
 		catch (Exception ex)
 		{
@@ -133,7 +132,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			Action = "UploadFile",
 			Step = "StartUploading",
-			Identity = bulkUploadFileDetailsDTO.FileID,
+			Identity = bulkUploadFileDetailsDTO.UploadedByUserId,
 			Timestamp = DateTime.UtcNow
 		};
 
@@ -150,22 +149,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				fileStream,
 				ct);
 		}
-
-		bulkUploadFileDetailsDTO.FileID = Guid.CreateVersion7();
-		bulkUploadFileDetailsDTO.Status = "Pending";
-		bulkUploadFileDetailsDTO.DateCreated = DateTime.UtcNow;
-
 		BulkUploadFileDetails bulkUploadFileDetails = bulkUploadFileDetailsDTO.Adapt<BulkUploadFileDetails>();
+		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
+		bulkUploadFileDetails.Status = "Pending";
+		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
 
 		try
 		{
 			await _atsRepository.AddBulkUploadFileDetailsAsync(bulkUploadFileDetails);
-			_logger.LogInformation("Successfully added the file info in the database and object storage - {FileID}: {@Context}", bulkUploadFileDetailsDTO.FileID, logContext);
+			_logger.LogInformation("Successfully added the file info in the database and object storage - {FileID}: {@Context}", bulkUploadFileDetailsDTO.UploadedByUserId, logContext);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to insert data for Bulk File Information {FileID} : {@Context}", bulkUploadFileDetailsDTO.FileID, logContext);
+			_logger.LogError(ex, "Failed to insert data for Bulk File Information {FileID} : {@Context}", bulkUploadFileDetailsDTO.UploadedByUserId, logContext);
 			throw new InternalServerException($"Failed insert data to the database. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
@@ -187,7 +184,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var otpBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink);
 
-		var isSent = await _emailService.SendEmailAsync(
+		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
 			subject: "CIBI | Background Verification Information Request",
 			body: otpBody
@@ -199,7 +196,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException("Failed to send Notification email.");
 		}
 
-		return isSent;
+		return true;
 	}
 
 }

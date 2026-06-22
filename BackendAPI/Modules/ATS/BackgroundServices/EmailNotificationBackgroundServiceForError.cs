@@ -45,7 +45,7 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 
 			if (string.IsNullOrEmpty(cacheKey))
 			{
-				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+				await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
 				continue;
 			}
 
@@ -93,7 +93,7 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 				await repository.UpdateEmailInvitationRequestForSentEmailAsync(successList);
 			}
 
-			await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+			await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
 		}
 	}
 }

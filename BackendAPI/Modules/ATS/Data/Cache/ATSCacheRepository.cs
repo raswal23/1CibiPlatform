@@ -102,5 +102,10 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
 	}
+
+	public async Task<bool> UpdateEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		return await _atsRepository.UpdateEmailInvitationRequestForNotSentEmailAsync(emailInvitationRequests);
+	}
 }
 

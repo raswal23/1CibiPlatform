@@ -75,8 +75,9 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			EmailAddress = "jsdelacruz@cibi.com.ph",
 			MobileNumber = "+639171234567",
 			HashToken = hashToken,
-			Status = "Pending",
-			HashTokenCreated = DateTime.UtcNow,
+			EmailSentStatus = "Pending",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			IsFormCompleted = false,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
 		};
 

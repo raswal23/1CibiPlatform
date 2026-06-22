@@ -15,7 +15,6 @@ public class EmailService : IEmailService
 	private readonly int _smtpPort;
 	private readonly int _expirationInMinutes;
 	private readonly string _onePlatformLink;
-	private readonly int _atsApplicationFormExpirationInHours;
 
 	public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
 	{
@@ -32,7 +31,7 @@ public class EmailService : IEmailService
 		_expirationInMinutes = int.Parse(_configuration["Email:OtpExpirationInMinutes"] ?? "15");
 		_onePlatformLink = _configuration["PhilSys:LivenessBaseUrl"]
 			?? throw new InvalidOperationException("OnePlatformLink not configured"); ;
-		_atsApplicationFormExpirationInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
+		
 	}
 
 	public async Task<bool> SendEmailAsync(
@@ -189,7 +188,6 @@ public class EmailService : IEmailService
 		string role
 		)
 	{
-		string subject = "OnePlatform Account Assignment Notification";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -290,51 +288,12 @@ public class EmailService : IEmailService
 
 	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
 	{
-		string body = $@"
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
-                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
-                        .content {{ padding: 20px; background-color: #f9f9f9; }}
-                        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-                    </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <div class='header'>
-                            <h1>CIBI | Background Verification Information Request</h1>
-                        </div>
-                        <div class='content'>
-                            <p>Dear {name},</p>
-							<p>
-								Princess Espiritu, TaskUs has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
-								<a href='{applicationFormLink}'>Application Form</a> 
-							</p>
-							<p>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
-						    <p><strong>REMINDERS IN ANSWERING THE FORM </strong></p>
-							<ol>
-								<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-								<li>In case you have a portion to input the Email Address of HR POC, kindly input your HR person of contact on the company you are applying to.</li>
-							</ol>
-                            <p>
-								For any questions or concerns, please do not hesitate to reach out to
-								<a href=""mailto:pre-workteam@cibi.com.ph"">pre-workteam@cibi.com.ph</a>
-								and
-								<a href=""mailto:ceteam@cibi.com.ph"">ceteam@cibi.com.ph</a>
-								or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
-							</p>
-						</div>
-						<div class='footer'>
-							<p>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</p>
-						</div>
-					</div>
-				</body>
-				</html>";
+		throw new NotImplementedException();
+	}
 
-		return body;
+	public Task<bool> SendATSEmailAsync(string toEmail, string subject, string body)
+	{
+		throw new NotImplementedException();
 	}
 }
 

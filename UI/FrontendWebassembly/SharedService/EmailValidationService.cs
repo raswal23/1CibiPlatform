@@ -2,8 +2,11 @@
 
 public class EmailValidationService
 {
-	public string ValidateEmail(string value)
+	public string? ValidateEmail(string value)
 	{
+		if (value is null)
+			return null;
+
 		if (!value.Contains("@"))
 			return "Invalid email format";
 
@@ -11,7 +14,7 @@ public class EmailValidationService
 		if (!Regex.IsMatch(value, regex))
 			return "Invalid email format";
 
-		return null!;
+		return null;
 	}
 
 }

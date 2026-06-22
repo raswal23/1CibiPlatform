@@ -12,7 +12,7 @@ public class RegisterService : IRegisterService
 	private readonly int _otpExpiryMinutes;
 
 	public RegisterService(
-		IEmailService emailService,
+		[FromKeyedServices("auth")] IEmailService emailService,
 		IPasswordHasherService passwordHasherService,
 		IAuthRepository authRepository,
 		IHashService hashService,

@@ -5,6 +5,8 @@ public class FakeEmailSender : IEmailService
 {
 	public Task<bool> SendEmailAsync(string toEmail, string subject, string body, bool isHtml = true)
 		=> Task.FromResult(true);
+	public Task<bool> SendATSEmailAsync(string toEmail, string subject, string body)
+	=> Task.FromResult(true);
 
 	public string SendOtpBody(string name, string otpCode)
 		=> $"Hello {name}, your OTP code is {otpCode}";

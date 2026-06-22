@@ -9,6 +9,8 @@ global using ATS.Data.DTO;
 global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
 global using ATS.Hubs;
+global using ATS.Services.EmailService;
+
 
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;
@@ -42,4 +44,7 @@ global using CsvHelper;
 global using System.Globalization;
 global using System.Security.Claims;
 global using StackExchange.Redis;
+global using System.Net;
+global using System.Net.Mail;
+
 
