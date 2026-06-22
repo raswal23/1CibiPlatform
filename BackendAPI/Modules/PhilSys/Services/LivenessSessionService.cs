@@ -36,7 +36,7 @@ public class LivenessSessionService
 		if (status == null)
 		{
 			_logger.LogError("Checking PhilSys Transaction Failed: There is no transaction for HashToken: {@Context}", logContext);
-			throw new InternalServerException($"There is no such transaction created for your liveness check.");
+			throw new NotFoundException($"There is no such transaction created for your liveness check.");
 		}
 
 		var hashTokenChecker = await _philSysRepository.GetTransactionDataByHashTokenAsync(HashToken);
@@ -44,7 +44,7 @@ public class LivenessSessionService
 		if (hashTokenChecker == null)
 		{
 			_logger.LogError("Checking PhilSys Transaction Failed: There is no transaction for HashToken: {@Context}", logContext);
-			throw new InternalServerException($"There is no such transaction created for your liveness check.");
+			throw new NotFoundException($"There is no such transaction created for your liveness check.");
 		}
 
 		var isTokenValid = _hashService.Verify(HashToken, hashTokenChecker.HashToken!);

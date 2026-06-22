@@ -23,8 +23,16 @@ public class PhilSysService : IPhilSysService
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"{errorContent!.Detail}");
+			return new UpdateFaceLivenessSessionResponseDTO
+			{
+				idv_session_id = string.Empty,
+				verified = null,
+				data_subject = null,
+				error_message = errorContent!.Detail,
+				trace_id = errorContent.TraceId,
+			};
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<UpdateFaceLivenessSessionResponseDTO>();
 		return successContent!;
 	}
@@ -37,8 +45,8 @@ public class PhilSysService : IPhilSysService
 		if (!response.IsSuccessStatusCode)
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"{errorContent!.Detail}");
+	
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 		
 		var successContent = await response.Content.ReadFromJsonAsync<TransactionStatusResponseDTO>();
@@ -69,7 +77,7 @@ public class PhilSysService : IPhilSysService
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"{errorContent!.Detail}");
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -96,7 +104,7 @@ public class PhilSysService : IPhilSysService
 
 				var errorContent = await responseInfo.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-				throw new Exception($"{errorContent!.Detail}");
+				throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 			}
 
 			var successContentInfo = await responseInfo.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();
@@ -110,7 +118,7 @@ public class PhilSysService : IPhilSysService
 		{
 			var errorContent = await responsePCn.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"{errorContent!.Detail}");
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 
 		var successContentPcn = await responsePCn.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();

@@ -1,9 +1,10 @@
 ﻿@layout GenericLayout
 @inject NavigationManager Navigation
+@inject LocalStorageService LocalStorageService
 @inject IApplicationFormService ATSService
 @page "/s&i/ats/applicationform/{HashToken}"
 
-<div class="philsys-liveness-container">
+<div class="oneplatform-generic-container">
     @if (Status)
     {
         <CompletedComponent />
@@ -95,7 +96,7 @@
         }
         else
         {
-            <ApplicationFormComponent EmailId="EmailId" ActiveStep="stepActive" ShowsPhilSys="philSysShow" HashToken="HashToken" />
+            <ApplicationFormComponent EmailId="@EmailId" ActiveStep="@stepActive" ShowsPhilSys="@philSysShow" HashToken="@HashToken" />
         }
     }
 </div>

@@ -14,7 +14,6 @@ public partial class PhilSysLiveness
 	private string? livenessKey;
 	private string errorMessage = string.Empty;
 	private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
-	//From db
 	public string? atsSession { get; set; } = null;
 	public string? applicationFormPath { get; set; }
 
@@ -58,7 +57,6 @@ public partial class PhilSysLiveness
 		if (string.IsNullOrEmpty(livenessKey))
 		{
 			_completed = true;
-			errorMessage = "Liveness SDK is not configured. Please contact the administrator.";
 			StateHasChanged();
 			return;
 		}

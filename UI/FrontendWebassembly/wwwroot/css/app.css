@@ -321,9 +321,10 @@ code {
     box-sizing: border-box;
 }
 
-.philsys-liveness-container {
+.oneplatform-generic-container {
     position: relative;
     min-height: 100vh;
+    min-width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -469,11 +470,3 @@ code {
     width: 100%;
 }
 
-.ats-gradient-icon {
-    font-size: 80px;
-    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-}

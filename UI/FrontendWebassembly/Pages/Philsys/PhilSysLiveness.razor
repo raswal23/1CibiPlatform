@@ -7,15 +7,11 @@
 
 <PageTitle>Face Liveness Session</PageTitle>
 
-<div class="philsys-liveness-container">
+<div class="oneplatform-generic-container">
 
-    @if (isTransacted)
+    @if (isTransacted || isExpired)
     {
-        <NotFoundComponent WebHookUrl="@webHookUrl"></NotFoundComponent>
-    }
-    else if (isExpired)
-    {
-        <ReTransactComponent WebHookUrl="@webHookUrl"></ReTransactComponent>
+        <ReTransactComponent IsCompleted="@isTransacted" ATSHashToken="@atsSession" WebHookUrl="@webHookUrl"></ReTransactComponent>
     }
     else if (!_completed)
     {

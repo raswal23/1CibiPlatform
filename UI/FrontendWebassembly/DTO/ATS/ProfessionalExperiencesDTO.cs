@@ -4,8 +4,8 @@ public record ProfessionalExperiencesDTO
 {
 	public Guid EmailInvitationID { get; set; }
 	public string? Emp1CompanyName { get; set; }
-	public bool? Emp1CurrentlyEmployed { get; set; }
-	public bool? Emp1PermissionToContact { get; set; }
+	public bool Emp1CurrentlyEmployed { get; set; }
+	public bool Emp1PermissionToContact { get; set; }
 	public string? Emp1CompanyCity { get; set; }
 	public string? Emp1CompanyProvince { get; set; }
 	public string? Emp1CompanyCountry { get; set; }
@@ -19,8 +19,8 @@ public record ProfessionalExperiencesDTO
 	public byte[]? Emp1COEUploadFile { get; set; }
 	public string? Emp1COEUploadFileName { get; set; }
 	public string? Emp2CompanyName { get; set; }
-	public bool? Emp2CurrentlyEmployed { get; set; }
-	public bool? Emp2PermissionToContact { get; set; }
+	public bool Emp2CurrentlyEmployed { get; set; }
+	public bool Emp2PermissionToContact { get; set; }
 	public string? Emp2CompanyCity { get; set; }
 	public string? Emp2CompanyProvince { get; set; }
 	public string? Emp2CompanyCountry { get; set; }
@@ -34,8 +34,8 @@ public record ProfessionalExperiencesDTO
 	public byte[]? Emp2COEUploadFile { get; set; }
 	public string? Emp2COEUploadFileName { get; set; }
 	public string? Emp3CompanyName { get; set; }
-	public bool? Emp3CurrentlyEmployed { get; set; }
-	public bool? Emp3PermissionToContact { get; set; }
+	public bool Emp3CurrentlyEmployed { get; set; }
+	public bool Emp3PermissionToContact { get; set; }
 	public string? Emp3CompanyCity { get; set; }
 	public string? Emp3CompanyProvince { get; set; }
 	public string? Emp3CompanyCountry { get; set; }

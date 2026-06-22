@@ -63,16 +63,20 @@
 			await _hubConnection.StartAsync();
 		}
 
-		public async Task<string> DownloadBulkTemplateAsync()
+		public async Task<string?> DownloadBulkTemplateAsync()
 		{
-			var response = await _httpClient.GetFromJsonAsync<string>("ats/downloadbulktemplate");
+			var response = await _httpClient.GetAsync("ats/downloadbulktemplate");
 
-			if (string.IsNullOrEmpty(response))
+			if (!response.IsSuccessStatusCode)
 			{
-				return string.Empty;
+				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 			}
 
-			return response;
+			var result = await response.Content.ReadFromJsonAsync<string>();
+
+			return result;
 		}
 
 		public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
@@ -80,6 +84,13 @@
 			var request = new { emailInvitationRequestDTO };
 
 			var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			}
 
 			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
 
@@ -105,7 +116,7 @@
 						var fileStream = file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
 						var fileContent = new StreamContent(fileStream);
 						fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-						content.Add(fileContent, name, name);
+						content.Add(fileContent, name, file.Name);
 					}
 				}
 
@@ -115,6 +126,13 @@
 				AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
 
 			var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			}
 
 			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
 

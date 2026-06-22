@@ -55,12 +55,23 @@ public partial class ApplicationFormComponent
 	private MudFileUpload<IBrowserFile> LicenseUploadFile = default!;
 
 	private ProfessionalExperiencesDTO professionalExperiences = new();
-	private DateTime? DatePermittedToContact;
-	private DateTime? StartOfEmployment;
-	private DateTime? EndOfEmployment;
-	private bool AddAnotherEmployer;
+	private DateTime? DatePermittedToContact1;
+	private DateTime? StartOfEmployment1;
+	private DateTime? EndOfEmployment1;
+	private DateTime? DatePermittedToContact2;
+	private DateTime? StartOfEmployment2;
+	private DateTime? EndOfEmployment2;
+	private DateTime? DatePermittedToContact3;
+	private DateTime? StartOfEmployment3;
+	private DateTime? EndOfEmployment3;
+	private bool AddEmployer2;
+	private bool AddEmployer3;
 	private IBrowserFile? Emp1COEFile;
 	private MudFileUpload<IBrowserFile> Emp1COEFileUpload = default!;
+	private IBrowserFile? Emp2COEFile;
+	private MudFileUpload<IBrowserFile> Emp2COEFileUpload = default!;
+	private IBrowserFile? Emp3COEFile;
+	private MudFileUpload<IBrowserFile> Emp3COEFileUpload = default!;
 
 	// Step 5 - references
 	private ReferenceDetailsDTO referenceDetails = new();
@@ -68,6 +79,8 @@ public partial class ApplicationFormComponent
 	private TimeSpan? Ref1BestTime;
 	private DateTime? Ref2BestDate;
 	private TimeSpan? Ref2BestTime;
+	private DateTime? Ref3BestDate;
+	private TimeSpan? Ref3BestTime;
 	private bool AddAnotherReference;
 
 	//Final
@@ -375,9 +388,15 @@ public partial class ApplicationFormComponent
 
 		licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
 
-		professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact!.Value);
-		professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment!.Value);
-		professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment!.Value);
+		professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact1!.Value);
+		professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment1!.Value);
+		professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment1!.Value);
+		professionalExperiences.Emp2DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact2!.Value);
+		professionalExperiences.Emp2StartDate = DateOnly.FromDateTime(StartOfEmployment2!.Value);
+		professionalExperiences.Emp2EndDate = DateOnly.FromDateTime(EndOfEmployment2!.Value);
+		professionalExperiences.Emp3DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact3!.Value);
+		professionalExperiences.Emp3StartDate = DateOnly.FromDateTime(StartOfEmployment3!.Value);
+		professionalExperiences.Emp3EndDate = DateOnly.FromDateTime(EndOfEmployment3!.Value);
 
 		if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
 		{
@@ -386,6 +405,10 @@ public partial class ApplicationFormComponent
 		if (Ref2BestDate.HasValue && Ref2BestTime.HasValue)
 		{
 			referenceDetails.Ref2BestTimeToContact = DateTime.SpecifyKind(Ref2BestDate.Value.Date + Ref2BestTime.Value, DateTimeKind.Utc);
+		}
+		if (Ref3BestDate.HasValue && Ref3BestTime.HasValue)
+		{
+			referenceDetails.Ref3BestTimeToContact = DateTime.SpecifyKind(Ref3BestDate.Value.Date + Ref3BestTime.Value, DateTimeKind.Utc);
 		}
 
 		try

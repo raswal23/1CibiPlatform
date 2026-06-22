@@ -9,7 +9,7 @@ internal class ATSQueries : IATSQueries
 		_atsRepository = atsRepository;
 	}
 
-	public async Task<string?> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
+	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
 	{
 		return await _atsRepository.IsHashTokenValidAsync(hashToken, cancellationToken);
 	}

@@ -2,7 +2,7 @@
 
 public record InternalSystemRequest(string callback_url, string inquiry_type, IdentityData identity_data);
 public record InternalSystemResponse(PartnerSystemResponseDTO PartnerSystemResponseDTO);
-public class InternalSystemEndpoint
+public class InternalSystemEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{

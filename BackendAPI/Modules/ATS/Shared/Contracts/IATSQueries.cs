@@ -2,7 +2,7 @@
 
 public interface IATSQueries
 {
-	Task<string?> IsHashTokenValidAsync(
+	Task<bool> IsHashTokenValidAsync(
 		string hashToken, 
 		CancellationToken cancellationToken);
 }

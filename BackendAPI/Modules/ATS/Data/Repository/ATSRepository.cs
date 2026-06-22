@@ -156,12 +156,12 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<string?> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
+	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir => eir.HashToken == hashToken && eir.HashTokenExpiration > DateTime.UtcNow)
-			.Select(eir => eir.HashToken)
-			.FirstOrDefaultAsync(cancellationToken) ?? null;
+			.AnyAsync(eir => eir.HashToken == hashToken && 
+					  eir.HashTokenExpiration > DateTime.UtcNow,
+					  cancellationToken);
 	}
 }

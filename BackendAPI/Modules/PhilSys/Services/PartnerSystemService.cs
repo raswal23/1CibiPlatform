@@ -34,10 +34,10 @@ public class PartnerSystemService
 
 		if (!string.IsNullOrEmpty(identity_data.ATSSession))
 		{
-			var atsSession = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, CancellationToken.None);
-			if (atsSession is null)
+			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, CancellationToken.None);
+			if (!IsATSSessionValid)
 			{
-				throw new InternalServerException("Invalid ATS Session provided.");
+				throw new NotFoundException("Invalid ATS Session provided.");
 			}
 		}
 

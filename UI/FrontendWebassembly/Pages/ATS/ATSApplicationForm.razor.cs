@@ -21,7 +21,19 @@ public partial class ATSApplicationForm
 		Status = response.Status;
 		IsExpired = response!.IsExpired;
 		EmailId = response.EmailId;
-		//if expired clear localstorage
+
+		if (response.IsExpired)
+		{
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_firstName");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_middleName");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_lastName");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_suffix");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_birthDate");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_sex");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_emailAddress");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_phoneNumber");
+			await LocalStorageService.RemoveItemAsync($"{HashToken}_profilePicture");
+		}
 	}
 
 	private void Proceed()
