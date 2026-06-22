@@ -73,7 +73,20 @@ a,
     content: "An error has occurred.";
 }
 
+html,
+body,
+#app {
+    background-color: white;
+}
+
+    html.dark-startup,
+    html.dark-startup body,
+    html.dark-startup #app {
+        background-color: #121212;
+    }
+
 .loader-container {
+    background-color: inherit;
     height: 100vh;
     display: flex;
     align-items: center;

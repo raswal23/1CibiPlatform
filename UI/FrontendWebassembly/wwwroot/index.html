@@ -11,7 +11,25 @@
     <link rel="stylesheet" href="css/app.css" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="FrontendWebassembly.styles.css" rel="stylesheet" />
-    <link rel="icon" href="/images/generic/cibi-icon.png" type="image/png"/>
+    <link rel="icon" href="/images/generic/cibi-icon.png" type="image/png" />
+
+    <script>
+        (function () {
+            const isDark = localStorage.getItem('isDarkMode');
+
+            if (isDark === 'true') {
+                document.documentElement.classList.add('dark-startup');
+            }
+        })();
+
+        window.setStartupTheme = function (isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark-startup');
+            } else {
+                document.documentElement.classList.remove('dark-startup');
+            }
+        };
+    </script>
 </head>
 
 <body>

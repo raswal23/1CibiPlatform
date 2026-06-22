@@ -46,10 +46,10 @@ public partial class NewOrderComponent
 			return;
 
 		var confirmParam = new DialogParameters
-	{
-		{ nameof(ConfirmationDialogComponent.Message),
-		  "Do you want to save the candidate's information?" }
-	};
+		{
+			{ nameof(ConfirmationDialogComponent.Message),
+			  "Do you want to save the candidate's information?" }
+		};
 
 		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
 			"Confirmation",
@@ -107,10 +107,22 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
+		var hasData = previewData.Rows.Any(row => 
+					row.Any(cell => !string.IsNullOrWhiteSpace(cell)));
+
+		if (!hasData)
+		{
+			await DialogService.ShowMessageBoxAsync(
+				"Empty Excel File",
+				"The Excel file is empty.");
+
+			return;
+		}
+
 		var parameters = new DialogParameters
 		{
-			{ nameof(BulkPreviewComponent.Headers), previewData.Headers },
-			{ nameof(BulkPreviewComponent.Rows), previewData.Rows }
+			{ nameof(PreviewComponent.Headers), previewData.Headers },
+			{ nameof(PreviewComponent.Rows), previewData.Rows }
 		};
 
 		var options = new DialogOptions
@@ -120,7 +132,7 @@ public partial class NewOrderComponent
 			CloseButton = true
 		};
 
-		var dialog = await DialogService.ShowAsync<BulkPreviewComponent>(
+		var dialog = await DialogService.ShowAsync<PreviewComponent>(
 			"Preview Upload",
 			parameters,
 			options);

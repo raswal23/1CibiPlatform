@@ -1,4 +1,4 @@
-﻿namespace FrontendWebassembly.Component.ATS;
+﻿namespace FrontendWebassembly.Component.Generic;
 
 public partial class ConfirmationDialogComponent
 {
