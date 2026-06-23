@@ -32,6 +32,8 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 	{
 		while (!stoppingToken.IsCancellationRequested)
 		{
+			string? cacheKey = string.Empty;
+
 			var dbRedis = _redis.GetDatabase();
 
 			using var scope = _scopeFactory.CreateScope();
@@ -42,12 +44,21 @@ public class EmailNotificationBackgroundServiceForPending : BackgroundService
 			var repository = scope.ServiceProvider
 				.GetRequiredService<IATSRepository>();
 
-			var cacheKey = await dbRedis.ListLeftPopAsync(_batchesPending);
-
-			if (string.IsNullOrEmpty(cacheKey))
+			try
 			{
-				await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-				continue;
+				cacheKey = await dbRedis.ListLeftPopAsync(_batchesPending);
+
+				if (string.IsNullOrEmpty(cacheKey))
+				{
+					await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+					continue;
+				}
+			}
+			catch (RedisTimeoutException ex)
+			{
+				_logger.LogWarning(ex, "Redis timeout while reading {_batchesPending}", _batchesPending);
+
+				await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
 			}
 
 			var cached = await _hybridCache.GetOrCreateAsync(
