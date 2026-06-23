@@ -10,7 +10,9 @@ public partial class PreviewComponent
 
 	[Parameter]
 	public List<List<string>> Rows { get; set; } = [];
-
+	
+	[Parameter]
+	public string Message { get; set; } = string.Empty;
 	private async Task Confirm()
 	{
 		if (InvalidRows.Any())

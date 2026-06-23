@@ -41,7 +41,7 @@ public partial class NewOrderComponent
 		return;
 	}
 
-	private async Task SubmitCandidate()
+	private async Task OnSubmitCandidate()
 	{
 		await candidateForm!.ValidateAsync();
 
@@ -88,20 +88,20 @@ public partial class NewOrderComponent
 					"Success",
 					successParam);
 
-				subject = new EmailInvitationRequestDTO();
-				await candidateForm.ResetAsync();
+				//subject = new EmailInvitationRequestDTO();
+				
 			}
 		}
 		finally
 		{
 			isSavingCandidate = false;
-
+			await candidateForm.ResetAsync();
 
 		}
 
 	}
 	
-	private async Task SubmitBulk()
+	private async Task OnSubmitBulk()
 	{
 		await bulkForm!.ValidateAsync();
 
@@ -125,7 +125,8 @@ public partial class NewOrderComponent
 		var parameters = new DialogParameters
 		{
 			{ nameof(PreviewComponent.Headers), previewData.Headers },
-			{ nameof(PreviewComponent.Rows), previewData.Rows }
+			{ nameof(PreviewComponent.Rows), previewData.Rows },
+			{ nameof(PreviewComponent.Message), "Upload has been disabled. Blank detail is not allowed." }
 		};
 
 		var options = new DialogOptions

@@ -85,7 +85,7 @@
                         <MudSpacer />
                         <MudButton Class="theme-button theme-button-active mt-4" 
                                    Style="width:120px; border-radius: 4px;" 
-                                   OnClick="SubmitCandidate">
+                                   OnClick="OnSubmitCandidate">
                             @if (isSavingCandidate)
                             {
                                 <MudProgressCircular Size = "Size.Small" Indeterminate = "true" />
@@ -180,7 +180,7 @@
                                 <MudStack Row Justify="Justify.Center">
                                     <MudButton Class="theme-button theme-button-active"
                                                Style="width: 200px; border-radius: 4px;"
-                                               OnClick="SubmitBulk">
+                                               OnClick="OnSubmitBulk">
 
 
                                         @if (isUploadingBulk)
