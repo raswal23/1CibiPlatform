@@ -30,6 +30,7 @@ public partial class Login
 		var emailFromStorage = await LocalStorageService.GetItemAsync<string>("tempUserEmail");
 		var userIdFromStorage = await LocalStorageService.GetItemAsync<string>("tempUserId");
 
+		// Ask to kuya if remove this since its attaching in the query params
 		if (await LocalStorageService.GetItemAsync<string>("tempUserEmail") is not null)
 		{
 			Navigation.NavigateTo($"/verify-otp?userId={userIdFromStorage}&email={emailFromStorage}", true);

@@ -117,13 +117,13 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				subjectName,
 				applicationFormLink);
 
-			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Pending");
+			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(emailInvitationRequest.EmailInvitationID);
 		}
 		catch (Exception ex)
 		{
 			_logger.LogError("Failed to send email: {@Context}, {Exception}", logContext, ex);
 
-			await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationRequest.EmailInvitationID, "Error");
+			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(emailInvitationRequest.EmailInvitationID);
 
 			throw new InternalServerException("Failed to send email.");
 		}

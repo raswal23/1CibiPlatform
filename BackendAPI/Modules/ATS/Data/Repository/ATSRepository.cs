@@ -98,7 +98,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateBulkEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
@@ -111,7 +111,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		var ids = emailInvitationRequests.Select(x => x.EmailInvitationID).ToList();
 
@@ -147,11 +147,21 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status)
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(Guid emailInvitationId)
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.EmailSentStatus, x => status));
+				.SetProperty(x => x.EmailSentStatus, x => "Done")
+				.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
+
+		return true;
+	}
+
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId)
+	{
+		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
+				.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.EmailSentStatus, x => "Error"));
 
 		return true;
 	}

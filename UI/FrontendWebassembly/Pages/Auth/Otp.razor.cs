@@ -7,7 +7,7 @@ public partial class Otp
 	public string? email = "";
 	public string? userId = "";
 
-	private MudForm form;
+	private MudForm? form;
 	private bool success;
 	private bool isLoading = false;
 	private bool isResending = false;

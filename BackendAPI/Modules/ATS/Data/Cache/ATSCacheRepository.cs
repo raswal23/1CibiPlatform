@@ -74,9 +74,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateBulkEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestForSentEmailAsync(emailInvitationRequests);
+		return await _atsRepository.UpdateBulkEmailInvitationRequestForSentEmailAsync(emailInvitationRequests);
 	}
 
 	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
@@ -84,9 +84,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.UpdateBulkFileDetailsStatusAsync(bulkUploadFileDetails);
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestStatusAsync(Guid emailInvitationId, string status)
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(Guid emailInvitationId)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestStatusAsync(emailInvitationId, status);
+		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(emailInvitationId);
 	}
 
 	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
@@ -103,9 +103,14 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
 	}
 
-	public async Task<bool> UpdateEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	public async Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestForNotSentEmailAsync(emailInvitationRequests);
+		return await _atsRepository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(emailInvitationRequests);
+	}
+
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId)
+	{
+		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(emailInvitationId);
 	}
 }
 

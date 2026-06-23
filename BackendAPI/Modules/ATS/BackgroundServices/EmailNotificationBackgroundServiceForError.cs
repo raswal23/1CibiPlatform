@@ -100,7 +100,7 @@ public class EmailNotificationBackgroundServiceForError : BackgroundService
 
 			if (successList.Any())
 			{
-				await repository.UpdateEmailInvitationRequestForSentEmailAsync(successList);
+				await repository.UpdateBulkEmailInvitationRequestForSentEmailAsync(successList);
 			}
 
 			await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);

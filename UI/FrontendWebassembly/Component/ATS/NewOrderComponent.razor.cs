@@ -95,8 +95,6 @@ public partial class NewOrderComponent
 		finally
 		{
 			isSavingCandidate = false;
-
-
 		}
 
 	}
