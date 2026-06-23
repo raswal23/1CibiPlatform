@@ -4,9 +4,10 @@ public class EmailValidationService
 {
 	public string? ValidateEmail(string value)
 	{
-		if (value is null)
+		if (string.IsNullOrWhiteSpace(value))
+		
 			return null;
-
+		
 		if (!value.Contains("@"))
 			return "Invalid email format";
 

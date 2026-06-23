@@ -43,7 +43,8 @@
                 Dense="true"
                 Class="mb-4">
                     Blank values found in row(s):
-                    @string.Join(", ", InvalidRows)
+                    @string.Join(", ", InvalidRows) - 
+                    @Message
             </MudAlert>
         }
 
@@ -56,7 +57,10 @@
                 Cancel
             </MudButton>
 
+
             <MudButton OnClick="Confirm"
+                       Color="Color.Primary"
+                       Disabled=InvalidRows.Any()
                        Class="theme-button theme-button-active"
                        Style="border-radius:4px;">
                 Confirm Upload
