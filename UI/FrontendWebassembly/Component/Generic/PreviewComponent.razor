@@ -1,5 +1,4 @@
-﻿@using MudBlazor
-@inject IDialogService DialogService
+﻿@inject IDialogService DialogService
 
 <MudDialog Style="padding: 8px;">
     <DialogContent>
@@ -8,7 +7,7 @@
                         Items="Rows">
 
             <HeaderTemplate>
-                <MudTh>#</MudTh>
+                <MudTh>Cell Row</MudTh>
 
                 @foreach (var header in Headers)
                 {
@@ -17,14 +16,17 @@
             </HeaderTemplate>
 
             <RowTemplate Context="row">
-                <MudTd>@(Rows.IndexOf(row) + 2)</MudTd>
+                <MudTd DataLabel="Cell Row">@(Rows.IndexOf(row) + 2)</MudTd>
 
-                @foreach (var cell in row)
+                @for (int i = 0; i < row.Count; i++)
                 {
-                    <MudTd Style="@(string.IsNullOrWhiteSpace(cell)
-                                       ? "color:#c62828;font-weight:bold;"
-                                       : "")">
-                        @(string.IsNullOrWhiteSpace(cell) ? "(Blank)" : cell)
+                    var cellColumn = row[i];
+
+                    <MudTd DataLabel="@Headers[i]"
+                           Style="@(string.IsNullOrWhiteSpace(cellColumn)
+                                                          ? "color:#c62828;font-weight:bold;"
+                                                          : "")">
+                @(string.IsNullOrWhiteSpace(cellColumn) ? "(Blank)" : cellColumn)
                     </MudTd>
                 }
 
@@ -49,14 +51,12 @@
                   Justify="Justify.FlexEnd"
                   Spacing="2">
 
-            <MudButton Color="Color.Default"
-                       OnClick="Cancel"
-                       Style="border-radius:4px;">
+            <MudButton OnClick="Cancel"
+                       Style="border-radius:4px; border: 2px solid gray;">
                 Cancel
             </MudButton>
 
-            <MudButton Color="Color.Primary"
-                       OnClick="Confirm"
+            <MudButton OnClick="Confirm"
                        Class="theme-button theme-button-active"
                        Style="border-radius:4px;">
                 Confirm Upload

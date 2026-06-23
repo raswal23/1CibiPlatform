@@ -86,6 +86,7 @@ public partial class MainLayout
 		return $@"
         width: auto !important;
         background: {gradient} !important;
+		border-radius: 4px;
         transition: margin-left 0.3s ease, margin-right 0.3s ease;
     ";
 	}

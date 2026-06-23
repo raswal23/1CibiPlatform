@@ -1,15 +1,13 @@
-﻿@using ExcelDataReader;
-@using System.Data;
-@using System.Text;
-@inject IJSRuntime JS
+﻿@inject IJSRuntime JS
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 @inject EmailValidationService EmailValidationService
 
 <MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
-        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Candidate Details</MudText>
 
             <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
@@ -104,7 +102,7 @@
             </MudForm>
         </MudPaper>
 
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Bulk Invite</MudText>
 
             <MudForm @ref="bulkForm" Disabled="@isUploadingBulk">
@@ -201,7 +199,9 @@
                                 <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mt-2 mb-2">
                                     <MudText Typo="Typo.body2">
                                         Don’t have a file?
-                                        <MudLink Href="@templateLink" Underline="Underline.Always" Class="ml-1">
+                                        <MudLink Underline="Underline.Always" 
+                                                 OnClick="DownloadTemplate"
+                                                 Class="ml-1">
                                             Download template
                                         </MudLink>
                                     </MudText>
@@ -216,16 +216,16 @@
 
     <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                  Style="height: auto; min-height: 851px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+                  Style="height: auto; min-height: 851px; max-height: 925px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
 
             <MudText Align="Align.Center" Class="mb-2 gradient-text" Style="font-size: 20px; font-weight: 700;">
                 Application Form
             </MudText>
 
-            <div style="flex:1; overflow:auto;">
+            <div style="flex:1;">
                 <MudImage Src="/images/ats/ApplicationForm.png"
                           Alt="Application Form"
-                          Style="width:100%; height:auto; object-fit:contain; min-height: 851px;" />
+                          Style="width:100%; height:auto; object-fit:contain; min-height: 851px; max-height: 851px; border-radius: 4px;" />
             </div>
 
         </MudPaper>

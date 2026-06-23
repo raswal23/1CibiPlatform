@@ -25,7 +25,7 @@ public partial class ATSDashboardComponent
 	}
 
 
-	private static readonly string[] Departments = { "IT", "Marketing", "Sales", "HR" };
+	private static readonly string[] Departments = { "IT", "Marketing"};
 
 	private static readonly string[] ChartPalette =
 	{
@@ -56,12 +56,12 @@ public partial class ATSDashboardComponent
 	{
 		new ChartSeries<double>
 		{
-			Name = "Tech Hiring",
+			Name = "Tech",
 			Data = new double[] { 10, 15, 20, 14, 18 }
 		},
 		new ChartSeries<double>
 		{
-			Name = "Operations Hiring",
+			Name = "Ops",
 			Data = new double[] { 8, 12, 16, 13, 15 }
 		}
 	};

@@ -1,11 +1,10 @@
-﻿<MudGrid AlignItems="Center">
+﻿<MudGrid>
     <MudItem xs="12" Class="d-flex justify-center">
         <MudTabs Rounded="false"
                  Elevation="0"
                  Class="custom-tabs"
                  @bind-ActivePanelIndex="_activeIndex"
                  TabPanelsClass="pt-2 pb-2"
-                 ScrollButtons="Auto"
                  Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;">
             <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(0)" Icon="@Icons.Material.Filled.Home" Text="Dashboard" Onclick="@TabChangedAsync" />
             <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(1)" Icon="@Icons.Material.Filled.Warning" Text="Dispute Order" Onclick="@TabChangedAsync" />

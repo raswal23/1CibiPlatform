@@ -2,23 +2,26 @@
 
 public partial class NewOrderComponent
 {
-	
-
 	private MudForm? candidateForm;
 	private MudForm? bulkForm;
 	private EmailInvitationRequestDTO subject = new();
 	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
-	private string? templateLink;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
 
 	protected override async Task OnInitializedAsync()
 	{
-		templateLink = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+		
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();
 
+	}
+	private async Task DownloadTemplate()
+	{
+		var url = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+
+		NavigationManager.NavigateTo(url!);
 	}
 
 	private async void OnATSResponse(string message)
@@ -74,12 +77,12 @@ public partial class NewOrderComponent
 			if (isSent)
 			{
 				var successParam = new DialogParameters
-		{
-			{
-				nameof(SuccessSaveComponent.Message),
-				"Successfully saved the candidate's information."
-			}
-		};
+				{
+					{
+						nameof(SuccessSaveComponent.Message),
+						"Successfully saved the candidate's information."
+					}
+				};
 
 				await DialogService.ShowAsync<SuccessSaveComponent>(
 					"Success",

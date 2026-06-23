@@ -5,6 +5,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly ILogger<EndorsementSubmissionService> _logger;
 	private readonly IHashService _hashService;
 	private readonly IEmailService _emailService;
+	private readonly HybridCache _hybridCache;
 	private readonly IConfiguration _configuration;
 	private readonly ISecureToken _secureToken;
 	private readonly IHttpContextAccessor _httpContextAccessor;
@@ -21,6 +22,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IConfiguration configuration,
 		IHashService hashService,
 		[FromKeyedServices("ats")] IEmailService emailService,
+		HybridCache hybridCache,
 		ISecureToken secureToken,
 		IHttpContextAccessor httpContextAccessor,
 		IObjectStorageService objectStorageService)
@@ -28,6 +30,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_logger = logger;
 		_hashService = hashService;
 		_emailService = emailService;
+		_hybridCache = hybridCache;
 		_secureToken = secureToken;
 		_httpContextAccessor = httpContextAccessor;
 		_configuration = configuration;
@@ -39,11 +42,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
 	}
 
-	public Task<string> GetBulkTemplateFileUrlAsync()
+	public async Task<string> GetBulkTemplateFileUrlAsync()
 	{
-		var bulkTemplateLink = _objectStorageService.GenerateDownloadUrlAsync(_templateFileName, TimeSpan.FromMinutes(15));
-
-		return bulkTemplateLink;
+		return await _hybridCache.GetOrCreateAsync(
+			"bulk-template-url",
+			async _ =>
+			{
+				return await _objectStorageService.GenerateDownloadUrlAsync(
+					_templateFileName,
+					TimeSpan.FromMinutes(15));
+			},
+			options: new HybridCacheEntryOptions
+			{
+				Expiration = TimeSpan.FromMinutes(14)
+			});
 	}
 
 	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)

@@ -127,24 +127,24 @@ code {
 }
 
 .mud-drawer.mud-drawer-open {
-    border-radius: 30px !important;
+    border-radius: 4px !important;
 }
 
 .mud-appbar {
-    border-radius: 15px !important;
+    border-radius: 4px !important;
 }
 
 .nav-active-light {
     background: white !important;
     color: black !important;
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 .nav-active-dark {
     background: linear-gradient(90deg, #102247 0%, #2a77ae 50%) !important;
     color: white !important;
-    border-radius: 8px;
-    margin : 0px 10px 0px 10px
+    border-radius: 4px;
+    margin: 0px 10px 0px 10px
 }
 
 .nav-active-light .mud-icon-root,
@@ -170,7 +170,7 @@ code {
     max-width: 450px !important;
     backdrop-filter: blur(10px) !important;
     background: rgba(255, 255, 255, 0.95) !important;
-    border-radius: 24px !important;
+    border-radius: 4px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -234,12 +234,12 @@ code {
     max-width: 450px;
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.95) !important;
-    border-radius: 24px !important;
+    border-radius: 4px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
 }
 
 .login-button {
-    border-radius: 12px !important;
+    border-radius: 4px !important;
     height: 48px !important;
     font-weight: 600 !important;
     text-transform: none !important;
@@ -292,11 +292,11 @@ code {
     display: none !important;
 }
 .oneplatform-rounded-input .mud-input-outlined {
-    border-radius: 12px !important;
+    border-radius: 4px !important;
 }
 
 .oneplatform-rounded-input fieldset {
-    border-radius: 12px !important;
+    border-radius: 4px !important;
 }
 
 .philsys-custom-tabs .mud-tab {
@@ -355,7 +355,7 @@ code {
 }
 
 .philsys-loader-paper {
-    border-radius: 20px !important;
+    border-radius: 4px !important;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -424,7 +424,7 @@ code {
 
 .ats-component-boxshadow {
     padding: 4px;
-    border-radius: 12px;
+    border-radius: 4px;
     background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }

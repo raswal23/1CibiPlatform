@@ -1,6 +1,4 @@
-﻿using FrontendWebassembly.Component.ATS;
-
-namespace FrontendWebassembly.Component.Generic;
+﻿namespace FrontendWebassembly.Component.Generic;
 
 public partial class PreviewComponent
 {
@@ -30,12 +28,9 @@ public partial class PreviewComponent
 
 			var result = await dialog.Result;
 
-			if (result.Canceled)
+			if (result!.Canceled)
 				return;
 		}
-
-
-
 
 		PreviewDialog.Close(DialogResult.Ok(true));
 	}

@@ -34,7 +34,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		public async Task LivenessSessionService_ShouldThrow_WhenTransactionRecordNotFoundByHashToken()
 		{
 			var service = _fixture.LivenessSessionService;
-			var transactionStatus = new TransactionStatusResponse{ Exists =  true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = DateTime.UtcNow};
+			var transactionStatus = new TransactionStatusResponse{ Exists =  true, WebHookURl = "/", IsTransacted = false, ExpiresAt = DateTime.UtcNow};
 			_fixture.MockPhilSysRepository.Setup(x => x.GetLivenessSessionStatusAsync(It.IsAny<string>())).ReturnsAsync(transactionStatus);
 			_fixture.MockPhilSysRepository.Setup(x => x.GetTransactionDataByHashTokenAsync(It.IsAny<string>())).ReturnsAsync((PhilSysTransaction?)null);
 
@@ -50,7 +50,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		{
 			var service = _fixture.LivenessSessionService;
 			var Tid = Guid.CreateVersion7();
-			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = DateTime.UtcNow };
+			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, ExpiresAt = DateTime.UtcNow };
 			var transactionRecord = new PhilSysTransaction { Tid = Tid, InquiryType = "pcn", PCN = "6786785465456459"};
 			_fixture.MockPhilSysRepository.Setup(x => x.GetLivenessSessionStatusAsync(It.IsAny<string>())).ReturnsAsync(transactionStatus);
 			_fixture.MockPhilSysRepository.Setup(x => x.GetTransactionDataByHashTokenAsync(It.IsAny<string>())).ReturnsAsync(transactionRecord);
@@ -69,8 +69,8 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 			var service = _fixture.LivenessSessionService;
 			var Tid = Guid.CreateVersion7();
 			var FixedUtcNow = new DateTime(2025, 11, 9, 0, 0, 0, DateTimeKind.Utc);
-			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = FixedUtcNow };
-			var transactionStatusDTO = new TransactionStatusResponseDTO { Exists = true, WebHookURl = "/", IsTransacted = false, isExpired = false, ExpiresAt = FixedUtcNow }; 
+			var transactionStatus = new TransactionStatusResponse { Exists = true, WebHookURl = "/", IsTransacted = false, ExpiresAt = FixedUtcNow };
+			var transactionStatusDTO = new TransactionStatusResponseDTO { Exists = true, WebHookURl = "/", IsTransacted = false, ExpiresAt = FixedUtcNow }; 
 			var transactionRecord = new PhilSysTransaction { Tid = Tid, InquiryType = "pcn", PCN = "6786785465456459" };
 			_fixture.MockPhilSysRepository.Setup(x => x.GetLivenessSessionStatusAsync(It.IsAny<string>())).ReturnsAsync(transactionStatus);
 			_fixture.MockPhilSysRepository.Setup(x => x.GetTransactionDataByHashTokenAsync(It.IsAny<string>())).ReturnsAsync(transactionRecord);

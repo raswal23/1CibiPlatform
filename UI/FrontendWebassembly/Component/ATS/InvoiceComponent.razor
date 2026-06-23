@@ -1,6 +1,6 @@
 ﻿<MudGrid GutterSize="3" Class="mb-4">
     <MudItem xs="12" md="6">
-        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight:700;">
                 Billed Date
             </MudText>
@@ -15,7 +15,7 @@
             </div>
         </MudPaper>
 
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); min-height: 467px; max-height: 467px;">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight:700;">
                 Summary Details
             </MudText>
@@ -73,48 +73,52 @@
                 </MudItem>
 
                 <MudItem xs="12" Class="d-flex justify-center">
-                    <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download Statement</MudButton>
+                    <MudButton Class="theme-button theme-button-active" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download Statement</MudButton>
                 </MudItem>
             </MudGrid>
         </MudPaper>
     </MudItem>
 
     <MudItem xs="12" md="6">
-        <MudPaper Elevation="1" Class="pa-4" Style="height:635px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudPaper Elevation="1" Class="pa-4" Style="height: auto; min-height: 635px; max-height:650px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight:700;">
                 Payment Options
             </MudText>
 
-            <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="Center" Class="height: auto;">
+            <MudGrid Spacing="2" Justify="Justify.Center" Style="max-height: 300px;">
                 <!-- Payment via Credit Cards -->
                 <MudItem xs="12" class="d-flex align-center justify-center">
                     <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
-                    <MudText class="ml-2 mb-4">via major credit cards</MudText>
+                    <MudText>
+                        <MudText Class="ml-2">via major credit cards</MudText>
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" class="d-flex justify-center">
                     <MudImage Src="/images/ats/CreditCard.jpg"
                               Alt="Credit Cards"
-                              Style="width:60%; height:auto; padding: 0px;" />
+                              Style="width:60%; max-height: 125px; min-height:125px;" />
                 </MudItem>
 
                 <!-- Payment via E-Wallets -->
                 <MudItem xs="12" class="d-flex align-center justify-center">
                     <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
-                    <MudText class="ml-2">via major e-wallets</MudText>
+                    <MudText Class="ml-2">via major e-wallets</MudText>
                 </MudItem>
                 <MudItem xs="12" class="d-flex justify-center">
                     <MudImage Src="/images/ats/CreditCard.jpg"
                               Alt="E-Wallets"
-                              Style="width:60%; height:auto;" />
+                              Style="width:60%; max-height: 125px; min-height:125px;" />
                 </MudItem>
 
                 <!-- Payment via Bank Transfer -->
                 <MudItem xs="12" class="d-flex align-center justify-center">
                     <MudButton Class="theme-button theme-button-active" Style="width: 80px; border-radius: 4px;" OnClick="ProcessBulkInvite">Pay</MudButton>
-                    <MudText class="ml-2">via bank transfer</MudText>
+                    <MudText Class="ml-2">via bank transfer</MudText>
                 </MudItem>
                 <MudItem xs="12" class="d-flex justify-center">
                     <MudImage Src="/images/ats/CreditCard.jpg"
                               Alt="Bank Transfer"
-                              Style="width:60%; height:auto;" />
+                              Style="width:60%; max-height: 125px; min-height:125px;" />
                 </MudItem>
             </MudGrid>
         </MudPaper>

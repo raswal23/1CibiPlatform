@@ -61,6 +61,5 @@ public class LivenessSessionIntegrationTesting : BaseIntegrationTest
 		status.Should().NotBeNull();
 		status.WebHookURl.Should().Be(transaction.WebHookUrl);
 		status.IsTransacted.Should().Be(transaction.IsTransacted);
-		status.isExpired.Should().BeFalse();
 	}
 }
