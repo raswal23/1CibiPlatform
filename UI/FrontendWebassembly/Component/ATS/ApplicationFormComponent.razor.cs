@@ -2,7 +2,6 @@
 
 public partial class ApplicationFormComponent
 {
-
 	private MudForm? ApplicationForm;
 	[Parameter]
 	public Guid EmailId { get; set; }
@@ -26,12 +25,6 @@ public partial class ApplicationFormComponent
 	private PersonalDetailsDTO personalDetails = new();
 	private bool NoMiddleName = false;
 	private DateTime? DateOfBirth;
-	private IBrowserFile? AdditionalGovtIDFile;
-	private IBrowserFile? NBIClearanceFile;
-	private IBrowserFile? ResumeFile;
-	private MudFileUpload<IBrowserFile> AdditionalGovtIDFileUpload = default!;
-	private MudFileUpload<IBrowserFile> NBIClearanceFileUpload = default!;
-	private MudFileUpload<IBrowserFile> ResumeFileUpload = default!;
 
 	// AddressDetials
 	private AddressDetailsDTO addressDetails = new();
@@ -40,19 +33,14 @@ public partial class ApplicationFormComponent
 
 	// Educational background
 	private EducationalBackgroundDTO educationalBackground = new();
-	private string? HighestEducationalAttainment;
 	private DateTime? GraduationDate;
 	private string? DegreeWithMajor;
 	private string? AcademicInstitution;
-	private IBrowserFile? DiplomaORTORFile;
-	private string? DiplomaORTORFileName;
-	private MudFileUpload<IBrowserFile> DiplomaORTORUploadFile = default!;
+	private string? DiplomaFileName;
 
 	// Step 4 - credentials & experience
 	private LicensesDetailsDTO licensesDetails = new();
 	private DateTime? LicenseExpiryDate;
-	private IBrowserFile? LicenseFile;
-	private MudFileUpload<IBrowserFile> LicenseUploadFile = default!;
 
 	private ProfessionalExperiencesDTO professionalExperiences = new();
 	private DateTime? DatePermittedToContact1;
@@ -66,12 +54,6 @@ public partial class ApplicationFormComponent
 	private DateTime? EndOfEmployment3;
 	private bool AddEmployer2;
 	private bool AddEmployer3;
-	private IBrowserFile? Emp1COEFile;
-	private MudFileUpload<IBrowserFile> Emp1COEFileUpload = default!;
-	private IBrowserFile? Emp2COEFile;
-	private MudFileUpload<IBrowserFile> Emp2COEFileUpload = default!;
-	private IBrowserFile? Emp3COEFile;
-	private MudFileUpload<IBrowserFile> Emp3COEFileUpload = default!;
 
 	// Step 5 - references
 	private ReferenceDetailsDTO referenceDetails = new();
@@ -114,61 +96,93 @@ public partial class ApplicationFormComponent
 		ActiveStep = 2; 
 	}
 
-	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
+	private void RemoveFileFromUploadsAsync(string fileName)
 	{
-		if (await AdditionalGovtIDFileUpload.RemoveFileAsync(file))
+		// Personal Details
+		if (fileName == personalDetails.AdditionalGovtIDFileName)
 		{
-			AdditionalGovtIDFile = null;
 			personalDetails.AdditionalGovtIDFile = null;
 			personalDetails.AdditionalGovtIDFileName = null;
-
 			return;
 		}
-		if (await NBIClearanceFileUpload.RemoveFileAsync(file))
+
+		if (fileName == personalDetails.NBIClearanceFileName)
 		{
-			NBIClearanceFile = null;
 			personalDetails.NBIClearanceFile = null;
 			personalDetails.NBIClearanceFileName = null;
 			return;
 		}
-		if (await ResumeFileUpload.RemoveFileAsync(file))
+
+		if (fileName == personalDetails.ResumeFileName)
 		{
-			ResumeFile = null;
 			personalDetails.ResumeFile = null;
 			personalDetails.ResumeFileName = null;
 			return;
 		}
-		if (await DiplomaORTORUploadFile.RemoveFileAsync(file))
+
+		// Educational Background
+		if (fileName == educationalBackground.HighSchoolDiplomaFileName)
 		{
-			DiplomaORTORFile = null;
 			educationalBackground.HighSchoolDiplomaFile = null;
 			educationalBackground.HighSchoolDiplomaFileName = null;
+			return;
+		}
 
+		if (fileName == educationalBackground.SeniorHighSchoolDiplomaFileName)
+		{
 			educationalBackground.SeniorHighSchoolDiplomaFile = null;
 			educationalBackground.SeniorHighSchoolDiplomaFileName = null;
+			return;
+		}
 
+		if (fileName == educationalBackground.BachelorsDiplomaFileName)
+		{
 			educationalBackground.BachelorsDiplomaFile = null;
 			educationalBackground.BachelorsDiplomaFileName = null;
+			return;
+		}
 
+		if (fileName == educationalBackground.MastersDiplomaFileName)
+		{
 			educationalBackground.MastersDiplomaFile = null;
 			educationalBackground.MastersDiplomaFileName = null;
+			return;
+		}
 
+		if (fileName == educationalBackground.DoctorateDiplomaFileName)
+		{
 			educationalBackground.DoctorateDiplomaFile = null;
 			educationalBackground.DoctorateDiplomaFileName = null;
 			return;
 		}
-		if (await LicenseUploadFile.RemoveFileAsync(file))
+
+		// Licenses
+		if (fileName == licensesDetails.LicenseUploadFileName)
 		{
-			LicenseFile = null;
 			licensesDetails.LicenseUploadFile = null;
 			licensesDetails.LicenseUploadFileName = null;
 			return;
 		}
-		if (await Emp1COEFileUpload.RemoveFileAsync(file))
+
+		// Experience
+		if (fileName == professionalExperiences.Emp1COEUploadFileName)
 		{
-			Emp1COEFile = null;
 			professionalExperiences.Emp1COEUploadFile = null;
 			professionalExperiences.Emp1COEUploadFileName = null;
+			return;
+		}
+
+		if (fileName == professionalExperiences.Emp2COEUploadFileName)
+		{
+			professionalExperiences.Emp2COEUploadFile = null;
+			professionalExperiences.Emp2COEUploadFileName = null;
+			return;
+		}
+
+		if (fileName == professionalExperiences.Emp3COEUploadFileName)
+		{
+			professionalExperiences.Emp3COEUploadFile = null;
+			professionalExperiences.Emp3COEUploadFileName = null;
 			return;
 		}
 	}
@@ -192,19 +206,17 @@ public partial class ApplicationFormComponent
 
 	private async Task OnGovtIdUpload(InputFileChangeEventArgs e)
 	{
-		AdditionalGovtIDFile = e.File;
-		personalDetails.AdditionalGovtIDFileName = e.File.Name;
 
-
-		if (AdditionalGovtIDFile != null)
+		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
 
-			await AdditionalGovtIDFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
 
-			personalDetails.ResumeFile = ms.ToArray();
+			personalDetails.AdditionalGovtIDFile = ms.ToArray();
+			personalDetails.AdditionalGovtIDFileName = e.File!.Name;
 		}
 
 		return;
@@ -212,113 +224,150 @@ public partial class ApplicationFormComponent
 
 	private async Task OnNbiUpload(InputFileChangeEventArgs e)
 	{
-		NBIClearanceFile = e.File;
-		personalDetails.NBIClearanceFileName = e.File.Name;
-
-		if (NBIClearanceFile != null)
+		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
 
-			await NBIClearanceFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
 
 			personalDetails.NBIClearanceFile = ms.ToArray();
+			personalDetails.NBIClearanceFileName = e.File.Name;
 		}
 		return;
 	}
 
 	private async Task OnCvUpload(InputFileChangeEventArgs e)
 	{
-		ResumeFile = e.File;
-		personalDetails.ResumeFileName = e.File.Name;
-		if (ResumeFile != null)
+		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
 
-			await ResumeFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
 
 			personalDetails.ResumeFile = ms.ToArray();
+			personalDetails.ResumeFileName = e.File.Name;
 		}
 		return;
 	}
 
 	private async Task OnDiplomaUpload(InputFileChangeEventArgs e)
 	{
-		DiplomaORTORFile = e.File;
-		DiplomaORTORFileName = e.File.Name;
-		if (DiplomaORTORFile is not null)
+		DiplomaFileName = e.File!.Name;
+		if (e.File is not null)
 		{
 			using var ms = new MemoryStream();
 
-			await DiplomaORTORFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
-
-			if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
+			if (e.File != null)
 			{
-				educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-				educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
-			}
-			else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
-			{
-				educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-				educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
-			}
-			else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
-			{
-				educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-				educationalBackground.BachelorsDegree = DegreeWithMajor;
-				educationalBackground.BachelorsDiplomaFile = ms.ToArray();
-			}
-			else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
-			{
-				educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-				educationalBackground.MastersDegree = DegreeWithMajor;
-				educationalBackground.MastersDiplomaFile = ms.ToArray();
-			}
-			else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
-			{
-				educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-				educationalBackground.DoctorateDegree = DegreeWithMajor;
-				educationalBackground.DoctorateDiplomaFile = ms.ToArray();
+				if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
+				{
+					educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+					educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
+					educationalBackground.HighSchoolDiplomaFileName = e.File.Name;
+				}
+				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
+				{
+					educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+					educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
+					educationalBackground.SeniorHighSchoolDiplomaFileName = e.File.Name;
+				}
+				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
+				{
+					educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+					educationalBackground.BachelorsDegree = DegreeWithMajor;
+					educationalBackground.BachelorsDiplomaFile = ms.ToArray();
+					educationalBackground.BachelorsDiplomaFileName = e.File.Name;
+				}
+				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
+				{
+					educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+					educationalBackground.MastersDegree = DegreeWithMajor;
+					educationalBackground.MastersDiplomaFile = ms.ToArray();
+					educationalBackground.MastersDiplomaFileName = e.File.Name;
+				}
+				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
+				{
+					educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+					educationalBackground.DoctorateDegree = DegreeWithMajor;
+					educationalBackground.DoctorateDiplomaFile = ms.ToArray();
+					educationalBackground.MastersDiplomaFileName = e.File.Name;
+				}
 			}
 		}
+
 		return;
 	}
 
 	private async Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
 	{
-		LicenseFile = e.File;
-		licensesDetails.LicenseUploadFileName = e.File.Name;
-		if (LicenseFile != null)
+		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
 
-			await LicenseFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
 
 			licensesDetails.LicenseUploadFile = ms.ToArray();
+			licensesDetails.LicenseUploadFileName = e.File.Name;
 		}
+
 		return;
 	}
 
 	private async Task OnCoe1Upload(InputFileChangeEventArgs e)
 	{
-		Emp1COEFile = e.File;
-		professionalExperiences.Emp1COEUploadFileName = e.File.Name;
-		if (Emp1COEFile != null)
+		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
 
-			await Emp1COEFile
+			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
 
 			professionalExperiences.Emp1COEUploadFile = ms.ToArray();
+			professionalExperiences.Emp1COEUploadFileName = e.File.Name;
+		}
+
+		return;
+	}
+
+	private async Task OnCoe2Upload(InputFileChangeEventArgs e)
+	{
+		if (e.File != null)
+		{
+			using var ms = new MemoryStream();
+
+			await e.File
+				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+				.CopyToAsync(ms);
+
+			professionalExperiences.Emp2COEUploadFile = ms.ToArray();
+			professionalExperiences.Emp2COEUploadFileName = e.File.Name;
+		}
+
+		return;
+	}
+
+	private async Task OnCoe3Upload(InputFileChangeEventArgs e)
+	{
+		if (e.File != null)
+		{
+			using var ms = new MemoryStream();
+
+			await e.File
+				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
+				.CopyToAsync(ms);
+
+			professionalExperiences.Emp3COEUploadFile = ms.ToArray();
+			professionalExperiences.Emp3COEUploadFileName = e.File.Name;
 		}
 
 		return;
@@ -391,12 +440,20 @@ public partial class ApplicationFormComponent
 		professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact1!.Value);
 		professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment1!.Value);
 		professionalExperiences.Emp1EndDate = DateOnly.FromDateTime(EndOfEmployment1!.Value);
-		professionalExperiences.Emp2DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact2!.Value);
-		professionalExperiences.Emp2StartDate = DateOnly.FromDateTime(StartOfEmployment2!.Value);
-		professionalExperiences.Emp2EndDate = DateOnly.FromDateTime(EndOfEmployment2!.Value);
-		professionalExperiences.Emp3DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact3!.Value);
-		professionalExperiences.Emp3StartDate = DateOnly.FromDateTime(StartOfEmployment3!.Value);
-		professionalExperiences.Emp3EndDate = DateOnly.FromDateTime(EndOfEmployment3!.Value);
+
+		if (DatePermittedToContact2.HasValue && StartOfEmployment2.HasValue && EndOfEmployment2.HasValue)
+		{
+			professionalExperiences.Emp2DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact2.Value);
+			professionalExperiences.Emp2StartDate = DateOnly.FromDateTime(StartOfEmployment2.Value);
+			professionalExperiences.Emp2EndDate = DateOnly.FromDateTime(EndOfEmployment2.Value);
+		}
+
+		if (DatePermittedToContact3.HasValue && StartOfEmployment3.HasValue && EndOfEmployment3.HasValue)
+		{
+			professionalExperiences.Emp3DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact3!.Value);
+			professionalExperiences.Emp3StartDate = DateOnly.FromDateTime(StartOfEmployment3!.Value);
+			professionalExperiences.Emp3EndDate = DateOnly.FromDateTime(EndOfEmployment3!.Value);
+		}
 
 		if (Ref1BestDate.HasValue && Ref1BestTime.HasValue)
 		{

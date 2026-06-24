@@ -15,7 +15,9 @@
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.FirstName" 
                                       Label="Last Name"
-                                      Variant="Variant.Outlined" 
+                                      Adornment="Adornment.Start"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
                                       Class="oneplatform-rounded-input" 
                                       Required="true"
                                       RequiredError="First Name is required"/>
@@ -24,7 +26,9 @@
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.LastName" 
                                     Label="Last Name" 
-                                    Variant="Variant.Outlined" 
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
                                     RequiredError="Last Name is required"/>
@@ -32,8 +36,10 @@
 
                     <MudItem xs="12" sm="2">
                         <MudTextField @bind-Value="subject.MiddleInitial" 
-                                      Label="M.I."
-                                    Variant="Variant.Outlined" 
+                                    Label="M.I."
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
                                     RequiredError="Middle Initial is required"/>
@@ -42,7 +48,9 @@
                     <MudItem xs="12">
                         <MudTextField @bind-Value="subject.EmailAddress" 
                                     Label="Email Address" 
-                                    Variant="Variant.Outlined" 
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
                                     FullWidth="true" 
                                     Class="oneplatform-rounded-input"
                                     Required="true"
@@ -53,7 +61,9 @@
                     <MudItem xs="12">
                         <MudTextField @bind-Value="subject.MobileNumber" 
                                     Label="Mobile Number" 
-                                    Variant="Variant.Outlined" 
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
                                     FullWidth="true" 
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
@@ -64,7 +74,9 @@
                     <MudItem xs="12">
                         <MudSelect @bind-Value="subject.SelectPackage" 
                                     Label="Select Package" 
-                                    Variant="Variant.Outlined" 
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
                                     FullWidth="true" 
                                     Class="oneplatform-rounded-input"
                                     Required="true"
@@ -111,7 +123,9 @@
                     <MudItem xs="12">
                         <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
                                    Label="Select Package"
+                                   Adornment="Adornment.Start"
                                    Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
                                    FullWidth="true"
                                    Class="oneplatform-rounded-input"
                                    Required="true"

@@ -34,8 +34,8 @@ public class ApplicationFormService : IApplicationFormService
 			{
 				var stream = new MemoryStream(file);
 				var fileContent = new StreamContent(stream);
-				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-				content.Add(fileContent, name);
+				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+				content.Add(fileContent, name, name);
 			}
 		}
 
@@ -183,7 +183,6 @@ public class ApplicationFormService : IApplicationFormService
 		// Post
 		AddString(SignatureDetails.EmailInvitationID.ToString(), "SignatureDetails.EmailInvitationID");
 		AddFile(SignatureDetails.Signature, "SignatureDetails.Signature");
-		AddString(SignatureDetails.SignatureFileName, "SignatureDetails.SignatureFileName");
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 

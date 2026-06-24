@@ -218,7 +218,7 @@ public class ApplicationFormService : IApplicationFormService
 		if (licensesDetailsDTO.LicenseUploadFile != null)
 		{
 			await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
-			string licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
+			licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
 		}
 
 		LicensesDetails licensesDetails = licensesDetailsDTO!.Adapt<LicensesDetails>();
@@ -304,6 +304,7 @@ public class ApplicationFormService : IApplicationFormService
 		SignatureDetailsDTO signatureDetailsDTO,
 		CancellationToken cancellationToken)
 	{
+		signatureDetailsDTO.SignatureFileName = $"{Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}";
 		if (signatureDetailsDTO.Signature != null)
 		{
 			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();

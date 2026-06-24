@@ -3,7 +3,7 @@
 @inject EmailValidationService EmailValidationService
 @using SigPad
 
-<MudPaper Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
+<MudPaper Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent/>
@@ -165,6 +165,7 @@
                                             <MudDatePicker @bind-Date="DateOfBirth"
                                                            Label="Birth Date"
                                                            Adornment="Adornment.End"
+                                                           Placeholder="Date"
                                                            Required="true"
                                                            RequiredError="Birth Date is required"
                                                            Variant="Variant.Outlined"
@@ -231,14 +232,11 @@
                                         <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                             <MudFileUpload T="IBrowserFile"
                                                            MaxFileSize="26214400"
-                                                           @bind-File="AdditionalGovtIDFile"
-                                                           @ref="AdditionalGovtIDFileUpload"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
-                                                           Required="true"
+                                                           Required="@string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
                                                            RequiredError="Government Id is required"
-                                                           Class="centered-upload"
-                                                           DragAndDrop="true">
+                                                           Class="centered-upload"s>
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
                                                         <MudFab Class="oneplatform-rounded-input"
@@ -249,15 +247,15 @@
                                                     </div>
                                                 </CustomContent>
                                                 <SelectedTemplate>
-                                                    @if (context != null)
+                                                    @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
                                                     {
                                                         <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                                <MudText>@personalDetails.AdditionalGovtIDFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
                                                             </MudStack>
                                                         </div>
                                                     }
@@ -266,11 +264,8 @@
 
                                             <MudFileUpload T="IBrowserFile" 
                                                            Accept=".pdf"
-                                                           DragAndDrop="true"
-                                                           Required="true"
-                                                           @bind-File="NBIClearanceFile"
-                                                           @ref="NBIClearanceFileUpload"
-                                                           OnFilesChanged="OnNbiUpload"
+                                                           Required="@string.IsNullOrEmpty(personalDetails.NBIClearanceFileName)"
+                                                           OnFilesChanged="OnNbiUpload"s
                                                            RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
                                                            Class="mt-4 centered-upload">
@@ -284,15 +279,15 @@
                                                     </div>
                                                 </CustomContent>
                                                 <SelectedTemplate>
-                                                    @if (context != null)
+                                                    @if (!string.IsNullOrEmpty(personalDetails.NBIClearanceFileName))
                                                     {
                                                         <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                                <MudText>@personalDetails.NBIClearanceFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFileName))" />
                                                             </MudStack>
                                                         </div>
                                                     }
@@ -301,12 +296,9 @@
 
                                             <MudFileUpload T="IBrowserFile" 
                                                            Accept=".pdf"
-                                                           DragAndDrop="true"
                                                            MaxFileSize="26214400"
-                                                           Required="true"
+                                                           Required="@string.IsNullOrEmpty(personalDetails.ResumeFileName)"
                                                            OnFilesChanged="OnCvUpload"
-                                                           @ref="ResumeFileUpload"
-                                                           @bind-File="ResumeFile"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
                                                 <CustomContent>
@@ -319,15 +311,15 @@
                                                     </div>
                                                 </CustomContent>
                                                 <SelectedTemplate>
-                                                    @if (context != null)
+                                                    @if (!string.IsNullOrEmpty(personalDetails.ResumeFileName))
                                                     {
                                                         <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                                <MudText>@personalDetails.ResumeFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFileName))" />
                                                             </MudStack>
                                                         </div>
                                                     }
@@ -536,8 +528,10 @@
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
+                                               Placeholder="Date"
                                                Class="oneplatform-rounded-input"
                                                @bind-Date="GraduationDate"
+                                               MaxDate="@DateTime.Now"
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
 
@@ -555,12 +549,9 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
-                                               Required="true"
-                                               @bind-File="DiplomaORTORFile"
-                                               @ref="DiplomaORTORUploadFile"
+                                               Required="@string.IsNullOrEmpty(DiplomaFileName)"
                                                Class="centered-upload"
-                                               OnFilesChanged="OnDiplomaUpload"
-                                               DragAndDrop="true">
+                                               OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
                                                 StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -569,15 +560,15 @@
                                                 Label="Upload Diploma / TOR" />
                                     </CustomContent>
                                     <SelectedTemplate>
-                                        @if (context != null)
+                                        @if (!string.IsNullOrEmpty(DiplomaFileName))
                                         {
                                             <div style="display:flex; justify-content:left; width:100%; margin-top:8px;">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudText>@DiplomaFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(DiplomaFileName))" />
                                                 </MudStack>
                                             </div>
                                         }
@@ -620,9 +611,11 @@
                                                Required="true"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
+                                               Placeholder="Date"
                                                Class="oneplatform-rounded-input"
                                                @bind-Date="LicenseExpiryDate"
                                                Label="License Expiry Date"
+                                               MinDate="@DateTime.Now"
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
 
@@ -643,11 +636,8 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnProfessionalLicenseUpload"
-                                               Required="true"
-                                               @ref="LicenseUploadFile"
-                                               @bind-File="LicenseFile"
-                                               Class="centered-upload"
-                                               DragAndDrop="true">
+                                               Required="string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName)"
+                                               Class="centered-upload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
                                                 StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -656,15 +646,15 @@
                                                 Label="Upload Professional License" />
                                     </CustomContent>
                                     <SelectedTemplate>
-                                        @if (context != null)
+                                        @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
                                         {
                                             <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudText>@licensesDetails.LicenseUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
                                                 </MudStack>
                                             </div>
                                         }
@@ -742,6 +732,7 @@
                                 <MudDatePicker @bind-Date="DatePermittedToContact1"
                                                Label="Date permitted to contact"
                                                DateFormat="MM/dd/yyyy"
+                                               Placeholder="Date"
                                                Required="true"
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
@@ -766,9 +757,11 @@
                                                @bind-Date="StartOfEmployment1"
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
+                                               Placeholder="Date"
                                                Margin="Margin.Dense"
                                                Required="true"
                                                Class="oneplatform-rounded-input"
+                                               MinDate="@DateTime.Now"
                                                Label="Start Date of Employment" />
                             </MudItem>
                             <MudItem xs="12" sm="3">
@@ -776,6 +769,7 @@
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
+                                               Placeholder="Date"
                                                Required="true"
                                                Class="oneplatform-rounded-input"
                                                Label="End Date of Employment"
@@ -789,11 +783,8 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="true"
-                                               class="centered-upload"
-                                               @ref="Emp1COEFileUpload"
-                                               @bind-File="Emp1COEFile"
-                                               DragAndDrop="true">
+                                               Required="@string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
+                                               class="centered-upload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
                                                 StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -802,15 +793,15 @@
                                                 Label="Upload COE/ID" />
                                     </CustomContent>
                                     <SelectedTemplate>
-                                        @if (context != null)
+                                        @if (!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))
                                         {
                                             <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudText>@professionalExperiences.Emp1COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFileName))" />
                                                 </MudStack>
                                             </div>
                                         }
@@ -911,6 +902,7 @@
                                                Required="true"
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
+                                               Placeholder="Date"
                                                Margin="Margin.Dense"
                                                MinDate="@DateTime.Now"
                                                Class="oneplatform-rounded-input" />
@@ -934,6 +926,8 @@
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                Required="true"
+                                               Placeholder="Date"
+                                               MinDate="@DateTime.Now"
                                                Class="oneplatform-rounded-input"
                                                Label="Start Date of Employment" />
                             </MudItem>
@@ -942,6 +936,7 @@
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
+                                               Placeholder="Date"
                                                Required="true"
                                                Class="oneplatform-rounded-input"
                                                Label="End Date of Employment"
@@ -954,12 +949,9 @@
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
-                                               OnFilesChanged="OnCoe1Upload"
-                                               Required="true"
-                                               class="centered-upload"
-                                               @ref="Emp2COEFileUpload"
-                                               @bind-File="Emp2COEFile"
-                                               DragAndDrop="true">
+                                               OnFilesChanged="OnCoe2Upload"
+                                               Required="@string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName)"
+                                               class="centered-upload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
                                                 StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -968,15 +960,15 @@
                                                 Label="Upload COE/ID" />
                                     </CustomContent>
                                     <SelectedTemplate>
-                                        @if (context != null)
+                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName))
                                         {
                                             <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                        <MudText>@professionalExperiences.Emp2COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFileName))" />
                                                 </MudStack>
                                             </div>
                                         }
@@ -1076,6 +1068,7 @@
                                                    Label="Date permitted to contact"
                                                    DateFormat="MM/dd/yyyy"
                                                    Required="true"
+                                                   Placeholder="Date"
                                                    Adornment="Adornment.End"
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
@@ -1097,10 +1090,12 @@
                                 <MudItem xs="12" sm="3">
                                     <MudDatePicker DateFormat="MM/dd/yyyy"
                                                    @bind-Date="StartOfEmployment3"
+                                                   Placeholder="Date"
                                                    Adornment="Adornment.End"
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
                                                    Required="true"
+                                                   MinDate="@DateTime.Now"
                                                    Class="oneplatform-rounded-input"
                                                    Label="Start Date of Employment" />
                                 </MudItem>
@@ -1108,6 +1103,7 @@
                                     <MudDatePicker @bind-Date="EndOfEmployment3"
                                                    Adornment="Adornment.End"
                                                    Variant="Variant.Outlined"
+                                                   Placeholder="Date"
                                                    Margin="Margin.Dense"
                                                    Required="true"
                                                    Class="oneplatform-rounded-input"
@@ -1121,12 +1117,9 @@
                                     <MudFileUpload T="IBrowserFile"
                                                    MaxFileSize="26214400"
                                                    Accept=".pdf"
-                                                   OnFilesChanged="OnCoe1Upload"
-                                                   Required="true"
-                                                   class="centered-upload"
-                                                   @ref="Emp3COEFileUpload"
-                                                   @bind-File="Emp3COEFile"
-                                                   DragAndDrop="true">
+                                                   OnFilesChanged="OnCoe3Upload"
+                                                   Required="@string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName)"
+                                                   class="centered-upload">
                                         <CustomContent>
                                             <MudFab Class="oneplatform-rounded-input"
                                                     StartIcon="@Icons.Material.Filled.CloudUpload"
@@ -1135,15 +1128,15 @@
                                                     Label="Upload COE/ID" />
                                         </CustomContent>
                                         <SelectedTemplate>
-                                            @if (context != null)
+                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName))
                                             {
                                                 <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                     <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                        <MudText>@context.Name (@($"{context.Size / 1024d:N1} kB"))</MudText>
+                                                        <MudText>@professionalExperiences.Emp3COEUploadFileName</MudText>
                                                         <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                        Color="Color.Default"
                                                                        Size="Size.Small"
-                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(context))" />
+                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFileName))" />
                                                     </MudStack>
                                                 </div>
                                             }
@@ -1291,6 +1284,7 @@
                                         <MudText Typo="Typo.body2">Best time to contact:</MudText>
                                         <MudDatePicker @bind-Date="Ref1BestDate"
                                                        Class="w-25 oneplatform-rounded-input"
+                                                       Placeholder="Date"
                                                        Adornment="Adornment.End"
                                                        Required="true"
                                                        Variant="Variant.Outlined"
@@ -1304,6 +1298,7 @@
                                                        Required="true"
                                                        Variant="Variant.Outlined"
                                                        Label="Time"
+                                                       Placeholder="Time"
                                                        Margin="Margin.Dense" />
                                     </MudItem>
                                 </MudGrid>
@@ -1411,6 +1406,7 @@
                                     <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
                                         <MudText Typo="Typo.body2">Best time to contact:</MudText>
                                         <MudDatePicker @bind-Date="Ref2BestDate"
+                                                       Placeholder="Date"
                                                        DateFormat="MM/dd/yyyy"
                                                        Class="w-25 oneplatform-rounded-input"
                                                        Adornment="Adornment.End"
@@ -1425,6 +1421,7 @@
                                                        Required="true"
                                                        Variant="Variant.Outlined"
                                                        Label="Time"
+                                                       Placeholder="Time"
                                                        Margin="Margin.Dense" />
                                     </MudItem>
                                 </MudGrid>
@@ -1443,7 +1440,7 @@
                                                           Required="@AddAnotherReference"
                                                           Class="oneplatform-rounded-input"
                                                           @bind-Value="referenceDetails.Ref3FullName"
-                                                          Label="Full Name of Reference #1" />
+                                                          Label="Full Name of Reference #3" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <div class="d-flex" style="gap:8px; align-items:center;">
@@ -1533,6 +1530,7 @@
                                             <MudText Typo="Typo.body2">Best time to contact:</MudText>
                                             <MudDatePicker @bind-Date="Ref3BestDate"
                                                            Class="w-25 oneplatform-rounded-input"
+                                                           Placeholder="Date"
                                                            Adornment="Adornment.End"
                                                            Required="@AddAnotherReference"
                                                            Variant="Variant.Outlined"
@@ -1546,6 +1544,7 @@
                                                            Required="@AddAnotherReference"
                                                            Variant="Variant.Outlined"
                                                            Label="Time"
+                                                           Placeholder="Time"
                                                            Margin="Margin.Dense" />
                                         </MudItem>
                                     </MudGrid>
