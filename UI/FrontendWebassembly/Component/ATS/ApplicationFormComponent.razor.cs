@@ -417,6 +417,7 @@ public partial class ApplicationFormComponent
 
 	private async Task OnSubmitForm()
 	{
+		await OnSaveAndNextAsync();
 		personalDetails.EmailInvitationID = EmailId;
 		addressDetails.EmailInvitationID = EmailId;
 		educationalBackground.EmailInvitationID = EmailId;

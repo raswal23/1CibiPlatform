@@ -175,6 +175,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Failed to insert data for Bulk File Information {FileID} : {@Context}", bulkUploadFileDetailsDTO.UploadedByUserId, logContext);
+			await _objectStorageService.DeleteAsync(bulkFileKey, ct);
 			throw new InternalServerException($"Failed insert data to the database. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
