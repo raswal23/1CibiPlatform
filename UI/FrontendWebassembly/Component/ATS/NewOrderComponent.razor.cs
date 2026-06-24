@@ -91,7 +91,10 @@ public partial class NewOrderComponent
 					"Success",
 					successParam);
 
-				await candidateForm.ResetAsync();
+					subject.RushNormal = null;
+
+					await candidateForm.ResetAsync();
+				
 			}
 		}
 		finally
@@ -171,8 +174,8 @@ public partial class NewOrderComponent
 				await DialogService.ShowAsync<SuccessSaveComponent>(
 					"Success",
 					successParams);
-
-				bulkUploadFileDetailsDTO = new();
+				
+				bulkUploadFileDetailsDTO.OrderType = null;
 
 				await bulkForm.ResetAsync();
 			}
