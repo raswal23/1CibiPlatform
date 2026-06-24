@@ -13,6 +13,7 @@ public partial class ApplicationFormComponent
 	public string? HashToken { get; set; }
 	private string? FaceUrl;
 	private bool IsSuccess = false;
+	private bool hasProfessionalLicense = false;
 
 	// Stepper and general
 	private MudStepper? _stepper;

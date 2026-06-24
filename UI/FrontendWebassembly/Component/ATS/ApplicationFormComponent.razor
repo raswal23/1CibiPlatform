@@ -601,73 +601,100 @@
                     <MudStep Title="Part 1 - Step 4">
                         <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 gradient-text">Credentials &amp; Licenses</MudText>
                         <MudGrid>
-                            <MudItem xs="12" sm="8">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"f
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="licensesDetails.LicenseName"
-                                              Required="true"
-                                              RequiredError="Professional License is required"
-                                              Label="Professional License" />
+                            <MudItem xs="12">
+                                <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+
+                                    <MudText Typo="Typo.h6">
+                                        Do you have a Professional License?
+                                    </MudText>
+
+                                    <MudStack Row Spacing="2" Class="mt-2" JustifyContent="center">
+                                        <MudButton Class="theme-button theme-button-active"
+                                                   Style="border-radius:4px;"
+                                                   OnClick="() => hasProfessionalLicense = true">
+                                            Yes
+                                        </MudButton>
+
+                                        <MudButton Style="border-radius:4px; border: 2px solid gray;"
+                                                   OnClick="() => hasProfessionalLicense = false">
+                                            No
+                                        </MudButton>
+                                    </MudStack>
+
+                                </div>
                             </MudItem>
 
-                            <MudItem xs="12" sm="4">
-                                <MudDatePicker Adornment="Adornment.End"
-                                               Required="true"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense"
-                                               Placeholder="Date"
-                                               Class="oneplatform-rounded-input"
-                                               @bind-Date="LicenseExpiryDate"
-                                               Label="License Expiry Date"
-                                               MinDate="@DateTime.Now"
-                                               DateFormat="MM/dd/yyyy" />
-                            </MudItem>
+                            @if (hasProfessionalLicense == true)
+                            {
+                                <MudItem xs="12" sm="8">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined" f
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="licensesDetails.LicenseName"
+                                                  Required="@hasProfessionalLicense"
+                                                  RequiredError="Professional License is required"
+                                                  Label="Professional License" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="8">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="licensesDetails.LicenseNumber"
-                                              Required="true"
-                                              RequiredError="License No. is required"
-                                              Label="License No." />
-                            </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudDatePicker Adornment="Adornment.End"
+                                                   Required="@hasProfessionalLicense"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Placeholder="Date"
+                                                   Class="oneplatform-rounded-input"
+                                                   @bind-Date="LicenseExpiryDate"
+                                                   Label="License Expiry Date"
+                                                   MinDate="@DateTime.Now"
+                                                   DateFormat="MM/dd/yyyy" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="4">
-                                <MudFileUpload T="IBrowserFile" 
-                                               MaxFileSize="26214400"
-                                               Accept=".pdf"
-                                               OnFilesChanged="OnProfessionalLicenseUpload"
-                                               Required="string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName)"
-                                               Class="centered-upload">
-                                    <CustomContent>
-                                        <MudFab Class="oneplatform-rounded-input"
-                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                Style="border: 1px solid gray; border-radius: 4px; max-width: 368px; width: auto;"
-                                                OnClick="@context.OpenFilePickerAsync"
-                                                Label="Upload Professional License" />
-                                    </CustomContent>
-                                    <SelectedTemplate>
-                                        @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
-                                        {
-                                            <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@licensesDetails.LicenseUploadFileName</MudText>
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                   Color="Color.Default"
-                                                                   Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
-                                                </MudStack>
-                                            </div>
-                                        }
-                                    </SelectedTemplate>
-                                </MudFileUpload>
-                            </MudItem>
+                                <MudItem xs="12" sm="8">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="licensesDetails.LicenseNumber"
+                                                  Required="@hasProfessionalLicense"
+                                                  RequiredError="License No. is required"
+                                                  Label="License No." />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="4">
+                                    <MudFileUpload T="IBrowserFile"
+                                                   MaxFileSize="26214400"
+                                                   Accept=".pdf"
+                                                   OnFilesChanged="OnProfessionalLicenseUpload"
+                                                   Required="@(string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName) && hasProfessionalLicense == true)"
+                                                   Class="centered-upload">
+                                        <CustomContent>
+                                            <MudFab Class="oneplatform-rounded-input"
+                                                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                    Style="border: 1px solid gray; border-radius: 4px; max-width: 368px; width: auto;"
+                                                    OnClick="@context.OpenFilePickerAsync"
+                                                    Label="Upload Professional License" />
+                                        </CustomContent>
+                                        <SelectedTemplate>
+                                            @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
+                                            {
+                                                <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
+                                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
+                                                        <MudText>@licensesDetails.LicenseUploadFileName</MudText>
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                       Color="Color.Default"
+                                                                       Size="Size.Small"
+                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
+                                                    </MudStack>
+                                                </div>
+                                            }
+                                        </SelectedTemplate>
+                                    </MudFileUpload>
+                                </MudItem>
+                            }
+                           
 
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6" Class="gradient-text" Style="font-weight:700;" Align="Align.Center">Professional Experiences</MudText>
@@ -790,7 +817,7 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="@!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
+                                               Required="@(!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))"
                                                class="centered-upload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
