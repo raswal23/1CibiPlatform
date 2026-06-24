@@ -76,7 +76,6 @@ public class ApplicationFormService : IApplicationFormService
 
 			await _unitOfWork.CommitAsync(ct);
 
-
 			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 
 			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
@@ -216,10 +215,13 @@ public class ApplicationFormService : IApplicationFormService
 		LicensesDetailsDTO licensesDetailsDTO,
 		CancellationToken cancellationToken)
 	{
-		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
-		string licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
+		if (licensesDetailsDTO.LicenseUploadFile != null)
+		{
+			await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
+			string licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
+		}
 
-		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
+		LicensesDetails licensesDetails = licensesDetailsDTO!.Adapt<LicensesDetails>();
 		licensesDetails.LicensesDetailsID = Guid.CreateVersion7();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
 		licensesDetails.CreatedDate = DateTime.UtcNow;
