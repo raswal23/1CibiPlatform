@@ -35,8 +35,11 @@ public partial class NewOrderComponent
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
 	{
-		bulkUploadFileDetailsDTO.BulkFile = e.File;
-		bulkUploadFileDetailsDTO.FileName = e.File.Name;
+		if (e.File is not null)
+		{
+			bulkUploadFileDetailsDTO.BulkFile = e.File;
+			bulkUploadFileDetailsDTO.FileName = e.File.Name;
+		}
 
 		return;
 	}

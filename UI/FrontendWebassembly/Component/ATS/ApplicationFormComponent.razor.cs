@@ -29,14 +29,13 @@ public partial class ApplicationFormComponent
 	// AddressDetials
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
-	private string? OwnershipOtherText;
+	private string? OwnershipOtherText = null;
 
 	// Educational background
 	private EducationalBackgroundDTO educationalBackground = new();
 	private DateTime? GraduationDate;
 	private string? DegreeWithMajor;
 	private string? AcademicInstitution;
-	private string? DiplomaFileName;
 
 	// Step 4 - credentials & experience
 	private LicensesDetailsDTO licensesDetails = new();
@@ -121,38 +120,10 @@ public partial class ApplicationFormComponent
 		}
 
 		// Educational Background
-		if (fileName == educationalBackground.HighSchoolDiplomaFileName)
+		if (fileName == educationalBackground.DiplomaFileName)
 		{
-			educationalBackground.HighSchoolDiplomaFile = null;
-			educationalBackground.HighSchoolDiplomaFileName = null;
-			return;
-		}
-
-		if (fileName == educationalBackground.SeniorHighSchoolDiplomaFileName)
-		{
-			educationalBackground.SeniorHighSchoolDiplomaFile = null;
-			educationalBackground.SeniorHighSchoolDiplomaFileName = null;
-			return;
-		}
-
-		if (fileName == educationalBackground.BachelorsDiplomaFileName)
-		{
-			educationalBackground.BachelorsDiplomaFile = null;
-			educationalBackground.BachelorsDiplomaFileName = null;
-			return;
-		}
-
-		if (fileName == educationalBackground.MastersDiplomaFileName)
-		{
-			educationalBackground.MastersDiplomaFile = null;
-			educationalBackground.MastersDiplomaFileName = null;
-			return;
-		}
-
-		if (fileName == educationalBackground.DoctorateDiplomaFileName)
-		{
-			educationalBackground.DoctorateDiplomaFile = null;
-			educationalBackground.DoctorateDiplomaFileName = null;
+			educationalBackground.DiplomaFile = null;
+			educationalBackground.DiplomaFileName = null;
 			return;
 		}
 
@@ -256,7 +227,6 @@ public partial class ApplicationFormComponent
 
 	private async Task OnDiplomaUpload(InputFileChangeEventArgs e)
 	{
-		DiplomaFileName = e.File!.Name;
 		if (e.File is not null)
 		{
 			using var ms = new MemoryStream();
@@ -264,42 +234,9 @@ public partial class ApplicationFormComponent
 			await e.File
 				.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024)
 				.CopyToAsync(ms);
-			if (e.File != null)
-			{
-				if (educationalBackground!.HighestEducationalAttainment!.Contains("HighSchool Graduate"))
-				{
-					educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-					educationalBackground.HighSchoolDiplomaFile = ms.ToArray();
-					educationalBackground.HighSchoolDiplomaFileName = e.File.Name;
-				}
-				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
-				{
-					educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-					educationalBackground.SeniorHighSchoolDiplomaFile = ms.ToArray();
-					educationalBackground.SeniorHighSchoolDiplomaFileName = e.File.Name;
-				}
-				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Bachelor's Degree"))
-				{
-					educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-					educationalBackground.BachelorsDegree = DegreeWithMajor;
-					educationalBackground.BachelorsDiplomaFile = ms.ToArray();
-					educationalBackground.BachelorsDiplomaFileName = e.File.Name;
-				}
-				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Degree"))
-				{
-					educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-					educationalBackground.MastersDegree = DegreeWithMajor;
-					educationalBackground.MastersDiplomaFile = ms.ToArray();
-					educationalBackground.MastersDiplomaFileName = e.File.Name;
-				}
-				else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Degree"))
-				{
-					educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
-					educationalBackground.DoctorateDegree = DegreeWithMajor;
-					educationalBackground.DoctorateDiplomaFile = ms.ToArray();
-					educationalBackground.MastersDiplomaFileName = e.File.Name;
-				}
-			}
+
+			educationalBackground.DiplomaFile = ms.ToArray();
+			educationalBackground.DiplomaFileName = e.File!.Name;
 		}
 
 		return;
@@ -405,6 +342,30 @@ public partial class ApplicationFormComponent
 		}
 	}
 
+	private bool DisableEducationFieldsForAboveCollege()
+	{
+		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
+			educationalBackground.HighestEducationalAttainment == "None" ||
+			educationalBackground.HighestEducationalAttainment  == "Elementary Graduate")
+		{
+			return true;
+		}
+		return false;
+	}
+
+	private bool DisableEducationForBelowCollege()
+	{
+		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
+			educationalBackground.HighestEducationalAttainment == "None" || 
+			educationalBackground.HighestEducationalAttainment == "Elementary Graduate" ||
+			educationalBackground.HighestEducationalAttainment == "Junior High School Graduate" ||
+			educationalBackground.HighestEducationalAttainment == "Senior High School Graduate")
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private async Task OnSaveAndNextAsync()
 	{
 		await ApplicationForm!.ValidateAsync();
@@ -417,6 +378,8 @@ public partial class ApplicationFormComponent
 
 	private async Task OnSubmitForm()
 	{
+		await ApplicationForm!.ValidateAsync();
+
 		personalDetails.EmailInvitationID = EmailId;
 		addressDetails.EmailInvitationID = EmailId;
 		educationalBackground.EmailInvitationID = EmailId;
@@ -433,7 +396,49 @@ public partial class ApplicationFormComponent
 			personalDetails.MiddleName = string.Empty;
 		}
 
-		addressDetails.TypeOfOwnership = OwnershipOtherText;
+		if (educationalBackground!.HighestEducationalAttainment!.Contains("Junior High School Graduate"))
+		{
+			educationalBackground.HighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+			educationalBackground.HighSchoolDiplomaFile = educationalBackground.DiplomaFile;
+			educationalBackground.HighSchoolDiplomaFileName = educationalBackground.DiplomaFileName;
+			educationalBackground.HighSchoolName = AcademicInstitution;
+		}
+		else if (educationalBackground!.HighestEducationalAttainment!.Contains("Senior High School Graduate"))
+		{
+			educationalBackground.SeniorHighSchoolGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+			educationalBackground.SeniorHighSchoolDiplomaFile = educationalBackground.DiplomaFile;
+			educationalBackground.SeniorHighSchoolDiplomaFileName = educationalBackground.DiplomaFileName;
+			educationalBackground.SeniorHighSchoolName = AcademicInstitution;
+		}
+		else if (educationalBackground!.HighestEducationalAttainment!.Contains("College Graduate"))
+		{
+			educationalBackground.BachelorsGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+			educationalBackground.BachelorsDegree = DegreeWithMajor;
+			educationalBackground.BachelorsDiplomaFile = educationalBackground.DiplomaFile;
+			educationalBackground.BachelorsDiplomaFileName = educationalBackground.DiplomaFileName;
+			educationalBackground.BachelorsSchoolName = AcademicInstitution;
+		}
+		else if (educationalBackground!.HighestEducationalAttainment!.Contains("Master's Graduate"))
+		{
+			educationalBackground.MastersGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+			educationalBackground.MastersDegree = DegreeWithMajor;
+			educationalBackground.MastersDiplomaFile = educationalBackground.DiplomaFile;
+			educationalBackground.MastersDiplomaFileName = educationalBackground.DiplomaFileName;
+			educationalBackground.MastersSchoolName = AcademicInstitution;
+		}
+		else if (educationalBackground!.HighestEducationalAttainment!.Contains("Doctorate Graduate"))
+		{
+			educationalBackground.DoctorateGraduationDate = DateOnly.FromDateTime(GraduationDate!.Value);
+			educationalBackground.DoctorateDegree = DegreeWithMajor;
+			educationalBackground.DoctorateDiplomaFile = educationalBackground.DiplomaFile;
+			educationalBackground.DoctorateDiplomaFileName = educationalBackground.DiplomaFileName;
+			educationalBackground.PhDSchoolName = AcademicInstitution;
+		}
+
+		if (!string.IsNullOrEmpty(OwnershipOtherText))
+		{
+			addressDetails.TypeOfOwnership = OwnershipOtherText;
+		}
 
 		licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
 

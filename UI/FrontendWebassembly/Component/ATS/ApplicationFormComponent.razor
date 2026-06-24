@@ -144,11 +144,12 @@
                                             <MudSelect @bind-Value="personalDetails.Suffix"
                                                     Label="Suffix"
                                                     FullWidth="true"
+                                                    Required="true"
                                                     Adornment="Adornment.Start"
                                                     Variant="Variant.Outlined"
                                                     Margin="Margin.Dense"
                                                     Class="oneplatform-rounded-input">
-                                                <MudSelectItem Value=@("")>N/A</MudSelectItem>
+                                                <MudSelectItem Value=@("N/A")>N/A</MudSelectItem>
                                                 <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
                                                 <MudSelectItem Value=@("Sr.")>Sr.</MudSelectItem>
                                                 <MudSelectItem Value=@("III.")>III.</MudSelectItem>
@@ -236,7 +237,7 @@
                                                            OnFilesChanged="OnGovtIdUpload"
                                                            Required="@string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
                                                            RequiredError="Government Id is required"
-                                                           Class="centered-upload"s>
+                                                           Class="centered-upload">
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
                                                         <MudFab Class="oneplatform-rounded-input"
@@ -515,7 +516,7 @@
                                             FullWidth="true">
                                     <MudSelectItem Value="@("None")">None</MudSelectItem>
                                     <MudSelectItem Value="@("Elementary Graduate")">Elementary Graduate</MudSelectItem>
-                                    <MudSelectItem Value="@("High School Graduate")">High School Graduate</MudSelectItem>
+                                    <MudSelectItem Value="@("Junior High School Graduate")">Junior High School Graduate</MudSelectItem>
                                     <MudSelectItem Value="@("Senior High School Graduate")">Senior High School Graduate</MudSelectItem>
                                     <MudSelectItem Value="@("College Graduate")">College Graduate</MudSelectItem>
                                     <MudSelectItem Value="@("Master's Graduate")">Master's Graduate</MudSelectItem>
@@ -530,6 +531,8 @@
                                                Margin="Margin.Dense"
                                                Placeholder="Date"
                                                Class="oneplatform-rounded-input"
+                                               Required="!DisableEducationFieldsForAboveCollege()"
+                                               Disabled="DisableEducationFieldsForAboveCollege()"
                                                @bind-Date="GraduationDate"
                                                MaxDate="@DateTime.Now"
                                                DateFormat="MM/dd/yyyy" />
@@ -540,16 +543,19 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
+                                              Required="!DisableEducationForBelowCollege()"
+                                              Disabled="DisableEducationForBelowCollege()"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="DegreeWithMajor"
                                               Label="Degree with major" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="3">
                                 <MudFileUpload T="IBrowserFile" 
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
-                                               Required="@string.IsNullOrEmpty(DiplomaFileName)"
+                                               Disabled="DisableEducationFieldsForAboveCollege()"
+                                               Required="DisableEducationFieldsForAboveCollege()"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
@@ -560,30 +566,31 @@
                                                 Label="Upload Diploma / TOR" />
                                     </CustomContent>
                                     <SelectedTemplate>
-                                        @if (!string.IsNullOrEmpty(DiplomaFileName))
+                                        @if (!string.IsNullOrEmpty(educationalBackground.DiplomaFileName))
                                         {
-                                            <div style="display:flex; justify-content:left; width:100%; margin-top:8px;">
+                                            <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
                                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@DiplomaFileName</MudText>
+                                                    <MudText>@educationalBackground.DiplomaFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(DiplomaFileName))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFileName))" />
                                                 </MudStack>
                                             </div>
                                         }
                                     </SelectedTemplate>
                                 </MudFileUpload>
                             </MudItem>
-
+                            
                             <MudItem xs="12" sm="6">
                                 <MudTextField FullWidth="true"
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
+                                              Required="!DisableEducationFieldsForAboveCollege()"
+                                              Disabled="DisableEducationFieldsForAboveCollege()"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="AcademicInstitution"
-                                              Required="true"
                                               RequiredError="Academic Institution is required"
                                               Label="Academic Institution" />
                             </MudItem>
@@ -597,7 +604,7 @@
                             <MudItem xs="12" sm="8">
                                 <MudTextField FullWidth="true"
                                               Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
+                                              Variant="Variant.Outlined"f
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="licensesDetails.LicenseName"
@@ -783,7 +790,7 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="@string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
+                                               Required="@!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
                                                class="centered-upload">
                                     <CustomContent>
                                         <MudFab Class="oneplatform-rounded-input"
@@ -1082,7 +1089,7 @@
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
-                                                  RequiredError="Jb TItle is required"
+                                                  RequiredError="Job Title is required"
                                                   Class="oneplatform-rounded-input"
                                                   @bind-Value="professionalExperiences.Emp3JobTitle"
                                                   Label="Job Title" />
@@ -1292,14 +1299,16 @@
                                                        MinDate="@DateTime.Now"
                                                        Label="Date"
                                                        DateFormat="MM/dd/yyyy" />
-                                        <MudTimePicker @bind-Time="Ref1BestTime"
-                                                       Class="w-25 oneplatform-rounded-input"
-                                                       Adornment="Adornment.End"
-                                                       Required="true"
-                                                       Variant="Variant.Outlined"
-                                                       Label="Time"
-                                                       Placeholder="Time"
-                                                       Margin="Margin.Dense" />
+
+                                        <MudTextField @bind-Value="Ref1BestTime"
+                                                      Placeholder="Date"
+                                                      Label="Time"
+                                                      InputType="InputType.Time"
+                                                      Required="true"
+                                                      RequiredError="Birth Date is required"
+                                                      Adornment="Adornment.Start"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"/>
                                     </MudItem>
                                 </MudGrid>
                             </MudItem>
@@ -1415,14 +1424,16 @@
                                                        Variant="Variant.Outlined"
                                                        Label="Date"
                                                        Margin="Margin.Dense" />
-                                        <MudTimePicker @bind-Time="Ref2BestTime"
-                                                       Class="w-25 oneplatform-rounded-input"
-                                                       Adornment="Adornment.End"
-                                                       Required="true"
-                                                       Variant="Variant.Outlined"
-                                                       Label="Time"
-                                                       Placeholder="Time"
-                                                       Margin="Margin.Dense" />
+
+                                        <MudTextField @bind-Value="Ref2BestTime"
+                                                      Placeholder="Date"
+                                                      Label="Time"
+                                                      InputType="InputType.Time"
+                                                      Required="true"
+                                                      RequiredError="Birth Date is required"
+                                                      Adornment="Adornment.Start"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"/>
                                     </MudItem>
                                 </MudGrid>
                             </MudItem>
@@ -1538,14 +1549,15 @@
                                                            MinDate="@DateTime.Now"
                                                            Label="Date"
                                                            DateFormat="MM/dd/yyyy" />
-                                            <MudTimePicker @bind-Time="Ref3BestTime"
-                                                           Class="w-25 oneplatform-rounded-input"
-                                                           Adornment="Adornment.End"
-                                                           Required="@AddAnotherReference"
-                                                           Variant="Variant.Outlined"
-                                                           Label="Time"
-                                                           Placeholder="Time"
-                                                           Margin="Margin.Dense" />
+                                            <MudTextField @bind-Value="Ref3BestTime"
+                                                          Placeholder="Date"
+                                                          Label="Time"
+                                                          InputType="InputType.Time"
+                                                          Required="true"
+                                                          RequiredError="Birth Date is required"
+                                                          Adornment="Adornment.Start"
+                                                          Variant="Variant.Outlined"
+                                                          Margin="Margin.Dense"/>
                                         </MudItem>
                                     </MudGrid>
                                 </MudItem>

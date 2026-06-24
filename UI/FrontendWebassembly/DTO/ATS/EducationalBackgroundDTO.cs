@@ -3,6 +3,8 @@
 public record EducationalBackgroundDTO
 {
 	public Guid EmailInvitationID { get; set; }
+	public byte[]? DiplomaFile { get; set; }
+	public string? DiplomaFileName { get; set; }
 	public string? HighestEducationalAttainment { get; set; }
 	public string? HighSchoolName { get; set; }
 	public DateOnly? HighSchoolGraduationDate { get; set; }

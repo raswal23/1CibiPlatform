@@ -126,19 +126,19 @@ public class ApplicationFormService : IApplicationFormService
 		if (personalDetailsDTO.ResumeFile != null)
 		{
 			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
-			resumeFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFile.FileName, resumeStream, cancellationToken);
+			resumeFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFileName!, resumeStream, cancellationToken);
 		}
 
 		if (personalDetailsDTO.NBIClearanceFile != null)
 		{
 			await using var nbiStream = personalDetailsDTO.NBIClearanceFile.OpenReadStream();
-			nbiKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFile.FileName, nbiStream, cancellationToken);
+			nbiKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFileName!, nbiStream, cancellationToken);
 		}
 
 		if (personalDetailsDTO.AdditionalGovtIDFile != null)
 		{
 			await using var govtIdStream = personalDetailsDTO.AdditionalGovtIDFile.OpenReadStream();
-			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFile.FileName, govtIdStream, cancellationToken);
+			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
 		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
@@ -171,7 +171,7 @@ public class ApplicationFormService : IApplicationFormService
 		EducationalBackgroundDTO educationalBackgroundDTO,
 		CancellationToken cancellationToken)
 	{
-		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("HighSchool Graduate", StringComparison.OrdinalIgnoreCase))
+		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Junior High School Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
 			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken);
@@ -181,17 +181,17 @@ public class ApplicationFormService : IApplicationFormService
 			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
 			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Bachelor's Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("College Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
 			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
 			mastersDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
 			doctorateDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken);
@@ -202,6 +202,10 @@ public class ApplicationFormService : IApplicationFormService
 		educationalBackground.HighSchoolDiplomaFileKey = highSchoolDiplomaKey;
 		educationalBackground.SeniorHighSchoolDiplomaFileKey = seniorHighSchoolDiplomaKey;
 		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
+		educationalBackground.CollegeSchoolName = educationalBackgroundDTO.BachelorsSchoolName;
+		educationalBackground.CollegeGraduationDate = educationalBackgroundDTO.BachelorsGraduationDate;
+		educationalBackground.CollegeDegree = educationalBackgroundDTO.BachelorsDegree;
+		educationalBackground.CollegeDiplomaFileKey = bachelorsDiplomaKey;
 		educationalBackground.MastersDiplomaFileKey = mastersDiplomaKey;
 		educationalBackground.DoctorateDiplomaFileKey = doctorateDiplomaKey;
 		educationalBackground.CreatedDate = DateTime.UtcNow;

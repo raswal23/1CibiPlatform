@@ -147,8 +147,8 @@
                     </MudItem>
 
                     <MudItem xs="12">
-                        <MudFileUpload @ref="@bulkFileUpload"
-                                       @bind-Files="bulkUploadFileDetailsDTO.BulkFile"
+                        <MudFileUpload T="IBrowserFile"
+                                       @ref="@bulkFileUpload"
                                        OnFilesChanged="OnBulkFileUpload"
                                        Accept=".csv"
                                        DragAndDrop="true"
