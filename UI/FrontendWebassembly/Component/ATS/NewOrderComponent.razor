@@ -102,7 +102,7 @@
                             {
                                 <MudProgressCircular Size = "Size.Small" Indeterminate = "true" />
                                 
-                                <span>Saving...</span>
+                                <span> Saving...</span>
                             }
                             else
                             {
@@ -177,7 +177,9 @@
                                         <MudList T="IBrowserFile" Dense="true">
                                             <MudListItem T="IBrowserFile" Value="bulkUploadFileDetailsDTO.BulkFile" @key="@bulkUploadFileDetailsDTO.BulkFile">
                                                 <MudStack Row Justify="Justify.SpaceBetween" Spacing="1" Class="w-100">
-                                                    <MudText Align="Align.Center">@bulkUploadFileDetailsDTO.BulkFile!.Name (@($"{bulkUploadFileDetailsDTO.BulkFile!.Size / 1024d:N1} kB"))</MudText>
+                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;" Align="Align.Center">
+                                                        @bulkUploadFileDetailsDTO.BulkFile!.Name (@($"{bulkUploadFileDetailsDTO.BulkFile!.Size / 1024d:N1} kB"))
+                                                    </MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                     Color="Color.Default"
                                                                     Size="Size.Small"
@@ -201,7 +203,7 @@
                                         {
                                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
 
-                                            <span>Uploading...</span>
+                                            <span> Uploading...</span>
                                         }
                                         else
                                         {
