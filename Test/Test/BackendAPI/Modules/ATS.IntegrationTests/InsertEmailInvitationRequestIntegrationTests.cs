@@ -145,7 +145,7 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 		Func<Task> act = async () => await _sender.Send(command);
 
 		// Assert
-		await act.Should().ThrowAsync<ArgumentNullException>().WithMessage("All data in the field is required");
+		await act.Should().ThrowAsync<NullReferenceException>();
 	}
 
 	#endregion

@@ -405,6 +405,12 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			MiddleInitial = "S",
 			EmailAddress = "jsdelacruz@cibi.com.ph",
 			MobileNumber = "+639171234567",
+			SelectPackage = "Air BnB",
+			RushNormal = "Rush",
+			HashToken = "Hashtoken",
+			IsFormCompleted = false,
+			EmailSentStatus = "Pending",
+			HashTokenCreatedAt = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
 		};
 

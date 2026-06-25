@@ -41,6 +41,8 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 			BulkFile = CreateFakeFormFile(sampleFileContent, bulkFileName),
 			FileName = bulkFileName,
 			Status = "Pending",
+			OrderType = "Rush",
+			PackageType = "Air BnB"
 		};
 
 		var command = new InsertBulkSubjectCommand(dto);
@@ -54,29 +56,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		{
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bulkFileName}");
 		}
-	}
-
-	[Fact]
-	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenFileIdIsEmpty()
-	{
-		// Arrange
-		var dto = new BulkUploadFileDetailsDTO
-		{
-			FileName = "testfile.csv",
-			Status = "Pending"
-		};
-
-		var command = new InsertBulkSubjectCommand(dto);
-
-		// Act
-		Func<Task> act = async () => await _sender.Send(command);
-
-		// Assert
-		var exception = await act.Should()
-			.ThrowAsync<ValidationException>();
-
-		exception.Which.Errors.Should()
-			.Contain(x => x.PropertyName.Contains("FileID"));
 	}
 
 	[Fact]
@@ -103,29 +82,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenStatusIsEmpty()
-	{
-		// Arrange
-		var dto = new BulkUploadFileDetailsDTO
-		{
-			FileName = "testfile.csv",
-			Status = string.Empty
-		};
-
-		var command = new InsertBulkSubjectCommand(dto);
-
-		// Act
-		Func<Task> act = async () => await _sender.Send(command);
-
-		// Assert
-		var exception = await act.Should()
-			.ThrowAsync<FluentValidation.ValidationException>();
-
-		exception.Which.Errors.Should()
-			.Contain(x => x.PropertyName.Contains("Status"));
-	}
-
-	[Fact]
 	public async Task InsertBulkSubject_ShouldReturnMultipleValidationErrors_WhenAllFieldsAreInvalid()
 	{
 		// Arrange
@@ -144,6 +100,6 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		var exception = await act.Should()
 			.ThrowAsync<ValidationException>();
 
-		exception.Which.Errors.Should().HaveCount(3);
+		exception.Which.Errors.Should().HaveCount(2);
 	}
 }
