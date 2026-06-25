@@ -240,27 +240,27 @@
                                                            Class="centered-upload">
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
-                                                        <MudFab Class="oneplatform-rounded-input"
-                                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                                Style="width:300px; border: 1px solid gray; border-radius: 4px;"
-                                                                OnClick="@context.OpenFilePickerAsync"
-                                                                Label="Upload Unexpired Government ID" />
+                                                        <MudButton Class="oneplatform-rounded-input"
+                                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                                   IconSize="Size.Large"
+                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                                   OnClick="@context.OpenFilePickerAsync">
+                                                                       @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
+                                                                        {
+                                                                            <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.AdditionalGovtIDFileName</MudText>
+                                                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                                                           Color="Color.Default"
+                                                                                                           Size="Size.Small"
+                                                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
+                                                                        }
+                                                                        else             
+                                                                        {
+                                                                            <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Unexpired Government ID</span>
+                                                                        }
+                                                        </MudButton>
                                                     </div>
                                                 </CustomContent>
-                                                <SelectedTemplate>
-                                                    @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
-                                                    {
-                                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@personalDetails.AdditionalGovtIDFileName</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                               Color="Color.Default"
-                                                                               Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
-                                                            </MudStack>
-                                                        </div>
-                                                    }
-                                                </SelectedTemplate>
+                                                <SelectedTemplate/>
                                             </MudFileUpload>
 
                                             <MudFileUpload T="IBrowserFile" 
@@ -555,7 +555,7 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                Disabled="DisableEducationFieldsForAboveCollege()"
-                                               Required="!DisableEducationFieldsForAboveCollege()"
+                                               Required="@(!DisableEducationFieldsForAboveCollege() && string.IsNullOrEmpty(educationalBackground.DiplomaFileName))"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
