@@ -71,6 +71,18 @@ public partial class ApplicationFormComponent
 	private DateTime? SignatureDate = DateTime.UtcNow;
 	private bool _signatureError;
 
+	//Validations
+	private bool _govtIdError;
+	private bool _resumeError;
+	private bool _nbiError;
+
+	private bool _emp1Error;
+	private bool _emp2Error;
+	private bool _emp3Error;
+
+	private bool _licenseError;
+	private bool _diplomaError;
+
 	protected override async Task OnInitializedAsync()
 	{
 		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_firstName") ?? string.Empty;
@@ -98,7 +110,7 @@ public partial class ApplicationFormComponent
 		ActiveStep = 2; 
 	}
 
-	private void RemoveFileFromUploadsAsync(byte[] file)
+	private async Task RemoveFileFromUploadsAsync(byte[] file)
 	{
 		// Personal Details
 		if (file == personalDetails.AdditionalGovtIDFile)
@@ -159,6 +171,35 @@ public partial class ApplicationFormComponent
 			professionalExperiences.Emp3COEUploadFileName = null;
 			return;
 		}
+
+	}
+
+	private bool ValidateUploads()
+	{
+		return _activeStep switch
+		{
+			1 => !(
+				(_govtIdError = personalDetails.AdditionalGovtIDFile == null) |
+				(_resumeError = personalDetails.ResumeFile == null) |
+				(_nbiError = personalDetails.NBIClearanceFile == null)
+			),
+
+			2 => !(
+				(_diplomaError = educationalBackground.DiplomaFile == null
+								&& educationalBackground.HighestEducationalAttainment != "None"
+								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
+			),
+
+			3 => !(
+				(_licenseError = licensesDetails.LicenseUploadFile == null
+								&& hasProfessionalLicense) |
+				(_emp1Error = professionalExperiences.Emp1COEUploadFile == null) |
+				(_emp2Error = professionalExperiences.Emp2COEUploadFile == null && AddEmployer2) |
+				(_emp3Error = professionalExperiences.Emp3COEUploadFile == null && AddEmployer3)
+			),
+
+			_ => true
+		};
 	}
 
 	private async Task SkipStep()
@@ -193,6 +234,8 @@ public partial class ApplicationFormComponent
 			personalDetails.AdditionalGovtIDFileName = e.File!.Name;
 		}
 
+		_govtIdError = false;
+
 		return;
 	}
 
@@ -209,6 +252,8 @@ public partial class ApplicationFormComponent
 			personalDetails.NBIClearanceFile = ms.ToArray();
 			personalDetails.NBIClearanceFileName = e.File.Name;
 		}
+
+		_nbiError = false;
 		return;
 	}
 
@@ -225,6 +270,8 @@ public partial class ApplicationFormComponent
 			personalDetails.ResumeFile = ms.ToArray();
 			personalDetails.ResumeFileName = e.File.Name;
 		}
+
+		_resumeError = false;
 		return;
 	}
 
@@ -242,6 +289,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.DiplomaFileName = e.File!.Name;
 		}
 
+		_diplomaError = false;
 		return;
 	}
 
@@ -259,6 +307,7 @@ public partial class ApplicationFormComponent
 			licensesDetails.LicenseUploadFileName = e.File.Name;
 		}
 
+		_licenseError = false;
 		return;
 	}
 
@@ -276,6 +325,7 @@ public partial class ApplicationFormComponent
 			professionalExperiences.Emp1COEUploadFileName = e.File.Name;
 		}
 
+		_emp1Error = false;
 		return;
 	}
 
@@ -292,7 +342,7 @@ public partial class ApplicationFormComponent
 			professionalExperiences.Emp2COEUploadFile = ms.ToArray();
 			professionalExperiences.Emp2COEUploadFileName = e.File.Name;
 		}
-
+		_emp2Error = false;
 		return;
 	}
 
@@ -309,7 +359,7 @@ public partial class ApplicationFormComponent
 			professionalExperiences.Emp3COEUploadFile = ms.ToArray();
 			professionalExperiences.Emp3COEUploadFileName = e.File.Name;
 		}
-
+		_emp3Error = false;
 		return;
 	}
 
@@ -372,7 +422,10 @@ public partial class ApplicationFormComponent
 	private async Task OnSaveAndNextAsync()
 	{
 		await ApplicationForm!.ValidateAsync();
-		if (ApplicationForm.IsValid)
+
+		bool uploadsValid = ValidateUploads();
+
+		if (ApplicationForm.IsValid && uploadsValid)
 		{
 			if (_stepper is not null)
 				await _stepper.NextStepAsync();

@@ -235,7 +235,6 @@
                                                            MaxFileSize="26214400"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
-                                                           Required="@(personalDetails.AdditionalGovtIDFile is null)"
                                                            RequiredError="Government Id is required"
                                                            Class="centered-upload">
                                                 <CustomContent>
@@ -263,11 +262,12 @@
                                                 <SelectedTemplate />
                                             </MudFileUpload>
 
+                                            <FileUploadValidationComponent ShowError="_govtIdError"
+                                                                           ErrorText="Government ID is required." />
+
                                             <MudFileUpload T="IBrowserFile"
                                                            Accept=".pdf"
-                                                           Required="@(personalDetails.NBIClearanceFile is null)"
                                                            OnFilesChanged="OnNbiUpload" 
-                                                           RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
                                                            Class="mt-4 centered-upload">
                                                 <CustomContent>
@@ -295,10 +295,12 @@
                                                 <SelectedTemplate />
                                             </MudFileUpload>
 
+                                            <FileUploadValidationComponent ShowError="_nbiError"
+                                                                           ErrorText="NBI ID is required." />
+
                                             <MudFileUpload T="IBrowserFile"
                                                            Accept=".pdf"
                                                            MaxFileSize="26214400"
-                                                           Required="@(personalDetails.ResumeFile is null)"
                                                            OnFilesChanged="OnCvUpload"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
@@ -326,6 +328,8 @@
                                                 </CustomContent>
                                                 <SelectedTemplate />
                                             </MudFileUpload>
+                                            <FileUploadValidationComponent ShowError="_resumeError"
+                                                                           ErrorText="CV/Resume is required." />
                                         </div>
                                     </div>
                                 </MudPaper>
@@ -555,7 +559,6 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                Disabled="DisableEducationFieldsForAboveCollege()"
-                                               Required="@(!DisableEducationFieldsForAboveCollege() && educationalBackground.DiplomaFile is null)"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
@@ -580,6 +583,8 @@
                                     </CustomContent>
                                     <SelectedTemplate />
                                 </MudFileUpload>
+                                <FileUploadValidationComponent ShowError="_diplomaError"
+                                                               ErrorText="Diploma is required." />
                             </MudItem>
                             
                             <MudItem xs="12" sm="6">
@@ -668,7 +673,6 @@
                                                    MaxFileSize="26214400"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnProfessionalLicenseUpload"
-                                                   Required="@(licensesDetails.LicenseUploadFile is null && hasProfessionalLicense == true)"
                                                    Class="centered-upload">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input"
@@ -692,6 +696,8 @@
                                         </CustomContent>
                                         <SelectedTemplate />
                                     </MudFileUpload>
+                                    <FileUploadValidationComponent ShowError="_licenseError"
+                                                                   ErrorText="Professional License is required." />
                                 </MudItem>
                             }
                            
@@ -817,7 +823,6 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="@(professionalExperiences.Emp1COEUploadFile is null)"
                                                class="centered-upload">
                                     <CustomContent>
                                         <MudButton Class="oneplatform-rounded-input"
@@ -841,6 +846,8 @@
                                     </CustomContent>
                                     <SelectedTemplate />
                                 </MudFileUpload>
+                                <FileUploadValidationComponent ShowError="_emp1Error"
+                                                               ErrorText="COE/ID is required." />
                             </MudItem>
 
                             <MudItem xs="12" sm="6">
@@ -1008,6 +1015,8 @@
                                         </CustomContent>
                                         <SelectedTemplate />
                                     </MudFileUpload>
+                                    <FileUploadValidationComponent ShowError="_emp2Error"
+                                                                   ErrorText="COE is required." />
                                 </MudItem>
 
                                 <MudItem xs="12" sm="6">
@@ -1176,6 +1185,8 @@
                                         </CustomContent>
                                         <SelectedTemplate />
                                     </MudFileUpload>
+                                    <FileUploadValidationComponent ShowError="_emp3Error"
+                                                                   ErrorText="COE is required." />
                                 </MudItem>
 
                                 <MudItem xs="12" sm="6">
@@ -1673,7 +1684,7 @@
                                                     </div>
                                                     @if (_signatureError)
                                                     {
-                                                        <div style="display:flex; justify-content:center; " width:40%; text-align: center;">
+                                                        <div style="display:flex; justify-content:center; margin-top:3px;">
                                                             <MudText Color="Color.Error"
                                                                      Typo="Typo.caption"
                                                                      Class="mb-2">
