@@ -19,6 +19,7 @@ public partial class ApplicationFormComponent
 	private MudStepper? _stepper;
 	private int _activeStep;
 	private bool showPhilSys = false;
+	private bool isSaving = false;
 
 	// Personal Detials
 	private bool consent { get; set; } = false;
@@ -68,6 +69,7 @@ public partial class ApplicationFormComponent
 	//Final
 	private SignatureDetailsDTO signatureDetails = new();
 	private DateTime? SignatureDate = DateTime.UtcNow;
+	private bool _signatureError;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -377,9 +379,27 @@ public partial class ApplicationFormComponent
 		}
 	}
 
+	private Task OnSignatureChanged(byte[]? value)
+	{
+		signatureDetails.Signature = value;
+
+		_signatureError = value == null || value.Length == 0;
+
+		return Task.CompletedTask;
+	}
+
 	private async Task OnSubmitForm()
 	{
 		await ApplicationForm!.ValidateAsync();
+
+		_signatureError = signatureDetails.Signature == null ||
+					 signatureDetails.Signature.Length == 0;
+
+		if (!ApplicationForm.IsValid || _signatureError)
+		{
+			await InvokeAsync(StateHasChanged);
+			return;
+		}
 
 		personalDetails.EmailInvitationID = EmailId;
 		addressDetails.EmailInvitationID = EmailId;
@@ -441,7 +461,11 @@ public partial class ApplicationFormComponent
 			addressDetails.TypeOfOwnership = OwnershipOtherText;
 		}
 
-		licensesDetails.LicenseExpiryDate = DateOnly.FromDateTime(LicenseExpiryDate!.Value);
+		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
+		{
+			licensesDetails.LicenseExpiryDate =
+				DateOnly.FromDateTime(LicenseExpiryDate.Value);
+		}
 
 		professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact1!.Value);
 		professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment1!.Value);
@@ -476,6 +500,8 @@ public partial class ApplicationFormComponent
 
 		try
 		{
+			isSaving = true;
+			await InvokeAsync(StateHasChanged);
 			await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 			IsSuccess = true;
 		}
@@ -490,6 +516,7 @@ public partial class ApplicationFormComponent
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_emailAddress");
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_phoneNumber");
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_profilePicture");
+			isSaving = false;
 		}
 	}
 }

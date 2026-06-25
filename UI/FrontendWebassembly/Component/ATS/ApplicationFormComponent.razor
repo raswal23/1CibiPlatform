@@ -245,22 +245,22 @@
                                                                    IconSize="Size.Large"
                                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                                    OnClick="@context.OpenFilePickerAsync">
-                                                                       @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
-                                                                        {
-                                                                            <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.AdditionalGovtIDFileName</MudText>
-                                                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                                                           Color="Color.Default"
-                                                                                                           Size="Size.Small"
-                                                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
-                                                                        }
-                                                                        else             
-                                                                        {
-                                                                            <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Unexpired Government ID</span>
-                                                                        }
+                                                            @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
+                                                            {
+                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.AdditionalGovtIDFileName</MudText>
+                                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                               Color="Color.Default"
+                                                                               Size="Size.Small"
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Unexpired Government ID</span>
+                                                            }
                                                         </MudButton>
                                                     </div>
                                                 </CustomContent>
-                                                <SelectedTemplate/>
+                                                <SelectedTemplate />
                                             </MudFileUpload>
 
                                             <MudFileUpload T="IBrowserFile" 
@@ -272,27 +272,27 @@
                                                            Class="mt-4 centered-upload">
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
-                                                        <MudFab Class="oneplatform-rounded-input"
-                                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                                Style="width:300px; border: 1px solid gray; border-radius: 4px;"
-                                                                OnClick="@context.OpenFilePickerAsync"
-                                                                Label="Upload NBI Clearance" />
-                                                    </div>
-                                                </CustomContent>
-                                                <SelectedTemplate>
-                                                    @if (!string.IsNullOrEmpty(personalDetails.NBIClearanceFileName))
-                                                    {
-                                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@personalDetails.NBIClearanceFileName</MudText>
+                                                        <MudButton Class="oneplatform-rounded-input"
+                                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                                   IconSize="Size.Large"
+                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                                   OnClick="@context.OpenFilePickerAsync">
+                                                            @if (!string.IsNullOrEmpty(personalDetails.NBIClearanceFileName))
+                                                            {
+                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.NBIClearanceFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFileName))" />
-                                                            </MudStack>
-                                                        </div>
-                                                    }
-                                                </SelectedTemplate>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload NBI Clearance</span>
+                                                            }
+                                                        </MudButton>
+                                                    </div>
+                                                </CustomContent>
+                                                <SelectedTemplate />
                                             </MudFileUpload>
 
                                             <MudFileUpload T="IBrowserFile" 
@@ -304,27 +304,27 @@
                                                            Class="mt-4 centered-upload">
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
-                                                        <MudFab Class="oneplatform-rounded-input"
-                                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                                Style="width:300px; border: 1px solid gray; border-radius: 4px;"
-                                                                OnClick="@context.OpenFilePickerAsync"
-                                                                Label="Upload CV / Resume" />
-                                                    </div>
-                                                </CustomContent>
-                                                <SelectedTemplate>
-                                                    @if (!string.IsNullOrEmpty(personalDetails.ResumeFileName))
-                                                    {
-                                                        <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                                <MudText>@personalDetails.ResumeFileName</MudText>
+                                                        <MudButton Class="oneplatform-rounded-input"
+                                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                                   IconSize="Size.Large"
+                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                                   OnClick="@context.OpenFilePickerAsync">
+                                                            @if (!string.IsNullOrEmpty(personalDetails.ResumeFileName))
+                                                            {
+                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.ResumeFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFileName))" />
-                                                            </MudStack>
-                                                        </div>
-                                                    }
-                                                </SelectedTemplate>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Resume File</span>
+                                                            }
+                                                        </MudButton>
+                                                    </div>
+                                                </CustomContent>
+                                                <SelectedTemplate />
                                             </MudFileUpload>
                                         </div>
                                     </div>
@@ -559,26 +559,26 @@
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
-                                        <MudFab Class="oneplatform-rounded-input"
-                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                Style="border: 1px solid gray; border-radius: 4px; width: auto; max-width: 270px;"
-                                                OnClick="@context.OpenFilePickerAsync"
-                                                Label="Upload Diploma / TOR" />
+                                        <MudButton Class="oneplatform-rounded-input"
+                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                   IconSize="Size.Large"
+                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                   OnClick="@context.OpenFilePickerAsync">
+                                            @if (!string.IsNullOrEmpty(educationalBackground.DiplomaFileName))
+                                            {
+                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@educationalBackground.DiplomaFileName</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Color="Color.Default"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFileName))" />
+                                            }
+                                            else
+                                            {
+                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Diploma / TOR</span>
+                                            }
+                                        </MudButton>
                                     </CustomContent>
-                                    <SelectedTemplate>
-                                        @if (!string.IsNullOrEmpty(educationalBackground.DiplomaFileName))
-                                        {
-                                            <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@educationalBackground.DiplomaFileName</MudText>
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                   Color="Color.Default"
-                                                                   Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFileName))" />
-                                                </MudStack>
-                                            </div>
-                                        }
-                                    </SelectedTemplate>
+                                    <SelectedTemplate/>
                                 </MudFileUpload>
                             </MudItem>
                             
@@ -671,26 +671,26 @@
                                                    Required="@(string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName) && hasProfessionalLicense == true)"
                                                    Class="centered-upload">
                                         <CustomContent>
-                                            <MudFab Class="oneplatform-rounded-input"
-                                                    StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                    Style="border: 1px solid gray; border-radius: 4px; max-width: 368px; width: auto;"
-                                                    OnClick="@context.OpenFilePickerAsync"
-                                                    Label="Upload Professional License" />
+                                            <MudButton Class="oneplatform-rounded-input"
+                                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                       IconSize="Size.Large"
+                                                       Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                       OnClick="@context.OpenFilePickerAsync">
+                                                @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
+                                                {
+                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@licensesDetails.LicenseUploadFileName</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Professional License</span>
+                                                }
+                                            </MudButton>
                                         </CustomContent>
-                                        <SelectedTemplate>
-                                            @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
-                                            {
-                                                <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                        <MudText>@licensesDetails.LicenseUploadFileName</MudText>
-                                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                       Color="Color.Default"
-                                                                       Size="Size.Small"
-                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
-                                                    </MudStack>
-                                                </div>
-                                            }
-                                        </SelectedTemplate>
+                                        <SelectedTemplate/>
                                     </MudFileUpload>
                                 </MudItem>
                             }
@@ -817,29 +817,29 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="@(!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))"
+                                               Required="@(!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))"
                                                class="centered-upload">
                                     <CustomContent>
-                                        <MudFab Class="oneplatform-rounded-input"
-                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                Style="border: 1px solid gray; border-radius: 4px; width:auto; max-width: 270px;"
-                                                OnClick="@context.OpenFilePickerAsync"
-                                                Label="Upload COE/ID" />
+                                        <MudButton Class="oneplatform-rounded-input"
+                                                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                   IconSize="Size.Large"
+                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                   OnClick="@context.OpenFilePickerAsync">
+                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))
+                                            {
+                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp1COEUploadFileName</MudText>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                               Color="Color.Default"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFileName))" />
+                                            }
+                                            else
+                                            {
+                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                            }
+                                        </MudButton>
                                     </CustomContent>
-                                    <SelectedTemplate>
-                                        @if (!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))
-                                        {
-                                            <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                    <MudText>@professionalExperiences.Emp1COEUploadFileName</MudText>
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                   Color="Color.Default"
-                                                                   Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFileName))" />
-                                                </MudStack>
-                                            </div>
-                                        }
-                                    </SelectedTemplate>
+                                    <SelectedTemplate/>
                                 </MudFileUpload>
                             </MudItem>
 
@@ -984,16 +984,29 @@
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe2Upload"
-                                               Required="@string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName)"
+                                                   Required="@string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName)"
                                                class="centered-upload">
                                     <CustomContent>
-                                        <MudFab Class="oneplatform-rounded-input"
-                                                StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                Style="border: 1px solid gray; border-radius: 4px; width:auto; max-width: 270px;"
-                                                OnClick="@context.OpenFilePickerAsync"
-                                                Label="Upload COE/ID" />
+                                            <MudButton Class="oneplatform-rounded-input"
+                                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                       IconSize="Size.Large"
+                                                       Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                       OnClick="@context.OpenFilePickerAsync">
+                                                @if (!string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName))
+                                                {
+                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp2COEUploadFileName</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFileName))" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                                }
+                                            </MudButton>
                                     </CustomContent>
-                                    <SelectedTemplate>
+                                    @* <SelectedTemplate>
                                             @if (!string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName))
                                         {
                                             <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
@@ -1005,8 +1018,8 @@
                                                                        OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFileName))" />
                                                 </MudStack>
                                             </div>
-                                        }
-                                    </SelectedTemplate>
+                                        } *@
+                                    <SelectedTemplate/>
                                 </MudFileUpload>
                             </MudItem>
 
@@ -1155,13 +1168,26 @@
                                                    Required="@string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName)"
                                                    class="centered-upload">
                                         <CustomContent>
-                                            <MudFab Class="oneplatform-rounded-input"
-                                                    StartIcon="@Icons.Material.Filled.CloudUpload"
-                                                    Style="border: 1px solid gray; border-radius: 4px; width:auto; max-width: 270px;"
-                                                    OnClick="@context.OpenFilePickerAsync"
-                                                    Label="Upload COE/ID" />
+                                            <MudButton Class="oneplatform-rounded-input"
+                                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                                       IconSize="Size.Large"
+                                                       Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
+                                                       OnClick="@context.OpenFilePickerAsync">
+                                                @if (!string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName))
+                                                {
+                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp3COEUploadFileName</MudText>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFileName))" />
+                                                }
+                                                else
+                                                {
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                                }
+                                            </MudButton>
                                         </CustomContent>
-                                        <SelectedTemplate>
+                                        @* <SelectedTemplate>
                                             @if (!string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName))
                                             {
                                                 <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
@@ -1173,8 +1199,8 @@
                                                                        OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFileName))" />
                                                     </MudStack>
                                                 </div>
-                                            }
-                                        </SelectedTemplate>
+                                            } *@
+                                        <SelectedTemplate/>
                                     </MudFileUpload>
                                 </MudItem>
 
@@ -1666,12 +1692,23 @@
                                                  <MudItem xs="12">
                                                     <div style="text-align: center;">
                                                     <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                        <SignaturePad @bind-Value="signatureDetails.Signature"
+                                                        <SignaturePad Value="signatureDetails.Signature"
+                                                                      ValueChanged="OnSignatureChanged"
                                                                       ClearButtonClass="theme-button theme-button-active ats-signature-button"
                                                                       Class="ats-signature mb-2" />
                                                      </div>
-                                                </MudItem>
-
+                                                    @if (_signatureError)
+                                                    {
+                                                        <div style="display:flex; justify-content:center; "width:40%; text-align: center;">
+                                                            <MudText Color="Color.Error"
+                                                                     Typo="Typo.caption"
+                                                                     Class="mb-2">
+                                                                Please provide your signature.
+                                                            </MudText>
+                                                        </div>
+                                                    }
+                                                 </MudItem>
+                                                
                                                <MudItem xs="12">
                                                     <div style="display:flex; justify-content:center;">
                                                         <div style="width:40%;">
@@ -1728,7 +1765,18 @@
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
                                            Style="width: 150px; border-radius: 4px; "
                                            OnClick="OnSubmitForm">
-                                    Submit
+
+                                    @if (isSaving)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Submit</span>
+                                    }
+                                    
                                 </MudButton>
                             }
                             else
