@@ -6,7 +6,7 @@
 <MudPaper Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
     @if (IsSuccess)
     {
-        <SuccessApplicationFormComponent/>
+        <SuccessApplicationFormComponent />
     }
     else if (showPhilSys)
     {
@@ -28,14 +28,14 @@
                             <MudGrid Justify="Justify.Center"
                                      AlignItems="AlignItems.Center">
                                 <MudItem xs="12" sm="6" Class="d-flex justify-center align-content-center">
-                                <MudPaper Elevation="0" Style="width: 100%;">
-                                    <div class="d-flex flex-column align-center text-center" style="height:100%; justify-content:center; padding:24px;">
-                                        <MudText Typo="Typo.h5" Style="font-weight:700;" Class="gradient-text">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
-                                        <div class="mt-4 d-flex" style="align-items:center; gap:16px; justify-content:center ">
-                                            <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:300px; height:auto;" />
+                                    <MudPaper Elevation="0" Style="width: 100%;">
+                                        <div class="d-flex flex-column align-center text-center" style="height:100%; justify-content:center; padding:24px;">
+                                            <MudText Typo="Typo.h5" Style="font-weight:700;" Class="gradient-text">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
+                                            <div class="mt-4 d-flex" style="align-items:center; gap:16px; justify-content:center ">
+                                                <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:300px; height:auto;" />
+                                            </div>
                                         </div>
-                                    </div>
-                                </MudPaper>
+                                    </MudPaper>
   
                                 </MudItem>
                                 <MudItem xs="12" sm="6" Class="d-flex justify-center align-center">
@@ -58,15 +58,15 @@
                                                              @bind-Value="declineConsent"
                                                              Label="No, I do not wish to proceed." />
                                                 <div class="d-flex" style="gap:30px;">
-                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;" 
+                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
                                                                Disabled="!declineConsent"
                                                                OnClick="SkipStep">
-                                                               Skip
-                                                     </MudButton>
-                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;" 
+                                                        Skip
+                                                    </MudButton>
+                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
                                                                Disabled="!declineConsent"
                                                                OnClick="ResetStepper">
-                                                               Cancel
+                                                        Cancel
                                                     </MudButton>
                                                 </div>
                                             </div>
@@ -88,7 +88,7 @@
                                 <MudPaper Class="pa-4" Elevation="0">
                                     <MudGrid>
                                         <MudItem xs="12">
-                                        <MudTextField FullWidth="true"
+                                            <MudTextField FullWidth="true"
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
@@ -100,7 +100,7 @@
                                         </MudItem>
 
                                         <MudItem xs="12">
-                                        <MudTextField FullWidth="true"
+                                            <MudTextField FullWidth="true"
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
@@ -142,13 +142,13 @@
                                         </MudItem>
                                         <MudItem xs="12" sm="4">
                                             <MudSelect @bind-Value="personalDetails.Suffix"
-                                                    Label="Suffix"
-                                                    FullWidth="true"
-                                                    Required="true"
-                                                    Adornment="Adornment.Start"
-                                                    Variant="Variant.Outlined"
-                                                    Margin="Margin.Dense"
-                                                    Class="oneplatform-rounded-input">
+                                                       Label="Suffix"
+                                                       FullWidth="true"
+                                                       Required="true"
+                                                       Adornment="Adornment.Start"
+                                                       Variant="Variant.Outlined"
+                                                       Margin="Margin.Dense"
+                                                       Class="oneplatform-rounded-input">
                                                 <MudSelectItem Value=@("N/A")>N/A</MudSelectItem>
                                                 <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
                                                 <MudSelectItem Value=@("Sr.")>Sr.</MudSelectItem>
@@ -216,7 +216,7 @@
                                                           RequiredError="Phone Number is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Phone Number"
-                                                          Mask="@(new PatternMask("00000000000"))"/>
+                                                          Mask="@(new PatternMask("00000000000"))" />
                                         </MudItem>
                                     </MudGrid>
                                 </MudPaper>
@@ -235,7 +235,7 @@
                                                            MaxFileSize="26214400"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
-                                                           Required="@string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName)"
+                                                           Required="@(personalDetails.AdditionalGovtIDFile is null)"
                                                            RequiredError="Government Id is required"
                                                            Class="centered-upload">
                                                 <CustomContent>
@@ -245,13 +245,13 @@
                                                                    IconSize="Size.Large"
                                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                                    OnClick="@context.OpenFilePickerAsync">
-                                                            @if (!string.IsNullOrEmpty(personalDetails.AdditionalGovtIDFileName))
+                                                            @if (personalDetails.AdditionalGovtIDFile is not null)
                                                             {
                                                                 <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.AdditionalGovtIDFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFileName))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFile!))" />
                                                             }
                                                             else
                                                             {
@@ -263,10 +263,10 @@
                                                 <SelectedTemplate />
                                             </MudFileUpload>
 
-                                            <MudFileUpload T="IBrowserFile" 
+                                            <MudFileUpload T="IBrowserFile"
                                                            Accept=".pdf"
-                                                           Required="@string.IsNullOrEmpty(personalDetails.NBIClearanceFileName)"
-                                                           OnFilesChanged="OnNbiUpload"s
+                                                           Required="@(personalDetails.NBIClearanceFile is null)"
+                                                           OnFilesChanged="OnNbiUpload" 
                                                            RequiredError="NBI Clearance is required"
                                                            MaxFileSize="26214400"
                                                            Class="mt-4 centered-upload">
@@ -277,17 +277,17 @@
                                                                    IconSize="Size.Large"
                                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                                    OnClick="@context.OpenFilePickerAsync">
-                                                            @if (!string.IsNullOrEmpty(personalDetails.NBIClearanceFileName))
+                                                            @if (personalDetails.NBIClearanceFile is not null)
                                                             {
                                                                 <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.NBIClearanceFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFileName))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload NBI Clearance</span>
+                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload NBI Clearance</span>
                                                             }
                                                         </MudButton>
                                                     </div>
@@ -295,10 +295,10 @@
                                                 <SelectedTemplate />
                                             </MudFileUpload>
 
-                                            <MudFileUpload T="IBrowserFile" 
+                                            <MudFileUpload T="IBrowserFile"
                                                            Accept=".pdf"
                                                            MaxFileSize="26214400"
-                                                           Required="@string.IsNullOrEmpty(personalDetails.ResumeFileName)"
+                                                           Required="@(personalDetails.ResumeFile is null)"
                                                            OnFilesChanged="OnCvUpload"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4 centered-upload">
@@ -309,17 +309,17 @@
                                                                    IconSize="Size.Large"
                                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                                    OnClick="@context.OpenFilePickerAsync">
-                                                            @if (!string.IsNullOrEmpty(personalDetails.ResumeFileName))
+                                                            @if (personalDetails.ResumeFile is not null)
                                                             {
                                                                 <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@personalDetails.ResumeFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFileName))" />
+                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Resume File</span>
+                                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload Resume File</span>
                                                             }
                                                         </MudButton>
                                                     </div>
@@ -396,9 +396,9 @@
                             </MudItem>
 
                             <MudItem xs="12" Style="margin-bottom:-10px;">
-                                <MudCheckBox T="bool" 
-                                             Class="small-checkbox-label" 
-                                             Style="margin-bottom:-12px;" 
+                                <MudCheckBox T="bool"
+                                             Class="small-checkbox-label"
+                                             Style="margin-bottom:-12px;"
                                              Value="SameAsPermanent"
                                              ValueChanged="OnSameAsPermanentChanged"
                                              Label="Check if current address is the same as permanent address" />
@@ -506,14 +506,14 @@
 
                             <MudItem xs="12" sm="6">
                                 <MudSelect T="string"
-                                            @bind-Value="educationalBackground.HighestEducationalAttainment"
-                                            Class="oneplatform-rounded-input"
-                                            Adornment="Adornment.Start"
-                                            Variant="Variant.Outlined"
-                                            Margin="Margin.Dense"
-                                            Required="true"
-                                            Label="Highest Educational Attainment"
-                                            FullWidth="true">
+                                           @bind-Value="educationalBackground.HighestEducationalAttainment"
+                                           Class="oneplatform-rounded-input"
+                                           Adornment="Adornment.Start"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           Required="true"
+                                           Label="Highest Educational Attainment"
+                                           FullWidth="true">
                                     <MudSelectItem Value="@("None")">None</MudSelectItem>
                                     <MudSelectItem Value="@("Elementary Graduate")">Elementary Graduate</MudSelectItem>
                                     <MudSelectItem Value="@("Junior High School Graduate")">Junior High School Graduate</MudSelectItem>
@@ -551,11 +551,11 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="3">
-                                <MudFileUpload T="IBrowserFile" 
+                                <MudFileUpload T="IBrowserFile"
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                Disabled="DisableEducationFieldsForAboveCollege()"
-                                               Required="@(!DisableEducationFieldsForAboveCollege() && string.IsNullOrEmpty(educationalBackground.DiplomaFileName))"
+                                               Required="@(!DisableEducationFieldsForAboveCollege() && educationalBackground.DiplomaFile is null)"
                                                Class="centered-upload"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
@@ -564,21 +564,21 @@
                                                    IconSize="Size.Large"
                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                    OnClick="@context.OpenFilePickerAsync">
-                                            @if (!string.IsNullOrEmpty(educationalBackground.DiplomaFileName))
+                                            @if (educationalBackground.DiplomaFile is not null)
                                             {
                                                 <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@educationalBackground.DiplomaFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFileName))" />
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFile!))" />
                                             }
                                             else
                                             {
-                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Diploma / TOR</span>
+                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload Diploma / TOR</span>
                                             }
                                         </MudButton>
                                     </CustomContent>
-                                    <SelectedTemplate/>
+                                    <SelectedTemplate />
                                 </MudFileUpload>
                             </MudItem>
                             
@@ -668,7 +668,7 @@
                                                    MaxFileSize="26214400"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnProfessionalLicenseUpload"
-                                                   Required="@(string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName) && hasProfessionalLicense == true)"
+                                                   Required="@(licensesDetails.LicenseUploadFile is null && hasProfessionalLicense == true)"
                                                    Class="centered-upload">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input"
@@ -676,21 +676,21 @@
                                                        IconSize="Size.Large"
                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                        OnClick="@context.OpenFilePickerAsync">
-                                                @if (!string.IsNullOrEmpty(licensesDetails.LicenseUploadFileName))
+                                                @if (licensesDetails.LicenseUploadFile is not null)
                                                 {
                                                     <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@licensesDetails.LicenseUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFileName))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFile!))" />
                                                 }
                                                 else
                                                 {
-                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload Professional License</span>
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload Professional License</span>
                                                 }
                                             </MudButton>
                                         </CustomContent>
-                                        <SelectedTemplate/>
+                                        <SelectedTemplate />
                                     </MudFileUpload>
                                 </MudItem>
                             }
@@ -813,11 +813,11 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="3" Class="mt-2">
-                                <MudFileUpload T="IBrowserFile" 
+                                <MudFileUpload T="IBrowserFile"
                                                MaxFileSize="26214400"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload"
-                                               Required="@(!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))"
+                                               Required="@(professionalExperiences.Emp1COEUploadFile is null)"
                                                class="centered-upload">
                                     <CustomContent>
                                         <MudButton Class="oneplatform-rounded-input"
@@ -825,21 +825,21 @@
                                                    IconSize="Size.Large"
                                                    Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                    OnClick="@context.OpenFilePickerAsync">
-                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp1COEUploadFileName))
+                                            @if (professionalExperiences.Emp1COEUploadFile is not null)
                                             {
                                                 <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp1COEUploadFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFileName))" />
+                                                               OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFile!))" />
                                             }
                                             else
                                             {
-                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                                <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload COE/ID</span>
                                             }
                                         </MudButton>
                                     </CustomContent>
-                                    <SelectedTemplate/>
+                                    <SelectedTemplate />
                                 </MudFileUpload>
                             </MudItem>
 
@@ -848,7 +848,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Required="true"      
+                                              Required="true"
                                               RequiredError="Supervisor Name is required"
                                               Class="oneplatform-rounded-input"
                                               @bind-Value="professionalExperiences.Emp1SupervisorName"
@@ -869,182 +869,169 @@
                             @if (AddEmployer2)
                             {
                                 <MudItem xs="12" sm="6">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              Required="@AddEmployer2"
-                                              @bind-Value="professionalExperiences.Emp2CompanyName"
-                                              Label="Company Name" />
-                            </MudItem>
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  Required="@AddEmployer2"
+                                                  @bind-Value="professionalExperiences.Emp2CompanyName"
+                                                  Label="Company Name" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
-                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
-                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
-                            </MudItem>
+                                <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
+                                    <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                                    <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="4">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Required="true"
-                                              RequiredError="Company City / Address is required"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="professionalExperiences.Emp2CompanyCity"
-                                              Label="Company City / Address" />
-                            </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Required="true"
-                                              RequiredError="State / Province / Region is required"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="professionalExperiences.Emp2CompanyProvince"
-                                              Label="State / Province / Region" />
-                            </MudItem>
-                            <MudItem xs="6" sm="2">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              Required="true"
-                                              RequiredError="Country is required"
-                                              @bind-Value="professionalExperiences.Emp2CompanyCountry"
-                                              Label="Country" />
-                            </MudItem>
-                            <MudItem xs="6" sm="1">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Required="true"
-                                              Mask="@(new PatternMask("00000000000"))"
-                                              RequiredError="Zip Code is required"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="professionalExperiences.Emp2CompanyPostalCode"
-                                              Label="Zip Code" />
-                            </MudItem>
-                            <MudItem xs="12" sm="2">
-                                <MudDatePicker @bind-Date="DatePermittedToContact2"
-                                               Label="Date permitted to contact"
-                                               DateFormat="MM/dd/yyyy"
-                                               Required="true"
-                                               Adornment="Adornment.End"
-                                               Variant="Variant.Outlined"
-                                               Placeholder="Date"
-                                               Margin="Margin.Dense"
-                                               MinDate="@DateTime.Now"
-                                               Class="oneplatform-rounded-input" />
-                            </MudItem>
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Company City / Address is required"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="professionalExperiences.Emp2CompanyCity"
+                                                  Label="Company City / Address" />
+                                </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="State / Province / Region is required"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="professionalExperiences.Emp2CompanyProvince"
+                                                  Label="State / Province / Region" />
+                                </MudItem>
+                                <MudItem xs="6" sm="2">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  Required="true"
+                                                  RequiredError="Country is required"
+                                                  @bind-Value="professionalExperiences.Emp2CompanyCountry"
+                                                  Label="Country" />
+                                </MudItem>
+                                <MudItem xs="6" sm="1">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  Mask="@(new PatternMask("00000000000"))"
+                                                  RequiredError="Zip Code is required"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="professionalExperiences.Emp2CompanyPostalCode"
+                                                  Label="Zip Code" />
+                                </MudItem>
+                                <MudItem xs="12" sm="2">
+                                    <MudDatePicker @bind-Date="DatePermittedToContact2"
+                                                   Label="Date permitted to contact"
+                                                   DateFormat="MM/dd/yyyy"
+                                                   Required="true"
+                                                   Adornment="Adornment.End"
+                                                   Variant="Variant.Outlined"
+                                                   Placeholder="Date"
+                                                   Margin="Margin.Dense"
+                                                   MinDate="@DateTime.Now"
+                                                   Class="oneplatform-rounded-input" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="3">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Required="true"
-                                              RequiredError="Jb TItle is required"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="professionalExperiences.Emp2JobTitle"
-                                              Label="Job Title" />
-                            </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudDatePicker DateFormat="MM/dd/yyyy"
-                                               @bind-Date="StartOfEmployment2"
-                                               Adornment="Adornment.End"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense"
-                                               Required="true"
-                                               Placeholder="Date"
-                                               MinDate="@DateTime.Now"
-                                               Class="oneplatform-rounded-input"
-                                               Label="Start Date of Employment" />
-                            </MudItem>
-                            <MudItem xs="12" sm="3">
-                                <MudDatePicker @bind-Date="EndOfEmployment2"
-                                               Adornment="Adornment.End"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense"
-                                               Placeholder="Date"
-                                               Required="true"
-                                               Class="oneplatform-rounded-input"
-                                               Label="End Date of Employment"
-                                               Disabled="@(!StartOfEmployment2.HasValue)"
-                                               MinDate="@StartOfEmployment2?.AddDays(1)"
-                                               DateFormat="MM/dd/yyyy" />
-                            </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Jb TItle is required"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="professionalExperiences.Emp2JobTitle"
+                                                  Label="Job Title" />
+                                </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudDatePicker DateFormat="MM/dd/yyyy"
+                                                   @bind-Date="StartOfEmployment2"
+                                                   Adornment="Adornment.End"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Required="true"
+                                                   Placeholder="Date"
+                                                   MinDate="@DateTime.Now"
+                                                   Class="oneplatform-rounded-input"
+                                                   Label="Start Date of Employment" />
+                                </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudDatePicker @bind-Date="EndOfEmployment2"
+                                                   Adornment="Adornment.End"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Placeholder="Date"
+                                                   Required="true"
+                                                   Class="oneplatform-rounded-input"
+                                                   Label="End Date of Employment"
+                                                   Disabled="@(!StartOfEmployment2.HasValue)"
+                                                   MinDate="@StartOfEmployment2?.AddDays(1)"
+                                                   DateFormat="MM/dd/yyyy" />
+                                </MudItem>
 
-                            <MudItem xs="12" sm="3" Class="mt-2">
-                                <MudFileUpload T="IBrowserFile" 
-                                               MaxFileSize="26214400"
-                                               Accept=".pdf"
-                                               OnFilesChanged="OnCoe2Upload"
-                                                   Required="@string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName)"
-                                               class="centered-upload">
-                                    <CustomContent>
+                                <MudItem xs="12" sm="3" Class="mt-2">
+                                    <MudFileUpload T="IBrowserFile"
+                                                   MaxFileSize="26214400"
+                                                   Accept=".pdf"
+                                                   OnFilesChanged="OnCoe2Upload"
+                                                   Required="@(professionalExperiences.Emp2COEUploadFile is null)"
+                                                   class="centered-upload">
+                                        <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input"
                                                        StartIcon="@Icons.Material.Filled.CloudUpload"
                                                        IconSize="Size.Large"
                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                        OnClick="@context.OpenFilePickerAsync">
-                                                @if (!string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName))
+                                                @if (professionalExperiences.Emp2COEUploadFile is not null)
                                                 {
                                                     <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp2COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFileName))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFile!))" />
                                                 }
                                                 else
                                                 {
-                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload COE/ID</span>
                                                 }
                                             </MudButton>
-                                    </CustomContent>
-                                    @* <SelectedTemplate>
-                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp2COEUploadFileName))
-                                        {
-                                            <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                        <MudText>@professionalExperiences.Emp2COEUploadFileName</MudText>
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                   Color="Color.Default"
-                                                                   Size="Size.Small"
-                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFileName))" />
-                                                </MudStack>
-                                            </div>
-                                        } *@
-                                    <SelectedTemplate/>
-                                </MudFileUpload>
-                            </MudItem>
+                                        </CustomContent>
+                                        <SelectedTemplate />
+                                    </MudFileUpload>
+                                </MudItem>
 
-                            <MudItem xs="12" sm="6">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Required="true"      
-                                              RequiredError="Supervisor Name is required"
-                                              Class="oneplatform-rounded-input"
-                                              @bind-Value="professionalExperiences.Emp2SupervisorName"
-                                              Label="Supervisor Name" />
-                            </MudItem>
-                            <MudItem xs="12" sm="6">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              Required="true"
-                                              RequiredError="Supervisor Contact Number is required"
-                                              @bind-Value="professionalExperiences.Emp2SupervisorContactNumber"
-                                              Label="Contact Information" />
-                            </MudItem>                                
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Supervisor Name is required"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="professionalExperiences.Emp2SupervisorName"
+                                                  Label="Supervisor Name" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField FullWidth="true"
+                                                  Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  Required="true"
+                                                  RequiredError="Supervisor Contact Number is required"
+                                                  @bind-Value="professionalExperiences.Emp2SupervisorContactNumber"
+                                                  Label="Contact Information" />
+                                </MudItem>
                             }
 
                             @if (AddEmployer3)
@@ -1165,7 +1152,7 @@
                                                    MaxFileSize="26214400"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnCoe3Upload"
-                                                   Required="@string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName)"
+                                                   Required="@(professionalExperiences.Emp3COEUploadFile is null)"
                                                    class="centered-upload">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input"
@@ -1173,34 +1160,21 @@
                                                        IconSize="Size.Large"
                                                        Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px"
                                                        OnClick="@context.OpenFilePickerAsync">
-                                                @if (!string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName))
+                                                @if (professionalExperiences.Emp3COEUploadFile is not null)
                                                 {
                                                     <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; margin-top:3px; ">@professionalExperiences.Emp3COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFileName))" />
+                                                                   OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFile!))" />
                                                 }
                                                 else
                                                 {
-                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 3px">Upload COE/ID</span>
+                                                    <span style="max-width: 170px;  margin: 0px;  margin-top: 2px;">Upload COE/ID</span>
                                                 }
                                             </MudButton>
                                         </CustomContent>
-                                        @* <SelectedTemplate>
-                                            @if (!string.IsNullOrEmpty(professionalExperiences.Emp3COEUploadFileName))
-                                            {
-                                                <div style="display:flex; justify-content:center; width:100%; margin-top:8px;">
-                                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="w-70">
-                                                        <MudText>@professionalExperiences.Emp3COEUploadFileName</MudText>
-                                                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                       Color="Color.Default"
-                                                                       Size="Size.Small"
-                                                                       OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFileName))" />
-                                                    </MudStack>
-                                                </div>
-                                            } *@
-                                        <SelectedTemplate/>
+                                        <SelectedTemplate />
                                     </MudFileUpload>
                                 </MudItem>
 
@@ -1361,7 +1335,7 @@
                                                       RequiredError="Birth Date is required"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
-                                                      Margin="Margin.Dense"/>
+                                                      Margin="Margin.Dense" />
                                     </MudItem>
                                 </MudGrid>
                             </MudItem>
@@ -1437,7 +1411,7 @@
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref2ContactNumber"
                                                       Required="true"
-                                                       Mask="@(new PatternMask("00000000000"))"
+                                                      Mask="@(new PatternMask("00000000000"))"
                                                       RequiredError="Mobile Contact Information is required"
                                                       Label="Mobile Contact Information" />
                                     </MudItem>
@@ -1486,12 +1460,12 @@
                                                       RequiredError="Birth Date is required"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
-                                                      Margin="Margin.Dense"/>
+                                                      Margin="Margin.Dense" />
                                     </MudItem>
                                 </MudGrid>
                             </MudItem>
 
-                            <!-- Reference 3 --> 
+                            <!-- Reference 3 -->
                             @if (AddAnotherReference)
                             {
                                 <MudItem xs="12">
@@ -1610,7 +1584,7 @@
                                                           RequiredError="Birth Date is required"
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense"/>
+                                                          Margin="Margin.Dense" />
                                         </MudItem>
                                     </MudGrid>
                                 </MudItem>
@@ -1686,20 +1660,20 @@
                                 <MudGrid>
                                     <!-- LEFT: Signature -->
                                     <MudItem xs="12">
-                                        <MudPaper Elevation="0" 
+                                        <MudPaper Elevation="0"
                                                   Style="padding:8px; margin-bottom: 30px;">
                                             <MudGrid>
-                                                 <MudItem xs="12">
+                                                <MudItem xs="12">
                                                     <div style="text-align: center;">
-                                                    <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
+                                                        <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
                                                         <SignaturePad Value="signatureDetails.Signature"
                                                                       ValueChanged="OnSignatureChanged"
                                                                       ClearButtonClass="theme-button theme-button-active ats-signature-button"
                                                                       Class="ats-signature mb-2" />
-                                                     </div>
+                                                    </div>
                                                     @if (_signatureError)
                                                     {
-                                                        <div style="display:flex; justify-content:center; "width:40%; text-align: center;">
+                                                        <div style="display:flex; justify-content:center; " width:40%; text-align: center;">
                                                             <MudText Color="Color.Error"
                                                                      Typo="Typo.caption"
                                                                      Class="mb-2">
@@ -1707,9 +1681,9 @@
                                                             </MudText>
                                                         </div>
                                                     }
-                                                 </MudItem>
+                                                </MudItem>
                                                 
-                                               <MudItem xs="12">
+                                                <MudItem xs="12">
                                                     <div style="display:flex; justify-content:center;">
                                                         <div style="width:40%;">
                                                             <MudTextField T="string"
@@ -1734,7 +1708,7 @@
                                                                            RequiredError="Date is required"
                                                                            Variant="Variant.Outlined"
                                                                            Margin="Margin.Dense"
-                                                                           Class="oneplatform-rounded-input" 
+                                                                           Class="oneplatform-rounded-input"
                                                                            DateFormat="MM/dd/yyyy"
                                                                            ReadOnly />
                                                         </div>

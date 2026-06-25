@@ -98,24 +98,24 @@ public partial class ApplicationFormComponent
 		ActiveStep = 2; 
 	}
 
-	private void RemoveFileFromUploadsAsync(string fileName)
+	private void RemoveFileFromUploadsAsync(byte[] file)
 	{
 		// Personal Details
-		if (fileName == personalDetails.AdditionalGovtIDFileName)
+		if (file == personalDetails.AdditionalGovtIDFile)
 		{
 			personalDetails.AdditionalGovtIDFile = null;
 			personalDetails.AdditionalGovtIDFileName = null;
 			return;
 		}
 
-		if (fileName == personalDetails.NBIClearanceFileName)
+		if (file == personalDetails.NBIClearanceFile)
 		{
 			personalDetails.NBIClearanceFile = null;
 			personalDetails.NBIClearanceFileName = null;
 			return;
 		}
 
-		if (fileName == personalDetails.ResumeFileName)
+		if (file == personalDetails.ResumeFile)
 		{
 			personalDetails.ResumeFile = null;
 			personalDetails.ResumeFileName = null;
@@ -123,7 +123,7 @@ public partial class ApplicationFormComponent
 		}
 
 		// Educational Background
-		if (fileName == educationalBackground.DiplomaFileName)
+		if (file == educationalBackground.DiplomaFile)
 		{
 			educationalBackground.DiplomaFile = null;
 			educationalBackground.DiplomaFileName = null;
@@ -131,7 +131,7 @@ public partial class ApplicationFormComponent
 		}
 
 		// Licenses
-		if (fileName == licensesDetails.LicenseUploadFileName)
+		if (file == licensesDetails.LicenseUploadFile)
 		{
 			licensesDetails.LicenseUploadFile = null;
 			licensesDetails.LicenseUploadFileName = null;
@@ -139,21 +139,21 @@ public partial class ApplicationFormComponent
 		}
 
 		// Experience
-		if (fileName == professionalExperiences.Emp1COEUploadFileName)
+		if (file == professionalExperiences.Emp1COEUploadFile)
 		{
 			professionalExperiences.Emp1COEUploadFile = null;
 			professionalExperiences.Emp1COEUploadFileName = null;
 			return;
 		}
 
-		if (fileName == professionalExperiences.Emp2COEUploadFileName)
+		if (file == professionalExperiences.Emp2COEUploadFile)
 		{
 			professionalExperiences.Emp2COEUploadFile = null;
 			professionalExperiences.Emp2COEUploadFileName = null;
 			return;
 		}
 
-		if (fileName == professionalExperiences.Emp3COEUploadFileName)
+		if (file == professionalExperiences.Emp3COEUploadFile)
 		{
 			professionalExperiences.Emp3COEUploadFile = null;
 			professionalExperiences.Emp3COEUploadFileName = null;
