@@ -1,10 +1,14 @@
-﻿namespace FrontendWebassembly.Pages.ATS;
+﻿using Microsoft.AspNetCore.Components.Routing;
+
+namespace FrontendWebassembly.Pages.ATS;
 
 public partial class ATSApplicationForm
 {
 	private bool _showApplicationForm = false;
 	private bool Status;
+	private bool isNavigationLocked = false;
 	private bool IsExpired = false;
+	private bool hasUnsavedChanges = true;
 	[Parameter]
 	public string? HashToken { get; set; }
 	[Parameter]
@@ -36,8 +40,21 @@ public partial class ATSApplicationForm
 		}
 	}
 
-	private void Proceed()
+	private async Task ConfirmNavigation(LocationChangingContext context)
 	{
-		_showApplicationForm = true;
+		if (hasUnsavedChanges)
+		{
+			var result = await JSRuntime.InvokeAsync<bool>("confirm",
+				"You have unsaved changes. Leave anyway?");
+
+			if (!result)
+			{
+				context.PreventNavigation();
+			}
+		}
+	}
+	private void SetDirtyState(bool value)
+	{
+		hasUnsavedChanges = value;
 	}
 }

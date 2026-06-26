@@ -1,6 +1,7 @@
 ﻿@inject IApplicationFormService ATSService
 @inject LocalStorageService LocalStorageService
 @inject EmailValidationService EmailValidationService
+@inject IJSRuntime JSRuntime
 @using SigPad
 
 <MudPaper Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
@@ -12,8 +13,8 @@
     {
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                        Color="Color.Default"
-                       OnClick="@DisablePhilSys" />
-        <div style="margin: 40px;">
+                       OnClick="@(()=> showPhilSys = false)"/>
+        <div style="margin: 0px 40px 40px 40px;">
             <PhilSysComponent HashToken="@HashToken"></PhilSysComponent>
         </div>
     }
@@ -243,11 +244,12 @@
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.AdditionalGovtIDFile is not null)
                                                             {
-                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@personalDetails.AdditionalGovtIDFileName</MudText>
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.AdditionalGovtIDFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="ml-3"
+                                                                               Class="mr-3 ml-3"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFile!))" />
                                                             }
                                                             else
@@ -279,17 +281,18 @@
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.NBIClearanceFile is not null)
                                                             {
-                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@personalDetails.NBIClearanceFileName</MudText>
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.NBIClearanceFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="ml-3"
+                                                                               Class="mr-3 ml-3"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFile!))" />
                                                             }
                                                             else
                                                             {
                                                                 <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 250px;  margin: 0px;">
+                                                                <span style="width: 250px; margin: 0px;">
                                                                     Upload NBI Clearance
                                                                 </span>
                                                             }
@@ -315,11 +318,12 @@
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.ResumeFile is not null)
                                                             {
-                                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@personalDetails.ResumeFileName</MudText>
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.ResumeFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="ml-3"
+                                                                               Class="mr-3 ml-3"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFile!))" />
                                                             }
                                                             else
@@ -572,17 +576,18 @@
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
                                             {
-                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@educationalBackground.DiplomaFileName</MudText>
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@educationalBackground.DiplomaFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="ml-3"
+                                                               Class="mr-3 ml-3"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFile!))" />
                                             }
                                             else
                                             {
                                                     <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 200px;  margin: 0px;">
+                                                    <span style="width: 220px;  margin: 0px;">
                                                         Upload Diploma / TOR
                                                     </span>
                                             }
@@ -686,17 +691,18 @@
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (licensesDetails.LicenseUploadFile is not null)
                                                 {
-                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@licensesDetails.LicenseUploadFileName</MudText>
+                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                    <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 268px;">@licensesDetails.LicenseUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   Class="ml-3"
+                                                                   Class="mr-3 ml-3"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFile!))" />
                                                 }
                                                 else
                                                 {
                                                     <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 250px;  margin: 0px;">
+                                                    <span style="width: 318px;  margin: 0px;">
                                                         Upload Professional License
                                                     </span>
                                                 }
@@ -836,17 +842,18 @@
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (professionalExperiences.Emp1COEUploadFile is not null)
                                             {
-                                                <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp1COEUploadFileName</MudText>
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp1COEUploadFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="ml-3"
+                                                               Class="mr-3 ml-3"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFile!))" />
                                             }
                                             else
                                             {
                                                 <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                <span style="width: 170px;  margin: 0px;  margin-top: 2px;">
+                                                <span style="width: 220px;  margin: 0px;  margin-top: 2px;">
                                                     Upload COE/ID #1
                                                 </span>
                                             }
@@ -1005,17 +1012,18 @@
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp2COEUploadFile is not null)
                                                 {
-                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp2COEUploadFileName</MudText>
+                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                    <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp2COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   Class="ml-3"
+                                                                   Class="mr-3 ml-3"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFile!))" />
                                                 }
                                                 else
                                                 {
                                                     <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 170px;  margin: 0px;  margin-top: 2px;">
+                                                    <span style="width: 220px;  margin: 0px;  margin-top: 2px;">
                                                         Upload COE/ID #2
                                                     </span>
                                                 }
@@ -1175,17 +1183,18 @@
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp3COEUploadFile is not null)
                                                 {
-                                                    <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp3COEUploadFileName</MudText>
+                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                                    <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp3COEUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   Class="ml-3"
+                                                                   Class="mr-3 ml-3"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFile!))" />
                                                 }
                                                 else
                                                 {
                                                     <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 170px;  margin: 0px;">
+                                                    <span style="width: 220px;  margin: 0px;">
                                                         Upload COE/ID #3
                                                     </span>
                                                 }

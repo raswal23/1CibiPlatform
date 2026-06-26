@@ -1,8 +1,11 @@
 ﻿@layout GenericLayout
-@inject NavigationManager Navigation
 @inject LocalStorageService LocalStorageService
 @inject IApplicationFormService ATSService
+@inject IJSRuntime JSRuntime
 @page "/s&i/ats/applicationform/{HashToken}"
+
+<NavigationLock ConfirmExternalNavigation="true"
+                OnBeforeInternalNavigation="ConfirmNavigation" />
 
 <div class="oneplatform-generic-container">
     @if (Status)
@@ -89,14 +92,16 @@
                     </div>
 
                     <div class="d-flex justify-center mt-6">
-                        <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="Proceed">Proceed</MudButton>
+                    <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="@(() => _showApplicationForm = true)">
+                            Proceed
+                        </MudButton>
                     </div>
                 </div>
             </MudPaper>
         }
         else
         {
-            <ApplicationFormComponent EmailId="@EmailId" ActiveStep="@stepActive" ShowsPhilSys="@philSysShow" HashToken="@HashToken" />
+            <ApplicationFormComponent HasChangesChanged="SetDirtyState" EmailId="@EmailId" ActiveStep="@stepActive" ShowsPhilSys="@philSysShow" HashToken="@HashToken" />
         }
     }
 </div>

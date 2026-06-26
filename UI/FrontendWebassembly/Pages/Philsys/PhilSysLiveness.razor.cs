@@ -92,7 +92,7 @@ public partial class PhilSysLiveness
 			await LocalStorageService.SetItemAsync($"{atsSession}_phoneNumber", information.data_subject!.mobile_number);
 			await LocalStorageService.SetItemAsync($"{atsSession}_profilePicture", information.data_subject!.face_url);
 
-			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=2");
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=1");
 		}
 
 		StateHasChanged();

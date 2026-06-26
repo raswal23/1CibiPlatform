@@ -8,7 +8,7 @@ public partial class ApplicationFormComponent
 	[Parameter]
 	public bool ShowsPhilSys { get; set; } = false;
 	[Parameter]
-	public int ActiveStep { get; set; } = 1;
+	public int ActiveStep { get; set; } = 0;
 	[Parameter]
 	public string? HashToken { get; set; }
 	private string? FaceUrl;
@@ -21,14 +21,14 @@ public partial class ApplicationFormComponent
 	private bool showPhilSys = false;
 	private bool isSaving = false;
 
-	// Personal Detials
+	// Personal Details
 	private bool consent { get; set; } = false;
 	private bool declineConsent = false;
 	private PersonalDetailsDTO personalDetails = new();
 	private bool NoMiddleName = false;
 	private DateTime? DateOfBirth;
 
-	// AddressDetials
+	// AddressDetails
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
 	private string? OwnershipOtherText = null;
@@ -95,6 +95,9 @@ public partial class ApplicationFormComponent
 		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_phoneNumber") ?? string.Empty;
 		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_profilePicture") ?? string.Empty;
 
+		_activeStep = ActiveStep;
+		showPhilSys = ShowsPhilSys;
+
 		if (!string.IsNullOrWhiteSpace(dobString))
 		{
 			if (DateTime.TryParse(dobString, out var dobDateTime))
@@ -104,10 +107,11 @@ public partial class ApplicationFormComponent
 		}
 	}
 
-	private void DisablePhilSys()
+	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
+
+	private async Task OnChanged()
 	{
-		showPhilSys = false;
-		ActiveStep = 2; 
+		await HasChangesChanged.InvokeAsync(false);
 	}
 
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
@@ -560,6 +564,7 @@ public partial class ApplicationFormComponent
 		}
 		finally
 		{
+			await OnChanged();
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_firstName");
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_middleName");
 			await LocalStorageService.RemoveItemAsync($"{HashToken}_lastName");

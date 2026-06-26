@@ -21,7 +21,7 @@ public partial class Otp
 	private string errorMessage = "";
 	private bool showResendSuccess = false;
 
-	private System.Threading.Timer? countdownTimer;
+	private Timer? countdownTimer;
 	private bool isNavigationLocked = false;
 
 	private bool showSuccessMessage = false;
@@ -94,6 +94,7 @@ public partial class Otp
 
 			if (!confirmed)
 			{
+				// naiwan
 				Navigation.NavigateTo($"/verify-otp?userId={userId}&email={email}", false);
 			}
 			else
@@ -103,7 +104,7 @@ public partial class Otp
 		}
 	}
 
-	private string ValidateOtp(string otp)
+	private string? ValidateOtp(string otp)
 	{
 		if (string.IsNullOrWhiteSpace(otp))
 			return "Verification code is required";
@@ -147,7 +148,7 @@ public partial class Otp
 			StateHasChanged();
 
 			// Start countdown timer
-			countdownTimer = new System.Threading.Timer(async _ =>
+			countdownTimer = new Timer(async _ =>
 			{
 				redirectCountdown--;
 
@@ -224,7 +225,7 @@ public partial class Otp
 
 	public async ValueTask DisposeAsync()
 	{
-		Navigation.LocationChanged -= HandleLocationChanged;
+		Navigation.LocationChanged -= HandleLocationChanged!;
 		await RemoveNavigationLock();
 	}
 }
