@@ -1,4 +1,6 @@
-﻿namespace FrontendWebassembly.Pages.Philsys;
+﻿using Microsoft.AspNetCore.Components.Routing;
+
+namespace FrontendWebassembly.Pages.Philsys;
 
 public partial class PhilSysLiveness
 {
@@ -13,6 +15,7 @@ public partial class PhilSysLiveness
 	private string? webHookUrl;
 	private string? livenessKey;
 	private string errorMessage = string.Empty;
+	private bool hasUnsavedChanges = true;
 	private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
 	public string? atsSession { get; set; } = null;
 	public string? applicationFormPath { get; set; }
@@ -26,10 +29,28 @@ public partial class PhilSysLiveness
 		isTransacted = _status.IsTransacted;
 		isExpired = _status.isExpired;
 
+		if(string.IsNullOrEmpty(atsSession))
+		{
+			hasUnsavedChanges = false;
+		}
+
 		if (_status.isExpired)
 		{
 			await IPhilSysService.DeleteTransactionAsync(HashToken);
 			return;
+		}
+	}
+	private async Task ConfirmNavigation(LocationChangingContext context)
+	{
+		if (hasUnsavedChanges)
+		{
+			var result = await JS.InvokeAsync<bool>("confirm",
+				"You have unsaved changes. Leave anyway?");
+
+			if (!result)
+			{
+				context.PreventNavigation();
+			}
 		}
 	}
 

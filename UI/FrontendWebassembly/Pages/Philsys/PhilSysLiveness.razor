@@ -7,6 +7,9 @@
 
 <PageTitle>Face Liveness Session</PageTitle>
 
+<NavigationLock ConfirmExternalNavigation="true"
+                OnBeforeInternalNavigation="ConfirmNavigation" />
+
 <div class="oneplatform-generic-container">
 
     @if (isTransacted || isExpired)
