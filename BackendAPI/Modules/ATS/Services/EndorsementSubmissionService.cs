@@ -95,7 +95,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.EmailSentStatus = "Pending";
 		emailInvitationRequest.IsFormCompleted = false;
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
-
 		
 		try
 		{

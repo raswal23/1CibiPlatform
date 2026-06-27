@@ -44,6 +44,8 @@ public static class ATSServiceConfiguration
 
 		services.AddHostedService<BulkSubmissionBackgroundService>();
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
+		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
+		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddHostedService<EmailNotificationBackgroundServiceForPending>();
 		services.AddHostedService<EmailNotificationBackgroundServiceForError>();
 		services.AddScoped<IATSQueries, ATSQueries>();
