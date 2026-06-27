@@ -33,7 +33,7 @@ public partial class PhilSysCardNumbeFormComponent
 		var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("pcn", identityData!);
 		if (!string.IsNullOrEmpty(livenessLink))
 		{
-			Navigation.NavigateTo(livenessLink, forceLoad: true);
+			Navigation.NavigateTo(livenessLink, false);
 		}
 	}
 }

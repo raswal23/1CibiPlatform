@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Routing;
-
-namespace FrontendWebassembly.Pages.ATS;
+﻿namespace FrontendWebassembly.Pages.ATS;
 
 public partial class ATSApplicationForm
 {
@@ -28,15 +26,15 @@ public partial class ATSApplicationForm
 
 		if (response.IsExpired)
 		{
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_firstName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_middleName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_lastName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_suffix");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_birthDate");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_sex");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_emailAddress");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_phoneNumber");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_profilePicture");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
 		}
 	}
 

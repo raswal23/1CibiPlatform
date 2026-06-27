@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Routing;
-
-namespace FrontendWebassembly.Pages.Philsys;
+﻿namespace FrontendWebassembly.Pages.Philsys;
 
 public partial class PhilSysLiveness
 {
@@ -44,8 +42,7 @@ public partial class PhilSysLiveness
 	{
 		if (hasUnsavedChanges)
 		{
-			var result = await JS.InvokeAsync<bool>("confirm",
-				"You have unsaved changes. Leave anyway?");
+			var result = await JS.InvokeAsync<bool>("confirm", "You have unsaved changes. Leave anyway?");
 
 			if (!result)
 			{
@@ -101,23 +98,27 @@ public partial class PhilSysLiveness
 		}
 
 		showLoader = false;
+		hasUnsavedChanges = false;
 		if (!string.IsNullOrEmpty(atsSession))
 		{
-			await LocalStorageService.SetItemAsync($"{atsSession}_firstName", information.data_subject!.first_name);
-			await LocalStorageService.SetItemAsync($"{atsSession}_middleName", information.data_subject!.middle_name);
-			await LocalStorageService.SetItemAsync($"{atsSession}_lastName", information.data_subject!.last_name);
-			await LocalStorageService.SetItemAsync($"{atsSession}_suffix", information.data_subject!.suffix);
-			await LocalStorageService.SetItemAsync($"{atsSession}_birthDate", information.data_subject!.birth_date);
-			await LocalStorageService.SetItemAsync($"{atsSession}_sex", information.data_subject!.gender);
-			await LocalStorageService.SetItemAsync($"{atsSession}_emailAddress", information.data_subject!.email);
-			await LocalStorageService.SetItemAsync($"{atsSession}_phoneNumber", information.data_subject!.mobile_number);
-			await LocalStorageService.SetItemAsync($"{atsSession}_profilePicture", information.data_subject!.face_url);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:firstName", information.data_subject!.first_name);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:middleName", information.data_subject!.middle_name);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:lastName", information.data_subject!.last_name);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:suffix", information.data_subject!.suffix);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:birthDate", information.data_subject!.birth_date);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:sex", information.data_subject!.gender);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:emailAddress", information.data_subject!.email);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:phoneNumber", information.data_subject!.mobile_number);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", information.data_subject!.face_url);
 
-			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=1");
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=1", false);
 		}
 
 		StateHasChanged();
 	}
 
-	public void Dispose() => _dotNetRef?.Dispose();
+	public async ValueTask DisposeAsync()
+	{
+		_dotNetRef?.Dispose();
+	}
 }

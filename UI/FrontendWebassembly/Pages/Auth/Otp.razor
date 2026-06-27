@@ -4,7 +4,9 @@
 @inject IAuthService IAuthService
 @inject IJSRuntime JSRuntime
 @inject LocalStorageService LocalStorageService
-@implements IAsyncDisposable
+
+<NavigationLock ConfirmExternalNavigation="true"
+                OnBeforeInternalNavigation="ConfirmNavigation" />
 
 @if (!_isLoading)
 {
@@ -96,7 +98,7 @@
              </MudForm>
    
                <div class="footer-links">
-                   Wrong email? <a href="/register">Go back to registration</a>
+                   Wrong email? <a href="/register" class="gradient-text">Go back to registration</a>
                </div>
            </div>
        </MudPaper>

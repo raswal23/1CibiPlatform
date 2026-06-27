@@ -18,7 +18,7 @@ public partial class BasicInformationFormComponent
 		var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
 		if (!string.IsNullOrEmpty(livenessLink))
 		{
-			Navigation.NavigateTo(livenessLink);
+			Navigation.NavigateTo(livenessLink, false);
 		}
 	}
 }

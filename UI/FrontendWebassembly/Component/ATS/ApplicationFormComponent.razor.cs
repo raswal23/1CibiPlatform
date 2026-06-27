@@ -85,15 +85,15 @@ public partial class ApplicationFormComponent
 
 	protected override async Task OnInitializedAsync()
 	{
-		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_firstName") ?? string.Empty;
-		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_middleName") ?? string.Empty;
-		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_lastName") ?? string.Empty;
-		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_suffix") ?? string.Empty;
-		string? dobString = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_birthDate");
-		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_sex") ?? string.Empty;
-		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_emailAddress") ?? string.Empty;
-		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_phoneNumber") ?? string.Empty;
-		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"{HashToken}_profilePicture") ?? string.Empty;
+		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? string.Empty;
+		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? string.Empty;
+		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? string.Empty;
+		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:suffix") ?? string.Empty;
+		string? dobString = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:birthDate");
+		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:sex") ?? string.Empty;
+		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:emailAddress") ?? string.Empty;
+		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? string.Empty;
+		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:profilePicture") ?? string.Empty;
 
 		_activeStep = ActiveStep;
 		showPhilSys = ShowsPhilSys;
@@ -565,15 +565,15 @@ public partial class ApplicationFormComponent
 		finally
 		{
 			await OnChanged();
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_firstName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_middleName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_lastName");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_suffix");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_birthDate");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_sex");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_emailAddress");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_phoneNumber");
-			await LocalStorageService.RemoveItemAsync($"{HashToken}_profilePicture");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
+			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
 			isSaving = false;
 		}
 	}

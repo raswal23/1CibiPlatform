@@ -40,3 +40,4 @@ global using Microsoft.AspNetCore.SignalR.Client;
 global using SigPad;
 global using System.Text.RegularExpressions;
 global using FrontendWebassembly.Component.Generic;
+global using Microsoft.AspNetCore.Components.Routing;

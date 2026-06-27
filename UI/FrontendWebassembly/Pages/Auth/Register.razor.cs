@@ -76,6 +76,8 @@ public partial class Register
 
 	private async Task HandleRegister()
 	{
+		await form!.ValidateAsync();
+
 		isLoading = true;
 		isUserValid = true;
 		errorMessage = "";

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Routing;
-
-namespace FrontendWebassembly.Pages.Auth;
+﻿namespace FrontendWebassembly.Pages.Auth;
 
 public partial class Otp
 {
@@ -15,6 +13,7 @@ public partial class Otp
 	private bool isDone => showSuccessMessage;
 	private bool isResendLoading = false;
 	private bool isResendSuccess = false;
+	private bool hasUnsavedChanges = true;
 
 	private string otpCode = "";
 	private bool isOtpValid = true;
@@ -52,54 +51,17 @@ public partial class Otp
 		}
 
 		_isLoading = false;
-
-		Navigation.LocationChanged += HandleLocationChanged!;
 	}
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	private async Task ConfirmNavigation(LocationChangingContext context)
 	{
-		if (firstRender)
+		if (hasUnsavedChanges)
 		{
-			await SetupNavigationLock();
-		}
-	}
+			var result = await JSRuntime.InvokeAsync<bool>("confirm", "You have unsaved changes. Leave anyway?");
 
-	private async Task SetupNavigationLock()
-	{
-		if (!isNavigationLocked)
-		{
-			isNavigationLocked = true;
-			await JSRuntime.InvokeVoidAsync(
-			"navigationLock.enable",
-			"You have an unverified account. Are you sure you want to leave?"
-			);
-		}
-	}
-
-	private async Task RemoveNavigationLock()
-	{
-		if (isNavigationLocked)
-		{
-			isNavigationLocked = false;
-			await JSRuntime.InvokeVoidAsync("navigationLock.disable");
-		}
-	}
-
-	private void HandleLocationChanged(object sender, LocationChangedEventArgs e)
-	{
-		if (!e.Location.Contains("/verify-otp"))
-		{
-			var confirmed = JSRuntime.InvokeAsync<bool>("confirm",
-				"You have an unverified account. Are you sure you want to leave?").GetAwaiter().GetResult();
-
-			if (!confirmed)
+			if (!result)
 			{
-				// naiwan
-				Navigation.NavigateTo($"/verify-otp?userId={userId}&email={email}", false);
-			}
-			else
-			{
-				RemoveNavigationLock().GetAwaiter().GetResult();
+				context.PreventNavigation();
 			}
 		}
 	}
@@ -137,8 +99,6 @@ public partial class Otp
 				return;
 			}
 
-			await RemoveNavigationLock();
-
 			// Show success message and start countdown
 			isLoading = false;
 			isResendLoading = false;
@@ -157,8 +117,8 @@ public partial class Otp
 					countdownTimer?.Dispose();
 					await InvokeAsync(() =>
 					{
-
-						Navigation.NavigateTo("/login", true);
+						hasUnsavedChanges = false;
+						Navigation.NavigateTo("/login", false);
 					});
 				}
 				else
@@ -221,11 +181,5 @@ public partial class Otp
 		errorMessage = "";
 		showResendSuccess = true;
 		isResendSuccess = false;
-	}
-
-	public async ValueTask DisposeAsync()
-	{
-		Navigation.LocationChanged -= HandleLocationChanged!;
-		await RemoveNavigationLock();
 	}
 }
