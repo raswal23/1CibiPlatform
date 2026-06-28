@@ -20,7 +20,7 @@
     }
     else
     {
-        <MudForm @ref="ApplicationForm">
+        <MudForm @ref="ApplicationForm" Disabled="@isSaving">
             <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper">
                 <ChildContent>
                     <!-- STEP 1 -->
@@ -571,7 +571,7 @@
                                                Disabled="DisableEducationFieldsForAboveCollege()"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
-                                        <MudButton Class="oneplatform-rounded-input"
+                                        <MudButton Class="oneplatform-rounded-input w-100"
                                                    Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
@@ -686,7 +686,7 @@
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnProfessionalLicenseUpload">
                                         <CustomContent>
-                                            <MudButton Class="oneplatform-rounded-input"
+                                            <MudButton Class="oneplatform-rounded-input w-100"
                                                        Style="width:368px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (licensesDetails.LicenseUploadFile is not null)
@@ -837,7 +837,7 @@
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload">
                                     <CustomContent>
-                                        <MudButton Class="oneplatform-rounded-input"
+                                        <MudButton Class="oneplatform-rounded-input w-100"
                                                    Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (professionalExperiences.Emp1COEUploadFile is not null)
@@ -1007,7 +1007,7 @@
                                                    OnFilesChanged="OnCoe2Upload"
                                                    Required="@(professionalExperiences.Emp2COEUploadFile is null)">
                                         <CustomContent>
-                                            <MudButton Class="oneplatform-rounded-input"
+                                            <MudButton Class="oneplatform-rounded-input w-100"
                                                        Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp2COEUploadFile is not null)
@@ -1178,7 +1178,7 @@
                                                    OnFilesChanged="OnCoe3Upload"
                                                    Required="@(professionalExperiences.Emp3COEUploadFile is null)">
                                         <CustomContent>
-                                            <MudButton Class="oneplatform-rounded-input"
+                                            <MudButton Class="oneplatform-rounded-input w-100"
                                                        Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp3COEUploadFile is not null)
@@ -1696,7 +1696,9 @@
                                                         <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
                                                         <SignaturePad Value="signatureDetails.Signature"
                                                                       ValueChanged="OnSignatureChanged"
-                                                                      ClearButtonClass="theme-button theme-button-active ats-signature-button"
+                                                                      ClearButtonClass="@(isSaving
+                                                                       ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
+                                                                       : "theme-button theme-button-active ats-signature-button")"
                                                                       Class="ats-signature mb-2" />
                                                     </div>
                                                     @if (_signatureError)
