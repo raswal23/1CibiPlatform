@@ -60,7 +60,9 @@ public class ATSServiceFixture : IDisposable
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
 				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
-				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" }
+				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" },
+				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" },
+				{ "CacheKeys:ATSBatchesError", "ats-batches-error" }
 			})
 			.Build();
 
