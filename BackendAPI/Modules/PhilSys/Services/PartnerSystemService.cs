@@ -1,4 +1,5 @@
-﻿namespace PhilSys.Services;
+﻿
+namespace PhilSys.Services;
 
 public class PartnerSystemService
 {
@@ -7,11 +8,13 @@ public class PartnerSystemService
 	private readonly IConfiguration _configuration;
 	private readonly IHashService _hashService;
 	private readonly ISecureToken _securetoken;
+	private readonly IATSQueries _atsQuery;
 	private readonly double _livenessExpiryMinutes;
 	private readonly string _livenessBaseUrl;
 	public PartnerSystemService(
 		ILogger<PartnerSystemService> logger, 
 		IPhilSysRepository repository,
+		IATSQueries atsQuery,
 		IConfiguration configuration,
 		IHashService hashService,
 		ISecureToken securetoken)
@@ -21,12 +24,22 @@ public class PartnerSystemService
 		_configuration = configuration;
 		_hashService = hashService;
 		_securetoken = securetoken;
+		_atsQuery = atsQuery;
 		_livenessExpiryMinutes = int.Parse(_configuration["PhilSys:LivenessSessionExpiryInMinutes"] ?? "10");
 		_livenessBaseUrl = _configuration["PhilSys:LivenessBaseUrl"] ?? "";
 	}
 	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
 	{
-		PhilSysTransaction transaction = new PhilSysTransaction { } ;
+		PhilSysTransaction transaction = new();
+
+		if (!string.IsNullOrEmpty(identity_data.ATSSession))
+		{
+			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, CancellationToken.None);
+			if (!IsATSSessionValid)
+			{
+				throw new NotFoundException("Invalid ATS Session provided.");
+			}
+		}
 
 		var identifier = !string.IsNullOrWhiteSpace(identity_data.PCN)
 							 ? identity_data.PCN
@@ -41,22 +54,22 @@ public class PartnerSystemService
 			Timestamp = DateTime.UtcNow
 		};
 
-		_logger.LogInformation("Partner system query initiated: {@Context}", logContext); ;
+		_logger.LogInformation("Partner system query initiated: {@Context}", logContext);
 
 		var token = _securetoken.GenerateSecureToken();
 
-		if (token == null)
+		if (string.IsNullOrEmpty(token))
 		{
 			_logger.LogError("Failed Transaction: Failed to generate Token for identity: {@Context}", logContext);
-			throw new Exception("Failed to generate Token.");
+			throw new InternalServerException("Failed to generate Token.");
 		}
 
 		var HashToken = _hashService.Hash(token);
 
-		if (HashToken == null)
+		if (string.IsNullOrEmpty(HashToken))
 		{
 			_logger.LogError("Failed Transaction: Failed to hash Token for identity: {@Context}", logContext);
-			throw new Exception("Failed to hash Token.");
+			throw new InternalServerException("Failed to hash Token.");
 		}
 
 		if (inquiry_type.Equals("name_dob", StringComparison.OrdinalIgnoreCase))
@@ -72,6 +85,7 @@ public class PartnerSystemService
 				BirthDate = identity_data.BirthDate,
 				IsTransacted = false,
 				HashToken = HashToken,
+				ATSSession = identity_data.ATSSession,
 				WebHookUrl = callback_url,
 				CreatedAt = DateTime.UtcNow,
 				ExpiresAt = DateTime.UtcNow.AddMinutes(_livenessExpiryMinutes)
@@ -88,6 +102,7 @@ public class PartnerSystemService
 				IsTransacted = false,
 				HashToken = HashToken,
 				WebHookUrl = callback_url,
+				ATSSession = identity_data.ATSSession,
 				CreatedAt = DateTime.UtcNow,
 				ExpiresAt = DateTime.UtcNow.AddMinutes(_livenessExpiryMinutes)
 			};
@@ -99,10 +114,10 @@ public class PartnerSystemService
 		{
 			var result = await _repository.AddTransactionDataAsync(transaction);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
 			_logger.LogError("Failed Transaction: Failed to add transaction data record for {Tid}: {@Context}", transaction.Tid, logContext);
-			throw new InternalServerException($"Failed to add transaction.");;
+			throw new InternalServerException($"Failed to add transaction. {ex}" );;
 		}
 
 		_logger.LogInformation("Succcessfully added the transaction data record for {Tid}: {@Context}", transaction.Tid, logContext);

@@ -2,7 +2,7 @@
 @inject IDialogService DialogService
 
 <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
         <MudDateRangePicker @bind-DateRange="@_dateRange"
                             Margin="Margin.Dense"
                             ReadOnly="false"
@@ -51,96 +51,17 @@
 
 </TableComponent>
 
-<MudGrid Class="mt-0" AlignItems="Center">
+<MudGrid Class="mt-0">
     <MudItem xs="12" md="8">
         <MudButton Class="theme-button theme-button-active"
                    Style="width: 120px; border-radius: 4px;"
                    OnClick="DownloadSelected">Download</MudButton>
     </MudItem>
     <MudItem xs="12" md="4">
-        <MudText Typo="Typo.caption" Class="text-right" Color="Color.Primary">
-            <b>IMPORTANT NOTICE!</b><br />
+        <MudText Typo="Typo.caption" Class="text-right">
+            <b class="gradient-text">IMPORTANT NOTICE!</b><br />
             For security purposes, all reports downloaded are password protected and in PDF format. Please reach out to your account manager for your quarterly passwords.
         </MudText>
     </MudItem>
 </MudGrid>
 
-@code {
-    private TableComponent<ReportRow>? reportsTable;
-    private DateRange? _dateRange { get; set; }
-    private readonly List<ReportRow> _dummyReports = new()
-    {
-        new ReportRow(false, "Antonio Aguinaldo", "2025 - 00123456", "In Progress", "Pending", "October 25, 2025", "Basic"),
-        new ReportRow(false, "Antonio Aguinaldo", "2025 - 00129876", "Completed", "Clear", "October 21, 2025", "Basic 2"),
-        new ReportRow(false, "Antonio Aguinaldo", "2024 - 00124356", "Completed", "Not Clear", "October 20, 2024", "Lite"),
-        new ReportRow(false, "Antonio Aguinaldo", "2023 - 00198765", "Completed", "Clear", "October 18, 2019", "Package 1"),
-        new ReportRow(false, "Antonio Aguinaldo", "2019 - 00198765", "Completed", "Clear", "October 10, 2018", "AirBNB")
-    };
-
-    private class ReportRow
-    {
-        public bool Selected { get; set; }
-        public string Subject { get; set; }
-        public string Ticket { get; set; }
-        public string Status { get; set; }
-        public string Result { get; set; }
-        public string DateCompleted { get; set; }
-        public string ReportType { get; set; }
-
-        public ReportRow(bool selected, string subject, string ticket, string status, string result, string dateCompleted, string reportType)
-        {
-            Selected = selected;
-            Subject = subject;
-            Ticket = ticket;
-            Status = status;
-            Result = result;
-            DateCompleted = dateCompleted;
-            ReportType = reportType;
-        }
-    }
-
-    private Task<TableData<ReportRow>> LoadReportData(TableState state, CancellationToken cancellationToken)
-    {
-        var filtered = _dummyReports.ToList();
-
-        return Task.FromResult(new TableData<ReportRow>
-        {
-            Items = filtered,
-            TotalItems = filtered.Count
-        });
-    }
-
-    private async Task DownloadSelected()
-    {
-        var selected = _dummyReports.Where(r => r.Selected).ToList();
-        if (!selected.Any())
-        {
-            await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
-            return;
-        }
-
-        await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
-    }
-
-    private async Task DownloadReport(ReportRow row)
-    {
-        await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
-    }
-
-    private async Task OpenResultDialog<TComponent>(string title)
-    where TComponent : ComponentBase
-    {
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            MaxWidth = MaxWidth.Large,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<TComponent>(title, options);
-        var result = await dialog.Result;
-    }
-
-    private async Task OpenResultTriggerDialog()
-        => await OpenResultDialog<ATSResultComponent>("Subject Result");
-}

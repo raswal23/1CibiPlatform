@@ -20,7 +20,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		{
 			// Assert
 			var service = _fixture.PartnerSystemService;
-			var identity_data = new IdentityData ( FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty );
+			var identity_data = new IdentityData ( FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty, ATSSession: string.Empty );
 			_fixture.MockSecureToken.Setup(x => x.GenerateSecureToken()).Throws(new Exception("Failed to generate Token."));
 
 			// Act
@@ -35,7 +35,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		{
 			// Assert
 			var service = _fixture.PartnerSystemService;
-			var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty);
+			var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty, ATSSession: string.Empty);
 			_fixture.MockSecureToken.Setup(x => x.GenerateSecureToken()).Returns("token");
 			_fixture.MockHashService.Setup(x => x.Hash(It.IsAny<string>())).Throws(new Exception("Failed to hash Token."));
 
@@ -51,7 +51,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests
 		{
 			// Assert
 			var service = _fixture.PartnerSystemService;
-			var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty);
+			var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty, ATSSession: string.Empty);
 			var Tid = "c2f95e6a-ff97-4ce1-9f33-73c13451def5";
 			var philsysTransaction = new PhilSysTransaction
 			{

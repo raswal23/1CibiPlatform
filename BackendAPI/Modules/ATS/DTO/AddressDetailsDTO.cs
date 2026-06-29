@@ -2,7 +2,6 @@
 
 public record AddressDetailsDTO
 {
-	public Guid Address { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? CurrentCity { get; set; }
 	public string? CurrentProvince { get; set; }

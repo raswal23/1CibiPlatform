@@ -1,4 +1,5 @@
 ﻿using AIAgent.Hubs;
+using ATS.Hubs;
 
 namespace APIs.ServiceConfig;
 
@@ -67,9 +68,10 @@ public static class AppConfiguration
 		}
 
 		app.MapHub<AIAgentHub>(configuration["SignalRHub:Endpoint"]!);
+		app.MapHub<ATSHub>(configuration["SignalRHub:ATSBulkEndpoint"]!);
 		app.UseWebSockets();
 		return app;
-	}
+	} 
 	#endregion
 
 	#region AI agent app skills configuration

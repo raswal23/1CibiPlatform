@@ -1,13 +1,15 @@
 ﻿namespace ATS.Services;
 
-public class ATSService : IATSService
+public class ApplicationFormService : IApplicationFormService
 {
-	private readonly ILogger<ATSService> _logger;
+	private readonly ILogger<ApplicationFormService> _logger;
 	private readonly IATSRepository _atsRepository;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
-	private readonly string _applicationFormPath;
+	private readonly string _applicationFormBaseUrl;
+	private readonly string _folderName;
+
 	private string resumeFileKey = "";
 	private string nbiKey = "";
 	private string govtIdKey = "";
@@ -22,7 +24,7 @@ public class ATSService : IATSService
 	private string licenseKey = "";
 	private string signatureKey = "";
 
-	public ATSService(ILogger<ATSService> logger,
+	public ApplicationFormService(ILogger<ApplicationFormService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,
@@ -33,7 +35,8 @@ public class ATSService : IATSService
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] ?? "";
+		_applicationFormBaseUrl = _configuration["ATS:ApplicationFormBaseUrl"] ?? "";
+		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
@@ -74,6 +77,8 @@ public class ATSService : IATSService
 			await _unitOfWork.CommitAsync(ct);
 
 			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+
+			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
 
 			return true;
 		}
@@ -116,27 +121,28 @@ public class ATSService : IATSService
 
 	}
 
-	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken)
+	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 
 	{
 		if (personalDetailsDTO.ResumeFile != null)
 		{
 			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
-			resumeFileKey = await _objectStorageService.UploadAsync(resumeStream, personalDetailsDTO.ResumeFile.FileName, cancellationToken);
+			resumeFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFileName!, resumeStream, cancellationToken);
 		}
 
 		if (personalDetailsDTO.NBIClearanceFile != null)
 		{
 			await using var nbiStream = personalDetailsDTO.NBIClearanceFile.OpenReadStream();
-			nbiKey = await _objectStorageService.UploadAsync(nbiStream, personalDetailsDTO.NBIClearanceFile.FileName, cancellationToken);
+			nbiKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFileName!, nbiStream, cancellationToken);
 		}
 
 		if (personalDetailsDTO.AdditionalGovtIDFile != null)
 		{
 			await using var govtIdStream = personalDetailsDTO.AdditionalGovtIDFile.OpenReadStream();
-			govtIdKey = await _objectStorageService.UploadAsync(govtIdStream, personalDetailsDTO.AdditionalGovtIDFile.FileName, cancellationToken);
+			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
 		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
+		personalDetails.PersonalID = Guid.CreateVersion7();
 		personalDetails.ResumeFileKey = resumeFileKey;
 		personalDetails.NBIClearanceFileKey = nbiKey;
 		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
@@ -152,6 +158,8 @@ public class ATSService : IATSService
 		CancellationToken cancellationToken)
 	{
 		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
+		addressDetails.CurrentTypeOfOwnership = addressDetailsDTO.TypeOfOwnership;
+		addressDetails.AddressId = Guid.CreateVersion7();
 		addressDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
@@ -163,36 +171,41 @@ public class ATSService : IATSService
 		EducationalBackgroundDTO educationalBackgroundDTO,
 		CancellationToken cancellationToken)
 	{
-		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("HighSchool Graduate", StringComparison.OrdinalIgnoreCase))
+		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Junior High School Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
-			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(highSchoolDiplomaStream, educationalBackgroundDTO.HighSchoolDiplomaFileName!, cancellationToken);
+			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken);
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Senior High School Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
-			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(seniorHighSchoolDiplomaStream, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, cancellationToken);
+			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Bachelor's Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("College Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
-			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(bachelorsDiplomaStream, educationalBackgroundDTO.BachelorsDiplomaFileName!, cancellationToken);
+			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
-			mastersDiplomaKey = await _objectStorageService.UploadAsync(mastersDiplomaStream, educationalBackgroundDTO.MastersDiplomaFileName!, cancellationToken);
+			mastersDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Degree", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Graduate", StringComparison.OrdinalIgnoreCase))
 		{
 			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
-			doctorateDiplomaKey = await _objectStorageService.UploadAsync(doctorateDiplomaStream, educationalBackgroundDTO.DoctorateDiplomaFileName!, cancellationToken);
+			doctorateDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken);
 		}
 
 		EducationalBackground educationalBackground = educationalBackgroundDTO.Adapt<EducationalBackground>();
+		educationalBackground.EducationalBackgroundID = Guid.CreateVersion7();
 		educationalBackground.HighSchoolDiplomaFileKey = highSchoolDiplomaKey;
 		educationalBackground.SeniorHighSchoolDiplomaFileKey = seniorHighSchoolDiplomaKey;
 		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
+		educationalBackground.CollegeSchoolName = educationalBackgroundDTO.BachelorsSchoolName;
+		educationalBackground.CollegeGraduationDate = educationalBackgroundDTO.BachelorsGraduationDate;
+		educationalBackground.CollegeDegree = educationalBackgroundDTO.BachelorsDegree;
+		educationalBackground.CollegeDiplomaFileKey = bachelorsDiplomaKey;
 		educationalBackground.MastersDiplomaFileKey = mastersDiplomaKey;
 		educationalBackground.DoctorateDiplomaFileKey = doctorateDiplomaKey;
 		educationalBackground.CreatedDate = DateTime.UtcNow;
@@ -206,11 +219,14 @@ public class ATSService : IATSService
 		LicensesDetailsDTO licensesDetailsDTO,
 		CancellationToken cancellationToken)
 	{
-		await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
+		if (licensesDetailsDTO.LicenseUploadFile != null)
+		{
+			await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
+			licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
+		}
 
-		licenseKey = await _objectStorageService.UploadAsync(licenseStream, licensesDetailsDTO.LicenseUploadFileName!, cancellationToken);
-
-		LicensesDetails licensesDetails = licensesDetailsDTO.Adapt<LicensesDetails>();
+		LicensesDetails licensesDetails = licensesDetailsDTO!.Adapt<LicensesDetails>();
+		licensesDetails.LicensesDetailsID = Guid.CreateVersion7();
 		licensesDetails.LicenseUploadFileKey = licenseKey;
 		licensesDetails.CreatedDate = DateTime.UtcNow;
 
@@ -226,24 +242,39 @@ public class ATSService : IATSService
 		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
 		{
 			await using var emp1COEStream = professionalExperiencesDTO.Emp1COEUploadFile!.OpenReadStream();
-			emp1COEKey = await _objectStorageService.UploadAsync(emp1COEStream, professionalExperiencesDTO.Emp1COEUploadFileName!, cancellationToken);
+			emp1COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp1COEUploadFileName!, emp1COEStream, cancellationToken);
 		}
 		if (professionalExperiencesDTO.Emp2COEUploadFile! != null)
 		{
 			await using var emp2COEStream = professionalExperiencesDTO.Emp2COEUploadFile!.OpenReadStream();
-			emp2COEKey = await _objectStorageService.UploadAsync(emp2COEStream, professionalExperiencesDTO.Emp2COEUploadFileName!, cancellationToken);
+			emp2COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp2COEUploadFileName!, emp2COEStream, cancellationToken);
 		}
 		if (professionalExperiencesDTO.Emp3COEUploadFile! != null)
 		{
 			await using var emp3COEStream = professionalExperiencesDTO.Emp3COEUploadFile!.OpenReadStream();
-			emp3COEKey = await _objectStorageService.UploadAsync(emp3COEStream, professionalExperiencesDTO.Emp3COEUploadFileName!, cancellationToken);
+			emp3COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp3COEUploadFileName!, emp3COEStream, cancellationToken);
 		}
 
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
+		professionalExperiences.ProfessionalExperiencesID = Guid.CreateVersion7();
 		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
 		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
 		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
 		professionalExperiences.CreatedDate = DateTime.UtcNow;
+
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp1CompanyCity))
+		{
+			professionalExperiences.Emp1CompanyAddress = $"{professionalExperiencesDTO.Emp1CompanyCity}, {professionalExperiencesDTO.Emp1CompanyProvince}, {professionalExperiencesDTO.Emp1CompanyPostalCode}, {professionalExperiencesDTO.Emp1CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp2CompanyCity))
+		{
+			professionalExperiences.Emp2CompanyAddress = $"{professionalExperiencesDTO.Emp2CompanyCity}, {professionalExperiencesDTO.Emp2CompanyProvince}, {professionalExperiencesDTO.Emp2CompanyPostalCode}, {professionalExperiencesDTO.Emp2CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp3CompanyCity))
+		{
+			professionalExperiences.Emp3CompanyAddress = $"{professionalExperiencesDTO.Emp3CompanyCity}, {professionalExperiencesDTO.Emp3CompanyProvince}, {professionalExperiencesDTO.Emp3CompanyPostalCode}, {professionalExperiencesDTO.Emp3CompanyCountry}";
+		}
+
 		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
 		return isAdded;
 	}
@@ -253,8 +284,9 @@ public class ATSService : IATSService
 		CancellationToken cancellationToken)
 	{
 		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
+		referenceDetails.ReferenceDetailsID = Guid.CreateVersion7();
+		referenceDetails.CreatedDate = DateTime.UtcNow;
 
-		// Ensure all DateTime values are UTC
 		if (referenceDetails.Ref1BestTimeToContact.HasValue)
 		{
 			referenceDetails.Ref1BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref1BestTimeToContact.Value, DateTimeKind.Utc);
@@ -268,8 +300,6 @@ public class ATSService : IATSService
 			referenceDetails.Ref3BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref3BestTimeToContact.Value, DateTimeKind.Utc);
 		}
 
-		referenceDetails.CreatedDate = DateTime.UtcNow;
-
 		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
 		return isAdded;
 	}
@@ -278,13 +308,17 @@ public class ATSService : IATSService
 		SignatureDetailsDTO signatureDetailsDTO,
 		CancellationToken cancellationToken)
 	{
+		signatureDetailsDTO.SignatureFileName = $"{Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}";
 		if (signatureDetailsDTO.Signature != null)
 		{
 			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
-			signatureKey = await _objectStorageService.UploadAsync(signatureStream, signatureDetailsDTO.SignatureFileName!, cancellationToken);
+			signatureKey = await _objectStorageService.UploadAsync(_folderName, signatureDetailsDTO.SignatureFileName!, signatureStream, cancellationToken);
 		}
+
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
+		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
 		signatureDetails.SignatureFileKey = signatureKey;
+
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return isAdded;
 	}
@@ -311,7 +345,7 @@ public class ATSService : IATSService
 
 		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);
 
-		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormPath;
+		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormBaseUrl;
 		return emailIdAndApplicationFormPath;
 	}
 }

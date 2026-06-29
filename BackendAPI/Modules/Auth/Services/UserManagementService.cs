@@ -7,7 +7,7 @@ public class UserManagementService : IUserService
 	private readonly ILogger<UserManagementService> _logger;
 
 	public UserManagementService(IAuthRepository authRepository,
-					   IEmailService emailService,
+					   [FromKeyedServices("auth")] IEmailService emailService,
 					   ILogger<UserManagementService> logger)
 	{
 		_authRepository = authRepository;

@@ -8,7 +8,19 @@ public interface IATSRepository
 	Task<bool> AddLicensesDetailsAsync(LicensesDetails licensesDetails);
 	Task<bool> AddProfessionalExperiencesAsync(ProfessionalExperiences professionalExperiences);
 	Task<bool> AddReferenceDetailsAsync(ReferenceDetails referenceDetails);
+	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
+												 CancellationToken cancellationToken);
 	Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails);
-	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, 
-													 CancellationToken cancellationToken);
+	Task<bool> AddEmailInvitationRequestAsync(EmailInvitationRequest emailInvitationRequest);
+	Task<bool>AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails);
+
+	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync();
+	Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateBulkEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests);
+	Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId);
+	Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails);
+	Task<bool> UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(Guid emailInvitationId);
+	Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId);
+	Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken);
 }

@@ -11,7 +11,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 	private readonly string _applicationFormPath;
 	public GetEmailIdAndApplicationFormPathIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
-		_applicationFormPath = _configuration["ATS:ApplicationFormPath"] = "application-forms";
+		_applicationFormPath = _configuration["ATS:ApplicationFormBaseUrl"] = "application-forms";
 	}
 
 	[Fact]
@@ -75,8 +75,12 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			EmailAddress = "jsdelacruz@cibi.com.ph",
 			MobileNumber = "+639171234567",
 			HashToken = hashToken,
-			HashTokenCreated = DateTime.UtcNow,
-			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
+			EmailSentStatus = "Pending",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			IsFormCompleted = false,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			SelectPackage = "Air BnB",
+			RushNormal = "Rush"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);

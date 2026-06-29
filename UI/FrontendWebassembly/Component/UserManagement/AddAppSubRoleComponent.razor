@@ -3,7 +3,7 @@
 
 <MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddAppSubRoleForm">
 
             <MudAutocomplete T="UsersDTO" Label="User" @bind-Value="selectedUser" SearchFunc="@SearchUsers" ToStringFunc="u => u?.email" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
             @if (showUserError)
@@ -33,90 +33,15 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Default" OnClick="Cancel"Style="border-radius: 4px;">
+        <MudButton OnClick="Cancel" 
+                   Style="border-radius: 4px; border: 2px solid gray;">
             Cancel
         </MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit" Class="theme-button theme-button-active" Style="border-radius: 4px;">
+        <MudButton OnClick="Submit" 
+                   Class="theme-button theme-button-active" 
+                   Style="border-radius: 4px;">
             Save
         </MudButton>
     </DialogActions>
 </MudDialog>
 
-@code {
-    private MudForm? form;
-    private bool showUserError;
-    private bool showAppError;
-    private bool showSubMenuError;
-    private bool showRoleError;
-
-    private UsersDTO? selectedUser;
-    private ApplicationsDTO? selectedApp;
-    private SubMenusDTO? selectedMenu;
-    private RolesDTO? selectedRole;
-
-    [CascadingParameter] IMudDialogInstance? MudDialog { get; set; }
-    [Parameter] public AddAppSubRoleDTO AppSubRole { get; set; } = new AddAppSubRoleDTO();
-
-    private List<UsersDTO>? Users = new();
-    private List<ApplicationsDTO>? Apps = new();
-    private List<SubMenusDTO>? SubMenus = new();
-    private List<RolesDTO>? Roles = new();
-
-    void Cancel() => MudDialog!.Cancel();
-
-    protected override async Task OnInitializedAsync()
-    {
-        AppSubRole.AssignedBy = await LocalStorageService.GetItemAsync<Guid>("UserId");
-
-        Users = (await UserManagementService.GetUsersAsync(1, int.MaxValue)).Data.ToList();
-        Apps = (await UserManagementService.GetApplicationsAsync(1, int.MaxValue)).Data.ToList();
-        SubMenus = (await UserManagementService.GetSubMenusAsync(1, int.MaxValue)).Data.ToList();
-        Roles = (await UserManagementService.GetRolesAsync(1, int.MaxValue)).Data.ToList();
-    }
-
-    async Task Submit()
-    {
-        var notification = new AssignmentNotificationDTO
-        {
-            Gmail = selectedUser?.email,
-            Application = selectedApp?.applicationName,
-            SubMenu = selectedMenu?.subMenuName,
-            Role = selectedRole?.roleName
-        };
-
-        AppSubRole.UserId = selectedUser?.userId ?? Guid.Empty;
-        AppSubRole.AppId = selectedApp?.applicationId ?? 0;
-        AppSubRole.SubMenuId = selectedMenu?.subMenuId ?? 0;
-        AppSubRole.RoleId = selectedRole?.roleId ?? 0;
-
-        MudDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
-    }
-
-    private async Task<IEnumerable<T>> Search<T>(
-    string value,
-    IEnumerable<T> source,
-    Func<T, string?> selector,
-    CancellationToken token)
-    {
-        await Task.Delay(300, token);
-
-        if (string.IsNullOrWhiteSpace(value))
-            return source;
-
-        return source.Where(x =>
-            (selector(x) ?? string.Empty)
-            .Contains(value, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
-    => Search(value, Users!, u => u.email, token);
-
-    private Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
-    => Search(value, Apps!, a => a.applicationName, token);
-
-    private Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
-    => Search(value, SubMenus!, s => s.subMenuName, token);
-
-    private Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
-    => Search(value, Roles!, r => r.roleName, token);
-}

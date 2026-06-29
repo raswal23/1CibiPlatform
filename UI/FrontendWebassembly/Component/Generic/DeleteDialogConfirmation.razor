@@ -3,18 +3,8 @@
         <MudText Typo="Typo.body1">@ContentText</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Default" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Style="border: 2px solid gray;" OnClick="Cancel">Cancel</MudButton>
         <MudButton Class="theme-button-delete"onclick ="Submit">@ButtonText</MudButton>
     </DialogActions>
 </MudDialog>
 
-@code {
-    [CascadingParameter]
-    IMudDialogInstance MudDialog { get; set; }
-
-    [Parameter] public string ContentText { get; set; }
-    [Parameter] public string ButtonText { get; set; }
-
-    void Cancel() => MudDialog.Cancel();
-    void Submit() => MudDialog.Close(DialogResult.Ok(true));
-}

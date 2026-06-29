@@ -6,9 +6,9 @@ public class AddressDetailsConfiguration : IEntityTypeConfiguration<AddressDetai
     {
         builder.ToTable("AddressDetails", "ats");
 
-        builder.HasKey(a => a.Address);
+        builder.HasKey(a => a.AddressId);
 
-        builder.Property(a => a.Address)
+        builder.Property(a => a.AddressId)
                .IsRequired()
                .ValueGeneratedNever();
 

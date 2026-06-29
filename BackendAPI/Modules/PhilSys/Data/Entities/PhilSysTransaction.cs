@@ -14,6 +14,7 @@ public class PhilSysTransaction
 	public string? WebHookUrl { get; set; }
 	public bool IsTransacted { get; set; }
 	public string? HashToken { get; set; }
+	public string? ATSSession { get; set; }
 	public DateTime? UpdatedLivenessIdAt { get; set; }
 	public DateTime ExpiresAt { get; set; }
 	public DateTime CreatedAt { get; set; }

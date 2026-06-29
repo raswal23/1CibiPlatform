@@ -10,15 +10,15 @@ public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
 public record AddApplicationFormDataResult(bool IsAdded);
 public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormDataCommand, AddApplicationFormDataResult>
 {
-	private readonly IATSService _atsService;
-	public AddApplicationFormDataHandler(IATSService atsService)
+	private readonly IApplicationFormService _applicationFormService;
+	public AddApplicationFormDataHandler(IApplicationFormService applicationFormService)
 	{
-		_atsService = atsService;
+		_applicationFormService = applicationFormService;
 	}
 	public async Task<AddApplicationFormDataResult> Handle(AddApplicationFormDataCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _atsService.AddApplicationFormDataAsync(request.PersonalDetails, 
-																   request.AddressDetails, 
+		var result = await _applicationFormService.AddApplicationFormDataAsync(request.PersonalDetails, 
+																			   request.AddressDetails, 
 																   request.EducationalBackground, 
 																   request.LicensesDetails, 
 																   request.ProfessionalExperiences,

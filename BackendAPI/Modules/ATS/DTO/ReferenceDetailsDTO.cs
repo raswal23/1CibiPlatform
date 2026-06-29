@@ -2,7 +2,6 @@
 
 public record ReferenceDetailsDTO
 {
-	public Guid ReferenceDetailsID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? Ref1FullName { get; set; }
 	public string? Ref1ProfessionalRelationship { get; set; }

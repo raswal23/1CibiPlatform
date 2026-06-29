@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddRoleForm">
             <MudTextField @bind-Value="Role.RoleName"
                           Label="Role Name"
                           Required="true"
@@ -24,36 +24,14 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Default"
-                   OnClick="Cancel"
-                   Style="border-radius: 4px;">
+        <MudButton OnClick="Cancel"
+                   Style="border-radius: 4px; border: 2px solid gray;">
             Cancel
         </MudButton>
-        <MudButton Color="Color.Primary"
-                   OnClick="Submit"
+        <MudButton OnClick="Submit"
                    Class="theme-button theme-button-active"
                    Style="border-radius: 4px;">
             Save
         </MudButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    private MudForm form;
-
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
-
-    [Parameter]
-    public AddRoleDTO Role { get; set; } = new AddRoleDTO();
-
-    void Cancel() => MudDialog.Cancel();
-
-    async Task Submit()
-    {
-        await form.ValidateAsync();
-        if (form.IsValid)
-        {
-            MudDialog.Close(DialogResult.Ok(Role));
-        }
-    }
-}

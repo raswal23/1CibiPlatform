@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using PhilSys.Data.Context;
 using System.Net;
 using System.Text;
@@ -36,6 +38,13 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureTestServices(services =>
 		{
+			services.RemoveAll<IHostedService>();
+			services.RemoveAll<IDistributedCache>();
+
+			services.AddDistributedMemoryCache();
+
+			services.AddDistributedMemoryCache();
+
 			// Remove existing DbContext registration
 			var descriptor = services
 				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<PhilSysDBContext>));

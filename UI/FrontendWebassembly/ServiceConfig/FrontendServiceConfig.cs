@@ -54,6 +54,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<LocalStorageService>();
+		services.AddScoped<EmailValidationService>();
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IUserManagementService, UserManagementService>();
@@ -62,7 +63,21 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAIAgentChatService, AIChatService>();
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
-		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IApplicationFormService, ApplicationFormService>();
+		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+
+		services.AddMudServices(config =>
+		{
+			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+			config.SnackbarConfiguration.RequireInteraction = false;
+			config.SnackbarConfiguration.PreventDuplicates = false;
+			config.SnackbarConfiguration.NewestOnTop = false;
+			config.SnackbarConfiguration.ShowCloseIcon = true;
+			config.SnackbarConfiguration.VisibleStateDuration = 10000;
+			config.SnackbarConfiguration.HideTransitionDuration = 500;
+			config.SnackbarConfiguration.ShowTransitionDuration = 500;
+			config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+		});
 
 		return services;
 	}

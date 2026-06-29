@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="AddApplicationForm">
             <MudTextField @bind-Value="Application.AppName"
                           Label="Application Name"
                           Required="true"
@@ -28,36 +28,14 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Default"
-                   OnClick="Cancel"
-                   Style="border-radius: 4px;">
+        <MudButton OnClick="Cancel"
+                   Style="border-radius: 4px; border: 2px solid gray;">
             Cancel
         </MudButton>
-        <MudButton Color="Color.Primary"
-                   OnClick="Submit"
+        <MudButton OnClick="Submit"
                    Class="theme-button theme-button-active"
                    Style="border-radius: 4px;">
             Save
         </MudButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    private MudForm form;
-
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
-
-    [Parameter]
-    public AddApplicationDTO Application { get; set; } = new AddApplicationDTO{IsActive = true};
-
-    void Cancel() => MudDialog.Cancel();
-
-    async Task Submit()
-    {
-        await form.ValidateAsync();
-        if (form.IsValid)
-        {
-            MudDialog.Close(DialogResult.Ok(Application));
-        }
-    }
-}

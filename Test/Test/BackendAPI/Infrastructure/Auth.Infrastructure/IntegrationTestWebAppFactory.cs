@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Testcontainers.PostgreSql;
 
 namespace Test.BackendAPI.Infrastructure.Auth.Infrastructure;
@@ -34,6 +36,11 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureTestServices(services =>
 		{
+			services.RemoveAll<IHostedService>();
+			services.RemoveAll<IDistributedCache>();
+
+			services.AddDistributedMemoryCache();
+
 			// Remove existing DbContext registration
 			var descriptor = services
 				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<AuthApplicationDbContext>));

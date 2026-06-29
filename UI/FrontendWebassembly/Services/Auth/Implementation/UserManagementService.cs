@@ -17,19 +17,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<UsersResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<UsersDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<UsersDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.users!;
+		var result = await response.Content.ReadFromJsonAsync<UsersResponseDTO>();
+
+		return result!.users!;
 	}
 
 	public async Task<PaginatedResult<UnApprovedUsersDTO>> GetUnApprovedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
@@ -38,19 +37,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<UnApprovedUsersResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<UnApprovedUsersDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<UnApprovedUsersDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.users!;
+		var result = await response.Content.ReadFromJsonAsync<UnApprovedUsersResponseDTO>();
+
+		return result!.users!;
 	}
 
 	public async Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(int? PageNumber = 1, int? PageSize = int.MaxValue, string? SearchTerm = null, CancellationToken ct = default)
@@ -59,19 +57,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<ApplicationsResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<ApplicationsDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<ApplicationsDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.applications!;
+		var result = await response.Content.ReadFromJsonAsync<ApplicationsResponseDTO>();
+
+		return result!.applications!;
 	}
 
 	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(
@@ -85,19 +82,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<SubMenusResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<SubMenusDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<SubMenusDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.submenus!;
+		var result = await response.Content.ReadFromJsonAsync<SubMenusResponseDTO>();
+
+		return result!.submenus!;
 	}
 
 	public async Task<PaginatedResult<LockedUsersDTO>> GetLockedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
@@ -106,19 +102,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<LockedUsersResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<LockedUsersDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<LockedUsersDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.lockedusers!;
+		var result = await response.Content.ReadFromJsonAsync<LockedUsersResponseDTO>();
+
+		return result!.lockedusers!;
 	}
 
 	public async Task<PaginatedResult<RolesDTO>> GetRolesAsync(
@@ -131,19 +126,18 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<RolesResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<RolesDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<RolesDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.roles!;
+		var result = await response.Content.ReadFromJsonAsync<RolesResponseDTO>();
+
+		return result!.roles!;
 	}
 
 	public async Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(
@@ -156,27 +150,29 @@ public class UserManagementService : IUserManagementService
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetFromJsonAsync<AppSubRolesResponseDTO>(query, ct);
+		var response = await _httpClient.GetAsync(query, ct);
 
-		if (response == null)
+		if (!response.IsSuccessStatusCode)
 		{
-			return new PaginatedResult<AppSubRolesDTO>(
-				pageIndex: PageNumber ?? 1,
-				pageSize: PageSize ?? 10,
-				count: 0,
-				data: Enumerable.Empty<AppSubRolesDTO>()
-			);
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		return response.appsubroles!;
+		var result = await response.Content.ReadFromJsonAsync<AppSubRolesResponseDTO>();
+
+		return result!.appsubroles!;
 	}
 
 	public async Task<bool> DeleteApplicationAsync(int AppId)
 	{
 		var response = await _httpClient.DeleteAsync($"auth/deleteapplication/{AppId}");
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -186,9 +182,12 @@ public class UserManagementService : IUserManagementService
 	public async Task<bool> DeleteSubMenuAsync(int SubMenuId)
 	{
 		var response = await _httpClient.DeleteAsync($"auth/deletesubmenu/{SubMenuId}");
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -198,9 +197,12 @@ public class UserManagementService : IUserManagementService
 	public async Task<bool> DeleteRoleAsync(int RoleId)
 	{
 		var response = await _httpClient.DeleteAsync($"auth/deleterole/{RoleId}");
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -210,9 +212,12 @@ public class UserManagementService : IUserManagementService
 	public async Task<bool> DeleteUserAppSubRoleAsync(int AppSubRoleId)
 	{
 		var response = await _httpClient.DeleteAsync($"auth/deleteappsubrole/{AppSubRoleId}");
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -222,9 +227,12 @@ public class UserManagementService : IUserManagementService
 	public async Task<bool> DeleteLockedUserAsync(Guid lockedUserId)
 	{
 		var response = await _httpClient.DeleteAsync($"auth/deletelockeduser/{lockedUserId}");
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -239,10 +247,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PostAsJsonAsync($"auth/addapplication", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -255,10 +267,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PostAsJsonAsync($"auth/addsubmenu", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -271,10 +287,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PostAsJsonAsync($"auth/addrole", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -287,10 +307,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PostAsJsonAsync($"auth/addappsubrole", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -299,10 +323,14 @@ public class UserManagementService : IUserManagementService
 	{
 		var payload = new { accountNotificationDTO };
 		var response = await _httpClient.PostAsJsonAsync("account/notification", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -311,10 +339,14 @@ public class UserManagementService : IUserManagementService
 	{
 		var payload = new { Gmail };
 		var response = await _httpClient.PostAsJsonAsync("account/approvalnotification", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return false!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
 		return successContent;
 	}
@@ -335,10 +367,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editapplication", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return null!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<EditApplicationDTO>();
 		if (successContent != null)
 		{
@@ -363,10 +399,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editsubmenu", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return null!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<EditSubMenuDTO>();
 		if (successContent != null)
 		{
@@ -390,10 +430,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editrole", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return null!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<EditRoleDTO>();
 		if (successContent != null)
 		{
@@ -419,10 +463,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editappsubrole", payload);
+
         if (!response.IsSuccessStatusCode)
         {
-            return null!;
-        }
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
         var successContent = await response.Content.ReadFromJsonAsync<EditAppSubRoleDTO>();
         if (successContent != null)
         {
@@ -445,10 +493,14 @@ public class UserManagementService : IUserManagementService
 		};
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/edituser", payload);
+
 		if (!response.IsSuccessStatusCode)
 		{
-			return null!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<EditUserDTO>();
 
 		if (successContent != null)

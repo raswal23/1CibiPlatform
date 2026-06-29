@@ -474,9 +474,7 @@ public class LoginService : ILoginService
 			throw new BadRequestException("Logout failed.");
 		}
 
-
 		var userData = await this._authRepository.IsUserExistAsync(userId);
-
 
 		if (userData == null)
 		{

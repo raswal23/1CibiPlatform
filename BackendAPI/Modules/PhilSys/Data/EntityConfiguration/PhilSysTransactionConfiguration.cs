@@ -49,6 +49,10 @@ public class PhilSysTransactionConfiguration : IEntityTypeConfiguration<PhilSysT
 			   .IsRequired()
 			   .HasMaxLength(100);
 
+		builder.Property(pt => pt.ATSSession)
+			   .IsRequired(false)
+			   .HasMaxLength(100);
+
 		builder.Property(builder => builder.UpdatedLivenessIdAt)
 			   .IsRequired(false);
 

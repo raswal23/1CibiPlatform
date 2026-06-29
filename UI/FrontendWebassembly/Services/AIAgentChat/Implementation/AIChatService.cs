@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-
-namespace FrontendWebassembly.Services.AIAgentChat.Implementation;
+﻿namespace FrontendWebassembly.Services.AIAgentChat.Implementation;
 
 public class AIChatService : IAIAgentChatService
 {
