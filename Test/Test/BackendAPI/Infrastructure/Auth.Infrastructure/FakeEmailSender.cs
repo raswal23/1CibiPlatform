@@ -5,6 +5,8 @@ public class FakeEmailSender : IEmailService
 {
 	public Task<bool> SendEmailAsync(string toEmail, string subject, string body, bool isHtml = true)
 		=> Task.FromResult(true);
+	public Task<bool> SendATSEmailAsync(string toEmail, string subject, string body)
+	=> Task.FromResult(true);
 
 	public string SendOtpBody(string name, string otpCode)
 		=> $"Hello {name}, your OTP code is {otpCode}";
@@ -17,4 +19,7 @@ public class FakeEmailSender : IEmailService
 
 	public string SendApprovalNotificationBody(string gmail)
 		=> $"Hello {gmail}, your account has been approved.";
+
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
+		=> $"Hello {name}/{gmail}, please complete your application form using this link: {applicationFormLink}";
 }

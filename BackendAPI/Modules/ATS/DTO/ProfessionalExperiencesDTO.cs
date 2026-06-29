@@ -2,7 +2,6 @@
 
 public record ProfessionalExperiencesDTO
 {
-	public Guid ProfessionalExperiencesID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? Emp1CompanyName { get; set; }
 	public bool? Emp1CurrentlyEmployed { get; set; }

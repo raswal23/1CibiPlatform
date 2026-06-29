@@ -3,7 +3,6 @@
 public record PersonalDetailsDTO
 {
 	public Guid EmailInvitationID { get; set; }
-	public Guid PersonalID { get; set; }
 	public string? PositionAppliedFor { get; set; }
 	public string? FirstName { get; set; }
 	public string? MiddleName { get; set; }
@@ -19,5 +18,4 @@ public record PersonalDetailsDTO
 	public string? NBIClearanceFileName { get; set; }
 	public byte[]? ResumeFile { get; set; }
 	public string? ResumeFileName { get; set; }
-	public DateTime? CreatedDate { get; set; }
 }

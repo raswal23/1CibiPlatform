@@ -2,7 +2,6 @@
 
 public record ReferenceDetailsDTO
 {
-	public Guid ReferenceDetailsID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? Ref1FullName { get; set; }
 	public string? Ref1ProfessionalRelationship { get; set; }
@@ -25,5 +24,4 @@ public record ReferenceDetailsDTO
 	public string? Ref3ContactNumber { get; set; }
 	public string? Ref3ModeOfContact { get; set; }
 	public DateTime? Ref3BestTimeToContact { get; set; }
-	public DateTime? CreatedDate { get; set; }
 }

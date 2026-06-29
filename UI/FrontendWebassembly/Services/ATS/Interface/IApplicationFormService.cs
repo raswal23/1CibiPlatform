@@ -1,6 +1,6 @@
 ﻿namespace FrontendWebassembly.Services.ATS.Interface;
 
-public interface IATSService
+public interface IApplicationFormService
 {
 	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,

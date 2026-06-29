@@ -15,7 +15,7 @@ public class ForgotPasswordService : IForgotPasswordService
 	public ForgotPasswordService(
 		IAuthRepository authRepository,
 		ILogger<ForgotPasswordService> logger,
-		IEmailService emailService,
+		[FromKeyedServices("auth")] IEmailService emailService,
 		IConfiguration configuration,
 		ISecureToken secureToken,
 		IHashService hashService,

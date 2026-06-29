@@ -37,9 +37,19 @@ public static class ATSServiceConfiguration
     #region Services
     public static IServiceCollection AddATSServices(this IServiceCollection services)
     {
-		services.AddScoped<IATSService, ATSService>();
+		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
+		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+
+		services.AddHostedService<BulkSubmissionBackgroundService>();
+		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
+		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
+		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
+		services.AddHostedService<EmailNotificationBackgroundServiceForPending>();
+		services.AddHostedService<EmailNotificationBackgroundServiceForError>();
+		services.AddScoped<IATSQueries, ATSQueries>();
+		services.AddSignalR();
 
 		return services;
     }
@@ -60,5 +70,6 @@ public static class ATSServiceConfiguration
 
         return services;
     }
-    #endregion
+	#endregion
+
 }

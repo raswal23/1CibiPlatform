@@ -7,7 +7,7 @@ public class AppSubRoleService : IAppSubRoleService
 	private readonly ILogger<AppSubRoleService> _logger;
 
 	public AppSubRoleService(IAuthRepository authRepository,
-						IEmailService emailService,
+						[FromKeyedServices("auth")] IEmailService emailService,
 					    ILogger<AppSubRoleService> logger)
 	{
 		_authRepository = authRepository;

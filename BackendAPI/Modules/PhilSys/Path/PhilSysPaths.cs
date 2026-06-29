@@ -25,6 +25,17 @@ public class PhilSysPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "InternalSystemQueryEntryPoint",
+				MatchPath: "/philsys/internal",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/internalsystemquery" }
+				}
+			),
+		
+			new RouteDefinitionDTO(
 				RouteId: "UpdateFaceLivenessSessionEntryPoint",
 				MatchPath: "/philsys/idv/updatefacelivenesssession",
 				ClusterId: GatewayConstants.OnePlatformApi,

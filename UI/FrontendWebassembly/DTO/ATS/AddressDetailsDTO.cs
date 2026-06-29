@@ -2,7 +2,6 @@
 
 public record AddressDetailsDTO
 {
-	public Guid Address { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? CurrentCity { get; set; }
 	public string? CurrentProvince { get; set; }
@@ -15,5 +14,4 @@ public record AddressDetailsDTO
 	public string? PermanentProvince { get; set; }
 	public string? PermanentCountry { get; set; }
 	public string? PermanentPostalCode { get; set; }
-	public DateTime? CreatedDate { get; set; }
 }

@@ -6,5 +6,6 @@ public record IdentityData(
 	[property: JsonPropertyName("last_name")] string? LastName,
 	[property: JsonPropertyName("suffix")] string? Suffix,
 	[property: JsonPropertyName("birth_date")] string? BirthDate,
-	[property: JsonPropertyName("pcn")] string? PCN
+	[property: JsonPropertyName("pcn")] string? PCN,
+	[property: JsonPropertyName("ats_session")] string? ATSSession
 );

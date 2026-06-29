@@ -1,4 +1,6 @@
-﻿namespace PhilSys.ServiceConfig;
+﻿using ATS.Data.Repository;
+
+namespace PhilSys.ServiceConfig;
 public static class PhilSysServiceConfiguration
 {
 	private const string assemblyName = "APIs";
@@ -53,6 +55,7 @@ public static class PhilSysServiceConfiguration
 		services.AddScoped<IHashService, HashService>();
 		services.AddScoped<ISecureToken, SecureToken>();
 		services.AddScoped<IPhilSysRepository, PhilSysRepository>();
+		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		return services;
 	}

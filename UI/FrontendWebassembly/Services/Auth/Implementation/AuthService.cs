@@ -138,8 +138,14 @@ public class AuthService : IAuthService
 			return false;
 		}
 
+		var isDarkMode = await _localStorageService.GetItemAsync<bool?>("isDarkMode");
 
 		await this._localStorageService.ClearAsync();
+
+		if (isDarkMode.HasValue)
+		{
+			await _localStorageService.SetItemAsync("isDarkMode", isDarkMode.Value);
+		}
 
 		_logger.LogInformation("Logout successful.");
 

@@ -24,7 +24,7 @@ public class LivenessSessionIntegrationTesting : BaseIntegrationTest
 		Func<Task> act = async () => { await _sender.Send(command); };
 
 		// Assert
-		await act.Should().ThrowAsync<InternalServerException>()
+		await act.Should().ThrowAsync<NotFoundException>()
 			.WithMessage("There is no such transaction created for your liveness check.");
 	}
 
@@ -61,6 +61,5 @@ public class LivenessSessionIntegrationTesting : BaseIntegrationTest
 		status.Should().NotBeNull();
 		status.WebHookURl.Should().Be(transaction.WebHookUrl);
 		status.IsTransacted.Should().Be(transaction.IsTransacted);
-		status.isExpired.Should().BeFalse();
 	}
 }

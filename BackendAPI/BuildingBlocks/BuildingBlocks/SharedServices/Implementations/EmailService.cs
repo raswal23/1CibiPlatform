@@ -31,6 +31,7 @@ public class EmailService : IEmailService
 		_expirationInMinutes = int.Parse(_configuration["Email:OtpExpirationInMinutes"] ?? "15");
 		_onePlatformLink = _configuration["PhilSys:LivenessBaseUrl"]
 			?? throw new InvalidOperationException("OnePlatformLink not configured"); ;
+		
 	}
 
 	public async Task<bool> SendEmailAsync(
@@ -134,7 +135,6 @@ public class EmailService : IEmailService
 		string resetLink,
 		int expireMins)
 	{
-		string subject = "Password Reset Request";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -188,7 +188,6 @@ public class EmailService : IEmailService
 		string role
 		)
 	{
-		string subject = "OnePlatform Account Assignment Notification";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -242,7 +241,6 @@ public class EmailService : IEmailService
 
 	public string SendApprovalNotificationBody(string gmail)
 	{
-		string subject = "OnePlatform Account Approval Notification";
 		string body = $@"
                 <!DOCTYPE html>
                 <html>
@@ -275,17 +273,27 @@ public class EmailService : IEmailService
                         <div class='content'>
                             <p>Hello {gmail},</p>
 							<p>Your account has been successfully approved.</p>
-						<p>You can now access the approved account.</p>
-						<a href='{_onePlatformLink}' class='button'>Go to OnePlatform</a>
-					</div>
+							<p>You can now access the approved account.</p>
+							<a href='{_onePlatformLink}' class='button'>Go to OnePlatform</a>
+						</div>
 					<div class='footer'>
 						<p>&copy; 2026 NoSent. All rights reserved.</p>
 					</div>
-            </div>
-        </body>
-        </html>";
+				</div>
+			</body>
+			</html>";
 
 		return body;
+	}
+
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task<bool> SendATSEmailAsync(string toEmail, string subject, string body)
+	{
+		throw new NotImplementedException();
 	}
 }
 

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace ATS.Features.AddApplicationFormData;
+﻿namespace ATS.Features.AddApplicationFormData;
 
 public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails, 
 											AddressDetailsDTO AddressDetails, 

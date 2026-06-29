@@ -32,6 +32,7 @@ public class PhilSysService : IPhilSysService
 				trace_id = errorContent.TraceId,
 			};
 		}
+
 		var successContent = await response.Content.ReadFromJsonAsync<UpdateFaceLivenessSessionResponseDTO>();
 		return successContent!;
 	}
@@ -44,12 +45,8 @@ public class PhilSysService : IPhilSysService
 		if (!response.IsSuccessStatusCode)
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-		
-			return new TransactionStatusResponseDTO 
-			{
-				error_message = errorContent!.Detail,
-				trace_id = errorContent.TraceId
-			};
+	
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 		
 		var successContent = await response.Content.ReadFromJsonAsync<TransactionStatusResponseDTO>();
@@ -78,7 +75,9 @@ public class PhilSysService : IPhilSysService
 		var response = await _httpClient.DeleteAsync($"philsys/deletetransaction/{HashToken}");
 		if (!response.IsSuccessStatusCode)
 		{
-			return false!;
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 
 		var successContent = await response.Content.ReadFromJsonAsync<bool>();
@@ -91,13 +90,21 @@ public class PhilSysService : IPhilSysService
 		{
 			identity_data.birth_date = parsedDate.ToString("yyyy-MM-dd");
 		}
+
+		var endpoint = string.IsNullOrEmpty(identity_data.ats_session)
+			? "philsys/idv"
+			: "philsys/internal";
+
 		if (inquiry_type == "name_dob")
 		{
 			var requestInfo = new { callback_url = "/", inquiry_type = "name_dob", identity_data };
-			var responseInfo = await _httpClient.PostAsJsonAsync("philsys/idv", requestInfo);
+			var responseInfo = await _httpClient.PostAsJsonAsync(endpoint, requestInfo);
 			if (!responseInfo.IsSuccessStatusCode)
 			{
-				return "";
+
+				var errorContent = await responseInfo.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+				throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 			}
 
 			var successContentInfo = await responseInfo.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();
@@ -105,10 +112,13 @@ public class PhilSysService : IPhilSysService
 		}
 
 		var requestPcn = new { callback_url = "/", inquiry_type = "pcn", identity_data };
-		var responsePCn = await _httpClient.PostAsJsonAsync("philsys/idv", requestPcn);
+		var responsePCn = await _httpClient.PostAsJsonAsync(endpoint, requestPcn);
+
 		if (!responsePCn.IsSuccessStatusCode)
 		{
-			return "";
+			var errorContent = await responsePCn.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
 
 		var successContentPcn = await responsePCn.Content.ReadFromJsonAsync<PostBasicInformationOrPCNResponseDTO>();

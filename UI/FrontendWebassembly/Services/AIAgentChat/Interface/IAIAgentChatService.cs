@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
-
-namespace FrontendWebassembly.Services.AIAgentChat.Interface;
+﻿namespace FrontendWebassembly.Services.AIAgentChat.Interface;
 
 public interface IAIAgentChatService
 {

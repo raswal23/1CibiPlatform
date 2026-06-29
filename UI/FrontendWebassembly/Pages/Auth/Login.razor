@@ -3,6 +3,7 @@
 @inject NavigationManager Navigation
 @inject IAuthService IAuthService
 @inject LocalStorageService LocalStorageService
+@inject EmailValidationService EmailValidationService
 
 @if (!_isLoading)
 {
@@ -12,7 +13,7 @@
                <div class="login-logo">
                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: white;" />
                </div>
-               <div class="login-title">One Platform</div>
+               <div class="login-title gradient-text">One Platform</div>
                <div class="login-subtitle">Sign in to your account to continue</div>
            </div>
    
@@ -34,7 +35,7 @@
                                   RequiredError="Email is required"
                                   InputType="InputType.Email"
                                   Adornment="Adornment.Start"
-                                  Validation="@(new Func<string, string>(ValidateEmail))"
+                                  Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                   AdornmentIcon="@Icons.Material.Filled.Email"
                                   Class="mb-4" />
 
@@ -53,7 +54,7 @@
    
                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                        <MudCheckBox @bind-Value="rememberMe" Label="Remember me" Color="Color.Primary" Dense="true" />
-                       <MudLink Href="/forgot-password" Color="Color.Primary" Typo="Typo.body2">Forgot password?</MudLink>
+                       <MudLink Href="/forgot-password" Class="gradient-text" Typo="Typo.body2">Forgot password?</MudLink>
                    </MudStack>
               
                    <ButtonComponent ButtonType="ButtonType.Submit"
@@ -72,7 +73,7 @@
                </MudForm>
    
                <div class="footer-links">
-                   Don't have an account? <a href="/register">Sign up</a>
+                    Don't have an account? <a class="gradient-text" href="/register">Sign up</a>
                </div>
            </div>
        </MudPaper>
@@ -82,95 +83,4 @@ else
 {
     <!-- Loading -->
     <LoaderComponent />
-}
-
-@code {
-    private MudForm form;
-    private bool success;
-    private bool isLoading = false;
-    private bool _isLoading = true;
-
-    private string email = "";
-    private string password = "";
-    private bool rememberMe = false;
-    private bool isUserValid = true;
-    private string errorMessage = "";
-
-    private bool isPasswordVisible = false;
-    private InputType passwordInput = InputType.Password;
-    private string passwordIcon = Icons.Material.Filled.VisibilityOff;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var isAuthenticated = await IAuthService.IsAuthenticated();
-
-        if (isAuthenticated)
-        {
-            Navigation.NavigateTo("/", true);
-            return;
-        }
-
-        var emailFromStorage = await LocalStorageService.GetItemAsync<string>("tempUserEmail");
-        var userIdFromStorage = await LocalStorageService.GetItemAsync<string>("tempUserId");
-
-        if (await LocalStorageService.GetItemAsync<string>("tempUserEmail") is not null)
-        {
-            Navigation.NavigateTo($"/verify-otp?userId={userIdFromStorage}&email={emailFromStorage}", true);
-        }
-
-        _isLoading = false;
-    }
-
-    private void TogglePasswordVisibility()
-    {
-        isPasswordVisible = !isPasswordVisible;
-        passwordInput = isPasswordVisible ? InputType.Text : InputType.Password;
-        passwordIcon = isPasswordVisible ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff;
-    }
-
-    private string ValidateEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-            return "Email is required";
-
-        if (!email.Contains("@"))
-            return "Invalid email format";
-
-        return null;
-    }
-
-
-    private async Task HandleLogin()
-    {
-        isLoading = true;
-        isUserValid = true;
-        errorMessage = "";
-
-        try
-        {
-            var userData = await IAuthService.Login(new LoginCred(email, password, rememberMe));
-
-            if (!string.IsNullOrWhiteSpace(userData.detail))
-            {
-                Console.WriteLine($"Login Error: {userData.detail}");
-                isLoading = false;
-                isUserValid = false;
-                errorMessage = userData.detail;
-                StateHasChanged();
-                return;
-            }
-            
-            Navigation.NavigateTo("/", true);
-        }
-
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Login Exception: {ex.Message}");
-            isLoading = false;
-            isUserValid = false;
-            errorMessage = "An unexpected error occurred. Please try again.";
-            StateHasChanged();
-            return;
-        }
-    }
 }
