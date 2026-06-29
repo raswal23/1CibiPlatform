@@ -1699,7 +1699,8 @@
                                                                       ClearButtonClass="@(isSaving
                                                                        ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
                                                                        : "theme-button theme-button-active ats-signature-button")"
-                                                                      Class="ats-signature mb-2" />
+                                                                      Class="ats-signature mb-2"
+                                                                      Disabled = "@isSaving"/>
                                                     </div>
                                                     @if (_signatureError)
                                                     {
@@ -1711,6 +1712,7 @@
                                                             </MudText>
                                                         </div>
                                                     }
+                                                    
                                                 </MudItem>
                                                 
                                                 <MudItem xs="12">
