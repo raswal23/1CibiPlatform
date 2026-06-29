@@ -24,7 +24,7 @@ namespace APIs.Migrations.ATS
 
             modelBuilder.Entity("ATS.Data.Entities.AddressDetails", b =>
                 {
-                    b.Property<Guid>("Address")
+                    b.Property<Guid>("AddressId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedDate")
@@ -85,12 +85,53 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.HasKey("Address");
+                    b.HasKey("AddressId");
 
                     b.HasIndex("EmailInvitationID")
                         .IsUnique();
 
                     b.ToTable("AddressDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.BulkUploadFileDetails", b =>
+                {
+                    b.Property<Guid>("FileID")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PackageType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("FileID");
+
+                    b.ToTable("BulkUploadFileDetails", "ats");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
@@ -274,24 +315,42 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("uuid");
 
                     b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("EmailSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailSentStatus")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("FormCompletedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("HashToken")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("HashTokenCreated")
+                    b.Property<DateTime>("HashTokenCreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsFormCompleted")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -300,18 +359,17 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("MobileNumber")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("RushNormal")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("SelectPackage")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 

@@ -46,7 +46,6 @@ public class PhilSysRepository : IPhilSysRepository
 			Exists = true, 
 			WebHookURl = t.WebHookUrl,
 			IsTransacted = t.IsTransacted,
-			isExpired = false,
 			ExpiresAt = t.ExpiresAt
 		})
 		.FirstOrDefaultAsync();

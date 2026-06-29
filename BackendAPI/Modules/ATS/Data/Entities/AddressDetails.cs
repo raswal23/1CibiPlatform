@@ -2,7 +2,7 @@
 
 public class AddressDetails
 {
-	public Guid Address { get; set; }
+	public Guid AddressId { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? CurrentTypeOfOwnership { get; set; }
 	public string? CurrentCity { get; set; }

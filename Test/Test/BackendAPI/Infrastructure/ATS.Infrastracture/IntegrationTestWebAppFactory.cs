@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using System.Security.Claims;
 using Testcontainers.PostgreSql;
 
 namespace Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -32,6 +34,11 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureServices(services =>
 		{
+			services.RemoveAll<IHostedService>();
+			services.RemoveAll<IDistributedCache>();
+
+			services.AddDistributedMemoryCache();
+
 			// Remove existing DbContext registration
 			var descriptor = services
 				.SingleOrDefault(s => s.ServiceType == typeof(DbContextOptions<ATSDBContext>));
@@ -49,6 +56,14 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			{
 				var fakeHttpContext = new DefaultHttpContext();
 				fakeHttpContext.Response.Body = new MemoryStream();
+
+				var claims = new List<Claim>
+				{
+					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+				};
+
+				fakeHttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
 				return new HttpContextAccessor { HttpContext = fakeHttpContext };
 			});
 		});

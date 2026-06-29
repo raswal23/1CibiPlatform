@@ -13,36 +13,47 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
                .ValueGeneratedNever();
 
         builder.Property(e => e.LastName)
-               .HasMaxLength(255);
+               .HasMaxLength(255)
+               .IsRequired(true);
 
-        builder.Property(e => e.FirstName)
-               .HasMaxLength(255);
+		builder.Property(e => e.FirstName)
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.MiddleInitial)
+		builder.Property(e => e.MiddleInitial)
                .HasMaxLength(255);
 
         builder.Property(e => e.EmailAddress)
-               .HasMaxLength(255);
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.MobileNumber)
-               .HasMaxLength(255);
+		builder.Property(e => e.MobileNumber)
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.SelectPackage)
-               .HasMaxLength(255);
+		builder.Property(e => e.SelectPackage)
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.RushNormal)
-               .HasMaxLength(255);
+		builder.Property(e => e.RushNormal)
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.HashToken)
-               .HasMaxLength(255);
+		builder.Property(e => e.HashToken)
+               .HasMaxLength(255)
+			   .IsRequired(true);
 
-        builder.Property(e => e.HashTokenCreated)
+		builder.Property(e => e.HashTokenCreatedAt)
                .IsRequired(true);
 
         builder.Property(e => e.HashTokenExpiration)
                .IsRequired(true);
 
-		builder.Property(pt => pt.Status)
-			   .HasMaxLength(255);
+		builder.Property(e => e.EmailSentStatus)
+			   .HasMaxLength(255)
+               .IsRequired(true);
+
+		builder.Property(e => e.IsFormCompleted)
+			   .IsRequired(true);
 	}
 }

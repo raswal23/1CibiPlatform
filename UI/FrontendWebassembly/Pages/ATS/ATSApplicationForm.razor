@@ -1,135 +1,112 @@
 ﻿@layout GenericLayout
-@inject NavigationManager Navigation
-@inject IATSService ATSService
-@page "/s&i/ats/applicationform"
-@* @page "/s&i/ats/applicationform/{HashToken}" *@
+@inject LocalStorageService LocalStorageService
+@inject IApplicationFormService ATSService
+@inject IJSRuntime JSRuntime
+@page "/s&i/ats/applicationform/{HashToken}"
 
-<div class="philsys-liveness-container">
 
-    @if (!_showApplicationForm)
+<PageTitle>ATS - Application Form</PageTitle>
+
+<NavigationLock ConfirmExternalNavigation="true"
+                OnBeforeInternalNavigation="ConfirmNavigation" />
+
+<div class="oneplatform-generic-container">
+    @if (Status)
     {
-        // Instructions
-       <MudPaper  Elevation="1"
-                  Style="border-radius:20px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; margin: 5px;">
-
-           <!-- Header bar -->
-           <div class="d-flex align-center justify-space-between"
-                 style="background:#e9f4ff; padding:18px 24px;">
-
-                <div class="d-flex align-center" style="gap:12px;">
-                    <MudImage Src="/images/generic/cibi-icon.png"
-                              Alt="logo"
-                              Style="width:36px; height:36px;" />
-
-                    <MudText Typo="Typo.h5"
-                             Class="mb-0 gradient-text"
-                             Style="font-weight:700;">
-                            WFS Talent Suite
-                    </MudText>
-                </div>
-            </div>
-
-           <!-- Content area -->
-           <div class="pa-6" style="background:#fff;">
-               <MudText Typo="Typo.subtitle2">Thank you for acknowledging our email.</MudText>
-               <MudText Typo="Typo.body2" Class="mt-2 mb-4">
-                   We are CIBI Information, Inc., a third-party verification company engaged by a firm with whom you have either an ongoing job application or currently employed to conduct background checks. Please provide all required documents and information as outlined in the email you received.
-               </MudText>
-
-               <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Prepare &amp; Upload Documents</MudText>
-               <MudText Typo="Typo.body2" Class="mb-2">Please ensure you have clear digital copies (pdf/jpg/png) of the following REQUIRED DOCUMENTS ready for upload:</MudText>
-
-               <ol class="ml-4" style="line-height:1.6;">
-                   <li>All or any in case of unavailability: Transcript of Records (TOR), Diploma or Certificate of Graduation</li>
-                   <li>Birth Certificate</li>
-                   <li>Two (2) valid government issued IDs</li>
-                   <li>Certificate of Employment (COE) covering all previous employment within the past 5 years (if applicable)</li>
-                   <li>Upload CV in TOR / Diploma / School Credentials portion of the form</li>
-                   <li>Optional documents: NBI clearance, Police clearance, BR 2316, SSS E1 forms, or TIN verification slip</li>
-               </ol>
-
-               <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Reminders in answering the form</MudText>
-
-               <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 1 - Application Form</MudText>
-               <ul style="line-height:1.6;">
-                   <li>Provide all information requested and affix signatures where needed.</li>
-                   <li>Answer every field-even if it is nonmandatory, In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-                   <li>Please download the corresponding Letter of Authorization (LOA) for your university through this <a href="https://drive.google.com/drive/folders/10XFr-wbKnItVi1ErutyaB5fm8ESvxWyN?usp=sharing"
-                    target="_blank"
-                    style="color: blue; text-decoration: underline;">
-                    link</a>. If your university does not have a specific LOA in the folder, please use the "Standard School LOA" file.</li>
-                   <li>Enter details for your references. You must provide five (5) references (not relatives). They should be colleagues, former superiors, or friends.</li>
-                   <li>Inform each reference in advance that you have shared their information and they will be contacted by CIBI.</li>
-                   <li> Doublecheck your answers to ensure accuracy (dates, names, employer details, etc.).</li>
-               </ul>
-
-               <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 2 - Examination</MudText>
-               <ul style="line-height:1.6;">
-                   <li>You will need to complete a timed-exam of an hour. There are three segments of 20 minutes each.</li>
-               </ul>
-
-               <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 3 - Initial Interview</MudText>
-               <ul style="line-height:1.6;">
-                   <li>An initial interview will be conducted as part of your application process.</li>
-               </ul>
-
-               <div>
-                    Note that your prompt response to this request within the next 24 hours is critical to the success of your job application. Rest assured that all the information you provide will be kept
-                    confidential in compliance with all Philippine laws including the Data Privacy Act, and will only be used for the processing of your application. For any questions or concerns, please do not
-                    hesitate to reach out to us via our support chat box or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
-               </div>
-
-               <div class="d-flex justify-center mt-6">
-                   <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="Proceed">Proceed</MudButton>
-               </div>
-           </div>
-       </MudPaper>
+        <CompletedComponent />
+    }
+    else if (IsExpired)
+    {
+        <ExpiredComponent />
     }
     else
     {
-        //Application Form
-        <ApplicationFormComponent ActiveStep="stepActive" ShowsPhilSys="philSysShow" HashToken="HashToken" />
+        @if (!_showApplicationForm)
+        {
+            // Instructions
+            <MudPaper  Elevation="1"
+                       Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; margin: 5px;">
+
+                <!-- Header bar -->
+                <div class="d-flex align-center justify-space-between"
+                style="background:#e9f4ff; padding:18px 24px;">
+
+                    <div class="d-flex align-center" style="gap:12px;">
+                        <MudImage Src="/images/generic/cibi-icon.png"
+                        Alt="logo"
+                        Style="width:36px; height:36px;" />
+
+                        <MudText Typo="Typo.h5"
+                        Class="mb-0 gradient-text"
+                        Style="font-weight:700;">
+                            WFS Talent Suite
+                        </MudText>
+                    </div>
+                </div>
+
+                <!-- Content area -->
+                <div class="pa-6" style="background:#fff;">
+                    <MudText Typo="Typo.subtitle2">Thank you for acknowledging our email.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2 mb-4">
+                        We are CIBI Information, Inc., a third-party verification company engaged by a firm with whom you have either an ongoing job application or currently employed to conduct background checks. Please provide all required documents and information as outlined in the email you received.
+                    </MudText>
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Prepare &amp; Upload Documents</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">Please ensure you have clear digital copies (pdf) of the following REQUIRED DOCUMENTS ready for upload:</MudText>
+
+                    <ol class="ml-4" style="line-height:1.6;">
+                        <li>All or any in case of unavailability: Transcript of Records (TOR), Diploma or Certificate of Graduation</li>
+                        <li>Birth Certificate</li>
+                        <li>Two (2) valid government issued IDs</li>
+                        <li>Certificate of Employment (COE) covering all previous employment within the past 5 years (if applicable)</li>
+                        <li>Upload CV in TOR / Diploma / School Credentials portion of the form</li>
+                        <li>Optional documents: NBI clearance, Police clearance, BR 2316, SSS E1 forms, or TIN verification slip</li>
+                    </ol>
+
+                    <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Reminders in answering the form</MudText>
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Application Form</MudText>
+                    <ul style="line-height:1.6;">
+                        <li>Provide all information requested and affix signatures where needed.</li>
+                        <li>Answer every field-even if it is nonmandatory, In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
+                        <li>Please download the corresponding Letter of Authorization (LOA) for your university through this <a href="https://drive.google.com/drive/folders/10XFr-wbKnItVi1ErutyaB5fm8ESvxWyN?usp=sharing"
+                            target="_blank"
+                            style="color: blue; text-decoration: underline;">
+                                link</a>. If your university does not have a specific LOA in the folder, please use the "Standard School LOA" file.</li>
+                        <li>Enter details for your references. You must provide three (3) references (not relatives). They should be colleagues, former superiors, or friends.</li>
+                        <li>Inform each reference in advance that you have shared their information and they will be contacted by CIBI.</li>
+                        <li> Doublecheck your answers to ensure accuracy (dates, names, employer details, etc.).</li>
+                    </ul>
+
+                   @*  <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 2 - Examination</MudText>
+                    <ul style="line-height:1.6;">
+                        <li>You will need to complete a timed-exam of an hour. There are three segments of 20 minutes each.</li>
+                    </ul>
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 3 - Initial Interview</MudText>
+                    <ul style="line-height:1.6;">
+                        <li>An initial interview will be conducted as part of your application process.</li>
+                    </ul> *@
+
+                    <div>
+                        Note that your prompt response to this request within the next 24 hours is critical to the success of your job application. Rest assured that all the information you provide will be kept
+                        confidential in compliance with all Philippine laws including the Data Privacy Act, and will only be used for the processing of your application. For any questions or concerns, please do not
+                        hesitate to reach out to us via our support chat box or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
+                    </div>
+
+                    <div class="d-flex justify-center mt-6">
+                    <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="@(() => _showApplicationForm = true)">
+                            Proceed
+                        </MudButton>
+                    </div>
+                </div>
+            </MudPaper>
+        }
+        else
+        {
+            <ApplicationFormComponent HasChangesChanged="SetDirtyState" EmailId="@EmailId" ActiveStep="@stepActive" ShowsPhilSys="@philSysShow" HashToken="@HashToken" />
+        }
     }
 </div>
 
 
-@* @if(Status == "Success")
-{
-    <CompletedComponent/>
-}
-else if(IsExpired)
-{
-    <ExpiredComponent/>
-}
-else
-{
-    //Show the applicaitonform
-} *@
-
-
-@code {
-    private bool _showApplicationForm = false;
-    private string? Status = string.Empty;
-    private bool IsExpired = false;
-    private string status = string.Empty;
-    [Parameter]
-    public string? HashToken { get; set; }
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "philSysShow")]
-    public bool philSysShow { get; set; } 
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "stepActive")]
-    public int stepActive { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        // var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
-        // Status = response?.Status;
-        // IsExpired = response!.IsExpired;
-    }
-
-    private void Proceed()
-    {
-        _showApplicationForm = true;
-    }
-}

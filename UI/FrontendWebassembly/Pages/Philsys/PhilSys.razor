@@ -9,11 +9,11 @@
 <PageTitle>Identity Verification System</PageTitle>
 
 <MudGrid Justify="Justify.Center">
-    <MudItem xs="12" sm="10" md="8" lg="6">
+    <MudItem xs="12" sm="12">
 
         <PhilSysFormTabComponent ActiveTabChanged="ChangeActiveTab" ></PhilSysFormTabComponent>
 
-        <MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
+        <MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
             @if (_activeIndex == 0)
             {
                 <BasicInformationFormComponent />
@@ -26,12 +26,3 @@
 
     </MudItem>
 </MudGrid>
-
-@code {
-    private int _activeIndex = 0;
-
-    private void ChangeActiveTab(int value)
-    {
-        _activeIndex = value;
-    }
-}

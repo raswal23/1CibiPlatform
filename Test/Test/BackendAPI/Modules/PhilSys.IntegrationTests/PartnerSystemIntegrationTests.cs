@@ -15,7 +15,7 @@ public class PartnerSystemIntegrationTests : BaseIntegrationTest
 	public async Task PartnerSystem_ShouldReturnLivenessLink_WhenSuccessful()
 	{
 		// Arrange
-		var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty);
+		var identity_data = new IdentityData(FirstName: "Juan", MiddleName: "Bitaw", LastName: "Dela Cruz", Suffix: string.Empty, BirthDate: "2001-08-20", PCN: string.Empty, ATSSession:string.Empty);
 		var command = new PartnerSystemCommand("/", "name_dob", identity_data);
 
 		// Act

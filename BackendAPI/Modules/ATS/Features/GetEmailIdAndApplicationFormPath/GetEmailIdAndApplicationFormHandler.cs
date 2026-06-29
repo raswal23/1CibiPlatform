@@ -6,15 +6,15 @@ public record GetEmailIdAndApplicationFormResult(EmailIdAndApplicationFormPathDT
 
 public class GetEmailIdAndApplicationFormHandler : IQueryHandler<GetEmailIdAndApplicationFormHandlerRequest, GetEmailIdAndApplicationFormResult>
 {
-	private readonly IATSService _atsService;
+	private readonly IApplicationFormService _applicationFormService;
 
-	public GetEmailIdAndApplicationFormHandler(IATSService atsService)
+	public GetEmailIdAndApplicationFormHandler(IApplicationFormService applicationFormService)
 	{
-		_atsService = atsService;
+		_applicationFormService = applicationFormService;
 	}
 	public async Task<GetEmailIdAndApplicationFormResult> Handle(GetEmailIdAndApplicationFormHandlerRequest request, CancellationToken cancellationToken)
 	{
-		var emailIdAndApplicationFormPath = await _atsService.GetEmailIdAndApplicationFormPathAsync(request.HashToken, cancellationToken);
+		var emailIdAndApplicationFormPath = await _applicationFormService.GetEmailIdAndApplicationFormPathAsync(request.HashToken, cancellationToken);
 		return new GetEmailIdAndApplicationFormResult(emailIdAndApplicationFormPath);
 	}
 }

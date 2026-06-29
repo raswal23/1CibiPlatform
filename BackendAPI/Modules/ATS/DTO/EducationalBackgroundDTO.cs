@@ -2,7 +2,6 @@
 
 public record EducationalBackgroundDTO
 {
-	public Guid EducationalBackgroundID { get; set; }
 	public Guid EmailInvitationID { get; set; }
 	public string? HighestEducationalAttainment { get; set; }
 	public string? HighSchoolName { get; set; }

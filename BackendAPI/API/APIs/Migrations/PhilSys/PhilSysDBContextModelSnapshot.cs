@@ -27,6 +27,11 @@ namespace APIs.Migrations.PhilSys
                     b.Property<Guid>("Tid")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ATSSession")
+                        .IsRequired(false)
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("BirthDate")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");

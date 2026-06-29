@@ -95,21 +95,3 @@ else
         </MudItem>
     </MudGrid>
 }
-
-@code {
-    private bool isLoading = true;
-
-    protected override async Task OnInitializedAsync()
-    {
-        var isAuthenticated = await SSOService.IsUserAuthenticatedAsync();
-
-        if (!isAuthenticated)
-        {
-            NavigationManager.NavigateTo("https://console.jumpcloud.com/login");
-
-            return;
-        }
-
-        isLoading = false;
-    }
-}

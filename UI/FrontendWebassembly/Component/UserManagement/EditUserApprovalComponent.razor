@@ -1,6 +1,6 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
-        <MudForm @ref="form">
+        <MudForm @ref="EditUserApprovalForm">
             <MudTextField @bind-Value="User.email"
                           Label="Email"
                           ReadOnly
@@ -13,37 +13,15 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton Color="Color.Default"
-                   OnClick="Cancel"
+        <MudButton OnClick="Cancel"
                    Class="theme-button-delete"
-                   Style="border-radius: 4px;">
+                   Style="border-radius: 4px; border: 2px solid gray;">
             Disapprove
         </MudButton>
-        <MudButton Color="Color.Primary"
-                   OnClick="Submit"
+        <MudButton OnClick="Submit"
                    Class="theme-button theme-button-active"
                    Style="border-radius: 4px;">
             Approve
         </MudButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    private MudForm form;
-
-    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
-
-    [Parameter] public UnApprovedUsersDTO User { get; set; } = new UnApprovedUsersDTO();
-
-    void Cancel() => MudDialog.Cancel();
-
-    async Task Submit()
-    {
-        User.isApproved = true;
-        await form.ValidateAsync();
-        if (form.IsValid)
-        {
-            MudDialog.Close(DialogResult.Ok(User));
-        }
-    }
-}
