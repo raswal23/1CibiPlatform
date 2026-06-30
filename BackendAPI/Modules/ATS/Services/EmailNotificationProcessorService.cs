@@ -84,11 +84,12 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 				}
 
 				var subjectName = $"{request.FirstName} {request.LastName}";
+				var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
 
 				await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
 					request.EmailAddress,
 					subjectName,
-					$"{_applicationformBaseUrl}/{request.HashToken}");
+					applicationFormLink);
 
 				successList.Add(request);
 			}
