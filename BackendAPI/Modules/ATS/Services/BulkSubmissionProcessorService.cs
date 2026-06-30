@@ -73,6 +73,34 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					reader,
 					CultureInfo.InvariantCulture);
 
+				if (!csv.Read() || !csv.ReadHeader())
+				{
+					_logger.LogError("Failed Transaction: Invalid CSV header for identity: {@Context}", logContext);
+					throw new InternalServerException("Invalid CSV format. Missing header row.");
+				}
+
+				var expectedHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+				{
+					nameof(BulkUploadCsvRecord.LastName),
+					nameof(BulkUploadCsvRecord.FirstName),
+					nameof(BulkUploadCsvRecord.MiddleInitial),
+					nameof(BulkUploadCsvRecord.EmailAddress),
+					nameof(BulkUploadCsvRecord.MobileNumber)
+				};
+
+				var actualHeaders = csv.HeaderRecord?
+					.Select(header => header?.Trim())
+					.Where(header => !string.IsNullOrWhiteSpace(header))
+					.Select(header => header!)
+					.ToHashSet(StringComparer.OrdinalIgnoreCase)
+					?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				if (!expectedHeaders.SetEquals(actualHeaders))
+				{
+					_logger.LogError("Failed Transaction: Invalid CSV columns for identity: {@Context}. Expected: {ExpectedHeaders}. Actual: {ActualHeaders}", logContext, string.Join(",", expectedHeaders), string.Join(",", actualHeaders));
+					throw new InternalServerException("Invalid CSV format. Please use the required column headers.");
+				}
+
 				var records = csv.GetRecords<BulkUploadCsvRecord>();
 
 				foreach (var row in records)
