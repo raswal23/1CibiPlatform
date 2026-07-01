@@ -34,7 +34,18 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureServices(services =>
 		{
-			services.RemoveAll<IHostedService>();
+			// Remove only ATS-specific hosted services to avoid affecting other tests
+			var hostedServiceDescriptors = services
+				.Where(s => s.ServiceType == typeof(IHostedService) &&
+					(s.ImplementationType?.Name.Contains("BulkSubmission") == true ||
+					 s.ImplementationType?.Name.Contains("EmailNotification") == true))
+				.ToList();
+
+			foreach (var hostedServiceDescriptor in hostedServiceDescriptors)
+			{
+				services.Remove(hostedServiceDescriptor);
+			}
+
 			services.RemoveAll<IDistributedCache>();
 
 			services.AddDistributedMemoryCache();
@@ -49,6 +60,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			// Register test DB context
 			services.AddDbContext<ATSDBContext>(options =>
 				options.UseNpgsql(_dbContainer.GetConnectionString()));
+
+			services.RemoveAll<IObjectStorageService>();
+			services.AddSingleton<IObjectStorageService, MockObjectStorageService>();
 
 			// Register HttpContextAccessor (scoped, not singleton)
 			services.RemoveAll<IHttpContextAccessor>();

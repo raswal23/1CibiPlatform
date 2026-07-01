@@ -1,4 +1,5 @@
 ﻿using ATS.Data.Context;
+using ATS.Services;
 using BuildingBlocks.SharedServices.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IConfiguration _configuration;
 	protected readonly ISecureToken _generateToken;
 	protected readonly IObjectStorageService _objectStorageService;
+	protected readonly IEndorsementSubmissionService _endorsementSubmissionService;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
 	{
@@ -29,6 +31,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_httpContextAccessor = _scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
+		_endorsementSubmissionService = _scope.ServiceProvider.GetRequiredService<IEndorsementSubmissionService>();
 
 	}
 
