@@ -14,6 +14,7 @@ public partial class ApplicationFormComponent
 	private string? FaceUrl;
 	private bool IsSuccess = false;
 	private bool hasProfessionalLicense = false;
+	private string? philSysId;
 
 	// Stepper and general
 	private MudStepper? _stepper;
@@ -85,6 +86,7 @@ public partial class ApplicationFormComponent
 
 	protected override async Task OnInitializedAsync()
 	{
+		philSysId = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:digitalId") ?? string.Empty;
 		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? string.Empty;
 		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? string.Empty;
 		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? string.Empty;
@@ -95,7 +97,8 @@ public partial class ApplicationFormComponent
 		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? string.Empty;
 		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:profilePicture") ?? string.Empty;
 
-		_activeStep = ActiveStep;
+		if (ActiveStep <= 1)
+			_activeStep = ActiveStep;
 		showPhilSys = ShowsPhilSys;
 
 		if (!string.IsNullOrWhiteSpace(dobString))
