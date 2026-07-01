@@ -34,7 +34,7 @@ public partial class Otp
 		// Check if email parameter exists
 		if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(userId))
 		{
-			Navigation.NavigateTo("/register", true);
+			Navigation.NavigateTo("/register");
 			return;
 		}
 
@@ -46,7 +46,7 @@ public partial class Otp
 		{
 			await LocalStorageService.RemoveItemAsync("tempUserId");
 			await LocalStorageService.RemoveItemAsync("tempUserEmail");
-			Navigation.NavigateTo("/login", true);
+			Navigation.NavigateTo("/login");
 			return;
 		}
 

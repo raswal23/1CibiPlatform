@@ -23,7 +23,7 @@ public partial class Login
 
 		if (isAuthenticated)
 		{
-			Navigation.NavigateTo("/", true);
+			Navigation.NavigateTo("/");
 			return;
 		}
 
@@ -57,7 +57,7 @@ public partial class Login
 				return;
 			}
 
-			Navigation.NavigateTo("/", true);
+			Navigation.NavigateTo("/");
 		}
 
 		catch (Exception ex)
