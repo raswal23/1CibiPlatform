@@ -26,12 +26,12 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 			var response = new AddApplicationFormDataResponse(result.IsAdded);
 			return Results.Ok(response.IsAdded);
 		})
-			   .DisableAntiforgery()
-		  .WithName("AddApplicationFormData")
-		  .WithTags("ATS")
-		  .Produces<AddApplicationFormDataResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Add Application Form Data")
-		  .WithDescription("Adds a new application form data entry to the database.");
+		.DisableAntiforgery()
+		.WithName("AddApplicationFormData")
+		.WithTags("ATS")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Add Application Form Data")
+		.WithDescription("Adds a new application form data entry to the database.");
 	}
 }

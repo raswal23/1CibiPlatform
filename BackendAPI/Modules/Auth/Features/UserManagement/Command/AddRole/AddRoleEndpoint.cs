@@ -16,7 +16,7 @@ public class AddRoleEndpoint : ICarterModule
 		})
 		.WithName("AddRole")
 		.WithTags("User Management")
-		.Produces<AddRoleResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add Role")
 		.WithDescription("Add a role in OnePlatform.")

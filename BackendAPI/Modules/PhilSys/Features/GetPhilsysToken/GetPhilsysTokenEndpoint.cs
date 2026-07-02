@@ -17,7 +17,7 @@ public class GetPhilsysTokenEndpoint : ICarterModule
 		})
 		.WithName("GetPhilSysToken")
 		.WithTags("PhilSys")
-		.Produces<GetPhilSysTokenResponse>()
+		.Produces<string>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Retrieve PhilSys Token")
 		.WithDescription("Retrieves an access token from the PhilSys API using client credentials.");

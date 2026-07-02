@@ -23,7 +23,7 @@ public class LoginWebEndpoint : ICarterModule
 		})
 		  .WithName("Loginweb")
 		  .WithTags("Authentication")
-		  .Produces<LoginWebResponse>()
+		  .Produces<LoginResponseWebDTO>()
 		  .ProducesProblem(StatusCodes.Status400BadRequest)
 		  .WithSummary("Login")
 		  .WithDescription("Login");

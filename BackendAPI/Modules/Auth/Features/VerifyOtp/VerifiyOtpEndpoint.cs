@@ -20,11 +20,11 @@ public class VerifiyOtpEndpoint : ICarterModule
 			return new VerifiyOtpResponse(result.IsVerified);
 
 		})
-		  .WithName("verifyotp")
-		  .WithTags("Authentication")
-		  .Produces<VerifiyOtpResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("verifyotp")
-		  .WithDescription("verifyotp");
+		.WithName("verifyotp")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("verifyotp")
+		.WithDescription("verifyotp");
 	}
 }

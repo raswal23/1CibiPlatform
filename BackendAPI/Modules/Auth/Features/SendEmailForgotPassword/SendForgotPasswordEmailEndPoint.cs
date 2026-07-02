@@ -21,11 +21,11 @@ public class SendForgotPasswordEmailEndPoint : ICarterModule
 
 			return Results.Ok(response);
 		})
-		  .WithName("SendForgotPasswordEmail")
-		  .WithTags("Authentication")
-		  .Produces<SendForgotPasswordEmailResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Request password reset email")
-		  .WithDescription("Triggers a password reset email if the account exists.");
+		.WithName("SendForgotPasswordEmail")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Request password reset email")
+		.WithDescription("Triggers a password reset email if the account exists.");
 	}
 }

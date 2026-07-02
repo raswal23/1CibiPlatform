@@ -15,7 +15,7 @@ public class DeleteAppSubRoleEndpoint : ICarterModule
 		})
 		.WithName("DeleteAppSubRole")
 		.WithTags("User Management")
-		.Produces<DeleteAppSubRoleResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Delete AppSubRole")
 		.WithDescription("Delete an application, submenu, and a role of a user in OnePlatform")

@@ -15,7 +15,7 @@ public class DeleteSubMenuEndpoint : ICarterModule
 		})
 		.WithName("DeleteSubMenu")
 		.WithTags("User Management")
-		.Produces<DeleteSubMenuResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Delete SubMenu")
 		.WithDescription("Deletes an existing submenu in OnePlatform.")

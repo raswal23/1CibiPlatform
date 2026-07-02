@@ -20,11 +20,11 @@ public class LogoutEndpoint : ICarterModule
 			return Results.Ok(response);
 
 		})
-		  .WithName("Logout")
-		  .WithTags("Authentication")
-		  .Produces<LogoutResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Logout")
-		  .WithDescription("Logout");
+		.WithName("Logout")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Logout")
+		.WithDescription("Logout");
 	}
 }

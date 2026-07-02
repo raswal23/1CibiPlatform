@@ -14,11 +14,11 @@ public class IsLivenessValidEndpoint : ICarterModule
 			var response = new IsLivenessValidResponse(result.TransactionStatusResponseDTO);
 			return Results.Ok(response.TransactionStatusResponseDTO);
 		})
-		  .WithName("isLivenessVerified")
-		  .WithTags("PhilSys")
-		  .Produces<IsLivenessValidResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Liveness Session")
-		  .WithDescription("Validates whether a PhilSys liveness session associated with a given hash token has not expired or been transacted.");
+		.WithName("isLivenessVerified")
+		.WithTags("PhilSys")
+		.Produces<TransactionStatusResponseDTO>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Liveness Session")
+		.WithDescription("Validates whether a PhilSys liveness session associated with a given hash token has not expired or been transacted.");
 	}
 }

@@ -20,11 +20,11 @@ public class LoginEndpoint : ICarterModule
 
 			return Results.Ok(loginResponse.LoginResponseDTO);
 		})
-		  .WithName("Login")
-		  .WithTags("Authentication")
-		  .Produces<LoginResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Login")
-		  .WithDescription("Login User");
+		.WithName("Login")
+		.WithTags("Authentication")
+		.Produces<LoginResponseDTO>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Login")
+		.WithDescription("Login User");
 	}
 }

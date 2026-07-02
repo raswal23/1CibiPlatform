@@ -19,11 +19,11 @@ public class GetNewAccessTokenEndpoint : ICarterModule
 
 			return Results.Ok(getNewAccessTokenResponse.LoginResponseWebDTO);
 		})
-		  .WithName("GetNewAccessToken")
-		  .WithTags("Authentication")
-		  .Produces<GetNewAccessTokenResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Get New Access Token")
-		  .WithDescription("Get New Access Token using Refresh Token");
+		.WithName("GetNewAccessToken")
+		.WithTags("Authentication")
+		.Produces<LoginResponseWebDTO>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Get New Access Token")
+		.WithDescription("Get New Access Token using Refresh Token");
 	}
 }

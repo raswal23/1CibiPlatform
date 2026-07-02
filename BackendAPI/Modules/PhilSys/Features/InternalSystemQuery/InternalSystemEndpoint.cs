@@ -13,11 +13,11 @@ public class InternalSystemEndpoint : ICarterModule
 			var response = new InternalSystemResponse(result.PartnerSystemResponseDTO);
 			return Results.Json(response.PartnerSystemResponseDTO);
 		})
-		  .WithName("InternalSystemQuery")
-		  .WithTags("PhilSys")
-		  .Produces<InternalSystemResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Initiate Internal System Identity Verification")
-		  .WithDescription("Initializes a new PhilSys Internal System identity verification transaction and generates a unique liveness verification link.");
+		.WithName("InternalSystemQuery")
+		.WithTags("PhilSys")
+		.Produces<PartnerSystemResponseDTO>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Initiate Internal System Identity Verification")
+		.WithDescription("Initializes a new PhilSys Internal System identity verification transaction and generates a unique liveness verification link.");
 	}
 }

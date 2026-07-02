@@ -16,7 +16,7 @@ public class EditRoleEndpoint : ICarterModule
 		})
 		.WithName("EditRole")
 		.WithTags("User Management")
-		.Produces<EditRoleResponse>()
+		.Produces<RoleDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Edit Role")
 		.WithDescription("Edits an existing role in OnePlatform.")

@@ -16,7 +16,7 @@ public class DeleteLockedUserEndpoint : ICarterModule
 		})
 		.WithName("DeleteLockedUser")
 		.WithTags("User Management")
-		.Produces<DeleteLockedUserResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Delete Locked User")
 		.WithDescription("Deletes an existing locked user in OnePlatform.")

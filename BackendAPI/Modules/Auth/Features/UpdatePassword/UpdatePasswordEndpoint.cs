@@ -21,10 +21,10 @@ public class UpdatePasswordEndpoint : ICarterModule
 
 				return Results.Ok(result);
 			})
-			.WithName("UpdatePassword")
-			.WithTags("Authentication")
-			.Produces<UpdatePasswordResponse>(StatusCodes.Status200OK)
-			.WithSummary("Updates the user's password.")
-			.WithDescription("Updates the user's password using the provided Hash and new password.");
+		.WithName("UpdatePassword")
+		.WithTags("Authentication")
+		.Produces<UpdatePasswordResponse>(StatusCodes.Status200OK)
+		.WithSummary("Updates the user's password.")
+		.WithDescription("Updates the user's password using the provided Hash and new password.");
 	}
 }

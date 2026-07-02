@@ -22,11 +22,11 @@ public class AccountApprovalNotificationEndpoint : ICarterModule
 			return Results.Ok(response.IsSent);
 
 		})
-		  .WithName("AccountApprovalNotification")
-		  .WithTags("User Management")
-		  .Produces<AccountApprovalNotificationResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("accountnotification")
-		  .WithDescription("accountnotification");
+		.WithName("AccountApprovalNotification")
+		.WithTags("User Management")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("accountnotification")
+		.WithDescription("accountnotification");
 	}
 }

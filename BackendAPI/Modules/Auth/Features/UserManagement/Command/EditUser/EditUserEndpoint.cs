@@ -15,7 +15,7 @@ public class EditUserEndpoint : ICarterModule
 		})
 		.WithName("EditUser")
 		.WithTags("User Management")
-		.Produces<EditUserResponse>()
+		.Produces<UserDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Edit User")
 		.WithDescription("Edits an existing user in OnePlatform.")

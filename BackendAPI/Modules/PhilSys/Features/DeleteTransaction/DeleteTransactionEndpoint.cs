@@ -14,7 +14,7 @@ public class DeleteTransactionEndpoint : ICarterModule
 		})
 		.WithName("DeleteTransaction")
 		.WithTags("PhilSys")
-		.Produces<DeleteTransactionResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Delete Transaction")
 		.WithDescription("Deletes an existing PhilSys transaction based on the provided unique hash token.");

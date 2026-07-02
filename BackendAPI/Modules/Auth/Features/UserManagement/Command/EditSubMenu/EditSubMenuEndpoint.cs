@@ -16,7 +16,7 @@ public class EditSubMenuEndpoint : ICarterModule
 		})
 		.WithName("EditSubMenu")
 		.WithTags("User Management")
-		.Produces<EditSubMenuResponse>()
+		.Produces<SubMenuDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Edit SubMenu")
 		.WithDescription("Edits an existing submnu in OnePlatform.")

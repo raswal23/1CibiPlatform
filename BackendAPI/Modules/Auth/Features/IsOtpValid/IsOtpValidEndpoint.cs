@@ -21,11 +21,11 @@ public class IsOtpValidEndpoint : ICarterModule
 
 			return Results.Ok(response);
 		})
-		  .WithName("isOtpVerified")
-		  .WithTags("Authentication")
-		  .Produces<IsOtpValidResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("OTP Session")
-		  .WithDescription("OTP Session");
+		.WithName("isOtpVerified")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("OTP Session")
+		.WithDescription("OTP Session");
 	}
 }
