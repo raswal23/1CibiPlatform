@@ -108,9 +108,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(emailInvitationRequests);
 	}
 
-	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId)
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId)
 	{
-		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(emailInvitationId);
+		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(emailInvitationId);
 	}
 }
 

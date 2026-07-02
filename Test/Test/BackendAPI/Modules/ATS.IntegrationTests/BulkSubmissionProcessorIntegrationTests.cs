@@ -1,25 +1,16 @@
 ﻿using ATS.Data.Entities;
-using ATS.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
-public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest, IClassFixture<IntegrationTestWebAppFactory>
+public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 {
-	private readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
-	private readonly IConnectionMultiplexer _redis;
-	private readonly IntegrationTestWebAppFactory _factory;
 
 	public BulkSubmissionProcessorIntegrationTests(IntegrationTestWebAppFactory factory) 
 		: base(factory)
 	{
-		_factory = factory;
-		_bulkSubmissionProcessorService = factory.Services.GetRequiredService<IBulkSubmissionProcessorService>();
-		_redis = factory.Services.GetRequiredService<IConnectionMultiplexer>();
 	}
 
 	[Fact]
@@ -32,7 +23,7 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest, ICla
 		// Act
 		await _bulkSubmissionProcessorService.ProcessAsync(cancellationToken);
 
-		// Assert - Use AsNoTracking to avoid DbContext conflicts from concurrent operations
+		// Assert 
 		var emailInvitations = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => e.SelectPackage == "Standard" && e.RushNormal == "Normal")
@@ -78,7 +69,7 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest, ICla
 		// Act
 		await _bulkSubmissionProcessorService.ProcessAsync(cancellationToken);
 
-		// Assert - Use AsNoTracking to prevent tracking conflicts
+		// Assert 
 		var premiumInvitations = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => e.SelectPackage == "Premium")
@@ -117,7 +108,6 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest, ICla
 		await _dbContext.BulkUploadFileDetails.AddAsync(bulkFile);
 		await _dbContext.SaveChangesAsync();
 
-		// Upload CSV content to object storage
 		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
 		await _objectStorageService.UploadAsync("test", fileName, stream);
 

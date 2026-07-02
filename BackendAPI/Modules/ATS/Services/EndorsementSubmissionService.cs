@@ -122,7 +122,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			_logger.LogError("Failed to send email: {@Context}, {Exception}", logContext, ex);
 
-			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(emailInvitationRequest.EmailInvitationID);
+			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(emailInvitationRequest.EmailInvitationID);
 
 			throw new InternalServerException("Failed to send email.");
 		}

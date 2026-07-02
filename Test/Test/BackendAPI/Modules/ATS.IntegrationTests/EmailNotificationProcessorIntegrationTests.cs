@@ -1,30 +1,17 @@
 ﻿using ATS.Data.Entities;
-using ATS.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
-public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest, IClassFixture<IntegrationTestWebAppFactory>
+public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 {
-	private readonly IEmailNotificationProcessorService _emailNotificationProcessorService;
-	private readonly IConnectionMultiplexer _redis;
-	private readonly HybridCache _hybridCache;
-	private readonly IntegrationTestWebAppFactory _factory;
-	private readonly IEndorsementSubmissionService _mockEndorsementService;
 
 	public EmailNotificationProcessorIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
-		_factory = factory;
-		_emailNotificationProcessorService = factory.Services.GetRequiredService<IEmailNotificationProcessorService>();
-		_redis = factory.Services.GetRequiredService<IConnectionMultiplexer>();
-		_hybridCache = factory.Services.GetRequiredService<HybridCache>();
-		_mockEndorsementService = factory.Services.GetRequiredService<IEndorsementSubmissionService>();
 	}
 
 	[Fact]

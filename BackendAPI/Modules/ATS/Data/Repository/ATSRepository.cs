@@ -157,7 +157,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId)
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId)
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
 				.ExecuteUpdateAsync(setters => setters
