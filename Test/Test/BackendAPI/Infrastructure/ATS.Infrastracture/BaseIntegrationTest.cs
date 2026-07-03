@@ -61,7 +61,8 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 								ats.""PersonalDetails"", 
 								ats.""ProfessionalExperiences"", 
 								ats.""ReferenceDetails"",
-								ats.""SignatureDetails""
+								ats.""SignatureDetails"",
+								ats.""BulkUploadFileDetails""
 						  RESTART IDENTITY CASCADE;";
 				await _dbContext.Database.ExecuteSqlRawAsync(sql);
 			}

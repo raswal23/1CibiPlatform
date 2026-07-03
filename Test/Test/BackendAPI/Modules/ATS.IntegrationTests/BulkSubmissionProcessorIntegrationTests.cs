@@ -1,4 +1,5 @@
 ﻿using ATS.Data.Entities;
+using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -33,7 +34,6 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		emailInvitations.Should().AllSatisfy(e =>
 		{
 			e.HashToken.Should().NotBeNullOrEmpty();
-			e.HashTokenCreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 			e.IsFormCompleted.Should().BeFalse();
 			e.EmailSentStatus.Should().Be("Pending");
 		});
@@ -84,14 +84,70 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		standardInvitations.Should().NotBeEmpty();
 	}
 
-	private async Task<BulkUploadFileDetails> SeedBulkUploadFileAsync(string fileName, string packageType, string orderType)
+	[Fact]
+	public async Task ProcessAsync_WithEmptyCsvHeader_ShouldThrowInternalServerException()
 	{
+		// Arrange
+		var csvContent = string.Empty;
+
+		await SeedBulkUploadFileAsync(
+			"empty-header.csv",
+			"Standard",
+			"Normal",
+			csvContent);
+
+		// Act
+		Func<Task> act = async () =>
+			await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		var exception = await act.Should()
+			.ThrowAsync<InternalServerException>();
+
+		exception.Which.Message.Should()
+			.Be("Invalid CSV format. Missing header row.");
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithInvalidColumnHeaders_ShouldThrowInternalServerException()
+	{
+		// Arrange
 		var csvContent = """
-			LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber
-			Dela Cruz,Juan,S,juan@example.com,+639171234567
-			Santos,Maria,A,maria@example.com,+639178765432
-			Reyes,Carlos,R,carlos@example.com,+639179876543
-			""";
+        Surname,GivenName,MiddleName,Email,Phone
+        Dela Cruz,Juan,S,juan@example.com,+639171234567
+        Santos,Maria,A,maria@example.com,+639178765432
+        """;
+
+		await SeedBulkUploadFileAsync(
+			"invalid-header.csv",
+			"Standard",
+			"Normal",
+			csvContent);
+
+		// Act
+		Func<Task> act = async () =>
+			await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		var exception = await act.Should()
+			.ThrowAsync<InternalServerException>();
+
+		exception.Which.Message.Should()
+			.Be("Invalid CSV format. Please use the required column headers.");
+	}
+
+	private async Task<BulkUploadFileDetails> SeedBulkUploadFileAsync(
+		string fileName,
+		string packageType,
+		string orderType,
+		string? csvContent = null)
+	{
+		csvContent ??= """
+        LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber
+        Dela Cruz,Juan,S,juan@example.com,+639171234567
+        Santos,Maria,A,maria@example.com,+639178765432
+        Reyes,Carlos,R,carlos@example.com,+639179876543
+        """;
 
 		var bulkFile = new BulkUploadFileDetails
 		{

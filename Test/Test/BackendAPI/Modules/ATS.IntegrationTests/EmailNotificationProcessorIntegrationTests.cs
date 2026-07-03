@@ -19,34 +19,36 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange
 		var emailInvitations = await SeedEmailInvitationRequestsAsync(3);
-		var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
-		// Store batch in cache
 		await _hybridCache.SetAsync(
 			batchId,
 			new List<List<EmailInvitationRequest>> { emailInvitations },
 			new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(30) });
 
-		// Add batch to pending queue
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.ListRightPushAsync("ats-batches-pending", batchId);
+		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
+		await dbRedis.ListRightPushAsync("devtest-batches:pending", batchId);
 
 		var cancellationToken = CancellationToken.None;
 
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
 
-		// Assert - Verify email invitations were processed
+		// Assert
 		var processedInvitations = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => emailInvitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
 			.ToListAsync();
 
 		processedInvitations.Should().NotBeEmpty();
-		//processedInvitations.Should().AllSatisfy(e =>
-		//{
-		//	e.EmailSentStatus.Should().NotBe("Pending");
-		//});
+		processedInvitations.Should().AllSatisfy(e =>
+		{
+			e.EmailSentStatus.Should().NotBe("Pending");
+		});
+
+		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
+
 	}
 
 	[Fact]
@@ -62,7 +64,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
 
-		// Assert - No changes should occur
+		// Assert 
 		var finalCount = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.CountAsync();
@@ -75,35 +77,35 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange
 		var emailInvitations = await SeedEmailInvitationRequestsAsync(2);
-		var batchId = $"batch-error:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
-		// Store batch in cache
 		await _hybridCache.SetAsync(
 			batchId,
 			emailInvitations,
 			new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(30) });
 
-		// Add batch to error queue
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.ListRightPushAsync("ats-batches-error", batchId);
+		await dbRedis.KeyDeleteAsync("devtest-batches:error");
+		await dbRedis.ListRightPushAsync("devtest-batches:error", batchId);
 
 		var cancellationToken = CancellationToken.None;
 
 		// Act
 		await _emailNotificationProcessorService.ProcessForErrorStatusAsync(cancellationToken);
 
-		// Assert - Verify error invitations were processed
+		// Assert
 		var processedInvitations = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => emailInvitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
 			.ToListAsync();
 
 		processedInvitations.Should().NotBeEmpty();
-		//processedInvitations.Should().AllSatisfy(e =>
-		//{
-		//	e.EmailSentStatus.Should().NotBe("Pending");
-		//});
+		processedInvitations.Should().AllSatisfy(e =>
+		{
+			e.EmailSentStatus.Should().NotBe("Pending");
+		});
 
+		await dbRedis.KeyDeleteAsync("devtest-batches:error");
 	}
 
 	[Fact]
@@ -113,10 +115,9 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var batch1Invitations = await SeedEmailInvitationRequestsAsync(2);
 		var batch2Invitations = await SeedEmailInvitationRequestsAsync(3);
 
-		var batch1Id = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-		var batch2Id = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow.AddSeconds(1):yyyyMMdd}";
+		var batch1Id = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+		var batch2Id = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow.AddSeconds(1):yyyyMMdd}";
 
-		// Store batches in cache
 		await _hybridCache.SetAsync(
 			batch1Id,
 			new List<List<EmailInvitationRequest>> { batch1Invitations },
@@ -127,25 +128,24 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			new List<List<EmailInvitationRequest>> { batch2Invitations },
 			new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(30) });
 
-		// Add batches to pending queue
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.ListRightPushAsync("ats-batches-pending", batch1Id);
-		await dbRedis.ListRightPushAsync("ats-batches-pending", batch2Id);
+		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
+		await dbRedis.ListRightPushAsync("devtest-batches:pending", batch1Id);
 
 		var cancellationToken = CancellationToken.None;
 
-		// Act - Process first batch
+		// Act 
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
 
-		// Assert - First batch should be processed
+		// Assert 
 		var batch1Processed = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => batch1Invitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
 			.ToListAsync();
 
-
 		batch1Processed.Should().NotBeEmpty();
-		//batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
+		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
+		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
 
 	}
 
