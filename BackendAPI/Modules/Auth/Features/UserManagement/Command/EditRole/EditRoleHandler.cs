@@ -1,5 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Command.EditRole;
 public record EditRoleCommand(EditRoleDTO editRole) : ICommand<EditRoleResult>;
+
+public class EditRoleCommandValidator : AbstractValidator<EditRoleCommand>
+{
+	public EditRoleCommandValidator()
+	{
+		RuleFor(x => x.editRole)
+			.NotNull().WithMessage("Edit role data is required.");
+	}
+}
+
 public record EditRoleResult(RoleDTO role);
 public class EditRoleHandler : ICommandHandler<EditRoleCommand, EditRoleResult>
 {

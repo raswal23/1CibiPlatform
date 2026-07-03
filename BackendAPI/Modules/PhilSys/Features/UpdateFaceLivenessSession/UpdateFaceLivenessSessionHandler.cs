@@ -2,6 +2,18 @@
 public record UpdateFaceLivenessSessionCommand(string HashToken, string FaceLivenessSessionId) : ICommand<UpdateFaceLivenessSessionResult>;
 
 public record UpdateFaceLivenessSessionResult(VerificationResponseDTO VerificationResponseDTO);
+public class UpdateFaceLivenessSessionCommandValidator : AbstractValidator<UpdateFaceLivenessSessionCommand>
+{
+	public UpdateFaceLivenessSessionCommandValidator()
+	{
+		RuleFor(x => x.HashToken)
+			.NotEmpty().WithMessage("HashToken is required.");
+
+		RuleFor(x => x.FaceLivenessSessionId)
+			.NotEmpty().WithMessage("FaceLivenessSessionId is required.");
+	}
+}
+
 public class UpdateFaceLivenessSessionHandler : ICommandHandler<UpdateFaceLivenessSessionCommand, UpdateFaceLivenessSessionResult>
 {
 	private readonly UpdateFaceLivenessSessionService _updateFaceLivenessSessionService;

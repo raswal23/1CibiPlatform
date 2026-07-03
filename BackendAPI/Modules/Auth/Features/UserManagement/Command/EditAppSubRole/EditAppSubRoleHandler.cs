@@ -1,6 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Command.EditAppSubRole;
 public record EditAppSubRoleCommand(EditAppSubRoleDTO editAppSubRole) : ICommand<EditAppSubRoleResult>;
 
+public class EditAppSubRoleCommandValidator : AbstractValidator<EditAppSubRoleCommand>
+{
+	public EditAppSubRoleCommandValidator()
+	{
+		RuleFor(x => x.editAppSubRole)
+			.NotNull().WithMessage("Edit AppSubRole data is required.");
+	}
+}
+
 public record EditAppSubRoleResult(AppSubRoleDTO appSubRole);
 
 public class EditAppSubRoleHandler : ICommandHandler<EditAppSubRoleCommand, EditAppSubRoleResult>

@@ -1,6 +1,16 @@
 ﻿namespace Auth.Features.AccountAssignmentNotification;
 public record AccountNotificationCommand(AccountNotificationDTO AccountNotificationDTO) : ICommand<AccountNotificationResult>;
 public record AccountNotificationResult(bool IsSent);
+
+public class AccountNotificationCommandValidator : AbstractValidator<AccountNotificationCommand>
+{
+	public AccountNotificationCommandValidator()
+	{
+		RuleFor(x => x.AccountNotificationDTO)
+			.NotNull().WithMessage("Account notification data is required.");
+	}
+}
+
 public class AccountAssignmentNotificationHandler : ICommandHandler<AccountNotificationCommand, AccountNotificationResult>
 {
 	private readonly IAppSubRoleService _appSubRoleService;

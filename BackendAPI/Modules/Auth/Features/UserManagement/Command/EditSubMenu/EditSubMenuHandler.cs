@@ -1,6 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Command.EditSubMenu;
 public record EditSubMenuCommand(EditSubMenuDTO editSubMenu) : ICommand<EditSubMenuResult>;
 
+public class EditSubMenuCommandValidator : AbstractValidator<EditSubMenuCommand>
+{
+	public EditSubMenuCommandValidator()
+	{
+		RuleFor(x => x.editSubMenu)
+			.NotNull().WithMessage("Edit SubMenu data is required.");
+	}
+}
+
 public record EditSubMenuResult(SubMenuDTO subMenu);
 public class EditSubMenuHandler : ICommandHandler<EditSubMenuCommand, EditSubMenuResult>
 {

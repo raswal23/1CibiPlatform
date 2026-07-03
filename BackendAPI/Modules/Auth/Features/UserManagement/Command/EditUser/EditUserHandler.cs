@@ -1,6 +1,16 @@
 ﻿namespace Auth.Features.UserManagement.Command.EditUser;
 public record EditUserCommand(EditUserDTO editUser) : ICommand<EditUserResult>;
 public record EditUserResult(UserDTO user);
+
+public class EditUserCommandValidator : AbstractValidator<EditUserCommand>
+{
+	public EditUserCommandValidator()
+	{
+		RuleFor(x => x.editUser)
+			.NotNull().WithMessage("Edit user data is required.");
+	}
+}
+
 public class EditUserHandler : ICommandHandler<EditUserCommand, EditUserResult>
 {
 	private readonly IUserService _userService;
