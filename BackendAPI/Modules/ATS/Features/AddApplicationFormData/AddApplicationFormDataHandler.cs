@@ -8,6 +8,33 @@ public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
 											ReferenceDetailsDTO ReferenceDetails,
 											SignatureDetailsDTO SignatureDetails) : ICommand<AddApplicationFormDataResult>;
 public record AddApplicationFormDataResult(bool IsAdded);
+public class AddApplicationFormDataCommandValidator : AbstractValidator<AddApplicationFormDataCommand>
+{
+	public AddApplicationFormDataCommandValidator()
+	{
+		RuleFor(x => x.PersonalDetails)
+			.NotNull().WithMessage("Personal details are required.");
+
+		RuleFor(x => x.AddressDetails)
+			.NotNull().WithMessage("Address details are required.");
+
+		RuleFor(x => x.EducationalBackground)
+			.NotNull().WithMessage("Educational background is required.");
+
+		RuleFor(x => x.LicensesDetails)
+			.NotNull().WithMessage("Licenses details are required.");
+
+		RuleFor(x => x.ProfessionalExperiences)
+			.NotNull().WithMessage("Professional experiences are required.");
+
+		RuleFor(x => x.ReferenceDetails)
+			.NotNull().WithMessage("Reference details are required.");
+
+		RuleFor(x => x.SignatureDetails)
+			.NotNull().WithMessage("Signature details are required.");
+	}
+}
+
 public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormDataCommand, AddApplicationFormDataResult>
 {
 	private readonly IApplicationFormService _applicationFormService;

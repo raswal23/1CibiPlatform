@@ -1,6 +1,16 @@
 ﻿namespace Auth.Features.UserManagement.Command.DeleteApplication;
 public record DeleteApplicationCommand(int AppId) : ICommand<DeleteApplicationResult>;
 public record DeleteApplicationResult(bool IsDeleted);
+
+public class DeleteApplicationCommandValidator : AbstractValidator<DeleteApplicationCommand>
+{
+	public DeleteApplicationCommandValidator()
+	{
+		RuleFor(x => x.AppId)
+			.GreaterThan(0).WithMessage("AppId must be greater than zero.");
+	}
+}
+
 public class DeleteApplicationHandler : ICommandHandler<DeleteApplicationCommand, DeleteApplicationResult>
 {
 	private readonly IApplicationService _applicationService;

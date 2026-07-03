@@ -1,6 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Command.EditApplication;
 public record EditApplicationCommand(EditApplicationDTO editApplication) : ICommand<EditApplicationResult>;
 
+public class EditApplicationCommandValidator : AbstractValidator<EditApplicationCommand>
+{
+	public EditApplicationCommandValidator()
+	{
+		RuleFor(x => x.editApplication)
+			.NotNull().WithMessage("Edit application data is required.");
+	}
+}
+
 public record EditApplicationResult(ApplicationDTO application);
 public class EditApplicationHandler : ICommandHandler<EditApplicationCommand, EditApplicationResult>
 {

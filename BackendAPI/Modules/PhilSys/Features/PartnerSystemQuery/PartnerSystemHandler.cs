@@ -5,7 +5,6 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 {
 	public PartnerSystemCommandValidator()
 	{
-		// Always required fields
 		RuleFor(x => x.callback_url)
 			.NotEmpty().WithMessage("callback_url is required.")
 			.Must(url =>
@@ -19,7 +18,6 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 			.Must(t => t == "name_dob" || t == "pcn")
 			.WithMessage("inquiry_type must be either 'name_dob' or 'pcn'.");
 
-		// When InquiryType = "name_dob"
 		When(x => x.inquiry_type == "name_dob", () =>
 		{
 			RuleFor(x => x.identity_data.FirstName)
@@ -42,7 +40,6 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 				.WithMessage("Birth Date must be in format YYYY-MM-DD.");
 		});
 
-		// When InquiryType = "pcn"
 		When(x => x.inquiry_type == "pcn", () =>
 		{
 			RuleFor(x => x.identity_data.PCN)

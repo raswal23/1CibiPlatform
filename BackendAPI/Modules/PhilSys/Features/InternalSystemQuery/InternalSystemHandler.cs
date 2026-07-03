@@ -2,6 +2,21 @@
 
 public record InternalSystemCommand(string callback_url, string inquiry_type, IdentityData identity_data) : ICommand<InternalSystemResult>;
 public record InternalSystemResult(PartnerSystemResponseDTO PartnerSystemResponseDTO);
+public class InternalSystemCommandValidator : AbstractValidator<InternalSystemCommand>
+{
+	public InternalSystemCommandValidator()
+	{
+		RuleFor(x => x.callback_url)
+			.NotEmpty().WithMessage("callback_url is required.");
+
+		RuleFor(x => x.inquiry_type)
+			.NotEmpty().WithMessage("inquiry_type is required.");
+
+		RuleFor(x => x.identity_data)
+			.NotNull().WithMessage("identity_data is required.");
+	}
+}
+
 public class InternalSystemHandler : ICommandHandler<InternalSystemCommand, InternalSystemResult>
 {
 	private readonly PartnerSystemService _partnerSystemService;
