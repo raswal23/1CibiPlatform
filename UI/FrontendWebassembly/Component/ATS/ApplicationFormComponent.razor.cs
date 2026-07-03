@@ -110,13 +110,6 @@ public partial class ApplicationFormComponent
 		}
 	}
 
-	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
-
-	private async Task OnChanged()
-	{
-		await HasChangesChanged.InvokeAsync(false);
-	}
-
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
 	{
 		// Personal Details
@@ -226,11 +219,34 @@ public partial class ApplicationFormComponent
 		showPhilSys = true;
 	}
 
+	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
+
+	private async Task OnChanged()
+	{
+		await HasChangesChanged.InvokeAsync(false);
+	}
+
+	private bool ValidateUploadFile(string fileName)
+	{
+		var result = FileValidationService.ValidateExtension(fileName, ".pdf");
+
+		if (!result.IsValid)
+		{
+			Snackbar.Add(result.ErrorMessage!, Severity.Error);
+			return false;
+		}
+
+		return true;
+	}
+
 	private async Task OnGovtIdUpload(InputFileChangeEventArgs e)
 	{
-
 		if (e.File != null)
 		{
+			var isValid = ValidateUploadFile(e.File.Name);
+			if (!isValid)
+				return;
+
 			using var ms = new MemoryStream();
 
 			await e.File
@@ -250,6 +266,10 @@ public partial class ApplicationFormComponent
 	{
 		if (e.File != null)
 		{
+			var isValid = ValidateUploadFile(e.File.Name);
+			if (!isValid)
+				return;
+
 			using var ms = new MemoryStream();
 
 			await e.File
@@ -266,6 +286,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCvUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -284,6 +308,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnDiplomaUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File is not null)
 		{
 			using var ms = new MemoryStream();
@@ -302,6 +330,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -320,6 +352,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCoe1Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -338,6 +374,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCoe2Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -355,6 +395,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCoe3Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -567,7 +611,6 @@ public partial class ApplicationFormComponent
 		}
 		finally
 		{
-			await OnChanged();
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");

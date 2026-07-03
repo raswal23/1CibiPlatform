@@ -1,8 +1,9 @@
 ﻿@inject IApplicationFormService ATSService
 @inject LocalStorageService LocalStorageService
 @inject EmailValidationService EmailValidationService
-@inject IJSRuntime JSRuntime
-@using SigPad
+@inject FileValidationService FileValidationService
+@inject ISnackbar Snackbar
+@using SigPad   
 
 <MudPaper Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
     @if (IsSuccess)

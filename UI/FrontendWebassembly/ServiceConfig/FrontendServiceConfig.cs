@@ -55,6 +55,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<LocalStorageService>();
 		services.AddScoped<EmailValidationService>();
+		services.AddScoped<FileValidationService>(); 
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IUserManagementService, UserManagementService>();

@@ -33,8 +33,19 @@ public partial class NewOrderComponent
 		});
 	}
 
+
+
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
 	{
+
+		var result = FileValidationService.ValidateExtension(e.File.Name, ".csv");
+
+		if (!result.IsValid)
+		{
+			Snackbar.Add(result.ErrorMessage!, Severity.Error);
+			return;
+		}
+
 		if (e.File is not null)
 		{
 			bulkUploadFileDetailsDTO.BulkFile = e.File;
