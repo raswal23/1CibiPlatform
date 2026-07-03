@@ -66,7 +66,7 @@ public partial class ATSApplicationForm
 		if (hasUnsavedChanges)
 		{
 			var result = await JSRuntime.InvokeAsync<bool>("confirm",
-				"You have unsaved changes. Leave anyway?");
+				"Are you sure you want to proceed?");
 
 			if (!result)
 			{

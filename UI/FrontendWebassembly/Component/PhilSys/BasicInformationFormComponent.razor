@@ -65,18 +65,17 @@
         </MudItem>
 
         <MudItem xs="12">
-            <MudTextField @bind-Value="identityData!.birth_date"
-                          Label="Birth Date"
-                          InputType="InputType.Date"
-                          FullWidth="true"
-                          Required="true"
-                          RequiredError="Birth Date is required"
-                          Adornment="Adornment.Start"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          Min="1900-01-01"
-                          Max="@DateTime.Today.ToString("yyyy-MM-dd")"
-                          Class="oneplatform-rounded-input" />
+            <MudDatePicker @bind-Value="BirthDate"
+                           Label="Birth Date"
+                           Adornment="Adornment.End"
+                           Placeholder="Date"
+                           Required="true"
+                           RequiredError="Birth Date is required"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           MaxDate="@DateTime.Today.AddDays(-1)"
+                           DateFormat="MM/dd/yyyy"
+                           Class="oneplatform-rounded-input" />
         </MudItem>
     </MudGrid>
 

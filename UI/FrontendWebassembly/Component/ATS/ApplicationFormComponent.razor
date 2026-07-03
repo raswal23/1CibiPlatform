@@ -48,8 +48,8 @@
                                                 I am a registered PSA National ID member and I voluntarily consent to share my verified information to any prospective employer I am applying for.
                                             </MudText>
                                             <div class="d-flex flex-column align-center justify-center mt-4">
-                                                <MudCheckBox T="bool" @bind-Value="consent" Label=" Yes, I agree and wish to proceed." />
-                                                <MudButton Disabled="!consent"
+                                                <MudCheckBox Disabled="@declineConsent" T="bool" @bind-Value="consent" Label=" Yes, I agree and wish to proceed." />
+                                                <MudButton Disabled="@(!consent || declineConsent)"
                                                            Class="@($"mb-4 theme-button {(consent ? "theme-button-active " : "theme-button-inactive")}")"
                                                            Style="width: 150px; border-radius: 4px;"
                                                            OnClick="ProceedClicked">
@@ -58,15 +58,16 @@
 
                                                 <MudCheckBox T="bool"
                                                              @bind-Value="declineConsent"
+                                                             Disabled="@consent"
                                                              Label="No, I do not wish to proceed." />
                                                 <div class="d-flex" style="gap:30px;">
                                                     <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
-                                                               Disabled="!declineConsent"
+                                                               Disabled="@(!declineConsent || consent)"
                                                                OnClick="SkipStep">
                                                         Skip
                                                     </MudButton>
                                                     <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
-                                                               Disabled="!declineConsent"
+                                                               Disabled="@(!declineConsent || consent)"
                                                                OnClick="ResetStepper">
                                                         Cancel
                                                     </MudButton>
@@ -117,6 +118,7 @@
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
+                                                          Disabled="@NoMiddleName"
                                                           @bind-Value="personalDetails.MiddleName"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Middle Name" />
@@ -173,7 +175,7 @@
                                                            RequiredError="Birth Date is required"
                                                            Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
-                                                           MaxDate="@DateTime.Today"
+                                                           MaxDate="@DateTime.Today.AddDays(-1)"
                                                            DateFormat="MM/dd/yyyy"
                                                            Class="oneplatform-rounded-input" />
                                         </MudItem>
@@ -428,6 +430,7 @@
                                              Class="small-checkbox-label"
                                              Style="margin-bottom:-12px;"
                                              Value="SameAsPermanent"
+                                             Disabled="@(string.IsNullOrEmpty(addressDetails.CurrentAddress))"
                                              ValueChanged="OnSameAsPermanentChanged"
                                              Label="Check if current address is the same as permanent address" />
                             </MudItem>
@@ -438,6 +441,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
+                                              Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentAddress"
                                               Required="true"
                                               RequiredError="Permanent Address (No., Street, Village, Brgy.) is required"
@@ -449,6 +453,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
+                                              Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentCity"
                                               Required="true"
                                               RequiredError="City is required"
@@ -460,6 +465,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
+                                              Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentProvince"
                                               Required="true"
                                               RequiredError="State / Province / Region is required"
@@ -471,6 +477,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
+                                              Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentCountry"
                                               Required="true"
                                               RequiredError="Country is required"
@@ -482,6 +489,7 @@
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
+                                              Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentPostalCode"
                                               Required="true"
                                               Mask="@(new PatternMask("00000000000"))"
@@ -491,7 +499,7 @@
 
                             <!-- Ownership -->
                             <MudItem xs="12">
-                                <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of Ownership</MudText>
+                                <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of Ownership (Current Address)</MudText>
                                 <div class="d-flex" style="gap:12px; flex-wrap:wrap;">
                                     <MudRadioGroup T="string"
                                                    @bind-Value="addressDetails.TypeOfOwnership"
@@ -837,7 +845,7 @@
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                Placeholder="Date"
-                                               Required="true"
+                                               Required="!professionalExperiences.Emp1CurrentlyEmployed"
                                                Class="oneplatform-rounded-input"
                                                Label="End Date of Employment #1"
                                                Disabled="@(!StartOfEmployment1.HasValue)"
@@ -1006,7 +1014,7 @@
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
                                                    Placeholder="Date"
-                                                   Required="true"
+                                                   Required="!professionalExperiences.Emp2CurrentlyEmployed"
                                                    Class="oneplatform-rounded-input"
                                                    Label="End Date of Employment #2"
                                                    Disabled="@(!StartOfEmployment2.HasValue)"
@@ -1177,7 +1185,7 @@
                                                    Variant="Variant.Outlined"
                                                    Placeholder="Date"
                                                    Margin="Margin.Dense"
-                                                   Required="true"
+                                                   Required="!professionalExperiences.Emp3CurrentlyEmployed"
                                                    Class="oneplatform-rounded-input"
                                                    Label="End Date of Employment #3"
                                                    Disabled="@(!StartOfEmployment3.HasValue)"
@@ -1374,7 +1382,6 @@
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
-                                                      RequiredError="Birth Date is required"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense" />
@@ -1499,7 +1506,6 @@
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
-                                                      RequiredError="Birth Date is required"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense" />
@@ -1623,7 +1629,6 @@
                                                           Label="Time"
                                                           InputType="InputType.Time"
                                                           Required="true"
-                                                          RequiredError="Birth Date is required"
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />

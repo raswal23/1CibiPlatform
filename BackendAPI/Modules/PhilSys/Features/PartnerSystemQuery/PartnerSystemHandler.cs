@@ -37,7 +37,7 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 			RuleFor(x => x.identity_data.BirthDate)
 				.NotEmpty().WithMessage("Birth Date is required for 'name_dob' inquiry.")
 				.Matches(@"^\d{4}-\d{2}-\d{2}$")
-				.WithMessage("Birth Date must be in format YYYY-MM-DD.");
+				.WithMessage("Birth Date must be in format yyyy-MM-dd.");
 		});
 
 		When(x => x.inquiry_type == "pcn", () =>

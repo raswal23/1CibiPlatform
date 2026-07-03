@@ -14,25 +14,26 @@
             <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
                 <MudGrid Spacing="2">
                     <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="subject.FirstName" 
+                        <MudTextField @bind-Value="subject.LastName"
                                       Label="Last Name"
+                                      Adornment="Adornment.Start"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input"
+                                      Required="true"
+                                      RequiredError="Last Name is required" />
+                    </MudItem>
+
+
+                    <MudItem xs="12" sm="5">
+                        <MudTextField @bind-Value="subject.FirstName" 
+                                      Label="First Name"
                                       Adornment="Adornment.Start"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
                                       Class="oneplatform-rounded-input" 
                                       Required="true"
                                       RequiredError="First Name is required"/>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="5">
-                        <MudTextField @bind-Value="subject.LastName" 
-                                    Label="Last Name" 
-                                    Adornment="Adornment.Start"
-                                    Variant="Variant.Outlined"
-                                    Margin="Margin.Dense"
-                                    Class="oneplatform-rounded-input" 
-                                    Required="true"
-                                    RequiredError="Last Name is required"/>
                     </MudItem>
 
                     <MudItem xs="12" sm="2">
