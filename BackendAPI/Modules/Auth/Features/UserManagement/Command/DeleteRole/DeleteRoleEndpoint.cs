@@ -14,7 +14,7 @@ public class DeleteRoleEndpoint : ICarterModule
 		})
 		.WithName("DeleteRole")
 		.WithTags("User Management")
-		.Produces<DeleteRoleResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Delete Role")
 		.WithDescription("Deletes an existing role in OnePlatform.")

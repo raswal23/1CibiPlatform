@@ -17,7 +17,7 @@ public class AddApplicationEndpoint : ICarterModule
 		})
 		.WithName("AddApplication")
 		.WithTags("User Management")
-		.Produces<AddApplicationResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add Application")
 		.WithDescription("Add an application in OnePlatform.")

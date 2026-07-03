@@ -19,7 +19,7 @@ public class UpdateFaceLivenessSessionEndpoint : ICarterModule
 		})
 		.WithName("UpdateFaceLivenessSession")
 		.WithTags("PhilSys")
-		.Produces<UpdateFaceLivenessSessionResponse>()
+		.Produces<VerificationResponseDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Update Face Liveness Session and Process Verification")
 		.WithDescription("Updates the Face Liveness Session ID for an existing PhilSys transaction and triggers verification based on the inquiry type.");

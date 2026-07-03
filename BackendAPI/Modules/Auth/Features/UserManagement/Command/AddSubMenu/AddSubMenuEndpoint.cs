@@ -17,7 +17,7 @@ public class AddSubMenuEndpoint : ICarterModule
 		})
 		.WithName("AddSubMenu")
 		.WithTags("User Management")
-		.Produces<AddSubMenuResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add SubMenu")
 		.WithDescription("Add an submenu in OnePlatform.")

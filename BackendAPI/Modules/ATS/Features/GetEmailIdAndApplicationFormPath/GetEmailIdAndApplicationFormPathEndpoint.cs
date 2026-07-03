@@ -15,11 +15,11 @@ public class GetEmailIdAndApplicationFormPathEndpoint : ICarterModule
 			var response = new GetEmailIdAndApplicationFormResponse(result.EmailIdAndApplicationFormPath);
 			return Results.Ok(response.EmailIdAndApplicationFormPath);
 		})
-		  .WithName("GetEmailIdAndApplicationFormPath")
-		  .WithTags("ATS")
-		  .Produces<GetEmailIdAndApplicationFormResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Get Email Id and Application Form Path")
-		  .WithDescription("Get Email Id and Application Form Path");
+		.WithName("GetEmailIdAndApplicationFormPath")
+		.WithTags("ATS")
+		.Produces<EmailIdAndApplicationFormPathDTO>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Get Email Id and Application Form Path")
+		.WithDescription("Get Email Id and Application Form Path");
 	}
 }
