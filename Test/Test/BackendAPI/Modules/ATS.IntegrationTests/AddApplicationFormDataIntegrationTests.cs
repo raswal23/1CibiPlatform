@@ -2,6 +2,7 @@
 using ATS.DTO;
 using ATS.Features.AddApplicationFormData;
 using FluentAssertions;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -302,7 +303,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LicenseUploadFileName = "aws_certificate.txt",
 			CreatedDate = DateTime.UtcNow
 		};
-
+		
 		var experiences = new ProfessionalExperiencesDTO
 		{
 			EmailInvitationID = EmailId,
@@ -391,7 +392,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var command = new AddApplicationFormDataCommand(null!, address, education, licenses, experiences, reference, signature);
 
 		// Act & Assert
-		await Assert.ThrowsAsync<NullReferenceException>(() =>
+		await Assert.ThrowsAsync<ValidationException>(() =>
 			_sender.Send(command));
 	}
 
