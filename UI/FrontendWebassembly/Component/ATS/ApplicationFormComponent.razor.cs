@@ -110,6 +110,39 @@ public partial class ApplicationFormComponent
 		}
 	}
 
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await JS.InvokeVoidAsync("general.attachNameFilter");
+	}
+
+	private bool CanAddEmployer2 =>
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyCity) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyProvince) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyCountry) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyPostalCode) &&
+		DatePermittedToContact1.HasValue &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1JobTitle) &&
+		StartOfEmployment1.HasValue &&
+		(professionalExperiences.Emp1CurrentlyEmployed || EndOfEmployment1.HasValue) &&
+		professionalExperiences.Emp1COEUploadFile is not null &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorContactNumber);
+
+	private bool CanAddEmployer3 =>
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyCity) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyProvince) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyCountry) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyPostalCode) &&
+		DatePermittedToContact2.HasValue &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2JobTitle) &&
+		StartOfEmployment2.HasValue &&
+		(professionalExperiences.Emp2CurrentlyEmployed || EndOfEmployment2.HasValue) &&
+		professionalExperiences.Emp2COEUploadFile is not null &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorContactNumber);
+
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
 	{
 		// Personal Details
@@ -611,6 +644,7 @@ public partial class ApplicationFormComponent
 		}
 		finally
 		{
+			await OnChanged();
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");

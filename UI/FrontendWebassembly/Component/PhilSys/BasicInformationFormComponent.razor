@@ -1,10 +1,11 @@
 ﻿@inject NavigationManager Navigation
 @inject IPhilSysService PhilSysService
+@inject IJSRuntime JS
 
 <MudForm @ref="personalForm" >
     <MudGrid Class="mb-2" Spacing="2">
         <MudItem xs="12" sm="8">
-            <MudTextField @bind-Value="identityData!.first_name"
+            <MudTextField @bind-Value="identityData.first_name"
                           Label="First Name"
                           FullWidth="true"
                           Required="true"
@@ -13,13 +14,15 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" />
+                          Class="name-filter oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
       
         <MudItem xs="12" sm="4">
             <MudSelect @bind-Value="identityData!.suffix"
                         Label="Suffix"
                         FullWidth="true"
+                        Required="true"
+                        RequiredError="Suffix is required"
                         Adornment="Adornment.Start"
                         Variant="Variant.Outlined"
                         Margin="Margin.Dense"
@@ -48,7 +51,7 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" />
+                          Class="name-filter oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
 
         <MudItem xs="12">
@@ -61,11 +64,11 @@
                           Variant="Variant.Outlined"
                           Margin="Margin.Dense"
                           MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" />
+                          Class="name-filter oneplatform-rounded-input philsys-uppercase-input" />
         </MudItem>
 
         <MudItem xs="12">
-            <MudDatePicker @bind-Value="BirthDate"
+            <MudDatePicker @bind-Date="BirthDate"
                            Label="Birth Date"
                            Adornment="Adornment.End"
                            Placeholder="Date"

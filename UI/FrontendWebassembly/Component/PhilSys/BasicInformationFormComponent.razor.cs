@@ -4,9 +4,16 @@ public partial class BasicInformationFormComponent
 {
 	private IdentityData identityData = new();
 	private MudForm? personalForm;
-	private DateTime? BirthDate { get; set; }
+	private DateTime? BirthDate;
 	[Parameter] public string? HashToken { get; set; }
 
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await JS.InvokeVoidAsync("general.attachNameFilter");
+		}
+	}
 
 	private async Task SubmitPersonalInfo()
 	{
@@ -18,8 +25,6 @@ public partial class BasicInformationFormComponent
 
 		identityData.ats_session = HashToken;
 		identityData!.birth_date = BirthDate?.ToString("yyyy-MM-dd");
-
-		Console.WriteLine(identityData!.birth_date);
 
 		var livenessLink = await PhilSysService.PostBasicInformationOrPCNAsync("name_dob", identityData!);
 		if (!string.IsNullOrEmpty(livenessLink))
