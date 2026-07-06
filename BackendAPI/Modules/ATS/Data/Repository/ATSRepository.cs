@@ -129,7 +129,7 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == emailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.IsFormCompleted, x => true)
+			.SetProperty(x => x.IsFormCompleted, x => "Done")
 			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow));
 
 		return true;
@@ -173,5 +173,12 @@ public class ATSRepository : IATSRepository
 			.AnyAsync(eir => eir.HashToken == hashToken && 
 					  eir.HashTokenExpiration > DateTime.UtcNow,
 					  cancellationToken);
+	}
+
+	public async Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests.Where(x => x.HashToken == hashToken)
+				.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.IsFormCompleted, x => "Withdrawn"));
 	}
 }

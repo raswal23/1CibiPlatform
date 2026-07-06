@@ -77,7 +77,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			HashToken = hashToken,
 			EmailSentStatus = "Pending",
 			HashTokenCreatedAt = DateTime.UtcNow,
-			IsFormCompleted = false,
+			IsFormCompleted = "Pending",
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush"

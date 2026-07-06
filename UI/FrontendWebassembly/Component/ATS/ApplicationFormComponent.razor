@@ -1,4 +1,5 @@
 ﻿@inject IApplicationFormService ATSService
+@inject IDialogService DialogService
 @inject LocalStorageService LocalStorageService
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
@@ -70,7 +71,7 @@
                                                     </MudButton>
                                                     <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
                                                                Disabled="@(!declineConsent || consent)"
-                                                               OnClick="ResetStepper">
+                                                               OnClick="CancelTransaction">
                                                         Cancel
                                                     </MudButton>
                                                 </div>

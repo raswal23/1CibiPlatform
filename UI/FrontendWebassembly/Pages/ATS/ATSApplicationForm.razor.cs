@@ -5,7 +5,7 @@ public partial class ATSApplicationForm
 	private bool _showApplicationForm = false;
 	private bool _showPhilsys = false;
 	private int _stepActive = 0;
-	private bool Status;
+	private string? Status;
 	private bool IsExpired = false;
 	private bool hasUnsavedChanges = true;
 	private readonly HashSet<int> allowedSteps = new() { 0, 1, 2, 3, 4, 5 };
@@ -74,6 +74,12 @@ public partial class ATSApplicationForm
 			}
 		}
 	}
+
+	private void SetWithdrawnStatus(string value)
+	{
+		Status = value;
+	}
+
 	private void SetDirtyState(bool value)
 	{
 		hasUnsavedChanges = value;

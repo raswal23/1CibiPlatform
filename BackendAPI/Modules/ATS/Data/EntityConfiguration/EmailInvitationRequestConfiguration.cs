@@ -54,6 +54,7 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
                .IsRequired(true);
 
 		builder.Property(e => e.IsFormCompleted)
+				.HasMaxLength(255)
 			   .IsRequired(true);
 	}
 }

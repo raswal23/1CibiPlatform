@@ -140,7 +140,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						MobileNumber = row.MobileNumber,
 						SelectPackage = file.PackageType,
 						EmailSentStatus = "Pending",
-						IsFormCompleted = false,
+						IsFormCompleted = "Pending",
 						RushNormal = file.OrderType
 					});
 				}

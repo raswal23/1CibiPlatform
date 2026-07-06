@@ -61,12 +61,22 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			new RouteDefinitionDTO(
+				RouteId: "WithdrawnApplicationForm",
+				MatchPath: "/ats/withdrawnapplicationform",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/withdrawnapplicationform" }
+				}
+			),
 
 			new RouteDefinitionDTO(
 				RouteId: "GetBulkInsertResponseEntryPoint",
 				MatchPath: "/hubs/atsbulk/{**catch-all}",
 				ClusterId: GatewayConstants.OnePlatformApi,
-				Methods: new [] { GatewayConstants.HttpMethod.Get, GatewayConstants.HttpMethod.Post }
+				Methods: new [] { GatewayConstants.HttpMethod.Get, GatewayConstants.HttpMethod.Post}
 			),
 
 

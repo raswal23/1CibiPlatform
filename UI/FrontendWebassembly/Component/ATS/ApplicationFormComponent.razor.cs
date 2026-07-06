@@ -241,10 +241,29 @@ public partial class ApplicationFormComponent
 			await _stepper.SkipCurrentStepAsync();
 	}
 
-	private async Task ResetStepper()
+	private async Task CancelTransaction()
 	{
-		if (_stepper is not null)
-			await _stepper.ResetAsync();
+		var confirmParam = new DialogParameters
+		{
+			{ nameof(ConfirmationDialogComponent.Message),
+			  "Are you sure you want to cancel this transaction?" }
+		};
+
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
+			"Confirmation",
+			confirmParam);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
+		var IsSuccess = await ATSService.WithdrawApplicationForm(HashToken!);
+
+		if (!IsSuccess)
+			return;
+
+		await IsWithDrawn.InvokeAsync("Withdrawn");
 	}
 
 	private async Task ProceedClicked()
@@ -253,7 +272,8 @@ public partial class ApplicationFormComponent
 	}
 
 	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
-
+	[Parameter] public EventCallback<string> IsWithDrawn { get; set; }
+	
 	private async Task OnChanged()
 	{
 		await HasChangesChanged.InvokeAsync(false);

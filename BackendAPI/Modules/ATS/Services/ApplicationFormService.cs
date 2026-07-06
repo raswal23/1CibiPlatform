@@ -348,4 +348,15 @@ public class ApplicationFormService : IApplicationFormService
 		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormBaseUrl;
 		return emailIdAndApplicationFormPath;
 	}
+
+	public async Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default)
+	{
+		var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
+
+		if (isUpdated == 0)
+		{
+			throw new NotFoundException("No record found for the provided hash token.");
+		}
+		return true;
+	}
 }

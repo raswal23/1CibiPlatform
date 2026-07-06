@@ -11,9 +11,13 @@
                 OnBeforeInternalNavigation="ConfirmNavigation" />
 
 <div class="oneplatform-generic-container">
-    @if (Status)
+    @if (string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase))
     {
         <CompletedComponent />
+    }
+    else if (string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase))
+    {
+        <WithdrawnComponent />
     }
     else if (IsExpired)
     {
@@ -104,7 +108,7 @@
         }
         else
         {
-            <ApplicationFormComponent HasChangesChanged="SetDirtyState" EmailId="@EmailId" ActiveStep="@_stepActive" ShowsPhilSys="@_showPhilsys" HashToken="@HashToken" />
+            <ApplicationFormComponent IsWithDrawn="SetWithdrawnStatus" HasChangesChanged="SetDirtyState" EmailId="@EmailId" ActiveStep="@_stepActive" ShowsPhilSys="@_showPhilsys" HashToken="@HashToken" />
         }
     }
 </div>

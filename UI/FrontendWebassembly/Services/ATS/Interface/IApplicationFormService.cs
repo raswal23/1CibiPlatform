@@ -11,4 +11,6 @@ public interface IApplicationFormService
 											SignatureDetailsDTO SignatureDetails);
 
 	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken);
+
+	Task<bool> WithdrawApplicationForm(string HashToken);
 }

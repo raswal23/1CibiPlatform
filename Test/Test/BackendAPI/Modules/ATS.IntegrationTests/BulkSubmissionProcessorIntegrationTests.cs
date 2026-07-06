@@ -34,7 +34,7 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		emailInvitations.Should().AllSatisfy(e =>
 		{
 			e.HashToken.Should().NotBeNullOrEmpty();
-			e.IsFormCompleted.Should().BeFalse();
+			e.IsFormCompleted.Should().Be("Pending");
 			e.EmailSentStatus.Should().Be("Pending");
 		});
 	}

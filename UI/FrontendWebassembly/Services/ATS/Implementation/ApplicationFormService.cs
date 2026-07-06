@@ -220,4 +220,26 @@ public class ApplicationFormService : IApplicationFormService
 
 		return result;
 	}
+
+	public async Task<bool> WithdrawApplicationForm(string HashToken)
+	{
+		var payload = new { HashToken };
+
+		var response = await _httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform", payload);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var successContent = await response.Content.ReadFromJsonAsync<bool>();
+		if (successContent == true)
+		{
+			return successContent;
+		}
+
+		return false;
+	}
 }

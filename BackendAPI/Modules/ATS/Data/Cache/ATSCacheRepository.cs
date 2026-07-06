@@ -112,5 +112,10 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(emailInvitationId);
 	}
+
+	public async Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken);
+	}
 }
 
