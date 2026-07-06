@@ -11,6 +11,22 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
+            <MudAutocomplete T="string"
+                             @bind-Value="SubMenu.SubMenuName"
+                             Label="SubMenu Name"
+                             Required="true"
+                             RequiredError="SubMenu Name is required"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             MaxLength="100"
+                             Adornment="Adornment.Start"
+                             SearchFunc="SearchSubMenus"
+                             ToStringFunc="@(x => x)"
+                             ResetValueOnEmptyText="false"
+                             Clearable="true"
+                             Dense="true"
+                             Class="oneplatform-rounded-input philsys-uppercase-input" />
+
             <MudTextField @bind-Value="SubMenu.Description"
                           Label="Description"
                           Required="true"

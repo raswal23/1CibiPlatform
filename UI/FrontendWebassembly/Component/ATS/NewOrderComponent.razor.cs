@@ -17,15 +17,6 @@ public partial class NewOrderComponent
 		await EndorsementSubmissionService.StartAsync();
 
 	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await JS.InvokeVoidAsync("general.attachNameFilter");
-		}
-	}
-
 	private async Task DownloadTemplate()
 	{
 		var url = await EndorsementSubmissionService.DownloadBulkTemplateAsync();

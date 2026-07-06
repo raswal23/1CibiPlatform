@@ -7,14 +7,6 @@ public partial class BasicInformationFormComponent
 	private DateTime? BirthDate;
 	[Parameter] public string? HashToken { get; set; }
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			await JS.InvokeVoidAsync("general.attachNameFilter");
-		}
-	}
-
 	private async Task SubmitPersonalInfo()
 	{
 		await personalForm!.ValidateAsync();

@@ -1,4 +1,6 @@
-﻿namespace FrontendWebassembly.Component.UserManagement;
+﻿using FrontendWebassembly.ShareData.Auth;
+
+namespace FrontendWebassembly.Component.UserManagement;
 
 public partial  class EditSubMenuComponent
 {
@@ -9,6 +11,20 @@ public partial  class EditSubMenuComponent
 
 	[Parameter] 
 	public SubMenusDTO SubMenu { get; set; } = new SubMenusDTO();
+
+	private Task<IEnumerable<string>> SearchSubMenus(string value, CancellationToken cancellationToken)
+	{
+		var result = SubMenuList.List.Values
+			.Select(x => x.Name);
+
+		if (!string.IsNullOrWhiteSpace(value))
+		{
+			result = result.Where(x =>
+				x.Contains(value, StringComparison.OrdinalIgnoreCase));
+		}
+
+		return Task.FromResult(result);
+	}
 
 	private SubMenusDTO EditSubMenu = new();
 
