@@ -2,6 +2,7 @@
 @inject LocalStorageService LocalStorageService
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
+@inject MobileNumberValidationService MobileNumberValidationService
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @using SigPad   
@@ -217,7 +218,9 @@
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.MobileNumber"
+                                                          Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                           Required="true"
+                                                          
                                                           RequiredError="Phone Number is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Phone Number"
@@ -374,7 +377,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               @bind-Value="addressDetails.CurrentAddress"
                                               Required="true"
                                               RequiredError="Current Address (No., Street, Village, Brgy.) is required"
@@ -396,7 +399,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               @bind-Value="addressDetails.CurrentProvince"
                                               Required="true"
                                               RequiredError="State / Province / Region is required"
@@ -441,7 +444,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentAddress"
                                               Required="true"
@@ -465,7 +468,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentProvince"
                                               Required="true"
@@ -543,7 +546,7 @@
 
                             <MudItem xs="12" sm="6">
                                 <MudSelect T="string"
-                                           @bind-Value="educationalBackground.HighestEducationalAttainment"
+                                           @bind-Value="HighestEducationalAttainment"
                                            Class="oneplatform-rounded-input"
                                            Adornment="Adornment.Start"
                                            Variant="Variant.Outlined"
@@ -749,7 +752,7 @@
                                               Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               Required="true"
                                               RequiredError="Company Name is required"
                                               @bind-Value="professionalExperiences.Emp1CompanyName"
@@ -768,7 +771,7 @@
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="Company City / Address is required"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               @bind-Value="professionalExperiences.Emp1CompanyCity"
                                               Label="Company City / Address #1" />
                             </MudItem>
@@ -779,7 +782,7 @@
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="State / Province / Region is required"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input"
                                               @bind-Value="professionalExperiences.Emp1CompanyProvince"
                                               Label="State / Province / Region #1" />
                             </MudItem>
@@ -910,7 +913,9 @@
                                               Mask="@(new PatternMask("00000000000"))"
                                               RequiredError="Supervisor Contact Number is required"
                                               @bind-Value="professionalExperiences.Emp1SupervisorContactNumber"
+                                              Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                               Label="Contact Information #1" />
+                                              
                             </MudItem>
 
                             @if (AddEmployer2)
@@ -920,7 +925,7 @@
                                                   Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   Required="@AddEmployer2"
                                                   @bind-Value="professionalExperiences.Emp2CompanyName"
                                                   Label="Company Name #2" />
@@ -938,7 +943,7 @@
                                                   Margin="Margin.Dense"
                                                   Required="true"
                                                   RequiredError="Company City / Address is required"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   @bind-Value="professionalExperiences.Emp2CompanyCity"
                                                   Label="Company City / Address #2" />
                                 </MudItem>
@@ -949,7 +954,7 @@
                                                   Margin="Margin.Dense"
                                                   Required="true"
                                                   RequiredError="State / Province / Region is required"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   @bind-Value="professionalExperiences.Emp2CompanyProvince"
                                                   Label="State / Province / Region #2" />
                                 </MudItem>
@@ -1081,6 +1086,7 @@
                                                   Mask="@(new PatternMask("00000000000"))"
                                                   RequiredError="Supervisor Contact Number is required"
                                                   @bind-Value="professionalExperiences.Emp2SupervisorContactNumber"
+                                                  Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                   Label="Contact Information #2" />
                                 </MudItem>
                             }
@@ -1092,7 +1098,7 @@
                                                   Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   Required="@AddEmployer3"
                                                   @bind-Value="professionalExperiences.Emp3CompanyName"
                                                   Label="Company Name #3" />
@@ -1110,7 +1116,7 @@
                                                   Margin="Margin.Dense"
                                                   Required="true"
                                                   RequiredError="Company City / Address is required"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   @bind-Value="professionalExperiences.Emp3CompanyCity"
                                                   Label="Company City / Address #3" />
                                 </MudItem>
@@ -1121,7 +1127,7 @@
                                                   Margin="Margin.Dense"
                                                   Required="true"
                                                   RequiredError="State / Province / Region is required"
-                                                  Class="name-filter oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input"
                                                   @bind-Value="professionalExperiences.Emp3CompanyProvince"
                                                   Label="State / Province / Region #3" />
                                 </MudItem>
@@ -1253,6 +1259,7 @@
                                                   Mask="@(new PatternMask("00000000000"))"
                                                   RequiredError="Supervisor Contact Number is required"
                                                   @bind-Value="professionalExperiences.Emp3SupervisorContactNumber"
+                                                  Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                   Label="Contact Information #3" />
                                 </MudItem>
                             }
@@ -1315,7 +1322,7 @@
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
-                                                      Class="name-filter oneplatform-rounded-input"
+                                                      Class="oneplatform-rounded-input"
                                                       Required="true"
                                                       RequiredError="Affiliated Company is required"
                                                       @bind-Value="referenceDetails.Ref1AffiliatedCompany"
@@ -1344,6 +1351,7 @@
                                                       Required="true"
                                                       Mask="@(new PatternMask("00000000000"))"
                                                       RequiredError="Mobile Contact Information is required"
+                                                      Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                       Label="Mobile Contact Information" />
                                     </MudItem>
 
@@ -1466,6 +1474,7 @@
                                                       @bind-Value="referenceDetails.Ref2ContactNumber"
                                                       Required="true"
                                                       Mask="@(new PatternMask("00000000000"))"
+                                                      Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                       RequiredError="Mobile Contact Information is required"
                                                       Label="Mobile Contact Information" />
                                     </MudItem>
@@ -1591,6 +1600,7 @@
                                                           @bind-Value="referenceDetails.Ref3ContactNumber"
                                                           Required="@AddAnotherReference"
                                                           Mask="@(new PatternMask("00000000000"))"
+                                                          Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                           RequiredError="Mobile Contact Information is required"
                                                           Label="Mobile Contact Information" />
                                         </MudItem>

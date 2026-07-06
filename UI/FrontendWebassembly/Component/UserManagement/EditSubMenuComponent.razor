@@ -1,7 +1,7 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
         <MudForm @ref="EditSubMenuForm">
-            <MudTextField @bind-Value="SubMenu.subMenuId"
+            <MudTextField @bind-Value="EditSubMenu.subMenuId"
                           Label="SubMenu Id"
                           ReadOnly
                           Adornment="Adornment.Start"
@@ -10,7 +10,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="SubMenu.subMenuName"
+            <MudTextField @bind-Value="EditSubMenu.subMenuName"
                           Label="Application Name"
                           Required="true"
                           RequiredError="SubMenu Name is required"
@@ -20,7 +20,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="SubMenu.Description"
+            <MudTextField @bind-Value="EditSubMenu.Description"
                           Label="Description"
                           Required="true"
                           RequiredError="Description is required"
@@ -31,7 +31,7 @@
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
             <MudCheckBox T="bool"
-                         @bind-Value="SubMenu.IsActive"
+                         @bind-Value="EditSubMenu.IsActive"
                          Label="Is Active" />
         </MudForm>
     </DialogContent>

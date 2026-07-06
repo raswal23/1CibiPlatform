@@ -502,7 +502,57 @@ public partial class ApplicationFormComponent
 		}
 		return false;
 	}
+	private void ResetEducationalBackground(string? education)
+	{
+		switch (education)
+		{
+			case "None":
+			case "Elementary Graduate":
 
+				GraduationDate = null;
+				DegreeWithMajor = null;
+				AcademicInstitution = null;
+
+				educationalBackground.DiplomaFile = null;
+				educationalBackground.DiplomaFileName = null;
+
+				_diplomaError = false;
+				break;
+
+			case "Junior High School Graduate":
+			case "Senior High School Graduate":
+
+				DegreeWithMajor = null;
+				break;
+
+			case "College Graduate":
+
+				_diplomaError = false;
+				break;
+
+			case "Master's Graduate":
+			case "Doctorate Graduate":
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	private string? HighestEducationalAttainment
+	{
+		get => educationalBackground.HighestEducationalAttainment;
+		set
+		{
+			if (educationalBackground.HighestEducationalAttainment == value)
+				return;
+
+			educationalBackground.HighestEducationalAttainment = value;
+
+			ResetEducationalBackground(value);
+			
+		}
+	}
 	private async Task OnSaveAndNextAsync()
 	{
 		await ApplicationForm!.ValidateAsync();

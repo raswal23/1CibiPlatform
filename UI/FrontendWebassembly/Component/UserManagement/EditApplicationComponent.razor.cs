@@ -4,9 +4,24 @@ public partial class EditApplicationComponent
 {
 	private MudForm? EditApplicationForm;
 
-	[CascadingParameter] IMudDialogInstance? EditApplicationDialog { get; set; }
+	[CascadingParameter]
+	IMudDialogInstance? EditApplicationDialog { get; set; }
 
-	[Parameter] public ApplicationsDTO Application { get; set; } = new ApplicationsDTO();
+	[Parameter]
+	public ApplicationsDTO Application { get; set; } = new();
+
+	private ApplicationsDTO EditApplication = new();
+
+	protected override void OnParametersSet()
+	{
+		EditApplication = new ApplicationsDTO
+		{
+			applicationId = Application.applicationId,
+			applicationName = Application.applicationName,
+			Description = Application.Description,
+			IsActive = Application.IsActive
+		};
+	}
 
 	void Cancel() => EditApplicationDialog!.Cancel();
 
@@ -15,7 +30,7 @@ public partial class EditApplicationComponent
 		await EditApplicationForm!.ValidateAsync();
 		if (EditApplicationForm!.IsValid)
 		{
-			EditApplicationDialog!.Close(DialogResult.Ok(Application));
+			EditApplicationDialog!.Close(DialogResult.Ok(EditApplication));
 		}
 	}
 }

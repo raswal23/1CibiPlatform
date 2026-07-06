@@ -44,7 +44,8 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 			RuleFor(x => x.PersonalDetails.MobileNumber)
 				.NotEmpty().WithMessage("Mobile number is required.")
-				.MaximumLength(11).WithMessage("Mobile number must not exceed 11 characters.");
+				.Matches(@"^\d{11}$")
+				.WithMessage("Mobile Contact Information #1 must be 11 digits.");
 
 			RuleFor(x => x.PersonalDetails.EmailAlternative)
 				.NotEmpty()

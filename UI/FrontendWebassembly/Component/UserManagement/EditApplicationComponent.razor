@@ -1,7 +1,7 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
         <MudForm @ref="EditApplicationForm">
-            <MudTextField @bind-Value="Application.applicationId"
+            <MudTextField @bind-Value="EditApplication.applicationId"
                           Label="Application Id"
                           ReadOnly
                           Adornment="Adornment.Start"
@@ -10,7 +10,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="Application.applicationName"
+            <MudTextField @bind-Value="EditApplication.applicationName"
                           Label="Application Name"
                           Required="true"
                           RequiredError="Application Name is required"
@@ -20,7 +20,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="Application.Description"
+            <MudTextField @bind-Value="EditApplication.Description"
                           Label="Description"
                           Required="true"
                           RequiredError="Description is required"
@@ -31,7 +31,7 @@
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
             <MudCheckBox T="bool"
-                         @bind-Value="Application.IsActive"
+                         @bind-Value="EditApplication.IsActive"
                          Label="Is Active" />
         </MudForm>
     </DialogContent>
