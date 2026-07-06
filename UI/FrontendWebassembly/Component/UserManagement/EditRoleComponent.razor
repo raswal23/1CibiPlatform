@@ -1,7 +1,7 @@
 ﻿<MudDialog Style="padding: 8px;">
     <DialogContent>
         <MudForm @ref="EditRoleForm">
-            <MudTextField @bind-Value="EditRole.roleId"
+            <MudTextField @bind-Value="Role.roleId"
                           Label="Role Id"
                           ReadOnly
                           Adornment="Adornment.Start"
@@ -10,7 +10,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="EditRole.roleName"
+            <MudTextField @bind-Value="Role.roleName"
                           Label="Role Name"
                           Required="true"
                           RequiredError="SubMenu Name is required"
@@ -20,7 +20,7 @@
                           MaxLength="100"
                           Class="oneplatform-rounded-input philsys-uppercase-input" />
 
-            <MudTextField @bind-Value="EditRole.Description"
+            <MudTextField @bind-Value="Role.Description"
                           Label="Description"
                           Required="true"
                           RequiredError="Description is required"
