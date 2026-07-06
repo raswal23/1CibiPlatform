@@ -34,6 +34,7 @@ global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Caching.Hybrid;
 global using Microsoft.AspNetCore.SignalR;
+global using Microsoft.EntityFrameworkCore.Design;
 
 global using MediatR;
 global using Carter;

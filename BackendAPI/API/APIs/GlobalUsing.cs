@@ -33,3 +33,4 @@ global using ATS.Data.Extensions;
 global using ATS.ServiceConfig;
 global using BuildingBlocks.Storage;
 global using StackExchange.Redis;
+global using Microsoft.EntityFrameworkCore.Design;
