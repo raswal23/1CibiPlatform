@@ -5,6 +5,7 @@
 @inject NavigationManager NavigationManager
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
+@inject MobileNumberValidationService MobileNumberValidationService
 
 <MudGrid Class="mb-4">
     <MudItem xs="12" md="6">
@@ -68,7 +69,8 @@
                                     Class="oneplatform-rounded-input" 
                                     Required="true"
                                     Mask="@(new PatternMask("00000000000"))"
-                                    RequiredError="Mobile Number is required"/>
+                                    RequiredError="Mobile Number is required"
+                                      Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))" />
                     </MudItem>
 
                     <MudItem xs="12">
