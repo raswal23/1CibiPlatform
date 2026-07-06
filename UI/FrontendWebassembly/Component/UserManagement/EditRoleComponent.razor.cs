@@ -8,7 +8,7 @@ public partial class EditRoleComponent
 	IMudDialogInstance? EditRoleDialog { get; set; }
 
 	[Parameter] 
-	public RolesDTO Role { get; set; } = new RolesDTO();
+	public RolesDTO Role { get; set; } = new ();
 
 	private RolesDTO EditRole = new();
 	protected override void OnParametersSet()
