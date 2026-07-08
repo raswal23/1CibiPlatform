@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Quartz;
 using System.Security.Claims;
 using Testcontainers.PostgreSql;
 
@@ -34,16 +35,16 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureServices(services =>
 		{
-			// Remove only ATS-specific hosted services to avoid affecting other tests
-			var hostedServiceDescriptors = services
-				.Where(s => s.ServiceType == typeof(IHostedService) &&
-					(s.ImplementationType?.Name.Contains("BulkSubmission") == true ||
-					 s.ImplementationType?.Name.Contains("EmailNotification") == true))
+			// Remove hosted services to avoid affecting other tests
+			var quartzHostedServices = services
+				.Where(s =>
+					s.ServiceType == typeof(IHostedService) &&
+					s.ImplementationType == typeof(QuartzHostedService))
 				.ToList();
 
-			foreach (var hostedServiceDescriptor in hostedServiceDescriptors)
+			foreach (var service in quartzHostedServices)
 			{
-				services.Remove(hostedServiceDescriptor);
+				services.Remove(service);
 			}
 
 			services.RemoveAll<IDistributedCache>();

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Quartz;
 using Testcontainers.PostgreSql;
 
 namespace Test.BackendAPI.Infrastructure.Auth.Infrastructure;
@@ -36,7 +37,18 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureTestServices(services =>
 		{
-			services.RemoveAll<IHostedService>();
+			// Remove hosted services to avoid affecting other tests
+			var quartzHostedServices = services
+				.Where(s =>
+					s.ServiceType == typeof(IHostedService) &&
+					s.ImplementationType == typeof(QuartzHostedService))
+				.ToList();
+
+			foreach (var service in quartzHostedServices)
+			{
+				services.Remove(service);
+			}
+
 			services.RemoveAll<IDistributedCache>();
 
 			services.AddDistributedMemoryCache();

@@ -64,8 +64,7 @@ public class ATSServiceFixture : IDisposable
 			{
 				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
 				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" },
-				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" },
-				{ "CacheKeys:ATSBatchesError", "ats-batches-error" }
+				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" }
 			})
 			.Build();
 

@@ -10,7 +10,6 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
 	private readonly string _batchesPending;
-	private readonly string _batchesError;
 
 	public EmailNotificationProcessorService(
 		ILogger<EmailNotificationProcessorService> logger,
@@ -27,7 +26,6 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		_hybridCache = hybridCache;
 		_configuration = configuration;
 		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
-		_batchesError = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesError") ?? string.Empty;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 	}
 
@@ -164,85 +162,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
 			await _repository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(errorList);
-
-			await _hybridCache.SetAsync(
-					batchId,
-					errorList,
-					new HybridCacheEntryOptions
-					{
-						Expiration = TimeSpan.FromMinutes(30)
-					});
-
-			await dbRedis.ListRightPushAsync(_batchesError, batchId);
 		}
 
 		await _hybridCache.RemoveAsync(cacheKey!);
-	}
-
-	public async Task ProcessForErrorStatusAsync(CancellationToken cancellationToken)
-	{
-		string? cacheKey = string.Empty;
-
-		var dbRedis = _redis.GetDatabase();
-
-		try
-		{
-			cacheKey = await dbRedis.ListLeftPopAsync(_batchesError);
-
-			if (string.IsNullOrEmpty(cacheKey))
-			{
-				return;
-			}
-		}
-		catch (RedisTimeoutException ex)
-		{
-			_logger.LogWarning(ex, "Redis timeout while reading {_batchesError}", _batchesError);
-
-			return;
-		}
-
-		var cached = await _hybridCache.GetOrCreateAsync(
-			cacheKey!,
-			async entry =>
-			{
-				return new List<EmailInvitationRequest>();
-			});
-
-		List<EmailInvitationRequest> successList = new();
-
-		foreach (var request in cached)
-		{
-			var logContext = new
-			{
-				Action = "ApplicationFormEmailSendingForDeadLetter",
-				Step = "SendEmail",
-				Identity = request.EmailInvitationID,
-				Timestamp = DateTime.UtcNow
-			};
-
-			try
-			{
-				var subjectName = $"{request.FirstName} {request.LastName}";
-
-				await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
-					request.EmailAddress!,
-					subjectName,
-					_applicationformBaseUrl);
-
-				successList.Add(request);
-			}
-
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Failed to send email to {Email}: {@Context}", request.EmailAddress, logContext);
-			}
-		}
-
-		_logger.LogInformation("Email processing completed. Success: {SuccessCount}", successList.Count);
-
-		if (successList.Any())
-		{
-			await _repository.UpdateBulkEmailInvitationRequestForSentEmailAsync(successList);
-		}
 	}
 }

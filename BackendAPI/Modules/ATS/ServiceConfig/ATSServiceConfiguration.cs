@@ -42,14 +42,35 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 
-		services.AddHostedService<BulkSubmissionBackgroundService>();
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
-		services.AddHostedService<EmailNotificationBackgroundServiceForPending>();
-		services.AddHostedService<EmailNotificationBackgroundServiceForError>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddSignalR();
+
+		services.AddQuartz(q =>
+		{
+			var jobKey = new JobKey("BulkSubmissionJob");
+
+			q.AddJob<BulkSubmissionJob>(opts => opts.WithIdentity(jobKey));
+
+			q.AddTrigger(opts => opts
+				.ForJob(jobKey)
+				.WithIdentity("BulkSubmissionTrigger")
+				.WithCronSchedule("0 0/1 * * * ?")); 
+		});
+
+		services.AddQuartz(q =>
+		{
+			var jobKey = new JobKey("EmailNotificationJob");
+
+			q.AddJob<EmailNotificationJob>(opts => opts.WithIdentity(jobKey));
+
+				q.AddTrigger(opts => opts
+					.ForJob(jobKey)
+					.WithIdentity("EmailNotificationTrigger")
+					.WithCronSchedule("0 0/1 * * * ?")); 
+		});
 
 		return services;
     }
@@ -68,7 +89,42 @@ public static class ATSServiceConfiguration
             );
         });
 
-        return services;
+
+		services.AddQuartz(q =>
+		{
+			q.SchedulerId = "ATS";
+
+			q.SchedulerName = "ATS Scheduler";
+
+			// This tells Quartz to create a pool of exactly 50 parallel threads
+			//q.SetProperty("quartz.threadPool.threadCount", "50");
+
+			q.UsePersistentStore(options =>
+			{
+				options.UsePostgres(postgres =>
+				{
+					postgres.ConnectionString =
+						configuration.GetConnectionString(connStringSegment)
+						?? throw new InvalidOperationException(
+							$"Connection string '{connStringSegment}' was not found.");
+
+					postgres.TablePrefix = "ats.qrtz_";
+				});
+
+				options.UseProperties = true;
+
+				options.UseNewtonsoftJsonSerializer();
+
+				options.UseClustering();
+			});
+		});
+
+		services.AddQuartzHostedService(options =>
+		{
+			options.WaitForJobsToComplete = true;
+		});
+
+		return services;
     }
 	#endregion
 

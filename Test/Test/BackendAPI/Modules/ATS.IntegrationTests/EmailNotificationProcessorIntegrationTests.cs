@@ -73,42 +73,6 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task ProcessForErrorStatusAsync_WithErrorBatch_ShouldProcessFailedEmailInvitations()
-	{
-		// Arrange
-		var emailInvitations = await SeedEmailInvitationRequestsAsync(2);
-		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		await _hybridCache.SetAsync(
-			batchId,
-			emailInvitations,
-			new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(30) });
-
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-batches:error");
-		await dbRedis.ListRightPushAsync("devtest-batches:error", batchId);
-
-		var cancellationToken = CancellationToken.None;
-
-		// Act
-		await _emailNotificationProcessorService.ProcessForErrorStatusAsync(cancellationToken);
-
-		// Assert
-		var processedInvitations = await _dbContext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(e => emailInvitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
-			.ToListAsync();
-
-		processedInvitations.Should().NotBeEmpty();
-		processedInvitations.Should().AllSatisfy(e =>
-		{
-			e.EmailSentStatus.Should().NotBe("Pending");
-		});
-
-		await dbRedis.KeyDeleteAsync("devtest-batches:error");
-	}
-
-	[Fact]
 	public async Task ProcessForPendingStatusAsync_WithMultipleBatches_ShouldProcessSequentially()
 	{
 		// Arrange
