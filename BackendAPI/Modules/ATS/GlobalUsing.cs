@@ -1,7 +1,6 @@
 ﻿global using ATS.Data.Entities;
 global using ATS.Data.Context;
 global using ATS.Services;
-global using ATS.BackgroundServices;
 global using ATS.Data.Repository;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
@@ -10,6 +9,8 @@ global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
 global using ATS.Hubs;
 global using ATS.Services.EmailService;
+global using ATS.BackgroundJobs.BulkSubmission;
+global using ATS.BackgroundJobs.EmailNotification;
 
 
 global using BuildingBlocks.Exceptions;
@@ -28,7 +29,7 @@ global using Microsoft.AspNetCore.Builder;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.AspNetCore.Routing;
 global using Microsoft.Extensions.Logging;
-global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Options;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
@@ -48,5 +49,6 @@ global using System.Net;
 global using System.Net.Mail;
 global using Npgsql;
 global using Quartz;
+
 
 

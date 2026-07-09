@@ -1,10 +1,10 @@
-﻿namespace ATS.BackgroundServices;
+﻿namespace ATS.BackgroundJobs.BulkSubmission;
 
-public class BulkSubmissionJob : IJob
+public class BulkSubmissionBackgroundJob : IJob
 {
 	private readonly IServiceScopeFactory _scopeFactory;
 
-	public BulkSubmissionJob(IServiceScopeFactory scopeFactory)
+	public BulkSubmissionBackgroundJob(IServiceScopeFactory scopeFactory)
 	{
 		_scopeFactory = scopeFactory;
 	}

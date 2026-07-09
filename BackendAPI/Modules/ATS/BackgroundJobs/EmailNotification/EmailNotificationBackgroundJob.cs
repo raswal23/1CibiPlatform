@@ -1,10 +1,10 @@
-﻿namespace ATS.BackgroundServices;
+﻿namespace ATS.BackgroundJobs.EmailNotification;
 
-public class EmailNotificationJob : IJob
+public class EmailNotificationBackgroundJob : IJob
 {
 	private readonly IServiceScopeFactory _scopeFactory;
 
-	public EmailNotificationJob(IServiceScopeFactory scopeFactory)
+	public EmailNotificationBackgroundJob(IServiceScopeFactory scopeFactory)
 	{
 		_scopeFactory = scopeFactory;
 	}

@@ -64,7 +64,7 @@ public class InternalSystemHandler : ICommandHandler<InternalSystemCommand, Inte
 	}
 	public async Task<InternalSystemResult> Handle(InternalSystemCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data);
+		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data, cancellationToken);
 		return new InternalSystemResult(result);
 	}
 }

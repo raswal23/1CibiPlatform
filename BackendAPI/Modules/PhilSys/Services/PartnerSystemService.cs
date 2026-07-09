@@ -28,13 +28,13 @@ public class PartnerSystemService
 		_livenessExpiryMinutes = int.Parse(_configuration["PhilSys:LivenessSessionExpiryInMinutes"] ?? "10");
 		_livenessBaseUrl = _configuration["PhilSys:LivenessBaseUrl"] ?? "";
 	}
-	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
+	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data, CancellationToken cancellationToken = default)
 	{
 		PhilSysTransaction transaction = new();
 
 		if (!string.IsNullOrEmpty(identity_data.ATSSession))
 		{
-			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, CancellationToken.None);
+			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, cancellationToken);
 			if (!IsATSSessionValid)
 			{
 				throw new NotFoundException("Invalid ATS Session provided.");

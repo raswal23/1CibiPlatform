@@ -48,29 +48,9 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddSignalR();
 
-		services.AddQuartz(q =>
-		{
-			var jobKey = new JobKey("BulkSubmissionJob");
+		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
+		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
 
-			q.AddJob<BulkSubmissionJob>(opts => opts.WithIdentity(jobKey));
-
-			q.AddTrigger(opts => opts
-				.ForJob(jobKey)
-				.WithIdentity("BulkSubmissionTrigger")
-				.WithCronSchedule("0 0/1 * * * ?")); 
-		});
-
-		services.AddQuartz(q =>
-		{
-			var jobKey = new JobKey("EmailNotificationJob");
-
-			q.AddJob<EmailNotificationJob>(opts => opts.WithIdentity(jobKey));
-
-				q.AddTrigger(opts => opts
-					.ForJob(jobKey)
-					.WithIdentity("EmailNotificationTrigger")
-					.WithCronSchedule("0 0/1 * * * ?")); 
-		});
 
 		return services;
     }

@@ -19,10 +19,9 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange
 		var bulkFile = await SeedBulkUploadFileAsync("test_file.csv", "Standard", "Normal");
-		var cancellationToken = CancellationToken.None;
 
 		// Act
-		await _bulkSubmissionProcessorService.ProcessAsync(cancellationToken);
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
 
 		// Assert 
 		var emailInvitations = await _dbContext.EmailInvitationRequests
@@ -43,13 +42,12 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 	public async Task ProcessAsync_WithNoPendingFiles_ShouldDoNothing()
 	{
 		// Arrange
-		var cancellationToken = CancellationToken.None;
 		var initialCount = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.CountAsync();
 
 		// Act
-		await _bulkSubmissionProcessorService.ProcessAsync(cancellationToken);
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
 
 		// Assert
 		var finalCount = await _dbContext.EmailInvitationRequests
@@ -64,10 +62,9 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedBulkUploadFileAsync("file1.csv", "Premium", "Rush");
 		await SeedBulkUploadFileAsync("file2.csv", "Standard", "Normal");
-		var cancellationToken = CancellationToken.None;
 
 		// Act
-		await _bulkSubmissionProcessorService.ProcessAsync(cancellationToken);
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
 
 		// Assert 
 		var premiumInvitations = await _dbContext.EmailInvitationRequests

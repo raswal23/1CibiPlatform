@@ -8,25 +8,27 @@ public interface IATSClient
 }
 public class ATSHub : Hub<IATSClient>
 {
-	public override Task OnConnectedAsync()
+	public override async Task OnConnectedAsync()
 	{
 		var userId = Context.GetHttpContext()?.Request.Query["userId"].ToString();
-		if (!string.IsNullOrEmpty(userId))
+
+		if (!string.IsNullOrWhiteSpace(userId))
 		{
-			Groups.AddToGroupAsync(Context.ConnectionId, userId);
+			await Groups.AddToGroupAsync(Context.ConnectionId, userId);
 		}
 
-		return base.OnConnectedAsync();
+		await base.OnConnectedAsync();
 	}
 
-	public override Task OnDisconnectedAsync(Exception? exception)
+	public override async Task OnDisconnectedAsync(Exception? exception)
 	{
 		var userId = Context.GetHttpContext()?.Request.Query["userId"].ToString();
-		if (!string.IsNullOrEmpty(userId))
+
+		if (!string.IsNullOrWhiteSpace(userId))
 		{
-			Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
+			await Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
 		}
 
-		return base.OnDisconnectedAsync(exception);
+		await base.OnDisconnectedAsync(exception);
 	}
 }

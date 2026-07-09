@@ -58,7 +58,7 @@ public class PartnerSystemHandler : ICommandHandler<PartnerSystemCommand, Partne
 	}
 	public async Task<PartnerSystemResult> Handle(PartnerSystemCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data);
+		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data, cancellationToken);
 		return new PartnerSystemResult(result);
 	}
 }

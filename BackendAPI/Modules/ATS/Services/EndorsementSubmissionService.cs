@@ -181,7 +181,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return true;
 	}
 
-
 	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink)
 	{
 		var logContext = new
