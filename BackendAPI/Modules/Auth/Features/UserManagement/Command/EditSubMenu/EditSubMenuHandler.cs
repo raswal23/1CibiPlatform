@@ -20,7 +20,7 @@ public class EditSubMenuCommandValidator : AbstractValidator<EditSubMenuCommand>
 				.NotEmpty().WithMessage("Description is required.")
 				.MaximumLength(500).WithMessage("Description must not exceed 500 characters.");
 			RuleFor(x => x.editSubMenu.IsActive)
-				.NotEmpty().WithMessage("IsActive is required.");
+				.NotNull().WithMessage("IsActive is required.");
 		});
 	}
 }

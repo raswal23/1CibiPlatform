@@ -14,7 +14,7 @@ public class EditUserCommandValidator : AbstractValidator<EditUserCommand>
 			RuleFor(x => x.editUser.Email)
 				.NotEmpty().WithMessage("Email is required.");
 			RuleFor(x => x.editUser.IsApproved)
-				.NotEmpty().WithMessage("IsApproved is required.");
+				.NotNull().WithMessage("IsApproved is required.");
 		});
 	}
 }

@@ -157,7 +157,8 @@ public class SubMenuIntegrationTests : BaseIntegrationTest
 		{
 			SubMenuId = 1,
 			SubMenuName = "Dashboard",
-			Description = "CNX Dashboard"
+			Description = "CNX Dashboard",
+			IsActive = false
 		};
 		var command = new EditSubMenuCommand(subMenu);
 
