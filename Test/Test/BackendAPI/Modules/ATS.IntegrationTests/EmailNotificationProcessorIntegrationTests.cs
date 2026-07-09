@@ -28,6 +28,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 
 		var dbRedis = _redis.GetDatabase();
 		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
+		await dbRedis.KeyDeleteAsync("devtest-batches:processing");
 		await dbRedis.ListRightPushAsync("devtest-batches:pending", batchId);
 
 		var cancellationToken = CancellationToken.None;
@@ -46,9 +47,6 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		{
 			e.EmailSentStatus.Should().NotBe("Pending");
 		});
-
-		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
-
 	}
 
 	[Fact]
@@ -94,6 +92,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 
 		var dbRedis = _redis.GetDatabase();
 		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
+		await dbRedis.KeyDeleteAsync("devtest-batches:processing");
 		await dbRedis.ListRightPushAsync("devtest-batches:pending", batch1Id);
 
 		var cancellationToken = CancellationToken.None;
@@ -109,7 +108,6 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 
 		batch1Processed.Should().NotBeEmpty();
 		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
-		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
 
 	}
 

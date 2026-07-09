@@ -10,6 +10,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
 	private readonly string _batchesPending;
+	private readonly string _batchesProcessing;
 
 	public EmailNotificationProcessorService(
 		ILogger<EmailNotificationProcessorService> logger,
@@ -26,6 +27,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		_hybridCache = hybridCache;
 		_configuration = configuration;
 		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
+		_batchesProcessing = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesProcessing") ?? string.Empty;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 	}
 
@@ -37,12 +39,17 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		try
 		{
-			cacheKey = await dbRedis.ListLeftPopAsync(_batchesPending);
+			cacheKey = await dbRedis.ListMoveAsync(
+						_batchesPending,
+						_batchesProcessing,
+						ListSide.Left,
+						ListSide.Left);
 
 			if (string.IsNullOrEmpty(cacheKey))
 			{
 				return;
 			}
+
 		}
 		catch (RedisTimeoutException ex)
 		{
@@ -65,86 +72,19 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		foreach (var request in allRequests)
 		{
-			var logContext = new
+			if (await TrySendEmailAsync(request))
 			{
-				Action = "ApplicationFormEmailSending",
-				Step = "SendEmail",
-				Identity = request.EmailInvitationID,
-				Timestamp = DateTime.UtcNow
-			};
-
-			try
-			{
-				if (string.IsNullOrWhiteSpace(request.EmailAddress))
-				{
-					errorList.Add(request);
-					continue;
-				}
-
-				var subjectName = $"{request.FirstName} {request.LastName}";
-				var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
-
-				await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
-					request.EmailAddress,
-					subjectName,
-					applicationFormLink);
-
 				successList.Add(request);
 			}
-			catch (Exception ex)
+			else
 			{
-				_logger.LogError(ex, "Failed to send email to {Email}: {@Context}", request.EmailAddress, logContext);
-
 				errorList.Add(request);
 			}
 		}
 
 		if (errorList.Any())
 		{
-			const int maxRetries = 3;
-
-			for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
-			{
-				var failedItems = errorList.ToList();
-
-				errorList.Clear();
-
-				foreach (var request in failedItems)
-				{
-					var logContext = new
-					{
-						Action = "RetryApplicationFormEmailSending",
-						Step = "SendEmail",
-						Identity = request.EmailInvitationID,
-						Timestamp = DateTime.UtcNow
-					};
-
-					try
-					{
-						if (string.IsNullOrWhiteSpace(request.EmailAddress))
-						{
-							errorList.Add(request);
-							continue;
-						}
-
-						var subjectName = $"{request.FirstName} {request.LastName}";
-						var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
-
-						await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
-							request.EmailAddress,
-							subjectName,
-							applicationFormLink);
-
-						successList.Add(request);
-					}
-					catch (Exception ex)
-					{
-						_logger.LogError(ex, "Retry {Retry} failed for {Email}: {@Context}", retry, request.EmailAddress, logContext);
-
-						errorList.Add(request);
-					}
-				}
-			}
+			await RetryFailedEmailsAsync(successList, errorList);
 		}
 
 		_logger.LogInformation(
@@ -159,11 +99,95 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		if (errorList.Any())
 		{
-			var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
 			await _repository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(errorList);
 		}
 
 		await _hybridCache.RemoveAsync(cacheKey!);
+
+		await dbRedis.ListRemoveAsync(
+			_batchesProcessing,
+			cacheKey);
+	}
+
+
+	private async Task RetryFailedEmailsAsync(
+		List<EmailInvitationRequest> successList,
+		List<EmailInvitationRequest> errorList)
+	{
+		const int maxRetries = 3;
+
+		for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
+		{
+			var failedItems = errorList.ToList();
+
+			errorList.Clear();
+
+			foreach (var request in failedItems)
+			{
+				if (await TrySendEmailAsync(request))
+				{
+					successList.Add(request);
+				}
+				else
+				{
+					errorList.Add(request);
+				}
+			}
+		}
+	}
+
+	private async Task<bool> TrySendEmailAsync(
+	EmailInvitationRequest request,
+	int? retry = null)
+	{
+		var logContext = new
+		{
+			Action = retry is null
+				? "ApplicationFormEmailSending"
+				: "RetryApplicationFormEmailSending",
+			Step = "SendEmail",
+			Identity = request.EmailInvitationID,
+			Timestamp = DateTime.UtcNow
+		};
+
+		try
+		{
+			if (string.IsNullOrWhiteSpace(request.EmailAddress))
+			{
+				return false;
+			}
+
+			var subjectName = $"{request.FirstName} {request.LastName}";
+			var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
+
+			await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
+				request.EmailAddress,
+				subjectName,
+				applicationFormLink);
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			if (retry is null)
+			{
+				_logger.LogError(
+					ex,
+					"Failed to send email to {Email}: {@Context}",
+					request.EmailAddress,
+					logContext);
+			}
+			else
+			{
+				_logger.LogError(
+					ex,
+					"Retry {Retry} failed for {Email}: {@Context}",
+					retry,
+					request.EmailAddress,
+					logContext);
+			}
+
+			return false;
+		}
 	}
 }
