@@ -7,6 +7,7 @@ public class DeleteSubMenuCommandValidator : AbstractValidator<DeleteSubMenuComm
 	public DeleteSubMenuCommandValidator()
 	{
 		RuleFor(x => x.SubMenuId)
+			.NotEmpty().WithMessage("AppId is required.")
 			.GreaterThan(0).WithMessage("SubMenuId must be greater than zero.");
 	}
 }

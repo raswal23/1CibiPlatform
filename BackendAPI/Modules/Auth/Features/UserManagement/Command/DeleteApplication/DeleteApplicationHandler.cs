@@ -7,6 +7,7 @@ public class DeleteApplicationCommandValidator : AbstractValidator<DeleteApplica
 	public DeleteApplicationCommandValidator()
 	{
 		RuleFor(x => x.AppId)
+			.NotEmpty().WithMessage("AppId is required.")
 			.GreaterThan(0).WithMessage("AppId must be greater than zero.");
 	}
 }

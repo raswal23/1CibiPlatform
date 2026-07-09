@@ -7,6 +7,7 @@ public class DeleteAppSubRoleCommandValidator : AbstractValidator<DeleteAppSubRo
 	public DeleteAppSubRoleCommandValidator()
 	{
 		RuleFor(x => x.AppSubRoleId)
+			.NotEmpty().WithMessage("AppSubRole with the specified ID does not exist.")
 			.GreaterThan(0).WithMessage("AppSubRoleId must be greater than zero.");
 	}
 }

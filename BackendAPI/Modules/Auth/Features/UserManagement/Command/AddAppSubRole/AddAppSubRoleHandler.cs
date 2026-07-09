@@ -8,6 +8,23 @@ public class AddAppSubRoleCommandValidator : AbstractValidator<AddAppSubRoleComm
 	{
 		RuleFor(x => x.appSubRole)
 			.NotNull().WithMessage("AppSubRole data is required.");
+
+		When(x => x.appSubRole != null, () =>
+		{
+			RuleFor(x => x.appSubRole.UserId)
+				.NotEmpty().WithMessage("UserId is required.");
+			RuleFor(x => x.appSubRole.AppId)
+				.NotEmpty().WithMessage("AppId is required.")
+				.GreaterThan(0).WithMessage("AppId must be greater than 0.");
+			RuleFor(x => x.appSubRole.SubMenuId)
+				.NotEmpty().WithMessage("SubMenuId is required.")
+				.GreaterThan(0).WithMessage("SubMenuId must be greater than 0.");
+			RuleFor(x => x.appSubRole.RoleId)
+				.NotEmpty().WithMessage("RoleId is required.")
+				.GreaterThan(0).WithMessage("RoleId must be greater than 0.");
+			RuleFor(x => x.appSubRole.AssignedBy)
+				.NotEmpty().WithMessage("AssignedBy is required.");
+		});
 	}
 }
 
