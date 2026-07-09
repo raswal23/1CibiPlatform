@@ -5,25 +5,60 @@
     <DialogContent>
         <MudForm @ref="AddAppSubRoleForm">
 
-            <MudAutocomplete T="UsersDTO" Label="User" @bind-Value="selectedUser" SearchFunc="@SearchUsers" ToStringFunc="u => u?.email" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
+            <MudAutocomplete T="UsersDTO" 
+                             Label="User" 
+                             @bind-Value="selectedUser" 
+                             SearchFunc="@SearchUsers" 
+                             ToStringFunc="u => u?.email" 
+                             Variant="Variant.Outlined" 
+                             ProgressIndicatorColor="Color.Default" 
+                             ShowProgressIndicator="true" 
+                             Class="oneplatform-rounded-input"
+                             Required="true" />
             @if (showUserError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">User is required</MudText>
             }
 
-            <MudAutocomplete T="ApplicationsDTO" Label="Application" @bind-Value="selectedApp" SearchFunc="@SearchApplications" ToStringFunc="a => a?.applicationName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
+            <MudAutocomplete T="ApplicationsDTO" 
+                             Label="Application" 
+                             @bind-Value="selectedApp" 
+                             SearchFunc="@SearchApplications" 
+                             ToStringFunc="a => a?.applicationName" 
+                             Variant="Variant.Outlined" 
+                             ProgressIndicatorColor="Color.Default" 
+                             ShowProgressIndicator="true" 
+                             Class="oneplatform-rounded-input"
+                             Required="true" />
             @if (showAppError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">Application is required</MudText>
             }
 
-            <MudAutocomplete T="SubMenusDTO" Label="SubMenu" @bind-Value="selectedMenu" SearchFunc="@SearchSubMenus" ToStringFunc="s => s?.subMenuName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
+            <MudAutocomplete T="SubMenusDTO" 
+                             Label="SubMenu" 
+                             @bind-Value="selectedMenu" 
+                             SearchFunc="@SearchSubMenus" 
+                             ToStringFunc="s => s?.subMenuName" 
+                             Variant="Variant.Outlined" 
+                             ProgressIndicatorColor="Color.Default" 
+                             ShowProgressIndicator="true" 
+                             Class="oneplatform-rounded-input"
+                             Required="true" />
             @if (showSubMenuError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">SubMenu is required</MudText>
             }
 
-            <MudAutocomplete T="RolesDTO" Label="Role" @bind-Value="selectedRole" SearchFunc="@SearchRoles" ToStringFunc="r => r?.roleName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
+            <MudAutocomplete T="RolesDTO" 
+                             Label="Role" @bind-Value="selectedRole" 
+                             SearchFunc="@SearchRoles" 
+                             ToStringFunc="r => r?.roleName" 
+                             Variant="Variant.Outlined" 
+                             ProgressIndicatorColor="Color.Default" 
+                             ShowProgressIndicator="true" 
+                             Class="oneplatform-rounded-input"
+                             Required="true" />
             @if (showRoleError)
             {
                 <MudText Typo="Typo.caption" Color="Color.Error">Role is required</MudText>

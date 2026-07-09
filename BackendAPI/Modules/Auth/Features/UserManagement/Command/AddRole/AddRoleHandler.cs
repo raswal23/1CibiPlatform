@@ -8,6 +8,14 @@ public class AddRoleCommandValidator : AbstractValidator<AddRoleCommand>
 	{
 		RuleFor(x => x.role)
 			.NotNull().WithMessage("Role data is required.");
+
+		When(x => x.role != null, () =>
+		{
+			RuleFor(x => x.role.RoleName)
+				.NotEmpty().WithMessage("RoleName is required.");
+			RuleFor(x => x.role.Description)
+				.NotEmpty().WithMessage("RoleDescription is required.");
+		});
 	}
 }
 
