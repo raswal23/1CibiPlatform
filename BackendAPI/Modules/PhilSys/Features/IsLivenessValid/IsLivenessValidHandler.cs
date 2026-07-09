@@ -12,8 +12,8 @@ public class IsLivenessValidCommandValidator : AbstractValidator<IsLivenessValid
 
 public class IsLivenessValidHandler : ICommandHandler<IsLivenessValidCommand, IsLivenessValidResult>
 {
-	private readonly LivenessSessionService _livenessSessionService;
-	public IsLivenessValidHandler(LivenessSessionService livenessSessionService)
+	private readonly ILivenessSessionService _livenessSessionService;
+	public IsLivenessValidHandler(ILivenessSessionService livenessSessionService)
 	{
 		_livenessSessionService = livenessSessionService;
 	}

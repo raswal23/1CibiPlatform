@@ -1,6 +1,6 @@
 ﻿namespace PhilSys.Services;
 
-public class LivenessSessionService
+public class LivenessSessionService : ILivenessSessionService
 {
 	private readonly IPhilSysRepository _philSysRepository;
 	private readonly IHashService _hashService;
@@ -16,9 +16,10 @@ public class LivenessSessionService
 		_philSysRepository = philSysRepository;
 		_hashService = hashService;
 		_configuration = configuration;
-		_applicationFormPath = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
+		_applicationFormPath = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_logger = logger;
 	}
+
 	public async Task<TransactionStatusResponseDTO> IsLivenessUsedAsync(string HashToken)
 	{
 		var logContext = new

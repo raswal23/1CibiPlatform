@@ -16,8 +16,8 @@ public class UpdateFaceLivenessSessionCommandValidator : AbstractValidator<Updat
 
 public class UpdateFaceLivenessSessionHandler : ICommandHandler<UpdateFaceLivenessSessionCommand, UpdateFaceLivenessSessionResult>
 {
-	private readonly UpdateFaceLivenessSessionService _updateFaceLivenessSessionService;
-	public UpdateFaceLivenessSessionHandler(UpdateFaceLivenessSessionService UpdateFaceLivenessSessionService)
+	private readonly IUpdateFaceLivenessSessionService _updateFaceLivenessSessionService;
+	public UpdateFaceLivenessSessionHandler(IUpdateFaceLivenessSessionService UpdateFaceLivenessSessionService)
 	{
 		_updateFaceLivenessSessionService = UpdateFaceLivenessSessionService;
 	}

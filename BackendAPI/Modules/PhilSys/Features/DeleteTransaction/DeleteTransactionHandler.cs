@@ -12,8 +12,8 @@ public class DeleteTransactionCommandValidator : AbstractValidator<DeleteTransac
 
 public class DeleteTransactionHandler : ICommandHandler<DeleteTransactionCommand, DeleteTransactionResult>
 {
-	private readonly DeleteTransactionService _deleteTransactionService;
-	public DeleteTransactionHandler(DeleteTransactionService deleteTransactionService)
+	private readonly IDeleteTransactionService _deleteTransactionService;
+	public DeleteTransactionHandler(IDeleteTransactionService deleteTransactionService)
 	{
 		_deleteTransactionService = deleteTransactionService;
 	}

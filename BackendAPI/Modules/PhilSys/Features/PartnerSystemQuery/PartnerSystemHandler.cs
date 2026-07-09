@@ -51,10 +51,10 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 }
 public class PartnerSystemHandler : ICommandHandler<PartnerSystemCommand, PartnerSystemResult>
 {
-	private readonly PartnerSystemService _partnerSystemService;
-	public PartnerSystemHandler(PartnerSystemService PartnerSystemService)
+	private readonly IPartnerSystemService _partnerSystemService;
+	public PartnerSystemHandler(IPartnerSystemService partnerSystemService)
 	{
-		_partnerSystemService = PartnerSystemService;
+		_partnerSystemService = partnerSystemService;
 	}
 	public async Task<PartnerSystemResult> Handle(PartnerSystemCommand request, CancellationToken cancellationToken)
 	{

@@ -33,7 +33,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	{
 		_atsTestFolder = _configuration
 						.GetSection("AlibabaOss")
-						.GetValue<string>("ATSTestFolder") ?? string.Empty;
+						.GetValue<string>("ATSTestFolder", "");
 	}
 
 	private IFormFile CreateFakeFormFile(byte[] content, string fileName)

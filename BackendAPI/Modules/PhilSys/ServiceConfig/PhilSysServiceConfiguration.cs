@@ -46,11 +46,11 @@ public static class PhilSysServiceConfiguration
 			client.DefaultRequestHeaders.Accept.Add(
 				new MediaTypeWithQualityHeaderValue("application/json"));
 		});
-		services.AddScoped<PartnerSystemService>();
-		services.AddScoped<UpdateFaceLivenessSessionService>();
-		services.AddScoped<LivenessSessionService>();
-		services.AddScoped<DeleteTransactionService>();
-		services.AddScoped<GetLivenessKeyService>();
+		services.AddScoped<IPartnerSystemService, PartnerSystemService>();
+		services.AddScoped<IUpdateFaceLivenessSessionService, UpdateFaceLivenessSessionService>();
+		services.AddScoped<ILivenessSessionService, LivenessSessionService>();
+		services.AddScoped<IDeleteTransactionService, DeleteTransactionService>();
+		services.AddScoped<IGetLivenessKeyService, GetLivenessKeyService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IHashService, HashService>();
 		services.AddScoped<ISecureToken, SecureToken>();

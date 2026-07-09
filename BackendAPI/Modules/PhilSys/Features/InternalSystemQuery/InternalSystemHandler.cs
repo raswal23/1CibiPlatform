@@ -56,11 +56,11 @@ public class InternalSystemCommandValidator : AbstractValidator<InternalSystemCo
 
 public class InternalSystemHandler : ICommandHandler<InternalSystemCommand, InternalSystemResult>
 {
-	private readonly PartnerSystemService _partnerSystemService;
+	private readonly IPartnerSystemService _partnerSystemService;
 
-	public InternalSystemHandler(PartnerSystemService PartnerSystemService)
+	public InternalSystemHandler(IPartnerSystemService partnerSystemService)
 	{
-		_partnerSystemService = PartnerSystemService;
+		_partnerSystemService = partnerSystemService;
 	}
 	public async Task<InternalSystemResult> Handle(InternalSystemCommand request, CancellationToken cancellationToken)
 	{

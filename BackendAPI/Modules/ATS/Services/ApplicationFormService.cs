@@ -9,7 +9,6 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
-
 	private string resumeFileKey = "";
 	private string nbiKey = "";
 	private string govtIdKey = "";
@@ -35,8 +34,8 @@ public class ApplicationFormService : IApplicationFormService
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_applicationFormBaseUrl = _configuration["ATS:ApplicationFormBaseUrl"] ?? "";
-		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
+		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
+		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSUploadFolderName", "");
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
