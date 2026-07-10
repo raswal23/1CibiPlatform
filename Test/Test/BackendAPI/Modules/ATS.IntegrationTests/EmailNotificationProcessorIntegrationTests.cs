@@ -34,7 +34,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 				SelectPackage = "Standard",
 				RushNormal = "Normal",
 				EmailSentStatus = "Pending",
-				ApplicationFormStatus = "Pending"
+				ApplicationFormStatus = "Pending",
+				TicketStatus = "Pending Candidate Info"
 			};
 
 			invitations.Add(invitation);

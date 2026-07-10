@@ -61,6 +61,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			HashToken = "Hashtoken",
 			ApplicationFormStatus = "Pending",
 			EmailSentStatus = "Pending",
+			TicketStatus = "Pending Candidate Info",
 			HashTokenCreatedAt = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
 		};

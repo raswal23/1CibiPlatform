@@ -32,7 +32,8 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			ApplicationFormStatus = "Pending",
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
 			SelectPackage = "Air BnB",
-			RushNormal = "Rush"
+			RushNormal = "Rush",
+			TicketStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);

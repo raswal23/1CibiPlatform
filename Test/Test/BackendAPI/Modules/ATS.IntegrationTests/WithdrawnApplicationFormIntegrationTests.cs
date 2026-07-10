@@ -48,7 +48,8 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
-			ApplicationFormStatus = "Pending" // replace with your actual column
+			ApplicationFormStatus = "Pending",
+			TicketStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(application);

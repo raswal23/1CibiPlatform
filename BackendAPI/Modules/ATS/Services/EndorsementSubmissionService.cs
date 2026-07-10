@@ -242,7 +242,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var invitation = await _atsRepository.GetEmailInvitationRequestByIdAsync(emailInvitationId, cancellationToken);
 
-		if (invitation == null || invitation.EmailInvitationID == Guid.Empty)
+		if (invitation.EmailInvitationID == Guid.Empty)
 		{
 			_logger.LogError("Failed to find email invitation for resend: {@Context}", logContext);
 			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
