@@ -14,6 +14,7 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 	{
 	}
 
+	#region Negative Path
 	[Fact]
 	public async Task WithdrawnApplicationForm_ShouldThrowNotFoundException_WhenHashTokenDoesNotExist()
 	{
@@ -66,4 +67,5 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 		updated.Should().NotBeNull();
 		updated!.ApplicationFormStatus.Should().Be("Withdrawn"); 
 	}
+	#endregion
 }
