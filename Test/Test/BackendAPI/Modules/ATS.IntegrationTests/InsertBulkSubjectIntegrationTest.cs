@@ -31,6 +31,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		};
 	}
 
+	#region Positive Path
 	[Fact]
 
 	public async Task InsertBulkSubject_ShouldReturnCreatedIdAndPersist()
@@ -58,6 +59,9 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		}
 	}
 
+	#endregion
+
+	#region Negative Path
 	[Fact]
 	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenFileNameIsEmpty()
 	{
@@ -131,4 +135,5 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 
 		exception.Which.Errors.Should().HaveCount(3);
 	}
+	#endregion
 }

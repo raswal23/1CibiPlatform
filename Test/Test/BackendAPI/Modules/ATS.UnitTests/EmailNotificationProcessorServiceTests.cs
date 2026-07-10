@@ -14,6 +14,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 		_fixture = fixture;
 	}
 
+	#region Positive Path
 	[Fact]
 	public async Task ProcessForPendingStatusAsync_ShouldReturn_WhenNoPendingBatches()
 	{
@@ -36,22 +37,6 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	}
 
 	[Fact]
-	public async Task ProcessForPendingStatusAsync_ShouldReturn_WhenRedisTimeoutOccurs()
-	{
-		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
-		_fixture.MockRedisDatabase
-			.Setup(x => x.ListLeftPopAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<int>(), It.IsAny<CommandFlags>()))
-			.ThrowsAsync(new RedisTimeoutException("Redis timeout", CommandStatus.Unknown));
-
-		// Act
-		Func<Task> act = async () => await service.ProcessForPendingStatusAsync(CancellationToken.None);
-
-		// Assert
-		await act.Should().NotThrowAsync();
-	}
-
-	[Fact]
 	public async Task ProcessForPendingStatusAsync_ShouldLogAndCompleteGracefully()
 	{
 		// Arrange
@@ -68,4 +53,23 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 		// Assert
 		await act.Should().NotThrowAsync();
 	}
+	#endregion
+
+	#region Negative Path
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldReturn_WhenRedisTimeoutOccurs()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockRedisDatabase
+			.Setup(x => x.ListLeftPopAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<int>(), It.IsAny<CommandFlags>()))
+			.ThrowsAsync(new RedisTimeoutException("Redis timeout", CommandStatus.Unknown));
+
+		// Act
+		Func<Task> act = async () => await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		await act.Should().NotThrowAsync();
+	}
+	#endregion
 }

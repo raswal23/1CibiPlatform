@@ -14,6 +14,32 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 		_applicationFormPath = _configuration["ATS:ApplicationFormBaseUrl"] = "application-forms";
 	}
 
+	private async Task SeedEmailInvitationRequestData(
+	Guid emailInvitationId,
+	string hashToken)
+	{
+		var emailInvitationRequest = new EmailInvitationRequest
+		{
+			EmailInvitationID = emailInvitationId,
+			LastName = "Dela Cruz",
+			FirstName = "Juan",
+			MiddleInitial = "S",
+			EmailAddress = "jsdelacruz@cibi.com.ph",
+			MobileNumber = "+639171234567",
+			HashToken = hashToken,
+			EmailSentStatus = "Pending",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			ApplicationFormStatus = "Pending",
+			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			SelectPackage = "Air BnB",
+			RushNormal = "Rush"
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
+		await _dbContext.SaveChangesAsync();
+	}
+
+	#region Positive Path
 	[Fact]
 	public async Task GetEmailIdAndApplicationFormPath_WithValidHashToken_ShouldReturnEmailIdAndPath()
 	{
@@ -33,7 +59,9 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 		result.EmailIdAndApplicationFormPath.EmailId.Should().Be(emailId);
 		result.EmailIdAndApplicationFormPath.ApplicationFormPath.Should().Be(_applicationFormPath);
 	}
+	#endregion
 
+	#region Negative Path
 	[Fact]
 	public async Task GetEmailIdAndApplicationFormPath_WithInvalidHashToken_ShouldReturnEmptyGuid()
 	{
@@ -61,30 +89,8 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 		// Assert
 		await act.Should().ThrowAsync<NotFoundException>().WithMessage("No record found for the provided hash token.");
 	}
+	#endregion
 
-	private async Task SeedEmailInvitationRequestData(
-		Guid emailInvitationId,
-		string hashToken)
-	{
-		var emailInvitationRequest = new EmailInvitationRequest
-		{
-			EmailInvitationID = emailInvitationId,
-			LastName = "Dela Cruz",
-			FirstName = "Juan",
-			MiddleInitial = "S",
-			EmailAddress = "jsdelacruz@cibi.com.ph",
-			MobileNumber = "+639171234567",
-			HashToken = hashToken,
-			EmailSentStatus = "Pending",
-			HashTokenCreatedAt = DateTime.UtcNow,
-			ApplicationFormStatus = "Pending",
-			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
-			SelectPackage = "Air BnB",
-			RushNormal = "Rush"
-		};
 
-		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
-		await _dbContext.SaveChangesAsync();
-	}
 
 }

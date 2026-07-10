@@ -14,6 +14,38 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 	}
 
+	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(int count)
+	{
+		var invitations = new List<EmailInvitationRequest>();
+
+		for (int i = 0; i < count; i++)
+		{
+			var invitation = new EmailInvitationRequest
+			{
+				EmailInvitationID = Guid.CreateVersion7(),
+				FirstName = $"FirstName{i}",
+				LastName = $"LastName{i}",
+				MiddleInitial = "M",
+				EmailAddress = $"test{i}@example.com",
+				MobileNumber = $"09123456{i:D3}",
+				HashToken = _hashService.Hash($"token-{i}"),
+				HashTokenCreatedAt = DateTime.UtcNow,
+				HashTokenExpiration = DateTime.UtcNow.AddHours(24),
+				SelectPackage = "Standard",
+				RushNormal = "Normal",
+				EmailSentStatus = "Pending",
+				ApplicationFormStatus = "Pending"
+			};
+
+			invitations.Add(invitation);
+			await _dbContext.EmailInvitationRequests.AddAsync(invitation);
+		}
+
+		await _dbContext.SaveChangesAsync();
+		return invitations;
+	}
+
+	#region Positive Path
 	[Fact]
 	public async Task ProcessForPendingStatusAsync_WithValidBatch_ShouldProcessEmailInvitations()
 	{
@@ -104,35 +136,6 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
 
 	}
+	#endregion
 
-	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(int count)
-	{
-		var invitations = new List<EmailInvitationRequest>();
-
-		for (int i = 0; i < count; i++)
-		{
-			var invitation = new EmailInvitationRequest
-			{
-				EmailInvitationID = Guid.CreateVersion7(),
-				FirstName = $"FirstName{i}",
-				LastName = $"LastName{i}",
-				MiddleInitial = "M",
-				EmailAddress = $"test{i}@example.com",
-				MobileNumber = $"09123456{i:D3}",
-				HashToken = _hashService.Hash($"token-{i}"),
-				HashTokenCreatedAt = DateTime.UtcNow,
-				HashTokenExpiration = DateTime.UtcNow.AddHours(24),
-				SelectPackage = "Standard",
-				RushNormal = "Normal",
-				EmailSentStatus = "Pending",
-				ApplicationFormStatus = "Pending"
-			};
-
-			invitations.Add(invitation);
-			await _dbContext.EmailInvitationRequests.AddAsync(invitation);
-		}
-
-		await _dbContext.SaveChangesAsync();
-		return invitations;
-	}
 }

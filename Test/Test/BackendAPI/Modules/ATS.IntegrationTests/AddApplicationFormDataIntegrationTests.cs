@@ -46,6 +46,30 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		};
 	}
 
+	private async Task SeedEmailInvitationRequestData()
+	{
+		var emailInvitationRequest = new EmailInvitationRequest
+		{
+			EmailInvitationID = EmailId,
+			LastName = "Dela Cruz",
+			FirstName = "Juan",
+			MiddleInitial = "S",
+			EmailAddress = "jsdelacruz@cibi.com.ph",
+			MobileNumber = "09171234567",
+			SelectPackage = "Air BnB",
+			RushNormal = "Rush",
+			HashToken = "Hashtoken",
+			ApplicationFormStatus = "Pending",
+			EmailSentStatus = "Pending",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
+		await _dbContext.SaveChangesAsync();
+	}
+
+	#region Positive Path
 	[Fact]
 	public async Task AddApplicationFormData_WithSamplePayload_ShouldReturnTrue()
 	{
@@ -242,7 +266,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{signatureFileName}");
 		}
 	}
+	#endregion
 
+	#region Negative Path
 	[Fact]
 	public async Task AddApplicationFormData_MissingPersonal_ShouldThrowNullReferenceException()
 	{
@@ -400,27 +426,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		await Assert.ThrowsAsync<ValidationException>(() =>
 			_sender.Send(command));
 	}
+	#endregion
 
-	private async Task SeedEmailInvitationRequestData()
-	{
-		var emailInvitationRequest = new EmailInvitationRequest
-		{
-			EmailInvitationID = EmailId,
-			LastName = "Dela Cruz",
-			FirstName = "Juan",
-			MiddleInitial = "S",
-			EmailAddress = "jsdelacruz@cibi.com.ph",
-			MobileNumber = "09171234567",
-			SelectPackage = "Air BnB",
-			RushNormal = "Rush",
-			HashToken = "Hashtoken",
-			ApplicationFormStatus = "Pending",
-			EmailSentStatus = "Pending",
-			HashTokenCreatedAt = DateTime.UtcNow,
-			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
-		};
 
-		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
-		await _dbContext.SaveChangesAsync();
-	}
 }

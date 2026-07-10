@@ -14,6 +14,41 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 	{
 	}
 
+	private async Task<BulkUploadFileDetails> SeedBulkUploadFileAsync(
+		string fileName,
+		string packageType,
+		string orderType,
+		string? csvContent = null)
+	{
+		csvContent ??= """
+        LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber
+        Dela Cruz,Juan,S,juan@example.com,+639171234567
+        Santos,Maria,A,maria@example.com,+639178765432
+        Reyes,Carlos,R,carlos@example.com,+639179876543
+        """;
+
+		var bulkFile = new BulkUploadFileDetails
+		{
+			FileID = Guid.CreateVersion7(),
+			FileName = fileName,
+			FileKey = $"test/{fileName}",
+			PackageType = packageType,
+			OrderType = orderType,
+			UploadedByUserId = Guid.CreateVersion7(),
+			Status = "Pending",
+			DateCreated = DateTime.UtcNow
+		};
+
+		await _dbContext.BulkUploadFileDetails.AddAsync(bulkFile);
+		await _dbContext.SaveChangesAsync();
+
+		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
+		await _objectStorageService.UploadAsync("test", fileName, stream);
+
+		return bulkFile;
+	}
+
+	#region Positive Path
 	[Fact]
 	public async Task ProcessAsync_WithValidBulkUploadFile_ShouldCreateEmailInvitationRequests()
 	{
@@ -80,7 +115,9 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		premiumInvitations.Should().NotBeEmpty();
 		standardInvitations.Should().NotBeEmpty();
 	}
+	#endregion
 
+	#region Negative Path
 	[Fact]
 	public async Task ProcessAsync_WithEmptyCsvHeader_ShouldThrowInternalServerException()
 	{
@@ -132,38 +169,6 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		exception.Which.Message.Should()
 			.Be("Invalid CSV format. Please use the required column headers.");
 	}
-
-	private async Task<BulkUploadFileDetails> SeedBulkUploadFileAsync(
-		string fileName,
-		string packageType,
-		string orderType,
-		string? csvContent = null)
-	{
-		csvContent ??= """
-        LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber
-        Dela Cruz,Juan,S,juan@example.com,+639171234567
-        Santos,Maria,A,maria@example.com,+639178765432
-        Reyes,Carlos,R,carlos@example.com,+639179876543
-        """;
-
-		var bulkFile = new BulkUploadFileDetails
-		{
-			FileID = Guid.CreateVersion7(),
-			FileName = fileName,
-			FileKey = $"test/{fileName}",
-			PackageType = packageType,
-			OrderType = orderType,
-			UploadedByUserId = Guid.CreateVersion7(),
-			Status = "Pending",
-			DateCreated = DateTime.UtcNow
-		};
-
-		await _dbContext.BulkUploadFileDetails.AddAsync(bulkFile);
-		await _dbContext.SaveChangesAsync();
-
-		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
-		await _objectStorageService.UploadAsync("test", fileName, stream);
-
-		return bulkFile;
-	}
+	#endregion
+	
 }
