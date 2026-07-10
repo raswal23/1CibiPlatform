@@ -24,4 +24,6 @@ public interface IATSRepository
 	Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId);
 	Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken);
 	Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken);
+	Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 }

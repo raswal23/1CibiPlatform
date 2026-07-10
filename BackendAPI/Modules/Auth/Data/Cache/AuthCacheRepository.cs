@@ -323,7 +323,7 @@ public class AuthCacheRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"{AppSubRolesTag}_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
 			cacheKey,
@@ -335,7 +335,7 @@ public class AuthCacheRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AppSubRolesDTO>> SearchAppSubRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"applications_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
 			cacheKey,

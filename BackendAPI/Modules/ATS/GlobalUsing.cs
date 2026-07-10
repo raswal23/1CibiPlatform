@@ -12,7 +12,6 @@ global using ATS.Services.EmailService;
 global using ATS.BackgroundJobs.BulkSubmission;
 global using ATS.BackgroundJobs.EmailNotification;
 
-
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;
 global using BuildingBlocks.SharedConstants;
@@ -21,6 +20,7 @@ global using BuildingBlocks.SharedInterfaces;
 global using BuildingBlocks.Behaviors;
 global using BuildingBlocks.Exceptions.Handler;
 global using BuildingBlocks.SharedServices.Interfaces;
+global using BuildingBlocks.Pagination;
 
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.EntityFrameworkCore;

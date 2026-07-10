@@ -5,6 +5,8 @@ public class ATSCacheRepository : IATSRepository
 	private readonly IATSRepository _atsRepository;
 	private readonly HybridCache _hybridCache;
 
+	private readonly string WithdrawnApplication = "withdrawnapplication";
+
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
 		_atsRepository = atsRepository;
@@ -117,5 +119,31 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken);
 	}
-}
 
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(req, token),
+			null,
+			tags: [WithdrawnApplication],
+			cancellationToken);
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(req, token),
+			null,
+			tags: [WithdrawnApplication],
+			cancellationToken);
+	}
+}

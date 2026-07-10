@@ -414,7 +414,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush",
 			HashToken = "Hashtoken",
-			IsFormCompleted = "Pending",
+			ApplicationFormStatus = "Pending",
 			EmailSentStatus = "Pending",
 			HashTokenCreatedAt = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(7)

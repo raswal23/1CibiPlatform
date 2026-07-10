@@ -47,7 +47,7 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
-			IsFormCompleted = "Pending" // replace with your actual column
+			ApplicationFormStatus = "Pending" // replace with your actual column
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(application);
@@ -64,6 +64,6 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			.SingleAsync(x => x.EmailInvitationID == application.EmailInvitationID);
 
 		updated.Should().NotBeNull();
-		updated!.IsFormCompleted.Should().Be("Withdrawn"); 
+		updated!.ApplicationFormStatus.Should().Be("Withdrawn"); 
 	}
 }

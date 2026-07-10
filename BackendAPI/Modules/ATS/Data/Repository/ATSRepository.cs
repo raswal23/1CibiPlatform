@@ -47,18 +47,18 @@ public class ATSRepository : IATSRepository
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
-																							  CancellationToken cancellationToken)
+						CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
-						.AsNoTracking()
-						.Where(af => af.HashToken == hashToken)
-						.Select(af => new EmailIdAndApplicationFormPathDTO
-						{
-							EmailId = af.EmailInvitationID,
-							ExpiresAt = af.HashTokenExpiration,
-							Status = af.IsFormCompleted
-						})
-						.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
+				.AsNoTracking()
+				.Where(af => af.HashToken == hashToken)
+				.Select(af => new EmailIdAndApplicationFormPathDTO
+				{
+					EmailId = af.EmailInvitationID,
+					ExpiresAt = af.HashTokenExpiration,
+					Status = af.ApplicationFormStatus
+				})
+				.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
 
 	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)
@@ -129,8 +129,9 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == emailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.IsFormCompleted, x => "Done")
-			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow));
+			.SetProperty(x => x.ApplicationFormStatus, x => "Done")
+			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow)
+			.SetProperty(x => x.TicketStatus, x => "In Progress"));
 
 		return true;
 	}
@@ -179,6 +180,85 @@ public class ATSRepository : IATSRepository
 	{
 		return await _dbcontext.EmailInvitationRequests.Where(x => x.HashToken == hashToken)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.IsFormCompleted, x => "Withdrawn"));
+				.SetProperty(x => x.ApplicationFormStatus, x => "Withdrawn")
+				.SetProperty(x => x.TicketStatus, x => "Application Withdrawn"));
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var query = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => eir.TicketStatus == "Application Withdrawn" && eir.TicketStatus != null);
+
+		if (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm))
+		{
+			var term = paginationRequest.SearchTerm.Trim();
+			query = query.Where(eir => EF.Functions.ILike(eir.EmailAddress!, $"%{term}%") ||
+				EF.Functions.ILike(eir.FirstName!, $"%{term}%") ||
+				EF.Functions.ILike(eir.LastName!, $"%{term}%"));
+		}
+
+		var totalRecords = await query.LongCountAsync(cancellationToken);
+
+		var items = await query
+			.OrderBy(eir => eir.EmailInvitationID)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(eir => new EmailInvitationRequestListDTO
+			{
+				EmailInvitationID = eir.EmailInvitationID,
+				EmailAddress = eir.EmailAddress,
+				FirstName = eir.FirstName,
+				LastName = eir.LastName,
+				MobileNumber = eir.MobileNumber,
+				TicketStatus = eir.TicketStatus,
+				ApplicationFormStatus = eir.ApplicationFormStatus,
+				EmailSentStatus = eir.EmailSentStatus
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<EmailInvitationRequestListDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var usersQuery = _dbcontext.EmailInvitationRequests
+				.Where(eir => eir.TicketStatus == "Application Withdrawn" && eir.TicketStatus != null && eir != null && eir.EmailInvitationID != Guid.Empty && eir.EmailAddress != null && eir.FirstName != null) // guard
+				.Where(eir =>
+					EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
+					EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+					EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+					EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
+
+        var totalRecords = await usersQuery.CountAsync(cancellationToken);
+
+        var users = await usersQuery
+                    .OrderBy(eir => eir.EmailInvitationID)
+                    .Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+                    .Take(paginationRequest.PageSize)
+                    .Select(eir => new EmailInvitationRequestListDTO
+                    {
+                        EmailInvitationID = eir.EmailInvitationID,
+                        EmailAddress = eir.EmailAddress,
+                        FirstName = eir.FirstName,
+                        LastName = eir.LastName,
+                        MobileNumber = eir.MobileNumber,
+                        TicketStatus = eir.TicketStatus,
+                        ApplicationFormStatus = eir.ApplicationFormStatus,
+                        EmailSentStatus = eir.EmailSentStatus
+                    })
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<EmailInvitationRequestListDTO>(
+          paginationRequest.PageIndex,
+          paginationRequest.PageSize,
+          totalRecords,
+          users
+        );
 	}
 }

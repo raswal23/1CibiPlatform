@@ -93,7 +93,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.HashToken =HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.EmailSentStatus = "Pending";
-		emailInvitationRequest.IsFormCompleted = "Pending";
+		emailInvitationRequest.ApplicationFormStatus = "Pending";
+		emailInvitationRequest.TicketStatus = "Pending Candidate Info";
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 		
 		try
@@ -210,4 +211,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return true;
 	}
 
+	public Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "GetWithdrawnApplicationForm",
+			Step = "FetchingWithdrawnApplicationForm",
+			Pagination = paginationRequest,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Fetching withdrawn application form with pagination: {@Context}", logContext);
+
+		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ? 
+			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken) :
+			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken);
+	}
 }

@@ -1,14 +1,14 @@
 ﻿namespace Auth.Services;
 
-public class UserManagementService : IUserService
+public class UserService : IUserService
 {
 	private readonly IAuthRepository _authRepository;
 	private readonly IEmailService _emailService;
-	private readonly ILogger<UserManagementService> _logger;
+	private readonly ILogger<UserService> _logger;
 
-	public UserManagementService(IAuthRepository authRepository,
+	public UserService(IAuthRepository authRepository,
 					   [FromKeyedServices("auth")] IEmailService emailService,
-					   ILogger<UserManagementService> logger)
+					   ILogger<UserService> logger)
 	{
 		_authRepository = authRepository;
 		_emailService = emailService;
