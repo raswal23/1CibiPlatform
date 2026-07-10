@@ -31,10 +31,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		await dbRedis.KeyDeleteAsync("devtest-batches:processing");
 		await dbRedis.ListRightPushAsync("devtest-batches:pending", batchId);
 
-		var cancellationToken = CancellationToken.None;
-
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert
 		var processedInvitations = await _dbContext.EmailInvitationRequests
@@ -57,10 +55,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			.AsNoTracking()
 			.CountAsync();
 
-		var cancellationToken = CancellationToken.None;
-
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert 
 		var finalCount = await _dbContext.EmailInvitationRequests
@@ -95,10 +91,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		await dbRedis.KeyDeleteAsync("devtest-batches:processing");
 		await dbRedis.ListRightPushAsync("devtest-batches:pending", batch1Id);
 
-		var cancellationToken = CancellationToken.None;
-
 		// Act 
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(cancellationToken);
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert 
 		var batch1Processed = await _dbContext.EmailInvitationRequests
