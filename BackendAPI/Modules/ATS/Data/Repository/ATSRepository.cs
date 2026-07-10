@@ -261,4 +261,26 @@ public class ATSRepository : IATSRepository
           users
         );
 	}
+
+	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.FirstOrDefaultAsync(eir => eir.EmailInvitationID == emailInvitationId, cancellationToken) ?? new EmailInvitationRequest();
+	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
+	{
+		await _dbcontext.EmailInvitationRequests
+			.Where(eir => eir.EmailInvitationID == emailInvitationId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(eir => eir.HashToken, hashToken)
+				.SetProperty(eir => eir.HashTokenCreatedAt, DateTime.UtcNow)
+				.SetProperty(eir => eir.HashTokenExpiration, hashTokenExpiration)
+				.SetProperty(eir => eir.TicketStatus, "Pending Candidate Info")
+				.SetProperty(eir => eir.ApplicationFormStatus, "Pending"),
+				cancellationToken);
+
+		return true;
+	}
 }

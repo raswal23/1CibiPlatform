@@ -5,7 +5,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly IATSRepository _atsRepository;
 	private readonly HybridCache _hybridCache;
 
-	private readonly string WithdrawnApplication = "withdrawnapplication";
+	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -130,7 +130,7 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(req, token),
 			null,
-			tags: [WithdrawnApplication],
+			tags: [WithdrawnApplicationTag],
 			cancellationToken);
 	}
 
@@ -143,7 +143,22 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(req, token),
 			null,
-			tags: [WithdrawnApplication],
+			tags: [WithdrawnApplicationTag],
 			cancellationToken);
+	}
+
+	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationRequestByIdAsync(emailInvitationId, cancellationToken);
+	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
+
+		return result;
 	}
 }

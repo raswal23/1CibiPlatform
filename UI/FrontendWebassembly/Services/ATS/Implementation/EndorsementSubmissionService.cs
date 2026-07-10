@@ -159,4 +159,22 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		return result!.Requests!;
 	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId)
+	{
+		var request = new { emailInvitationId };
+
+		var response = await _httpClient.PatchAsJsonAsync("ats/resendapplicationform", request);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var successContent = await response.Content.ReadFromJsonAsync<bool>();
+
+		return successContent;
+	}
 }

@@ -61,6 +61,18 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+
+				new RouteDefinitionDTO(
+				RouteId: "ResendApplicationForm",
+				MatchPath: "/ats/resendapplicationform",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/resendapplicationform" }
+				}
+			),
+
 			new RouteDefinitionDTO(
 				RouteId: "DownloadBulkTemplate",
 				MatchPath: "/ats/downloadbulktemplate",

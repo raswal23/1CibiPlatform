@@ -1,6 +1,4 @@
-﻿using FrontendWebassembly.Component.UserManagement;
-
-namespace FrontendWebassembly.Pages.Auth;
+﻿namespace FrontendWebassembly.Pages.Auth;
 
 public partial class UserAppRoles
 {
@@ -19,11 +17,6 @@ public partial class UserAppRoles
 	private TableComponent<SubMenusDTO> subMenusTable;
 	private TableComponent<RolesDTO> rolesTable;
 	private TableComponent<AppSubRolesDTO> appSubRolesTable;
-
-	private void OnTabChanged(int index)
-	{
-		_activeIndex = index;
-	}
 
 	private string GetTabClass(int index)
 	{

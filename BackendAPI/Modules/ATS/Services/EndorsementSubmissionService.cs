@@ -227,4 +227,70 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken) :
 			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken);
 	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "ResendApplicationForm",
+			Step = "FetchingRecord",
+			EmailInvitationId = emailInvitationId,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Resending application form for invitation: {@Context}", logContext);
+
+		var invitation = await _atsRepository.GetEmailInvitationRequestByIdAsync(emailInvitationId, cancellationToken);
+
+		if (invitation == null || invitation.EmailInvitationID == Guid.Empty)
+		{
+			_logger.LogError("Failed to find email invitation for resend: {@Context}", logContext);
+			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
+		}
+
+		var token = _secureToken.GenerateSecureToken();
+		if (string.IsNullOrEmpty(token))
+		{
+			_logger.LogError("Failed to generate new token: {@Context}", logContext);
+			throw new InternalServerException("Failed to generate new token.");
+		}
+
+		var hashToken = _hashService.Hash(token);
+		if (string.IsNullOrEmpty(hashToken))
+		{
+			_logger.LogError("Failed to hash token: {@Context}", logContext);
+			throw new InternalServerException("Failed to hash token.");
+		}
+
+		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
+
+		try
+		{
+			await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, newExpiration, cancellationToken);
+
+			logContext = new
+			{
+				Action = "ResendApplicationForm",
+				Step = "SendingEmail",
+				EmailInvitationId = emailInvitationId,
+				Timestamp = DateTime.UtcNow
+			};
+
+			var applicationFormLink = $"{_applicationformBaseUrl}/{hashToken}";
+			var fullName = $"{invitation.FirstName} {invitation.LastName}";
+
+			await SendApplicationFormToUserEmailAsync(
+				invitation.EmailAddress!,
+				fullName,
+				applicationFormLink);
+
+			_logger.LogInformation("Successfully resent application form for invitation: {@Context}", logContext);
+			return true;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError("Failed to resend application form: {@Context}, {Exception}", logContext, ex);
+			throw new InternalServerException($"Failed to resend application form. {ex.InnerException?.Message ?? ex.Message}");
+		}
+	}
 }
