@@ -295,5 +295,10 @@ public class EmailService : IEmailService
 	{
 		throw new NotImplementedException();
 	}
+
+	public string SendEmailForDispute(string gmail)
+	{
+		throw new NotImplementedException();
+	}
 }
 

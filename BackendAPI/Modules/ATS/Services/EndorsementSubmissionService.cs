@@ -96,16 +96,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.ApplicationFormStatus = "Pending";
 		emailInvitationRequest.OrderStatus = "Pending Candidate Info";
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
-		
+
 		try
 		{
 			await _atsRepository.AddEmailInvitationRequestAsync(emailInvitationRequest);
-
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError("Failed Transaction: Failed to add Email Invitation Request: {@Context}, {Exception}", logContext, ex);
-			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}"); ;
+			_logger.LogError(
+				ex,
+				"Failed to add Email Invitation Request. {@Context}",
+				logContext);
+
+			throw new InternalServerException(
+				$"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
 		var applicationFormLink = $"{_applicationformBaseUrl}/{HashToken}";
@@ -116,19 +120,55 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				emailInvitationRequestDTO.EmailAddress!,
 				subjectName,
 				applicationFormLink);
-
-			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(emailInvitationRequest.EmailInvitationID);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError("Failed to send email: {@Context}, {Exception}", logContext, ex);
+			_logger.LogError(
+				ex,
+				"Failed to send application form email. {@Context}",
+				logContext);
 
-			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(emailInvitationRequest.EmailInvitationID);
+			await TryUpdateEmailStatusToNotSentAsync(
+				emailInvitationRequest.EmailInvitationID,
+				logContext);
 
-			throw new InternalServerException("Failed to send email.");
+			throw new InternalServerException("Failed to send application form email.");
+		}
+
+		try
+		{
+			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
+				emailInvitationRequest.EmailInvitationID);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(
+				ex,
+				"Email was sent successfully, but failed to update its status. {@Context}",
+				logContext);
+
+			throw new InternalServerException(
+				"The email was sent successfully, but the system failed to update its status.");
 		}
 
 		return true;
+	}
+	private async Task TryUpdateEmailStatusToNotSentAsync(
+	Guid emailInvitationId,
+	object logContext)
+	{
+		try
+		{
+			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(
+				emailInvitationId);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(
+				ex,
+				"Failed to update email status to 'Not Sent'. {@Context}",
+				logContext);
+		}
 	}
 
 	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default)
@@ -208,7 +248,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException("Failed to send Notification email.");
 		}
 
-		return true;
+		return isSent;
 	}
 
 	public Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)

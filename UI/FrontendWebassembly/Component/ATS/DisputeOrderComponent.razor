@@ -22,10 +22,21 @@
     <RowTemplate Context="o">
         <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
         <MudTd DataLabel="Status">@o.OrderStatus</MudTd>
-        <MudTd DataLabel="Date Completed">@(o.OrdeCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+        <MudTd DataLabel="Date Completed">@(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
         <MudTd>
             <div style="display:flex; justify-content:center; align-items:center;">
-                <MudCheckBox T="bool" Checked="@o.IsDiputed" Disabled="true" Color="Color.Primary" />
+                @if (o.IsDisputed)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Report"
+                                   Color="Color.Error"
+                                   Disabled="@isMarkingAsDisputed"
+                                   OnClick="@(() => MarkAsDisputed(o))"
+                                   Title="Mark as Disputed" />
+                }
             </div>
         </MudTd>
     </RowTemplate>

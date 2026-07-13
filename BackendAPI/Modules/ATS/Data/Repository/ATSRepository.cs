@@ -280,7 +280,6 @@ public class ATSRepository : IATSRepository
 				LastName = eir.LastName,
 				OrderStatus = eir.OrderStatus,
 			    OrderCompletedAt = eir.OrderCompletedAt,
-				OrderCreatedAt = eir.OrderCreatedAt,
 				IsDisputed = eir.IsDisputed,
 			})
 			.ToListAsync(cancellationToken);
@@ -320,7 +319,6 @@ public class ATSRepository : IATSRepository
 				LastName = eir.LastName,
 				OrderStatus = eir.OrderStatus,
 				OrderCompletedAt = eir.OrderCompletedAt,
-				OrderCreatedAt = eir.OrderCreatedAt,
 				IsDisputed = eir.IsDisputed,
 			})
 			.AsNoTracking()
@@ -334,6 +332,18 @@ public class ATSRepository : IATSRepository
 			  items
 			);
 
+	}
+
+	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		var affectedRows = await _dbcontext.EmailInvitationRequests
+			.Where(eir => eir.EmailInvitationID == emailInvitationId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(eir => eir.IsDisputed, true)
+				.SetProperty(eir => eir.DisputedAt, DateTime.UtcNow),
+				cancellationToken);
+
+		return affectedRows > 0;
 	}
 
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)

@@ -110,6 +110,67 @@ public class ATSEmailService : IEmailService
 		return body;
 	}
 
+	public string SendEmailForDispute(string gmail)
+	{
+		string body = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
+                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .content {{ padding: 20px; background-color: #f9f9f9; }}
+                        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+                    </style>
+                </head>
+                <div class=""container"">
+					<div class=""header"">
+						<h1>CIBI | New Dispute Order Submitted</h1>
+					</div>
+					<div class=""content"">
+						<p>Hello,</p>
+						<p>
+							A new dispute order has been submitted and requires your review.
+							Please verify the details below and process the dispute in accordance with the standard dispute handling procedure.
+						</p>
+						<table>
+							<tr>
+								<td>Applicant Name</td>
+								<td>{{name}}</td>
+							</tr>
+							<tr>
+								<td>Email Address</td>
+								<td>{{email}}</td>
+							</tr>
+							<tr>
+								<td>Order Number</td>
+								<td>{{orderNumber}}</td>
+							</tr>
+							<tr>
+								<td>Dispute Submitted</td>
+								<td>{{disputedAt}}</td>
+							</tr>
+						</table>
+						<p>
+							Please log in to the ATS system to review the dispute details and take the necessary action.
+						</p>
+						<p>
+							Thank you.
+						</p>
+					</div>
+					<div class=""footer"">
+						<p>
+							This is an automated notification from the ATS. Please do not reply to this email.
+						</p>
+					</div>
+				</div>
+				</body>
+				</html>";
+
+		return body;
+	}
+
 	public string SendApprovalNotificationBody(string gmail)
 	{
 		throw new NotImplementedException();

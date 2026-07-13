@@ -28,4 +28,20 @@ public class DisputeOrderService : IDisputeOrderService
 		var result = await response.Content.ReadFromJsonAsync<GetDisputeOrdersResponseDTO>();
 		return result!.Orders!;
 	}
+
+	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId)
+	{
+		var request = new { emailInvitationId };
+
+		var response = await _httpClient.PatchAsJsonAsync("ats/markasdisputed", request);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+		}
+
+		var result = await response.Content.ReadFromJsonAsync<bool>();
+		return result;
+	}
 }

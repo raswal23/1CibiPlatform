@@ -6,7 +6,6 @@ public record DisputeOrderListDTO
 	public string? FirstName { get; set; }
 	public string? LastName { get; set; }
 	public string? OrderStatus { get; set; }
-	public DateTime? OrderCreatedAt { get; set; }
-	public DateTime? OrdeCompletedAt { get; set; }
-	public bool IsDiputed { get; set; }
+    public DateTime? OrderCompletedAt { get; set; }
+	public bool IsDisputed { get; set; }
 }

@@ -188,4 +188,14 @@ public class ATSCacheRepository : IATSRepository
 			tags: [DisputeOrderTag],
 			cancellationToken);
 	}
+
+	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.MarkAsDisputedAsync(emailInvitationId, cancellationToken);
+
+		if (result)
+            await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+
+		return result;
+	}
 }
