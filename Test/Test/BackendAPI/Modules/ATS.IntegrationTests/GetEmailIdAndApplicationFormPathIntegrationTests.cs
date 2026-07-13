@@ -33,7 +33,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush",
-			TicketStatus = "Pending Candidate Info"
+			OrderStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);

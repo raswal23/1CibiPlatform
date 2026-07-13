@@ -94,7 +94,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.EmailSentStatus = "Pending";
 		emailInvitationRequest.ApplicationFormStatus = "Pending";
-		emailInvitationRequest.TicketStatus = "Pending Candidate Info";
+		emailInvitationRequest.OrderStatus = "Pending Candidate Info";
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 		
 		try

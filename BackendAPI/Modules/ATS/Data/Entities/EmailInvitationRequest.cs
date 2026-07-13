@@ -17,7 +17,11 @@ public class EmailInvitationRequest
 	public DateTime? EmailSentAt { get; set; }
 	public DateTime? HashTokenCreatedAt { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
-	public string? TicketStatus { get; set; }
+	public string? OrderStatus { get; set; }
+	public DateTime? OrderCreatedAt { get; set; }
+	public DateTime? OrderCompletedAt { get; set; }
+	public bool IsDisputed { get; set; } = false;
+	public DateTime? DisputedAt { get; set; }
 
 	// Navigation properties
 	public PersonalDetails? PersonalDetails { get; set; }

@@ -57,8 +57,14 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 			   .HasMaxLength(255)
 			   .IsRequired(true);
 
-		builder.Property(e => e.TicketStatus)
+		builder.Property(e => e.OrderStatus)
 			   .HasMaxLength(255)
 			   .IsRequired(true);
+
+		builder.Property(e => e.OrderCreatedAt)
+			   .IsRequired(true);
+
+		builder.Property(e => e.OrderCreatedAt)
+				.IsRequired(false);
 	}
 }

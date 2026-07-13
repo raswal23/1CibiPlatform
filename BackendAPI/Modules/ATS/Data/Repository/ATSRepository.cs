@@ -131,7 +131,7 @@ public class ATSRepository : IATSRepository
 			.ExecuteUpdateAsync(setters => setters
 			.SetProperty(x => x.ApplicationFormStatus, x => "Done")
 			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow)
-			.SetProperty(x => x.TicketStatus, x => "In Progress"));
+			.SetProperty(x => x.OrderStatus, x => "In Progress"));
 
 		return true;
 	}
@@ -181,41 +181,34 @@ public class ATSRepository : IATSRepository
 		return await _dbcontext.EmailInvitationRequests.Where(x => x.HashToken == hashToken)
 				.ExecuteUpdateAsync(setters => setters
 				.SetProperty(x => x.ApplicationFormStatus, x => "Withdrawn")
-				.SetProperty(x => x.TicketStatus, x => "Application Withdrawn"));
+				.SetProperty(x => x.OrderStatus, x => "Application Withdrawn"));
 	}
 
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var query = _dbcontext.EmailInvitationRequests
+		var totalRecords = await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir => eir.TicketStatus == "Application Withdrawn" && eir.TicketStatus != null);
+			.Where(eir => eir.OrderStatus == "Application Withdrawn")
+			.LongCountAsync(cancellationToken);
 
-		if (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm))
-		{
-			var term = paginationRequest.SearchTerm.Trim();
-			query = query.Where(eir => EF.Functions.ILike(eir.EmailAddress!, $"%{term}%") ||
-				EF.Functions.ILike(eir.FirstName!, $"%{term}%") ||
-				EF.Functions.ILike(eir.LastName!, $"%{term}%"));
-		}
-
-		var totalRecords = await query.LongCountAsync(cancellationToken);
-
-		var items = await query
-			.OrderBy(eir => eir.EmailInvitationID)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(eir => new EmailInvitationRequestListDTO
-			{
-				EmailInvitationID = eir.EmailInvitationID,
-				EmailAddress = eir.EmailAddress,
-				FirstName = eir.FirstName,
-				LastName = eir.LastName,
-				MobileNumber = eir.MobileNumber,
-				TicketStatus = eir.TicketStatus,
-				ApplicationFormStatus = eir.ApplicationFormStatus,
-				EmailSentStatus = eir.EmailSentStatus
-			})
-			.ToListAsync(cancellationToken);
+		var items = await _dbcontext.EmailInvitationRequests
+					.AsNoTracking()
+					.Where(eir => eir.OrderStatus == "Application Withdrawn")
+					.OrderBy(eir => eir.EmailInvitationID)
+					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+					.Take(paginationRequest.PageSize)
+					.Select(eir => new EmailInvitationRequestListDTO
+					{
+						EmailInvitationID = eir.EmailInvitationID,
+						EmailAddress = eir.EmailAddress,
+						FirstName = eir.FirstName,
+						LastName = eir.LastName,
+						MobileNumber = eir.MobileNumber,
+						OrderStatus = eir.OrderStatus,
+						ApplicationFormStatus = eir.ApplicationFormStatus,
+						EmailSentStatus = eir.EmailSentStatus
+					})
+					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<EmailInvitationRequestListDTO>(
 			paginationRequest.PageIndex,
@@ -227,7 +220,8 @@ public class ATSRepository : IATSRepository
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
-				.Where(eir => eir.TicketStatus == "Application Withdrawn" && eir.TicketStatus != null && eir != null && eir.EmailInvitationID != Guid.Empty && eir.EmailAddress != null && eir.FirstName != null) // guard
+			    .AsNoTracking()
+				.Where(eir => eir.OrderStatus == "Application Withdrawn" && eir.OrderStatus != null && eir != null && eir.EmailInvitationID != Guid.Empty && eir.EmailAddress != null && eir.FirstName != null) // guard
 				.Where(eir =>
 					EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 					EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
@@ -247,7 +241,7 @@ public class ATSRepository : IATSRepository
                         FirstName = eir.FirstName,
                         LastName = eir.LastName,
                         MobileNumber = eir.MobileNumber,
-                        TicketStatus = eir.TicketStatus,
+                        OrderStatus = eir.OrderStatus,
                         ApplicationFormStatus = eir.ApplicationFormStatus,
                         EmailSentStatus = eir.EmailSentStatus
                     })
@@ -260,6 +254,86 @@ public class ATSRepository : IATSRepository
           totalRecords,
           users
         );
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
+
+		var totalRecords = await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir =>
+				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart)
+				|| eir.OrderStatus == "Disputed")
+			.LongCountAsync(cancellationToken); 
+
+		var items = await _dbcontext.EmailInvitationRequests
+			.OrderByDescending(eir => eir.IsDisputed)
+	        .ThenByDescending(eir => eir.OrderCreatedAt)
+			.ThenBy(eir => eir.EmailInvitationID)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(eir => new DisputeOrderListDTO
+			{
+				EmailInvitationID = eir.EmailInvitationID,
+				FirstName = eir.FirstName,
+				LastName = eir.LastName,
+				OrderStatus = eir.OrderStatus,
+			    OrderCompletedAt = eir.OrderCompletedAt,
+				OrderCreatedAt = eir.OrderCreatedAt,
+				IsDisputed = eir.IsDisputed,
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<DisputeOrderListDTO>(
+			paginationRequest.PageIndex,
+		    paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
+
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir =>
+				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart)
+				|| eir.OrderStatus == "Disputed" &&
+			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
+
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var items = await usersQuery
+			.OrderByDescending(eir => eir.IsDisputed)
+			.ThenByDescending(eir => eir.OrderCreatedAt)
+			.ThenBy(eir => eir.EmailInvitationID)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(eir => new DisputeOrderListDTO
+			{
+				EmailInvitationID = eir.EmailInvitationID,
+				FirstName = eir.FirstName,
+				LastName = eir.LastName,
+				OrderStatus = eir.OrderStatus,
+				OrderCompletedAt = eir.OrderCompletedAt,
+				OrderCreatedAt = eir.OrderCreatedAt,
+				IsDisputed = eir.IsDisputed,
+			})
+			.AsNoTracking()
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<DisputeOrderListDTO>
+			(
+			  paginationRequest.PageIndex,
+			  paginationRequest.PageSize,
+			  totalRecords,
+			  items
+			);
+
 	}
 
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
@@ -277,7 +351,7 @@ public class ATSRepository : IATSRepository
 				.SetProperty(eir => eir.HashToken, hashToken)
 				.SetProperty(eir => eir.HashTokenCreatedAt, DateTime.UtcNow)
 				.SetProperty(eir => eir.HashTokenExpiration, hashTokenExpiration)
-				.SetProperty(eir => eir.TicketStatus, "Pending Candidate Info")
+				.SetProperty(eir => eir.OrderStatus, "Pending Candidate Info")
 				.SetProperty(eir => eir.ApplicationFormStatus, "Pending"),
 				cancellationToken);
 

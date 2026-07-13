@@ -38,7 +38,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
@@ -62,7 +62,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		updated!.HashToken.Should().NotBe(originalHashToken);
 		updated.HashTokenCreatedAt.Should().BeAfter(originalCreatedAt);
 		updated.HashTokenExpiration.Should().BeAfter(originalExpiration);
-		updated.TicketStatus.Should().Be("Pending Candidate Info");
+		updated.OrderStatus.Should().Be("Pending Candidate Info");
 		updated.EmailSentStatus.Should().Be("Done");
 	}
 
@@ -85,7 +85,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
@@ -110,7 +110,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task ResendApplicationForm_ShouldResetTicketStatusToPendingCandidateInfo()
+	public async Task ResendApplicationForm_ShouldResetOrderStatusToPendingCandidateInfo()
 	{
 		// Arrange
 		var emailInvitation = new EmailInvitationRequest
@@ -128,7 +128,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
@@ -146,7 +146,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			.AsNoTracking()
 			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
 
-		updated!.TicketStatus.Should().Be("Pending Candidate Info");
+		updated!.OrderStatus.Should().Be("Pending Candidate Info");
 	}
 
 	[Fact]
@@ -168,7 +168,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
@@ -225,7 +225,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
@@ -260,7 +260,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
@@ -293,7 +293,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		firstResendToken.Should().NotBe("hash-token-1");
 		secondResendToken.Should().NotBe("hash-token-1");
 		secondResendToken.Should().NotBe(firstResendToken);
-		afterSecondResend.TicketStatus.Should().Be("Pending Candidate Info");
+		afterSecondResend.OrderStatus.Should().Be("Pending Candidate Info");
 		afterSecondResend.EmailSentStatus.Should().Be("Done");
 	}
 

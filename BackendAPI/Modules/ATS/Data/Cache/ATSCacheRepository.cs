@@ -6,6 +6,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly HybridCache _hybridCache;
 
 	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
+	private readonly string DisputeOrderTag = "disputeorder";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -160,5 +161,31 @@ public class ATSCacheRepository : IATSRepository
 			await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
 
 		return result;
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetDisputeOrdersAsync(req, token),
+			null,
+			tags: [DisputeOrderTag],
+			cancellationToken);
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchDisputeOrdersAsync(req, token),
+			null,
+			tags: [DisputeOrderTag],
+			cancellationToken);
 	}
 }

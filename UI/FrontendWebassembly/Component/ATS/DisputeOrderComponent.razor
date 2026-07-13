@@ -1,41 +1,47 @@
-﻿<TableComponent TItem="OrderRow"
+﻿@inject IDisputeOrderService DisputeOrderService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<TableComponent TItem="DisputeOrderListDTO"
                 @ref="ordersTable"
-                Title="Completed Orders (Last 30 Days)"
+                Title="Dispute Orders"
                 EnableSearch="true"
-                ColumnCount="6"
+                ColumnCount="5"
                 RowsPerPage="10"
-                LoadServerData="LoadOrderData">
+                LoadServerData="LoadOrderData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
 
     <HeaderTemplate>
-        <MudTh>Ticket Number</MudTh>
         <MudTh>Subject Name</MudTh>
         <MudTh>Status</MudTh>
-        <MudTh>Result</MudTh>
         <MudTh>Date Completed</MudTh>
         <MudTh>Dispute</MudTh>
     </HeaderTemplate>
 
     <RowTemplate Context="o">
-        <MudTd DataLabel="Ticket Number">@o.TicketNumber</MudTd>
-        <MudTd DataLabel="Subject Name">@o.SubjectName</MudTd>
-        <MudTd DataLabel="Status">@o.Status</MudTd>
-        <MudTd DataLabel="Result">@o.Result</MudTd>
-        <MudTd DataLabel="Date Completed">@o.DateCompleted</MudTd>
+        <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
+        <MudTd DataLabel="Status">@o.OrderStatus</MudTd>
+        <MudTd DataLabel="Date Completed">@(o.OrdeCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
         <MudTd>
             <div style="display:flex; justify-content:center; align-items:center;">
-                <MudCheckBox T="bool" @bind-Checked="o.Dispute" Color="Color.Primary" />
+                <MudCheckBox T="bool" Checked="@o.IsDiputed" Disabled="true" Color="Color.Primary" />
             </div>
         </MudTd>
     </RowTemplate>
+
+    <NoRecordsTemplate>
+        <MudText Typo="Typo.body2">No dispute orders found.</MudText>
+    </NoRecordsTemplate>
 </TableComponent>
 
 <MudGrid Class="mt-0" Justify="Justify.Center">
     <MudItem xs="12" md="5" Class="d-flex justify-center">
         <MudText Align="Align.Center" Typo="Typo.caption">
             <b class="gradient-text">IMPORTANT NOTICE!</b><br />
-            To preserve data and result integrity, dispute process can only be submitted for orders compieted within the last 30 days.
+            To preserve data and result integrity, dispute process can only be submitted for orders completed within the allowed dispute window.
             <MudSpacer/>
-            Please submit an order if more than 30 days or if reverification is required for the selected individual.
+            Please submit a new order if dispute is no longer eligible or if reverification is required for the selected individual.
         </MudText>
     </MudItem>
 

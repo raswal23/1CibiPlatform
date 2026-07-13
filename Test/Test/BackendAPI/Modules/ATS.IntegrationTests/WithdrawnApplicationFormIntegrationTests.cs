@@ -49,7 +49,7 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Pending Candidate Info"
+			OrderStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(application);

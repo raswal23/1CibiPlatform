@@ -8,7 +8,7 @@ public class GetWithdrawnEmailInvitationRequestsEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapGet("getwithdrawnapplicationform", async (
+		app.MapGet("getwithdrawnapplicationforms", async (
 			[AsParameters] GetWithdrawnEmailInvitationRequestsEndpointRequest request,
 			ISender sender,
 			CancellationToken cancellationToken) =>
@@ -29,7 +29,7 @@ public class GetWithdrawnEmailInvitationRequestsEndpoint : ICarterModule
 		.Produces<GetWithdrawnEmailInvitationRequestsEndpointResponse>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Withdrawn Email Invitation Requests")
-		.WithDescription("Retrieves a paginated list of email invitation requests with TicketStatus = 'Application Withdrawn'.")
+		.WithDescription("Retrieves a paginated list of email invitation requests with OrderStatus = 'Application Withdrawn'.")
 		.RequireAuthorization();
 	}
 }

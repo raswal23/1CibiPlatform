@@ -4,22 +4,22 @@ public static class ATSServiceConfiguration
     private const string assemblyName = "APIs";
     private const string connStringSegment = "OnePlatform_Connection";
 
-    #region Carter Config
-    //public static IServiceCollection AddATSCarterModules(this IServiceCollection services, Assembly assembly)
-    //{
-    //    services.AddCarter(configurator: c =>
-    //    {
-    //        var modules = assembly.GetTypes()
-				//.Where(t => typeof(ICarterModule).IsAssignableFrom(t) && !t.IsAbstract)
-    //            .ToArray();
-    //        c.WithModules(modules);
-    //    });
-    //    return services;
-    //}
-    #endregion
+	#region Carter Config
+	public static IServiceCollection AddATSCarterModules(this IServiceCollection services, Assembly assembly)
+	{
+		services.AddCarter(configurator: c =>
+		{
+			var modules = assembly.GetTypes()
+				.Where(t => typeof(ICarterModule).IsAssignableFrom(t) && !t.IsAbstract)
+				.ToArray();
+			c.WithModules(modules);
+		});
+		return services;
+	}
+	#endregion
 
-    #region MediatR Config
-    public static IServiceCollection AddATSMediaTR(this IServiceCollection services, Assembly assembly)
+	#region MediatR Config
+	public static IServiceCollection AddATSMediaTR(this IServiceCollection services, Assembly assembly)
     {
         services.AddMediatR(config =>
         {
@@ -41,6 +41,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
@@ -50,7 +51,6 @@ public static class ATSServiceConfiguration
 
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
-
 
 		return services;
     }

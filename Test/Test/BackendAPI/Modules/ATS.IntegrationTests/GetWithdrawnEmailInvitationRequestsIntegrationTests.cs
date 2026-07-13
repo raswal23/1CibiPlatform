@@ -31,7 +31,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -49,7 +49,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		var active = new EmailInvitationRequest
@@ -67,7 +67,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Pending Candidate Info"
+			OrderStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2, active);
@@ -79,7 +79,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		// Assert
 		result.Should().NotBeNull();
 		result!.Data.Should().HaveCount(2);
-		result.Data.Should().AllSatisfy(x => x.TicketStatus.Should().Be("Application Withdrawn"));
+		result.Data.Should().AllSatisfy(x => x.OrderStatus.Should().Be("Application Withdrawn"));
 		result.Data.Select(x => x.EmailAddress).Should().Contain(new[] { "withdrawn1@example.com", "withdrawn2@example.com" });
 	}
 
@@ -105,7 +105,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 				RushNormal = "Normal",
 				EmailSentStatus = "Done",
 				ApplicationFormStatus = "Pending",
-				TicketStatus = "Application Withdrawn"
+				OrderStatus = "Application Withdrawn"
 			});
 		}
 
@@ -150,7 +150,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Pending Candidate Info"
+			OrderStatus = "Pending Candidate Info"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(active);
@@ -185,7 +185,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -203,7 +203,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2);
@@ -238,7 +238,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -256,7 +256,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2);
@@ -290,7 +290,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			TicketStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn"
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(withdrawn);

@@ -141,7 +141,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						SelectPackage = file.PackageType,
 						EmailSentStatus = "Pending",
 						ApplicationFormStatus = "Pending",
-						TicketStatus = "Pending Candidate Info",
+						OrderStatus = "Pending Candidate Info",
 						RushNormal = file.OrderType
 					});
 				}

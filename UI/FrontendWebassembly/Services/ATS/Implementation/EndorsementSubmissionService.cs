@@ -142,7 +142,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
 	{
-		var query = $"ats/getwithdrawnapplicationform?pageNumber={PageNumber}&pageSize={PageSize}";
+		var query = $"ats/getwithdrawnapplicationforms?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
