@@ -8,7 +8,7 @@
 @inject ISnackbar Snackbar
 @using SigPad   
 
-<MudPaper Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
+<MudPaper Style="border-radius:12px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
@@ -45,7 +45,7 @@
 
                                 <MudItem xs="12" sm="6" Class="d-flex justify-center align-center">
                                     <div style="padding:18px;">
-                                        <MudPaper Class="pa-4" Style="background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
+                                        <MudPaper Class="pa-4" Style="background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:12px;">
                                             <MudText Typo="Typo.subtitle1" Style="font-weight:700;" Class="mb-2 gradient-text">IMPORTANT NOTICE!</MudText>
                                             <MudText Typo="Typo.body2" Class="mb-3">
                                                 I am a registered PSA National ID member and I voluntarily consent to share my verified information to any prospective employer I am applying for.
@@ -64,12 +64,12 @@
                                                              Disabled="@consent"
                                                              Label="No, I do not wish to proceed." />
                                                 <div class="d-flex" style="gap:30px;">
-                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
+                                                    <MudButton Style="background-color:gray; color:white; border-radius:12px;"
                                                                Disabled="@(!declineConsent || consent)"
                                                                OnClick="SkipStep">
                                                         Skip
                                                     </MudButton>
-                                                    <MudButton Style="background-color:gray; color:white; border-radius: 4px;"
+                                                    <MudButton Style="background-color:gray; color:white; border-radius:12px;"
                                                                Disabled="@(!declineConsent || consent)"
                                                                OnClick="CancelTransaction">
                                                         Cancel
@@ -233,7 +233,7 @@ oneplatform-rounded-input"
                             </MudItem>
 
                             <MudItem xs="12" sm="6">
-                                <MudPaper Class="pa-10" Elevation="0" Style=" height: auto; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:8px;">
+                                <MudPaper Class="pa-10" Elevation="0" Style=" height: auto; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:12px;">
                                     <div class="d-flex flex-column align-center" style="gap:12px;">
                                         <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
                                                   Alt="User Profile"
@@ -241,13 +241,13 @@ oneplatform-rounded-input"
                                         <div style="grid-column: 1; grid-row: 2; align-content: center; margin-bottom: 12px;">
                                             @if (!string.IsNullOrEmpty(philSysId))
                                             {
-                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #e8f5e9; color: #2e7d32; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
+                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #e8f5e9; color: #2e7d32; border-radius:12px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
                                                     <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium" Color="Color.Success" /> PhilSys Verified
                                                 </div>
                                             }
                                             else
                                             {
-                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fdecea; color: #c62828; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
+                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fdecea; color: #c62828; border-radius:12px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
                                                     <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Medium" Color="Color.Error" /> Not PhilSys Verified
                                                 </div>
                                             }
@@ -262,7 +262,7 @@ oneplatform-rounded-input"
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
                                                         <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; "
+                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; "
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.AdditionalGovtIDFile is not null)
                                                             {
@@ -299,7 +299,7 @@ oneplatform-rounded-input"
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
                                                         <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px;"
+                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px;"
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.NBIClearanceFile is not null)
                                                             {
@@ -336,7 +336,7 @@ oneplatform-rounded-input"
                                                 <CustomContent>
                                                     <div style="display: flex; justify-content: center;">
                                                         <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px;"
+                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px;"
                                                                    OnClick="@context.OpenFilePickerAsync">
                                                             @if (personalDetails.ResumeFile is not null)
                                                             {
@@ -600,7 +600,7 @@ oneplatform-rounded-input"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
                                         <MudButton Class="oneplatform-rounded-input w-100"
-                                                   Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                   Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
                                             {
@@ -655,12 +655,12 @@ oneplatform-rounded-input"
 
                                     <MudStack Row Spacing="2" Class="mt-2" JustifyContent="center">
                                         <MudButton Class="theme-button theme-button-active"
-                                                   Style="border-radius:4px;"
+                                                   Style="border-radius:12px;"
                                                    OnClick="() => hasProfessionalLicense = true">
                                             Yes
                                         </MudButton>
 
-                                        <MudButton Style="border-radius:4px; border: 2px solid gray;"
+                                        <MudButton Style="border-radius:12px; border: 2px solid gray;"
                                                    OnClick="() => hasProfessionalLicense = false">
                                             No
                                         </MudButton>
@@ -716,7 +716,7 @@ oneplatform-rounded-input"
                                                    OnFilesChanged="OnProfessionalLicenseUpload">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input w-100"
-                                                       Style="width:368px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                       Style="width:368px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (licensesDetails.LicenseUploadFile is not null)
                                                 {
@@ -867,7 +867,7 @@ oneplatform-rounded-input"
                                                OnFilesChanged="OnCoe1Upload">
                                     <CustomContent>
                                         <MudButton Class="oneplatform-rounded-input w-100"
-                                                   Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                   Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (professionalExperiences.Emp1COEUploadFile is not null)
                                             {
@@ -1040,7 +1040,7 @@ oneplatform-rounded-input"
                                                    Required="@(professionalExperiences.Emp2COEUploadFile is null)">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input w-100"
-                                                       Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                       Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp2COEUploadFile is not null)
                                                 {
@@ -1213,7 +1213,7 @@ oneplatform-rounded-input"
                                                    Required="@(professionalExperiences.Emp3COEUploadFile is null)">
                                         <CustomContent>
                                             <MudButton Class="oneplatform-rounded-input w-100"
-                                                       Style="width:270px; border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                       Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (professionalExperiences.Emp3COEUploadFile is not null)
                                                 {
@@ -1796,7 +1796,7 @@ oneplatform-rounded-input"
                     {
                         <div class="d-flex justify-space-between w-100 pa-2">
 
-                            <MudButton Style="width: 150px; border-radius: 4px; border: 2px solid gray;"
+                            <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray;"
                                        Class="mt-3 mb-4"
                                        OnClick="@(() => stepper.PreviousStepAsync())">
                                 Previous
@@ -1805,7 +1805,7 @@ oneplatform-rounded-input"
                             @if (_activeStep == stepper.Steps.Count - 1)
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                           Style="width: 150px; border-radius: 4px; "
+                                           Style="width: 150px; border-radius:12px; "
                                            OnClick="OnSubmitForm">
 
                                     @if (isSaving)
@@ -1824,7 +1824,7 @@ oneplatform-rounded-input"
                             else
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                           Style="width: 150px; border-radius: 4px; "
+                                           Style="width: 150px; border-radius:12px; "
                                            OnClick="OnSaveAndNextAsync">
                                     Save & Next
                                 </MudButton>
