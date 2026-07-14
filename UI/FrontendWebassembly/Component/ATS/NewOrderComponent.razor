@@ -6,14 +6,17 @@
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
 @inject MobileNumberValidationService MobileNumberValidationService
+@inherits CrudPageBase
 
 <MudGrid Class="mb-4">
-    <MudItem xs="12" md="6">
-        <MudPaper Elevation="1" Class="pa-4 mb-3" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); min-height: 414px;">
+    <MudItem xs="12" md="6" Class="d-flex">
+        <MudPaper Class="pa-4 flex-grow-1"
+                  Elevation="1" 
+                  Style="min-height:495px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Candidate Details</MudText>
 
             <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
-                <MudGrid Spacing="2">
+                <MudGrid Spacing="5">
                     <MudItem xs="12" sm="5">
                         <MudTextField @bind-Value="subject.LastName"
                                       Label="Last Name"
@@ -91,14 +94,18 @@
                         </MudSelect>
                     </MudItem>
 
-                    <MudItem xs="12" Class="d-flex align-center" Style="gap:12px;">
+                    <MudItem xs="12" 
+                             Class="d-flex align-center  mt-6"
+                             Style="gap:12px;">
                         <MudRadioGroup @bind-Value="subject.RushNormal" Required="true">
                             <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
+
                         <MudSpacer />
-                        <MudButton Class="theme-button theme-button-active mt-4" 
-                                   Style="width:120px; border-radius: 4px;" 
+
+                        <MudButton Class="theme-button theme-button-active" 
+                                   Style="width:120px; border-radius: 12px;"
                                    OnClick="OnSubmitCandidate">
                             @if (isSavingCandidate)
                             {
@@ -111,16 +118,21 @@
                                 <span>Send</span>
                             }
                         </MudButton>
+
                     </MudItem>
                 </MudGrid>
             </MudForm>
         </MudPaper>
+    </MudItem>
 
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); min-height: 495px;">
-            <MudText Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Bulk Invite</MudText>
+    <MudItem xs="12" md="6" Class="d-flex">
+        <MudPaper Class="pa-4 flex-grow-1"
+                  Elevation="1" 
+                  Style="min-height:495px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">Bulk Invite</MudText>
 
             <MudForm @ref="bulkForm" Disabled="@isUploadingBulk">
-                <MudGrid>
+                <MudGrid Spacing="3">
 
                     <MudItem xs="12">
                         <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
@@ -161,7 +173,7 @@
                                 <div style="display: flex; justify-content: center;">
                                     <MudFab Class="oneplatform-rounded-input"
                                             StartIcon="@Icons.Material.Filled.CloudUpload"
-                                            Style="width:300px; border: 1px solid gray; border-radius: 4px;"
+                                            Style="width:300px; border: 1px solid gray; border-radius: 12px;"
                                             OnClick="@context.OpenFilePickerAsync"
                                             Label=" Upload.csv file" />
                                 </div>
@@ -171,7 +183,7 @@
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex justify-center">
-                        <MudPaper Class="pa-4  mb-1" Style="border-radius: 4px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8); height: auto;">
+                        <MudPaper Class="pa-4  mb-1" Style="border-radius: 12px; width: 300px; box-shadow: 0 0 10px rgba(42,119,174,0.8); height: auto;">
                             <MudStack Spacing="2" >
                                 <MudStack Row Justify="Justify.Center">
                                     @if (bulkUploadFileDetailsDTO.BulkFile is not null)
@@ -197,7 +209,7 @@
                                 </MudStack>
                                 <MudStack Row Justify="Justify.Center">
                                     <MudButton Class="theme-button theme-button-active"
-                                               Style="width: 200px; border-radius: 4px;"
+                                               Style="width: 200px; border-radius: 12px;"
                                                OnClick="OnSubmitBulk">
 
 
@@ -232,7 +244,7 @@
         </MudPaper>
     </MudItem>
 
-    <MudItem xs="12" md="6">
+    @* <MudItem xs="12" md="6">
         <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
                   Style="height: auto; min-height: 851px; max-height: 925px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
 
@@ -247,6 +259,56 @@
             </div>
 
         </MudPaper>
-    </MudItem>
+    </MudItem> *@
 </MudGrid>
 
+@if (isResending)
+{
+    <div class="d-flex justify-center align-center" style="height:300px;">
+        <LoaderComponent />
+    </div>
+}
+else
+{
+    <TableComponent @ref="lockedUsersTable"
+                    TItem="FrontendWebassembly.DTO.ATS.EmailInvitationRequestListDTO"
+                    Title="Withdrawn Applications"
+                    EnableSearch="true"
+                    LoadServerData="LoadWithdrawnServerData"
+                    SearchString="@searchString"
+                    ColumnCount="8"
+                    SearchStringChanged="@((string val) => searchString = val)">
+        <HeaderTemplate>
+            <MudTh>Email</MudTh>
+            <MudTh>First Name</MudTh>
+            <MudTh>Last Name</MudTh>
+            <MudTh>Mobile</MudTh>
+            <MudTh>Ticket Status</MudTh>
+            <MudTh>Application Status</MudTh>
+            <MudTh>Email Status</MudTh>
+            <MudTh>Action</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="item">
+            <MudTd DataLabel="Email">@item.EmailAddress</MudTd>
+            <MudTd DataLabel="First Name">@item.FirstName</MudTd>
+            <MudTd DataLabel="Last Name">@item.LastName</MudTd>
+            <MudTd DataLabel="Mobile">@item.MobileNumber</MudTd>
+            <MudTd DataLabel="Ticket Status">@item.OrderStatus</MudTd>
+            <MudTd DataLabel="App Status">@item.ApplicationFormStatus</MudTd>
+            <MudTd DataLabel="Email Status">@item.EmailSentStatus</MudTd>
+            <MudTd DataLabel="Action">
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               Size="Size.Medium"
+                               OnClick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))"
+                               Title="Resend Application Form" />
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <MudText Typo="Typo.body2">No withdrawn application forms found.</MudText>
+        </NoRecordsTemplate>
+    </TableComponent>
+
+}

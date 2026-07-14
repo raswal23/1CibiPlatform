@@ -1,18 +1,57 @@
 ﻿<MudGrid>
     <MudItem xs="12" Class="d-flex justify-center">
-        <MudTabs Rounded="false"
-                 Elevation="0"
-                 Class="custom-tabs"
-                 @bind-ActivePanelIndex="_activeIndex"
-                 TabPanelsClass="pt-2 pb-2"
-                 Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;">
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(0)" Icon="@Icons.Material.Filled.Home" Text="Dashboard" Onclick="@TabChangedAsync" />
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(1)" Icon="@Icons.Material.Filled.Warning" Text="Dispute Order" Onclick="@TabChangedAsync" />
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(2)" Icon="@Icons.Material.Filled.AddShoppingCart" Text="New Order" Onclick="@TabChangedAsync" />
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(3)" Icon="@Icons.Material.Filled.Search" Text="Search Report" Onclick="@TabChangedAsync" />
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(4)" Icon="@Icons.Material.Filled.Cancel" Text="Withdrawn" Onclick="@TabChangedAsync" />
-            <MudTabPanel Style="border: 1px solid gray;" Class="@GetTabClass(5)" Icon="@Icons.Material.Filled.Description" Text="Invoice" Onclick="@TabChangedAsync" />
-        </MudTabs>
+
+        <MudPaper Class="d-flex align-center px-2 py-1 ats-custom-tabs mb-3"
+                  Elevation="0"
+                  Style="overflow-x:auto; white-space:nowrap;">
+
+            @*   <MudButton StartIcon="@Icons.Material.Filled.Home"
+                       Variant="Variant.Text"
+                       Class="@GetTabClass(0)"
+                       OnClick="@(() => NavigateToTab(0))">
+                Dashboard
+            </MudButton> *@
+
+            <MudMenu Label="Order Query"
+                     Class="@GetOrderClass()"
+                     StartIcon="@Icons.Material.Filled.ShoppingCart"
+                     EndIcon="@Icons.Material.Filled.ArrowDropDown"
+                     Variant="Variant.Text">
+
+                <MudMenuItem Class="ats-menu-item"
+                             OnClick="@(() => NavigateToTab(2))">
+                    New Order
+                </MudMenuItem>
+
+                <MudMenuItem Class="ats-menu-item"
+                             OnClick="@(() => NavigateToTab(1))">
+                    Dispute Order
+                </MudMenuItem>
+
+            </MudMenu>
+
+            <MudButton StartIcon="@Icons.Material.Filled.Search"
+                       Variant="Variant.Text"
+                       Class="@GetTabClass(3)"
+                       OnClick="@(() => NavigateToTab(3))">
+                Search Report
+            </MudButton>
+
+            @* <MudButton StartIcon="@Icons.Material.Filled.Cancel"
+                       Variant="Variant.Text"
+                       Class="@GetTabClass(4)"
+                       OnClick="@(() => NavigateToTab(4))">
+                Withdrawn
+            </MudButton> *@
+
+            @* <MudButton StartIcon="@Icons.Material.Filled.Description"
+                       Variant="Variant.Text"
+                       Class="@GetTabClass(5)"
+                       OnClick="@(() => NavigateToTab(5))">
+                Invoice
+            </MudButton> *@
+
+        </MudPaper>
+
     </MudItem>
 </MudGrid>
-

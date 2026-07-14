@@ -8,7 +8,7 @@
 
     <div class="d-flex align-center mb-3" style="gap:12px; align-items:center;">
         <div>
-            <MudText Typo="Typo.h5" Class="mb-0 gradient-text" Style="font-weight: 700;">WFS Talent Suite</MudText>
+            <MudText Typo="Typo.h5" Class="mb-0 gradient-text" Style="font-weight: 700;">@($"{ATSname}")</MudText>
         </div>
         <MudImage Src="/images/generic/cibi-icon.png" Alt="logo" Style="width:48px; height:48px;" />
     </div>
@@ -23,42 +23,42 @@
     }
     else
     {
-        @if (_activeIndex == 0)
+        @* @if (_activeIndex == 0)
         {
-            <PageTitle>WFS Talent Suite - Dashboard</PageTitle>
+            <PageTitle>@($"{ATSname} - Dashboard")</PageTitle>
 
             <ATSDashboardComponent />
-        }
-        else if (_activeIndex == 1)
+        } *@
+        if (_activeIndex == 1)
         {
-            <PageTitle>WFS Talent Suite - Dispute Order</PageTitle>
+            <PageTitle>@($"{ATSname} - Dispute Order")</PageTitle>
 
             <DisputeOrderComponent />
         }
         else if (_activeIndex == 2)
         {
-            <PageTitle>WFS Talent Suite - New Order</PageTitle>
+            <PageTitle>@($"{ATSname} - New Order")</PageTitle>
 
             <NewOrderComponent />
         }
         else if (_activeIndex == 3)
         {
-            <PageTitle>WFS Talent Suite - Search Report</PageTitle>
+            <PageTitle>@($"{ATSname} - Search Report")</PageTitle>
 
             <SearchReportComponent />
         }
         else if (_activeIndex == 4)
         {
-            <PageTitle>WFS Talent Suite - Withdrawn</PageTitle>
+            <PageTitle>@($"{ATSname} - Withdrawn")</PageTitle>
 
             <WithdrawnApplicationTableComponent />
         }
-        else if (_activeIndex == 5)
+        @* else if (_activeIndex == 5)
         {
-            <PageTitle>WFS Talent Suite - Invoice</PageTitle>
+            <PageTitle>@($"{ATSname} - Invoice")</PageTitle>
 
             <InvoiceComponent />
-        }
+        } *@
     }
 
 </MudContainer>
