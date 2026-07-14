@@ -12,8 +12,6 @@ public partial class ATS
 		_isLoading = true;
 		StateHasChanged();
 
-		await Task.Delay(50);
-
 		_activeIndex = value;
 
 		_isLoading = false;

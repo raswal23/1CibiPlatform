@@ -320,7 +320,6 @@ public class ATSRepository : IATSRepository
 			  totalRecords,
 			  items
 			);
-
 	}
 
 	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)

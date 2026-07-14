@@ -27,4 +27,11 @@ public partial class ATSTabComponent
 			? "ats-tab-active"
 			: "ats-tab-inactive";
 	}
+
+	private string GetReportClass()
+	{
+		return (_activeIndex == 3 || _activeIndex == 4)
+			? "ats-tab-active"
+			: "ats-tab-inactive";
+	}
 }

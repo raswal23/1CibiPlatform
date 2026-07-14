@@ -30,12 +30,23 @@
 
             </MudMenu>
 
-            <MudButton StartIcon="@Icons.Material.Filled.Search"
-                       Variant="Variant.Text"
-                       Class="@GetTabClass(3)"
-                       OnClick="@(() => NavigateToTab(3))">
-                Search Report
-            </MudButton>
+            <MudMenu Label="Report"
+                     Class="@GetReportClass()"
+                     StartIcon="@Icons.Material.Filled.Report"
+                     EndIcon="@Icons.Material.Filled.ArrowDropDown"
+                     Variant="Variant.Text">
+
+                <MudMenuItem Class="ats-menu-item"
+                             OnClick="@(() => NavigateToTab(3))">
+                    Search Report
+                </MudMenuItem>
+
+                <MudMenuItem Class="ats-menu-item"
+                             OnClick="@(() => NavigateToTab(4))">
+                    Upload Report
+                </MudMenuItem>
+
+            </MudMenu>
 
             @* <MudButton StartIcon="@Icons.Material.Filled.Cancel"
                        Variant="Variant.Text"

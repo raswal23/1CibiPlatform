@@ -1,0 +1,49 @@
+﻿<MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
+    <MudGrid Class="mb-2" Spacing="2">
+
+        <MudItem xs="12">
+            <MudTextField @bind-Value="name"
+                          Label="Gmail"
+                          FullWidth="true"
+                          Required="true"
+                          RequiredError="Gmail is required"
+                          Adornment="Adornment.Start"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          MaxLength="100"
+                          Class="oneplatform-rounded-input" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudSelect @bind-Value="hitstatus"
+                       Label="Hit Status"
+                       FullWidth="true"
+                       Required="true"
+                       RequiredError="Hit Status is required"
+                       Adornment="Adornment.Start"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Class="oneplatform-rounded-input">
+                <MudSelectItem Value=@("Clear")>Clear</MudSelectItem>
+                <MudSelectItem Value=@("Not Clear")>ot Clear</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudSelect @bind-Value="reportstatus"
+                       Label="Report Status"
+                       FullWidth="true"
+                       Required="true"
+                       RequiredError="Report Status is required"
+                       Adornment="Adornment.Start"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Class="oneplatform-rounded-input">
+                <MudSelectItem Value=@("Initial Report")>Initial Report</MudSelectItem>
+                <MudSelectItem Value=@("Complete Final Report")>Complete Final Report</MudSelectItem>
+                <MudSelectItem Value=@("Closed Final Report")>Closed Final Report</MudSelectItem>
+                <MudSelectItem Value=@("Supplementary Report")>Supplementary Report</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+</MudPaper>

@@ -1,333 +1,66 @@
 ﻿@inject IJSRuntime JS
 @inject IDialogService DialogService
 
-@if (_showSubjectResult)
-{
-    <MudGrid Class="mb-4">
+<MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
+    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+        <MudDateRangePicker @bind-DateRange="@_dateRange"
+                            Margin="Margin.Dense"
+                            ReadOnly="false"
+                            Clearable="true"
+                            PlaceholderStart="Start Date"
+                            PlaceholderEnd="End Date"
+                            Label="Date Range" />
+    </MudPaper>
+</MudStack>
 
-        <MudItem xs="12">
-            <MudButton StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Style="border-radius: 12px;"
-                       Class="pa-0 mb-3 theme-button theme-button-active"
-                       OnClick="@BackToQueryResults"/>
-        </MudItem>
+<TableComponent TItem="ReportRow"
+                @ref="reportsTable"
+                Title="Query Results"
+                EnableSearch="true"
+                ColumnCount="8"
+                RowsPerPage="10"
+                LoadServerData="LoadReportData">
 
-        <MudItem xs="12" md="6">
-            <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                      Style="height:100%; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,1);">
+    <HeaderTemplate>
+        <MudTh> Selected</MudTh>
+        <MudTh>Subject Name</MudTh>
+        <MudTh>Ticket Number</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Result</MudTh>
+        <MudTh>Date Completed</MudTh>
+        <MudTh>Report Type</MudTh>
+        <MudTh>Directory</MudTh>
+    </HeaderTemplate>
 
-                <MudGrid Spacing="2">
+    <RowTemplate Context="r">
+        <MudTd DataLabel="Selected">
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
+            </div>
+        </MudTd>
+        <MudTd DataLabel="Subject Name">@r.Subject</MudTd>
+        <MudTd DataLabel="Ticket Number">@r.Ticket</MudTd>
+        <MudTd DataLabel="Status">@r.Status</MudTd>
+        <MudTd DataLabel="Result">@r.Result</MudTd>
+        <MudTd DataLabel="Date Completed">@r.DateCompleted</MudTd>
+        <MudTd DataLabel="Type">@r.ReportType</MudTd>
+        <MudTd DataLabel="Report Directory">
+            <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@OpenResultTriggerDialog" />
+        </MudTd>
+    </RowTemplate>
 
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Ticket Number</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.TicketNumber"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
+</TableComponent>
 
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Status</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.Status"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Result</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.Result"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Report Type</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.ReportType"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Aptitude Test</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.AptitudeTest"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Live Interview</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.LiveInterview"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Grammar</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.Grammar"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Comprehension</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.Comprehension"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Relativeness</MudText>
-                    </MudItem>
-                    <MudItem xs="8">
-                        <MudTextField @bind-Value="ticketDetails.Relativeness"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="12" Class="d-flex justify-center">
-                        <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 12px;" OnClick="Download">Download</MudButton>
-                    </MudItem>
-                </MudGrid>
-
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="6">
-            <MudPaper Elevation="1" Class="pa-4 d-flex flex-column"
-                      Style="height: 100%; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,1);">
-
-                <MudGrid Spacing="2">
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Resume / CV</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.Resume"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>ID Uploaded</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.ID"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>COE</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.COE"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Diploma / TOR</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.Diploma"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Biometric Photo</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.BiometricPhoto"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Consent Form</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.ConsentForm"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-
-                    <MudItem xs="4" class="d-flex align-center">
-                        <MudText>Status</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.FinalReport"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudTextField @bind-Value="fileDetails.UploadedDate"
-                                      Variant="Variant.Outlined"
-                                      FullWidth="true"
-                                      ReadOnly
-                                      Class="oneplatform-rounded-input" />
-                    </MudItem>
-                </MudGrid>
-
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-}
-else
-{
-    <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
-        <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
-            <MudDateRangePicker @bind-DateRange="@_dateRange"
-                                Margin="Margin.Dense"
-                                ReadOnly="false"
-                                Clearable="true"
-                                PlaceholderStart="Start Date"
-                                PlaceholderEnd="End Date"
-                                Label="Date Range" />
-        </MudPaper>
-    </MudStack>
-
-    <TableComponent TItem="ReportRow"
-                    @ref="reportsTable"
-                    Title="Query Results"
-                    EnableSearch="true"
-                    ColumnCount="8"
-                    RowsPerPage="10"
-                    LoadServerData="LoadReportData">
-
-        <HeaderTemplate>
-            <MudTh> Selected</MudTh>
-            <MudTh>Subject Name</MudTh>
-            <MudTh>Ticket Number</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Result</MudTh>
-            <MudTh>Date Completed</MudTh>
-            <MudTh>Report Type</MudTh>
-            <MudTh>Directory</MudTh>
-        </HeaderTemplate>
-
-        <RowTemplate Context="r">
-            <MudTd DataLabel="Selected">
-                <div style="display:flex; justify-content:center; align-items:center;">
-                    <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Subject Name">@r.Subject</MudTd>
-            <MudTd DataLabel="Ticket Number">@r.Ticket</MudTd>
-            <MudTd DataLabel="Status">@r.Status</MudTd>
-            <MudTd DataLabel="Result">@r.Result</MudTd>
-            <MudTd DataLabel="Date Completed">@r.DateCompleted</MudTd>
-            <MudTd DataLabel="Type">@r.ReportType</MudTd>
-            <MudTd DataLabel="Report Directory">
-                <MudIconButton Icon="@Icons.Material.Filled.Folder" 
-                               Color="Color.Primary" 
-                               Size="Size.Small" 
-                               OnClick="@(() => OpenResultTriggerDialog(r))" />
-            </MudTd>
-        </RowTemplate>
-
-    </TableComponent>
-
-    <MudGrid Class="mt-0">
-        <MudItem xs="12" md="8">
-            <MudButton Class="theme-button theme-button-active"
-                       Style="width: 120px; border-radius: 12px;"
-                       OnClick="DownloadSelected">Download</MudButton>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudText Typo="Typo.caption" Class="text-right">
-                <b class="gradient-text">IMPORTANT NOTICE!</b><br />
-                For security purposes, all reports downloaded are password protected and in PDF format. Please reach out to your account manager for your quarterly passwords.
-            </MudText>
-        </MudItem>
-    </MudGrid>
-}
-
-
+<MudGrid Class="mt-0">
+    <MudItem xs="12" md="8">
+        <MudButton Class="theme-button theme-button-active"
+                   Style="width: 120px; border-radius: 4px;"
+                   OnClick="DownloadSelected">Download</MudButton>
+    </MudItem>
+    <MudItem xs="12" md="4">
+        <MudText Typo="Typo.caption" Class="text-right">
+            <b class="gradient-text">IMPORTANT NOTICE!</b><br />
+            For security purposes, all reports downloaded are password protected and in PDF format. Please reach out to your account manager for your quarterly passwords.
+        </MudText>
+    </MudItem>
+</MudGrid>
