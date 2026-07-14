@@ -60,9 +60,9 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			new HybridCacheEntryOptions { Expiration = TimeSpan.FromMinutes(30) });
 
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-batches:processing");
-		await dbRedis.ListRightPushAsync("devtest-batches:pending", batchId);
+		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
+		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.ListRightPushAsync("devtest-ats-batches:pending", batchId);
 
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);

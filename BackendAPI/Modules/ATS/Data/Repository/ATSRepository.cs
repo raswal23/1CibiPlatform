@@ -186,14 +186,13 @@ public class ATSRepository : IATSRepository
 
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext.EmailInvitationRequests
+		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir => eir.OrderStatus == "Application Withdrawn")
-			.LongCountAsync(cancellationToken);
+			.Where(eir => eir.OrderStatus == "Application Withdrawn");
 
-		var items = await _dbcontext.EmailInvitationRequests
-					.AsNoTracking()
-					.Where(eir => eir.OrderStatus == "Application Withdrawn")
+		var totalRecords = await usersQuery.CountAsync(cancellationToken);
+
+		var items = await usersQuery
 					.OrderBy(eir => eir.EmailInvitationID)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -203,10 +202,7 @@ public class ATSRepository : IATSRepository
 						EmailAddress = eir.EmailAddress,
 						FirstName = eir.FirstName,
 						LastName = eir.LastName,
-						MobileNumber = eir.MobileNumber,
 						OrderStatus = eir.OrderStatus,
-						ApplicationFormStatus = eir.ApplicationFormStatus,
-						EmailSentStatus = eir.EmailSentStatus
 					})
 					.ToListAsync(cancellationToken);
 
@@ -220,15 +216,15 @@ public class ATSRepository : IATSRepository
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
-			    .AsNoTracking()
-				.Where(eir => eir.OrderStatus == "Application Withdrawn" && eir.OrderStatus != null && eir != null && eir.EmailInvitationID != Guid.Empty && eir.EmailAddress != null && eir.FirstName != null) // guard
-				.Where(eir =>
-					EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
-					EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-					EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
-					EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
+							.AsNoTracking()
+							.Where(eir => eir.OrderStatus == "Application Withdrawn")
+							.Where(eir =>
+								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
+								EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+								EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+								EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
 
-        var totalRecords = await usersQuery.CountAsync(cancellationToken);
+		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
         var users = await usersQuery
                     .OrderBy(eir => eir.EmailInvitationID)
@@ -240,12 +236,8 @@ public class ATSRepository : IATSRepository
                         EmailAddress = eir.EmailAddress,
                         FirstName = eir.FirstName,
                         LastName = eir.LastName,
-                        MobileNumber = eir.MobileNumber,
                         OrderStatus = eir.OrderStatus,
-                        ApplicationFormStatus = eir.ApplicationFormStatus,
-                        EmailSentStatus = eir.EmailSentStatus
                     })
-                    .AsNoTracking()
                     .ToListAsync(cancellationToken);
 
         return new PaginatedResult<EmailInvitationRequestListDTO>(
@@ -260,14 +252,13 @@ public class ATSRepository : IATSRepository
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
-		var totalRecords = await _dbcontext.EmailInvitationRequests
+		var usersQuery =  _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir =>
-				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart)
-				|| eir.OrderStatus == "Disputed")
-			.LongCountAsync(cancellationToken); 
+			.Where(eir => eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
 
-		var items = await _dbcontext.EmailInvitationRequests
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var items = await usersQuery
 			.OrderByDescending(eir => eir.IsDisputed)
 	        .ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
@@ -298,8 +289,7 @@ public class ATSRepository : IATSRepository
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir =>
-				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart)
-				|| eir.OrderStatus == "Disputed" &&
+				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
@@ -321,7 +311,6 @@ public class ATSRepository : IATSRepository
 				OrderCompletedAt = eir.OrderCompletedAt,
 				IsDisputed = eir.IsDisputed,
 			})
-			.AsNoTracking()
 			.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<DisputeOrderListDTO>

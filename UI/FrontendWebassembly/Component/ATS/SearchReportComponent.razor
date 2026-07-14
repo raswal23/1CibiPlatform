@@ -7,38 +7,9 @@
 
         <MudItem xs="12">
             <MudButton StartIcon="@Icons.Material.Filled.ArrowBack"
-                       Variant="Variant.Text"
-                       Color="Color.Primary"
-                       Class="pa-0 mb-3"
-                       OnClick="@BackToQueryResults">
-
-                Back to Query Results
-            </MudButton>
-        </MudItem>
-
-
-        <MudItem xs="12" class="d-flex justify-center align-center">
-            <MudPaper Elevation="2" Class="pa-5 d-flex flex-column ats-result" Style="border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,1); width: 500px; color: white;">
-                <MudGrid Spacing="3" Justify="Justify.Center">
-                    <MudItem xs="12" sm="6">
-                        <MudText Style="font-size: 20px;" Class="mb-1" Align="Align.Center">
-                            Subject Name
-                        </MudText>
-                        <MudText Style="font-size: 16px;" Align="Align.Center">
-                            @subject.SubjectName
-                        </MudText>
-                    </MudItem>
-
-                    <MudItem xs="12" sm="6">
-                        <MudText Style="font-size: 20px;" Class="mb-1" Align="Align.Center">
-                            E-Pass Score
-                        </MudText>
-                        <MudText Style="font-size: 16px;" Align="Align.Center">
-                            @subject.Score
-                        </MudText>
-                    </MudItem>
-                </MudGrid>
-            </MudPaper>
+                       Style="border-radius: 12px;"
+                       Class="pa-0 mb-3 theme-button theme-button-active"
+                       OnClick="@BackToQueryResults"/>
         </MudItem>
 
         <MudItem xs="12" md="6">
@@ -147,7 +118,7 @@
                     </MudItem>
 
                     <MudItem xs="12" Class="d-flex justify-center">
-                        <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 12px;" OnClick="ProcessBulkInvite">Download</MudButton>
+                        <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 12px;" OnClick="Download">Download</MudButton>
                     </MudItem>
                 </MudGrid>
 

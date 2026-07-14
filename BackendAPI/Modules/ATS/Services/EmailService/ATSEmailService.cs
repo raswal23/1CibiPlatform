@@ -124,47 +124,54 @@ public class ATSEmailService : IEmailService
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
                     </style>
                 </head>
-                <div class=""container"">
-					<div class=""header"">
-						<h1>CIBI | New Dispute Order Submitted</h1>
+                <body>
+					<div class=""container"">
+						<div class=""header"">
+							<h1>CIBI | Dispute Order Notification</h1>
+						</div>
+
+						<div class=""content"">
+							<p>Hello,</p>
+
+							<p>
+								A request for dispute has been raised for subject
+								<strong>{{fullName}}</strong>.
+							</p>
+
+							<p>Supplemental details are provided below:</p>
+
+							<table>
+								<tr>
+									<td>Requestor Email</td>
+									<td>{{requestorEmail}}</td>
+								</tr>
+								<tr>
+									<td>Company (Requestor)</td>
+									<td>{{companyName}}</td>
+								</tr>
+								<tr>
+									<td>Order Date</td>
+									<td>{{orderDate}}</td>
+								</tr>
+								<tr>
+									<td>Reason for Dispute</td>
+									<td>{{reasonForDispute}}</td>
+								</tr>
+							</table>
+
+							<p>
+								Please review the dispute request and proceed with the appropriate action.
+							</p>
+
+							<p>Thank you.</p>
+						</div>
+
+						<div class=""footer"">
+							<p>
+								This is an automated notification from the ATS. Please do not reply to this email.
+							</p>
+						</div>
 					</div>
-					<div class=""content"">
-						<p>Hello,</p>
-						<p>
-							A new dispute order has been submitted and requires your review.
-							Please verify the details below and process the dispute in accordance with the standard dispute handling procedure.
-						</p>
-						<table>
-							<tr>
-								<td>Applicant Name</td>
-								<td>{{name}}</td>
-							</tr>
-							<tr>
-								<td>Email Address</td>
-								<td>{{email}}</td>
-							</tr>
-							<tr>
-								<td>Order Number</td>
-								<td>{{orderNumber}}</td>
-							</tr>
-							<tr>
-								<td>Dispute Submitted</td>
-								<td>{{disputedAt}}</td>
-							</tr>
-						</table>
-						<p>
-							Please log in to the ATS system to review the dispute details and take the necessary action.
-						</p>
-						<p>
-							Thank you.
-						</p>
-					</div>
-					<div class=""footer"">
-						<p>
-							This is an automated notification from the ATS. Please do not reply to this email.
-						</p>
-					</div>
-				</div>
 				</body>
 				</html>";
 

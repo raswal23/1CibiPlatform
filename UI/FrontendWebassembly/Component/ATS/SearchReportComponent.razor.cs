@@ -5,7 +5,7 @@ public partial class SearchReportComponent
 	private bool _showSubjectResult = false;
 
 	private ReportRow? _selectedReport;
-
+	private TableComponent<ReportRow>? reportsTable;
 	private MudForm? form;
 	private TicketDetails ticketDetails = new();
 	private Subject subject = new();
@@ -20,7 +20,6 @@ public partial class SearchReportComponent
 		public string SubjectName { get; set; } = "Antonio Aguinaldo";
 		public string Score { get; set; } = "85%";
 	}
-	private TableComponent<ReportRow>? reportsTable;
 	private DateRange? _dateRange { get; set; }
 	private readonly List<ReportRow> _dummyReports = new()
 	{
@@ -76,24 +75,6 @@ public partial class SearchReportComponent
 		await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
 	}
 
-	private async Task DownloadReport(ReportRow row)
-	{
-		await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
-	}
-
-	private async Task OpenResultDialog<TComponent>(string title)
-	where TComponent : ComponentBase
-	{
-		var options = new DialogOptions
-		{
-			CloseButton = true,
-			MaxWidth = MaxWidth.Large,
-			FullWidth = true
-		};
-
-		var dialog = await DialogService.ShowAsync<TComponent>(title, options);
-		var result = await dialog.Result;
-	}
 	private void OpenResultTriggerDialog(ReportRow row)
 	{
 		_selectedReport = row;
@@ -103,7 +84,6 @@ public partial class SearchReportComponent
 	private void BackToQueryResults()
 	{
 		_showSubjectResult = false;
-		_selectedReport = null;
 	}
 	//private async Task OpenResultTriggerDialog()
 	//	=> await OpenResultDialog<ATSResultComponent>("Subject Result");
@@ -133,7 +113,7 @@ public partial class SearchReportComponent
 		public string UploadedDate { get; set; } = "October 19, 2025";
 	}
 
-	private async Task ProcessBulkInvite()
+	private async Task Download()
 	{
 	}
 
