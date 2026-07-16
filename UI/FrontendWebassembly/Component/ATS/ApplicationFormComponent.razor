@@ -144,8 +144,7 @@
                                                           @bind-Value="personalDetails.LastName"
                                                           Required="true"
                                                           RequiredError="Last Name is required"
-                                                          Class="
-oneplatform-rounded-input"
+                                                          Class="oneplatform-rounded-input"
                                                           Label="Last Name" />
                                         </MudItem>
                                         <MudItem xs="12" sm="4">
@@ -255,7 +254,7 @@ oneplatform-rounded-input"
 
                                         <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
                                             <MudFileUpload T="IBrowserFile"
-                                                           MaxFileSize="26214400"
+                                                           Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
                                                            RequiredError="Government Id is required">
@@ -291,6 +290,7 @@ oneplatform-rounded-input"
                                                                            ErrorText="Government ID is required." />
 
                                             <MudFileUpload T="IBrowserFile"
+                                                           Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnNbiUpload" 
                                                            RequiredError="NBI Clearance is required"
@@ -329,7 +329,7 @@ oneplatform-rounded-input"
 
                                             <MudFileUpload T="IBrowserFile"
                                                            Accept=".pdf"
-                                                           MaxFileSize="26214400"
+                                                           Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            OnFilesChanged="OnCvUpload"
                                                            RequiredError="CV/Resume is required"
                                                            Class="mt-4">
@@ -594,7 +594,7 @@ oneplatform-rounded-input"
 
                             <MudItem xs="12" sm="3">
                                 <MudFileUpload T="IBrowserFile"
-                                               MaxFileSize="26214400"
+                                               Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                Accept=".pdf"
                                                Disabled="DisableEducationFieldsForAboveCollege()"
                                                OnFilesChanged="OnDiplomaUpload">
@@ -711,7 +711,7 @@ oneplatform-rounded-input"
 
                                 <MudItem xs="12" sm="4">
                                     <MudFileUpload T="IBrowserFile"
-                                                   MaxFileSize="26214400"
+                                                   Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnProfessionalLicenseUpload">
                                         <CustomContent>
@@ -862,7 +862,7 @@ oneplatform-rounded-input"
 
                             <MudItem xs="12" sm="3">
                                 <MudFileUpload T="IBrowserFile"
-                                               MaxFileSize="26214400"
+                                               Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload">
                                     <CustomContent>
@@ -1034,7 +1034,7 @@ oneplatform-rounded-input"
 
                                 <MudItem xs="12" sm="3">
                                     <MudFileUpload T="IBrowserFile"
-                                                   MaxFileSize="26214400"
+                                                   Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnCoe2Upload"
                                                    Required="@(professionalExperiences.Emp2COEUploadFile is null)">
@@ -1207,7 +1207,7 @@ oneplatform-rounded-input"
 
                                 <MudItem xs="12" sm="3">
                                     <MudFileUpload T="IBrowserFile"
-                                                   MaxFileSize="26214400"
+                                                   Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnCoe3Upload"
                                                    Required="@(professionalExperiences.Emp3COEUploadFile is null)">
