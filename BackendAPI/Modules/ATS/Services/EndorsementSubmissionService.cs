@@ -39,7 +39,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
-		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
+		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkFileFolderName", "");
 	}
 
 	public async Task<string> GetBulkTemplateFileUrlAsync()

@@ -2,11 +2,12 @@
 
 public partial class UploadReportComponent
 {
-	string hitstatus;
-	string reportstatus;
-	string name;
-	IBrowserFile report;
-	string reportfilename;
+   [Parameter] public Guid EmailInvitationRequestId { get; set; }
+
+	private ReportDetailsDTO reportDetails = new();
+	private string? reportFileName;
+
+	private bool isUploading = false;
 	private MudFileUpload<IBrowserFile> reportFileUpload = default!;
 
 	private async Task OnReportFileUpload(InputFileChangeEventArgs e)
@@ -21,8 +22,8 @@ public partial class UploadReportComponent
 
 		if (e.File is not null)
 		{
-			report = e.File;
-			reportfilename = e.File.Name;
+			reportDetails.ReportFile = e.File;
+			reportFileName = e.File.Name;
 		}
 
 		return;
@@ -32,14 +33,59 @@ public partial class UploadReportComponent
 	{
 		if (await reportFileUpload.RemoveFileAsync(file))
 		{
-			report = null;
-			reportfilename = null;
+			reportDetails.ReportFile = null;
+			reportFileName = null;
 			return;
 		}
 	}
 
-	private void SubmitUploadReport()
+   private async Task SubmitUploadReport()
 	{
+		if (EmailInvitationRequestId == Guid.Empty)
+		{
+			Snackbar.Add("Email invitation request ID is required.", Severity.Error);
+			return;
+		}
+
+		if (string.IsNullOrWhiteSpace(reportDetails.HitStatus) || string.IsNullOrWhiteSpace(reportDetails.ReportStatus) || reportDetails.ReportFile is null)
+		{
+			Snackbar.Add("Please complete required fields and upload a report file.", Severity.Error);
+			return;
+		}
+
+		try
+		{
+			isUploading = true;
+			await InvokeAsync(StateHasChanged);
+
+		   reportDetails.EmailInvitationRequestId = EmailInvitationRequestId;
+
+           var success = await ReportUploadService.UploadReportAsync(reportDetails);
+
+			if (!success)
+			{
+				Snackbar.Add("Failed to upload report.", Severity.Error);
+				return;
+			}
+
+			Snackbar.Add("Report uploaded successfully.", Severity.Success);
+			reportDetails.HitStatus = null;
+			reportDetails.ReportStatus = null;
+			reportDetails.ReportFile = null;
+			if (reportDetails.ReportFile is not null)
+			{
+				await RemoveFileFromUploadsAsync(reportDetails.ReportFile);
+			}
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to upload report.", Severity.Error);
+		}
+		finally
+		{
+			isUploading = false;
+			await InvokeAsync(StateHasChanged);
+		}
 
 	}
 

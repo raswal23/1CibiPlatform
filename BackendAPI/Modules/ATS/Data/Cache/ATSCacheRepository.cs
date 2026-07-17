@@ -198,4 +198,24 @@ public class ATSCacheRepository : IATSRepository
 
 		return result;
 	}
+
+	public async Task<ReportDetails?> GetReportDetailsByStatusAsync(Guid emailInvitationRequestId, string reportStatus, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetReportDetailsByStatusAsync(emailInvitationRequestId, reportStatus, cancellationToken);
+	}
+
+	public async Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+	}
+
+	public async Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
+	}
+
+	public async Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
+	}
 }

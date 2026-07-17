@@ -83,6 +83,17 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			new RouteDefinitionDTO(
+				RouteId: "UploadReport",
+				MatchPath: "/ats/uploadreport",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/uploadreport" }
+				}
+			),
+
 
 			new RouteDefinitionDTO(
 				RouteId: "ResendApplicationForm",

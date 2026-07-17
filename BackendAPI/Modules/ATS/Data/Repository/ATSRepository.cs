@@ -334,6 +334,41 @@ public class ATSRepository : IATSRepository
 		return affectedRows > 0;
 	}
 
+	public async Task<ReportDetails?> GetReportDetailsByStatusAsync(Guid emailInvitationRequestId, string reportStatus, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.ReportDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.EmailInvitationRequestId == emailInvitationRequestId && x.ReportStatus == reportStatus, cancellationToken);
+	}
+
+	public async Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+		await _dbcontext.ReportDetails.AddAsync(reportDetails, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return true;
+	}
+
+	public async Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+		var affectedRows = await _dbcontext.ReportDetails
+			.Where(x => x.ReportFileId == reportDetails.ReportFileId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.HitStatus, reportDetails.HitStatus)
+				.SetProperty(x => x.ReportFileName, reportDetails.ReportFileName)
+				.SetProperty(x => x.ReportFileKey, reportDetails.ReportFileKey)
+				.SetProperty(x => x.ReportUploadedAt, reportDetails.ReportUploadedAt),
+				cancellationToken);
+
+		return affectedRows > 0;
+	}
+
+	public async Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken)
+	{
+		await _dbcontext.ArchiveReports.AddAsync(archiveReport, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return true;
+	}
+
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests

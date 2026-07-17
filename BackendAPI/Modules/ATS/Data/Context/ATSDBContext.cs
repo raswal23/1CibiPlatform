@@ -16,6 +16,8 @@ public class ATSDBContext : DbContext
     public DbSet<DocumentDetails> DocumentDetails { get; set; }
 	public DbSet<SignatureDetails> SignatureDetails { get; set; }
 	public DbSet<BulkUploadFileDetails> BulkUploadFileDetails { get; set; }
+    public DbSet<ReportDetails> ReportDetails { get; set; }
+    public DbSet<ArchiveReport> ArchiveReports { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

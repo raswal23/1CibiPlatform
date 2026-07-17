@@ -35,7 +35,7 @@ public class ApplicationFormService : IApplicationFormService
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
-		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSUploadFolderName", "");
+		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
