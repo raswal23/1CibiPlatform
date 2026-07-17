@@ -1,4 +1,7 @@
-﻿<MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
+@inject FileValidationService FileValidationService
+@inject ISnackbar Snackbar
+
+<MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
     <MudGrid Class="mb-2" Spacing="2">
 
         <MudItem xs="12">
@@ -25,7 +28,7 @@
                        Margin="Margin.Dense"
                        Class="oneplatform-rounded-input">
                 <MudSelectItem Value=@("Clear")>Clear</MudSelectItem>
-                <MudSelectItem Value=@("Not Clear")>ot Clear</MudSelectItem>
+                <MudSelectItem Value=@("Not Clear")>Not Clear</MudSelectItem>
             </MudSelect>
         </MudItem>
 
@@ -45,5 +48,49 @@
                 <MudSelectItem Value=@("Supplementary Report")>Supplementary Report</MudSelectItem>
             </MudSelect>
         </MudItem>
+
+        <MudItem xs="12">
+            <MudFileUpload T="IBrowserFile"
+                           MaxFileSize="26214400"
+                           Accept=".pdf"
+                           Class="mt-1 100vw"
+                           @ref="reportFileUpload"
+                           OnFilesChanged="OnReportFileUpload"
+                           RequiredError="Report File is required">
+                <CustomContent>
+                    <div style="display: flex; justify-content: center;">
+                        <MudButton Class="oneplatform-rounded-input"
+                                   Style="border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; background-color: #f1f3f4; min-width: 332px;"
+                                   OnClick="@context.OpenFilePickerAsync">
+                            @if (report is not null)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
+                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@reportfilename</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                               Color="Color.Default"
+                                               Size="Size.Small"
+                                               Class="mr-3 ml-3"
+                                               OnClick="@(() => RemoveFileFromUploadsAsync(report))" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
+                                <span style="width: 250px;  margin: 0px;">
+                                    Upload Report
+                                </span>
+                            }
+                        </MudButton>
+                    </div>
+                </CustomContent>
+                <SelectedTemplate />
+            </MudFileUpload>
+        </MudItem>
+
+        <ButtonComponent OnClick="SubmitUploadReport"
+                         Class="theme-button theme-button-active mt-4"
+                         Style="border-radius: 4px;">
+            Upload
+        </ButtonComponent>
+
     </MudGrid>
 </MudPaper>

@@ -36,8 +36,6 @@ public partial class NewOrderComponent
 		});
 	}
 
-
-
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
 	{
 
