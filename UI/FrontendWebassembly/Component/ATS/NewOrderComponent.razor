@@ -71,7 +71,7 @@
                                     Required="true"
                                     Mask="@(new PatternMask("00000000000"))"
                                     RequiredError="Mobile Number is required"
-                                      Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))" />
+                                    Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))" />
                     </MudItem>
 
                     <MudItem xs="12">
@@ -160,11 +160,11 @@
 
                     <MudItem xs="12">
                         <MudFileUpload T="IBrowserFile"
+                                       Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                        @ref="@bulkFileUpload"
                                        OnFilesChanged="OnBulkFileUpload"
                                        Accept=".csv"
                                        DragAndDrop="true"
-                                       MaxFileSize="26214400"
                                        Required="true"
                                        Class="centered-upload">
                             <CustomContent>
@@ -193,8 +193,8 @@
                                                         @bulkUploadFileDetailsDTO.BulkFile!.Name (@($"{bulkUploadFileDetailsDTO.BulkFile!.Size / 1024d:N1} kB"))
                                                     </MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                    Color="Color.Default"
-                                                                    Size="Size.Small"
+                                                                   Color="Color.Default"
+                                                                   Size="Size.Small"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(bulkUploadFileDetailsDTO.BulkFile!))" />
                                                 </MudStack>
                                             </MudListItem>
@@ -214,8 +214,12 @@
                                         @if (isUploadingBulk)
                                         {
                                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-
                                             <span> Uploading...</span>
+                                        }
+                                        else if (isPreview)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+
                                         }
                                         else
                                         {

@@ -9,6 +9,7 @@ public partial class NewOrderComponent
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
+	private bool isPreview = false;
 
 	private TableComponent<EmailInvitationRequestListDTO>? lockedUsersTable;
 	private string? _searchString;
@@ -37,7 +38,7 @@ public partial class NewOrderComponent
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-	{
+	{	
 
 		var result = FileValidationService.ValidateExtension(e.File.Name, ".csv");
 
@@ -138,6 +139,9 @@ public partial class NewOrderComponent
 			return;
 		}
 
+		isPreview = true;
+		StateHasChanged();
+
 		var parameters = new DialogParameters
 		{
 			{ nameof(PreviewComponent.Headers), previewData.Headers },
@@ -151,6 +155,8 @@ public partial class NewOrderComponent
 			FullWidth = true,
 			CloseButton = true
 		};
+
+		isPreview = false;
 
 		var dialog = await DialogService.ShowAsync<PreviewComponent>(
 			"Preview Upload",
@@ -241,11 +247,10 @@ public partial class NewOrderComponent
 
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
 	{
-		if (await bulkFileUpload.RemoveFileAsync(file))
+		if (await bulkFileUpload!.RemoveFileAsync(file))
 		{
 			bulkUploadFileDetailsDTO.BulkFile = null;
 			bulkUploadFileDetailsDTO.FileName = null;
-			return;
 		}
 	}
 

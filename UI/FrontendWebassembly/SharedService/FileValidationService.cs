@@ -24,4 +24,13 @@ public class FileValidationService
 			$"Only the following file type/s are allowed: {string.Join(", ", allowedExtensions)}"
 		);
 	}
+
+	public IEnumerable<string> ValidateFileSize(IBrowserFile? file)
+	{
+		if (file is null)
+			yield break;
+
+		if (file.Size > 25 * 1024 * 1024)
+			yield return "The file size should not exceed 25 MB.";
+	}
 }
