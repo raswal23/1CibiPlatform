@@ -2,69 +2,79 @@
 
 public partial class SearchReportComponent
 {
-	private TableComponent<ReportRow>? reportsTable;
+    private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
-	private readonly List<ReportRow> _dummyReports = new()
-	{
-		new ReportRow(false, "Antonio Aguinaldo", "2025 - 00123456", "In Progress", "Pending", "October 25, 2025", "Basic"),
-		new ReportRow(false, "Antonio Aguinaldo", "2025 - 00129876", "Completed", "Clear", "October 21, 2025", "Basic 2"),
-		new ReportRow(false, "Antonio Aguinaldo", "2024 - 00124356", "Completed", "Not Clear", "October 20, 2024", "Lite"),
-		new ReportRow(false, "Antonio Aguinaldo", "2023 - 00198765", "Completed", "Clear", "October 18, 2019", "Package 1"),
-		new ReportRow(false, "Antonio Aguinaldo", "2019 - 00198765", "Completed", "Clear", "October 10, 2018", "AirBNB")
-	};
+    private string? _searchString;
+	private List<ReportListDTO> currentPageData = new();
 
-	private class ReportRow
-	{
-		public bool Selected { get; set; }
-		public string Subject { get; set; }
-		public string Ticket { get; set; }
-		public string Status { get; set; }
-		public string Result { get; set; }
-		public string DateCompleted { get; set; }
-		public string ReportType { get; set; }
 
-		public ReportRow(bool selected, string subject, string ticket, string status, string result, string dateCompleted, string reportType)
+	private string searchString
+	{
+      get => _searchString!;
+		set => UpdateSearch(ref _searchString!, value, reportsTable!);
+	}
+
+    private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	{
+      if (field != value)
 		{
-			Selected = selected;
-			Subject = subject;
-			Ticket = ticket;
-			Status = status;
-			Result = result;
-			DateCompleted = dateCompleted;
-			ReportType = reportType;
+			field = value;
+			table?.TableRef!.ReloadServerData();
 		}
 	}
 
-	private Task<TableData<ReportRow>> LoadReportData(TableState state, CancellationToken cancellationToken)
+	private async Task<TableData<ReportListDTO>> LoadReportData(TableState state, CancellationToken cancellationToken)
 	{
-		var filtered = _dummyReports.ToList();
-
-		return Task.FromResult(new TableData<ReportRow>
+		try
 		{
-			Items = filtered,
-			TotalItems = filtered.Count
-		});
+			var result = await ReportService.GetReportsAsync(state.Page + 1, state.PageSize, searchString);
+			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+
+         if (_dateRange?.Start is not null || _dateRange?.End is not null)
+			{
+				var start = _dateRange?.Start?.Date;
+				var end = _dateRange?.End?.Date;
+
+				currentPageData = currentPageData
+					.Where(r => r.OrderCompletedAt.HasValue &&
+						(!start.HasValue || r.OrderCompletedAt.Value.Date >= start.Value) &&
+						(!end.HasValue || r.OrderCompletedAt.Value.Date <= end.Value))
+					.ToList();
+			}
+
+			return new TableData<ReportListDTO>
+			{
+				Items = currentPageData,
+               TotalItems = (int)result.Count
+			};
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load reports.", Severity.Error);
+			return new TableData<ReportListDTO>
+			{
+				Items = Array.Empty<ReportListDTO>(),
+				TotalItems = 0
+			};
+		}
 	}
 
 	private async Task DownloadSelected()
 	{
-		var selected = _dummyReports.Where(r => r.Selected).ToList();
+       var selected = currentPageData.Where(r => r.Selected).ToList();
 		if (!selected.Any())
 		{
-			await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
+          await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
 			return;
 		}
 
-		await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
+      await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.EmailInvitationRequestId));
 	}
 
-	private async Task DownloadReport(ReportRow row)
-	{
-		await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
-	}
-
-	private async Task OpenResultDialog<TComponent>(string title)
-	where TComponent : ComponentBase
+	private async Task OpenResultDialog<TComponent>(
+	string title,
+	DialogParameters? parameters = null)
+	where TComponent : IComponent
 	{
 		var options = new DialogOptions
 		{
@@ -73,11 +83,24 @@ public partial class SearchReportComponent
 			FullWidth = true
 		};
 
-		var dialog = await DialogService.ShowAsync<TComponent>(title, options);
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters!,
+			options);
+
 		var result = await dialog.Result;
 	}
 
-	private async Task OpenResultTriggerDialog()
-		=> await OpenResultDialog<ATSResultComponent>("Subject Result");
+	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
+	{
+		var parameters = new DialogParameters
+	{
+		{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId }
+	};
+
+		await OpenResultDialog<ATSResultComponent>(
+			"Subject Result",
+			parameters);
+	}
 
 }

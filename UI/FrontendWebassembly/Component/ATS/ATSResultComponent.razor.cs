@@ -7,9 +7,11 @@ public partial class ATSResultComponent
 	private Subject subject = new();
 	private FileDetails fileDetails = new();
 	private bool IsLoaded = true;
+	private bool showReportUploader = false;
+
 
 	[Parameter]
-	public AddRoleDTO Role { get; set; } = new AddRoleDTO();
+	public Guid EmailInvitationId { get; set; }
 
 	private class Subject
 	{
@@ -44,5 +46,15 @@ public partial class ATSResultComponent
 
 	private async Task ProcessBulkInvite()
 	{
+	}
+
+	private void ShowUploadReport()
+	{
+		showReportUploader = true;
+	}
+
+	private void GoBackToSearchReport()
+	{
+		showReportUploader = false;
 	}
 }

@@ -1,5 +1,7 @@
 ﻿@inject IJSRuntime JS
 @inject IDialogService DialogService
+@inject IReportService ReportService
+@inject ISnackbar Snackbar
 
 <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
     <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
@@ -13,22 +15,23 @@
     </MudPaper>
 </MudStack>
 
-<TableComponent TItem="ReportRow"
+<TableComponent TItem="ReportListDTO"
                 @ref="reportsTable"
                 Title="Query Results"
                 EnableSearch="true"
-                ColumnCount="8"
+                ColumnCount="7"
                 RowsPerPage="10"
-                LoadServerData="LoadReportData">
+                LoadServerData="LoadReportData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
 
     <HeaderTemplate>
         <MudTh> Selected</MudTh>
         <MudTh>Subject Name</MudTh>
-        <MudTh>Ticket Number</MudTh>
         <MudTh>Status</MudTh>
-        <MudTh>Result</MudTh>
         <MudTh>Date Completed</MudTh>
-        <MudTh>Report Type</MudTh>
+        <MudTh>Selected Package</MudTh>
+        <MudTh>Hit Status</MudTh>
         <MudTh>Directory</MudTh>
     </HeaderTemplate>
 
@@ -38,16 +41,19 @@
                 <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
             </div>
         </MudTd>
-        <MudTd DataLabel="Subject Name">@r.Subject</MudTd>
-        <MudTd DataLabel="Ticket Number">@r.Ticket</MudTd>
-        <MudTd DataLabel="Status">@r.Status</MudTd>
-        <MudTd DataLabel="Result">@r.Result</MudTd>
-        <MudTd DataLabel="Date Completed">@r.DateCompleted</MudTd>
-        <MudTd DataLabel="Type">@r.ReportType</MudTd>
+        <MudTd DataLabel="Subject Name">@r.SubjectName</MudTd>
+        <MudTd DataLabel="Status">@r.OrderStatus</MudTd>
+        <MudTd DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+        <MudTd DataLabel="Selected Package">@r.SelectedPackage</MudTd>
+        <MudTd DataLabel="Hit Status">@r.HitStatus</MudTd>
         <MudTd DataLabel="Report Directory">
-            <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@OpenResultTriggerDialog" />
+            <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))" />
         </MudTd>
     </RowTemplate>
+
+    <NoRecordsTemplate>
+        <MudText Typo="Typo.body2">No reports found.</MudText>
+    </NoRecordsTemplate>
 
 </TableComponent>
 

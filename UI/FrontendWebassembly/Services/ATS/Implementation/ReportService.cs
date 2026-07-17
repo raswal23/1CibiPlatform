@@ -48,4 +48,24 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 		var result = await response.Content.ReadFromJsonAsync<bool>();
 		return result;
 	}
+
+	public async Task<PaginatedResult<FrontendWebassembly.DTO.ATS.ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+	{
+		var query = $"ats/getreports?pageNumber={PageNumber}&pageSize={PageSize}";
+		if (!string.IsNullOrWhiteSpace(SearchTerm))
+		{
+			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
+		}
+
+		var response = await _httpClient.GetAsync(query);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+		}
+
+		var result = await response.Content.ReadFromJsonAsync<FrontendWebassembly.DTO.ATS.GetReportsResponseDTO>();
+		return result!.Reports!;
+	}
 }

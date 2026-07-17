@@ -106,4 +106,21 @@ public class ReportService : IReportService
 			throw new InternalServerException($"Failed to upload report. {ex.InnerException?.Message ?? ex.Message}");
 		}
 	}
+
+	public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "GetReports",
+			Step = "FetchingReports",
+			Pagination = paginationRequest,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
+
+		return string.IsNullOrEmpty(paginationRequest.SearchTerm)
+			? _atsRepository.GetReportsAsync(paginationRequest, cancellationToken)
+			: _atsRepository.SearchReportsAsync(paginationRequest, cancellationToken);
+	}
 }

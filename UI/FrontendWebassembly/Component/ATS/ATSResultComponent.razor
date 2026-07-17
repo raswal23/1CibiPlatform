@@ -5,6 +5,12 @@
         {
             <LoaderComponent Height="200px" />
         }
+        else if (showReportUploader)
+        {
+
+            <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId" />
+            <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="GoBackToSearchReport">Report Upload</MudButton>
+        }
         else
         {
             <MudGrid GutterSize="3" Class="mb-4">
@@ -137,8 +143,12 @@
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
 
-                            <MudItem xs="12" Class="d-flex justify-center">
+                            <MudItem xs="12" sm="6" Class="d-flex justify-center">
                                 <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download</MudButton>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" Class="d-flex justify-center">
+                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ShowUploadReport">Report Upload</MudButton>
                             </MudItem>
                         </MudGrid>
 

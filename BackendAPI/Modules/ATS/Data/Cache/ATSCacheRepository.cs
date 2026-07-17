@@ -7,6 +7,7 @@ public class ATSCacheRepository : IATSRepository
 
 	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
 	private readonly string DisputeOrderTag = "disputeorder";
+	private readonly string ReportTag = "report";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -206,16 +207,48 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
 	{
-		return await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+        var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+		return result;
 	}
 
 	public async Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
 	{
-		return await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
+     var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+		return result;
 	}
 
 	public async Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken)
 	{
 		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
+	}
+
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetReportsAsync(req, token),
+			null,
+			tags: [ReportTag],
+			cancellationToken);
+	}
+
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchReportsAsync(req, token),
+			null,
+			tags: [ReportTag],
+			cancellationToken);
 	}
 }

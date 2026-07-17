@@ -369,6 +369,79 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Select(eir => new ReportListDTO
+			{
+				EmailInvitationRequestId = eir.EmailInvitationID,
+				SubjectName = $"{eir.FirstName} {eir.LastName}".Trim(),
+				OrderStatus = eir.OrderStatus,
+				OrderCompletedAt = eir.OrderCompletedAt,
+				SelectedPackage = eir.SelectPackage,
+				HitStatus = _dbcontext.ReportDetails
+					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
+					.OrderByDescending(rd => rd.ReportUploadedAt)
+					.Select(rd => rd.HitStatus)
+					.FirstOrDefault()
+			});
+
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var items = await usersQuery
+			.OrderByDescending(x => x.OrderCompletedAt)
+			.ThenBy(x => x.EmailInvitationRequestId)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ReportListDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Select(eir => new ReportListDTO
+			{
+				EmailInvitationRequestId = eir.EmailInvitationID,
+				SubjectName = $"{eir.FirstName} {eir.LastName}".Trim(),
+				OrderStatus = eir.OrderStatus,
+				OrderCompletedAt = eir.OrderCompletedAt,
+				SelectedPackage = eir.SelectPackage,
+				HitStatus = _dbcontext.ReportDetails
+					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
+					.OrderByDescending(rd => rd.ReportUploadedAt)
+					.Select(rd => rd.HitStatus)
+					.FirstOrDefault()
+			})
+			.Where(x =>
+				EF.Functions.ILike(x.SubjectName ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(x.OrderStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(x.SelectedPackage ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(x.HitStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var items = await usersQuery
+			.OrderByDescending(x => x.OrderCompletedAt)
+			.ThenBy(x => x.EmailInvitationRequestId)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ReportListDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
