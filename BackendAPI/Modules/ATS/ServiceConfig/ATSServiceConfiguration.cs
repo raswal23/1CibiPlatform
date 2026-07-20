@@ -43,6 +43,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
@@ -52,6 +53,7 @@ public static class ATSServiceConfiguration
 
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
+		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
 
 		return services;
     }

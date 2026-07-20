@@ -131,7 +131,12 @@ public class ATSRepository : IATSRepository
 			.ExecuteUpdateAsync(setters => setters
 			.SetProperty(x => x.ApplicationFormStatus, x => "Done")
 			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow)
-			.SetProperty(x => x.OrderStatus, x => "In Progress"));
+			.SetProperty(
+				x => x.OrderStatus,
+				x => x.OrderStatus == "Completed"
+					? x.OrderStatus
+					: "In Progress")
+			.SetProperty(x => x.NeedsProjection, x => true));
 
 		return true;
 	}
@@ -362,6 +367,19 @@ public class ATSRepository : IATSRepository
 		return affectedRows > 0;
 	}
 
+	public async Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken)
+	{
+		var affectedRows = await _dbcontext.EmailInvitationRequests
+			.Where(x => x.EmailInvitationID == EmailInvitationRequestId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.OrderStatus, orderStatus)
+				.SetProperty(x => x.OrderCompletedAt, orderCompletedAt),
+				cancellationToken);
+
+		return affectedRows > 0;
+	}
+
+
 	public async Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken)
 	{
 		await _dbcontext.ArchiveReports.AddAsync(archiveReport, cancellationToken);
@@ -491,6 +509,32 @@ public class ATSRepository : IATSRepository
 		return await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.FirstOrDefaultAsync(eir => eir.EmailInvitationID == emailInvitationId, cancellationToken) ?? new EmailInvitationRequest();
+	}
+
+	public async Task<List<EmailInvitationRequest>> GetEmailInvitationRequestsNeedingProjectionAsync(CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+			.Where(x => x.NeedsProjection)
+			.Include(x => x.PersonalDetails)
+			.Include(x => x.AddressDetails)
+			.Include(x => x.EducationalBackground)
+			.Include(x => x.LicensesDetails)
+			.Include(x => x.ProfessionalExperiences)
+			.Include(x => x.ReferenceDetails)
+			.Include(x => x.SignatureDetails)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<ApplicantSearchProjection?> GetApplicantSearchProjectionByIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.ApplicantSearchProjections
+			.FirstOrDefaultAsync(x => x.EmailInvitationRequestId == emailInvitationRequestId, cancellationToken);
+	}
+
+	public async Task<bool> AddApplicantSearchProjectionAsync(ApplicantSearchProjection projection, CancellationToken cancellationToken)
+	{
+		await _dbcontext.ApplicantSearchProjections.AddAsync(projection, cancellationToken);
+		return true;
 	}
 
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)

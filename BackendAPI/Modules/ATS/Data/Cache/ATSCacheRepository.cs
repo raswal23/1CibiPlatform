@@ -1,4 +1,6 @@
-﻿namespace ATS.Data.Cache;
+﻿using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
+
+namespace ATS.Data.Cache;
 
 public class ATSCacheRepository : IATSRepository
 {
@@ -104,7 +106,12 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+		var result =  await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+
+		return result;
 	}
 
 	public async Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
@@ -160,6 +167,17 @@ public class ATSCacheRepository : IATSRepository
 
 		if (result)
 			await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
+
+		return result;
+	}
+
+	public async Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.UpdateOrderStatusAsync(EmailInvitationRequestId, orderStatus, orderCompletedAt, cancellationToken);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(ReportTag);
 
 		return result;
 	}
@@ -250,5 +268,20 @@ public class ATSCacheRepository : IATSRepository
 			null,
 			tags: [ReportTag],
 			cancellationToken);
+	}
+
+	public async Task<List<EmailInvitationRequest>> GetEmailInvitationRequestsNeedingProjectionAsync(CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationRequestsNeedingProjectionAsync(cancellationToken);
+	}
+
+	public async Task<ApplicantSearchProjection?> GetApplicantSearchProjectionByIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetApplicantSearchProjectionByIdAsync(emailInvitationRequestId, cancellationToken);
+	}
+
+	public async Task<bool> AddApplicantSearchProjectionAsync(ApplicantSearchProjection projection, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.AddApplicantSearchProjectionAsync(projection, cancellationToken);
 	}
 }

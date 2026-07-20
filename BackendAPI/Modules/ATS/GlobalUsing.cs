@@ -11,6 +11,7 @@ global using ATS.Hubs;
 global using ATS.Services.EmailService;
 global using ATS.BackgroundJobs.BulkSubmission;
 global using ATS.BackgroundJobs.EmailNotification;
+global using ATS.BackgroundJobs.ApplicantSearchProjection;
 
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;

@@ -32,6 +32,9 @@ public class ReportService : IReportService
 			Timestamp = DateTime.UtcNow
 		};
 
+		string orderStatus = "In Progress";
+		DateTime? orderCompletedAt = null ;
+
 		if (reportDetailsDTO.ReportFile is null)
 		{
 			throw new BadRequestException("Report file is required.");
@@ -53,6 +56,16 @@ public class ReportService : IReportService
 				reportDetailsDTO.EmailInvitationRequestId,
 				reportDetailsDTO.ReportStatus ?? string.Empty,
 				cancellationToken);
+
+			if (reportDetailsDTO.ReportStatus != "Initial Report")
+				orderStatus = "Completed";
+			    orderCompletedAt = DateTime.UtcNow;
+
+			await _atsRepository.UpdateOrderStatusAsync(
+					reportDetailsDTO.EmailInvitationRequestId,
+					orderStatus,
+					orderCompletedAt,
+					cancellationToken);
 
 			if (existingReport is not null)
 			{
