@@ -84,6 +84,17 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetReportResult",
+				MatchPath: "/ats/getreportresult",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getreportresult" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "MarkAsDisputed",
 				MatchPath: "/ats/markasdisputed",
 				ClusterId: GatewayConstants.OnePlatformApi,

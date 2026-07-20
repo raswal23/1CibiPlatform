@@ -504,6 +504,82 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		var result = await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => eir.EmailInvitationID == emailInvitationRequestId)
+			.Select(eir => new
+			{
+				eir.FirstName,
+				eir.LastName,
+				eir.OrderStatus,
+				eir.SelectPackage,
+				Personal = new
+				{
+					eir.PersonalDetails!.ResumeFileName,
+					eir.PersonalDetails.BiometricFileName,
+					eir.PersonalDetails.AdditionalGovtIDFileName
+				},
+				Educational = new
+				{
+					eir.EducationalBackground!.DoctorateDiplomaFileName,
+					eir.EducationalBackground!.MastersDiplomaFileName,
+					eir.EducationalBackground!.BachelorsDiplomaFileName,
+					eir.EducationalBackground!.SeniorHighSchoolDiplomaFileName,
+					eir.EducationalBackground!.HighSchoolDiplomaFileName,
+				},
+				Professional = new
+				{
+					eir.ProfessionalExperiences!.Emp1COEUploadFileName,
+					eir.ProfessionalExperiences!.Emp2COEUploadFileName,
+					eir.ProfessionalExperiences!.Emp3COEUploadFileName,
+					eir.ProfessionalExperiences!.COEUploadFileName,
+				},
+				Signature = new
+				{ 
+					eir.SignatureDetails!.SignatureFileName
+				},
+				LatestReport = eir.ReportDetails!
+					.OrderByDescending(rd => rd.ReportUploadedAt)
+					.Select(rd => new
+					{
+						rd.HitStatus,
+						rd.ReportFileName,
+						rd.ReportUploadedAt
+					})
+				   .FirstOrDefault()
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileName
+			?? result.Educational?.MastersDiplomaFileName
+			?? result.Educational?.BachelorsDiplomaFileName
+			?? result.Educational?.SeniorHighSchoolDiplomaFileName
+			?? result.Educational?.HighSchoolDiplomaFileName;
+
+		string? coeFileKey = result.Professional?.Emp1COEUploadFileName
+			?? result.Professional?.Emp2COEUploadFileName
+			?? result.Professional?.Emp3COEUploadFileName
+			?? result.Professional?.COEUploadFileName;
+
+		return new ReportResultDTO
+		{
+			SubjectName = $"{result.FirstName} {result.LastName}".Trim(),
+			OrderStatus = result.OrderStatus,
+			HitStatus = result.LatestReport?.HitStatus,
+			SelectedPackage = result.SelectPackage,
+			ResumeFileName = result.Personal?.ResumeFileName,
+			IdUploadedFileName = result.Personal?.AdditionalGovtIDFileName,
+			CoeFileName = coeFileKey,
+			DiplomaFileName = diplomaFileKey,
+			BiometricPhotoFileName = result.Personal?.BiometricFileName,
+			ConsentFormFileName = result.Signature?.SignatureFileName,
+			UploadedReportFileName = result.LatestReport?.ReportFileName,
+			ReportUploadedAt = result.LatestReport?.ReportUploadedAt
+		};
+	}
+
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests

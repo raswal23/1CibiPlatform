@@ -72,4 +72,18 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 		var result = await response.Content.ReadFromJsonAsync<FrontendWebassembly.DTO.ATS.GetReportsResponseDTO>();
 		return result!.Reports!;
 	}
+
+	public async Task<ATSResultDetailsDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId)
+	{
+		var response = await _httpClient.GetAsync($"ats/getreportresult?emailInvitationRequestId={emailInvitationRequestId}");
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+		}
+
+		var result = await response.Content.ReadFromJsonAsync<GetReportResultResponseDTO>();
+		return result!.ReportResult!;
+	}
 }

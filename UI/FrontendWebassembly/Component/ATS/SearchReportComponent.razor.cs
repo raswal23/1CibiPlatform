@@ -98,14 +98,24 @@ public partial class SearchReportComponent
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
 	{
-		var parameters = new DialogParameters
-	{
-		{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId }
-	};
+       try
+		{
+			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 
-		await OpenResultDialog<ATSResultComponent>(
-			"Subject Result",
-			parameters);
+			var parameters = new DialogParameters
+			{
+				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
+				{ nameof(ATSResultComponent.ReportResult), reportResult }
+			};
+
+			await OpenResultDialog<ATSResultComponent>(
+				"Subject Result",
+				parameters);
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+		}
 	}
 
 }

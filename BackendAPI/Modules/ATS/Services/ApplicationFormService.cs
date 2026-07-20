@@ -12,6 +12,7 @@ public class ApplicationFormService : IApplicationFormService
 	private string resumeFileKey = "";
 	private string nbiKey = "";
 	private string govtIdKey = "";
+	private string biometricFileKey = "";
 	private string highSchoolDiplomaKey = "";
 	private string seniorHighSchoolDiplomaKey = "";
 	private string bachelorsDiplomaKey = "";
@@ -140,11 +141,18 @@ public class ApplicationFormService : IApplicationFormService
 			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
 		}
 
+		if(personalDetailsDTO.BiometricFile != null)
+		{
+			await using var biometricStream = personalDetailsDTO.BiometricFile.OpenReadStream();
+			biometricFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.BiometricFileName!, biometricStream, cancellationToken);
+		}
+
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
 		personalDetails.PersonalID = Guid.CreateVersion7();
 		personalDetails.ResumeFileKey = resumeFileKey;
 		personalDetails.NBIClearanceFileKey = nbiKey;
 		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
+		personalDetails.BiometricFileKey = biometricFileKey;
 		personalDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddPersonalDetailsAsync(personalDetails);

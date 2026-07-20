@@ -1,6 +1,4 @@
-﻿using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
-
-namespace ATS.Data.Cache;
+﻿namespace ATS.Data.Cache;
 
 public class ATSCacheRepository : IATSRepository
 {
@@ -255,6 +253,19 @@ public class ATSCacheRepository : IATSRepository
 			null,
 			tags: [ReportTag],
 			cancellationToken);
+	}
+
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"report_result_{emailInvitationRequestId}";
+
+		return await _hybridCache.GetOrCreateAsync(
+			cacheKey,
+			async _ => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken),
+			options: new HybridCacheEntryOptions
+			{
+				Expiration = TimeSpan.FromMinutes(5)
+			});
 	}
 
   public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)

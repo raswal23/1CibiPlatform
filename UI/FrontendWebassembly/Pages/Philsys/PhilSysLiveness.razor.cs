@@ -84,7 +84,7 @@ public partial class PhilSysLiveness
 	}
 
 	[JSInvokable]
-	public async Task OnLivenessCompleted(string sessionId)
+	public async Task OnLivenessCompleted(string sessionId, string photoUrl)
 	{
 		showLoader = true;
 		StateHasChanged();
@@ -112,7 +112,7 @@ public partial class PhilSysLiveness
 				await LocalStorageService.SetItemAsync($"ats:applicationForm:sex", information.data_subject!.gender ?? string.Empty);
 				await LocalStorageService.SetItemAsync($"ats:applicationForm:emailAddress", information.data_subject!.email ?? string.Empty);
 				await LocalStorageService.SetItemAsync($"ats:applicationForm:phoneNumber", information.data_subject!.mobile_number ?? string.Empty);
-				await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", information.data_subject!.face_url ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", photoUrl ?? string.Empty);
 			}
 
 			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=1", false);

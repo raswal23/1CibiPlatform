@@ -16,11 +16,13 @@ public class ProfessionalExperiences
 	public string? Emp1SupervisorContactNumber { get; set; }
 	public string? Emp1SupervisorEmail { get; set; }
 	public string? Emp1COEUploadFileKey { get; set; }
+	public string? Emp1COEUploadFileName { get; set; }
 	public string? Emp2CompanyName { get; set; }
 	public string? Emp2CurrentlyEmployed { get; set; }
 	public string? Emp2PermissionToContact { get; set; }
 	public string? Emp2CompanyAddress { get; set; }
 	public string? Emp2COEUploadFileKey { get; set; }
+	public string? Emp2COEUploadFileName { get; set; }
 	public DateOnly? Emp2StartDate { get; set; }
 	public DateOnly? Emp2EndDate { get; set; }
 	public string? Emp2JobTitle { get; set; }
@@ -33,6 +35,7 @@ public class ProfessionalExperiences
 	public string? Emp3PermissionToContact { get; set; }
 	public string? Emp3CompanyAddress { get; set; }
 	public string? Emp3COEUploadFileKey { get; set; }
+	public string? Emp3COEUploadFileName { get; set; }
 	public DateOnly? Emp3StartDate { get; set; }
 	public DateOnly? Emp3EndDate { get; set; }
 	public string? Emp3JobTitle { get; set; }
@@ -41,6 +44,7 @@ public class ProfessionalExperiences
 	public string? Emp3SupervisorContactNumber { get; set; }
 	public string? Emp3SupervisorEmail { get; set; }
 	public string? COEUploadFileKey { get; set; }
+	public string? COEUploadFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 
 }

@@ -136,4 +136,16 @@ public class ReportService : IReportService
           ? _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
 			: _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
 	}
+
+	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken);
+
+		if (result is null)
+		{
+			throw new NotFoundException($"No report result found for email invitation ID {emailInvitationRequestId}.");
+		}
+
+		return result;
+	}
 }

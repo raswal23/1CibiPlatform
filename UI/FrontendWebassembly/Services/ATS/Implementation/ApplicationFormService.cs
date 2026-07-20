@@ -56,6 +56,8 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.NBIClearanceFileName, "PersonalDetails.NBIClearanceFileName");
 		AddFile(PersonalDetails.ResumeFile, "PersonalDetails.ResumeFile");
 		AddString(PersonalDetails.ResumeFileName, "PersonalDetails.ResumeFileName");
+		AddFile(PersonalDetails.BiometricFile, "PersonalDetails.BiometricFile");
+		AddString(PersonalDetails.BiometricFileName, "PersonalDetails.BiometricFileName");
 
 		// AddressDetails
 		AddString(AddressDetails.EmailInvitationID.ToString(), "AddressDetails.EmailInvitationID");

@@ -20,8 +20,12 @@ public class PersonalDetails
 	public string? EmailAddress { get; set; }
 	public string? EmailAlternative { get; set; }
 	public string? AdditionalGovtIDFileKey { get; set; }
+	public string? AdditionalGovtIDFileName { get; set; }
 	public string? NBIClearanceFileKey { get; set; }
+	public string? NBIClearanceFileName { get; set; }
 	public string? ResumeFileKey { get; set; }
-	public string? PhilSysImageKey { get; set; }
+	public string? ResumeFileName { get; set; }
+	public string? BiometricFileKey { get; set; }
+	public string? BiometricFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

@@ -97,6 +97,14 @@ public partial class ApplicationFormComponent
 		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? string.Empty;
 		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:profilePicture") ?? string.Empty;
 
+		if (!string.IsNullOrEmpty(FaceUrl))
+		{
+			var uri = new Uri(FaceUrl);
+
+			personalDetails.BiometricFileName = Path.GetFileName(uri.AbsolutePath);
+			personalDetails.BiometricFile = await Http.GetByteArrayAsync(FaceUrl);
+		}
+
 		if (ActiveStep <= 1)
 			_activeStep = ActiveStep;
 		showPhilSys = ShowsPhilSys;

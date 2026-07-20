@@ -13,6 +13,9 @@ public partial class ATSResultComponent
 	[Parameter]
 	public Guid EmailInvitationId { get; set; }
 
+	[Parameter]
+	public ATSResultDetailsDTO? ReportResult { get; set; }
+
 	private class Subject
 	{
 		public string SubjectName { get; set; } = "Antonio Aguinaldo";
@@ -56,5 +59,27 @@ public partial class ATSResultComponent
 	private void GoBackToSearchReport()
 	{
 		showReportUploader = false;
+	}
+
+	protected override void OnParametersSet()
+	{
+		if (ReportResult is null)
+		{
+			return;
+		}
+
+		subject.SubjectName = string.IsNullOrWhiteSpace(ReportResult.SubjectName) ? subject.SubjectName : ReportResult.SubjectName;
+		ticketDetails.Status = ReportResult.OrderStatus ?? "-";
+		ticketDetails.Result = ReportResult.HitStatus ?? "-";
+		ticketDetails.ReportType = ReportResult.SelectedPackage ?? "-";
+
+		fileDetails.Resume = ReportResult.ResumeFileName ?? "-";
+		fileDetails.ID = ReportResult.IdUploadedFileName ?? "-";
+		fileDetails.COE = ReportResult.CoeFileName ?? "-";
+		fileDetails.Diploma = ReportResult.DiplomaFileName ?? "-";
+		fileDetails.BiometricPhoto = ReportResult.BiometricPhotoFileName ?? "-";
+		fileDetails.ConsentForm = ReportResult.ConsentFormFileName ?? "-";
+		fileDetails.FinalReport = ReportResult.UploadedReportFileName ?? "-";
+		fileDetails.UploadedDate = ReportResult.ReportUploadedAt?.ToString("MMMM dd, yyyy") ?? "-";
 	}
 }
