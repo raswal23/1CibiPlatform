@@ -107,7 +107,7 @@ public class ReportService : IReportService
 		}
 	}
 
-	public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+   public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -120,7 +120,7 @@ public class ReportService : IReportService
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm)
-			? _atsRepository.GetReportsAsync(paginationRequest, cancellationToken)
-			: _atsRepository.SearchReportsAsync(paginationRequest, cancellationToken);
+          ? _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
+			: _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
 	}
 }

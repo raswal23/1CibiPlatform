@@ -49,12 +49,16 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 		return result;
 	}
 
-	public async Task<PaginatedResult<FrontendWebassembly.DTO.ATS.ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+   public async Task<PaginatedResult<FrontendWebassembly.DTO.ATS.ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
 	{
 		var query = $"ats/getreports?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
+		}
+		if (!string.IsNullOrWhiteSpace(SortColumn))
+		{
+			query += $"&sortColumn={Uri.EscapeDataString(SortColumn)}&sortDescending={SortDescending}";
 		}
 
 		var response = await _httpClient.GetAsync(query);

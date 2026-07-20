@@ -27,7 +27,12 @@ public partial class SearchReportComponent
 	{
 		try
 		{
-			var result = await ReportService.GetReportsAsync(state.Page + 1, state.PageSize, searchString);
+         var result = await ReportService.GetReportsAsync(
+				state.Page + 1,
+				state.PageSize,
+				searchString,
+				state.SortLabel,
+				state.SortDirection == SortDirection.Descending);
 			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
 
          if (_dateRange?.Start is not null || _dateRange?.End is not null)

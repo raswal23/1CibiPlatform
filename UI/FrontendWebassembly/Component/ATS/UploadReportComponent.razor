@@ -74,20 +74,22 @@
             </MudFileUpload>
         </MudItem>
 
-        <ButtonComponent OnClick="SubmitUploadReport"
-                         Disabled="@isUploading"
-                         Class="theme-button theme-button-active mt-4"
-                         Style="border-radius: 4px;">
-            @if (isUploading)
-            {
-                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                <span> Uploading...</span>
-            }
-            else
-            {
-                <span>Upload</span>
-            }
-        </ButtonComponent>
+        <MudItem xs="12">
+            <ButtonComponent OnClick="SubmitUploadReport"
+                             Disabled="@isUploading"
+                             Class="theme-button theme-button-active mt-4"
+                             Style="border-radius: 4px;">
+                @if (isUploading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    <span> Uploading...</span>
+                }
+                else
+                {
+                    <span>Upload</span>
+                }
+            </ButtonComponent>
+        </MudItem>
 
     </MudGrid>
 </MudPaper>

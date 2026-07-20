@@ -27,9 +27,15 @@
 
     <HeaderTemplate>
         <MudTh> Selected</MudTh>
-        <MudTh>Subject Name</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Date Completed</MudTh>
+        <MudTh>
+            <MudTableSortLabel T="ReportListDTO" SortLabel="SubjectName">Subject Name</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="ReportListDTO" SortLabel="OrderStatus">Status</MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel T="ReportListDTO" SortLabel="OrderCompletedAt">Date Completed</MudTableSortLabel>
+        </MudTh>
         <MudTh>Selected Package</MudTh>
         <MudTh>Hit Status</MudTh>
         <MudTh>Directory</MudTh>

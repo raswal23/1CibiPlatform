@@ -226,27 +226,27 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+ public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+      var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.GetReportsAsync(req, token),
+         async (req, token) => await _atsRepository.GetReportsAsync(req, sortColumn, sortDescending, token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+  public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+        var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}_sort_{sortColumn}_desc_{sortDescending}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.SearchReportsAsync(req, token),
+          async (req, token) => await _atsRepository.SearchReportsAsync(req, sortColumn, sortDescending, token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);

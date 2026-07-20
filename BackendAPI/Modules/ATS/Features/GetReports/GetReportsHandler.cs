@@ -1,6 +1,6 @@
 namespace ATS.Features.Report;
 
-public record GetReportsQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+public record GetReportsQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
 	: IQuery<GetReportsQueryResult>;
 
 public record GetReportsQueryResult(PaginatedResult<ReportListDTO> Reports);
@@ -16,6 +16,11 @@ public class GetReportsQueryRequestValidator : AbstractValidator<GetReportsQuery
 		RuleFor(x => x.PageSize)
 			.Must(pageSize => pageSize is null || (pageSize > 0 && pageSize <= 100))
 			.WithMessage("PageSize must be greater than 0 and less than or equal to 100.");
+
+		RuleFor(x => x.SortColumn)
+			.Must(sortColumn => string.IsNullOrWhiteSpace(sortColumn)
+				|| sortColumn is "SubjectName" or "OrderStatus" or "OrderCompletedAt")
+			.WithMessage("SortColumn must be one of: SubjectName, OrderStatus, OrderCompletedAt.");
 	}
 }
 
@@ -35,7 +40,11 @@ public class GetReportsHandler : IQueryHandler<GetReportsQueryRequest, GetReport
 			request.PageSize ?? 10,
 			request.SearchTerm);
 
-		var reports = await _reportService.GetReportsAsync(paginationRequest, cancellationToken);
+       var reports = await _reportService.GetReportsAsync(
+			paginationRequest,
+			request.SortColumn,
+			request.SortDescending,
+			cancellationToken);
 
 		return new GetReportsQueryResult(reports);
 	}

@@ -369,17 +369,18 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+   public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Select(eir => new ReportListDTO
+			.Select(eir => new
 			{
-				EmailInvitationRequestId = eir.EmailInvitationID,
-				SubjectName = $"{eir.FirstName} {eir.LastName}".Trim(),
-				OrderStatus = eir.OrderStatus,
-				OrderCompletedAt = eir.OrderCompletedAt,
-				SelectedPackage = eir.SelectPackage,
+				eir.EmailInvitationID,
+				eir.FirstName,
+				eir.LastName,
+				eir.OrderStatus,
+				eir.OrderCompletedAt,
+				eir.SelectPackage,
 				HitStatus = _dbcontext.ReportDetails
 					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
 					.OrderByDescending(rd => rd.ReportUploadedAt)
@@ -387,13 +388,34 @@ public class ATSRepository : IATSRepository
 					.FirstOrDefault()
 			});
 
+		usersQuery = sortColumn switch
+		{
+			"SubjectName" => sortDescending
+				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
+				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
+			"OrderStatus" => sortDescending
+				? usersQuery.OrderByDescending(x => x.OrderStatus)
+				: usersQuery.OrderBy(x => x.OrderStatus),
+			"OrderCompletedAt" => sortDescending
+				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
+			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+		};
+
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
-			.OrderByDescending(x => x.OrderCompletedAt)
-			.ThenBy(x => x.EmailInvitationRequestId)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
+			.Select(x => new ReportListDTO
+			{
+				EmailInvitationRequestId = x.EmailInvitationID,
+				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+				OrderStatus = x.OrderStatus,
+				OrderCompletedAt = x.OrderCompletedAt,
+				SelectedPackage = x.SelectPackage,
+				HitStatus = x.HitStatus
+			})
 			.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<ReportListDTO>(
@@ -403,17 +425,18 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+   public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Select(eir => new ReportListDTO
+			.Select(eir => new
 			{
-				EmailInvitationRequestId = eir.EmailInvitationID,
-				SubjectName = $"{eir.FirstName} {eir.LastName}".Trim(),
-				OrderStatus = eir.OrderStatus,
-				OrderCompletedAt = eir.OrderCompletedAt,
-				SelectedPackage = eir.SelectPackage,
+				eir.EmailInvitationID,
+				eir.FirstName,
+				eir.LastName,
+				eir.OrderStatus,
+				eir.OrderCompletedAt,
+				eir.SelectPackage,
 				HitStatus = _dbcontext.ReportDetails
 					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
 					.OrderByDescending(rd => rd.ReportUploadedAt)
@@ -421,18 +444,39 @@ public class ATSRepository : IATSRepository
 					.FirstOrDefault()
 			})
 			.Where(x =>
-				EF.Functions.ILike(x.SubjectName ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike($"{x.FirstName} {x.LastName}", $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(x.OrderStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(x.SelectedPackage ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(x.SelectPackage ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%"));
+
+		usersQuery = sortColumn switch
+		{
+			"SubjectName" => sortDescending
+				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
+				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
+			"OrderStatus" => sortDescending
+				? usersQuery.OrderByDescending(x => x.OrderStatus)
+				: usersQuery.OrderBy(x => x.OrderStatus),
+			"OrderCompletedAt" => sortDescending
+				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
+			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+		};
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
-			.OrderByDescending(x => x.OrderCompletedAt)
-			.ThenBy(x => x.EmailInvitationRequestId)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
+			.Select(x => new ReportListDTO
+			{
+				EmailInvitationRequestId = x.EmailInvitationID,
+				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+				OrderStatus = x.OrderStatus,
+				OrderCompletedAt = x.OrderCompletedAt,
+				SelectedPackage = x.SelectPackage,
+				HitStatus = x.HitStatus
+			})
 			.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<ReportListDTO>(
