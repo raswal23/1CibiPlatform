@@ -105,7 +105,9 @@ public partial class SearchReportComponent
 			var parameters = new DialogParameters
 			{
 				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
-				{ nameof(ATSResultComponent.ReportResult), reportResult }
+				{ nameof(ATSResultComponent.ReportResult), reportResult },
+				{ nameof(ATSResultComponent.OnUploadSucceededReload),
+				EventCallback.Factory.Create(this, ReloadTable) }
 			};
 
 			await OpenResultDialog<ATSResultComponent>(
@@ -115,6 +117,15 @@ public partial class SearchReportComponent
 		catch (Exception)
 		{
 			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+		}
+	}
+
+	private async Task ReloadTable()
+	{
+		if (reportsTable?.TableRef is not null)
+		{
+			await reportsTable.TableRef.ReloadServerData();
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 

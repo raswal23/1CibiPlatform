@@ -13,5 +13,6 @@ public record ReportResultDTO
 	public string? BiometricPhotoFileName { get; set; }
 	public string? ConsentFormFileName { get; set; }
 	public string? UploadedReportFileName { get; set; }
+	public DateTime? FilledFormAt { get; set; }
 	public DateTime? ReportUploadedAt { get; set; }
 }

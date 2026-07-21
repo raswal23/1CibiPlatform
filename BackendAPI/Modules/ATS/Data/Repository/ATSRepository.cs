@@ -372,7 +372,8 @@ public class ATSRepository : IATSRepository
 		var affectedRows = await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == EmailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.OrderStatus, orderStatus)
+				.SetProperty(x => x.OrderStatus, 
+							 x => x.OrderStatus == "Completed" ? x.OrderStatus : orderStatus)
 				.SetProperty(x => x.OrderCompletedAt, orderCompletedAt),
 				cancellationToken);
 
@@ -515,6 +516,7 @@ public class ATSRepository : IATSRepository
 				eir.LastName,
 				eir.OrderStatus,
 				eir.SelectPackage,
+				eir.FormCompletedAt,
 				Personal = new
 				{
 					eir.PersonalDetails!.ResumeFileName,
@@ -541,15 +543,24 @@ public class ATSRepository : IATSRepository
 					eir.SignatureDetails!.SignatureFileName
 				},
 				LatestReport = eir.ReportDetails!
-					.OrderByDescending(rd => rd.ReportUploadedAt)
-					.Select(rd => new
-					{
-						rd.HitStatus,
-						rd.ReportFileName,
-						rd.ReportUploadedAt
-					})
-				   .FirstOrDefault()
-			})
+				.Where(rd =>
+					rd.ReportStatus == "Supplementary Report" ||
+					rd.ReportStatus == "Complete Final Report" ||
+					rd.ReportStatus == "Closed Final Report" ||
+					rd.ReportStatus == "Initial Report")
+				.OrderBy(rd =>
+					rd.ReportStatus == "Supplementary Report" ? 0 :
+					(rd.ReportStatus == "Complete Final Report" ||
+					 rd.ReportStatus == "Closed Final Report") ? 1 : 2)
+				.ThenByDescending(rd => rd.ReportUploadedAt)
+				.Select(rd => new
+				{
+					rd.HitStatus,
+					rd.ReportFileName,
+					rd.ReportUploadedAt
+				})
+				.FirstOrDefault()
+				})
 			.FirstOrDefaultAsync(cancellationToken);
 
 		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileName
@@ -576,6 +587,7 @@ public class ATSRepository : IATSRepository
 			BiometricPhotoFileName = result.Personal?.BiometricFileName,
 			ConsentFormFileName = result.Signature?.SignatureFileName,
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
+			FilledFormAt = result.FormCompletedAt,
 			ReportUploadedAt = result.LatestReport?.ReportUploadedAt
 		};
 	}

@@ -2,7 +2,11 @@
 
 public partial class UploadReportComponent
 {
-   [Parameter] public Guid EmailInvitationRequestId { get; set; }
+    [Parameter] 
+	public Guid EmailInvitationRequestId { get; set; }
+	[Parameter]
+	public EventCallback OnUploadSucceeded { get; set; }
+	private MudForm? uploadReportForm;
 
 	private ReportDetailsDTO reportDetails = new();
 	private string? reportFileName;
@@ -41,6 +45,11 @@ public partial class UploadReportComponent
 
    private async Task SubmitUploadReport()
 	{
+		await uploadReportForm!.ValidateAsync();
+
+		if (!uploadReportForm.IsValid)
+			return;
+
 		if (EmailInvitationRequestId == Guid.Empty)
 		{
 			Snackbar.Add("Email invitation request ID is required.", Severity.Error);
@@ -58,7 +67,7 @@ public partial class UploadReportComponent
 			isUploading = true;
 			await InvokeAsync(StateHasChanged);
 
-		   reportDetails.EmailInvitationRequestId = EmailInvitationRequestId;
+			reportDetails.EmailInvitationRequestId = EmailInvitationRequestId;
 
            var success = await ReportUploadService.UploadReportAsync(reportDetails);
 
@@ -68,18 +77,26 @@ public partial class UploadReportComponent
 				return;
 			}
 
-			Snackbar.Add("Report uploaded successfully.", Severity.Success);
-			reportDetails.HitStatus = null;
-			reportDetails.ReportStatus = null;
-			reportDetails.ReportFile = null;
-			if (reportDetails.ReportFile is not null)
+			var successParams = new DialogParameters
 			{
-				await RemoveFileFromUploadsAsync(reportDetails.ReportFile);
-			}
-		}
-		catch (Exception)
-		{
-			Snackbar.Add("Failed to upload report.", Severity.Error);
+				{
+					nameof(SuccessSaveComponent.Message),
+					"Successfully uploaded the report."
+				}
+			};
+
+			await OnUploadSucceeded.InvokeAsync();
+
+			await DialogService.ShowAsync<SuccessSaveComponent>(
+					"Success",
+					successParams);
+
+			reportDetails = new ReportDetailsDTO
+			{
+				EmailInvitationRequestId = EmailInvitationRequestId
+			};
+
+			await uploadReportForm.ResetAsync();
 		}
 		finally
 		{

@@ -83,6 +83,7 @@ public class ReportService : IReportService
 
 				existingReport.HitStatus = reportDetailsDTO.HitStatus;
 				existingReport.ReportFileKey = fileKey;
+				existingReport.ReportFileName = reportDetailsDTO.ReportFile.FileName;
 				existingReport.ReportUploadedAt = DateTime.UtcNow;
 
 				return await _atsRepository.UpdateReportDetailsAsync(existingReport, cancellationToken);

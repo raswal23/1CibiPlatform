@@ -1,4 +1,6 @@
-﻿<MudDialog Style="padding: 8px;">
+﻿@inject IReportService ReportService
+
+<MudDialog Style="padding: 8px;">
     <DialogContent>
 
         @if (!IsLoaded)
@@ -7,8 +9,12 @@
         }
         else if (showReportUploader)
         {
-            <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId" />
-            <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="GoBackToSearchReport">Go Back</MudButton>
+            <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId"
+                                   OnUploadSucceeded="ReloadReportResult" />
+            <MudButton Class="theme-button theme-button-active mt-5" 
+                       Style="width: 200px; border-radius: 4px;" 
+
+                       OnClick="GoBackToSearchReport">Go Back</MudButton>
         }
         else
         {
@@ -21,18 +27,18 @@
                                     Subject Name
                                 </MudText>
                                 <MudText Style="font-size: 16px;" Align="Align.Center">
-                                    @subject.SubjectName
+                                    @ReportResult!.SubjectName
                                 </MudText>
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            @* <MudItem xs="12" sm="6">
                                 <MudText Style="font-size: 20px;" Class="mb-1" Align="Align.Center">
                                     E-Pass Score
-                                </MudText>
+                                </MudText>s
                                 <MudText Style="font-size: 16px;" Align="Align.Center">
                                     @subject.Score
                                 </MudText>
-                            </MudItem>
+                            </MudItem> *@
                         </MudGrid>
                     </MudPaper>
                 </MudItem>
@@ -43,7 +49,7 @@
 
                         <MudGrid Spacing="2">
 
-                            <MudItem xs="4" class="d-flex align-center">
+                            @* <MudItem xs="4" class="d-flex align-center">
                                 <MudText>Ticket Number</MudText>
                             </MudItem>
                             <MudItem xs="8">
@@ -52,13 +58,13 @@
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
-                            </MudItem>
+                            </MudItem> *@
 
                             <MudItem xs="4" class="d-flex align-center">
                                 <MudText>Status</MudText>
                             </MudItem>
                             <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.Status"
+                                <MudTextField @bind-Value="ReportResult!.OrderStatus "
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -69,7 +75,7 @@
                                 <MudText>Result</MudText>
                             </MudItem>
                             <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.Result"
+                                <MudTextField @bind-Value=" ReportResult!.HitStatus"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -80,7 +86,7 @@
                                 <MudText>Report Type</MudText>
                             </MudItem>
                             <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.ReportType"
+                                <MudTextField @bind-Value="ReportResult!.SelectedPackage"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -163,14 +169,14 @@
                                 <MudText>Resume / CV</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.Resume"
+                                <MudTextField @bind-Value="ReportResult!.ResumeFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -181,14 +187,14 @@
                                 <MudText>ID Uploaded</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.ID"
+                                <MudTextField @bind-Value="ReportResult!.IdUploadedFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -199,14 +205,14 @@
                                 <MudText>COE</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.COE"
+                                <MudTextField @bind-Value="ReportResult!.CoeFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -217,14 +223,14 @@
                                 <MudText>Diploma / TOR</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.Diploma"
+                                <MudTextField @bind-Value="ReportResult!.DiplomaFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -235,14 +241,14 @@
                                 <MudText>Biometric Photo</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.BiometricPhoto"
+                                <MudTextField @bind-Value="ReportResult!.BiometricPhotoFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
@@ -253,31 +259,31 @@
                                 <MudText>Consent Form</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.ConsentForm"
+                                <MudTextField @bind-Value="ReportResult!.ConsentFormFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="FilledFormAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
 
                             <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Status</MudText>
+                                <MudText>Report File</MudText>
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.FinalReport"
+                                <MudTextField @bind-Value="ReportResult!.UploadedReportFileName"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
                                               Class="oneplatform-rounded-input" />
                             </MudItem>
                             <MudItem xs="4">
-                                <MudTextField @bind-Value="fileDetails.UploadedDate"
+                                <MudTextField @bind-Value="ReportUploadedAt"
                                               Variant="Variant.Outlined"
                                               FullWidth="true"
                                               ReadOnly
