@@ -1,4 +1,7 @@
 ﻿@inject IReportService ReportService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
 
 <MudDialog Style="padding: 8px;">
     <DialogContent>
@@ -149,7 +152,7 @@
                             </MudItem> *@
 
                             <MudItem xs="12" sm="6" Class="d-flex justify-center">
-                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ProcessBulkInvite">Download</MudButton>
+                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="SelecFilesToDownload">Download</MudButton>
                             </MudItem>
 
                             <MudItem xs="12" sm="6" Class="d-flex justify-center">

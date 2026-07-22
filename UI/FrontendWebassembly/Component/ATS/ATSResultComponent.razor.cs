@@ -15,9 +15,45 @@ public partial class ATSResultComponent
 	public ATSResultDetailsDTO? ReportResult { get; set; }
 	public string? ReportUploadedAt { get; set; }
 	public string? FilledFormAt { get; set; }
-	
-	private async Task ProcessBulkInvite()
+
+	private async Task OpenResultDialog<TComponent>(
+	string title,
+	DialogParameters? parameters = null)
+	where TComponent : IComponent
 	{
+		var options = new DialogOptions
+		{
+			CloseButton = true,
+			MaxWidth = MaxWidth.Medium,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters!,
+			options);
+
+		var result = await dialog.Result;
+	}
+
+	private async Task SelecFilesToDownload()
+	{
+		try
+		{
+			var parameters = new DialogParameters
+			{
+				{ nameof(SelectFilesToDownloadComponent.ReportResult), ReportResult },
+			
+			};
+
+			await OpenResultDialog<SelectFilesToDownloadComponent>(
+				"Select File/s to Download",
+				parameters);
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+		}
 	}
 
 	private void ShowUploadReport()

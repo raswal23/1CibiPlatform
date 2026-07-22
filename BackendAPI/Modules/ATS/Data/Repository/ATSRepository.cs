@@ -520,27 +520,40 @@ public class ATSRepository : IATSRepository
 				Personal = new
 				{
 					eir.PersonalDetails!.ResumeFileName,
+					eir.PersonalDetails.ResumeFileKey,
 					eir.PersonalDetails.BiometricFileName,
-					eir.PersonalDetails.AdditionalGovtIDFileName
+					eir.PersonalDetails.BiometricFileKey,
+					eir.PersonalDetails.AdditionalGovtIDFileName,
+					eir.PersonalDetails.AdditionalGovtIDFileKey
 				},
 				Educational = new
 				{
 					eir.EducationalBackground!.DoctorateDiplomaFileName,
+					eir.EducationalBackground!.DoctorateDiplomaFileKey,
 					eir.EducationalBackground!.MastersDiplomaFileName,
+					eir.EducationalBackground!.MastersDiplomaFileKey,
 					eir.EducationalBackground!.BachelorsDiplomaFileName,
+					eir.EducationalBackground!.BachelorsDiplomaFileKey,
 					eir.EducationalBackground!.SeniorHighSchoolDiplomaFileName,
+					eir.EducationalBackground!.SeniorHighSchoolDiplomaFileKey,
 					eir.EducationalBackground!.HighSchoolDiplomaFileName,
+					eir.EducationalBackground!.HighSchoolDiplomaFileKey,
 				},
 				Professional = new
 				{
 					eir.ProfessionalExperiences!.Emp1COEUploadFileName,
+					eir.ProfessionalExperiences!.Emp1COEUploadFileKey,
 					eir.ProfessionalExperiences!.Emp2COEUploadFileName,
+					eir.ProfessionalExperiences!.Emp2COEUploadFileKey,
 					eir.ProfessionalExperiences!.Emp3COEUploadFileName,
+					eir.ProfessionalExperiences!.Emp3COEUploadFileKey,
 					eir.ProfessionalExperiences!.COEUploadFileName,
+					eir.ProfessionalExperiences!.COEUploadFileKey
 				},
 				Signature = new
 				{ 
-					eir.SignatureDetails!.SignatureFileName
+					eir.SignatureDetails!.SignatureFileName,
+					eir.SignatureDetails!.SignatureFileKey
 				},
 				LatestReport = eir.ReportDetails!
 				.Where(rd =>
@@ -557,22 +570,34 @@ public class ATSRepository : IATSRepository
 				{
 					rd.HitStatus,
 					rd.ReportFileName,
+					rd.ReportFileKey,
 					rd.ReportUploadedAt
 				})
 				.FirstOrDefault()
 				})
 			.FirstOrDefaultAsync(cancellationToken);
 
-		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileName
+		string? diplomaFileName = result!.Educational?.DoctorateDiplomaFileName
 			?? result.Educational?.MastersDiplomaFileName
 			?? result.Educational?.BachelorsDiplomaFileName
 			?? result.Educational?.SeniorHighSchoolDiplomaFileName
 			?? result.Educational?.HighSchoolDiplomaFileName;
 
-		string? coeFileKey = result.Professional?.Emp1COEUploadFileName
+		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileKey
+			?? result.Educational?.MastersDiplomaFileKey
+			?? result.Educational?.BachelorsDiplomaFileKey
+			?? result.Educational?.SeniorHighSchoolDiplomaFileKey
+			?? result.Educational?.HighSchoolDiplomaFileKey;
+
+		string? coeFileName = result.Professional?.Emp1COEUploadFileName
 			?? result.Professional?.Emp2COEUploadFileName
 			?? result.Professional?.Emp3COEUploadFileName
 			?? result.Professional?.COEUploadFileName;
+
+		string? coeFileKey = result.Professional?.Emp1COEUploadFileKey
+			?? result.Professional?.Emp2COEUploadFileKey
+			?? result.Professional?.Emp3COEUploadFileKey
+			?? result.Professional?.COEUploadFileKey;
 
 		return new ReportResultDTO
 		{
@@ -581,12 +606,19 @@ public class ATSRepository : IATSRepository
 			HitStatus = result.LatestReport?.HitStatus,
 			SelectedPackage = result.SelectPackage,
 			ResumeFileName = result.Personal?.ResumeFileName,
+			ResumeFileKey = result.Personal?.ResumeFileKey,
 			IdUploadedFileName = result.Personal?.AdditionalGovtIDFileName,
-			CoeFileName = coeFileKey,
-			DiplomaFileName = diplomaFileKey,
+			IdUploadedFileKey = result.Personal?.AdditionalGovtIDFileKey,
+			CoeFileName = coeFileName,
+			CoeFileKey = coeFileKey,
+			DiplomaFileName = diplomaFileName,
+			DiplomaFileKey = diplomaFileKey,
 			BiometricPhotoFileName = result.Personal?.BiometricFileName,
+			BiometricPhotoFileKey = result.Personal?.BiometricFileKey,
 			ConsentFormFileName = result.Signature?.SignatureFileName,
+			ConsentFormFileKey = result.Signature?.SignatureFileKey,
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
+			UploadedReportFileKey = result.LatestReport?.ReportFileKey,
 			FilledFormAt = result.FormCompletedAt,
 			ReportUploadedAt = result.LatestReport?.ReportUploadedAt
 		};

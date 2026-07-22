@@ -1,3 +1,5 @@
+using System.IO.Compression;
+
 namespace ATS.Services;
 
 public class ReportService : IReportService
@@ -148,5 +150,33 @@ public class ReportService : IReportService
 		}
 
 		return result;
+	}
+
+	public async Task<Stream> DownloadIndividualReport(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken)
+	{
+		var zipStream = new MemoryStream();
+
+		using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+		{
+			foreach (var file in downloadInvididualRequest.FileDocuments)
+			{
+				try
+				{
+					var entry = archive.CreateEntry(file.FileName ?? "UnknownFile");
+
+					await using var entryStream = entry.Open();
+					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey!, cancellationToken);
+
+					await ossStream.CopyToAsync(entryStream, cancellationToken);
+				}
+				catch (Exception ex)
+				{
+					throw new Exception($"{ex}");
+				}
+			}
+		}
+
+		zipStream.Position = 0;
+		return zipStream;
 	}
 }

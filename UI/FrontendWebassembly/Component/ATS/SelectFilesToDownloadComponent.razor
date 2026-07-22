@@ -1,0 +1,87 @@
+﻿@inject IReportService ReportService
+@inject IJSRuntime JS
+
+<MudDialog Style="padding: 8px;">
+     <DialogContent>
+        <div class="d-flex justify-center">
+            <MudGrid Style="width:350px;" Spacing="2">
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
+                        <MudCheckBox @bind-Value="ResumeSelected"
+                                     Disabled="@(ReportResult!.ResumeFileName == "-")"
+                                     Label="@(ReportResult?.ResumeFileName == "-" ? "No resume uploaded" : ReportResult?.ResumeFileName)" />
+                    </MudStack>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Info" />
+                        <MudCheckBox @bind-Value="GovernmentIdSelected"
+                                     Disabled="@(ReportResult!.IdUploadedFileName == "-")"
+                                     Label="@(ReportResult?.IdUploadedFileName == "-" ? "No government ID uploaded" : ReportResult?.IdUploadedFileName)" />
+                    </MudStack>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Success" />
+                        <MudCheckBox @bind-Value="DiplomaSelected"
+                                     Disabled="@(ReportResult!.DiplomaFileName == "-")"                     
+                                     Label="@(ReportResult?.DiplomaFileName == "-" ? "No diploma uploaded" : ReportResult?.DiplomaFileName)" />
+                    </MudStack>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Warning" />
+                        <MudCheckBox @bind-Value="CoeSelected"
+                                     Disabled="@(ReportResult!.CoeFileName == "-")"
+                                     Label="@(ReportResult?.CoeFileName == "-" ? "No certificate of employment uploaded" : ReportResult?.CoeFileName)" />
+                    </MudStack>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.Draw" Color="Color.Secondary" />
+                        <MudCheckBox @bind-Value="ConsentSelected"
+                                     Disabled="@(ReportResult!.ConsentFormFileName == "-")"
+                                     Label="@(ReportResult?.ConsentFormFileName == "-" ? "No consent form uploaded" : ReportResult?.ConsentFormFileName)" />
+                    </MudStack>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Color="Color.Error" />
+                        <MudCheckBox @bind-Value="ReportSelected"
+                                     Disabled="@(ReportResult!.UploadedReportFileName == "-")"
+                                     Label="@(ReportResult?.UploadedReportFileName == "-" ? "No report uploaded" : ReportResult?.UploadedReportFileName)" />
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudGrid>
+            <MudItem xs="6">
+                <MudButton FullWidth="true"
+                           Variant="Variant.Filled"
+                           Style="border: 2px solid gray;"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="6">
+                <MudButton FullWidth="true"
+                           Variant="Variant.Filled"
+                           Class="theme-button theme-button-active"
+                           OnClick="DownloadDocumentsAsync">
+                    Download
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+     </DialogContent>
+</MudDialog>

@@ -1,6 +1,6 @@
 namespace FrontendWebassembly.Services.ATS.Implementation;
 
-public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportService
+public class ReportService : IReportService
 {
 	private readonly HttpClient _httpClient;
 
@@ -9,7 +9,7 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-    public async Task<bool> UploadReportAsync(FrontendWebassembly.DTO.ATS.ReportDetailsDTO reportDetailsDTO)
+    public async Task<bool> UploadReportAsync(ReportDetailsDTO reportDetailsDTO)
 	{
 		using var content = new MultipartFormDataContent();
 
@@ -49,7 +49,7 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 		return result;
 	}
 
-   public async Task<PaginatedResult<FrontendWebassembly.DTO.ATS.ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
+   public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
 	{
 		var query = $"ats/getreports?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
@@ -69,7 +69,7 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
 		}
 
-		var result = await response.Content.ReadFromJsonAsync<FrontendWebassembly.DTO.ATS.GetReportsResponseDTO>();
+		var result = await response.Content.ReadFromJsonAsync<GetReportsResponseDTO>();
 		return result!.Reports!;
 	}
 
@@ -85,5 +85,23 @@ public class ReportService : FrontendWebassembly.Services.ATS.Interface.IReportS
 
 		var result = await response.Content.ReadFromJsonAsync<GetReportResultResponseDTO>();
 		return result!.ReportResult!;
+	}
+
+	public async Task<HttpResponseMessage> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken = default)
+	{
+		var request = new { downloadInvididualRequest };
+
+		var response = await _httpClient.PostAsJsonAsync(
+									"ats/downloadindividualreport",
+									request,
+									cancellationToken);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+		}
+
+		return response;
 	}
 }
