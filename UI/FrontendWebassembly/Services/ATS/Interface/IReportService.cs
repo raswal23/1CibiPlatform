@@ -5,5 +5,6 @@ public interface IReportService
     Task<bool> UploadReportAsync(ReportDetailsDTO reportDetailsDTO);
     Task<PaginatedResult<ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false);
     Task<ATSResultDetailsDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId);
-	Task<HttpResponseMessage> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO request, CancellationToken cancellationToken = default);
+	Task<HttpResponseMessage> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken = default);
+	Task<HttpResponseMessage> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken = default);
 }

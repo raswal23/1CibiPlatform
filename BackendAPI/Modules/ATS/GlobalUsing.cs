@@ -41,6 +41,7 @@ global using MediatR;
 global using Carter;
 global using FluentValidation;
 global using System.Reflection;
+global using System.IO.Compression;
 global using Mapster;
 global using CsvHelper;
 global using System.Globalization;

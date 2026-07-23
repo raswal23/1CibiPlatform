@@ -7,7 +7,6 @@ public partial class SearchReportComponent
     private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
 
-
 	private string searchString
 	{
       get => _searchString!;
@@ -66,14 +65,24 @@ public partial class SearchReportComponent
 
 	private async Task DownloadSelected()
 	{
-       var selected = currentPageData.Where(r => r.Selected).ToList();
-		if (!selected.Any())
+		var selected = currentPageData.Where(r => r.Selected).ToList();
+
+		DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest = new DownloadMultipleOrderRecordsRequestDTO();
+
+		foreach (var report in currentPageData.Where(x => x.Selected))
 		{
-          await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
-			return;
+			downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList.Add(report.EmailInvitationRequestId);
 		}
 
-      await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.EmailInvitationRequestId));
+		var response = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
+
+		var fileBytes = await response.Content.ReadAsByteArrayAsync();
+
+		var fileName =
+			response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+			?? $"FileRecords-{DateTime.Now:yyyyMMdd_HHmmss}.zip";
+
+		await JS.InvokeVoidAsync("downloadFile", fileName, "application/zip", fileBytes);
 	}
 
 	private async Task OpenResultDialog<TComponent>(

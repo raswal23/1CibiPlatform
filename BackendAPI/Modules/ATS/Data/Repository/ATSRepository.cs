@@ -624,6 +624,144 @@ public class ATSRepository : IATSRepository
 		};
 	}
 
+	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
+	List<Guid> emailInvitationRequestIds,
+	CancellationToken cancellationToken)
+	{
+		var results = await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => emailInvitationRequestIds.Contains(eir.EmailInvitationID))
+			.Select(eir => new
+			{
+				eir.EmailInvitationID,
+				SubjectName = (eir.FirstName + " " + eir.LastName).Trim(),
+
+				Personal = new
+				{
+					eir.PersonalDetails!.ResumeFileName,
+					eir.PersonalDetails.ResumeFileKey,
+
+					eir.PersonalDetails.BiometricFileName,
+					eir.PersonalDetails.BiometricFileKey,
+
+					eir.PersonalDetails.AdditionalGovtIDFileName,
+					eir.PersonalDetails.AdditionalGovtIDFileKey
+				},
+
+				Educational = new
+				{
+					eir.EducationalBackground!.DoctorateDiplomaFileName,
+					eir.EducationalBackground.DoctorateDiplomaFileKey,
+
+					eir.EducationalBackground.MastersDiplomaFileName,
+					eir.EducationalBackground.MastersDiplomaFileKey,
+
+					eir.EducationalBackground.BachelorsDiplomaFileName,
+					eir.EducationalBackground.BachelorsDiplomaFileKey,
+
+					eir.EducationalBackground.SeniorHighSchoolDiplomaFileName,
+					eir.EducationalBackground.SeniorHighSchoolDiplomaFileKey,
+
+					eir.EducationalBackground.HighSchoolDiplomaFileName,
+					eir.EducationalBackground.HighSchoolDiplomaFileKey
+				},
+
+				Professional = new
+				{
+					eir.ProfessionalExperiences!.Emp1COEUploadFileName,
+					eir.ProfessionalExperiences.Emp1COEUploadFileKey,
+
+					eir.ProfessionalExperiences.Emp2COEUploadFileName,
+					eir.ProfessionalExperiences.Emp2COEUploadFileKey,
+
+					eir.ProfessionalExperiences.Emp3COEUploadFileName,
+					eir.ProfessionalExperiences.Emp3COEUploadFileKey,
+
+					eir.ProfessionalExperiences.COEUploadFileName,
+					eir.ProfessionalExperiences.COEUploadFileKey
+				},
+
+				Signature = new
+				{
+					eir.SignatureDetails!.SignatureFileName,
+					eir.SignatureDetails.SignatureFileKey
+				},
+
+				LatestReport = eir.ReportDetails!
+					.Where(rd =>
+						rd.ReportStatus == "Supplementary Report" ||
+						rd.ReportStatus == "Complete Final Report" ||
+						rd.ReportStatus == "Closed Final Report" ||
+						rd.ReportStatus == "Initial Report")
+					.OrderBy(rd =>
+						rd.ReportStatus == "Supplementary Report" ? 0 :
+						(rd.ReportStatus == "Complete Final Report" ||
+						 rd.ReportStatus == "Closed Final Report") ? 1 : 2)
+					.ThenByDescending(rd => rd.ReportUploadedAt)
+					.Select(rd => new
+					{
+						rd.ReportFileName,
+						rd.ReportFileKey
+					})
+					.FirstOrDefault()
+			})
+			.ToListAsync(cancellationToken);
+
+		var documents = new List<DownloadDocumentDTO>();
+
+		foreach (var result in results)
+		{
+			void Add(string? fileName, string? fileKey)
+			{
+				if (!string.IsNullOrWhiteSpace(fileName) &&
+					!string.IsNullOrWhiteSpace(fileKey))
+				{
+					documents.Add(new DownloadDocumentDTO
+					{
+						EmailInvitationRequestId = result.EmailInvitationID,
+						SubjectName = result.SubjectName,
+						FileName = fileName,
+						FileKey = fileKey
+					});
+				}
+			}
+
+			Add(result.Personal?.ResumeFileName, result.Personal?.ResumeFileKey);
+
+			Add(result.Personal?.BiometricFileName, result.Personal?.BiometricFileKey);
+
+			Add(result.Personal?.AdditionalGovtIDFileName, result.Personal?.AdditionalGovtIDFileKey);
+
+			Add(
+				result.Educational?.DoctorateDiplomaFileName
+					?? result.Educational?.MastersDiplomaFileName
+					?? result.Educational?.BachelorsDiplomaFileName
+					?? result.Educational?.SeniorHighSchoolDiplomaFileName
+					?? result.Educational?.HighSchoolDiplomaFileName,
+				result.Educational?.DoctorateDiplomaFileKey
+					?? result.Educational?.MastersDiplomaFileKey
+					?? result.Educational?.BachelorsDiplomaFileKey
+					?? result.Educational?.SeniorHighSchoolDiplomaFileKey
+					?? result.Educational?.HighSchoolDiplomaFileKey);
+
+			Add(
+				result.Professional?.Emp1COEUploadFileName
+					?? result.Professional?.Emp2COEUploadFileName
+					?? result.Professional?.Emp3COEUploadFileName
+					?? result.Professional?.COEUploadFileName,
+				result.Professional?.Emp1COEUploadFileKey
+					?? result.Professional?.Emp2COEUploadFileKey
+					?? result.Professional?.Emp3COEUploadFileKey
+					?? result.Professional?.COEUploadFileKey);
+
+			Add(result.Signature?.SignatureFileName, result.Signature?.SignatureFileKey);
+
+			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey);
+		}
+
+		return documents;
+	}
+
 	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests

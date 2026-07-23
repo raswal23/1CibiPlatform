@@ -104,4 +104,22 @@ public class ReportService : IReportService
 
 		return response;
 	}
+
+	public async Task<HttpResponseMessage> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken = default)
+	{
+		var request = new { downloadMultipleOrderRecordsRequest };
+
+		var response = await _httpClient.PostAsJsonAsync(
+									"ats/downloadmultipleorderrecords",
+									request,
+									cancellationToken);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+		}
+
+		return response;
+	}
 }

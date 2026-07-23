@@ -1,4 +1,5 @@
-using System.IO.Compression;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Pdf.IO;
 
 namespace ATS.Services;
 
@@ -142,18 +143,37 @@ public class ReportService : IReportService
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
 	{
+		var logContext = new
+		{
+			Action = "GetReportResult",
+			Step = "FetchingReportResult",
+			EmailInvitationRequestId = emailInvitationRequestId,
+			Timestamp = DateTime.UtcNow
+		};
+
 		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken);
 
 		if (result is null)
 		{
+			_logger.LogError("Failed to upload report {@Context}", logContext);
 			throw new NotFoundException($"No report result found for email invitation ID {emailInvitationRequestId}.");
 		}
 
 		return result;
 	}
 
-	public async Task<Stream> DownloadIndividualReport(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken)
+	public async Task<Stream> DownloadIndividualReportAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken)
 	{
+		var logContext = new
+		{
+			Action = "DownloadIndividualReport",
+			Step = "GetEachFileAndDownload",
+			Pagination = downloadInvididualRequest,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Compiling individual reports for download: {@Context}", logContext);
+
 		var zipStream = new MemoryStream();
 
 		using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
@@ -171,10 +191,87 @@ public class ReportService : IReportService
 				}
 				catch (Exception ex)
 				{
-					throw new Exception($"{ex}");
+					_logger.LogError("Failed to download individual report {@Context}", logContext);
+					throw new InternalServerException($"{ex}");
 				}
 			}
 		}
+
+		zipStream.Position = 0;
+		return zipStream;
+	}
+
+	public async Task<Stream> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken)
+	{
+
+		var logContext = new
+		{
+			Action = "DownloadMultipleOrderRecords",
+			Step = "GetEachFileAndDownload",
+			Pagination = downloadMultipleOrderRecordsRequest,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Compiling multiple order records for download: {@Context}", logContext);
+
+		var zipStream = new MemoryStream();
+
+			try
+			{
+				var documents = await _atsRepository.GetDownloadDocumentsAsync(downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList, cancellationToken);
+
+				using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true);
+
+				foreach (var applicant in documents.GroupBy(x => x.EmailInvitationRequestId))
+				{
+				var files = applicant
+						 .Where(x => !string.IsNullOrWhiteSpace(x.FileKey))
+						 .ToList();
+
+				if (files.Count == 0)
+					continue;
+
+				    using var output = new PdfDocument();
+
+					foreach (var file in files)
+					{
+
+					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey, cancellationToken);
+
+					using var memoryStream = new MemoryStream();
+
+					await ossStream.CopyToAsync(memoryStream, cancellationToken);
+
+					memoryStream.Position = 0;
+
+					using var input = PdfReader.Open(memoryStream, PdfDocumentOpenMode.Import);
+
+					foreach (var page in input.Pages)
+						{
+							output.AddPage(page);
+						}
+					}
+
+					using var mergedPdf = new MemoryStream();
+
+					output.Save(mergedPdf);
+
+					mergedPdf.Position = 0;
+
+					var entry = archive.CreateEntry($"{applicant.First().SubjectName.Replace(" ", "_")}.pdf");
+
+					await using var entryStream = entry.Open();
+
+					mergedPdf.Position = 0;
+
+					await mergedPdf.CopyToAsync(entryStream, cancellationToken);
+				}
+			}	
+			catch (Exception ex)
+			{
+				_logger.LogError("Failed to download multiple order records {@Context}", logContext);
+				throw new InternalServerException($"{ex}");
+			}
 
 		zipStream.Position = 0;
 		return zipStream;

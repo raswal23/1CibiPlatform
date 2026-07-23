@@ -12,7 +12,7 @@ public class DownloadIndividualReportHandler : ICommandHandler<DownloadIndividua
 
 	public async Task<Stream> Handle(DownloadIndividualReportHandlerRequest request, CancellationToken cancellationToken)
 	{
-		var stream = await _reportService.DownloadIndividualReport(request.downloadInvididualRequest, cancellationToken);
+		var stream = await _reportService.DownloadIndividualReportAsync(request.downloadInvididualRequest, cancellationToken);
 		return stream;
 	}
 }

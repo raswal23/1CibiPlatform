@@ -128,6 +128,17 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "DownloadMultipleRecords",
+				MatchPath: "/ats/downloadmultipleorderrecords",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/downloadmultipleorderrecords" }
+				}
+			),
+			
+			new RouteDefinitionDTO(
 				RouteId: "ResendApplicationForm",
 				MatchPath: "/ats/resendapplicationform",
 				ClusterId: GatewayConstants.OnePlatformApi,

@@ -295,4 +295,9 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.AddApplicantSearchProjectionAsync(projection, cancellationToken);
 	}
+
+	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
+	}
 }

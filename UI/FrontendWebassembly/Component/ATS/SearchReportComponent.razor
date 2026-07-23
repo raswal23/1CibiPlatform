@@ -44,7 +44,13 @@
     <RowTemplate Context="r">
         <MudTd DataLabel="Selected">
             <div style="display:flex; justify-content:center; align-items:center;">
-                <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
+                <MudCheckBox T="bool" @bind-Checked="r.Selected" 
+                             Color="Color.Primary" 
+                             ValueChanged="@(value =>
+                             {
+                                r.Selected = value;
+                                StateHasChanged();
+                             })" />
             </div>
         </MudTd>
         <MudTd DataLabel="Subject Name">@r.SubjectName</MudTd>
@@ -67,6 +73,7 @@
     <MudItem xs="12" md="8">
         <MudButton Class="theme-button theme-button-active"
                    Style="width: 120px; border-radius: 12px;"
+                   Disabled="@(!currentPageData.Any(r => r.Selected))"
                    OnClick="DownloadSelected">Download</MudButton>
     </MudItem>
     <MudItem xs="12" md="4">
