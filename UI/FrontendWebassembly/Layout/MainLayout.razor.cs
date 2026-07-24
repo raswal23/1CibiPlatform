@@ -26,6 +26,8 @@ public partial class MainLayout
 	private List<List<int>> SubMenus = new List<List<int>>();
 	private List<int> Roles = new List<int>();
 
+	private bool UseCover => Navigation.Uri.Contains("/s&i");
+
 	private string GetContainerStyle()
 	{
 		var background = !_isDarkMode
@@ -33,6 +35,13 @@ public partial class MainLayout
 			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%)";
 
 		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
+	}
+
+	private string GetPaperStyle()
+	{
+		return UseCover
+			? "border-radius:4px; background:linear-gradient(90deg,#68c0d6 0%,#2a77ae 50%,#102247 100%);"
+			: "border-radius:4px;";
 	}
 
 	private MudTheme _myTheme = new MudTheme()

@@ -532,3 +532,40 @@ code {
     overflow: hidden !important;
     margin: 2px 6px;
 }
+
+
+.ats-page {
+    position: relative;
+    overflow: hidden;
+}
+
+.ats-watermark {
+    position: absolute;
+    top: 8rem;
+    right: -2rem;
+    width: 40rem; 
+    height: auto;
+    opacity: 1; 
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+.mud-table-empty-row {
+    background: transparent !important;
+}
+.ats-page > *:not(.ats-watermark) {
+    position: relative;
+    z-index: 1;
+}
+
+/*.transparent-paper {
+    background: transparent !important;
+    box-shadow: none; 
+}*/
+
+
+.transparent-paper {
+    background: white;
+    opacity: 0.9;
+}

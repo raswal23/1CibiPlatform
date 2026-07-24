@@ -8,6 +8,8 @@ global using ATS.Data.DTO;
 global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
 global using ATS.Hubs;
+global using ATS.Constants;
+global using ATS.Services.FilePDFService;
 global using ATS.Services.EmailService;
 global using ATS.BackgroundJobs.BulkSubmission;
 global using ATS.BackgroundJobs.EmailNotification;
@@ -51,6 +53,9 @@ global using System.Net;
 global using System.Net.Mail;
 global using Npgsql;
 global using Quartz;
-
-
+global using PdfSharp.Pdf;
+global using PdfSharp.Pdf.IO;
+global using QuestPDF.Fluent;
+global using QuestPDF.Infrastructure;
+global using QuestPDF.Helpers;
 

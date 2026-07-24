@@ -34,7 +34,7 @@ public class ApplicationFormService : IApplicationFormService
 			{
 				var stream = new MemoryStream(file);
 				var fileContent = new StreamContent(stream);
-				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 				content.Add(fileContent, name, name);
 			}
 		}

@@ -92,6 +92,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.EmailInvitationID = Guid.CreateVersion7();
 		emailInvitationRequest.HashToken =HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
+		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.EmailSentStatus = "Pending";
 		emailInvitationRequest.ApplicationFormStatus = "Pending";
 		emailInvitationRequest.OrderStatus = "Pending Candidate Info";

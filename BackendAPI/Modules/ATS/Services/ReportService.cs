@@ -1,6 +1,3 @@
-using PdfSharpCore.Pdf;
-using PdfSharpCore.Pdf.IO;
-
 namespace ATS.Services;
 
 public class ReportService : IReportService

@@ -71,7 +71,7 @@
 
 <MudGrid Class="mt-0">
     <MudItem xs="12" md="8">
-        <MudButton Class="theme-button theme-button-active"
+        <MudButton Class="@($"theme-button {(currentPageData.Any(r => r.Selected) ? "theme-button-active " : "theme-button-inactive")}")"
                    Style="width: 120px; border-radius: 12px;"
                    Disabled="@(!currentPageData.Any(r => r.Selected))"
                    OnClick="DownloadSelected">Download</MudButton>

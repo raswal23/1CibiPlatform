@@ -142,7 +142,8 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						EmailSentStatus = "Pending",
 						ApplicationFormStatus = "Pending",
 						OrderStatus = "Pending Candidate Info",
-						RushNormal = file.OrderType
+						RushNormal = file.OrderType,
+						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
 

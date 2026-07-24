@@ -1,4 +1,6 @@
-﻿namespace ATS.Services;
+﻿using System.Text;
+
+namespace ATS.Services;
 
 public class ApplicationFormService : IApplicationFormService
 {
@@ -7,6 +9,7 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
+    private readonly IFilePdfService _filePdfService;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 	private string resumeFileKey = "";
@@ -23,18 +26,21 @@ public class ApplicationFormService : IApplicationFormService
 	private string emp3COEKey = "";
 	private string licenseKey = "";
 	private string signatureKey = "";
+	private string consentFormKey = "";
 
 	public ApplicationFormService(ILogger<ApplicationFormService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,
-					  IObjectStorageService objectStorageService)
+                      IObjectStorageService objectStorageService,
+					  IFilePdfService filePdfService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
+		_filePdfService = filePdfService;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
@@ -99,7 +105,8 @@ public class ApplicationFormService : IApplicationFormService
 				emp2COEKey,
 				emp3COEKey,
 				licenseKey,
-				signatureKey
+                signatureKey,
+				consentFormKey
 			};
 
 			foreach (var key in keys.Where(k => !string.IsNullOrWhiteSpace(k)))
@@ -141,10 +148,21 @@ public class ApplicationFormService : IApplicationFormService
 			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
 		}
 
-		if(personalDetailsDTO.BiometricFile != null)
+		if (personalDetailsDTO.BiometricFile != null)
 		{
-			await using var biometricStream = personalDetailsDTO.BiometricFile.OpenReadStream();
-			biometricFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.BiometricFileName!, biometricStream, cancellationToken);
+			await using var pdfStream =
+				await _filePdfService.ConvertImageToPdfAsync(
+					personalDetailsDTO.BiometricFile,
+					cancellationToken);
+
+			personalDetailsDTO.BiometricFileName =
+				System.IO.Path.ChangeExtension(personalDetailsDTO.BiometricFileName, ".pdf");
+
+			biometricFileKey = await _objectStorageService.UploadAsync(
+				_folderName,
+				personalDetailsDTO.BiometricFileName!,
+				pdfStream,
+				cancellationToken);
 		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
@@ -315,16 +333,35 @@ public class ApplicationFormService : IApplicationFormService
 		SignatureDetailsDTO signatureDetailsDTO,
 		CancellationToken cancellationToken)
 	{
-		signatureDetailsDTO.SignatureFileName = $"{Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}";
-		if (signatureDetailsDTO.Signature != null)
+       if (signatureDetailsDTO.Signature == null)
+			throw new BadRequestException("Signature is required.");
+
+		await using var signatureInputStream = signatureDetailsDTO.Signature.OpenReadStream();
+		using var signatureMemory = new MemoryStream();
+		await signatureInputStream.CopyToAsync(signatureMemory, cancellationToken);
+		var signatureBytes = signatureMemory.ToArray();
+		var signatureText = Encoding.UTF8.GetString(signatureBytes);
+
+		if (signatureText.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
 		{
-			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
-			signatureKey = await _objectStorageService.UploadAsync(_folderName, signatureDetailsDTO.SignatureFileName!, signatureStream, cancellationToken);
+			var base64 = signatureText[(signatureText.IndexOf(',') + 1)..];
+			signatureBytes = Convert.FromBase64String(base64);
 		}
+
+		var consentFormFileName = $"{ Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}-ConsentForm.pdf";
+		await using var consentPdfStream = await _filePdfService.GenerateConsentFormPdfAsync(
+			signatureDetailsDTO.SignerName ?? string.Empty,
+			signatureDetailsDTO.SignatureDate,
+			signatureBytes,
+			cancellationToken);
+
+		consentFormKey = await _objectStorageService.UploadAsync(_folderName, consentFormFileName, consentPdfStream, cancellationToken);
 
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
 		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
-		signatureDetails.SignatureFileKey = signatureKey;
+		signatureDetails.ConsentFormFileKey = consentFormKey;
+		signatureDetails.ConsentFormFileName = consentFormFileName;
+		signatureDetails.ConsentGeneratedAt = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return isAdded;

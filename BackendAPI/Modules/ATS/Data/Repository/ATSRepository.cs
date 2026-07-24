@@ -552,8 +552,8 @@ public class ATSRepository : IATSRepository
 				},
 				Signature = new
 				{ 
-					eir.SignatureDetails!.SignatureFileName,
-					eir.SignatureDetails!.SignatureFileKey
+					eir.SignatureDetails!.ConsentFormFileName,
+					eir.SignatureDetails!.ConsentFormFileKey
 				},
 				LatestReport = eir.ReportDetails!
 				.Where(rd =>
@@ -615,8 +615,8 @@ public class ATSRepository : IATSRepository
 			DiplomaFileKey = diplomaFileKey,
 			BiometricPhotoFileName = result.Personal?.BiometricFileName,
 			BiometricPhotoFileKey = result.Personal?.BiometricFileKey,
-			ConsentFormFileName = result.Signature?.SignatureFileName,
-			ConsentFormFileKey = result.Signature?.SignatureFileKey,
+			ConsentFormFileName = result.Signature?.ConsentFormFileName,
+			ConsentFormFileKey = result.Signature?.ConsentFormFileKey,
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
 			UploadedReportFileKey = result.LatestReport?.ReportFileKey,
 			FilledFormAt = result.FormCompletedAt,
@@ -683,8 +683,8 @@ public class ATSRepository : IATSRepository
 
 				Signature = new
 				{
-					eir.SignatureDetails!.SignatureFileName,
-					eir.SignatureDetails.SignatureFileKey
+					eir.SignatureDetails!.ConsentFormFileName,
+					eir.SignatureDetails.ConsentFormFileKey
 				},
 
 				LatestReport = eir.ReportDetails!
@@ -754,7 +754,7 @@ public class ATSRepository : IATSRepository
 					?? result.Professional?.Emp3COEUploadFileKey
 					?? result.Professional?.COEUploadFileKey);
 
-			Add(result.Signature?.SignatureFileName, result.Signature?.SignatureFileKey);
+			Add(result.Signature?.ConsentFormFileName, result.Signature?.ConsentFormFileKey);
 
 			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey);
 		}

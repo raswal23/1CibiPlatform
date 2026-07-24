@@ -6,11 +6,8 @@
 
 <MudContainer Class="pa-0">
 
-    <div class="d-flex align-center mb-3" style="gap:12px; align-items:center;">
-        <div>
-            <MudText Typo="Typo.h5" Class="mb-0 gradient-text" Style="font-weight: 700;">@($"{ATSname}")</MudText>
-        </div>
-        <MudImage Src="/images/generic/cibi-icon.png" Alt="logo" Style="width:48px; height:48px;" />
+    <div class="d-flex align-center mb-3" style="gap:12px; align-items:center; width: 320px;">
+        <MudText Typo="Typo.h5" Class="mb-0" Style="font-weight: 700; color: #102247;">@($"{ATSname}")</MudText>
     </div>
 
     <ATSTabComponent ActiveTabChanged="ChangeActiveTab" />
@@ -32,19 +29,16 @@
         if (_activeIndex == 1)
         {
             <PageTitle>@($"{ATSname} - Dispute Order")</PageTitle>
-
             <DisputeOrderComponent />
         }
         else if (_activeIndex == 2)
         {
             <PageTitle>@($"{ATSname} - New Order")</PageTitle>
-
             <NewOrderComponent />
         }
         else if (_activeIndex == 3)
         {
             <PageTitle>@($"{ATSname} - Search Report")</PageTitle>
-
             <SearchReportComponent />
         }
         @* else if (_activeIndex == 4)
