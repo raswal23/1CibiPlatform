@@ -299,7 +299,7 @@ public class EmailService : IEmailService
 		throw new NotImplementedException();
 	}
 
-	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor)
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string SubjectName)
 	{
 		throw new NotImplementedException();
 	}
