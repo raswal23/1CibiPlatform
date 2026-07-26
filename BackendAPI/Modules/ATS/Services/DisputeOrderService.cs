@@ -99,7 +99,7 @@ public class DisputeOrderService : IDisputeOrderService
 
 		_logger.LogInformation("Sending dispute order notification for email: {@Context}", logContext);
 
-		var otpBody = _emailService.SendEmailForDispute(gmail, disputeRequest.Company!, disputeRequest.DisputeReason!, disputeRequest.OrderCreatedAt, requestor);
+		var otpBody = _emailService.SendEmailForDispute(gmail, disputeRequest.Company!, disputeRequest.DisputeReason!, disputeRequest.OrderCreatedAt, requestor, disputeRequest.SubjectName);
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
