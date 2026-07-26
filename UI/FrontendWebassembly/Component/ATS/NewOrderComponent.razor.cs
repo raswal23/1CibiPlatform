@@ -168,7 +168,6 @@ public partial class NewOrderComponent
 		if (result!.Canceled)
 			return;
 
-
 		try
 		{
 			isUploadingBulk = true;

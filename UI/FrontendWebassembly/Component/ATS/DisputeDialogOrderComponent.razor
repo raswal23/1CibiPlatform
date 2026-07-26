@@ -1,0 +1,84 @@
+﻿@inject IDisputeOrderService DisputeOrderService
+@inject ISnackbar Snackbar
+
+<MudDialog Style="padding: 8px;">
+    <DialogContent>
+        <MudForm @ref="disputeForm">
+            <MudGrid Style="width:350px;" Spacing="2">
+                <MudItem xs="12" Class="mt-3">
+                    <MudTextField FullWidth="true"
+                                    Adornment="Adornment.Start"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
+                                    @bind-Value="disputeRequest.Company"
+                                    Class="name-filter oneplatform-rounded-input"
+                                    Required="true"
+                                    RequiredError="Company is required"
+                                    Label="Company" />
+                </MudItem>
+
+                <MudItem xs="12" Class="mt-3">
+                    <MudText Typo="Typo.subtitle1" Align="Align.Left">Dispute Category</MudText>
+                    <MudRadioGroup T="string"
+                                    @bind-Value="disputeRequest.DisputeReason"
+                                    Required="true"
+                                    RequiredError="Type of Ownership is required"
+                                    Class="d-flex flex-wrap"
+                                    Style="gap:12px;">
+                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Billing")">
+                            Owned
+                        </MudRadio>
+                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Report")">
+                            Rent
+                        </MudRadio>
+                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Others")">
+                            Others
+                        </MudRadio>
+                        @if (disputeRequest.DisputeReason == "Others")
+                        {
+                            <MudTextField Adornment="Adornment.Start"
+                                            Variant="Variant.Outlined"
+                                            Margin="Margin.Dense"
+                                            Style="width:200px;"
+                                            Class="oneplatform-rounded-input ml-2"
+                                            @bind-Value="otherReason"
+                                            Required="true"
+                                            RequiredError="Please specify is required"
+                                            Label="Please specify" />
+                        }
+                    </MudRadioGroup>
+                </MudItem>
+
+                <MudDivider Class="my-4" />
+
+                <MudGrid>
+                    <MudItem xs="6">
+                        <MudButton FullWidth="true"
+                                    Variant="Variant.Filled"
+                                    Style="border: 2px solid gray;"
+                                    OnClick="Cancel">
+                            Cancel
+                        </MudButton>
+                    </MudItem>
+
+                    <MudItem xs="6">
+                        <MudButton FullWidth="true"
+                                    Variant="Variant.Filled"
+                                    Class="theme-button theme-button-active"
+                                    OnClick="SendDisputeAsync">
+                            @if (isMarkingAsDisputed)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span> Uploading...</span>
+                            }
+                            else
+                            {
+                                <span> Send Dispute </span>
+                            }
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+</MudDialog>

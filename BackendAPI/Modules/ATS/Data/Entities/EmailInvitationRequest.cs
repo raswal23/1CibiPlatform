@@ -20,9 +20,9 @@ public class EmailInvitationRequest
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }
-   public bool NeedsProjection { get; set; } = true;
+    public bool NeedsProjection { get; set; } = true;
 	public DateTime? ProjectionUpdatedAt { get; set; }
-	public bool IsDisputed { get; set; } = false;
+	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
 
 	// Navigation properties

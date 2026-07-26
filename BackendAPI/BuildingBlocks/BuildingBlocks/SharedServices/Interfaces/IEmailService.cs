@@ -14,6 +14,6 @@ public interface IEmailService
 
 	string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink);
 
-	string SendEmailForDispute(string gmail);
+	string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName);
 
 }

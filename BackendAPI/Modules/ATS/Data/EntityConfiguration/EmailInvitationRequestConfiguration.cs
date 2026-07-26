@@ -70,5 +70,12 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 
 		builder.Property(e => e.ProjectionUpdatedAt)
 			.IsRequired(false);
+
+		builder.Property(e => e.DisputeCategory)
+			.HasMaxLength(255)
+			.IsRequired(false);
+
+		builder.Property(e => e.DisputedAt)
+			.IsRequired(false);
 	}
 }

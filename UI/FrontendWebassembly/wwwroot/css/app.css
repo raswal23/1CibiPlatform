@@ -533,39 +533,36 @@ code {
     margin: 2px 6px;
 }
 
-
-.ats-page {
+.ats-cover {
     position: relative;
+    border-radius: 4px;
     overflow: hidden;
-}
-
-.ats-watermark {
-    position: absolute;
-    top: 8rem;
-    right: -2rem;
-    width: 40rem; 
-    height: auto;
-    opacity: 1; 
-    pointer-events: none;
-    user-select: none;
-    z-index: 0;
+    background-image: url('/images/ats/logo-shape.png');
+    background-size: cover; 
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat;
+    min-height: 100%;
 }
 
 .mud-table-empty-row {
     background: transparent !important;
 }
-.ats-page > *:not(.ats-watermark) {
-    position: relative;
-    z-index: 1;
-}
-
-/*.transparent-paper {
-    background: transparent !important;
-    box-shadow: none; 
-}*/
-
 
 .transparent-paper {
     background: white;
     opacity: 0.9;
+}
+
+.ats-application-form {
+    position: relative;
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-image: url('/images/ats/logo-shape.png');
+    background-size: cover;
+    background-position: center; 
+    background-repeat: no-repeat;
 }

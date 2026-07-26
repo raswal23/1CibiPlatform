@@ -142,14 +142,7 @@
                 </MudDrawer>
                 <!-- Main content -->
                 <MudMainContent>
-                    <MudPaper Class="pa-5 ma-5 ats-page" Elevation="2" Style="@GetPaperStyle()">
-
-                        @if (UseCover)
-                        {
-                            <MudImage Class="ats-watermark"
-                                      Src="/images/ats/logo-shape.png"
-                                      Alt="" />
-                        }
+                    <MudPaper Class="@GetCoverStyle()" Elevation="2" Style="border-radius:4px;">
                         @Body
                     </MudPaper>
                 </MudMainContent>

@@ -1,3 +1,5 @@
+using FrontendWebassembly.Component.ATS;
+
 namespace FrontendWebassembly.Services.ATS.Implementation;
 
 public class DisputeOrderService : IDisputeOrderService
@@ -29,9 +31,9 @@ public class DisputeOrderService : IDisputeOrderService
 		return result!.Orders!;
 	}
 
-	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId)
+	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest)
 	{
-		var request = new { emailInvitationId };
+		var request = new { disputeRequest };
 
 		var response = await _httpClient.PatchAsJsonAsync("ats/markasdisputed", request);
 

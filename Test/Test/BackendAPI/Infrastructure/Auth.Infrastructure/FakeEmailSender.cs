@@ -25,4 +25,7 @@ public class FakeEmailSender : IEmailService
 
 	public string SendEmailForDispute(string gmail)
 	   => $"Hello there is a dispute";
+
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor)
+		 => $"{requestor} submitted a dispute for {company} (Customer: {gmail}) with reason '{disputeReason}' for the order placed on {orderedAt:MMMM dd, yyyy}.";
 }

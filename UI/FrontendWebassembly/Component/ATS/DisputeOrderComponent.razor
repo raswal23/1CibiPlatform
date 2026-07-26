@@ -15,28 +15,21 @@
     <HeaderTemplate>
         <MudTh>Subject Name</MudTh>
         <MudTh>Status</MudTh>
+        <MudTh>Order Date</MudTh>
         <MudTh>Date Completed</MudTh>
-        <MudTh>Dispute</MudTh>
+        <MudTh>Send Dispute</MudTh>
     </HeaderTemplate>
 
     <RowTemplate Context="o">
         <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
-        <MudTd DataLabel="Status">@o.OrderStatus</MudTd>
+        <MudTd DataLabel="Status">@o.DisputeCategory</MudTd>
+        <MudTd DataLabel="Order Date">@o.OrderCreatedAt?.ToString("MMMM dd, yyyy")</MudTd>
         <MudTd DataLabel="Date Completed">@(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
         <MudTd>
             <div style="display:flex; justify-content:center; align-items:center;">
-                @if (o.IsDisputed)
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Report"
-                                   Color="Color.Error"
-                                   Disabled="@isMarkingAsDisputed"
-                                   OnClick="@(() => MarkAsDisputed(o))"
-                                   Title="Mark as Disputed" />
-                }
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                Color="Color.Error"
+                                OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
             </div>
         </MudTd>
     </RowTemplate>
@@ -49,7 +42,7 @@
 <MudGrid Class="mt-0" Justify="Justify.Center">
     <MudItem xs="12" md="5" Class="d-flex justify-center">
         <MudText Align="Align.Center" Typo="Typo.caption">
-            <b class="gradient-text">IMPORTANT NOTICE!</b><br />
+            <b style="color: #102247;">IMPORTANT NOTICE!</b><br />
             To preserve data and result integrity, dispute process can only be submitted for orders completed within the allowed dispute window.
             <MudSpacer/>
             Please submit a new order if dispute is no longer eligible or if reverification is required for the selected individual.

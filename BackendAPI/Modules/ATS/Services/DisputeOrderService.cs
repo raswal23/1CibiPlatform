@@ -4,6 +4,7 @@ public class DisputeOrderService : IDisputeOrderService
 {
 	private readonly ILogger<DisputeOrderService> _logger;
 	private readonly IATSRepository _atsRepository;
+	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
 	private readonly string _disputeOrderEmailRecipient;
@@ -12,13 +13,15 @@ public class DisputeOrderService : IDisputeOrderService
 		ILogger<DisputeOrderService> logger,
 		[FromKeyedServices("ats")] IEmailService emailService,
 		IConfiguration configuration,
-		IATSRepository atsRepository)
+		IATSRepository atsRepository,
+		IHttpContextAccessor httpContextAccessor)
 	{
 		_logger = logger;
 		_emailService = emailService;
 		_configuration = configuration;
 		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
+		_httpContextAccessor = httpContextAccessor;
 	}
 
 	public Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -38,21 +41,24 @@ public class DisputeOrderService : IDisputeOrderService
 				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
 	}
 
-	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
 			Action = "MarkAsDisputed",
 			Step = "UpdatingDisputeStatus",
-			EmailInvitationId = emailInvitationId,
+			EmailInvitationId = disputeRequest.EmailInvitationId,
 			Timestamp = DateTime.UtcNow
 		};
+
+		var requestor = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value ?? 
+					_httpContextAccessor.HttpContext?.User.FindFirst("email")?.Value;
 
 		_logger.LogInformation("Marking order as disputed: {@Context}", logContext);
 
 		try
 		{
-			await SendDisputeOrderEmailAsync(_disputeOrderEmailRecipient);
+			await SendDisputeOrderEmailAsync(_disputeOrderEmailRecipient, disputeRequest, requestor!);
 		}
 		catch (Exception ex)
 		{
@@ -66,9 +72,7 @@ public class DisputeOrderService : IDisputeOrderService
 
 		try
 		{
-			await _atsRepository.MarkAsDisputedAsync(
-				emailInvitationId, 
-				cancellationToken);
+			await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
 		}
 		catch (Exception ex)
 		{
@@ -83,7 +87,7 @@ public class DisputeOrderService : IDisputeOrderService
 		return true;
 	}
 
-	public async Task<bool> SendDisputeOrderEmailAsync(string gmail)
+	public async Task<bool> SendDisputeOrderEmailAsync(string gmail, DisputeOrderRequestDTO disputeRequest, string requestor)
 	{
 		var logContext = new
 		{
@@ -95,7 +99,7 @@ public class DisputeOrderService : IDisputeOrderService
 
 		_logger.LogInformation("Sending dispute order notification for email: {@Context}", logContext);
 
-		var otpBody = _emailService.SendEmailForDispute(gmail);
+		var otpBody = _emailService.SendEmailForDispute(gmail, disputeRequest.Company!, disputeRequest.DisputeReason!, disputeRequest.OrderCreatedAt, requestor);
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,

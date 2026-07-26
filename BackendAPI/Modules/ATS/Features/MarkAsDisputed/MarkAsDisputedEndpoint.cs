@@ -1,6 +1,6 @@
 namespace ATS.Features.MarkAsDisputed;
 
-public record MarkAsDisputedRequest(Guid EmailInvitationId);
+public record MarkAsDisputedRequest(DisputeOrderRequestDTO disputeRequest);
 
 public record MarkAsDisputedResponse(bool Success);
 
@@ -13,7 +13,7 @@ public class MarkAsDisputedEndpoint : ICarterModule
 			ISender sender,
 			CancellationToken cancellationToken) =>
 		{
-			var command = new MarkAsDisputedCommand(request.EmailInvitationId);
+			var command = new MarkAsDisputedCommand(request.disputeRequest);
 			var result = await sender.Send(command, cancellationToken);
 
 			if (!result.Success)

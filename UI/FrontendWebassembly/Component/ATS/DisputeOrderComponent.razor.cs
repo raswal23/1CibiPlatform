@@ -4,7 +4,6 @@ public partial class DisputeOrderComponent
 {
   private TableComponent<DisputeOrderListDTO>? ordersTable;
 	private string? _searchString;
-	private bool isMarkingAsDisputed = false;
 
 	private string searchString
 	{
@@ -21,58 +20,33 @@ public partial class DisputeOrderComponent
 		}
 	}
 
-  private async Task<TableData<DisputeOrderListDTO>> LoadOrderData(TableState state, CancellationToken cancellationToken)
+	private async Task<TableData<DisputeOrderListDTO>> LoadOrderData(TableState state, CancellationToken cancellationToken)
 	=> await LoadPagedDataAsync(state, (page, pageSize) =>
 				DisputeOrderService.GetDisputeOrdersAsync(page, pageSize, searchString));
 
-   private async Task MarkAsDisputed(DisputeOrderListDTO order)
+	private async Task MarkAsDisputed(Guid emailInvitationId, DateTime? orderCreatedAt, string subjectName)
 	{
-     if (order.IsDisputed)
-		{
-			return;
-		}
-
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message), "Do you want to mark this order as disputed?" }
+			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId },
+			{ nameof(DisputeDialogOrderComponent.OrderCreatedAt), orderCreatedAt },
+			{ nameof(DisputeDialogOrderComponent.SubjectName), subjectName }
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>("Confirmation", confirmParam);
+		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>("Reason to Dispute", confirmParam);
 		var result = await dialog.Result;
 
-		if (result!.Canceled)
+		if (!result!.Canceled)
 		{
 			if (ordersTable?.TableRef != null)
 				await ordersTable.TableRef.ReloadServerData();
-			return;
-		}
 
-		try
-		{
-			isMarkingAsDisputed = true;
-			await InvokeAsync(StateHasChanged);
-
-			var success = await DisputeOrderService.MarkAsDisputedAsync(order.EmailInvitationID);
-
-			if (!success)
+			var successParam = new DialogParameters
 			{
-				Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
-				return;
-			}
+				{ nameof(SuccessSaveComponent.Message), "Successfully saved the candidate's information." }
+			};
 
-			Snackbar.Add("Order marked as disputed successfully.", Severity.Success);
-
-			if (ordersTable?.TableRef != null)
-				await ordersTable.TableRef.ReloadServerData();
-		}
-		catch (Exception)
-		{
-			Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
-		}
-		finally
-		{
-			isMarkingAsDisputed = false;
-			await InvokeAsync(StateHasChanged);
+			var dialogResults = await DialogService.ShowAsync<SuccessSaveComponent>("Success", successParam);
 		}
 	}
 		

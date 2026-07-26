@@ -264,7 +264,7 @@ public class ATSRepository : IATSRepository
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
-			.OrderByDescending(eir => eir.IsDisputed)
+			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
 	        .ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
@@ -274,9 +274,9 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
-				OrderStatus = eir.OrderStatus,
-			    OrderCompletedAt = eir.OrderCompletedAt,
-				IsDisputed = eir.IsDisputed,
+				DisputeCategory = eir.DisputeCategory,
+				OrderCreatedAt = eir.OrderCreatedAt,
+				OrderCompletedAt = eir.OrderCompletedAt
 			})
 			.ToListAsync(cancellationToken);
 
@@ -302,7 +302,7 @@ public class ATSRepository : IATSRepository
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
-			.OrderByDescending(eir => eir.IsDisputed)
+			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
 			.ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
@@ -312,9 +312,9 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
-				OrderStatus = eir.OrderStatus,
+				DisputeCategory = eir.DisputeCategory,
+				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
-				IsDisputed = eir.IsDisputed,
 			})
 			.ToListAsync(cancellationToken);
 
@@ -327,12 +327,12 @@ public class ATSRepository : IATSRepository
 			);
 	}
 
-	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
 	{
 		var affectedRows = await _dbcontext.EmailInvitationRequests
-			.Where(eir => eir.EmailInvitationID == emailInvitationId)
+			.Where(eir => eir.EmailInvitationID == disputeRequest.EmailInvitationId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(eir => eir.IsDisputed, true)
+				.SetProperty(eir => eir.DisputeCategory, disputeRequest.DisputeReason)
 				.SetProperty(eir => eir.DisputedAt, DateTime.UtcNow),
 				cancellationToken);
 

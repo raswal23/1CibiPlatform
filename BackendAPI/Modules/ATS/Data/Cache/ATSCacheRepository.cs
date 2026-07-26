@@ -206,9 +206,9 @@ public class ATSCacheRepository : IATSRepository
 			cancellationToken);
 	}
 
-	public async Task<bool> MarkAsDisputedAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.MarkAsDisputedAsync(emailInvitationId, cancellationToken);
+		var result = await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
 
 		if (result)
             await _hybridCache.RemoveByTagAsync(DisputeOrderTag);

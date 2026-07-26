@@ -110,7 +110,7 @@ public class ATSEmailService : IEmailService
 		return body;
 	}
 
-	public string SendEmailForDispute(string gmail)
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName)
 	{
 		string body = $@"
                 <!DOCTYPE html>
@@ -121,55 +121,58 @@ public class ATSEmailService : IEmailService
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
                         .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
+						.wrapper {{ width: 100%; display: flex; justify-content: center; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
                     </style>
                 </head>
                 <body>
-					<div class=""container"">
-						<div class=""header"">
-							<h1>CIBI | Dispute Order Notification</h1>
-						</div>
+`					<div class=""wrapper"">
+						<div class=""container"">
+							<div class=""header"">
+								<h1>CIBI | Dispute Order Notification</h1>
+							</div>
 
-						<div class=""content"">
-							<p>Hello,</p>
+							<div class=""content"">
+								<p>Hello,</p>
 
-							<p>
-								A request for dispute has been raised for subject
-								<strong>{{fullName}}</strong>.
-							</p>
+								<p>
+									A request for dispute has been raised for subject
+									<strong>{subjectName}</strong>.
+								</p>
 
-							<p>Supplemental details are provided below:</p>
+								<p>Supplemental details are provided below:</p>
 
-							<table>
-								<tr>
-									<td>Requestor Email</td>
-									<td>{{requestorEmail}}</td>
-								</tr>
-								<tr>
-									<td>Company (Requestor)</td>
-									<td>{{companyName}}</td>
-								</tr>
-								<tr>
-									<td>Order Date</td>
-									<td>{{orderDate}}</td>
-								</tr>
-								<tr>
-									<td>Reason for Dispute</td>
-									<td>{{reasonForDispute}}</td>
-								</tr>
-							</table>
+								<table>
+									<tr>
+										<td>Requestor Email:</td>
+										<td>{requestor}</td>
+									</tr>
+									<tr>
+										<td>Company:</td>
+										<td><strong>{company}</strong></td>
+									</tr>
+									<tr>
+										<td>Order Date:</td>
+										<td><strong>{orderedAt}</strong></td>
+									</tr>
+									<tr>
+										<td>Reason for Dispute:</td>
+										<td><strong>{disputeReason}</strong></td>
+									</tr>
+								</table>
 
-							<p>
-								Please review the dispute request and proceed with the appropriate action.
-							</p>
+								<p>
+									Please review the dispute request and proceed with the appropriate action.
+								</p>
 
-							<p>Thank you.</p>
-						</div>
+								<p>Thank you.</p>
+							</div>
 
-						<div class=""footer"">
-							<p>
-								This is an automated notification from the ATS. Please do not reply to this email.
-							</p>
+							<div class=""footer"">
+								<p>
+									This is an automated notification from the ATS. Please do not reply to this email.
+								</p>
+							</div>
 						</div>
 					</div>
 				</body>
