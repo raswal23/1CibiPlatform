@@ -6,10 +6,6 @@
 
 <MudContainer Class="pa-0">
 
-    <div class="d-flex align-center mb-3" style="gap:12px; align-items:center; width: 320px;">
-        <MudText Typo="Typo.h5" Class="mb-0" Style="font-weight: 700; color: #102247;">@($"{ATSname}")</MudText>
-    </div>
-
     <ATSTabComponent ActiveTabChanged="ChangeActiveTab" />
 
     @if (_isLoading)
@@ -28,17 +24,17 @@
         } *@
         if (_activeIndex == 1)
         {
-            <PageTitle>@($"{ATSname} - Dispute Order")</PageTitle>
+            <PageTitle>@($"Applicant Tracking System - Dispute Order")</PageTitle>
             <DisputeOrderComponent />
         }
         else if (_activeIndex == 2)
         {
-            <PageTitle>@($"{ATSname} - New Order")</PageTitle>
+            <PageTitle>@($"Applicant Tracking System - New Order")</PageTitle>
             <NewOrderComponent />
         }
         else if (_activeIndex == 3)
         {
-            <PageTitle>@($"{ATSname} - Search Report")</PageTitle>
+            <PageTitle>@($"Applicant Tracking System - Search Report")</PageTitle>
             <SearchReportComponent />
         }
         @* else if (_activeIndex == 4)

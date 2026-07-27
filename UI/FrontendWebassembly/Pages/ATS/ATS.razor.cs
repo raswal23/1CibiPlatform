@@ -6,7 +6,6 @@ public partial class ATS
 
 	private bool _isLoading = false;
 
-	private string ATSname = "Applicant Tracking System ";
 	private async Task ChangeActiveTab(int value)
 	{
 		_isLoading = true;

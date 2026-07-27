@@ -26,7 +26,7 @@ public partial class MainLayout
 	private List<List<int>> SubMenus = new List<List<int>>();
 	private List<int> Roles = new List<int>();
 
-	private bool UseCover => Navigation.Uri.Contains("/s&i/ats");
+	private bool UseATSLayout => Navigation.Uri.Contains("/s&i/ats");
 
 	private string GetContainerStyle()
 	{
@@ -37,9 +37,18 @@ public partial class MainLayout
 		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
 	}
 
+	private string GetATSStyle()
+	{
+		var color = !_isDarkMode
+			? "#68c0d6"
+			: "#102247;";
+
+		return $"font-weight: 700; color: {color};";
+	}
+
 	private string GetCoverStyle()
 	{
-		return UseCover
+		return UseATSLayout
 			? "pa-5 ma-5 ats-cover"
 			: "pa-5 ma-5";
 	}
@@ -129,13 +138,13 @@ public partial class MainLayout
 				return;
 			}
 
-			Apps = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_appIdKey));
+			Apps = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_appIdKey) ?? string.Empty) ?? new List<int>();
 			Console.WriteLine($"Apps: {string.Join(", ", Apps)}");
 
-			SubMenus = JsonSerializer.Deserialize<List<List<int>>>(await LocalStorageService.GetItemAsync<string>(_subMenuKey));
+			SubMenus = JsonSerializer.Deserialize<List<List<int>>>(await LocalStorageService.GetItemAsync<string>(_subMenuKey) ?? string.Empty) ?? new List<List<int>>();
 			Console.WriteLine($"SubMenus: {string.Join(", ", SubMenus.SelectMany(sm => sm))}");
 
-			Roles = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_roleIdKey));
+			Roles = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_roleIdKey) ?? string.Empty) ?? new List<int>();
 			Console.WriteLine($"Roles: {string.Join(", ", Roles)}");
 
 			name = await LocalStorageService.GetItemAsync<string>(_userNameKey) ?? string.Empty;
