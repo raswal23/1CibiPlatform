@@ -3,58 +3,35 @@
 
 <MudDialog Style="padding: 8px;">
      <DialogContent>
-        <div class="d-flex justify-center">
-            <MudGrid Style="width:350px;" Spacing="2">
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="ResumeSelected"
-                                     Disabled="@(ReportResult!.ResumeFileName == "-")"
-                                     Label="@(ReportResult?.ResumeFileName == "-" ? "No resume uploaded" : ReportResult?.ResumeFileName)" />
-                    </MudStack>
-                </MudItem>
+        <MudStack Spacing="2" AlignItems="AlignItems.Center">
+               <MudStack Spacing="2" Style="width: 100%; max-width: 500px;">
 
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="GovernmentIdSelected"
-                                     Disabled="@(ReportResult!.IdUploadedFileName == "-")"
-                                     Label="@(ReportResult?.IdUploadedFileName == "-" ? "No government ID uploaded" : ReportResult?.IdUploadedFileName)" />
-                    </MudStack>
-                </MudItem>
+                <MudCheckBox @bind-Value="ResumeSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName) ? "No resume uploaded" : ReportResult.ResumeFileName)" />
 
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="DiplomaSelected"
-                                     Disabled="@(ReportResult!.DiplomaFileName == "-")"                     
-                                     Label="@(ReportResult?.DiplomaFileName == "-" ? "No diploma uploaded" : ReportResult?.DiplomaFileName)" />
-                    </MudStack>
-                </MudItem>
+                <MudCheckBox @bind-Value="GovernmentIdSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName) ? "No government ID uploaded" : ReportResult.IdUploadedFileName)" />
 
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="CoeSelected"
-                                     Disabled="@(ReportResult!.CoeFileName == "-")"
-                                     Label="@(ReportResult?.CoeFileName == "-" ? "No certificate of employment uploaded" : ReportResult?.CoeFileName)" />
-                    </MudStack>
-                </MudItem>
+                <MudCheckBox @bind-Value="DiplomaSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName) ? "No diploma uploaded" : ReportResult.DiplomaFileName)" />
 
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="ConsentSelected"
-                                     Disabled="@(ReportResult!.ConsentFormFileName == "-")"
-                                     Label="@(ReportResult?.ConsentFormFileName == "-" ? "No consent form uploaded" : ReportResult?.ConsentFormFileName)" />
-                    </MudStack>
-                </MudItem>
+                <MudCheckBox @bind-Value="CoeSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.CoeFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.CoeFileName) ? "No certificate of employment uploaded" : ReportResult.CoeFileName)" />
 
-                <MudItem xs="12">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudCheckBox @bind-Value="ReportSelected"
-                                     Disabled="@(ReportResult!.UploadedReportFileName == "-")"
-                                     Label="@(ReportResult?.UploadedReportFileName == "-" ? "No report uploaded" : ReportResult?.UploadedReportFileName)" />
-                    </MudStack>
-                </MudItem>
+                <MudCheckBox @bind-Value="ConsentSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName) ? "No consent form uploaded" : ReportResult.ConsentFormFileName)" />
 
-            </MudGrid>
-        </div>
+                <MudCheckBox @bind-Value="ReportSelected"
+                             Disabled="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName))"
+                             Label="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName) ? "No report uploaded" : ReportResult.UploadedReportFileName)" />
+
+            </MudStack>
+        </MudStack>
 
         <MudDivider Class="my-4" />
 

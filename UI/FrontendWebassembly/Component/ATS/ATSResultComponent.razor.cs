@@ -22,7 +22,7 @@ public partial class ATSResultComponent
 		var options = new DialogOptions
 		{
 			CloseButton = true,
-			MaxWidth = MaxWidth.Medium,
+			MaxWidth = MaxWidth.ExtraSmall,
 			FullWidth = true
 		};
 

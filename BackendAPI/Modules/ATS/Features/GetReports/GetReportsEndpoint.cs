@@ -1,6 +1,6 @@
 namespace ATS.Features.Report;
 
-public record GetReportsEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false);
+public record GetReportsEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false, DateTime? StartDate = null, DateTime? EndDate = null);
 
 public record GetReportsEndpointResponse(PaginatedResult<ReportListDTO> Reports);
 
@@ -18,7 +18,9 @@ public class GetReportsEndpoint : ICarterModule
 				request.PageSize,
                 request.SearchTerm,
 				request.SortColumn,
-				request.SortDescending);
+				request.SortDescending,
+				request.StartDate,
+				request.EndDate);
 
 			var result = await sender.Send(query, cancellationToken);
 

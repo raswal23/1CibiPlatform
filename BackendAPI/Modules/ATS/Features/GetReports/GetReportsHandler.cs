@@ -1,6 +1,6 @@
 namespace ATS.Features.Report;
 
-public record GetReportsQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
+public record GetReportsQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false, DateTime? StartDate = null, DateTime? EndDate = null)
 	: IQuery<GetReportsQueryResult>;
 
 public record GetReportsQueryResult(PaginatedResult<ReportListDTO> Reports);
@@ -38,7 +38,9 @@ public class GetReportsHandler : IQueryHandler<GetReportsQueryRequest, GetReport
 		var paginationRequest = new PaginationRequest(
 			request.PageNumber ?? 1,
 			request.PageSize ?? 10,
-			request.SearchTerm);
+			request.SearchTerm,
+			request.StartDate,
+			request.EndDate);
 
        var reports = await _reportService.GetReportsAsync(
 			paginationRequest,

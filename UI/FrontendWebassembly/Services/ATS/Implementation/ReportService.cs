@@ -49,7 +49,7 @@ public class ReportService : IReportService
 		return result;
 	}
 
-   public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false)
+    public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false, DateTime? StartDate = null, DateTime? EndDate = null)
 	{
 		var query = $"ats/getreports?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
@@ -59,6 +59,14 @@ public class ReportService : IReportService
 		if (!string.IsNullOrWhiteSpace(SortColumn))
 		{
 			query += $"&sortColumn={Uri.EscapeDataString(SortColumn)}&sortDescending={SortDescending}";
+		}
+		if (StartDate.HasValue)
+		{
+			query += $"&startDate={Uri.EscapeDataString(StartDate.Value.ToString("yyyy-MM-dd"))}";
+		}
+		if (EndDate.HasValue)
+		{
+			query += $"&endDate={Uri.EscapeDataString(EndDate.Value.ToString("yyyy-MM-dd"))}";
 		}
 
 		var response = await _httpClient.GetAsync(query);

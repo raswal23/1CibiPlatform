@@ -133,9 +133,11 @@ public class ReportService : IReportService
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm)
-          ? _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
-			: _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
+		return !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
+			   || paginationRequest.StartDate.HasValue
+			   || paginationRequest.EndDate.HasValue
+			? _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
+			: _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

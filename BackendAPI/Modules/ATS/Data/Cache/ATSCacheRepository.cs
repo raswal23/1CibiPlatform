@@ -270,7 +270,14 @@ public class ATSCacheRepository : IATSRepository
 
   public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-        var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}_sort_{sortColumn}_desc_{sortDescending}";
+		var cacheKey =
+			$"report_page_{paginationRequest.PageIndex}" +
+			$"_size_{paginationRequest.PageSize}" +
+			$"_search_{paginationRequest.SearchTerm ?? "none"}" +
+			$"_start_{(paginationRequest.StartDate.HasValue ? paginationRequest.StartDate.Value.ToString("yyyyMMdd") : "none")}" +
+			$"_end_{(paginationRequest.EndDate.HasValue ? paginationRequest.EndDate.Value.ToString("yyyyMMdd") : "none")}" +
+			$"_sort_{sortColumn ?? "none"}" +
+			$"_desc_{sortDescending}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,

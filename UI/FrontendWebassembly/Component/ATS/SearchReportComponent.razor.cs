@@ -31,20 +31,10 @@ public partial class SearchReportComponent
 				state.PageSize,
 				searchString,
 				state.SortLabel,
-				state.SortDirection == SortDirection.Descending);
+				state.SortDirection == SortDirection.Descending,
+				_dateRange?.Start,
+				_dateRange?.End);
 			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
-
-         if (_dateRange?.Start is not null || _dateRange?.End is not null)
-			{
-				var start = _dateRange?.Start?.Date;
-				var end = _dateRange?.End?.Date;
-
-				currentPageData = currentPageData
-					.Where(r => r.OrderCompletedAt.HasValue &&
-						(!start.HasValue || r.OrderCompletedAt.Value.Date >= start.Value) &&
-						(!end.HasValue || r.OrderCompletedAt.Value.Date <= end.Value))
-					.ToList();
-			}
 
 			return new TableData<ReportListDTO>
 			{
@@ -63,7 +53,16 @@ public partial class SearchReportComponent
 		}
 	}
 
-	private async Task DownloadSelected()
+    private async Task OnDateRangeChanged(DateRange range)
+    {
+        _dateRange = range;
+
+        Console.WriteLine($"{_dateRange?.Start} - {_dateRange?.End}");
+
+        await ReloadTable();
+    }
+
+    private async Task DownloadSelected()
 	{
 
 		if (!currentPageData.Any(r => r.Selected))
@@ -144,5 +143,4 @@ public partial class SearchReportComponent
 			await InvokeAsync(StateHasChanged);
 		}
 	}
-
 }

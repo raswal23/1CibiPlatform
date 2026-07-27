@@ -421,6 +421,8 @@ public class ATSRepository : IATSRepository
 			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
 		};
 
+
+
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
@@ -461,12 +463,37 @@ public class ATSRepository : IATSRepository
 					.OrderByDescending(rd => rd.ReportUploadedAt)
 					.Select(rd => rd.HitStatus)
 					.FirstOrDefault()
-			})
-			.Where(x =>
-				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(x.OrderStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(x.SelectPackage ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(x.HitStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%"));
+			});
+
+		if (paginationRequest.StartDate.HasValue)
+		{
+			var start = DateTime.SpecifyKind(
+						paginationRequest.StartDate.Value.Date,
+						DateTimeKind.Utc);
+
+			usersQuery = usersQuery.Where(x =>
+				x.OrderCompletedAt >= start);
+		}
+
+		if (paginationRequest.EndDate.HasValue)
+		{
+			var end = DateTime.SpecifyKind(
+				paginationRequest.EndDate.Value.Date.AddDays(1),
+				DateTimeKind.Utc);
+
+			usersQuery = usersQuery.Where(x =>
+				x.OrderCompletedAt < end);
+		}
+
+		if (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm))
+		{
+			var search = $"%{paginationRequest.SearchTerm}%";
+
+			usersQuery = usersQuery.Where(x =>
+				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
+				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
+				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
+		}
 
 		usersQuery = sortColumn switch
 		{

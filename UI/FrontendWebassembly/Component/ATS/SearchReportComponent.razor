@@ -6,10 +6,10 @@
 <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
     <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);"
               Class="transparent-paper">
-        <MudDateRangePicker @bind-DateRange="@_dateRange"
-                            Margin="Margin.Dense"
+        <MudDateRangePicker Margin="Margin.Dense"
                             ReadOnly="false"
                             Clearable="true"
+                            DateRangeChanged="OnDateRangeChanged"
                             PlaceholderStart="Start Date"
                             PlaceholderEnd="End Date"
                             Label="Date Range" />
