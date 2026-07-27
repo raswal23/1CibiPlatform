@@ -4,7 +4,8 @@
 @inject ISnackbar Snackbar
 
 <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
+    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8);"
+              Class="transparent-paper">
         <MudDateRangePicker @bind-DateRange="@_dateRange"
                             Margin="Margin.Dense"
                             ReadOnly="false"
@@ -71,9 +72,8 @@
 
 <MudGrid Class="mt-0">
     <MudItem xs="12" md="8">
-        <MudButton Class="@($"theme-button {(currentPageData.Any(r => r.Selected) ? "theme-button-active " : "theme-button-inactive")}")"
+        <MudButton Class="theme-button theme-button-active"
                    Style="width: 120px; border-radius: 12px;"
-                   Disabled="@(!currentPageData.Any(r => r.Selected))"
                    OnClick="DownloadSelected">Download</MudButton>
     </MudItem>
     <MudItem xs="12" md="4">

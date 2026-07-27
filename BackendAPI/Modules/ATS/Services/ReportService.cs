@@ -156,6 +156,14 @@ public class ReportService : IReportService
 			throw new NotFoundException($"No report result found for email invitation ID {emailInvitationRequestId}.");
 		}
 
+		if (result.DiplomaFileKey is not null)
+			result.UploadDiplomaAt = result.FilledFormAt;
+
+
+		if (result.BiometricPhotoFileKey is not null)
+			result.UploadBiometricPhotoAt = result.FilledFormAt;
+
+
 		return result;
 	}
 

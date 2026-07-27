@@ -463,7 +463,7 @@ public class ATSRepository : IATSRepository
 					.FirstOrDefault()
 			})
 			.Where(x =>
-				EF.Functions.ILike($"{x.FirstName} {x.LastName}", $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(x.OrderStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, $"%{paginationRequest.SearchTerm}%"));
@@ -619,8 +619,8 @@ public class ATSRepository : IATSRepository
 			ConsentFormFileKey = result.Signature?.ConsentFormFileKey,
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
 			UploadedReportFileKey = result.LatestReport?.ReportFileKey,
-			FilledFormAt = result.FormCompletedAt,
-			ReportUploadedAt = result.LatestReport?.ReportUploadedAt
+			FilledFormAt = result.FormCompletedAt?.ToString("MMMM dd, yyyy"),
+			ReportUploadedAt = result.LatestReport?.ReportUploadedAt.ToString("MMMM dd, yyyy")
 		};
 	}
 

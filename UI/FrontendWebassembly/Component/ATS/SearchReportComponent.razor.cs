@@ -65,6 +65,13 @@ public partial class SearchReportComponent
 
 	private async Task DownloadSelected()
 	{
+
+		if (!currentPageData.Any(r => r.Selected))
+		{
+			Snackbar.Add("Please select at least one record to download.", Severity.Error);
+			return;
+		}
+
 		var selected = currentPageData.Where(r => r.Selected).ToList();
 
 		DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest = new DownloadMultipleOrderRecordsRequestDTO();

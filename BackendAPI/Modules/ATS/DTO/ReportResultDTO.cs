@@ -14,12 +14,14 @@ public record ReportResultDTO
 	public string? CoeFileKey { get; set; }
 	public string? DiplomaFileName { get; set; }
 	public string? DiplomaFileKey { get; set; }
+	public string? UploadDiplomaAt { get; set; }
 	public string? BiometricPhotoFileName { get; set; }
 	public string? BiometricPhotoFileKey { get; set; }
+	public string? UploadBiometricPhotoAt { get; set; }
 	public string? ConsentFormFileName { get; set; }
 	public string? ConsentFormFileKey { get; set; }
 	public string? UploadedReportFileName { get; set; }
 	public string? UploadedReportFileKey { get; set; }
-	public DateTime? FilledFormAt { get; set; }
-	public DateTime? ReportUploadedAt { get; set; }
+	public string? FilledFormAt { get; set; }
+	public string? ReportUploadedAt { get; set; }
 }

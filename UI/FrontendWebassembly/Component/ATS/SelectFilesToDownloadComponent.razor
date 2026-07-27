@@ -7,7 +7,6 @@
             <MudGrid Style="width:350px;" Spacing="2">
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
                         <MudCheckBox @bind-Value="ResumeSelected"
                                      Disabled="@(ReportResult!.ResumeFileName == "-")"
                                      Label="@(ReportResult?.ResumeFileName == "-" ? "No resume uploaded" : ReportResult?.ResumeFileName)" />
@@ -16,7 +15,6 @@
 
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Info" />
                         <MudCheckBox @bind-Value="GovernmentIdSelected"
                                      Disabled="@(ReportResult!.IdUploadedFileName == "-")"
                                      Label="@(ReportResult?.IdUploadedFileName == "-" ? "No government ID uploaded" : ReportResult?.IdUploadedFileName)" />
@@ -25,7 +23,6 @@
 
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Success" />
                         <MudCheckBox @bind-Value="DiplomaSelected"
                                      Disabled="@(ReportResult!.DiplomaFileName == "-")"                     
                                      Label="@(ReportResult?.DiplomaFileName == "-" ? "No diploma uploaded" : ReportResult?.DiplomaFileName)" />
@@ -34,7 +31,6 @@
 
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Work" Color="Color.Warning" />
                         <MudCheckBox @bind-Value="CoeSelected"
                                      Disabled="@(ReportResult!.CoeFileName == "-")"
                                      Label="@(ReportResult?.CoeFileName == "-" ? "No certificate of employment uploaded" : ReportResult?.CoeFileName)" />
@@ -43,7 +39,6 @@
 
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.Draw" Color="Color.Secondary" />
                         <MudCheckBox @bind-Value="ConsentSelected"
                                      Disabled="@(ReportResult!.ConsentFormFileName == "-")"
                                      Label="@(ReportResult?.ConsentFormFileName == "-" ? "No consent form uploaded" : ReportResult?.ConsentFormFileName)" />
@@ -52,7 +47,6 @@
 
                 <MudItem xs="12">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Color="Color.Error" />
                         <MudCheckBox @bind-Value="ReportSelected"
                                      Disabled="@(ReportResult!.UploadedReportFileName == "-")"
                                      Label="@(ReportResult?.UploadedReportFileName == "-" ? "No report uploaded" : ReportResult?.UploadedReportFileName)" />
