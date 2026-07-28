@@ -85,7 +85,7 @@ public class ATSRepository : IATSRepository
 	{
 		return await _dbcontext.BulkUploadFileDetails
 			.AsNoTracking()
-			.Where(bf => bf.Status == "Pending")
+			.Where(bf => bf.Status == BulkFileStatus.Pending)
 			.OrderBy(bf => bf.FileID)
 			.Take(10)
 			.ToListAsync();
@@ -105,7 +105,7 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.EmailSentStatus, x => "Done")
+			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Done)
 			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
 
 		return true;
@@ -118,7 +118,7 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.EmailSentStatus, x => "Error"));
+			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error));
 
 		return true;
 	}
@@ -129,13 +129,13 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == emailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.ApplicationFormStatus, x => "Done")
+			.SetProperty(x => x.ApplicationFormStatus, x => ApplicationFormStatus.Done)
 			.SetProperty(x => x.FormCompletedAt, x => DateTime.UtcNow)
 			.SetProperty(
 				x => x.OrderStatus,
-				x => x.OrderStatus == "Completed"
+				x => x.OrderStatus == OrderStatus.Completed
 					? x.OrderStatus
-					: "In Progress")
+					: OrderStatus.InProgress)
 			.SetProperty(x => x.NeedsProjection, x => true));
 
 		return true;
@@ -148,7 +148,7 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.BulkUploadFileDetails
 				.Where(x => fileIds.Contains(x.FileID))
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => "Done"));
+				.SetProperty(x => x.Status, x => BulkFileStatus.Done));
 
 		return true;
 	}
@@ -157,7 +157,7 @@ public class ATSRepository : IATSRepository
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.EmailSentStatus, x => "Done")
+				.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Done)
 				.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
 
 		return true;
@@ -167,7 +167,7 @@ public class ATSRepository : IATSRepository
 	{
 		await _dbcontext.EmailInvitationRequests.Where(x => x.EmailInvitationID == emailInvitationId)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.EmailSentStatus, x => "Error"));
+				.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error));
 
 		return true;
 	}
@@ -185,15 +185,15 @@ public class ATSRepository : IATSRepository
 	{
 		return await _dbcontext.EmailInvitationRequests.Where(x => x.HashToken == hashToken)
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.ApplicationFormStatus, x => "Withdrawn")
-				.SetProperty(x => x.OrderStatus, x => "Application Withdrawn"));
+				.SetProperty(x => x.ApplicationFormStatus, x => ApplicationFormStatus.Withdrawn)
+				.SetProperty(x => x.OrderStatus, x => OrderStatus.ApplicationWithdrawn));
 	}
 
 	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir => eir.OrderStatus == "Application Withdrawn");
+			.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn);
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
@@ -222,7 +222,7 @@ public class ATSRepository : IATSRepository
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 							.AsNoTracking()
-							.Where(eir => eir.OrderStatus == "Application Withdrawn")
+							.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn)
 							.Where(eir =>
 								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 								EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
@@ -259,7 +259,7 @@ public class ATSRepository : IATSRepository
 
 		var usersQuery =  _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.Where(eir => eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
+			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
@@ -294,7 +294,7 @@ public class ATSRepository : IATSRepository
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir =>
-				(eir.OrderStatus == "Completed" && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
+				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
@@ -373,7 +373,7 @@ public class ATSRepository : IATSRepository
 			.Where(x => x.EmailInvitationID == EmailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
 				.SetProperty(x => x.OrderStatus, 
-							 x => x.OrderStatus == "Completed" ? x.OrderStatus : orderStatus)
+							 x => x.OrderStatus == OrderStatus.Completed ? x.OrderStatus : orderStatus)
 				.SetProperty(x => x.OrderCompletedAt, orderCompletedAt),
 				cancellationToken);
 
@@ -409,13 +409,13 @@ public class ATSRepository : IATSRepository
 
 		usersQuery = sortColumn switch
 		{
-			"SubjectName" => sortDescending
+			SortColumn.SubjectName => sortDescending
 				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
 				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
-			"OrderStatus" => sortDescending
+			SortColumn.OrderStatus => sortDescending
 				? usersQuery.OrderByDescending(x => x.OrderStatus)
 				: usersQuery.OrderBy(x => x.OrderStatus),
-			"OrderCompletedAt" => sortDescending
+			SortColumn.OrderCompletedAt => sortDescending
 				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
 				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
 			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
@@ -497,13 +497,13 @@ public class ATSRepository : IATSRepository
 
 		usersQuery = sortColumn switch
 		{
-			"SubjectName" => sortDescending
+			SortColumn.SubjectName => sortDescending
 				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
 				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
-			"OrderStatus" => sortDescending
+			SortColumn.OrderStatus => sortDescending
 				? usersQuery.OrderByDescending(x => x.OrderStatus)
 				: usersQuery.OrderBy(x => x.OrderStatus),
-			"OrderCompletedAt" => sortDescending
+			SortColumn.OrderCompletedAt => sortDescending
 				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
 				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
 			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
@@ -584,14 +584,14 @@ public class ATSRepository : IATSRepository
 				},
 				LatestReport = eir.ReportDetails!
 				.Where(rd =>
-					rd.ReportStatus == "Supplementary Report" ||
-					rd.ReportStatus == "Complete Final Report" ||
-					rd.ReportStatus == "Closed Final Report" ||
-					rd.ReportStatus == "Initial Report")
+					rd.ReportStatus == ReportStatus.SupplementaryReport ||
+					rd.ReportStatus == ReportStatus.CompleteFinalReport ||
+					rd.ReportStatus == ReportStatus.ClosedFinalReport ||
+					rd.ReportStatus == ReportStatus.InitialReport)
 				.OrderBy(rd =>
-					rd.ReportStatus == "Supplementary Report" ? 0 :
-					(rd.ReportStatus == "Complete Final Report" ||
-					 rd.ReportStatus == "Closed Final Report") ? 1 : 2)
+					rd.ReportStatus == ReportStatus.SupplementaryReport ? 0 :
+					(rd.ReportStatus == ReportStatus.CompleteFinalReport ||
+					 rd.ReportStatus == ReportStatus.ClosedFinalReport) ? 1 : 2)
 				.ThenByDescending(rd => rd.ReportUploadedAt)
 				.Select(rd => new
 				{
@@ -716,14 +716,14 @@ public class ATSRepository : IATSRepository
 
 				LatestReport = eir.ReportDetails!
 					.Where(rd =>
-						rd.ReportStatus == "Supplementary Report" ||
-						rd.ReportStatus == "Complete Final Report" ||
-						rd.ReportStatus == "Closed Final Report" ||
-						rd.ReportStatus == "Initial Report")
+						rd.ReportStatus == ReportStatus.SupplementaryReport ||
+						rd.ReportStatus == ReportStatus.CompleteFinalReport ||
+						rd.ReportStatus == ReportStatus.ClosedFinalReport ||
+						rd.ReportStatus == ReportStatus.InitialReport)
 					.OrderBy(rd =>
-						rd.ReportStatus == "Supplementary Report" ? 0 :
-						(rd.ReportStatus == "Complete Final Report" ||
-						 rd.ReportStatus == "Closed Final Report") ? 1 : 2)
+						rd.ReportStatus == ReportStatus.SupplementaryReport ? 0 :
+						(rd.ReportStatus == ReportStatus.CompleteFinalReport ||
+						 rd.ReportStatus == ReportStatus.ClosedFinalReport) ? 1 : 2)
 					.ThenByDescending(rd => rd.ReportUploadedAt)
 					.Select(rd => new
 					{
@@ -830,8 +830,8 @@ public class ATSRepository : IATSRepository
 				.SetProperty(eir => eir.HashToken, hashToken)
 				.SetProperty(eir => eir.HashTokenCreatedAt, DateTime.UtcNow)
 				.SetProperty(eir => eir.HashTokenExpiration, hashTokenExpiration)
-				.SetProperty(eir => eir.OrderStatus, "Pending Candidate Info")
-				.SetProperty(eir => eir.ApplicationFormStatus, "Pending"),
+				.SetProperty(eir => eir.OrderStatus, OrderStatus.PendingCandidateInfo)
+				.SetProperty(eir => eir.ApplicationFormStatus, ApplicationFormStatus.Pending),
 				cancellationToken);
 
 		return true;

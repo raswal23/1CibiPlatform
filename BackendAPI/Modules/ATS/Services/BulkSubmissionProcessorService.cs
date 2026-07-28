@@ -139,9 +139,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						EmailAddress = row.EmailAddress,
 						MobileNumber = row.MobileNumber,
 						SelectPackage = file.PackageType,
-						EmailSentStatus = "Pending",
-						ApplicationFormStatus = "Pending",
-						OrderStatus = "Pending Candidate Info",
+						EmailSentStatus = EmailStatus.Pending,
+						ApplicationFormStatus = ApplicationFormStatus.Pending,
+						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,
 						OrderCreatedAt = DateTime.UtcNow
 					});

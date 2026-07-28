@@ -196,27 +196,27 @@ public class ApplicationFormService : IApplicationFormService
 		EducationalBackgroundDTO educationalBackgroundDTO,
 		CancellationToken cancellationToken)
 	{
-		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Junior High School Graduate", StringComparison.OrdinalIgnoreCase))
+		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.JuniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
 			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Senior High School Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.SeniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
 			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("College Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.CollegeGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
 			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.MastersGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
 			mastersDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.DoctorateGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
 			doctorateDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken);

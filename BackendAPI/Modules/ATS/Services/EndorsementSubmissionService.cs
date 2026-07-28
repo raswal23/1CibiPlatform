@@ -93,9 +93,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.HashToken =HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
-		emailInvitationRequest.EmailSentStatus = "Pending";
-		emailInvitationRequest.ApplicationFormStatus = "Pending";
-		emailInvitationRequest.OrderStatus = "Pending Candidate Info";
+		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
+		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
+		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		try
@@ -204,7 +204,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 		BulkUploadFileDetails bulkUploadFileDetails = bulkUploadFileDetailsDTO.Adapt<BulkUploadFileDetails>();
 		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
-		bulkUploadFileDetails.Status = "Pending";
+		bulkUploadFileDetails.Status = BulkFileStatus.Pending;
 		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
 

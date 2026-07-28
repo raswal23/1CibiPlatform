@@ -32,7 +32,7 @@ public class ReportService : IReportService
 			Timestamp = DateTime.UtcNow
 		};
 
-		string orderStatus = "In Progress";
+		string orderStatus = OrderStatus.InProgress;
 		DateTime? orderCompletedAt = null ;
 
 		if (reportDetailsDTO.ReportFile is null)
@@ -57,8 +57,8 @@ public class ReportService : IReportService
 				reportDetailsDTO.ReportStatus ?? string.Empty,
 				cancellationToken);
 
-			if (reportDetailsDTO.ReportStatus != "Initial Report")
-				orderStatus = "Completed";
+			if (reportDetailsDTO.ReportStatus != ReportStatus.InitialReport)
+				orderStatus = OrderStatus.Completed;
 			    orderCompletedAt = DateTime.UtcNow;
 
 			await _atsRepository.UpdateOrderStatusAsync(
