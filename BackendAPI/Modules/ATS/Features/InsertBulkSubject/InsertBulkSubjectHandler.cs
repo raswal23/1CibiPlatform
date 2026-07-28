@@ -18,6 +18,7 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			.WithMessage("Only .csv files are allowed.");
 	}
 }
+
 public class InsertBulkSubjectHandler : ICommandHandler<InsertBulkSubjectCommand, InsertBulkSubjectResult>
 {
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;

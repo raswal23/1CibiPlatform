@@ -2,6 +2,8 @@
 
 public record DownloadIndividualReportRequest(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest);
 
+public record DownloadIndividualReportResponse(Stream zipStream);
+
 public class DownloadIndividualReportEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -9,9 +11,10 @@ public class DownloadIndividualReportEndpoint : ICarterModule
 		app.MapPost("downloadindividualreport", async(DownloadIndividualReportRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new DownloadIndividualReportHandlerRequest(request.downloadInvididualRequest);
-			Stream zipStream = await sender.Send(command, cancellationToken);
+			DownloadIndividualReportResult result = await sender.Send(command, cancellationToken);
+			var response = new DownloadIndividualReportResponse(result.zipStream);
 			return Results.File(
-				zipStream,
+				response.zipStream,
 				"application/zip",
 				$"{request.downloadInvididualRequest.SubjectName}.zip");
 		})

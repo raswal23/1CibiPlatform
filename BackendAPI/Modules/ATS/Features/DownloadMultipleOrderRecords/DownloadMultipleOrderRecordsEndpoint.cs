@@ -2,17 +2,19 @@
 
 public record DownloadMultipleOrderRecordsRequest(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest);
 
+public record DownloadMultipleOrderRecordsResponse(Stream zipStream);
 
 public class DownloadMultipleOrderRecordsEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("downloadmultipleorderrecords", async (DownloadMultipleOrderRecordsRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("downloadmultipleorderrecords", async(DownloadMultipleOrderRecordsRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new DownloadMultipleOrderRecordsHandlerRequest(request.downloadMultipleOrderRecordsRequest);
-			Stream zipStream = await sender.Send(command, cancellationToken);
+			DownloadMultipleOrderRecordsResult result = await sender.Send(command, cancellationToken);
+			var response = new DownloadMultipleOrderRecordsResponse(result.zipStream);
 			return Results.File(
-				zipStream,
+				response.zipStream,
 				"application/zip",
 				"ATS_Order_Records.zip");
 		})
