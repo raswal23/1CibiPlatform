@@ -32,7 +32,7 @@ public class ConsentFormPdfDocument : IDocument
 			page.MarginVertical(35);
 
 			page.DefaultTextStyle(x =>
-				x.FontSize(8.8f)
+				x.FontSize(10)
 				 .FontColor(TextColor));
 
 			page.Content().Column(column =>
@@ -47,11 +47,15 @@ public class ConsentFormPdfDocument : IDocument
 					.LineColor(Divider);
 
 				BuildReleaseSection(column);
-
-				column.Item().PaddingTop(20);
-
-				BuildSignatureSection(column);
 			});
+			page.Footer()
+				.Element(container =>
+				{
+					container.Column(column =>
+					{
+						BuildSignatureSection(column);
+					});
+				});
 		});
 	}
 	private void BuildConsentSection(ColumnDescriptor column)
@@ -109,20 +113,22 @@ public class ConsentFormPdfDocument : IDocument
 					.PaddingTop(8)
 					.Text(text =>
 					{
-						text.Span("Purpose of Consent: ").Bold();
+						text.Span("Purpose of Consent: ").Bold().FontSize(11);
 						text.Span(
-							"Background Screening/Credit (Due Diligence) Check");
-					});
+							"Background Screening/Credit (Due Diligence) Check").FontSize(11);
+					})
+					;
 
 				c.Item()
 					.PaddingTop(8)
 					.Text(ConsentFormTextConstants.ReleaseText)
+					.FontSize(11)
 					.Justify()
 					.LineHeight(1.3f);
 
 				c.Item()
 					.PaddingTop(8)
-					.Text("I certify that the information set out by me in this authorization/consent is correct.");
+					.Text("I certify that the information set out by me in this authorization/consent is correct.").FontSize(11);
 
 				c.Item()
 					.PaddingTop(10)
@@ -170,7 +176,7 @@ public class ConsentFormPdfDocument : IDocument
 				{
 					c.PaddingTop(18)
 					 .Text(_applicantName)
-					 .FontSize(9);
+					 .FontSize(11);
 				});
 
 			row.ConstantItem(20);
@@ -182,7 +188,7 @@ public class ConsentFormPdfDocument : IDocument
 				{
 					c.PaddingTop(18)
 					 .Text(_signedDate.ToString("MMMM dd, yyyy"))
-					 .FontSize(9);
+					 .FontSize(11);
 				});
 		});
 	}
@@ -201,7 +207,7 @@ public class ConsentFormPdfDocument : IDocument
 
 			row.RelativeItem()
 				.Text(text)
-				.FontSize(8.8f)
+				.FontSize(11)
 				.Justify()
 				.LineHeight(1.3f);
 		});
@@ -216,11 +222,11 @@ public class ConsentFormPdfDocument : IDocument
 			column.Item()
 				.Text(title)
 				.SemiBold()
-				.FontSize(8)
+				.FontSize(11)
 				.FontColor("#666666");
 
 			column.Item()
-				.Height(50)
+				.Height(35)
 				.Element(content);
 
 			column.Item()
