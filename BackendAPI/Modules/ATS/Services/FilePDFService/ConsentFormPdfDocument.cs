@@ -6,7 +6,15 @@ public class ConsentFormPdfDocument : IDocument
 	private readonly DateOnly _signedDate;
 	private readonly byte[] _signatureImage;
 
-	public ConsentFormPdfDocument(string applicantName, DateOnly signedDate, byte[] signatureImage)
+	private const string PrimaryBlue = "#174A9C";
+	private const string BulletBlue = "#1E88E5";
+	private const string Divider = "#DCE6F4";
+	private const string TextColor = "#333333";
+
+	public ConsentFormPdfDocument(
+		string applicantName,
+		DateOnly signedDate,
+		byte[] signatureImage)
 	{
 		_applicantName = applicantName;
 		_signedDate = signedDate;
@@ -19,33 +27,205 @@ public class ConsentFormPdfDocument : IDocument
 	{
 		container.Page(page =>
 		{
-			page.Margin(30);
 			page.Size(PageSizes.A4);
-			page.DefaultTextStyle(x => x.FontSize(10));
+			page.MarginHorizontal(40);
+			page.MarginVertical(35);
+
+			page.DefaultTextStyle(x =>
+				x.FontSize(8.8f)
+				 .FontColor(TextColor));
 
 			page.Content().Column(column =>
 			{
-				column.Spacing(10);
+				column.Spacing(12);
 
-				column.Item().AlignCenter().Text(ConsentFormTextConstants.ConsentTitle).SemiBold().FontSize(14);
+				BuildConsentSection(column);
 
-				foreach (var text in ConsentFormTextConstants.ConsentItems)
-				{
-					column.Item().Text(text);
-				}
+				column.Item()
+					.PaddingVertical(10)
+					.LineHorizontal(0.8f)
+					.LineColor(Divider);
 
-				column.Item().PaddingTop(6).AlignCenter().Text(ConsentFormTextConstants.ReleaseTitle).SemiBold().FontSize(12);
-				column.Item().Text(ConsentFormTextConstants.PurposeText);
-				column.Item().Text(ConsentFormTextConstants.ReleaseText);
-				column.Item().Text(ConsentFormTextConstants.DpoText);
+				BuildReleaseSection(column);
 
-				column.Item().PaddingTop(20).Text($"Applicant Name: {_applicantName}");
+				column.Item().PaddingTop(20);
 
-				column.Item().PaddingTop(8).Text("Signature:");
-				column.Item().Height(80).Width(260).Image(_signatureImage, ImageScaling.FitArea);
-
-				column.Item().PaddingTop(6).Text($"Signed Date: {_signedDate:MMMM dd, yyyy}");
+				BuildSignatureSection(column);
 			});
+		});
+	}
+	private void BuildConsentSection(ColumnDescriptor column)
+	{
+		column.Item().Row(row =>
+		{
+			row.ConstantItem(40)
+				.AlignTop()
+				.Text("🛡")
+				.FontSize(22)
+				.FontColor(PrimaryBlue);
+
+			row.RelativeItem().Column(c =>
+			{
+				c.Item()
+					.Text(ConsentFormTextConstants.ConsentTitle)
+					.Bold()
+					.FontSize(16)
+					.FontColor(PrimaryBlue);
+
+				c.Item()
+					.PaddingTop(5)
+					.Text(ConsentFormTextConstants.ConsentIntro)
+					.Justify()
+					.LineHeight(1.3f);
+			});
+		});
+
+		column.Item().PaddingTop(12);
+
+		foreach (var item in ConsentFormTextConstants.ConsentItems)
+		{
+			BulletItem(column, item);
+		}
+	}
+	private void BuildReleaseSection(ColumnDescriptor column)
+	{
+		column.Item().Row(row =>
+		{
+			row.ConstantItem(40)
+				.AlignTop()
+				.Text("📄")
+				.FontSize(22)
+				.FontColor(PrimaryBlue);
+
+			row.RelativeItem().Column(c =>
+			{
+				c.Item()
+					.Text(ConsentFormTextConstants.ReleaseTitle)
+					.Bold()
+					.FontSize(16)
+					.FontColor(PrimaryBlue);
+
+				c.Item()
+					.PaddingTop(8)
+					.Text(text =>
+					{
+						text.Span("Purpose of Consent: ").Bold();
+						text.Span(
+							"Background Screening/Credit (Due Diligence) Check");
+					});
+
+				c.Item()
+					.PaddingTop(8)
+					.Text(ConsentFormTextConstants.ReleaseText)
+					.Justify()
+					.LineHeight(1.3f);
+
+				c.Item()
+					.PaddingTop(8)
+					.Text("I certify that the information set out by me in this authorization/consent is correct.");
+
+				c.Item()
+					.PaddingTop(10)
+					.Row(r =>
+					{
+						r.ConstantItem(12)
+							.Text("ⓘ")
+							.FontColor(PrimaryBlue);
+
+						r.RelativeItem()
+							.Text(text =>
+							{
+								text.Span("You may reach out to the DPO at ");
+
+								text.Span("dpo@cibi.com.ph")
+									.Underline()
+									.FontColor(PrimaryBlue);
+							});
+					});
+			});
+		});
+	}
+	private void BuildSignatureSection(ColumnDescriptor column)
+	{
+		column.Item().Row(row =>
+		{
+			SignatureColumn(
+				row.RelativeItem(),
+				"SIGNATURE",
+				c =>
+				{
+					if (_signatureImage != null && _signatureImage.Length > 0)
+					{
+						c.Height(45)
+						 .Image(_signatureImage, ImageScaling.FitHeight);
+					}
+				});
+
+			row.ConstantItem(20);
+
+			SignatureColumn(
+				row.RelativeItem(),
+				"NAME",
+				c =>
+				{
+					c.PaddingTop(18)
+					 .Text(_applicantName)
+					 .FontSize(9);
+				});
+
+			row.ConstantItem(20);
+
+			SignatureColumn(
+				row.RelativeItem(),
+				"DATE",
+				c =>
+				{
+					c.PaddingTop(18)
+					 .Text(_signedDate.ToString("MMMM dd, yyyy"))
+					 .FontSize(9);
+				});
+		});
+	}
+	private void BulletItem(ColumnDescriptor column, string text)
+	{
+		column.Item()
+			.PaddingLeft(23)
+			.Row(row =>
+		{
+			row.ConstantItem(40)
+				.AlignTop()
+				.AlignCenter()
+				.Text("•")
+				.FontSize(12f)
+				.FontColor(BulletBlue);
+
+			row.RelativeItem()
+				.Text(text)
+				.FontSize(8.8f)
+				.Justify()
+				.LineHeight(1.3f);
+		});
+	}
+	private void SignatureColumn(
+	IContainer container,
+	string title,
+	Action<IContainer> content)
+	{
+		container.Column(column =>
+		{
+			column.Item()
+				.Text(title)
+				.SemiBold()
+				.FontSize(8)
+				.FontColor("#666666");
+
+			column.Item()
+				.Height(50)
+				.Element(content);
+
+			column.Item()
+				.LineHorizontal(1)
+				.LineColor("#A8A8A8");
 		});
 	}
 }
