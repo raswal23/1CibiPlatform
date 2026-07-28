@@ -1,15 +1,13 @@
 ﻿.login-container {
-    position: relative;
     min-height: 100vh;
     min-width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    background-image: url('/images/ats/logo-shape.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
+    padding: 20px;
 }
 
 .login-header {

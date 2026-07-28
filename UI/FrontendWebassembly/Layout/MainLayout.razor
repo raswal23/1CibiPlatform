@@ -16,15 +16,7 @@
             <MudLayout>
                 <!-- AppBar -->
                 <MudAppBar Style="@GetAppBarStyle()" Class="mb-8 mt-0">
-
-                    @if (UseATSLayout)
-                    {
-                        <MudText Align="Align.Start" Typo="Typo.h5" Class="mb-0" Style="@GetATSStyle()">Applicant Tracking System</MudText>
-                    }
-                    else
-                    {
-                        <MudIconButton Icon="@Icons.Material.Filled.Menu" Style="@GetMenuIconStyle()" Edge="Edge.Start" OnClick="@DrawerToggle" />
-                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Style="@GetMenuIconStyle()" Edge="Edge.Start" OnClick="@DrawerToggle" />
                     <MudSpacer />
                     <MudText Typo="Typo.subtitle1" Class="mr-2">Hi @name</MudText>
                     <MudIconButton Icon="@(_isDarkMode? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
