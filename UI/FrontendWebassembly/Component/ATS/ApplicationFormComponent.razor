@@ -248,8 +248,9 @@
                                                         height:100%;
                                                         object-fit:cover;
                                                         object-position:center;
-                                                        transform:scale(1.4);
-                                                        transform-origin:center;
+                                                        @(string.IsNullOrWhiteSpace(FaceUrl)
+                                                             ? ""
+                                                             : "transform:scale(1.4);transform-origin:center;")
                                                         " />
                                         </div>
                                         <div style="grid-column: 1; grid-row: 2; align-content: center; margin-bottom: 12px;">
