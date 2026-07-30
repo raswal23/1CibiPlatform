@@ -33,6 +33,7 @@
 
 	<ItemGroup>
 		<Folder Include="BackendAPI\BuildingBlocks.UnitTests\" />
+		<Folder Include="BackendAPI\Modules\ATS.IntegrationTests\TestFiles\" />
 		<Folder Include="BackendAPI\Modules\CNX.UnitTests\" />
 		<Folder Include="BackendAPI\Modules\CNX.IntegrationTests\" />
 		<Folder Include="BackendAPI\Modules\AIAgent.UnitTests\" />

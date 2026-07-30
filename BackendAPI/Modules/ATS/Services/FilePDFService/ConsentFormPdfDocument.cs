@@ -157,7 +157,10 @@ public class ConsentFormPdfDocument : IDocument
 				{
 					if (_signatureImage is not null && _signatureImage.Length > 0)
 					{
-						c.Image(_signatureImage!, ImageScaling.FitWidth);
+						c.AlignCenter()
+						 .Width(100)
+						 .PaddingBottom(-1)
+						 .Image(_signatureImage!);
 					}
 				});
 
@@ -216,10 +219,13 @@ public class ConsentFormPdfDocument : IDocument
 				.Text(title)
 				.SemiBold()
 				.FontSize(11)
+				.AlignCenter()
 				.FontColor("#666666");
 
 			column.Item()
+				.AlignCenter()
 				.Height(35)
+				.ScaleToFit()
 				.Element(content);
 
 			column.Item()
