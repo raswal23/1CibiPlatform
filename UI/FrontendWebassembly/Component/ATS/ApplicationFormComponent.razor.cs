@@ -270,8 +270,16 @@ public partial class ApplicationFormComponent
 
 		if (!IsSuccess)
 			return;
+		try
+		{
+			await IsWithDrawn.InvokeAsync("Withdrawn");
+		}
 
-		await IsWithDrawn.InvokeAsync("Withdrawn");
+		finally
+		{
+			await RemoveItemsAsync();
+		}
+		
 	}
 
 	private async Task ProceedClicked()
@@ -722,17 +730,22 @@ public partial class ApplicationFormComponent
 		}
 		finally
 		{
-			await OnChanged();
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
+			await RemoveItemsAsync();
 			isSaving = false;
 		}
+	}
+
+	private async Task RemoveItemsAsync()
+	{
+		await OnChanged();
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
 	}
 }
