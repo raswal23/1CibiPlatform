@@ -184,7 +184,18 @@ public class ApplicationFormService : IApplicationFormService
 
 		// Post
 		AddString(SignatureDetails.EmailInvitationID.ToString(), "SignatureDetails.EmailInvitationID");
-		AddFile(SignatureDetails.Signature, "SignatureDetails.Signature");
+		if (SignatureDetails.Signature is not null)
+		{
+			var dataUrl = Encoding.UTF8.GetString(SignatureDetails.Signature);
+
+			if (dataUrl.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+			{
+				var base64 = dataUrl[(dataUrl.IndexOf(',') + 1)..];
+				var imageBytes = Convert.FromBase64String(base64);
+
+				AddFile(imageBytes, "SignatureDetails.Signature");
+			}
+		}
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 

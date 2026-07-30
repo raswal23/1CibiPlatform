@@ -7,28 +7,100 @@
                <MudStack Spacing="2" Style="width: 100%; max-width: 500px;">
 
                 <MudCheckBox @bind-Value="ResumeSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName) ? "No resume uploaded" : ReportResult.ResumeFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.ResumeFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.ResumeFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Resume</span>
+                    }
+                    else
+                    {
+                        <span>No resume uploaded</span>
+                    }
+                </MudCheckBox>
 
                 <MudCheckBox @bind-Value="GovernmentIdSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName) ? "No government ID uploaded" : ReportResult.IdUploadedFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.IdUploadedFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.IdUploadedFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Government ID</span>
+                    }
+                    else
+                    {
+                        <span>No government ID uploaded</span>
+                    }
+                </MudCheckBox>
 
                 <MudCheckBox @bind-Value="DiplomaSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName) ? "No diploma uploaded" : ReportResult.DiplomaFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.DiplomaFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.DiplomaFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Diploma</span>
+                    }
+                    else
+                    {
+                        <span>No diploma uploaded</span>
+                    }
+                </MudCheckBox>
 
                 <MudCheckBox @bind-Value="CoeSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.CoeFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.CoeFileName) ? "No certificate of employment uploaded" : ReportResult.CoeFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.CoeFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.CoeFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Certificate of Employment</span>
+                    }
+                    else
+                    {
+                        <span>No certificate of employment uploaded</span>
+                    }
+                </MudCheckBox>
 
                 <MudCheckBox @bind-Value="ConsentSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName) ? "No consent form uploaded" : ReportResult.ConsentFormFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.ConsentFormFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.ConsentFormFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Consent Form</span>
+                    }
+                    else
+                    {
+                        <span>No consent form uploaded</span>
+                    }
+                </MudCheckBox>
 
                 <MudCheckBox @bind-Value="ReportSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName) ? "No report uploaded" : ReportResult.UploadedReportFileName)" />
+                             Disabled="@string.IsNullOrEmpty(ReportResult!.UploadedReportFileName)">
+                    @if (!string.IsNullOrEmpty(ReportResult.UploadedReportFileName))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf"
+                                 Size="Size.Small"
+                                 Color="Color.Error"
+                                 Class="me-1" />
+                        <span>Report</span>
+                    }
+                    else
+                    {
+                        <span>No report uploaded</span>
+                    }
+                </MudCheckBox>
 
             </MudStack>
         </MudStack>

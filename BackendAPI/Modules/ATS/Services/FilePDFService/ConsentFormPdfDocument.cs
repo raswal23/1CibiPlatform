@@ -47,26 +47,23 @@ public class ConsentFormPdfDocument : IDocument
 					.LineColor(Divider);
 
 				BuildReleaseSection(column);
+
+				column.Item()
+				.PaddingTop(20);
+
+				BuildSignatureSection(column);
 			});
-			page.Footer()
-				.Element(container =>
-				{
-					container.Column(column =>
-					{
-						BuildSignatureSection(column);
-					});
-				});
 		});
 	}
 	private void BuildConsentSection(ColumnDescriptor column)
 	{
 		column.Item().Row(row =>
 		{
-			row.ConstantItem(40)
-				.AlignTop()
-				.Text("🛡")
-				.FontSize(22)
-				.FontColor(PrimaryBlue);
+			//row.ConstantItem(40)
+			//	.AlignTop()
+			//	.Text("🛡")
+			//	.FontSize(22)
+			//	.FontColor(PrimaryBlue);
 
 			row.RelativeItem().Column(c =>
 			{
@@ -84,8 +81,6 @@ public class ConsentFormPdfDocument : IDocument
 			});
 		});
 
-		column.Item().PaddingTop(12);
-
 		foreach (var item in ConsentFormTextConstants.ConsentItems)
 		{
 			BulletItem(column, item);
@@ -95,11 +90,11 @@ public class ConsentFormPdfDocument : IDocument
 	{
 		column.Item().Row(row =>
 		{
-			row.ConstantItem(40)
-				.AlignTop()
-				.Text("📄")
-				.FontSize(22)
-				.FontColor(PrimaryBlue);
+			//row.ConstantItem(40)
+			//	.AlignTop()
+			//	.Text("📄")
+			//	.FontSize(22)
+			//	.FontColor(PrimaryBlue);
 
 			row.RelativeItem().Column(c =>
 			{
@@ -113,30 +108,30 @@ public class ConsentFormPdfDocument : IDocument
 					.PaddingTop(8)
 					.Text(text =>
 					{
-						text.Span("Purpose of Consent: ").Bold().FontSize(11);
+						text.Span("Purpose of Consent: ").Bold().FontSize(10);
 						text.Span(
-							"Background Screening/Credit (Due Diligence) Check").FontSize(11);
+							"Background Screening/Credit (Due Diligence) Check").FontSize(10);
 					})
 					;
 
 				c.Item()
 					.PaddingTop(8)
 					.Text(ConsentFormTextConstants.ReleaseText)
-					.FontSize(11)
+					.FontSize(10)
 					.Justify()
 					.LineHeight(1.3f);
 
 				c.Item()
 					.PaddingTop(8)
-					.Text("I certify that the information set out by me in this authorization/consent is correct.").FontSize(11);
+					.Text("I certify that the information set out by me in this authorization/consent is correct.").FontSize(10);
 
 				c.Item()
 					.PaddingTop(10)
 					.Row(r =>
 					{
-						r.ConstantItem(12)
-							.Text("ⓘ")
-							.FontColor(PrimaryBlue);
+						//r.ConstantItem(12)
+						//	.Text("ⓘ")
+						//	.FontColor(PrimaryBlue);
 
 						r.RelativeItem()
 							.Text(text =>
@@ -160,10 +155,9 @@ public class ConsentFormPdfDocument : IDocument
 				"SIGNATURE",
 				c =>
 				{
-					if (_signatureImage != null && _signatureImage.Length > 0)
+					if (_signatureImage is not null && _signatureImage.Length > 0)
 					{
-						c.Height(45)
-						 .Image(_signatureImage, ImageScaling.FitHeight);
+						c.Image(_signatureImage!, ImageScaling.FitWidth);
 					}
 				});
 
@@ -195,7 +189,6 @@ public class ConsentFormPdfDocument : IDocument
 	private void BulletItem(ColumnDescriptor column, string text)
 	{
 		column.Item()
-			.PaddingLeft(23)
 			.Row(row =>
 		{
 			row.ConstantItem(40)
@@ -207,7 +200,7 @@ public class ConsentFormPdfDocument : IDocument
 
 			row.RelativeItem()
 				.Text(text)
-				.FontSize(11)
+				.FontSize(10)
 				.Justify()
 				.LineHeight(1.3f);
 		});

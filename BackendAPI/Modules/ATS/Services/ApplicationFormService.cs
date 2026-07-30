@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace ATS.Services;
+﻿namespace ATS.Services;
 
 public class ApplicationFormService : IApplicationFormService
 {
@@ -336,19 +334,17 @@ public class ApplicationFormService : IApplicationFormService
        if (signatureDetailsDTO.Signature == null)
 			throw new BadRequestException("Signature is required.");
 
-		await using var signatureInputStream = signatureDetailsDTO.Signature.OpenReadStream();
-		using var signatureMemory = new MemoryStream();
-		await signatureInputStream.CopyToAsync(signatureMemory, cancellationToken);
-		var signatureBytes = signatureMemory.ToArray();
-		var signatureText = Encoding.UTF8.GetString(signatureBytes);
+		await using var stream = signatureDetailsDTO.Signature.OpenReadStream();
 
-		if (signatureText.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
-		{
-			var base64 = signatureText[(signatureText.IndexOf(',') + 1)..];
-			signatureBytes = Convert.FromBase64String(base64);
-		}
+		using var memory = new MemoryStream();
+		await stream.CopyToAsync(memory, cancellationToken);
 
-		var consentFormFileName = $"{ Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}-ConsentForm.pdf";
+		var signatureBytes = memory.ToArray();
+
+		var test = 
+	BitConverter.ToString(signatureBytes.Take(16).ToArray());
+
+		var consentFormFileName = $"{signatureDetailsDTO.SignerName}_ConsentForm.pdf";
 		await using var consentPdfStream = await _filePdfService.GenerateConsentFormPdfAsync(
 			signatureDetailsDTO.SignerName ?? string.Empty,
 			signatureDetailsDTO.SignatureDate,
