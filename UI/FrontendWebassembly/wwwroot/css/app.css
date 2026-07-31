@@ -332,6 +332,114 @@ code {
     background: linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%) !important;
 }
 
+.um-dialog {
+    border-radius: 20px !important;
+    overflow: hidden;
+}
+
+.um-dialog .mud-dialog-content {
+    padding: 0 !important;
+}
+
+.um-dialog-shell {
+    width: min(100%, 620px);
+    background: #fff;
+}
+
+.um-dialog-header {
+    padding: 24px 28px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.um-dialog-title {
+    margin: 0;
+    color: #102247;
+    font-weight: 700;
+}
+
+.um-dialog-subtitle {
+    margin-top: 2px;
+    color: #6b7b92;
+}
+
+.um-dialog-close {
+    background: #eef3f9 !important;
+    border-radius: 12px !important;
+    color: #7d91ab !important;
+}
+
+.um-dialog-body {
+    padding: 22px 28px 10px;
+}
+
+.um-dialog-label {
+    color: #1e2a3c;
+    font-weight: 600;
+}
+
+.um-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.um-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 18px 28px 24px;
+}
+
+.um-dialog-footer-split {
+    justify-content: space-between;
+}
+
+.um-secondary-button,
+.um-primary-button,
+.um-danger-button {
+    min-width: 120px;
+    border-radius: 12px !important;
+    text-transform: none !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+}
+
+.um-secondary-button {
+    border-color: #d9e2ee !important;
+    color: #102247 !important;
+}
+
+.um-danger-button {
+    border-color: #f1c7c1 !important;
+    color: #d8503a !important;
+    background: #fff !important;
+}
+
+@media (max-width: 960px) {
+    .um-dialog-header,
+    .um-dialog-body,
+    .um-dialog-footer {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .um-dialog-footer,
+    .um-dialog-footer-split {
+        flex-direction: column-reverse;
+    }
+
+    .um-secondary-button,
+    .um-primary-button,
+    .um-danger-button {
+        width: 100%;
+    }
+}
+
 .philsys-loader-overlay {
     position: fixed;
     top: 0;
@@ -843,15 +951,48 @@ code {
 
 .ats-upload-report-shell {
     display: flex;
-    justify-content: center;
-    padding: 10px 0;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+}
+
+.ats-upload-report-shell-header {
+    padding: 22px 26px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    border: 1px solid #e3e9f1;
+    border-bottom: 0;
+    box-shadow: 0 8px 24px -18px rgba(11,31,58,.25);
+}
+
+.ats-upload-report-shell-title {
+    margin: 0;
+    color: #102247;
+    font-weight: 700;
+}
+
+.ats-upload-report-shell-subtitle {
+    margin-top: 2px;
+    color: #6b7b92;
+}
+
+.ats-upload-report-shell-close {
+    background: #eef3f9 !important;
+    border-radius: 12px !important;
+    color: #7d91ab !important;
 }
 
 .ats-upload-report-card {
     width: 100%;
-    max-width: 620px;
-    border-radius: 20px;
+    border-radius: 0 0 20px 20px;
     overflow: hidden;
+    border-top: 0;
 }
 
 .ats-upload-report-header {
@@ -989,12 +1130,13 @@ code {
         font-size: 14px !important;
     }
 
-    .ats-upload-report-header,
+    .ats-upload-report-shell-header,
     .ats-upload-report-card .pa-4 {
         padding-left: 16px !important;
         padding-right: 16px !important;
     }
 }
+
 
 .ats-console {
     --ats-navy-900: #0B1F3A;

@@ -6,18 +6,6 @@
 
 <MudForm @ref="uploadReportForm">
     <MudPaper Elevation="0" Class="oneplatform-surface-card ats-upload-report-card">
-        <div class="ats-upload-report-header">
-            <div>
-                <MudText Typo="Typo.h5" Class="ats-upload-report-title">Upload report</MudText>
-                <MudText Typo="Typo.body1" Class="ats-upload-report-subtitle">Attach the final report and update its status</MudText>
-            </div>
-            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                           Class="ats-upload-report-close"
-                           OnClick="GoBack" />
-        </div>
-
-        <MudDivider />
-
         <MudGrid Spacing="2" Class="pa-4">
             <MudItem xs="12">
                 <MudText Class="ats-upload-report-label">Hit status <span class="ats-upload-required">*</span></MudText>
