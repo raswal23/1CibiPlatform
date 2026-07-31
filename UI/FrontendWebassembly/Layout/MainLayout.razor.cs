@@ -37,15 +37,6 @@ public partial class MainLayout
 		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
 	}
 
-	private string GetATSStyle()
-	{
-		var color = !_isDarkMode
-			? "#68c0d6"
-			: "#102247;";
-
-		return $"font-weight: 700; color: {color};";
-	}
-
 	private string GetCoverStyle()
 	{
 		return UseATSLayout
@@ -107,16 +98,6 @@ public partial class MainLayout
 		border-radius: 4px;
         transition: margin-left 0.3s ease, margin-right 0.3s ease;
     ";
-	}
-
-	private string GetNavLinkStyle(bool isActive)
-	{
-		if (isActive)
-			return _isDarkMode
-				? "background: white; color: black;"
-				: "background: linear-gradient(90deg, #102247 0%, #2a77ae 50%); color: white;";
-
-		return "";
 	}
 
 	private string GetMenuIconStyle()
