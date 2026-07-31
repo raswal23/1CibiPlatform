@@ -551,10 +551,11 @@ code {
 }
 
 .ats-signature {
-    height: 100px;
-    width: 40%;
-    border: 2px solid grey;
-    border-radius: 4px;
+    height: 120px;
+    width: min(520px, 100%);
+    border: 1px dashed #D5E2F2;
+    border-radius: 10px;
+    background: #fff;
     display: flex;
     margin: 0 auto;
     flex-direction: column;
@@ -562,10 +563,64 @@ code {
 }
 
 .ats-signature-button {
-    margin-top: 3px;
+    margin-top: 8px;
     width: 150px;
     padding: 4px;
-    border-radius: 4px;
+    border-radius: 10px;
+}
+
+.ats-step-final .ats-consent-document {
+    border: 1px solid #DCE7F4;
+    border-radius: 12px;
+    background: #F9FCFF;
+    padding: 16px 18px;
+    max-height: 260px;
+    overflow-y: auto;
+    color: #43556F;
+}
+
+.ats-step-final .ats-consent-document .mud-typography {
+    color: #43556F;
+    line-height: 1.6;
+}
+
+.ats-step-final .ats-consent-subheading {
+    margin-top: 14px;
+    color: #0F294B !important;
+    font-weight: 700;
+}
+
+.ats-step-final .ats-signature-panel {
+    margin-top: 14px;
+    padding: 8px 0 0;
+}
+
+.ats-step-final .ats-signature-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-step-final .ats-signature-error {
+    display: flex;
+    justify-content: center;
+    margin-top: 3px;
+}
+
+.ats-step-final .ats-signature-meta-row {
+    margin-top: 14px;
+}
+
+.ats-step-final .ats-signature-meta-row .mud-item {
+    margin-bottom: 4px;
+}
+
+@media (max-width: 600px) {
+    .ats-step-final .ats-consent-document {
+        max-height: 220px;
+        padding: 14px;
+    }
 }
 
 .centered-upload .mud-input-helper-text .me-auto{
@@ -1671,6 +1726,606 @@ code {
     justify-content: center;
     align-items: center;
     padding: 20px;
+}
+
+.ats-appform-surface {
+    background: var(--modern-bg) !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--modern-border) !important;
+    opacity: 1 !important;
+    width: 100%;
+}
+
+.ats-appform-stepper {
+    padding: 18px 20px 26px;
+}
+
+.ats-appform-stepper .mud-step-label {
+    color: #6B7B92;
+    font-weight: 600;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px;
+}
+
+.ats-appform-stepper .mud-step .mud-step-label-text,
+.ats-appform-stepper .mud-step .mud-step-title,
+.ats-appform-stepper .mud-step .mud-step-label-name {
+    margin-top: 0 !important;
+    line-height: 1.1;
+}
+
+.ats-appform-stepper .mud-step-label-icon {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+    border: 1px solid #DCE7F4;
+    background: #EAF1F8 !important;
+    color: #51627D !important;
+}
+
+.ats-appform-stepper .mud-step-completed .mud-step-label-icon {
+    background: #2F9D62 !important;
+    border-color: #2F9D62 !important;
+    color: #fff !important;
+}
+
+.ats-appform-stepper .mud-step.active .mud-step-label-icon,
+.ats-appform-stepper .mud-step-label-icon.mud-default {
+    background: #234C80 !important;
+    border-color: #234C80 !important;
+    color: #fff !important;
+}
+
+.ats-appform-stepper .mud-stepper-content {
+    background: #fff;
+    border: 1px solid #E3E9F1;
+    border-radius: 16px;
+    margin-top: 12px;
+}
+
+.ats-appform-stepper .mud-stepper-content .mud-paper {
+    box-shadow: none !important;
+    border-radius: 12px;
+}
+
+.ats-appform-form .mud-input-outlined .mud-input-outlined-border {
+    border-color: #DCE7F4 !important;
+}
+
+.ats-appform-form .oneplatform-rounded-input .mud-input-outlined,
+.ats-appform-form .oneplatform-rounded-input fieldset {
+    border-radius: 10px !important;
+}
+
+.ats-appform-section-title {
+    color: #0B1F3A;
+}
+
+.ats-idv-hero-title {
+    color: #0B1F3A;
+    font-size: 46px;
+    line-height: 1.1;
+}
+
+.ats-consent-card {
+    background: #EDF5FD !important;
+    border: 1px solid #CFE0F4;
+    border-radius: 16px !important;
+}
+
+.ats-step-one .ats-step-one-shell {
+    padding: 18px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.ats-step-one .ats-step-one-grid {
+    padding: 28px 24px;
+    margin: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ats-step-one .ats-step-one-hero {
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-step-one .ats-step-one-hero-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 18px 20px;
+}
+
+.ats-step-one .ats-step-one-title {
+    color: #04224D;
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 1.28;
+    max-width: 470px;
+    letter-spacing: -.01em;
+}
+
+.ats-step-one .ats-step-one-logo {
+    max-width: 320px;
+    width: 100%;
+    height: auto;
+}
+
+.ats-step-one .ats-step-one-notice {
+    width: 100%;
+    max-width: 560px;
+    background: #E8F2FF;
+    border: 1px solid #C4DCF9;
+    border-radius: 18px;
+    padding: 22px 20px;
+}
+
+.ats-step-one .ats-step-one-notice-title {
+    color: #04224D;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.ats-step-one .ats-step-one-notice-text {
+    color: #2C3F57;
+    font-size: 16px;
+    line-height: 1.55;
+    margin-bottom: 22px;
+}
+
+.ats-step-one .ats-step-one-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    align-items: stretch;
+}
+
+.ats-step-one .ats-step-one-choice-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.ats-step-one .ats-step-one-choice-card {
+    margin: 0 !important;
+    width: 100%;
+    border: 1px solid #C9D9EC;
+    border-radius: 14px;
+    background: #fff;
+    padding: 16px 18px;
+    min-height: 74px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    transition: all .18s ease;
+}
+
+.ats-step-one .ats-step-one-choice-card.selected,
+.ats-step-one .ats-step-one-choice-card.mud-checked,
+.ats-step-one .ats-step-one-choice-card.mud-radio-checked {
+    border-color: #7FB2E6;
+    background: #F1F7FF;
+}
+
+.ats-step-one .ats-step-one-choice-card .mud-radio {
+    width: 100%;
+    margin: 0;
+}
+
+.ats-step-one .ats-step-one-choice-card .mud-radio-content,
+.ats-step-one .ats-step-one-choice-card .mud-radio-label {
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.ats-step-one .ats-step-one-choice-card .mud-radio-icon {
+    color: #6E86A6;
+    margin-right: 12px;
+}
+
+.ats-step-one .ats-step-one-choice-card.selected .mud-radio-icon,
+.ats-step-one .ats-step-one-choice-card.mud-checked .mud-radio-icon,
+.ats-step-one .ats-step-one-choice-card.mud-radio-checked .mud-radio-icon {
+    color: #2C7FB8;
+}
+
+.ats-step-one .ats-step-one-choice-card .mud-typography {
+    color: #1E2A3C;
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.ats-step-one .ats-step-one-button-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.ats-step-one .ats-step-one-proceed {
+    width: 100%;
+    min-width: 0;
+    border-radius: 14px;
+    min-height: 42px;
+    text-transform: none;
+}
+
+.ats-step-one .ats-step-one-secondary-btn {
+    width: 100%;
+    min-width: 0;
+    border-radius: 14px !important;
+    min-height: 42px;
+    text-transform: none;
+    border: 1px solid #C9D9EC !important;
+    background: #fff !important;
+    color: #355273 !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 960px) {
+    .ats-step-one .ats-step-one-grid {
+        padding: 20px 14px;
+    }
+
+    .ats-step-one .ats-step-one-title {
+        font-size: 30px;
+        max-width: 100%;
+    }
+
+    .ats-step-one .ats-step-one-hero {
+        min-height: 280px;
+    }
+
+    .ats-step-one .ats-step-one-logo {
+        max-width: 260px;
+    }
+
+    .ats-step-one .ats-step-one-button-row {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+.ats-step-three .ats-appform-section-title {
+    color: #2C7FB8;
+}
+
+.ats-step-three .mud-item {
+    margin-bottom: 4px;
+}
+
+.ats-step-three .small-checkbox-label .mud-typography,
+.ats-step-three .mud-typography-subtitle1 {
+    color: #1E2A3C;
+    font-weight: 600;
+}
+
+.ats-ownership-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ats-step-three .ats-ownership-pill {
+    margin: 0 !important;
+    border: 1px solid #DCE7F4;
+    background: #fff;
+    border-radius: 999px;
+    min-height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-step-three .ats-ownership-pill .mud-button-root,
+.ats-step-three .ats-ownership-pill .mud-icon-button,
+.ats-step-three .ats-ownership-pill .mud-radio-icon,
+.ats-step-three .ats-ownership-pill .mud-radio-icons,
+.ats-step-three .ats-ownership-pill svg {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ats-step-three .ats-ownership-pill .mud-radio-label,
+.ats-step-three .ats-ownership-pill .mud-radio-content,
+.ats-step-three .ats-ownership-pill .mud-typography {
+    margin: 0 !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #41536E;
+    line-height: 1;
+    text-align: center;
+    width: 100%;
+}
+
+.ats-step-three .ats-ownership-pill.selected,
+.ats-step-three .ats-ownership-pill.mud-checked,
+.ats-step-three .ats-ownership-pill.mud-radio-checked {
+    background: linear-gradient(100deg,#102247,#2C7FB8);
+    border-color: #234C80;
+}
+
+.ats-step-three .ats-ownership-pill.selected .mud-radio-label,
+.ats-step-three .ats-ownership-pill.selected .mud-radio-content,
+.ats-step-three .ats-ownership-pill.selected .mud-typography,
+.ats-step-three .ats-ownership-pill.mud-checked .mud-radio-label,
+.ats-step-three .ats-ownership-pill.mud-checked .mud-radio-content,
+.ats-step-three .ats-ownership-pill.mud-checked .mud-typography,
+.ats-step-three .ats-ownership-pill.mud-radio-checked .mud-radio-label,
+.ats-step-three .ats-ownership-pill.mud-radio-checked .mud-radio-content,
+.ats-step-three .ats-ownership-pill.mud-radio-checked .mud-typography {
+    color: #fff !important;
+}
+
+.ats-upload-outline-btn {
+    border: 1px solid #DCE7F4 !important;
+    background: #fff !important;
+    color: #233A5A !important;
+    text-transform: none !important;
+}
+
+.ats-upload-outline-btn:hover {
+    background: #F7FAFE !important;
+}
+
+.ats-step-four .ats-license-segment {
+    display: inline-flex;
+    border: 1px solid #D7E3F3;
+    border-radius: 12px;
+    background: #EEF3F9;
+    padding: 4px;
+    gap: 4px;
+}
+
+.ats-step-four .ats-license-segment-btn {
+    min-width: 64px;
+    border-radius: 9px;
+    text-transform: none !important;
+    background: transparent;
+    color: #51627D;
+    font-weight: 600;
+    box-shadow: none !important;
+}
+
+.ats-step-four .ats-license-segment-btn.active {
+    background: #fff;
+    color: #0B1F3A;
+    box-shadow: 0 2px 8px rgba(11,31,58,.12) !important;
+}
+
+.ats-step-four .ats-add-employer-row {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ats-step-four .ats-add-employer-card {
+    width: 100%;
+    margin: 0;
+    border: 1px dashed #C9DAEF;
+    border-radius: 10px;
+    background: #fff;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2C7FB8;
+    font-weight: 600;
+}
+
+.ats-step-four .ats-add-employer-card .mud-checkbox {
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+}
+
+.ats-step-four .ats-add-employer-card .mud-icon-button,
+.ats-step-four .ats-add-employer-card .mud-icon-root,
+.ats-step-four .ats-add-employer-card svg {
+    display: none !important;
+}
+
+.ats-step-four .ats-add-employer-card .mud-typography {
+    color: #2C7FB8;
+    font-weight: 600;
+}
+
+.ats-step-four .ats-add-employer-card:hover {
+    background: #F7FAFE;
+}
+
+.ats-step-four .ats-remove-employer-btn {
+    color: #6F819B !important;
+    text-transform: none !important;
+    font-weight: 600;
+    min-height: 28px;
+}
+
+.ats-step-four .ats-employer-card {
+    border: 1px solid #DCE7F4;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.ats-step-four .ats-employer-card-title {
+    color: #0F294B;
+    font-weight: 700;
+}
+
+.ats-step-four .ats-employer-card .mud-item {
+    margin-bottom: 2px;
+}
+
+.ats-step-five .ats-reference-block {
+    border: 1px solid #DCE7F4;
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.ats-step-five .ats-reference-title {
+    color: #0F294B;
+    font-weight: 700;
+}
+
+.ats-step-five .ats-reference-option-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ats-step-five .ats-reference-option-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F294B;
+    margin-top: 4px;
+}
+
+.ats-step-five .ats-reference-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ats-step-five .ats-reference-pill {
+    margin: 0 !important;
+    border: 1px solid #DCE7F4;
+    background: #fff;
+    border-radius: 999px;
+    min-height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-step-five .ats-reference-pill .mud-button-root,
+.ats-step-five .ats-reference-pill .mud-icon-button,
+.ats-step-five .ats-reference-pill .mud-radio-icon,
+.ats-step-five .ats-reference-pill .mud-radio-icons,
+.ats-step-five .ats-reference-pill svg {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ats-step-five .ats-reference-pill .mud-radio-label,
+.ats-step-five .ats-reference-pill .mud-radio-content,
+.ats-step-five .ats-reference-pill .mud-typography {
+    margin: 0 !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #41536E;
+    line-height: 1;
+    text-align: center;
+    width: 100%;
+}
+
+.ats-step-five .ats-reference-pill.selected,
+.ats-step-five .ats-reference-pill.mud-checked,
+.ats-step-five .ats-reference-pill.mud-radio-checked {
+    background: linear-gradient(100deg,#102247,#2C7FB8);
+    border-color: #234C80;
+}
+
+.ats-step-five .ats-reference-pill.selected .mud-radio-label,
+.ats-step-five .ats-reference-pill.selected .mud-radio-content,
+.ats-step-five .ats-reference-pill.selected .mud-typography,
+.ats-step-five .ats-reference-pill.mud-checked .mud-radio-label,
+.ats-step-five .ats-reference-pill.mud-checked .mud-radio-content,
+.ats-step-five .ats-reference-pill.mud-checked .mud-typography,
+.ats-step-five .ats-reference-pill.mud-radio-checked .mud-radio-label,
+.ats-step-five .ats-reference-pill.mud-radio-checked .mud-radio-content,
+.ats-step-five .ats-reference-pill.mud-radio-checked .mud-typography {
+    color: #fff !important;
+}
+
+.ats-step-five .ats-reference-datetime-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.ats-step-five .ats-reference-date,
+.ats-step-five .ats-reference-time {
+    width: 100%;
+}
+
+.ats-step-five .ats-add-reference-row {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ats-step-five .ats-add-reference-card {
+    width: 100%;
+    margin: 0;
+    border: 1px dashed #C9DAEF;
+    border-radius: 10px;
+    background: #fff;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2C7FB8;
+    font-weight: 600;
+}
+
+.ats-step-five .ats-add-reference-card .mud-checkbox {
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+}
+
+.ats-step-five .ats-add-reference-card .mud-icon-button,
+.ats-step-five .ats-add-reference-card .mud-icon-root,
+.ats-step-five .ats-add-reference-card svg {
+    display: none !important;
+}
+
+.ats-step-five .ats-add-reference-card .mud-typography {
+    color: #2C7FB8;
+    font-weight: 600;
+}
+
+.ats-step-five .ats-add-reference-card:hover {
+    background: #F7FAFE;
+}
+
+.ats-step-five .ats-remove-reference-btn {
+    color: #6F819B !important;
+    text-transform: none !important;
+    font-weight: 600;
+    min-height: 28px;
 }
 
 .ats-appform-modern .ats-modern-card,

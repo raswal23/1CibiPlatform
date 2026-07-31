@@ -9,7 +9,7 @@
 @inject ISnackbar Snackbar
 @using SigPad   
 
-<MudPaper Style="overflow:hidden; margin: 5px; max-width:1200px;" Class="transparent-paper ats-modern-card ats-appform-modern">
+<MudPaper Style="overflow:hidden; margin: 5px; max-width:1200px;" Class="transparent-paper ats-modern-card ats-appform-surface">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
@@ -26,65 +26,65 @@
     }
     else
     {
-        <MudForm @ref="ApplicationForm" Disabled="@isSaving">
-            <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper">
+        <MudForm @ref="ApplicationForm" Disabled="@isSaving" Class="ats-appform-form">
+            <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper ats-appform-stepper">
                 <ChildContent>
                     <!-- STEP 1 -->
-                    <MudStep Title="Part 1 - Step 1" Class="pa-4">
-                        <MudPaper Elevation="0">
-                            <MudGrid Justify="Justify.Center"
-                                     AlignItems="AlignItems.Center">
-                                <MudItem xs="12" sm="6" Class="d-flex justify-center align-content-center">
-                                    <MudPaper Elevation="0" Style="width: 100%;">
-                                        <div class="d-flex flex-column align-center text-center" style="height:100%; justify-content:center; padding:24px;">
-                                            <MudText Typo="Typo.h5" Style="font-weight:700;" Class="gradient-text">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
-                                            <div class="mt-4 d-flex" style="align-items:center; gap:16px; justify-content:center ">
-                                                <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Style="max-width:300px; height:auto;" />
-                                            </div>
+                    <MudStep Title="Part 1 - Step 1" Class="ats-step-one">
+                        <MudPaper Elevation="0" Class="ats-step-one-shell">
+                            <MudGrid Class="ats-step-one-grid" Justify="Justify.Center" AlignItems="AlignItems.Center">
+                                <MudItem xs="12" md="6" Class="d-flex justify-center align-content-center">
+                                    <MudPaper Elevation="0" Class="ats-step-one-hero" Style="width:100%;">
+                                        <div class="ats-step-one-hero-content">
+                                            <MudText Typo="Typo.h4" Class="ats-step-one-title">Get your identity verified using your PSA's live national ID verification free of charge!</MudText>
+                                            <MudImage Src="/images/ats/philippine-id.png" Alt="Philippine Identification System" Class="ats-step-one-logo" />
                                         </div>
                                     </MudPaper>
                                 </MudItem>
 
-                                <MudItem xs="12" sm="6" Class="d-flex justify-center align-center">
-                                    <div style="padding:18px;">
-                                        <MudPaper Class="pa-4" Style="background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:12px;">
-                                            <MudText Typo="Typo.subtitle1" Style="font-weight:700;" Class="mb-2 gradient-text">IMPORTANT NOTICE!</MudText>
-                                            <MudText Typo="Typo.body2" Class="mb-3">
-                                                I am a registered PSA National ID member and I voluntarily consent to share my verified information to any prospective employer I am applying for.
-                                            </MudText>
-                                            <div class="d-flex flex-column align-center justify-center mt-4">
-                                                <MudCheckBox Disabled="@declineConsent" T="bool" @bind-Value="consent" Label=" Yes, I agree and wish to proceed." />
-                                                <MudButton Disabled="@(!consent || declineConsent)"
-                                                           Class="@($"mb-4 theme-button {(consent ? "theme-button-active " : "theme-button-inactive")}")"
-                                                           Style="width: 150px; border-radius: 4px;"
+                                <MudItem xs="12" md="6" Class="d-flex justify-center align-center">
+                                    <MudPaper Elevation="0" Class="ats-step-one-notice">
+                                        <MudText Typo="Typo.h6" Class="ats-step-one-notice-title">Important Notice</MudText>
+                                        <MudText Typo="Typo.body1" Class="ats-step-one-notice-text">
+                                            I am a registered PSA National ID member and I voluntarily consent to share my verified information to any prospective employer I am applying for.
+                                        </MudText>
+
+                                        <div class="ats-step-one-actions">
+                                            <MudRadioGroup T="string"
+                                                           @bind-Value="ConsentChoice"
+                                                           Class="ats-step-one-choice-group">
+                                                <MudRadio T="string"
+                                                          Value="@("yes")"
+                                                          Class="@($"ats-step-one-choice-card {(ConsentChoice == "yes" ? "selected" : string.Empty)}")">
+                                                    Yes, I agree and wish to proceed.
+                                                </MudRadio>
+                                                <MudRadio T="string"
+                                                          Value="@("no")"
+                                                          Class="@($"ats-step-one-choice-card {(ConsentChoice == "no" ? "selected" : string.Empty)}")">
+                                                    No, I do not wish to proceed.
+                                                </MudRadio>
+                                            </MudRadioGroup>
+
+                                            <div class="ats-step-one-button-row">
+                                                <MudButton Class="ats-step-one-secondary-btn"
+                                                           OnClick="SkipStep">
+                                                    Skip
+                                                </MudButton>
+                                                <MudButton Disabled="@(!consent)"
+                                                           Class="@($"ats-step-one-proceed {(consent ? "theme-button theme-button-active" : "theme-button theme-button-inactive")}")"
                                                            OnClick="ProceedClicked">
                                                     Proceed
                                                 </MudButton>
-
-                                                <MudCheckBox T="bool"
-                                                             @bind-Value="declineConsent"
-                                                             Disabled="@consent"
-                                                             Label="No, I do not wish to proceed." />
-                                                <div class="d-flex" style="gap:30px;">
-                                                    <MudButton Style="background-color:gray; color:white; border-radius:12px;"
-                                                               Disabled="@(!declineConsent || consent)"
-                                                               OnClick="SkipStep">
-                                                        Skip
-                                                    </MudButton>
-                                                    <MudButton Style="background-color:gray; color:white; border-radius:12px;"
-                                                               Disabled="@(!declineConsent || consent)"
-                                                               OnClick="CancelTransaction">
-                                                        Cancel
-                                                    </MudButton>
-                                                </div>
+                                                <MudButton Class="ats-step-one-secondary-btn"
+                                                           OnClick="CancelTransaction">
+                                                    Cancel
+                                                </MudButton>
                                             </div>
-                                        </MudPaper>
-                                    </div>
-
+                                        </div>
+                                    </MudPaper>
                                 </MudItem>
                             </MudGrid>
                         </MudPaper>
-                    
                     </MudStep>
 
                     <!-- STEP 2 -->
@@ -372,8 +372,8 @@
                     </MudStep>
 
                     <!-- STEP 3 -->
-                    <MudStep Title="Part 1 - Step 3">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 gradient-text">Address</MudText>
+                    <MudStep Title="Part 1 - Step 3" Class="ats-step-three">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 ats-appform-section-title">Address</MudText>
                         <MudGrid>
                             <!-- Address section -->
                             <MudItem xs="12" sm="4">
@@ -513,39 +513,41 @@
                                                    @bind-Value="addressDetails.TypeOfOwnership"
                                                    Required="true"
                                                    RequiredError="Type of Ownership is required"
-                                                   Class="d-flex flex-wrap"
+                                                   Class="ats-ownership-pills d-flex flex-wrap"
                                                    Style="gap:12px;">
-                                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Owned")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Owned" ? "selected" : string.Empty)}")" Value="@("Owned")">
                                             Owned
                                         </MudRadio>
-                                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Rent")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Rent" ? "selected" : string.Empty)}")" Value="@("Rent")">
                                             Rent
                                         </MudRadio>
-                                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Living with family / relatives")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Living with family / relatives" ? "selected" : string.Empty)}")" Value="@("Living with family / relatives")">
                                             Living with family / relatives
                                         </MudRadio>
-                                        <MudRadio T="string" Class="small-checkbox-label" Value="@("Others")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Others" ? "selected" : string.Empty)}")" Value="@("Others")">
                                             Others
                                         </MudRadio>
-                                        @if (addressDetails.TypeOfOwnership == "Others")
-                                        {
-                                            <MudTextField Adornment="Adornment.Start"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense"
-                                                          Style="width:200px;"
-                                                          Class="oneplatform-rounded-input ml-2"
-                                                          @bind-Value="OwnershipOtherText"
-                                                          Required="true"
-                                                          RequiredError="Please specify is required"
-                                                          Label="Please specify" />
-                                        }
                                     </MudRadioGroup>
                                 </div>
                             </MudItem>
 
+                            @if (addressDetails.TypeOfOwnership == "Others")
+                            {
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField Adornment="Adornment.Start"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Class="oneplatform-rounded-input"
+                                                  @bind-Value="OwnershipOtherText"
+                                                  Required="true"
+                                                  RequiredError="Please specify is required"
+                                                  Label="Please specify" />
+                                </MudItem>
+                            }
+
                             <!-- Educational Background -->
                             <MudItem xs="12">
-                                <MudText Typo="Typo.h6" Class="gradient-text" Style="font-weight:700;" Align="Align.Center">Educational Background</MudText>
+                                <MudText Typo="Typo.h6" Class="ats-appform-section-title" Style="font-weight:700;" Align="Align.Center">Educational Background</MudText>
                             </MudItem>
 
                             <MudItem xs="12" sm="6">
@@ -601,8 +603,8 @@
                                                Disabled="DisableEducationFieldsForAboveCollege()"
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
-                                        <MudButton Class="oneplatform-rounded-input w-100"
-                                                   Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                        <MudButton Class="oneplatform-rounded-input w-100 ats-upload-outline-btn"
+                                                   Style="width:270px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
                                             {
@@ -645,8 +647,8 @@
                     </MudStep>
 
                     <!-- STEP 4 -->
-                    <MudStep Title="Part 1 - Step 4">
-                        <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 gradient-text">Credentials &amp; Licenses</MudText>
+                    <MudStep Title="Part 1 - Step 4" Class="ats-step-four">
+                        <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 ats-appform-section-title">Credentials, Licenses &amp; Professional Experience</MudText>
                         <MudGrid>
                             <MudItem xs="12">
                                 <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
@@ -655,18 +657,17 @@
                                         Do you have a Professional License?
                                     </MudText>
 
-                                    <MudStack Row Spacing="2" Class="mt-2" JustifyContent="center">
-                                        <MudButton Class="theme-button theme-button-active"
-                                                   Style="border-radius:12px;"
+                                    <div class="ats-license-segment mt-2">
+                                        <MudButton Class="@(hasProfessionalLicense ? "ats-license-segment-btn active" : "ats-license-segment-btn")"
                                                    OnClick="() => hasProfessionalLicense = true">
                                             Yes
                                         </MudButton>
 
-                                        <MudButton Style="border-radius:12px; border: 2px solid gray;"
+                                        <MudButton Class="@(!hasProfessionalLicense ? "ats-license-segment-btn active" : "ats-license-segment-btn")"
                                                    OnClick="() => hasProfessionalLicense = false">
                                             No
                                         </MudButton>
-                                    </MudStack>
+                                    </div>
 
                                 </div>
                             </MudItem>
@@ -742,26 +743,33 @@
                                         <SelectedTemplate />
                                     </MudFileUpload>
                                     <FileUploadValidationComponent ShowError="_licenseError"
-                                                                   ErrorText="Professional License is required." />
+                                                                   ErrorText="Professional License is Required." />
                                 </MudItem>
                             }
                            
 
                             <MudItem xs="12">
-                                <MudText Typo="Typo.h6" Class="gradient-text" Style="font-weight:700;" Align="Align.Center">Professional Experiences</MudText>
+                                <MudText Typo="Typo.h6" Class="ats-appform-section-title" Style="font-weight:700;" Align="Align.Center">Professional Experience</MudText>
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
-                                <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
-                                              Required="true"
-                                              RequiredError="Company Name is required"
-                                              @bind-Value="professionalExperiences.Emp1CompanyName"
-                                              Label="Company Name #1" />
-                            </MudItem>
+                            <MudItem xs="12">
+                                <MudPaper Elevation="0" Class="ats-employer-card">
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title">Employer 1</MudText>
+                                        </MudItem>
+
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField FullWidth="true"
+                                                          Adornment="Adornment.Start"
+                                                          Variant="Variant.Outlined"
+                                                          Margin="Margin.Dense"
+                                                          Class="oneplatform-rounded-input"
+                                                          Required="true"
+                                                          RequiredError="Company Name is required"
+                                                          @bind-Value="professionalExperiences.Emp1CompanyName"
+                                                          Label="Company Name #1" />
+                                        </MudItem>
 
                             <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
                                 <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp1CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
@@ -919,12 +927,27 @@
                                               @bind-Value="professionalExperiences.Emp1SupervisorContactNumber"
                                               Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                               Label="Contact Information #1" />
-                                              
+
+                            </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
                             </MudItem>
 
                             @if (AddEmployer2)
                             {
-                                <MudItem xs="12" sm="6">
+                                <MudItem xs="12">
+                                    <MudPaper Elevation="0" Class="ats-employer-card">
+                                        <MudGrid>
+                                            <MudItem xs="12" Class="d-flex align-center justify-space-between">
+                                                <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title mb-0">Employer 2</MudText>
+                                                <MudButton Variant="Variant.Text"
+                                                           Class="ats-remove-employer-btn"
+                                                           OnClick="@(() => AddEmployer2 = false)">
+                                                    Remove ✕
+                                                </MudButton>
+                                            </MudItem>
+
+                                            <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
                                                   Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
@@ -1093,11 +1116,26 @@
                                                   Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                   Label="Contact Information #2" />
                                 </MudItem>
+                                        </MudGrid>
+                                    </MudPaper>
+                                </MudItem>
                             }
 
                             @if (AddEmployer3)
                             {
-                                <MudItem xs="12" sm="6">
+                                <MudItem xs="12">
+                                    <MudPaper Elevation="0" Class="ats-employer-card">
+                                        <MudGrid>
+                                            <MudItem xs="12" Class="d-flex align-center justify-space-between">
+                                                <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title mb-0">Employer 3</MudText>
+                                                <MudButton Variant="Variant.Text"
+                                                           Class="ats-remove-employer-btn"
+                                                           OnClick="@(() => AddEmployer3 = false)">
+                                                    Remove ✕
+                                                </MudButton>
+                                            </MudItem>
+
+                                            <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
                                                   Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
@@ -1266,18 +1304,36 @@
                                                   Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                   Label="Contact Information #3" />
                                 </MudItem>
+                                        </MudGrid>
+                                    </MudPaper>
+                                </MudItem>
                             }
 
-                            <MudItem xs="12" Class="d-flex align-center justify-center">
-                                <MudCheckBox T="bool" @bind-Value="AddEmployer2" Disabled="!CanAddEmployer2" Label="Add another employer 2?" />
-                                <MudCheckBox T="bool" @bind-Value="AddEmployer3" Disabled="!CanAddEmployer3" Label="Add another employer 3?" />
+                            <MudItem xs="12" Class="ats-add-employer-row">
+                                @if (!AddEmployer2)
+                                {
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-employer-card"
+                                                 @bind-Value="AddEmployer2"
+                                                 Disabled="!CanAddEmployer2"
+                                                 Label="+ Add Employer 2" />
+                                }
+
+                                @if (!AddEmployer3)
+                                {
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-employer-card"
+                                                 @bind-Value="AddEmployer3"
+                                                 Disabled="!CanAddEmployer3"
+                                                 Label="+ Add Employer 3" />
+                                }
                             </MudItem>
 
                         </MudGrid>
                     </MudStep>
 
                     <!-- STEP 5 -->
-                    <MudStep Title="Part 1 - Step 5">
+                    <MudStep Title="Part 1 - Step 5" Class="ats-step-five">
                         <MudGrid>
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mt-4 gradient-text">Professional Character Reference</MudText>
@@ -1285,7 +1341,11 @@
 
                             <!-- Reference 1 -->
                             <MudItem xs="12">
-                                <MudGrid>
+                                <MudPaper Elevation="0" Class="ats-reference-block">
+                                    <MudGrid>
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 1</MudText>
+                                    </MudItem>
                                     <MudItem xs="12" sm="6">
                                         <MudTextField FullWidth="true"
                                                       Adornment="Adornment.Start"
@@ -1294,31 +1354,28 @@
                                                       Required="true"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref1FullName"
-                                                      Label="Full Name of Reference #1" />
+                                                      Label="Full Name" />
                                     </MudItem>
-                                    <MudItem xs="12" sm="6">
-                                        <div class="d-flex align-start mt-1">
-                                            <MudText Typo="Typo.body2" Class="mt-3">Professional Relationship</MudText>
-                                            <MudRadioGroup T="string"
-                                                           Required="true"
-                                                           RequiredError="Professional Relationship is required"
-                                                           @bind-Value="referenceDetails.Ref1ProfessionalRelationship"
-                                                           Class="d-flex flex-wrap"
-                                                           Style="gap:12px;">
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Colleague")">
-                                                    Colleague
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Superior")">
-                                                    Superior
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Peer")">
-                                                    Peer
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Subordinate")">
-                                                    Subordinate
-                                                </MudRadio>
-                                            </MudRadioGroup>
-                                        </div>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                        <MudText Typo="Typo.body2" Class="ats-reference-option-label">Professional Relationship</MudText>
+                                        <MudRadioGroup T="string"
+                                                       Required="true"
+                                                       RequiredError="Professional Relationship is required"
+                                                       @bind-Value="referenceDetails.Ref1ProfessionalRelationship"
+                                                       Class="ats-reference-pill-group">
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ProfessionalRelationship == "Colleague" ? "selected" : string.Empty)}")" Value="@("Colleague")">
+                                                Colleague
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ProfessionalRelationship == "Superior" ? "selected" : string.Empty)}")" Value="@("Superior")">
+                                                Superior
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ProfessionalRelationship == "Peer" ? "selected" : string.Empty)}")" Value="@("Peer")">
+                                                Peer
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ProfessionalRelationship == "Subordinate" ? "selected" : string.Empty)}")" Value="@("Subordinate")">
+                                                Subordinate
+                                            </MudRadio>
+                                        </MudRadioGroup>
                                     </MudItem>
 
                                     <MudItem xs="12" sm="4">
@@ -1342,7 +1399,7 @@
                                                       Required="true"
                                                       RequiredError="Email Contact Information is required"
                                                       Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
-                                                      Label="Email Contact Information" />
+                                                      Label="Email Contact" />
                                     </MudItem>
 
                                     <MudItem xs="12" sm="4">
@@ -1356,61 +1413,59 @@
                                                       Mask="@(new PatternMask("00000000000"))"
                                                       RequiredError="Mobile Contact Information is required"
                                                       Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
-                                                      Label="Mobile Contact Information" />
+                                                      Label="Mobile Contact" />
                                     </MudItem>
 
-                                    <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
-                                        <div class="d-flex align-start mt-1">
-                                            <MudText Class="mt-3" Typo="Typo.body2">Available to reach on:</MudText>
-                                            <MudRadioGroup T="string"
-                                                           Required="true"
-                                                           @bind-Value="referenceDetails.Ref1ModeOfContact"
-                                                           Class="d-flex flex-wrap"
-                                                           Style="gap:12px;">
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Email")">
-                                                    Email
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                    Phone
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                    Peer
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Both")">
-                                                    Both
-                                                </MudRadio>
-                                            </MudRadioGroup>
-                                        </div>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                        <MudText Typo="Typo.body2" Class="ats-reference-option-label">Available to Reach On</MudText>
+                                        <MudRadioGroup T="string"
+                                                       Required="true"
+                                                       @bind-Value="referenceDetails.Ref1ModeOfContact"
+                                                       Class="ats-reference-pill-group">
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ModeOfContact == "Email" ? "selected" : string.Empty)}")" Value="@("Email")">
+                                                Email
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ModeOfContact == "Phone" ? "selected" : string.Empty)}")" Value="@("Phone")">
+                                                Phone
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref1ModeOfContact == "Both" ? "selected" : string.Empty)}")" Value="@("Both")">
+                                                Both
+                                            </MudRadio>
+                                        </MudRadioGroup>
                                     </MudItem>
 
-                                    <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:flex-start;">
-                                        <MudText CLass="mt-4" Typo="Typo.body2">Best time to contact:</MudText>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-datetime-wrap">
                                         <MudDatePicker @bind-Date="Ref1BestDate"
-                                                       Class="w-25 oneplatform-rounded-input"
+                                                       Class="oneplatform-rounded-input ats-reference-date"
                                                        Placeholder="Date"
                                                        Adornment="Adornment.End"
                                                        Required="true"
                                                        Variant="Variant.Outlined"
                                                        Margin="Margin.Dense"
                                                        MinDate="@DateTime.Now"
-                                                       Label="Date"
+                                                       Label="Best Date to Contact"
                                                        DateFormat="MM/dd/yyyy" />
 
                                         <MudTextField @bind-Value="Ref1BestTime"
-                                                      Placeholder="Date"
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
-                                                      Margin="Margin.Dense" />
+                                                      Margin="Margin.Dense"
+                                                      Class="oneplatform-rounded-input ats-reference-time" />
                                     </MudItem>
-                                </MudGrid>
+                                    </MudGrid>
+                                </MudPaper>
                             </MudItem>
 
                             <!-- Reference 2 -->
                             <MudItem xs="12">
-                                <MudGrid>
+                                <MudPaper Elevation="0" Class="ats-reference-block">
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 2</MudText>
+                                        </MudItem>
                                     <MudItem xs="12" sm="6">
                                         <MudTextField FullWidth="true"
                                                       Adornment="Adornment.Start"
@@ -1419,32 +1474,28 @@
                                                       Required="true"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref2FullName"
-                                                      Label="Full Name of Reference #2" />
+                                                      Label="Full Name" />
                                     </MudItem>
-                                    <MudItem xs="12" sm="6">
-                                        <div class="d-flex align-start mt-1">
-                                            <MudText Class="mt-3" Typo="Typo.body2">Professional Relationship</MudText>
-                                            <MudRadioGroup T="string"
-                                                           Required="true"
-                                                           RequiredError="Professional Relationship is required"
-                                                           @bind-Value="referenceDetails.Ref2ProfessionalRelationship"
-                                                           Class="d-flex flex-wrap"
-                                                           Style="gap:12px;">
-
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Colleague")">
-                                                    Colleague
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Superior")">
-                                                    Superior
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Peer")">
-                                                    Peer
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Subordinate")">
-                                                    Subordinate
-                                                </MudRadio>
-                                            </MudRadioGroup>
-                                        </div>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                        <MudText Typo="Typo.body2" Class="ats-reference-option-label">Professional Relationship</MudText>
+                                        <MudRadioGroup T="string"
+                                                       Required="true"
+                                                       RequiredError="Professional Relationship is required"
+                                                       @bind-Value="referenceDetails.Ref2ProfessionalRelationship"
+                                                       Class="ats-reference-pill-group">
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ProfessionalRelationship == "Colleague" ? "selected" : string.Empty)}")" Value="@("Colleague")">
+                                                Colleague
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ProfessionalRelationship == "Superior" ? "selected" : string.Empty)}")" Value="@("Superior")">
+                                                Superior
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ProfessionalRelationship == "Peer" ? "selected" : string.Empty)}")" Value="@("Peer")">
+                                                Peer
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ProfessionalRelationship == "Subordinate" ? "selected" : string.Empty)}")" Value="@("Subordinate")">
+                                                Subordinate
+                                            </MudRadio>
+                                        </MudRadioGroup>
                                     </MudItem>
 
                                     <MudItem xs="12" sm="4">
@@ -1468,7 +1519,7 @@
                                                       Required="true"
                                                       RequiredError="Email Contact Information is required"
                                                       Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
-                                                      Label="Email Contact Information" />
+                                                      Label="Email Contact" />
                                     </MudItem>
 
                                     <MudItem xs="12" sm="4">
@@ -1482,64 +1533,68 @@
                                                       Mask="@(new PatternMask("00000000000"))"
                                                       Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                       RequiredError="Mobile Contact Information is required"
-                                                      Label="Mobile Contact Information" />
+                                                      Label="Mobile Contact" />
                                     </MudItem>
 
-                                    <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
-                                        <div class="d-flex align-start mt-1">
-                                            <MudText Class="mt-3" Typo="Typo.body2">Available to reach on:</MudText>
-                                            <MudRadioGroup T="string"
-                                                           Required="true"
-                                                           @bind-Value="referenceDetails.Ref2ModeOfContact"
-                                                           Class="d-flex flex-wrap"
-                                                           Style="gap:12px;">
-
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Email")">
-                                                    Email
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                    Phone
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                    Peer
-                                                </MudRadio>
-                                                <MudRadio T="string" Class="small-checkbox-label" Value="@("Both")">
-                                                    Both
-                                                </MudRadio>
-                                            </MudRadioGroup>
-                                        </div>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                        <MudText Typo="Typo.body2" Class="ats-reference-option-label">Available to Reach On</MudText>
+                                        <MudRadioGroup T="string"
+                                                       Required="true"
+                                                       @bind-Value="referenceDetails.Ref2ModeOfContact"
+                                                       Class="ats-reference-pill-group">
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ModeOfContact == "Email" ? "selected" : string.Empty)}")" Value="@("Email")">
+                                                Email
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ModeOfContact == "Phone" ? "selected" : string.Empty)}")" Value="@("Phone")">
+                                                Phone
+                                            </MudRadio>
+                                            <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref2ModeOfContact == "Both" ? "selected" : string.Empty)}")" Value="@("Both")">
+                                                Both
+                                            </MudRadio>
+                                        </MudRadioGroup>
                                     </MudItem>
 
-                                    <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:flex-start;">
-                                        <MudText CLass="mt-4" Typo="Typo.body2">Best time to contact:</MudText>
+                                    <MudItem xs="12" sm="6" Class="ats-reference-datetime-wrap">
                                         <MudDatePicker @bind-Date="Ref2BestDate"
                                                        Placeholder="Date"
                                                        DateFormat="MM/dd/yyyy"
-                                                       Class="w-25 oneplatform-rounded-input"
+                                                       Class="oneplatform-rounded-input ats-reference-date"
                                                        Adornment="Adornment.End"
                                                        Required="true"
                                                        MinDate="@DateTime.Now"
                                                        Variant="Variant.Outlined"
-                                                       Label="Date"
+                                                       Label="Best Date to Contact"
                                                        Margin="Margin.Dense" />
 
                                         <MudTextField @bind-Value="Ref2BestTime"
-                                                      Placeholder="Date"
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
                                                       Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
-                                                      Margin="Margin.Dense" />
+                                                      Margin="Margin.Dense"
+                                                      Class="oneplatform-rounded-input ats-reference-time" />
                                     </MudItem>
-                                </MudGrid>
+                                    </MudGrid>
+                                </MudPaper>
                             </MudItem>
 
                             <!-- Reference 3 -->
                             @if (AddAnotherReference)
                             {
                                 <MudItem xs="12">
-                                    <MudGrid>
+                                    <MudPaper Elevation="0" Class="ats-reference-block">
+                                        <MudGrid>
+                                        <MudItem xs="12" Class="d-flex justify-end">
+                                            <MudButton Variant="Variant.Text"
+                                                       Class="ats-remove-reference-btn"
+                                                       OnClick="@(() => AddAnotherReference = false)">
+                                                Remove ✕
+                                            </MudButton>
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 3</MudText>
+                                        </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField FullWidth="true"
                                                           Adornment="Adornment.Start"
@@ -1548,31 +1603,28 @@
                                                           Required="@AddAnotherReference"
                                                           Class="oneplatform-rounded-input"
                                                           @bind-Value="referenceDetails.Ref3FullName"
-                                                          Label="Full Name of Reference #3" />
+                                                          Label="Full Name" />
                                         </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <div class="d-flex align-start mt-1">
-                                                <MudText CLass="mt-3" Typo="Typo.body2">Professional Relationship</MudText>
-                                                <MudRadioGroup T="string"
-                                                               Required="true"
-                                                               RequiredError="Professional Relationship is required"
-                                                               @bind-Value="referenceDetails.Ref3ProfessionalRelationship"
-                                                               Class="d-flex flex-wrap"
-                                                               Style="gap:12px;">
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Colleague")">
-                                                        Colleague
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Superior")">
-                                                        Superior
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Peer")">
-                                                        Peer
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Subordinate")">
-                                                        Subordinate
-                                                    </MudRadio>
-                                                </MudRadioGroup>
-                                            </div>
+                                        <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                            <MudText Typo="Typo.body2" Class="ats-reference-option-label">Professional Relationship</MudText>
+                                            <MudRadioGroup T="string"
+                                                           Required="true"
+                                                           RequiredError="Professional Relationship is required"
+                                                           @bind-Value="referenceDetails.Ref3ProfessionalRelationship"
+                                                           Class="ats-reference-pill-group">
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ProfessionalRelationship == "Colleague" ? "selected" : string.Empty)}")" Value="@("Colleague")">
+                                                    Colleague
+                                                </MudRadio>
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ProfessionalRelationship == "Superior" ? "selected" : string.Empty)}")" Value="@("Superior")">
+                                                    Superior
+                                                </MudRadio>
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ProfessionalRelationship == "Peer" ? "selected" : string.Empty)}")" Value="@("Peer")">
+                                                    Peer
+                                                </MudRadio>
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ProfessionalRelationship == "Subordinate" ? "selected" : string.Empty)}")" Value="@("Subordinate")">
+                                                    Subordinate
+                                                </MudRadio>
+                                            </MudRadioGroup>
                                         </MudItem>
 
                                         <MudItem xs="12" sm="4">
@@ -1596,7 +1648,7 @@
                                                           Required="@AddAnotherReference"
                                                           RequiredError="Email Contact Information is required"
                                                           Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
-                                                          Label="Email Contact Information" />
+                                                          Label="Email Contact" />
                                         </MudItem>
 
                                         <MudItem xs="12" sm="4">
@@ -1610,67 +1662,65 @@
                                                           Mask="@(new PatternMask("00000000000"))"
                                                           Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                           RequiredError="Mobile Contact Information is required"
-                                                          Label="Mobile Contact Information" />
+                                                          Label="Mobile Contact" />
                                         </MudItem>
 
-                                        <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:center;">
-                                            <div class="d-flex align-start mt-1">
-                                                <MudText Class="mt-3" Typo="Typo.body2">Available to reach on:</MudText>
-                                                <MudRadioGroup T="string"
-                                                               Required="@AddAnotherReference"
-                                                               @bind-Value="referenceDetails.Ref3ModeOfContact"
-                                                               Class="d-flex flex-wrap"
-                                                               Style="gap:12px;">
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Email")">
-                                                        Email
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                        Phone
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Phone")">
-                                                        Peer
-                                                    </MudRadio>
-                                                    <MudRadio T="string" Class="small-checkbox-label" Value="@("Both")">
-                                                        Both
-                                                    </MudRadio>
-                                                </MudRadioGroup>
-                                            </div>
+                                        <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
+                                            <MudText Typo="Typo.body2" Class="ats-reference-option-label">Available to Reach On</MudText>
+                                            <MudRadioGroup T="string"
+                                                           Required="@AddAnotherReference"
+                                                           @bind-Value="referenceDetails.Ref3ModeOfContact"
+                                                           Class="ats-reference-pill-group">
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ModeOfContact == "Email" ? "selected" : string.Empty)}")" Value="@("Email")">
+                                                    Email
+                                                </MudRadio>
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ModeOfContact == "Phone" ? "selected" : string.Empty)}")" Value="@("Phone")">
+                                                    Phone
+                                                </MudRadio>
+                                                <MudRadio T="string" Class="@($"ats-reference-pill {(referenceDetails.Ref3ModeOfContact == "Both" ? "selected" : string.Empty)}")" Value="@("Both")">
+                                                    Both
+                                                </MudRadio>
+                                            </MudRadioGroup>
                                         </MudItem>
 
-                                        <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px; align-items:flex-start;">
-                                            <MudText CLass="mt-4" Typo="Typo.body2">Best time to contact:</MudText>
+                                        <MudItem xs="12" sm="6" Class="ats-reference-datetime-wrap">
                                             <MudDatePicker @bind-Date="Ref3BestDate"
-                                                           Class="w-25 oneplatform-rounded-input"
+                                                           Class="oneplatform-rounded-input ats-reference-date"
                                                            Placeholder="Date"
                                                            Adornment="Adornment.End"
                                                            Required="@AddAnotherReference"
                                                            Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
                                                            MinDate="@DateTime.Now"
-                                                           Label="Date"
+                                                           Label="Best Date to Contact"
                                                            DateFormat="MM/dd/yyyy" />
                                             <MudTextField @bind-Value="Ref3BestTime"
-                                                          Placeholder="Date"
                                                           Label="Time"
                                                           InputType="InputType.Time"
                                                           Required="true"
                                                           Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
+                                                          Margin="Margin.Dense"
+                                                          Class="oneplatform-rounded-input ats-reference-time" />
                                         </MudItem>
-                                    </MudGrid>
+                                        </MudGrid>
+                                    </MudPaper>
                                 </MudItem>
                             }
-                            
-                            <MudItem xs="12" Class="d-flex align-center justify-center">
-                                <MudText Typo="Typo.body2">Add another reference?</MudText>
-                                <MudCheckBox T="bool" @bind-Value="AddAnotherReference" />
-                            </MudItem>
+                            else
+                            {
+                                <MudItem xs="12" Class="ats-add-reference-row">
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-reference-card"
+                                                 @bind-Value="AddAnotherReference"
+                                                 Label="+ Add Reference 3" />
+                                </MudItem>
+                            }
 
                         </MudGrid>
                     </MudStep>
 
-                    <MudStep Title="Final">
+                    <MudStep Title="Final" Class="ats-step-final">
                         <MudGrid>
                             <MudItem xs="12">
                                 <MudPaper Elevation="0" Style="width:100%;" Class="">
@@ -1679,121 +1729,109 @@
                                     </MudItem>
 
                                     <MudItem xs="12">
-                                        <MudText Typo="Typo.body2">
-                                            I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-2">
-                                            - Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedinas, collection actions
-                                            negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit
-                                            record.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-2">
-                                            - Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and | hereby authorize any public or private
-                                            educational institution to provide and release to CIBI information related to my educational/training record.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-2">
-                                            - Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide
-                                            and release to CIBI information related to my employment record.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-2">
-                                            - References from any professional and personal associates I have provided or will provide, including information on my attendance, technical skills, interpersonal relations and any other
-                                            pertinent information and i hereby authorize any professional associations to provide and release to CIBI information related to my employment record.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-2 mb-8">
-                                            - Obtain information about myself and actions l am or have been involved in from judicial court, tribunal, regulatory body disciplinary committee of any other legal or quasi-legal authority i
-                                            the Philippines and I hereby authorize these judicial or quasi-judicial bodies to provide and release to CIBI information related to my records.
-                                        </MudText>
-                                    </MudItem>
+                                        <MudPaper Elevation="0" Class="ats-consent-document">
+                                            <MudText Typo="Typo.body2">
+                                                I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
+                                            </MudText>
 
-                                    <MudItem xs="12">
-                                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="gradient-text">
-                                            Release and Discharge
-                                        </MudText>
-                                    </MudItem>
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Employment &amp; Education</MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                - Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedinas, collection actions
+                                                negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit
+                                                record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                - Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and | hereby authorize any public or private
+                                                educational institution to provide and release to CIBI information related to my educational/training record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                - Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide
+                                                and release to CIBI information related to my employment record.
+                                            </MudText>
 
-                                    <MudItem xs="12">
-                                        <MudText Typo="Typo.body2" Class="mt-2">
-                                            Purpose of Consent: Background Screening /Credit (Due Diligence) Check
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-4">
-                                            I understand that the information obtained because of this authorization and consent will be held in the strictest of confidentiality by CIBi and/or the Company and will be maintained in
-                                            accordance with their respective Privacy Policies. The information obtained will only be used in accordance with and to satisfy the scope for which this authorization/consent has been
-                                            signed. I release, waive and forever discharge anyone who provides information in relation to this release, from any and all liability for the disclosure of information to CIBI or the Company. I
-                                            certify that the information set out by me in this authorization/consent is correct.
-                                        </MudText>
-                                        <MudText Typo="Typo.body2" Class="mt-4">
-                                            You may reach out to the DPO at dpo@cibi.com.ph tor any privacy concerns.
-                                        </MudText>
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">References</MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                - References from any professional and personal associates I have provided or will provide, including information on my attendance, technical skills, interpersonal relations and any other
+                                                pertinent information and i hereby authorize any professional associations to provide and release to CIBI information related to my employment record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                - Obtain information about myself and actions l am or have been involved in from judicial court, tribunal, regulatory body disciplinary committee of any other legal or quasi-legal authority i
+                                                the Philippines and I hereby authorize these judicial or quasi-judicial bodies to provide and release to CIBI information related to my records.
+                                            </MudText>
+
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Release and Discharge</MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-2">
+                                                Purpose of Consent: Background Screening /Credit (Due Diligence) Check
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-4">
+                                                I understand that the information obtained because of this authorization and consent will be held in the strictest of confidentiality by CIBi and/or the Company and will be maintained in
+                                                accordance with their respective Privacy Policies. The information obtained will only be used in accordance with and to satisfy the scope for which this authorization/consent has been
+                                                signed. I release, waive and forever discharge anyone who provides information in relation to this release, from any and all liability for the disclosure of information to CIBI or the Company. I
+                                                certify that the information set out by me in this authorization/consent is correct.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Class="mt-4">
+                                                You may reach out to the DPO at dpo@cibi.com.ph tor any privacy concerns.
+                                            </MudText>
+                                        </MudPaper>
                                     </MudItem>
                                 </MudPaper>
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudGrid>
-                                    <!-- LEFT: Signature -->
-                                    <MudItem xs="12">
-                                        <MudPaper Elevation="0"
-                                                  Style="padding:8px; margin-bottom: 30px;">
-                                            <MudGrid>
-                                                <MudItem xs="12">
-                                                    <div style="text-align: center;">
-                                                        <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                        <SignaturePad Value="signatureDetails.Signature"
-                                                                      ValueChanged="OnSignatureChanged"
-                                                                      ClearButtonClass="@(isSaving
-                                                                       ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
-                                                                       : "theme-button theme-button-active ats-signature-button")"
-                                                                      Class="ats-signature mb-2"
-                                                                      Disabled = "@isSaving"/>
-                                                    </div>
-                                                    @if (_signatureError)
-                                                    {
-                                                        <div style="display:flex; justify-content:center; margin-top:3px;">
-                                                            <MudText Color="Color.Error"
-                                                                     Typo="Typo.caption"
-                                                                     Class="mb-2">
-                                                                Please provide your signature.
-                                                            </MudText>
-                                                        </div>
-                                                    }
-                                                    
-                                                </MudItem>
-                                                
-                                                <MudItem xs="12">
-                                                    <div style="display:flex; justify-content:center;">
-                                                        <div style="width:40%;">
-                                                            <MudTextField T="string"
-                                                                          Label="Name"
-                                                                          @bind-Value="signatureDetails.SignerName"
-                                                                          Required="true"
-                                                                          RequiredError="Name is required"
-                                                                          Adornment="Adornment.Start"
-                                                                          Variant="Variant.Outlined"
-                                                                          Margin="Margin.Dense"
-                                                                          Class="oneplatform-rounded-input" />
-                                                        </div>
-                                                    </div>
+                                <MudPaper Elevation="0" Class="ats-signature-panel">
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <div class="ats-signature-block">
+                                                <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
+                                                <SignaturePad Value="signatureDetails.Signature"
+                                                              ValueChanged="OnSignatureChanged"
+                                                              ClearButtonClass="@(isSaving
+                                                               ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
+                                                               : "theme-button theme-button-active ats-signature-button")"
+                                                              Class="ats-signature mb-2"
+                                                              Disabled="@isSaving" />
+                                            </div>
+                                            @if (_signatureError)
+                                            {
+                                                <div class="ats-signature-error">
+                                                    <MudText Color="Color.Error"
+                                                             Typo="Typo.caption"
+                                                             Class="mb-2">
+                                                        Please provide your signature.
+                                                    </MudText>
+                                                </div>
+                                            }
+                                        </MudItem>
+
+                                        <MudItem xs="12">
+                                            <MudGrid Class="ats-signature-meta-row">
+                                                <MudItem xs="12" sm="6">
+                                                    <MudTextField T="string"
+                                                                  Label="Name"
+                                                                  @bind-Value="signatureDetails.SignerName"
+                                                                  Required="true"
+                                                                  RequiredError="Name is required"
+                                                                  Adornment="Adornment.Start"
+                                                                  Variant="Variant.Outlined"
+                                                                  Margin="Margin.Dense"
+                                                                  Class="oneplatform-rounded-input" />
                                                 </MudItem>
 
-                                                <MudItem xs="12">
-                                                    <div style="display:flex; justify-content:center;">
-                                                        <div style="width:40%;">
-                                                            <MudDatePicker @bind-Date="SignatureDate"
-                                                                           Label="Date"
-                                                                           Required="true"
-                                                                           RequiredError="Date is required"
-                                                                           Variant="Variant.Outlined"
-                                                                           Margin="Margin.Dense"
-                                                                           Class="oneplatform-rounded-input"
-                                                                           DateFormat="MM/dd/yyyy"
-                                                                           ReadOnly />
-                                                        </div>
-                                                    </div>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudDatePicker @bind-Date="SignatureDate"
+                                                                   Label="Date"
+                                                                   Required="true"
+                                                                   RequiredError="Date is required"
+                                                                   Variant="Variant.Outlined"
+                                                                   Margin="Margin.Dense"
+                                                                   Class="oneplatform-rounded-input"
+                                                                   DateFormat="MM/dd/yyyy"
+                                                                   ReadOnly />
                                                 </MudItem>
                                             </MudGrid>
-                                        </MudPaper>
-                                    </MudItem>
-                                </MudGrid>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
                             </MudItem>
                         </MudGrid>
                     </MudStep>
@@ -1824,7 +1862,7 @@
                                     }
                                     else
                                     {
-                                        <span>Submit</span>
+                                        <span>Submit Application</span>
                                     }
                                     
                                 </MudButton>
