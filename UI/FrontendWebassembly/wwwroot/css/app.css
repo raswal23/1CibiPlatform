@@ -2491,6 +2491,123 @@ code {
     color: #fff !important;
 }
 
+.ats-dispute-dialog-content {
+    width: min(520px, 100%);
+    padding: 20px 18px 16px;
+}
+
+.ats-dispute-dialog-grid {
+    width: 100%;
+}
+
+.ats-dispute-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.ats-dispute-header-logo-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1px solid #DCE7F4;
+    background: #F8FBFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px -14px rgba(11,31,58,.28);
+}
+
+.ats-dispute-header-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.ats-dispute-title {
+    color: #0B1F3A;
+    font-weight: 700;
+    text-align: center;
+}
+
+.ats-dispute-category-label {
+    color: #51627D;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.ats-dispute-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ats-dispute-dialog .ats-reference-pill {
+    margin: 0 !important;
+    border: 1px solid #DCE7F4;
+    background: #fff;
+    border-radius: 999px;
+    min-height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-dispute-dialog .ats-reference-pill .mud-button-root,
+.ats-dispute-dialog .ats-reference-pill .mud-icon-button,
+.ats-dispute-dialog .ats-reference-pill .mud-radio-icon,
+.ats-dispute-dialog .ats-reference-pill .mud-radio-icons,
+.ats-dispute-dialog .ats-reference-pill svg {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ats-dispute-dialog .ats-reference-pill .mud-radio-label,
+.ats-dispute-dialog .ats-reference-pill .mud-radio-content,
+.ats-dispute-dialog .ats-reference-pill .mud-typography {
+    margin: 0 !important;
+    font-size: 12px;
+    font-weight: 600;
+    color: #41536E;
+    line-height: 1;
+    text-align: center;
+    width: 100%;
+}
+
+.ats-dispute-dialog .ats-reference-pill.selected,
+.ats-dispute-dialog .ats-reference-pill.mud-checked,
+.ats-dispute-dialog .ats-reference-pill.mud-radio-checked {
+    background: #123A63;
+    border-color: #123A63;
+}
+
+.ats-dispute-dialog .ats-reference-pill.selected .mud-radio-label,
+.ats-dispute-dialog .ats-reference-pill.selected .mud-radio-content,
+.ats-dispute-dialog .ats-reference-pill.selected .mud-typography,
+.ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-label,
+.ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-content,
+.ats-dispute-dialog .ats-reference-pill.mud-checked .mud-typography,
+.ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-label,
+.ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-content,
+.ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-typography {
+    color: #fff !important;
+}
+
+.ats-dispute-cancel-btn {
+    background: #fff !important;
+    color: #41536E !important;
+    border: 1px solid #DCE7F4 !important;
+    box-shadow: none !important;
+}
+
 .ats-step-five .ats-reference-datetime-wrap {
     display: grid;
     grid-template-columns: 1fr 1fr;
