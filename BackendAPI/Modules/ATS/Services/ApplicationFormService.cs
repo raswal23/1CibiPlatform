@@ -123,7 +123,7 @@ public class ApplicationFormService : IApplicationFormService
 			}
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction. {ex.InnerException!.Message}");
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
 	}

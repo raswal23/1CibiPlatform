@@ -1,24 +1,21 @@
-﻿<MudPaper Elevation="6"
-          Class="p-10 text-center d-flex flex-column justify-center align-center"
-          Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:500px; max-width:100%;">
- 
-    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
-             Size="Size.Large"
-             Style="font-size: 80px; color: green; margin-bottom: 20px;"/>
+﻿<div class="ats-success-wrap">
+    <MudPaper Elevation="0" Class="ats-modern-card ats-success-card">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                 Size="Size.Large"
+                 Class="ats-success-icon" />
 
+        <MudText Typo="Typo.h4" Class="ats-success-title">
+            Submission Complete
+        </MudText>
 
-    <MudText Typo="Typo.h4" Style="font-weight: bold; margin-top: 10px;" Class="gradient-text">
-        Submission Complete
-    </MudText>
+        <MudText Typo="Typo.subtitle1" Class="ats-success-thanks">
+            Thank you!
+        </MudText>
 
-    <MudText Typo="Typo.subtitle1" Style="max-width: 420px; color: #555;  margin: 15px 10px 5px 10px;">
-        Thank You!
-    </MudText>
-
-    <MudText Typo="Typo.subtitle1" Style="max-width: 420px; color: #555;  margin: 0px 10px 20px 10px;">
-        You will be receiving a notification as confirmation for completing the form. Please do not
-        hesitate to reach us or your designated HR/Recruiter should you have any questions.
-    </MudText>
-
-</MudPaper>
+        <MudText Typo="Typo.body1" Class="ats-success-message">
+            You will receive a notification confirming your completed form. If you have questions,
+            please reach out to your designated HR/Recruiter.
+        </MudText>
+    </MudPaper>
+</div>
 
