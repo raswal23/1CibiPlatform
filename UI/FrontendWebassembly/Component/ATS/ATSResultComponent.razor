@@ -13,6 +13,16 @@
         else if (showReportUploader)
         {
             <div class="ats-upload-report-shell">
+                <div class="ats-upload-report-shell-header">
+                    <div>
+                        <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
+                        <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Class="ats-upload-report-shell-close"
+                                   OnClick="GoBackToSearchReport" />
+                </div>
+
                 <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId"
                                        OnUploadSucceeded="ReloadReportResult"
                                        OnCancel="GoBackToSearchReport" />
