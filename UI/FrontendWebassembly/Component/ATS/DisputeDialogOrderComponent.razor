@@ -2,9 +2,10 @@
 @inject ISnackbar Snackbar
 
 <MudDialog Class="ats-dispute-dialog" Style="padding: 0;">
-    <DialogContent Class="ats-dispute-dialog-content">
-        <MudForm @ref="disputeForm">
-            <MudGrid Class="ats-dispute-dialog-grid" Spacing="1">
+    <DialogContent>
+        <div class="ats-dispute-dialog-content">
+            <MudForm @ref="disputeForm">
+                <MudGrid Class="ats-dispute-dialog-grid" Spacing="1">
                 <MudItem xs="12" Class="ats-dispute-header">
                     <div class="ats-dispute-header-logo-wrap">
                         <MudImage Src="/images/generic/cibi-icon.png" Alt="CIBI" Class="ats-dispute-header-logo" />
@@ -91,7 +92,8 @@
                         </MudItem>
                     </MudGrid>
                 </MudItem>
-            </MudGrid>
-        </MudForm>
-    </DialogContent>
-</MudDialog>
+                            </MudGrid>
+                        </MudForm>
+                    </div>
+                </DialogContent>
+            </MudDialog>
