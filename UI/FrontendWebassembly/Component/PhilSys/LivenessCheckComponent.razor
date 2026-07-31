@@ -1,13 +1,13 @@
 ﻿@inject IJSRuntime JS
 @implements IAsyncDisposable
 
- <MudPaper Class="p-10 text-center d-flex flex-column justify-center align-center transparent-paper"
-           Elevation="6"
-           Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:400px; max-width:90%;">
-    <MudText Typo="Typo.h5" Class="mb-4">
+ <MudPaper Class="p-10 text-center d-flex flex-column justify-center align-center transparent-paper philsys-modern-card philsys-modern"
+           Elevation="0"
+           Style="padding: 18px; width:400px; max-width:90%;">
+    <MudText Typo="Typo.h5" Class="mb-4 philsys-modern-title">
         Liveness Check
     </MudText>
-    <MudText Typo="Typo.subtitle1" Class="mb-4">
+    <MudText Typo="Typo.subtitle1" Class="mb-4 philsys-modern-sub">
         Click the button below to start the liveness verification process.
     </MudText>
     <ButtonComponent OnClick="@OnClick" Class="theme-button theme-button-active">

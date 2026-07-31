@@ -9,7 +9,7 @@
 @inject ISnackbar Snackbar
 @using SigPad   
 
-<MudPaper Style="border-radius:12px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); margin: 5px; max-width:1200px;" Class="transparent-paper">
+<MudPaper Style="overflow:hidden; margin: 5px; max-width:1200px;" Class="transparent-paper ats-modern-card ats-appform-modern">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
@@ -18,8 +18,9 @@
     {
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                        Color="Color.Default"
+                       Class="ml-2 mt-2"
                        OnClick="@(()=> showPhilSys = false)"/>
-        <div style="margin: 10px 40px 40px 40px;">
+        <div class="philsys-modern" style="margin: 10px 40px 40px 40px;">
             <PhilSysComponent HashToken="@HashToken"></PhilSysComponent>
         </div>
     }

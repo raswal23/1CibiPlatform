@@ -1,8 +1,8 @@
 ﻿@inject NavigationManager NavigationManager
 
-<MudPaper Elevation="6"
-          Class="p-10 text-center d-flex flex-column justify-center align-center transparent-paper"
-          Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:500px; max-width:90%;">
+<MudPaper Elevation="0"
+          Class="p-10 text-center d-flex flex-column justify-center align-center transparent-paper philsys-modern philsys-modern-card"
+          Style="padding: 18px; width:500px; max-width:90%;">
 
     @if (IsCompleted)
     {
@@ -11,7 +11,7 @@
                  Style="font-size: 80px; color: #d9534f; margin-bottom: 20px;" />
 
         
-        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;" Class="gradient-text">
+        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;" Class="philsys-modern-title">
             Session Not Found
         </MudText>
 
@@ -25,7 +25,7 @@
                  Size="Size.Large"
                  Style="font-size: 80px; color: #d9534f; margin-bottom: 20px;" />
 
-        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;">
+        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;" Class="philsys-modern-title">
             Session Expired
         </MudText>
 

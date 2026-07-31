@@ -1,53 +1,57 @@
-﻿@inject IDisputeOrderService DisputeOrderService
+﻿@page "/s&i/ats/disputes"
+@page "/s&i/ats/disputeorder"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IDisputeOrderService DisputeOrderService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
+    <TableComponent TItem="DisputeOrderListDTO"
+                    @ref="ordersTable"
+                    Title="Dispute orders"
+                    EnableSearch="true"
+                    ColumnCount="5"
+                    RowsPerPage="10"
+                    LoadServerData="LoadOrderData"
+                    SearchString="@searchString"
+                    SearchStringChanged="@((string val) => searchString = val)">
 
-<TableComponent TItem="DisputeOrderListDTO"
-                @ref="ordersTable"
-                Title="Dispute Orders"
-                EnableSearch="true"
-                ColumnCount="5"
-                RowsPerPage="10"
-                LoadServerData="LoadOrderData"
-                SearchString="@searchString"
-                SearchStringChanged="@((string val) => searchString = val)">
+        <HeaderTemplate>
+            <MudTh>Subject Name</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Order Date</MudTh>
+            <MudTh>Date Completed</MudTh>
+            <MudTh>Send Dispute</MudTh>
+        </HeaderTemplate>
 
-    <HeaderTemplate>
-        <MudTh>Subject Name</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Order Date</MudTh>
-        <MudTh>Date Completed</MudTh>
-        <MudTh>Send Dispute</MudTh>
-    </HeaderTemplate>
+        <RowTemplate Context="o">
+            <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
+            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">@o.DisputeCategory</span></MudTd>
+            <MudTd DataLabel="Order Date">@o.OrderCreatedAt?.ToString("MMMM dd, yyyy")</MudTd>
+            <MudTd DataLabel="Date Completed">@(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+            <MudTd>
+                <div style="display:flex; justify-content:center; align-items:center;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   Color="Color.Error"
+                                   OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
+                </div>
+            </MudTd>
+        </RowTemplate>
 
-    <RowTemplate Context="o">
-        <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
-        <MudTd DataLabel="Status">@o.DisputeCategory</MudTd>
-        <MudTd DataLabel="Order Date">@o.OrderCreatedAt?.ToString("MMMM dd, yyyy")</MudTd>
-        <MudTd DataLabel="Date Completed">@(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-        <MudTd>
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <MudIconButton Icon="@Icons.Material.Filled.Send"
-                                Color="Color.Error"
-                                OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
+        <NoRecordsTemplate>
+            <div class="ats-console-empty-state">
+                <div class="ats-console-empty-icon">⚠</div>
+                <div class="ats-console-empty-title">No dispute orders</div>
+                <div class="ats-console-empty-sub">Completed orders eligible for dispute within the allowed window will appear here.</div>
             </div>
-        </MudTd>
-    </RowTemplate>
+        </NoRecordsTemplate>
+    </TableComponent>
 
-    <NoRecordsTemplate>
-        <MudText Typo="Typo.body2">No dispute orders found.</MudText>
-    </NoRecordsTemplate>
-</TableComponent>
-
-<MudGrid Class="mt-0" Justify="Justify.Center">
-    <MudItem xs="12" md="5" Class="d-flex justify-center">
-        <MudText Align="Align.Center" Typo="Typo.caption">
-            <b style="color: #102247;">IMPORTANT NOTICE!</b><br />
-            To preserve data and result integrity, dispute process can only be submitted for orders completed within the allowed dispute window.
-            <MudSpacer/>
-            Please submit a new order if dispute is no longer eligible or if reverification is required for the selected individual.
-        </MudText>
-    </MudItem>
-
-</MudGrid>
+    <MudGrid Class="mt-3" Justify="Justify.Center">
+        <MudItem xs="12" md="8">
+            <div class="ats-console-notice">
+                <strong>Dispute window applies</strong>
+                Disputes can only be filed for orders completed within the allowed window. Submit a new order if that window has closed or reverification is needed.
+            </div>
+        </MudItem>
+    </MudGrid>
 

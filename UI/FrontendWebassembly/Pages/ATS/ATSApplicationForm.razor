@@ -10,7 +10,7 @@
 <NavigationLock ConfirmExternalNavigation="true"
                 OnBeforeInternalNavigation="ConfirmNavigation" />
 
-<div class="ats-application-form">
+<div class="ats-application-form ats-appform-modern">
     @if (string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase))
     {
         <CompletedComponent />
@@ -28,8 +28,8 @@
         @if (!_showApplicationForm)
         {
             // Instructions
-            <MudPaper  Class="transparent-paper"
-                       Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; margin: 5px;">
+            <MudPaper Class="transparent-paper ats-modern-card"
+                       Style="overflow:hidden; max-width:1200px; margin: 5px;">
 
                 <!-- Header bar -->
                 <div class="d-flex align-center justify-space-between"
@@ -41,7 +41,7 @@
                         Style="width:36px; height:36px;" />
 
                         <MudText Typo="Typo.h5"
-                        Class="mb-0 gradient-text"
+                        Class="mb-0 ats-appform-modern-title"
                         Style="font-weight:700;">
                             WFS Talent Suite
                         </MudText>
@@ -50,8 +50,8 @@
 
                 <!-- Content area -->
                 <div class="pa-6" style="background:#fff;">
-                    <MudText Typo="Typo.subtitle2">Thank you for acknowledging our email.</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2 mb-4">
+                    <MudText Typo="Typo.subtitle2" Class="ats-appform-modern-title">Thank you for acknowledging our email.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2 mb-4 ats-appform-modern-sub">
                         We are CIBI Information, Inc., a third-party verification company engaged by a firm with whom you have either an ongoing job application or currently employed to conduct background checks. Please provide all required documents and information as outlined in the email you received.
                     </MudText>
 
@@ -99,7 +99,7 @@
                     </div>
 
                     <div class="d-flex justify-center mt-6">
-                    <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="@(() => _showApplicationForm = true)">
+                    <MudButton Class="theme-button theme-button-active" Style="width: 120px;" OnClick="@(() => _showApplicationForm = true)">
                             Proceed
                         </MudButton>
                     </div>
