@@ -564,9 +564,436 @@ code {
 }
 
 .ats-result-dialog {
-    background-image: url('/images/ats/dialog-bg-image.png');
-    background-size: cover;
-    background-position: center;
+    background: #fff;
+}
+
+.ats-result-dialog .mud-dialog-content {
+    padding: 24px !important;
+    max-height: 78vh;
+    overflow-y: auto;
+}
+
+.oneplatform-surface-card {
+    background: #fff;
+    border: 1px solid #e3e9f1;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px -18px rgba(11,31,58,.25);
+}
+
+.ats-result-shell {
+    color: #1e2a3c;
+}
+
+.ats-result-title {
+    margin: 0;
+    color: #102247;
+    font-weight: 700;
+}
+
+.ats-result-subtitle {
+    margin-top: 2px;
+    color: #6b7b92;
+}
+
+.ats-result-hero {
+    border-radius: 16px;
+    padding: 20px 24px;
+    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ats-result-hero-name {
+    margin: 0;
+    font-weight: 700;
+    color: #fff;
+}
+
+.ats-result-hero-subtitle {
+    color: rgba(255,255,255,.9);
+}
+
+.ats-result-hero-status {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ats-result-summary-card,
+.ats-result-docs-card {
+    height: 100%;
+    padding: 20px 22px;
+}
+
+.ats-result-section-title {
+    margin: 0 0 16px;
+    color: #102247;
+    font-weight: 700;
+}
+
+.ats-result-summary-item {
+    margin-bottom: 14px;
+}
+
+.ats-result-label {
+    color: #6b7b92;
+}
+
+.ats-result-value {
+    color: #1e2a3c;
+    font-weight: 600;
+}
+
+.ats-result-upload-button {
+    border-radius: 10px !important;
+    border-color: #d9e2ee !important;
+    color: #102247 !important;
+    text-transform: none !important;
+    font-size: 16px !important;
+}
+
+.ats-result-doc-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.ats-result-doc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid #e8edf4;
+}
+
+.ats-result-doc-row:first-child {
+    border-top: 0;
+    padding-top: 4px;
+}
+
+.ats-result-doc-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ats-result-doc-icon.uploaded {
+    background: #e7f5ec;
+    color: #1e8e5a;
+}
+
+.ats-result-doc-icon.missing {
+    background: #f1f4f8;
+    color: #9aa8ba;
+}
+
+.ats-result-doc-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.ats-result-doc-title {
+    font-weight: 700;
+    color: #1e2a3c;
+}
+
+.ats-result-doc-sub {
+    color: #6b7b92;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ats-result-doc-request {
+    color: #2a77ae;
+    font-weight: 700;
+    margin-left: auto;
+    cursor: pointer;
+}
+
+.ats-download-dialog {
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+.ats-download-dialog .mud-dialog-content {
+    padding: 0 !important;
+}
+
+.ats-download-header {
+    padding: 24px 28px 14px;
+    border-bottom: 1px solid #e6edf5;
+}
+
+.ats-download-title {
+    color: #102247;
+    margin: 0;
+    font-weight: 700;
+}
+
+.ats-download-subtitle {
+    margin-top: 2px;
+    color: #6b7b92;
+}
+
+.ats-download-list {
+    padding: 10px 28px 6px;
+}
+
+.ats-download-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e6edf5;
+}
+
+.ats-download-item-last {
+    border-bottom: 0;
+}
+
+.ats-download-checkbox {
+    margin: 0;
+}
+
+.ats-download-checkbox .mud-button-root {
+    padding: 0 !important;
+}
+
+.ats-download-doc-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-download-doc-icon.available {
+    background: #e4f3ed;
+    color: #8e80ac;
+}
+
+.ats-download-doc-icon.missing {
+    background: #eff3f8;
+    color: #c9d3df;
+}
+
+.ats-download-doc-name {
+    flex: 1;
+    min-width: 0;
+    color: #1e2a3c;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.ats-download-pill {
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-download-pill.available {
+    background: #e7f5ec;
+    color: #1e8e5a;
+}
+
+.ats-download-pill.missing {
+    background: #eef2f7;
+    color: #97a8bc;
+}
+
+.ats-download-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 18px 28px 24px;
+}
+
+.ats-download-cancel,
+.ats-download-submit {
+    min-width: 140px;
+    border-radius: 12px !important;
+    text-transform: none !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    padding: 10px 18px !important;
+}
+
+.ats-download-cancel {
+    border-color: #d9e2ee !important;
+    color: #102247 !important;
+}
+
+.ats-download-submit.theme-button-inactive {
+    color: #fff !important;
+}
+
+.ats-upload-report-shell {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.ats-upload-report-card {
+    width: 100%;
+    max-width: 620px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.ats-upload-report-header {
+    padding: 22px 26px 18px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ats-upload-report-title {
+    margin: 0;
+    color: #102247;
+    font-weight: 700;
+}
+
+.ats-upload-report-subtitle {
+    margin-top: 2px;
+    color: #6b7b92;
+}
+
+.ats-upload-report-close {
+    background: #eef3f9 !important;
+    border-radius: 12px !important;
+    color: #7d91ab !important;
+}
+
+.ats-upload-report-label {
+    color: #1e2a3c;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.ats-upload-required {
+    color: #d8503a;
+}
+
+.ats-upload-dropzone {
+    border: 1.5px dashed #d8e4f2;
+    border-radius: 12px;
+    padding: 24px 18px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.ats-upload-dropzone-icon {
+    color: #2a77ae;
+}
+
+.ats-upload-dropzone-title {
+    margin-top: 4px;
+    color: #1e2a3c;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ats-upload-dropzone-subtitle {
+    color: #6b7b92;
+}
+
+.ats-upload-selected-file {
+    border: 1px solid #dce6f2;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 10px;
+}
+
+.ats-upload-selected-file-icon {
+    color: #b4a6ce;
+}
+
+.ats-upload-selected-file-name {
+    flex: 1;
+    min-width: 0;
+    color: #1e2a3c;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ats-upload-selected-file-remove {
+    color: #7d91ab !important;
+}
+
+.ats-upload-report-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ats-upload-report-back,
+.ats-upload-report-submit {
+    min-width: 132px;
+    border-radius: 12px !important;
+    text-transform: none !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+}
+
+.ats-upload-report-back {
+    border-color: #d9e2ee !important;
+    color: #102247 !important;
+}
+
+@media (max-width: 960px) {
+    .ats-result-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ats-download-list {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .ats-download-header,
+    .ats-download-actions {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .ats-download-doc-name {
+        font-size: 15px;
+    }
+
+    .ats-download-pill {
+        font-size: 12px;
+    }
+
+    .ats-download-cancel,
+    .ats-download-submit {
+        min-width: 120px;
+        font-size: 14px !important;
+    }
+
+    .ats-upload-report-header,
+    .ats-upload-report-card .pa-4 {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
 }
 
 .ats-console {

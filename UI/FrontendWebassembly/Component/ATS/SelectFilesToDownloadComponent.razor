@@ -1,58 +1,90 @@
 ﻿@inject IReportService ReportService
 @inject IJSRuntime JS
 
-<MudDialog Style="padding: 8px;">
-     <DialogContent>
-        <MudStack Spacing="2" AlignItems="AlignItems.Center">
-               <MudStack Spacing="2" Style="width: 100%; max-width: 500px;">
+<MudDialog Class="ats-download-dialog" Style="padding: 0;">
+    <DialogContent>
+        <div class="ats-download-header">
+            <MudText Typo="Typo.h5" Class="ats-download-title">Select files to download</MudText>
+            <MudText Typo="Typo.body1" Class="ats-download-subtitle">@AvailableDocumentCount of @TotalDocuments documents are available</MudText>
+        </div>
 
+        <div class="ats-download-list">
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="ResumeSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.ResumeFileName) ? "No resume uploaded" : ReportResult.ResumeFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Resume / CV</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
 
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="GovernmentIdSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.IdUploadedFileName) ? "No government ID uploaded" : ReportResult.IdUploadedFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.IdUploadedFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Government ID</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
 
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="DiplomaSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.DiplomaFileName) ? "No diploma uploaded" : ReportResult.DiplomaFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.DiplomaFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Diploma</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
 
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="CoeSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.CoeFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.CoeFileName) ? "No certificate of employment uploaded" : ReportResult.CoeFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.CoeFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Certificate of employment</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
 
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="ConsentSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.ConsentFormFileName) ? "No consent form uploaded" : ReportResult.ConsentFormFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.ConsentFormFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Consent form</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
 
+            <div class="ats-download-item ats-download-item-last">
                 <MudCheckBox @bind-Value="ReportSelected"
-                             Disabled="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName))"
-                             Label="@(string.IsNullOrEmpty(ReportResult!.UploadedReportFileName) ? "No report uploaded" : ReportResult.UploadedReportFileName)" />
+                             Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.UploadedReportFileName))"
+                             Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Report file</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
+        </div>
 
-            </MudStack>
-        </MudStack>
+        <div class="ats-download-actions">
+            <MudButton Variant="Variant.Outlined"
+                       Class="ats-download-cancel"
+                       OnClick="Cancel">Cancel</MudButton>
 
-        <MudDivider Class="my-4" />
-
-        <MudGrid>
-            <MudItem xs="6">
-                <MudButton FullWidth="true"
-                           Variant="Variant.Filled"
-                           Style="border: 2px solid gray;"
-                           OnClick="Cancel">
-                    Cancel
-                </MudButton>
-            </MudItem>
-
-            <MudItem xs="6">
-                <MudButton FullWidth="true"
-                           Variant="Variant.Filled"
-                           Class="theme-button theme-button-active"
-                           OnClick="DownloadDocumentsAsync">
-                    Download
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-     </DialogContent>
+            <MudButton Variant="Variant.Filled"
+                       Disabled="@(!HasSelectedFile)"
+                       Class="@($"ats-download-submit {(HasSelectedFile ? "theme-button theme-button-active" : "theme-button-inactive")}")"
+                       OnClick="DownloadDocumentsAsync">Download</MudButton>
+        </div>
+    </DialogContent>
 </MudDialog>
