@@ -3,11 +3,11 @@
 @inject IJSRuntime JS
 
 <MudForm @ref="personalForm" Class="philsys-modern philsys-lookup-form">
-    <MudPaper Class="pa-5 philsys-modern-card philsys-lookup-card" Elevation="0">
-        <MudText Typo="Typo.h4" Class="philsys-modern-title mb-1">Personal information</MudText>
-        <MudText Typo="Typo.body1" Class="philsys-modern-sub mb-4">Enter the details exactly as they appear on the registrant's PhilSys record.</MudText>
+    <MudPaper Class="pa-3 philsys-modern-card philsys-lookup-card" Elevation="0">
+        <MudText Typo="Typo.h5" Class="philsys-modern-title mb-1">Personal information</MudText>
+        <MudText Typo="Typo.body2" Class="philsys-modern-sub mb-3">Enter the details exactly as they appear on the registrant's PhilSys record.</MudText>
 
-        <MudGrid Class="mb-1" Spacing="2">
+        <MudGrid Class="mb-1" Spacing="1">
             <MudItem xs="12" sm="8">
                 <MudTextField @bind-Value="identityData.first_name"
                               Label="First name"
@@ -86,11 +86,13 @@
         </MudGrid>
 
         <div class="philsys-modern-actions">
-            <ButtonComponent OnClick="SubmitPersonalInfo"
-                             Class="theme-button theme-button-active mt-4"
-                             Style="min-width: 120px;">
-                Next →
-            </ButtonComponent>
+            <div style="width: 120px; margin-left: auto;">
+                <ButtonComponent OnClick="SubmitPersonalInfo"
+                                 Class="theme-button theme-button-active mt-2"
+                                 Style="min-width: 110px; min-height: 38px;">
+                    Next →
+                </ButtonComponent>
+            </div>
         </div>
     </MudPaper>
 </MudForm>

@@ -726,6 +726,16 @@ code {
     background-repeat: no-repeat;
 }
 
+.philsys-liveness-page {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    background: #F4F7FB;
+}
+
 .ats-result-dialog {
     background: #fff;
 }
@@ -1736,6 +1746,13 @@ code {
     width: 100%;
 }
 
+.ats-philsys-wrap {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 40px 40px;
+    overflow-x: hidden;
+}
+
 .ats-appform-stepper {
     padding: 18px 20px 26px;
 }
@@ -1744,16 +1761,19 @@ code {
     color: #6B7B92;
     font-weight: 600;
     display: inline-flex !important;
-    flex-direction: row !important;
+    flex-direction: column !important;
     align-items: center !important;
-    gap: 8px;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
 }
 
 .ats-appform-stepper .mud-step .mud-step-label-text,
 .ats-appform-stepper .mud-step .mud-step-title,
 .ats-appform-stepper .mud-step .mud-step-label-name {
     margin-top: 0 !important;
-    line-height: 1.1;
+    line-height: 1.15;
+    text-align: center;
 }
 
 .ats-appform-stepper .mud-step-label-icon {
@@ -1763,31 +1783,59 @@ code {
     border: 1px solid #DCE7F4;
     background: #EAF1F8 !important;
     color: #51627D !important;
-}
-
-.ats-appform-stepper .mud-step-completed .mud-step-label-icon {
-    background: #2F9D62 !important;
-    border-color: #2F9D62 !important;
-    color: #fff !important;
+    margin: 0 auto;
 }
 
 .ats-appform-stepper .mud-step.active .mud-step-label-icon,
 .ats-appform-stepper .mud-step-label-icon.mud-default {
-    background: #234C80 !important;
-    border-color: #234C80 !important;
+    background: linear-gradient(135deg, #102247 0%, #2A77AE 55%, #68C0D6 100%) !important;
+    border-color: transparent !important;
     color: #fff !important;
+}
+
+.ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
+.ats-appform-stepper .mud-step-label-icon.mud-completed {
+    background: #1F9D57 !important;
+    border-color: #1F9D57 !important;
+    color: transparent !important;
+    font-size: 0 !important;
+    position: relative;
+}
+
+.ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon::before,
+.ats-appform-stepper .mud-step-label-icon.mud-completed::before {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ats-appform-stepper :is(.mud-step-completed, .mud-completed) :is(.mud-step-label, .mud-step-label-text, .mud-step-title, .mud-step-label-name) {
+    color: #1F9D57 !important;
 }
 
 .ats-appform-stepper .mud-stepper-content {
     background: #fff;
-    border: 1px solid #E3E9F1;
-    border-radius: 16px;
     margin-top: 12px;
+    box-sizing: border-box;
 }
 
 .ats-appform-stepper .mud-stepper-content .mud-paper {
     box-shadow: none !important;
     border-radius: 12px;
+}
+
+.ats-appform-stepper .mud-stepper-content > div:last-child,
+.ats-appform-stepper .mud-stepper-content form,
+.ats-appform-stepper .mud-stepper-content .mud-grid,
+.ats-appform-stepper .mud-stepper-content .mud-paper {
+    margin-bottom: 0 !important;
 }
 
 .ats-appform-form .mud-input-outlined .mud-input-outlined-border {
@@ -1797,6 +1845,36 @@ code {
 .ats-appform-form .oneplatform-rounded-input .mud-input-outlined,
 .ats-appform-form .oneplatform-rounded-input fieldset {
     border-radius: 10px !important;
+}
+
+.ats-appform-form .mud-input-control {
+    margin-top: 2px;
+}
+
+.ats-appform-form .mud-input-outlined {
+    min-height: 38px !important;
+}
+
+.ats-appform-form .mud-input-slot {
+    min-height: 38px !important;
+    font-size: 13px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+}
+
+.ats-appform-form .mud-input>input,
+.ats-appform-form .mud-select {
+    min-height: 26px !important;
+    font-size: 13px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.ats-appform-form .mud-input-label,
+.ats-appform-form .mud-input-label-inputcontrol,
+.ats-appform-form .mud-input-helper-text,
+.ats-appform-form .mud-input-error {
+    font-size: 12px !important;
 }
 
 .ats-appform-section-title {
@@ -1981,6 +2059,10 @@ code {
 }
 
 @media (max-width: 960px) {
+    .ats-philsys-wrap {
+        padding: 10px 16px 24px;
+    }
+
     .ats-step-one .ats-step-one-grid {
         padding: 20px 14px;
     }
@@ -2004,12 +2086,146 @@ code {
     }
 }
 
-.ats-step-three .ats-appform-section-title {
-    color: #2C7FB8;
+.ats-step-two-grid {
+    margin-top: 0;
 }
 
+.ats-step-two-grid .mud-item,
 .ats-step-three .mud-item {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+}
+
+.ats-step-two-form-card {
+    min-height: auto;
+}
+
+.ats-step-two-upload-card {
+    height: 100%;
+    background: #EEF7FF !important;
+    border: 1px solid #D5E5F4;
+    border-radius: 28px !important;
+    padding: 36px 28px 28px;
+    box-shadow: none !important;
+}
+
+.ats-step-two-upload-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+}
+
+.ats-step-two-avatar-frame {
+    width: 208px;
+    height: 208px;
+    border-radius: 50%;
+    background: #D4E0ED;
+    border: 4px solid #fff;
+    box-shadow: 0 0 0 1px #D3E2F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ats-step-two-avatar {
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    margin: auto;
+    border-radius : 80px
+}
+
+.ats-step-two-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ats-step-two-status.verified {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.ats-step-two-status.not-verified {
+    background: #FDECEA;
+    color: #E75A3C;
+}
+
+.ats-step-two-upload-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.ats-step-two-upload-list .mud-file-upload {
+    width: 100%;
+}
+
+.ats-step-two-upload-btn {
+    width: 100%;
+    min-height: 62px;
+    border: 1px solid #D6E2EF !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    color: #3B4A61 !important;
+    text-transform: none !important;
+    box-shadow: none !important;
+    padding: 12px 20px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 18px;
+}
+
+.ats-step-two-upload-btn:hover {
+    background: rgba(255, 255, 255, 0.35) !important;
+}
+
+.ats-step-two-upload-btn-icon {
+    color: #4F4F4F !important;
+    flex-shrink: 0;
+}
+
+.ats-step-two-upload-btn-text {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    white-space: normal;
+}
+
+.ats-step-two-upload-btn-text-uppercase {
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.ats-step-two-upload-file-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.ats-step-two-upload-remove {
+    margin-left: 8px;
+}
+
+.ats-step-three .ats-appform-section-title {
+    color: #2C7FB8;
 }
 
 .ats-step-three .small-checkbox-label .mud-typography,
@@ -2406,50 +2622,225 @@ code {
     color: #D8503A;
 }
 
+.philsys-liveness-shell {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.philsys-liveness-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 34px 28px 30px !important;
+    border-radius: 20px !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E3E9F1 !important;
+    box-shadow: 0 20px 45px -28px rgba(11,31,58,.28) !important;
+    text-align: center;
+}
+
+.philsys-liveness-badge-wrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.philsys-liveness-badge-pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(44,127,184,.14);
+    animation: philsys-liveness-pulse 2s ease-out infinite;
+}
+
+.philsys-liveness-badge {
+    position: relative;
+    z-index: 1;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,#102247,#2C7FB8);
+    color: #fff;
+    box-shadow: 0 10px 22px -16px rgba(16,34,71,.7);
+}
+
+.philsys-liveness-title {
+    margin-bottom: 10px;
+    color: #0B1F3A;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.philsys-liveness-subtitle {
+    max-width: 320px;
+    margin: 0 auto 20px;
+    color: #6B7B92;
+    line-height: 1.6;
+}
+
+.philsys-liveness-tips {
+    border: 1px solid #E3E9F1;
+    border-radius: 14px;
+    background: #FAFCFF;
+    padding: 14px 16px;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.philsys-liveness-tip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1E2A3C;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.philsys-liveness-tip + .philsys-liveness-tip {
+    margin-top: 10px;
+}
+
+.philsys-liveness-tip-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #E7F5EC;
+    color: #1E8E5A;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.philsys-liveness-action {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.philsys-liveness-button {
+    min-height: 48px !important;
+    border-radius: 14px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+}
+
+.philsys-liveness-privacy {
+    color: #7A8CA8;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.philsys-liveness-privacy-link {
+    display: inline-block;
+    margin-left: 4px;
+    color: #2C7FB8;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.philsys-liveness-privacy-link:hover {
+    text-decoration: underline;
+}
+
+@keyframes philsys-liveness-pulse {
+    0% {
+        transform: scale(.82);
+        opacity: .75;
+    }
+    70% {
+        transform: scale(1.22);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1.22);
+        opacity: 0;
+    }
+}
+
 .philsys-lookup-shell {
     width: 100%;
-    max-width: 860px;
+    max-width: 680px;
     margin: 0 auto;
 }
 
 .philsys-lookup-form {
     width: 100%;
-    max-width: 860px;
+    max-width: 680px;
     margin: 0 auto;
 }
 
 .philsys-lookup-card {
-    border-radius: 18px !important;
-    padding: 34px 38px !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
 }
 
 .philsys-lookup-card .mud-input-control {
-    margin-top: 6px;
+    margin-top: 2px;
+}
+
+.philsys-lookup-card .mud-input-outlined {
+    min-height: 34px !important;
+}
+
+.philsys-lookup-card .mud-input-slot {
+    min-height: 34px !important;
+    font-size: 12px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
 }
 
 .philsys-lookup-card .mud-input>input,
 .philsys-lookup-card .mud-select {
-    min-height: 44px;
+    min-height: 28px !important;
+    font-size: 12px;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.philsys-lookup-card .mud-input-label,
+.philsys-lookup-card .mud-input-label-inputcontrol {
+    font-size: 12px !important;
+}
+
+.philsys-lookup-card .mud-input-helper-text,
+.philsys-lookup-card .mud-input-error {
+    font-size: 11px !important;
 }
 
 .philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
 .philsys-lookup-card .oneplatform-rounded-input fieldset {
-    border-radius: 10px !important;
+    border-radius: 8px !important;
+}
+
+.philsys-lookup-card .mud-input-adornment {
+    margin-top: 0 !important;
 }
 
 .philsys-lookup-card .philsys-modern-title {
-    font-size: 38px;
-    line-height: 1.15;
+    font-size: 16px;
+    line-height: 1.1;
 }
 
 .philsys-lookup-card .philsys-modern-sub {
-    font-size: 16px;
+    font-size: 11px;
 }
 
 .philsys-lookup-card .philsys-modern-actions .mud-button-root {
-    min-width: 150px;
-    min-height: 44px;
-    border-radius: 12px !important;
+    min-width: 120px;
+    min-height: 38px;
+    border-radius: 10px !important;
+    font-size: 13px !important;
 }
 
 .philsys-lookup-tabs-wrap {
@@ -2473,12 +2864,12 @@ code {
 
 .philsys-lookup-tab {
     border: 1px solid #DCE7F4;
-    border-radius: 14px;
+    border-radius: 12px;
     background: #fff;
-    padding: 14px 16px;
+    padding: 10px 12px;
     display: grid;
     grid-template-columns: auto 1fr auto;
-    gap: 12px;
+    gap: 10px;
     align-items: center;
     text-align: left;
     cursor: pointer;
@@ -2490,33 +2881,33 @@ code {
 }
 
 .philsys-lookup-tab-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg,#102247,#2C7FB8);
     color: #fff;
-    font-size: 16px;
+    font-size: 13px;
 }
 
 .philsys-lookup-tab-title {
     display: block;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #0B1F3A;
 }
 
 .philsys-lookup-tab-sub {
     display: block;
-    font-size: 14px;
+    font-size: 12px;
     color: #6B7B92;
 }
 
 .philsys-lookup-tab-check {
     color: #2C7FB8;
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
 }
 
@@ -2543,10 +2934,14 @@ code {
     }
 
     .philsys-lookup-card {
-        padding: 20px 18px !important;
+        padding: 12px 10px !important;
     }
 
     .philsys-lookup-card .philsys-modern-title {
-        font-size: 30px;
+        font-size: 17px;
+    }
+
+    .philsys-lookup-card .philsys-modern-sub {
+        font-size: 11px;
     }
 }

@@ -20,7 +20,7 @@
                        Color="Color.Default"
                        Class="ml-2 mt-2"
                        OnClick="@(()=> showPhilSys = false)"/>
-        <div class="philsys-modern" style="margin: 10px 40px 40px 40px;">
+        <div class="philsys-modern ats-philsys-wrap">
             <PhilSysComponent HashToken="@HashToken"></PhilSysComponent>
         </div>
     }
@@ -30,7 +30,7 @@
             <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper ats-appform-stepper">
                 <ChildContent>
                     <!-- STEP 1 -->
-                    <MudStep Title="Part 1 - Step 1" Class="ats-step-one">
+                    <MudStep Title="Part 1 - Step 1" Class="ats-step-one" Completed="@(_activeStep > 0)">
                         <MudPaper Elevation="0" Class="ats-step-one-shell">
                             <MudGrid Class="ats-step-one-grid" Justify="Justify.Center" AlignItems="AlignItems.Center">
                                 <MudItem xs="12" md="6" Class="d-flex justify-center align-content-center">
@@ -88,12 +88,12 @@
                     </MudStep>
 
                     <!-- STEP 2 -->
-                    <MudStep Title="Part 1 - Step 2">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 gradient-text">Personal Information</MudText>
-                        <MudGrid>
+                    <MudStep Title="Part 1 - Step 2" Class="ats-step-two" Completed="@(_activeStep > 1)">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-3 mt-3 gradient-text">Personal Information</MudText>
+                        <MudGrid Class="ats-step-two-grid" Spacing="2">
                             <!-- Left column: Personal information fields -->
                             <MudItem xs="12" sm="6">
-                                <MudPaper Class="pa-4" Elevation="0" Style="min-height: 570px;">
+                                <MudPaper Class="pa-3 ats-step-two-form-card" Elevation="0">
                                     <MudGrid>
                                         <MudItem xs="12" Class="mt-3">
                                             <MudTextField FullWidth="true"
@@ -234,56 +234,54 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6">
-                                <MudPaper Class="pa-10" Elevation="0" Style=" height: auto; background:linear-gradient(180deg,#f2fbff,#e6f7fb); box-shadow: 0 0 10px rgba(42,119,174,0.8); width:100%; border-radius:12px;">
-                                    <div class="d-flex flex-column align-center" style="gap:12px;">
-                                        <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
-                                                  Alt="User Profile"
-                                                  Style="height: 200px; width: 200px; object-fit: cover; border-radius: 50%; outline: 2px solid #000;" />
-                                        <div style="grid-column: 1; grid-row: 2; align-content: center; margin-bottom: 12px;">
-                                            @if (!string.IsNullOrEmpty(philSysId))
-                                            {
-                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #e8f5e9; color: #2e7d32; border-radius:12px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium" Color="Color.Success" /> PhilSys Verified
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fdecea; color: #c62828; border-radius:12px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Medium" Color="Color.Error" /> Not PhilSys Verified
-                                                </div>
-                                            }
+                                <MudPaper Class="ats-step-two-upload-card" Elevation="0">
+                                    <div class="ats-step-two-upload-shell">
+                                        <div class="ats-step-two-avatar-frame">
+                                            <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
+                                                      Alt="User Profile"
+                                                      Class="ats-step-two-avatar" />
                                         </div>
 
-                                        <div class="d-flex flex-column" style="width:100%; margin-top:12px; gap:8px;">
+                                        @if (!string.IsNullOrEmpty(philSysId))
+                                        {
+                                            <div class="ats-step-two-status verified">
+                                                <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium" />
+                                                <span>PhilSys Verified</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="ats-step-two-status not-verified">
+                                                <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Medium" />
+                                                <span>Not PhilSys Verified</span>
+                                            </div>
+                                        }
+
+                                        <div class="ats-step-two-upload-list">
                                             <MudFileUpload T="IBrowserFile"
                                                            Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            Accept=".pdf"
                                                            OnFilesChanged="OnGovtIdUpload"
                                                            RequiredError="Government Id is required">
                                                 <CustomContent>
-                                                    <div style="display: flex; justify-content: center;">
-                                                        <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; "
-                                                                   OnClick="@context.OpenFilePickerAsync">
-                                                            @if (personalDetails.AdditionalGovtIDFile is not null)
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.AdditionalGovtIDFileName</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                               Color="Color.Default"
-                                                                               Size="Size.Small"
-                                                                               Class="mr-3 ml-3"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFile!))" />
-                                                            }
-                                                            else
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 250px;  margin: 0px;">
-                                                                    Upload Unexpired Government ID
-                                                                </span>
-                                                            }
-                                                        </MudButton>
-                                                    </div>
+                                                    <MudButton Class="ats-step-two-upload-btn"
+                                                               OnClick="@context.OpenFilePickerAsync">
+                                                        @if (personalDetails.AdditionalGovtIDFile is not null)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudText Class="ats-step-two-upload-file-name">@personalDetails.AdditionalGovtIDFileName</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           Class="ats-step-two-upload-remove"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFile!))" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
+                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload Unexpired Government ID</span>
+                                                        }
+                                                    </MudButton>
                                                 </CustomContent>
                                                 <SelectedTemplate />
                                             </MudFileUpload>
@@ -294,34 +292,28 @@
                                             <MudFileUpload T="IBrowserFile"
                                                            Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            Accept=".pdf"
-                                                           OnFilesChanged="OnNbiUpload" 
+                                                           OnFilesChanged="OnNbiUpload"
                                                            RequiredError="NBI Clearance is required"
-                                                           MaxFileSize="26214400"
-                                                           Class="mt-4">
+                                                           MaxFileSize="26214400">
                                                 <CustomContent>
-                                                    <div style="display: flex; justify-content: center;">
-                                                        <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px;"
-                                                                   OnClick="@context.OpenFilePickerAsync">
-                                                            @if (personalDetails.NBIClearanceFile is not null)
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.NBIClearanceFileName</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                               Color="Color.Default"
-                                                                               Size="Size.Small"
-                                                                               Class="mr-3 ml-3"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFile!))" />
-                                                            }
-                                                            else
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 250px; margin: 0px;">
-                                                                    Upload NBI Clearance
-                                                                </span>
-                                                            }
-                                                        </MudButton>
-                                                    </div>
+                                                    <MudButton Class="ats-step-two-upload-btn"
+                                                               OnClick="@context.OpenFilePickerAsync">
+                                                        @if (personalDetails.NBIClearanceFile is not null)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudText Class="ats-step-two-upload-file-name">@personalDetails.NBIClearanceFileName</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           Class="ats-step-two-upload-remove"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFile!))" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
+                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload NBI Clearance</span>
+                                                        }
+                                                    </MudButton>
                                                 </CustomContent>
                                                 <SelectedTemplate />
                                             </MudFileUpload>
@@ -333,35 +325,30 @@
                                                            Accept=".pdf"
                                                            Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                            OnFilesChanged="OnCvUpload"
-                                                           RequiredError="CV/Resume is required"
-                                                           Class="mt-4">
+                                                           RequiredError="CV/Resume is required">
                                                 <CustomContent>
-                                                    <div style="display: flex; justify-content: center;">
-                                                        <MudButton Class="oneplatform-rounded-input"
-                                                                   Style="width:300px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px;"
-                                                                   OnClick="@context.OpenFilePickerAsync">
-                                                            @if (personalDetails.ResumeFile is not null)
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@personalDetails.ResumeFileName</MudText>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                                               Color="Color.Default"
-                                                                               Size="Size.Small"
-                                                                               Class="mr-3 ml-3"
-                                                                               OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFile!))" />
-                                                            }
-                                                            else
-                                                            {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 250px;  margin: 0px;">
-                                                                    Upload Resume File
-                                                                </span>
-                                                            }
-                                                        </MudButton>
-                                                    </div>
+                                                    <MudButton Class="ats-step-two-upload-btn"
+                                                               OnClick="@context.OpenFilePickerAsync">
+                                                        @if (personalDetails.ResumeFile is not null)
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudText Class="ats-step-two-upload-file-name">@personalDetails.ResumeFileName</MudText>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                                           Color="Color.Default"
+                                                                           Size="Size.Small"
+                                                                           Class="ats-step-two-upload-remove"
+                                                                           OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFile!))" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
+                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload Resume File</span>
+                                                        }
+                                                    </MudButton>
                                                 </CustomContent>
                                                 <SelectedTemplate />
                                             </MudFileUpload>
+
                                             <FileUploadValidationComponent ShowError="_resumeError"
                                                                            ErrorText="CV/Resume is required." />
                                         </div>
@@ -372,7 +359,7 @@
                     </MudStep>
 
                     <!-- STEP 3 -->
-                    <MudStep Title="Part 1 - Step 3" Class="ats-step-three">
+                    <MudStep Title="Part 1 - Step 3" Class="ats-step-three" Completed="@(_activeStep > 2)">
                         <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 ats-appform-section-title">Address</MudText>
                         <MudGrid>
                             <!-- Address section -->
@@ -647,7 +634,7 @@
                     </MudStep>
 
                     <!-- STEP 4 -->
-                    <MudStep Title="Part 1 - Step 4" Class="ats-step-four">
+                    <MudStep Title="Part 1 - Step 4" Class="ats-step-four" Completed="@(_activeStep > 3)">
                         <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 ats-appform-section-title">Credentials, Licenses &amp; Professional Experience</MudText>
                         <MudGrid>
                             <MudItem xs="12">
@@ -1333,7 +1320,7 @@
                     </MudStep>
 
                     <!-- STEP 5 -->
-                    <MudStep Title="Part 1 - Step 5" Class="ats-step-five">
+                    <MudStep Title="Part 1 - Step 5" Class="ats-step-five" Completed="@(_activeStep > 4)">
                         <MudGrid>
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mt-4 gradient-text">Professional Character Reference</MudText>
@@ -1720,7 +1707,7 @@
                         </MudGrid>
                     </MudStep>
 
-                    <MudStep Title="Final" Class="ats-step-final">
+                    <MudStep Title="Final" Class="ats-step-final" Completed="@(_activeStep > 5)">
                         <MudGrid>
                             <MudItem xs="12">
                                 <MudPaper Elevation="0" Style="width:100%;" Class="">
@@ -1840,7 +1827,7 @@
                 <ActionContent Context="stepper">
                     @if (_activeStep != 0)
                     {
-                        <div class="d-flex justify-space-between w-100 pa-2">
+                        <div class="d-flex justify-space-between w-100 pa-2 ats-step-action-bar">
 
                             <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray;"
                                        Class="mt-3 mb-4"
