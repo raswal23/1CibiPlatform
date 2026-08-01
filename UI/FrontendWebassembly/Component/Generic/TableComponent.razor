@@ -27,8 +27,9 @@
                     Value="SearchString"
                     ValueChanged="@(EventCallback.Factory.Create<string>(this, SearchChanged))"
                     ValueExpression="(() => SearchString)"
-                    Placeholder="Search"
-                    Adornment="Adornment.Start"
+                    Label="Search"
+                    Variant="Variant.Outlined"
+                    Margin="Margin.Dense"
                     AdornmentIcon="@Icons.Material.Filled.Search"
                     IconSize="Size.Medium"
                     Class="mt-0" />

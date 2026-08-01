@@ -1,5 +1,4 @@
-﻿@page "/s&i/ats/disputes"
-@page "/s&i/ats/disputeorder"
+﻿@page "/s&i/ats/disputeorder"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
 @inject IDisputeOrderService DisputeOrderService
@@ -16,24 +15,36 @@
                     SearchStringChanged="@((string val) => searchString = val)">
 
         <HeaderTemplate>
-            <MudTh>Subject Name</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Order Date</MudTh>
-            <MudTh>Date Completed</MudTh>
-            <MudTh>Send Dispute</MudTh>
+            <MudTh Class="ats-table-cell-center">Subject Name</MudTh>
+            <MudTh Class="ats-table-cell-center">Status</MudTh>
+            <MudTh Class="ats-table-cell-center">Order Date</MudTh>
+            <MudTh Class="ats-table-cell-center">Date Completed</MudTh>
+            <MudTh Class="ats-table-cell-center">Send Dispute</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="o">
-            <MudTd DataLabel="Subject Name">@($"{o.FirstName} {o.LastName}".Trim())</MudTd>
-            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">@o.DisputeCategory</span></MudTd>
-            <MudTd DataLabel="Order Date">@o.OrderCreatedAt?.ToString("MMMM dd, yyyy")</MudTd>
-            <MudTd DataLabel="Date Completed">@(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-            <MudTd>
-                <div style="display:flex; justify-content:center; align-items:center;">
-                    <MudIconButton Icon="@Icons.Material.Filled.Send"
-                                   Color="Color.Error"
-                                   OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
-                </div>
+            <MudTd Class="ats-table-cell-center" DataLabel="Subject Name">
+                @($"{o.FirstName} {o.LastName}".Trim())
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center " DataLabel="Status">
+                <span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">
+                    @o.DisputeCategory
+                </span>
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Order Date">
+                @o.OrderCreatedAt?.ToString("MMMM dd, yyyy")
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center " DataLabel="Date Completed">
+                @(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Send Dispute">
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Error"
+                               OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
             </MudTd>
         </RowTemplate>
 

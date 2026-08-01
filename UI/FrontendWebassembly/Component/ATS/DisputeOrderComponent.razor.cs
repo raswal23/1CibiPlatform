@@ -41,13 +41,7 @@ public partial class DisputeOrderComponent
 			if (ordersTable?.TableRef != null)
 				await ordersTable.TableRef.ReloadServerData();
 
-			var successParam = new DialogParameters
-			{
-				{ nameof(SuccessSaveComponent.Message), "Successfully saved the candidate's information." }
-			};
-
-			var dialogResults = await DialogService.ShowAsync<SuccessSaveComponent>("Success", successParam);
+			Snackbar.Add("Dispute reason submitted successfully.", Severity.Success);
 		}
 	}
-		
 }

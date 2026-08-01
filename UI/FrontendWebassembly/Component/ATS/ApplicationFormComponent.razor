@@ -9,7 +9,7 @@
 @inject ISnackbar Snackbar
 @using SigPad   
 
-<MudPaper Style="overflow:hidden; margin: 5px; max-width:1200px;" Class="transparent-paper ats-modern-card ats-appform-surface">
+<MudPaper Style="overflow:hidden; margin: 5px; max-width:1200px;" Class="ats-modern-card">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
@@ -67,15 +67,17 @@
 
                                             <div class="ats-step-one-button-row">
                                                 <MudButton Class="ats-step-one-secondary-btn"
+                                                           Disabled="@(!declineConsent || consent)"
                                                            OnClick="SkipStep">
                                                     Skip
                                                 </MudButton>
-                                                <MudButton Disabled="@(!consent)"
+                                                <MudButton Disabled="@(!consent || declineConsent)"
                                                            Class="@($"ats-step-one-proceed {(consent ? "theme-button theme-button-active" : "theme-button theme-button-inactive")}")"
                                                            OnClick="ProceedClicked">
                                                     Proceed
                                                 </MudButton>
                                                 <MudButton Class="ats-step-one-secondary-btn"
+                                                           Disabled="@(!declineConsent || consent)"
                                                            OnClick="CancelTransaction">
                                                     Cancel
                                                 </MudButton>
@@ -97,7 +99,6 @@
                                     <MudGrid>
                                         <MudItem xs="12" Class="mt-3">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.PositionAppliedFor"
@@ -109,7 +110,6 @@
 
                                         <MudItem xs="12">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.FirstName"
@@ -120,7 +120,6 @@
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Disabled="@NoMiddleName"
@@ -140,7 +139,6 @@
 
                                         <MudItem xs="12">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.LastName"
@@ -154,7 +152,6 @@
                                                        Label="Suffix"
                                                        FullWidth="true"
                                                        Required="true"
-                                                       Adornment="Adornment.Start"
                                                        Variant="Variant.Outlined"
                                                        Margin="Margin.Dense"
                                                        Class="oneplatform-rounded-input">
@@ -189,7 +186,6 @@
                                             <MudSelect T="string"
                                                        @bind-Value="personalDetails.Sex"
                                                        Class="oneplatform-rounded-input"
-                                                       Adornment="Adornment.Start"
                                                        Required="true"
                                                        RequiredError="Sex is required"
                                                        Variant="Variant.Outlined"
@@ -198,13 +194,11 @@
                                                        FullWidth="true">
                                                 <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                                 <MudSelectItem Value="@("Female")">Female</MudSelectItem>
-                                                <MudSelectItem Value="@("Prefer not to say")">Prefer not to say</MudSelectItem>
                                             </MudSelect>
                                         </MudItem>
 
                                         <MudItem xs="12">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.EmailAlternative"
@@ -217,13 +211,11 @@
 
                                         <MudItem xs="12">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.MobileNumber"
                                                           Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
                                                           Required="true"
-                                                          
                                                           RequiredError="Phone Number is required"
                                                           Class="oneplatform-rounded-input"
                                                           Label="Phone Number"
@@ -365,7 +357,6 @@
                             <!-- Address section -->
                             <MudItem xs="12" sm="4">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -376,7 +367,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -387,7 +377,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -398,7 +387,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="name-filter oneplatform-rounded-input"
@@ -409,7 +397,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -432,7 +419,6 @@
 
                             <MudItem xs="12" sm="4">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -444,7 +430,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -456,7 +441,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -468,7 +452,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="name-filter oneplatform-rounded-input"
@@ -480,7 +463,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -521,8 +503,7 @@
                             @if (addressDetails.TypeOfOwnership == "Others")
                             {
                                 <MudItem xs="12" sm="4">
-                                    <MudTextField Adornment="Adornment.Start"
-                                                  Variant="Variant.Outlined"
+                                    <MudTextField Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
                                                   @bind-Value="OwnershipOtherText"
@@ -541,7 +522,6 @@
                                 <MudSelect T="string"
                                            @bind-Value="HighestEducationalAttainment"
                                            Class="oneplatform-rounded-input"
-                                           Adornment="Adornment.Start"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
                                            Required="true"
@@ -573,7 +553,6 @@
 
                             <MudItem xs="12" sm="6">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="!DisableEducationForBelowCollege()"
@@ -620,7 +599,6 @@
                             
                             <MudItem xs="12" sm="6">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Required="!DisableEducationFieldsForAboveCollege()"
                                               Disabled="DisableEducationFieldsForAboveCollege()"
@@ -663,7 +641,6 @@
                             {
                                 <MudItem xs="12" sm="8">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined" f
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -688,7 +665,6 @@
 
                                 <MudItem xs="12" sm="8">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -748,7 +724,6 @@
 
                                         <MudItem xs="12" sm="6">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Class="oneplatform-rounded-input"
@@ -765,7 +740,6 @@
 
                             <MudItem xs="12" sm="4">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -776,7 +750,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="3">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -787,7 +760,6 @@
                             </MudItem>
                             <MudItem xs="6" sm="2">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="name-filter oneplatform-rounded-input"
@@ -798,7 +770,6 @@
                             </MudItem>
                             <MudItem xs="6" sm="1">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -823,7 +794,6 @@
 
                             <MudItem xs="12" sm="3">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -893,7 +863,6 @@
 
                             <MudItem xs="12" sm="6">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -904,7 +873,6 @@
                             </MudItem>
                             <MudItem xs="12" sm="6">
                                 <MudTextField FullWidth="true"
-                                              Adornment="Adornment.Start"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Class="oneplatform-rounded-input"
@@ -936,7 +904,6 @@
 
                                             <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -952,7 +919,6 @@
 
                                 <MudItem xs="12" sm="4">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -963,7 +929,6 @@
                                 </MudItem>
                                 <MudItem xs="12" sm="3">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -974,7 +939,6 @@
                                 </MudItem>
                                 <MudItem xs="6" sm="2">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="name-filter oneplatform-rounded-input"
@@ -985,7 +949,6 @@
                                 </MudItem>
                                 <MudItem xs="6" sm="1">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1010,7 +973,6 @@
 
                                 <MudItem xs="12" sm="3">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1081,7 +1043,6 @@
 
                                 <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1092,7 +1053,6 @@
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -1124,7 +1084,6 @@
 
                                             <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -1140,7 +1099,6 @@
 
                                 <MudItem xs="12" sm="4">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1151,7 +1109,6 @@
                                 </MudItem>
                                 <MudItem xs="12" sm="3">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1162,7 +1119,6 @@
                                 </MudItem>
                                 <MudItem xs="6" sm="2">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="name-filter oneplatform-rounded-input"
@@ -1173,7 +1129,6 @@
                                 </MudItem>
                                 <MudItem xs="6" sm="1">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1198,7 +1153,6 @@
 
                                 <MudItem xs="12" sm="3">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1269,7 +1223,6 @@
 
                                 <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Required="true"
@@ -1280,7 +1233,6 @@
                                 </MudItem>
                                 <MudItem xs="12" sm="6">
                                     <MudTextField FullWidth="true"
-                                                  Adornment="Adornment.Start"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
                                                   Class="oneplatform-rounded-input"
@@ -1335,7 +1287,6 @@
                                     </MudItem>
                                     <MudItem xs="12" sm="6">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Required="true"
@@ -1367,7 +1318,6 @@
 
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input"
@@ -1378,7 +1328,6 @@
                                     </MudItem>
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input"
@@ -1391,7 +1340,6 @@
 
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input"
@@ -1437,7 +1385,6 @@
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input ats-reference-time" />
@@ -1455,7 +1402,6 @@
                                         </MudItem>
                                     <MudItem xs="12" sm="6">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Required="true"
@@ -1487,7 +1433,6 @@
 
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Required="true"
@@ -1498,7 +1443,6 @@
                                     </MudItem>
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input"
@@ -1511,7 +1455,6 @@
 
                                     <MudItem xs="12" sm="4">
                                         <MudTextField FullWidth="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input"
@@ -1557,7 +1500,6 @@
                                                       Label="Time"
                                                       InputType="InputType.Time"
                                                       Required="true"
-                                                      Adornment="Adornment.Start"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Class="oneplatform-rounded-input ats-reference-time" />
@@ -1584,7 +1526,6 @@
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Required="@AddAnotherReference"
@@ -1616,7 +1557,6 @@
 
                                         <MudItem xs="12" sm="4">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Class="oneplatform-rounded-input"
@@ -1627,7 +1567,6 @@
                                         </MudItem>
                                         <MudItem xs="12" sm="4">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Class="oneplatform-rounded-input"
@@ -1640,7 +1579,6 @@
 
                                         <MudItem xs="12" sm="4">
                                             <MudTextField FullWidth="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Class="oneplatform-rounded-input"
@@ -1685,7 +1623,6 @@
                                                           Label="Time"
                                                           InputType="InputType.Time"
                                                           Required="true"
-                                                          Adornment="Adornment.Start"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           Class="oneplatform-rounded-input ats-reference-time" />
@@ -1798,7 +1735,6 @@
                                                                   @bind-Value="signatureDetails.SignerName"
                                                                   Required="true"
                                                                   RequiredError="Name is required"
-                                                                  Adornment="Adornment.Start"
                                                                   Variant="Variant.Outlined"
                                                                   Margin="Margin.Dense"
                                                                   Class="oneplatform-rounded-input" />
@@ -1829,7 +1765,7 @@
                     {
                         <div class="d-flex justify-space-between w-100 pa-2 ats-step-action-bar">
 
-                            <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray;"
+                            <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray; height; 40px;"
                                        Class="mt-3 mb-4"
                                        OnClick="@(() => stepper.PreviousStepAsync())">
                                 Previous
@@ -1838,7 +1774,7 @@
                             @if (_activeStep == stepper.Steps.Count - 1)
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                           Style="width: 150px; border-radius:12px; "
+                                           Style="width: 150px; border-radius:12px; height; 40px; "
                                            OnClick="OnSubmitForm">
 
                                     @if (isSaving)
@@ -1849,7 +1785,7 @@
                                     }
                                     else
                                     {
-                                        <span>Submit Application</span>
+                                        <span>Submit</span>
                                     }
                                     
                                 </MudButton>

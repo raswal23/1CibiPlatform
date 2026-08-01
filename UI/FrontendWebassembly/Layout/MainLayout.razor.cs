@@ -37,13 +37,6 @@ public partial class MainLayout
 		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
 	}
 
-	private string GetCoverStyle()
-	{
-		return UseATSLayout
-			? "pa-5 ma-5 ats-cover"
-			: "pa-5 ma-5";
-	}
-
 	private MudTheme _myTheme = new MudTheme()
 	{
 		PaletteLight = new PaletteLight()

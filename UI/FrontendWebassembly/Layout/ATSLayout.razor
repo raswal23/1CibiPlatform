@@ -14,7 +14,7 @@
                     <span>ATS Console</span>
                 </div>
 
-            <NavLink href="/s&i/ats/cnxdashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+            <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                 <span class="ats-console-nav-ic">◉</span>
                 <span>Dashboard</span>
             </NavLink>
@@ -24,14 +24,19 @@
                 <span>New order</span>
             </NavLink>
 
-            <NavLink href="/s&i/ats/ordersreports" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+            <NavLink href="/s&i/ats/searchreport" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                 <span class="ats-console-nav-ic">📋</span>
                 <span>Orders & reports</span>
             </NavLink>
 
-            <NavLink href="/s&i/ats/disputes" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <NavLink href="/s&i/ats/disputeorder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                 <span class="ats-console-nav-ic">⚠</span>
                 <span>Disputes</span>
+            </NavLink>
+
+            <NavLink href="/s&i/ats/withdrawn" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">↩</span>
+                <span>Withdrawn</span>
             </NavLink>
 
             <div class="ats-console-nav-label">Manage</div>
@@ -113,10 +118,11 @@ else
         _pageTitle = relative switch
         {
             "s&i/ats/neworder" => "New order",
-            "s&i/ats/ordersreports" or "s&i/ats/searchreport" => "Orders & reports",
-            "s&i/ats/disputes" or "s&i/ats/disputeorder" => "Disputes",
+            "s&i/ats/searchreport" => "Orders & reports",
+            "s&i/ats/disputeorder" => "Disputes",
             "s&i/ats/candidates" => "Candidates",
             "s&i/ats/settings" => "Settings",
+            "s&i/ats/withdrawn" => "Withdrawn",
             _ => "Dashboard"
         };
     }

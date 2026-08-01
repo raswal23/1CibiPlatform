@@ -450,6 +450,7 @@ code {
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    background-color: white;
     overflow: hidden; 
 }
 
@@ -645,6 +646,14 @@ code {
     text-transform: none;
 }
 
+.ats-success-application-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
 .ats-custom-tabs .mud-button-root:hover {
     background-color: rgba(42,119,174,.08);
 }
@@ -690,17 +699,6 @@ code {
     border-radius: 20px !important;
     overflow: hidden !important;
     margin: 2px 6px;
-}
-
-.ats-cover {
-    position: relative;
-    border-radius: 4px;
-    overflow: hidden;
-    background-image: url('/images/ats/logo-shape.png');
-    background-size: cover; 
-    background-position: center; /* Center the image */
-    background-repeat: no-repeat;
-    min-height: 100%;
 }
 
 .mud-table-empty-row {
@@ -1465,7 +1463,7 @@ code {
 }
 
 .ats-console .mud-input-control {
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .ats-console .theme-button,
@@ -1738,14 +1736,6 @@ code {
     padding: 20px;
 }
 
-.ats-appform-surface {
-    background: var(--modern-bg) !important;
-    border-radius: 18px !important;
-    border: 1px solid var(--modern-border) !important;
-    opacity: 1 !important;
-    width: 100%;
-}
-
 .ats-philsys-wrap {
     width: 100%;
     box-sizing: border-box;
@@ -1851,38 +1841,17 @@ code {
     border-radius: 10px !important;
 }
 
-.ats-appform-form .mud-input-control {
-    margin-top: 0;
-}
-
 .ats-appform-form .mud-input-outlined {
     min-height: 48px !important;
-}
-
-.ats-appform-form .mud-input-slot {
-    min-height: 48px !important;
-    font-size: 15px !important;
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
 }
 
 .ats-appform-form .mud-input>input,
 .ats-appform-form .mud-select {
     min-height: 36px !important;
-    font-size: 15px;
+    font-size: 14px;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-}
-
-.ats-appform-form .mud-input-label,
-.ats-appform-form .mud-input-label-inputcontrol {
-    font-size: 14px !important;
-}
-
-.ats-appform-form .mud-input-helper-text,
-.ats-appform-form .mud-input-error {
-    font-size: 12px !important;
-}
+}*
 
 .ats-appform-section-title {
     color: #0B1F3A;
@@ -2224,7 +2193,7 @@ code {
     white-space: nowrap;
     font-size: 13px;
     font-weight: 600;
-    text-align: left;
+    text-align: center;
 }
 
 .ats-step-two-upload-remove {
@@ -2238,7 +2207,6 @@ code {
 .ats-step-three .small-checkbox-label .mud-typography,
 .ats-step-three .mud-typography-subtitle1 {
     color: #1E2A3C;
-    font-weight: 600;
 }
 
 .ats-ownership-pills {
@@ -2676,56 +2644,33 @@ code {
     box-shadow: 0 8px 24px -18px rgba(11,31,58,.15) !important;
 }
 
-.ats-success-wrap {
-    width: 100%;
-    min-height: 60vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 24px;
-}
-
-.ats-success-card {
-    width: min(560px, 100%);
-    padding: 30px 24px;
-    text-align: center;
-}
-
-.ats-success-icon {
-    font-size: 76px !important;
-    color: #1E8E5A !important;
-    margin-bottom: 16px;
-}
-
-.ats-success-title {
-    color: var(--modern-title);
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.ats-success-thanks {
-    color: var(--modern-sub);
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.ats-success-message {
-    color: var(--modern-sub);
-    max-width: 460px;
-    margin: 0 auto;
-    line-height: 1.6;
-}
-
 .ats-appform-modern .mud-input-outlined .mud-input-outlined-border,
 .philsys-modern .mud-input-outlined .mud-input-outlined-border {
     border-color: var(--modern-border);
 }
 
-.ats-appform-modern .mud-input>input,
-.philsys-modern .mud-input>input,
-.philsys-modern .mud-select,
-.ats-appform-modern .mud-select {
-    font-size: 13.5px;
+/*Input controller csss*/
+.philsys-lookup-card .mud-input-helper-text,
+.philsys-lookup-card .mud-input-error {
+    font-size: 14px !important;
+}
+
+.philsys-lookup-card .mud-input-helper-text,
+.philsys-lookup-card .mud-input-error {
+    margin-top: 3px;
+    font-size: 14px !important;
+}
+
+.ats-appform-form .mud-input-label,
+.ats-appform-form .mud-input-label-inputcontrol {
+    font-size: 14px !important;
+    margin-top: 3px;
+}
+
+.ats-appform-form .mud-input-helper-text,
+.ats-appform-form .mud-input-error {
+    margin-top: 3px;
+    font-size: 14px !important;
 }
 
 .ats-appform-modern-title,
@@ -2843,10 +2788,11 @@ code {
 }
 
 .philsys-liveness-subtitle {
-    max-width: 320px;
     margin: 0 auto 20px;
     color: #6B7B92;
     line-height: 1.6;
+    margin-bottom: 12px;
+    text-align: center;
 }
 
 .philsys-liveness-tips {
@@ -2854,7 +2800,6 @@ code {
     border-radius: 14px;
     background: #FAFCFF;
     padding: 14px 16px;
-    text-align: left;
     margin-bottom: 20px;
 }
 
@@ -2933,24 +2878,29 @@ code {
 }
 
 .philsys-lookup-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.philsys-lookup-shell > * {
     width: 100%;
-    max-width: 680px;
-    margin: 0 auto;
+    max-width: 700px;
 }
 
 .philsys-lookup-form {
     width: 100%;
-    max-width: 680px;
-    margin: 0 auto;
+    max-width: 600px;
 }
 
 .philsys-lookup-card {
     border-radius: 16px !important;
-    padding: 14px 16px !important;
+    padding: 5px !important;
+    width: 100% !important;
 }
 
 .philsys-lookup-card .mud-input-control {
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .philsys-lookup-card .mud-input-outlined {
@@ -2959,27 +2909,20 @@ code {
 
 .philsys-lookup-card .mud-input-slot {
     min-height: 34px !important;
-    font-size: 12px !important;
+    font-size: 14px !important;
     padding-top: 6px !important;
     padding-bottom: 6px !important;
 }
 
-.philsys-lookup-card .mud-input>input,
-.philsys-lookup-card .mud-select {
-    min-height: 28px !important;
+.philsys-lookup-card .mud-input{
+    min-height: 24px !important;
     font-size: 12px;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+
 }
 
 .philsys-lookup-card .mud-input-label,
 .philsys-lookup-card .mud-input-label-inputcontrol {
     font-size: 12px !important;
-}
-
-.philsys-lookup-card .mud-input-helper-text,
-.philsys-lookup-card .mud-input-error {
-    font-size: 11px !important;
 }
 
 .philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
@@ -3021,6 +2964,9 @@ code {
 }
 
 .philsys-lookup-tabs {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
@@ -3042,6 +2988,10 @@ code {
 .philsys-lookup-tab.active {
     border-color: #2C7FB8;
     background: #F4F9FE;
+}
+
+.philsys-tab-button {
+    width: 100% !important;
 }
 
 .philsys-lookup-tab-icon {
@@ -3095,6 +3045,11 @@ code {
 
     .philsys-lookup-tabs {
         grid-template-columns: 1fr;
+    }
+
+    .ats-table-cell-center {
+        text-align: center;
+        vertical-align: middle;
     }
 
     .philsys-lookup-card {

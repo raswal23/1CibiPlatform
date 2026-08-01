@@ -3,7 +3,7 @@
 @inject IJSRuntime JS
 
 <MudForm @ref="personalForm" Class="philsys-modern philsys-lookup-form">
-    <MudPaper Class="pa-3 philsys-modern-card philsys-lookup-card" Elevation="0">
+    <MudPaper Class="pa-10 philsys-modern-card philsys-lookup-card" Elevation="0">
         <MudText Typo="Typo.h5" Class="philsys-modern-title mb-1">Personal information</MudText>
         <MudText Typo="Typo.body2" Class="philsys-modern-sub mb-3">Enter the details exactly as they appear on the registrant's PhilSys record.</MudText>
 
@@ -14,7 +14,6 @@
                               FullWidth="true"
                               Required="true"
                               RequiredError="First Name is required"
-                              Adornment="Adornment.Start"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               MaxLength="100"
@@ -27,7 +26,6 @@
                            FullWidth="true"
                            Required="true"
                            RequiredError="Suffix is required"
-                           Adornment="Adornment.Start"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
                            Class="oneplatform-rounded-input">
@@ -49,7 +47,6 @@
                 <MudTextField @bind-Value="identityData!.middle_name"
                               Label="Middle name - Optional"
                               FullWidth="true"
-                              Adornment="Adornment.Start"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               MaxLength="100"
@@ -62,7 +59,6 @@
                               Required="true"
                               FullWidth="true"
                               RequiredError="Last Name is required"
-                              Adornment="Adornment.Start"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               MaxLength="100"

@@ -15,8 +15,6 @@ public partial class PhilSysFormTabComponent
 
 	private string GetTabClass(int index)
 	{
-		return _activeIndex == index
-			? "philsys-lookup-tab active"
-			: "philsys-lookup-tab";
+		return $"philsys-lookup-tab philsys-tab-button{(_activeIndex == index ? " active" : "")}";
 	}
 }

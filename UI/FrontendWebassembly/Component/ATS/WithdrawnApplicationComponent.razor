@@ -1,0 +1,43 @@
+﻿@page "/s&i/ats/withdrawn"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IEndorsementSubmissionService EndorsementSubmissionService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<TableComponent @ref="lockedUsersTable"
+                TItem="FrontendWebassembly.DTO.ATS.EmailInvitationRequestListDTO"
+                Title="Withdrawn Applications"
+                EnableSearch="true"
+                LoadServerData="LoadWithdrawnServerData"
+                SearchString="@searchString"
+                ColumnCount="8"
+                SearchStringChanged="@((string val) => searchString = val)">
+    <HeaderTemplate>
+        <MudTh>Email</MudTh>
+        <MudTh>First Name</MudTh>
+        <MudTh>Last Name</MudTh>
+        <MudTh>Ticket Status</MudTh>
+        <MudTh>Action</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="item">
+        <MudTd DataLabel="Email">@item.EmailAddress</MudTd>
+        <MudTd DataLabel="First Name">@item.FirstName</MudTd>
+        <MudTd DataLabel="Last Name">@item.LastName</MudTd>
+        <MudTd DataLabel="Ticket Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(item.OrderStatus)">@item.OrderStatus</span></MudTd>
+        <MudTd DataLabel="Action">
+            <MudIconButton Icon="@Icons.Material.Filled.Send"
+                            Color="Color.Primary"
+                            Size="Size.Medium"
+                            OnClick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))" />
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-no-records-center">
+            <MudText Typo="Typo.body2">No withdrawn application forms found.</MudText>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+

@@ -84,19 +84,9 @@ public partial class UploadReportComponent
 				return;
 			}
 
-			var successParams = new DialogParameters
-			{
-				{
-					nameof(SuccessSaveComponent.Message),
-					"Successfully uploaded the report."
-				}
-			};
-
 			await OnUploadSucceeded.InvokeAsync();
 
-			await DialogService.ShowAsync<SuccessSaveComponent>(
-					"Success",
-					successParams);
+			Snackbar.Add("Report uploaded successfully.", Severity.Success);
 
 			reportDetails = new ReportDetailsDTO
 			{

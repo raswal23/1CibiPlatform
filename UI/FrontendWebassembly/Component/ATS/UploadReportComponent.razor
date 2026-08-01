@@ -1,11 +1,9 @@
 @inject FileValidationService FileValidationService
 @inject IReportService ReportUploadService
-@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 
 <MudForm @ref="uploadReportForm">
-    <MudPaper Elevation="0" Class="oneplatform-surface-card ats-upload-report-card">
         <MudGrid Spacing="2" Class="pa-4">
             <MudItem xs="12">
                 <MudText Class="ats-upload-report-label">Hit status <span class="ats-upload-required">*</span></MudText>
@@ -91,5 +89,4 @@
                 </div>
             </MudItem>
         </MudGrid>
-    </MudPaper>
 </MudForm>

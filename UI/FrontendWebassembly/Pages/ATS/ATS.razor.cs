@@ -4,6 +4,6 @@ public partial class ATS
 {
 	protected override void OnInitialized()
 	{
-		NavigationManager.NavigateTo("/s&i/ats/cnxdashboard");
+		NavigationManager.NavigateTo("/s&i/ats/dashboard");
 	}
 }

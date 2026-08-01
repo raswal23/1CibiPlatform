@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ATS Console</title>
+<title>ATS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -140,7 +140,7 @@
 
 <div class="app">
   <aside class="sidebar">
-    <div class="logo"><div class="mark">AT</div>ATS Console</div>
+    <div class="logo"><div class="mark">ATS</div>ATS</div>
     <div class="nav-item active" data-page="dashboard"><span class="ic">&#9673;</span> Dashboard</div>
     <div class="nav-item" data-page="neworder"><span class="ic">&#10133;</span> New order</div>
     <div class="nav-item" data-page="orders"><span class="ic">&#128203;</span> Orders &amp; reports</div>
@@ -153,7 +153,7 @@
   <div class="main">
     <div class="topbar">
       <div>
-        <div class="crumb">ATS console / <b>Dashboard</b></div>
+        <div class="crumb">ATS / <b>Dashboard</b></div>
         <h1 id="page-title">Dashboard</h1>
       </div>
       <div class="right">
@@ -311,7 +311,7 @@
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById('page-'+page).classList.add('active');
     document.getElementById('page-title').textContent=titles[page];
-    document.querySelector('.crumb').innerHTML='ATS console / <b>'+titles[page]+'</b>';
+    document.querySelector('.crumb').innerHTML='ATS / <b>'+titles[page]+'</b>';
   }
   document.querySelectorAll('.nav-item[data-page]').forEach(n=>n.addEventListener('click',()=>goTo(n.dataset.page)));
 

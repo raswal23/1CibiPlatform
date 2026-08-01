@@ -12,9 +12,6 @@ public partial class NewOrderComponent
 	private bool isPreview = false;
 	private bool isBulkMode = false;
 
-	private TableComponent<EmailInvitationRequestListDTO>? lockedUsersTable;
-	private string? _searchString;
-	private bool isResending = false;
 	protected override async Task OnInitializedAsync()
 	{
 
@@ -114,6 +111,13 @@ public partial class NewOrderComponent
 		if (!candidateForm.IsValid)
 			return;
 
+		if (string.IsNullOrWhiteSpace(subject.RushNormal))
+		{
+			Console.WriteLine($"After validation: '{subject.RushNormal}'");
+			Snackbar.Add("Processing speed is required",Severity.Error);
+			return;
+		}
+
 		var confirmParam = new DialogParameters
 		{
 			{ nameof(ConfirmationDialogComponent.Message),
@@ -142,30 +146,17 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				var successParam = new DialogParameters
-				{
-					{
-						nameof(SuccessSaveComponent.Message),
-						"Successfully saved the candidate's information."
-					}
-				};
+				Snackbar.Add("Candidate's information saved successfully.", Severity.Success);
 
-				await DialogService.ShowAsync<SuccessSaveComponent>(
-					"Success",
-					successParam);
+				subject.RushNormal = null;
 
-					subject.RushNormal = null;
-
-					await candidateForm.ResetAsync();
-				
+				await candidateForm.ResetAsync();
 			}
 		}
 		finally
 		{
 			isSavingCandidate = false;
-			
 		}
-
 	}
 	
 	private async Task OnSubmitBulk()
@@ -175,6 +166,18 @@ public partial class NewOrderComponent
 		if (!bulkForm.IsValid)
 			return;
 
+		if (string.IsNullOrWhiteSpace(bulkUploadFileDetailsDTO.OrderType))
+		{
+			Snackbar.Add("Processing speed is required", Severity.Error);
+			return;
+		}
+
+		if (bulkUploadFileDetailsDTO.BulkFile is null)
+		{
+			Snackbar.Add("File is required", Severity.Error);
+			return;
+		}
+
 		var previewData = await BuildCsvPreview();
 
 		var hasData = previewData.Rows.Any(row => 
@@ -182,10 +185,7 @@ public partial class NewOrderComponent
 
 		if (!hasData)
 		{
-			await DialogService.ShowMessageBoxAsync(
-				"Empty Excel File",
-				"The Excel file is empty.");
-
+			Snackbar.Add("The Excel file is empty.", Severity.Error);
 			return;
 		}
 
@@ -221,7 +221,7 @@ public partial class NewOrderComponent
 		try
 		{
 			isUploadingBulk = true;
-			await InvokeAsync(StateHasChanged);
+			StateHasChanged();
 
 			await Task.Yield();
 
@@ -230,21 +230,14 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				var successParams = new DialogParameters
-			{
-				{
-					nameof(SuccessSaveComponent.Message),
-					"Successfully uploaded the bulk candidates' information."
-				}
-			};
+				Snackbar.Add("Bulk upload successful.", Severity.Success);
 
-				await DialogService.ShowAsync<SuccessSaveComponent>(
-					"Success",
-					successParams);
-				
 				bulkUploadFileDetailsDTO.OrderType = null;
+				bulkUploadFileDetailsDTO.BulkFile = null;
 
 				await bulkForm.ResetAsync();
+
+				StateHasChanged();
 			}
 		}
 		finally
@@ -252,7 +245,6 @@ public partial class NewOrderComponent
 			isUploadingBulk = false;
 
 		}
-
 	}
 
 	public class ExcelPreviewData
@@ -303,74 +295,8 @@ public partial class NewOrderComponent
 		}
 	}
 
-	private string searchString
-	{
-		get => _searchString!;
-		set => UpdateSearch(ref _searchString!, value, lockedUsersTable!);
-	}
 
-	private async Task<TableData<EmailInvitationRequestListDTO>> LoadWithdrawnServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			EndorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(page, pageSize, searchString));
+	
 
-	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
-	{
-		if (field != value)
-		{
-			field = value;
-			table?.TableRef!.ReloadServerData();
-		}
-	}
-
-	private async Task ConfirmResendApplicationForm(Guid emailInvitationId)
-	{
-		var confirmParam = new DialogParameters
-		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Do you want to resend the application form?" }
-		};
-
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
-
-		var result = await dialog.Result;
-
-		if (result!.Canceled)
-			return;
-
-		await ResendApplicationForm(emailInvitationId);
-	}
-
-	private async Task ResendApplicationForm(Guid emailInvitationId)
-	{
-		try
-		{
-			isResending = true;
-			await InvokeAsync(StateHasChanged);
-
-			var success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
-
-			if (!success)
-			{
-				Snackbar.Add("Failed to resend application form.", Severity.Error);
-				return;
-			}
-
-			if (lockedUsersTable?.TableRef != null)
-			{
-				await lockedUsersTable.TableRef.ReloadServerData();
-
-				await InvokeAsync(StateHasChanged);
-				await Task.Yield();
-			}
-
-			Snackbar.Add("Application form resent successfully.", Severity.Success);
-		}
-		finally
-		{
-			isResending = false;
-			await InvokeAsync(StateHasChanged);
-		}
-	}
+	
 }
