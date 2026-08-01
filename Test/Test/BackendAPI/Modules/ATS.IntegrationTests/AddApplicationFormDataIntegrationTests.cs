@@ -13,7 +13,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
 	Guid EmailId = Guid.CreateVersion7();
-	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
+	byte[] sampleFileContent = File.ReadAllBytes("C:\\Users\\rcgu\\Documents\\GitHub\\1CibiPlatform\\Test\\Test\\BackendAPI\\Modules\\ATS.IntegrationTests\\TestFiles\\signature.png");
 	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
 	string govermentIdFileName = $"{Guid.CreateVersion7()}-govId.txt";
 	string nbiFileName = $"{Guid.CreateVersion7()}-nbiId.txt";
@@ -36,13 +36,17 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 						.GetValue<string>("ATSTestFolder", "");
 	}
 
-	private IFormFile CreateFakeFormFile(byte[] content, string fileName)
+	private IFormFile CreateFakeFormFile(
+	byte[] content,
+	string fileName,
+	string contentType = "application/octet-stream")
 	{
 		var stream = new MemoryStream(content);
+
 		return new FormFile(stream, 0, content.Length, "file", fileName)
 		{
 			Headers = new HeaderDictionary(),
-			ContentType = "text/plain"
+			ContentType = contentType
 		};
 	}
 
@@ -236,7 +240,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var signature = new SignatureDetailsDTO
 		{
 			EmailInvitationID = EmailId,
-			Signature = CreateFakeFormFile(sampleFileContent, signatureFileName),
+			Signature = CreateFakeFormFile(sampleFileContent,"signature.png","image/png"),
 			SignerName = "Juan S. Dela Cruz",
 			SignatureDate = sampleDate
 		};
@@ -249,6 +253,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.IsAdded.Should().BeTrue();
+
+		var consentFile = _dbContext.SignatureDetails.FirstOrDefault(e => e.EmailInvitationID == EmailId);
 
 		if (result.IsAdded == true)
 		{
@@ -265,6 +271,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp2COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp3COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{signatureFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{consentFile!.ConsentFormFileName}");
 		}
 	}
 	#endregion
