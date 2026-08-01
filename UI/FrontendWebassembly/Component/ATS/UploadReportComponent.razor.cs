@@ -2,10 +2,12 @@
 
 public partial class UploadReportComponent
 {
-    [Parameter] 
+	[Parameter]
 	public Guid EmailInvitationRequestId { get; set; }
 	[Parameter]
 	public EventCallback OnUploadSucceeded { get; set; }
+	[Parameter]
+	public EventCallback OnCancel { get; set; }
 	private MudForm? uploadReportForm;
 
 	private ReportDetailsDTO reportDetails = new();
@@ -41,6 +43,11 @@ public partial class UploadReportComponent
 			reportFileName = null;
 			return;
 		}
+	}
+
+	private async Task GoBack()
+	{
+		await OnCancel.InvokeAsync();
 	}
 
    private async Task SubmitUploadReport()

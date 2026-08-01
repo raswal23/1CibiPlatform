@@ -4,17 +4,15 @@
 @inject ISnackbar Snackbar
 
 
-<MudForm @ref="uploadReportForm" >
-    <MudPaper Elevation="1" Class="p-4 philsys-form-container transparent-paper" Style="border-radius: 12px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
-        <MudGrid Class="mb-2" Spacing="2">
-
+<MudForm @ref="uploadReportForm">
+    <MudPaper Elevation="0" Class="oneplatform-surface-card ats-upload-report-card">
+        <MudGrid Spacing="2" Class="pa-4">
             <MudItem xs="12">
+                <MudText Class="ats-upload-report-label">Hit status <span class="ats-upload-required">*</span></MudText>
                 <MudSelect @bind-Value="reportDetails.HitStatus"
-                           Label="Hit Status"
                            FullWidth="true"
                            Required="true"
                            RequiredError="Hit Status is required"
-                           Adornment="Adornment.Start"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
                            Class="oneplatform-rounded-input">
@@ -24,12 +22,11 @@
             </MudItem>
 
             <MudItem xs="12">
+                <MudText Class="ats-upload-report-label">Report status <span class="ats-upload-required">*</span></MudText>
                 <MudSelect @bind-Value="reportDetails.ReportStatus"
-                           Label="Report Status"
                            FullWidth="true"
                            Required="true"
                            RequiredError="Report Status is required"
-                           Adornment="Adornment.Start"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
                            Class="oneplatform-rounded-input">
@@ -41,59 +38,58 @@
             </MudItem>
 
             <MudItem xs="12">
+                <MudText Class="ats-upload-report-label">Report file <span class="ats-upload-required">*</span></MudText>
+
                 <MudFileUpload T="IBrowserFile"
                                MaxFileSize="26214400"
                                Accept=".pdf"
-                               Class="mt-1 100vw"
                                @ref="reportFileUpload"
                                OnFilesChanged="OnReportFileUpload"
                                RequiredError="Report File is required">
                     <CustomContent>
-                        <div style="display: flex; justify-content: center;">
-                            <MudButton Class="oneplatform-rounded-input"
-                                       Style="border: 1px solid gray; border-radius: 4px; min-height: 48px; max-height: 48px; background-color: #f1f3f4; min-width: 332px;"
-                                       OnClick="@context.OpenFilePickerAsync">
-                                @if (reportDetails.ReportFile is not null)
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                    <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">@reportFileName</MudText>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                                   Color="Color.Default"
-                                                   Size="Size.Small"
-                                                   Class="mr-3 ml-3"
-                                                   OnClick="@(() => RemoveFileFromUploadsAsync(reportDetails.ReportFile))" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                    <span style="width: 250px;  margin: 0px;">
-                                        Upload Report
-                                    </span>
-                                }
-                            </MudButton>
-                        </div>
+                        <MudPaper Elevation="0" Class="ats-upload-dropzone" @onclick="context.OpenFilePickerAsync">
+                            <MudIcon Icon="@Icons.Material.Filled.North" Size="Size.Medium" Class="ats-upload-dropzone-icon" />
+                            <MudText Class="ats-upload-dropzone-title">Upload report file</MudText>
+                            <MudText Class="ats-upload-dropzone-subtitle">PDF, drag and drop or click to browse</MudText>
+                        </MudPaper>
                     </CustomContent>
                     <SelectedTemplate />
                 </MudFileUpload>
+
+                @if (reportDetails.ReportFile is not null)
+                {
+                    <MudPaper Elevation="0" Class="ats-upload-selected-file mt-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Class="ats-upload-selected-file-icon" />
+                        <MudText Class="ats-upload-selected-file-name">@reportFileName</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Size="Size.Small"
+                                       Class="ats-upload-selected-file-remove"
+                                       OnClick="@(() => RemoveFileFromUploadsAsync(reportDetails.ReportFile))" />
+                    </MudPaper>
+                }
             </MudItem>
 
-            <MudItem xs="12">
-                <ButtonComponent OnClick="SubmitUploadReport"
-                                 Disabled="@isUploading"
-                                 Class="theme-button theme-button-active mt-4"
-                                 Style="border-radius: 4px;">
-                    @if (isUploading)
-                    {
-                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                        <span> Uploading...</span>
-                    }
-                    else
-                    {
-                        <span>Upload</span>
-                    }
-                </ButtonComponent>
-            </MudItem>
+            <MudItem xs="12" Class="mt-2">
+                <div class="ats-upload-report-actions">
+                    <MudButton Variant="Variant.Outlined"
+                               Class="ats-upload-report-back"
+                               OnClick="GoBack">Go back</MudButton>
 
+                    <MudButton OnClick="SubmitUploadReport"
+                               Disabled="@isUploading"
+                               Class="theme-button theme-button-active ats-upload-report-submit">
+                        @if (isUploading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>Uploading...</span>
+                        }
+                        else
+                        {
+                            <span>Upload</span>
+                        }
+                    </MudButton>
+                </div>
+            </MudItem>
         </MudGrid>
     </MudPaper>
 </MudForm>

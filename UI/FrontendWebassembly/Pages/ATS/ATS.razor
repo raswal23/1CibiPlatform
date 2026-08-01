@@ -1,52 +1,11 @@
 ﻿@page "/s&i/ats"
-@layout MainLayout
+@layout ATSLayout
 @inherits SecurePageBase
 @attribute [RequirePermission(6, 7)]
+@inject NavigationManager NavigationManager
 
+<PageTitle>Applicant Tracking System</PageTitle>
 
-<MudContainer Class="pa-0">
-
-    <div class="d-flex align-center mb-3" style="gap:12px; align-items:center; width: 320px;">
-        <MudText Typo="Typo.h5" Class="mb-0" Style="font-weight: 700; color: #102247;">Applicant Tracking System</MudText>
-    </div>
-
-    <ATSTabComponent ActiveTabChanged="ChangeActiveTab" />
-
-    @if (_isLoading)
-    {
-        <div class="d-flex justify-center align-center" style="height:300px;">
-            <LoaderComponent />
-        </div>
-    }
-    else
-    {
-        @* @if (_activeIndex == 0)
-        {
-            <PageTitle>@($"{ATSname} - Dashboard")</PageTitle>
-
-            <ATSDashboardComponent />
-        } *@
-        if (_activeIndex == 1)
-        {
-            <PageTitle>@("Applicant Tracking System - Dispute Order")</PageTitle>
-            <DisputeOrderComponent />
-        }
-        else if (_activeIndex == 2)
-        {
-            <PageTitle>@("Applicant Tracking System - New Order")</PageTitle>
-            <NewOrderComponent />
-        }
-        else if (_activeIndex == 3)
-        {
-            <PageTitle>@("Applicant Tracking System - Search Report")</PageTitle>
-            <SearchReportComponent />
-        }
-        @* else if (_activeIndex == 4)
-        {
-            <PageTitle>@($"{ATSname} - Invoice")</PageTitle>
-
-            <InvoiceComponent />
-        } *@
-    }
-
-</MudContainer>
+<div class="d-flex justify-center align-center" style="height:300px;">
+    <LoaderComponent />
+</div>

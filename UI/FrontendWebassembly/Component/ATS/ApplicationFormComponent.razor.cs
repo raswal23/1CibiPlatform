@@ -25,6 +25,15 @@ public partial class ApplicationFormComponent
 	// Personal Details
 	private bool consent { get; set; } = false;
 	private bool declineConsent = false;
+	private string? ConsentChoice
+	{
+		get => consent ? "yes" : declineConsent ? "no" : null;
+		set
+		{
+			consent = value == "yes";
+			declineConsent = value == "no";
+		}
+	}
 	private PersonalDetailsDTO personalDetails = new();
 	private bool NoMiddleName = false;
 	private DateTime? DateOfBirth;

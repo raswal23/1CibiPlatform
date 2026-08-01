@@ -10,16 +10,66 @@ public partial class NewOrderComponent
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
 	private bool isPreview = false;
+	private bool isBulkMode = false;
 
 	private TableComponent<EmailInvitationRequestListDTO>? lockedUsersTable;
 	private string? _searchString;
 	private bool isResending = false;
 	protected override async Task OnInitializedAsync()
 	{
-		
+
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();
 
+	}
+
+	private void SetOrderMode(bool bulk)
+	{
+		isBulkMode = bulk;
+	}
+
+	private string GetSegmentClass(bool bulk)
+		=> isBulkMode == bulk ? "ats-segment-btn active" : "ats-segment-btn";
+
+	private static string GetSpeedCardClass(string? selectedValue, string cardValue)
+		=> selectedValue == cardValue ? "ats-speed-card selected" : "ats-speed-card";
+
+	private void SetCandidateSpeed(string speed)
+	{
+		subject.RushNormal = speed;
+	}
+
+	private string GetCandidateNormalCardClass()
+		=> GetSpeedCardClass(subject.RushNormal, "Normal");
+
+	private string GetCandidateRushCardClass()
+		=> GetSpeedCardClass(subject.RushNormal, "Rush");
+
+	private string GetBulkNormalCardClass()
+		=> GetSpeedCardClass(bulkUploadFileDetailsDTO.OrderType, "Normal");
+
+	private string GetBulkRushCardClass()
+		=> GetSpeedCardClass(bulkUploadFileDetailsDTO.OrderType, "Rush");
+
+	private void SelectCandidateNormal() => SetCandidateSpeed("Normal");
+	private void SelectCandidateRush() => SetCandidateSpeed("Rush");
+	private void SelectBulkNormal() => SetBulkSpeed("Normal");
+	private void SelectBulkRush() => SetBulkSpeed("Rush");
+
+	private void SetBulkSpeed(string speed)
+	{
+		bulkUploadFileDetailsDTO.OrderType = speed;
+	}
+
+	private async Task ResetBulkFormAsync()
+	{
+		bulkUploadFileDetailsDTO.BulkFile = null;
+		bulkUploadFileDetailsDTO.FileName = null;
+		bulkUploadFileDetailsDTO.OrderType = null;
+		bulkUploadFileDetailsDTO.PackageType = null;
+
+		if (bulkForm is not null)
+			await bulkForm.ResetAsync();
 	}
 	private async Task DownloadTemplate()
 	{

@@ -1,11 +1,27 @@
-﻿<MudTabs Rounded="false"
-                 Scrollable="true"
-                 Centered="true"
-                 Elevation="0"
-                 AlwaysShowScrollButtons="true"
-                 @bind-ActivePanelIndex="_activeIndex"
-                 OnActivePanelIndexChanged="OnTabChanged"
-                 Class="philsys-custom-tabs mb-5">
-                <MudTabPanel Text="Personal Information" Class="@GetTabClass(0)" Onclick="@TabChangedAsync" Style="text-transform:none; min-width:120px;" />
-                <MudTabPanel Text="PhilSys Card Number" Class="@GetTabClass(1)" Onclick="@TabChangedAsync" Style="text-transform:none; min-width: 120px;" />
-</MudTabs>
+﻿<div class="philsys-modern philsys-lookup-tabs-wrap">
+    <div class="philsys-lookup-caption">LOOK UP THE REGISTRANT BY</div>
+
+    <div class="philsys-lookup-tabs">
+        <button type="button"
+                class="@(GetTabClass(0))"
+                @onclick="() => SelectTabAsync(0)">
+            <span class="philsys-lookup-tab-icon">👤</span>
+            <span>
+                <span class="philsys-lookup-tab-title">Personal information</span>
+                <span class="philsys-lookup-tab-sub">Search using name and birth date</span>
+            </span>
+            <span class="philsys-lookup-tab-check">@( _activeIndex == 0 ? "✓" : "○")</span>
+        </button>
+
+        <button type="button"
+                class="@(GetTabClass(1))"
+                @onclick="() => SelectTabAsync(1)">
+            <span class="philsys-lookup-tab-icon">💳</span>
+            <span>
+                <span class="philsys-lookup-tab-title">PhilSys card number</span>
+                <span class="philsys-lookup-tab-sub">Search using the 16-digit PCN</span>
+            </span>
+            <span class="philsys-lookup-tab-check">@( _activeIndex == 1 ? "✓" : "○")</span>
+        </button>
+    </div>
+</div>

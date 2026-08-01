@@ -1,19 +1,49 @@
 ﻿@inject IJSRuntime JS
 @implements IAsyncDisposable
 
- <MudPaper Class="p-10 text-center d-flex flex-column justify-center align-center transparent-paper"
-           Elevation="6"
-           Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:400px; max-width:90%;">
-    <MudText Typo="Typo.h5" Class="mb-4">
-        Liveness Check
-    </MudText>
-    <MudText Typo="Typo.subtitle1" Class="mb-4">
-        Click the button below to start the liveness verification process.
-    </MudText>
-    <ButtonComponent OnClick="@OnClick" Class="theme-button theme-button-active">
-        <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-2" />
-        Start Liveness
-    </ButtonComponent>
-</MudPaper>
+ <div class="philsys-liveness-shell">
+     <MudPaper Class="philsys-liveness-card philsys-modern-card philsys-modern" Elevation="0">
+         <div class="philsys-liveness-badge-wrap">
+             <div class="philsys-liveness-badge-pulse"></div>
+             <div class="philsys-liveness-badge">
+                 <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Medium" />
+             </div>
+         </div>
+
+         <MudText Typo="Typo.h5" Class="philsys-liveness-title">
+             Liveness Check
+         </MudText>
+         <MudText Typo="Typo.body1" Class="philsys-liveness-subtitle">
+             Click the button below to start the liveness verification process.
+         </MudText>
+
+         <div class="philsys-liveness-tips">
+             <div class="philsys-liveness-tip">
+                 <span class="philsys-liveness-tip-check">✓</span>
+                 <span>Find a well-lit, plain background</span>
+             </div>
+             <div class="philsys-liveness-tip">
+                 <span class="philsys-liveness-tip-check">✓</span>
+                 <span>Remove glasses, hats, or masks</span>
+             </div>
+             <div class="philsys-liveness-tip">
+                 <span class="philsys-liveness-tip-check">✓</span>
+                 <span>Keep your face centered in frame</span>
+             </div>
+         </div>
+
+         <div class="philsys-liveness-action">
+             <ButtonComponent OnClick="@OnClick" Class="theme-button theme-button-active philsys-liveness-button">
+                 <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-2" />
+                 Start Liveness
+             </ButtonComponent>
+         </div>
+
+         <MudText Typo="Typo.body2" Class="philsys-liveness-privacy">
+             Your camera feed is used only for this verification and is not stored.
+             <a href="#" class="philsys-liveness-privacy-link">Learn more</a>
+         </MudText>
+     </MudPaper>
+ </div>
 
 

@@ -12,291 +12,147 @@
         }
         else if (showReportUploader)
         {
-            <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId"
-                                   OnUploadSucceeded="ReloadReportResult" />
-            <MudButton Class="theme-button theme-button-active mt-5" 
-                       Style="width: 200px; border-radius: 4px;" 
+            <div class="ats-upload-report-shell">
+                <div class="ats-upload-report-shell-header">
+                    <div>
+                        <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
+                        <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Class="ats-upload-report-shell-close"
+                                   OnClick="GoBackToSearchReport" />
+                </div>
 
-                       OnClick="GoBackToSearchReport">Go Back</MudButton>
+                <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId"
+                                       OnUploadSucceeded="ReloadReportResult"
+                                       OnCancel="GoBackToSearchReport" />
+            </div>
         }
         else
         {
-            <MudGrid GutterSize="3" Class="mb-4">
-                <MudItem xs="12" class="d-flex justify-center align-center">
-                    <MudPaper Elevation="2" Class="pa-5 d-flex flex-column" Style="border-radius: 12px; background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); box-shadow: 0 0 10px rgba(42,119,174,1); width: 500px; color: white;">
-                        <MudGrid Spacing="3" Justify="Justify.Center">
-                            <MudItem xs="12" sm="6">
-                                <MudText Style="font-size: 20px;" Class="mb-1" Align="Align.Center">
-                                    Subject Name
-                                </MudText>
-                                <MudText Style="font-size: 16px;" Align="Align.Center">
-                                    @ReportResult!.SubjectName
-                                </MudText>
-                            </MudItem>
+            <div class="ats-result-shell">
+                <MudPaper Elevation="0" Class="ats-result-hero">
+                    <div>
+                        <MudText Typo="Typo.h5" Class="ats-result-hero-name">@ReportResult!.SubjectName</MudText>
+                        <MudText Typo="Typo.body2" Class="ats-result-hero-subtitle">@ReportResult.SelectedPackage</MudText>
+                    </div>
+                    <div class="ats-result-hero-status">@ReportResult.OrderStatus</div>
+                </MudPaper>
 
-                            @* <MudItem xs="12" sm="6">
-                                <MudText Style="font-size: 20px;" Class="mb-1" Align="Align.Center">
-                                    E-Pass Score
-                                </MudText>s
-                                <MudText Style="font-size: 16px;" Align="Align.Center">
-                                    @subject.Score
-                                </MudText>
-                            </MudItem> *@
-                        </MudGrid>
-                    </MudPaper>
-                </MudItem>
+                <MudGrid GutterSize="3" Class="mt-4">
+                    <MudItem xs="12" md="4">
+                        <MudPaper Elevation="0" Class="oneplatform-surface-card ats-result-summary-card">
+                            <MudText Typo="Typo.h6" Class="ats-result-section-title">Screening summary</MudText>
 
-                <MudItem xs="12" md="6">
-                    <MudPaper Class="pa-4 d-flex flex-column transparent-paper"
-                              Style="height: 668px; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,1);">
+                            <div class="ats-result-summary-item">
+                                <MudText Typo="Typo.caption" Class="ats-result-label">Status</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.OrderStatus</MudText>
+                            </div>
 
-                        <MudGrid Spacing="2">
+                            <div class="ats-result-summary-item">
+                                <MudText Typo="Typo.caption" Class="ats-result-label">Result</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.HitStatus</MudText>
+                            </div>
 
-                            @* <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Ticket Number</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.TicketNumber"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem> *@
+                            <div class="ats-result-summary-item">
+                                <MudText Typo="Typo.caption" Class="ats-result-label">Report type</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.SelectedPackage</MudText>
+                            </div>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Status</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ReportResult!.OrderStatus "
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                            <MudButton Class="theme-button theme-button-active mt-4"
+                                       Style="width: 100%; border-radius: 10px;"
+                                       OnClick="SelecFilesToDownload">↓ Download</MudButton>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Result</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value=" ReportResult!.HitStatus"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                            <MudButton Variant="Variant.Outlined"
+                                       Class="ats-result-upload-button mt-3"
+                                       Style="width: 100%;"
+                                       OnClick="ShowUploadReport">Upload report</MudButton>
+                        </MudPaper>
+                    </MudItem>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Report Type</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ReportResult!.SelectedPackage"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                    <MudItem xs="12" md="8">
+                        <MudPaper Elevation="0" Class="oneplatform-surface-card ats-result-docs-card">
+                            <MudText Typo="Typo.h6" Class="ats-result-section-title">Submitted documents</MudText>
 
-                            @* <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Aptitude Test</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.AptitudeTest"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                            <div class="ats-result-doc-list mt-2">
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Resume / CV</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "Not yet uploaded" : $"{ReportResult.ResumeFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                                    </div>
+                                </div>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Live Interview</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.LiveInterview"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Government ID</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "Not yet uploaded" : $"{ReportResult.IdUploadedFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                                    </div>
+                                </div>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Grammar</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.Grammar"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Certificate of employment</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "Not yet uploaded" : $"{ReportResult.CoeFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                                    </div>
+                                </div>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Comprehension</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.Comprehension"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Diploma / TOR</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "Not yet uploaded" : $"{ReportResult.DiplomaFileName} · uploaded {ReportResult.UploadDiplomaAt}")</MudText>
+                                    </div>
+   @*                                  @if (string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName))
+                                    {
+                                        <MudText Class="ats-result-doc-request">Request</MudText>
+                                    } *@
+                                </div>
 
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Relativeness</MudText>
-                            </MudItem>
-                            <MudItem xs="8">
-                                <MudTextField @bind-Value="ticketDetails.Relativeness"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem> *@
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Biometric photo</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "Not yet uploaded" : $"{ReportResult.BiometricPhotoFileName} · uploaded {ReportResult.UploadBiometricPhotoAt}")</MudText>
+                                    </div>
+                                </div>
 
-                            <MudItem xs="12" sm="6" Class="d-flex justify-center">
-                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="SelecFilesToDownload">Download</MudButton>
-                            </MudItem>
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Consent form</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "Not yet uploaded" : $"{ReportResult.ConsentFormFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                                    </div>
+                                </div>
 
-                            <MudItem xs="12" sm="6" Class="d-flex justify-center">
-                                <MudButton Class="theme-button theme-button-active mt-5" Style="width: 200px; border-radius: 4px;" OnClick="ShowUploadReport">Report Upload</MudButton>
-                            </MudItem>
-                        </MudGrid>
-
-                    </MudPaper>
-                </MudItem>
-
-                <MudItem xs="12" md="6">
-                    <MudPaper Class="pa-4 d-flex flex-column transparent-paper"
-                              Style="height: 100%; border-radius: 10px; box-shadow: 0 0 10px rgba(42,119,174,1);">
-
-                        <MudGrid Spacing="2">
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Resume / CV</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.ResumeFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.FilledFormAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>ID Uploaded</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.IdUploadedFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.FilledFormAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>COE</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.CoeFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.FilledFormAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Diploma / TOR</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.DiplomaFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.UploadDiplomaAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Biometric Photo</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.BiometricPhotoFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.UploadBiometricPhotoAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Consent Form</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.ConsentFormFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.FilledFormAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-
-                            <MudItem xs="4" class="d-flex align-center">
-                                <MudText>Report File</MudText>
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.UploadedReportFileName"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                            <MudItem xs="4">
-                                <MudTextField @bind-Value="ReportResult!.ReportUploadedAt"
-                                              Variant="Variant.Outlined"
-                                              FullWidth="true"
-                                              ReadOnly
-                                              Class="oneplatform-rounded-input" />
-                            </MudItem>
-                        </MudGrid>
-
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+                                <div class="ats-result-doc-row">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                                    </div>
+                                    <div class="ats-result-doc-details">
+                                        <MudText Class="ats-result-doc-title">Report file</MudText>
+                                        <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "Not yet uploaded" : $"{ReportResult.UploadedReportFileName} · uploaded {ReportResult.ReportUploadedAt}")</MudText>
+                                    </div>
+                                </div>
+                            </div>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </div>
         }
     </DialogContent>
 </MudDialog>

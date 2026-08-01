@@ -59,11 +59,11 @@ public class ConsentFormPdfDocument : IDocument
 	{
 		column.Item().Row(row =>
 		{
-			//row.ConstantItem(40)
-			//	.AlignTop()
-			//	.Text("🛡")
-			//	.FontSize(22)
-			//	.FontColor(PrimaryBlue);
+			row.ConstantItem(40)
+				.AlignTop()
+				.Width(24)
+				.Height(24)
+				.Svg(PdfIcons.Shield);
 
 			row.RelativeItem().Column(c =>
 			{
@@ -90,11 +90,11 @@ public class ConsentFormPdfDocument : IDocument
 	{
 		column.Item().Row(row =>
 		{
-			//row.ConstantItem(40)
-			//	.AlignTop()
-			//	.Text("📄")
-			//	.FontSize(22)
-			//	.FontColor(PrimaryBlue);
+			row.ConstantItem(40)
+				.AlignTop()
+				.Width(24)
+				.Height(24)
+				.Svg(PdfIcons.Document);
 
 			row.RelativeItem().Column(c =>
 			{
@@ -129,9 +129,10 @@ public class ConsentFormPdfDocument : IDocument
 					.PaddingTop(10)
 					.Row(r =>
 					{
-						//r.ConstantItem(12)
-						//	.Text("ⓘ")
-						//	.FontColor(PrimaryBlue);
+						r.ConstantItem(18)
+							.PaddingTop(2)
+							.PaddingRight(2)
+							.Svg(PdfIcons.Info);
 
 						r.RelativeItem()
 							.Text(text =>

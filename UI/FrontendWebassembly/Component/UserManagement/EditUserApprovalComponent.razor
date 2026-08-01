@@ -1,28 +1,34 @@
-﻿<MudDialog Style="padding: 8px;">
+﻿<MudDialog Class="um-dialog" Style="padding: 0;">
     <DialogContent>
-        <MudForm @ref="EditUserApprovalForm">
-            <MudTextField @bind-Value="User.email"
-                          Label="Email"
-                          ReadOnly
-                          Adornment="Adornment.Start"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" 
-                          Required="true" />
-        </MudForm>
-    </DialogContent>
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Review user approval</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Approve or disapprove the selected user</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
 
-    <DialogActions>
-        <MudButton OnClick="Cancel"
-                   Class="theme-button-delete"
-                   Style="border-radius: 4px; border: 2px solid gray;">
-            Disapprove
-        </MudButton>
-        <MudButton OnClick="Submit"
-                   Class="theme-button theme-button-active"
-                   Style="border-radius: 4px;">
-            Approve
-        </MudButton>
-    </DialogActions>
+            <MudDivider />
+
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="EditUserApprovalForm">
+                    <MudTextField @bind-Value="User.email"
+                                  Label="Email"
+                                  ReadOnly
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  MaxLength="100"
+                                  Class="oneplatform-rounded-input philsys-uppercase-input"
+                                  Required="true" />
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer um-dialog-footer-split">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-danger-button">Disapprove</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Approve</MudButton>
+            </div>
+        </div>
+    </DialogContent>
 </MudDialog>
