@@ -148,4 +148,10 @@ public partial class SearchReportComponent
 	{
 		return r.Selected ? "ats-selected-row" : "";
 	}
+
+	private void OnCheckboxChanged(ReportListDTO row, bool value)
+	{
+		row.Selected = value;
+		StateHasChanged();
+	}
 }
