@@ -25,6 +25,8 @@ public partial class TableComponent<TItem>
 
 	[Parameter]
 	public EventCallback<string> SearchStringChanged { get; set; }
+	[Parameter]
+	public RenderFragment? ToolBarLeft { get; set; }
 
 	private async Task SearchChanged(string value)
 	{

@@ -7,18 +7,6 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4" Elevation="0">
-    <MudGrid Class="mb-2" AlignItems="AlignItems.End">
-        <MudItem xs="12" md="4">
-            <MudDateRangePicker Margin="Margin.Dense"
-                                ReadOnly="false"
-                                Clearable="true"
-                                DateRangeChanged="OnDateRangeChanged"
-                                PlaceholderStart="Start Date"
-                                PlaceholderEnd="End Date"
-                                Label="Date range" />
-        </MudItem>
-    </MudGrid>
-
     <TableComponent TItem="ReportListDTO"
                     @ref="reportsTable"
                     Title="Query results"
@@ -28,7 +16,15 @@
                     LoadServerData="LoadReportData"
                     SearchString="@searchString"
                     SearchStringChanged="@((string val) => searchString = val)">
-
+        <ToolBarLeft>
+            <MudDateRangePicker Margin="Margin.Dense"
+                                ReadOnly="false"
+                                Clearable="true"
+                                DateRangeChanged="OnDateRangeChanged"
+                                PlaceholderStart="Start Date"
+                                PlaceholderEnd="End Date"
+                                Label="Date range" />
+        </ToolBarLeft>
         <HeaderTemplate>
             <MudTh> Selected</MudTh>
             <MudTh>
@@ -46,8 +42,8 @@
         </HeaderTemplate>
 
         <RowTemplate Context="r">
-            <MudTd DataLabel="Selected">
-                <div style="display:flex; justify-content:center; align-items:center;">
+            <MudTd DataLabel="Action">
+                <div style="display:flex; justify-content:left; align-items:center;">
                     <MudCheckBox T="bool" @bind-Checked="r.Selected"
                                  Color="Color.Primary"
                                  ValueChanged="@(value =>
