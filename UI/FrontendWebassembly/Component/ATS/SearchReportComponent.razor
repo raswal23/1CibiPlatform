@@ -22,10 +22,19 @@
                     RowsPerPage="10"
                     LoadServerData="LoadReportData"
                     SearchString="@searchString"
+                    RowClassFunc="GetRowClass"
                     SearchStringChanged="@((string val) => searchString = val)">
-
+        <ToolBarLeft>
+            <MudDateRangePicker Margin="Margin.Dense"
+                                ReadOnly="false"
+                                Clearable="true"
+                                DateRangeChanged="OnDateRangeChanged"
+                                PlaceholderStart="Start Date"
+                                PlaceholderEnd="End Date"
+                                Label="Date range" />
+        </ToolBarLeft>
         <HeaderTemplate>
-            <MudTh> Selected</MudTh>
+            <MudTh> Action</MudTh>
             <MudTh>
                 <MudTableSortLabel T="ReportListDTO" SortLabel="SubjectName">Subject Name</MudTableSortLabel>
             </MudTh>
@@ -42,8 +51,8 @@
         </HeaderTemplate>
 
         <RowTemplate Context="r">
-            <MudTd DataLabel="Selected">
-                <div style="display:flex; justify-content:center; align-items:center;">
+            <MudTd DataLabel="Action">
+                <div style="display:flex; justify-content:left; align-items:left;">
                     <MudCheckBox T="bool" @bind-Checked="r.Selected"
                                  Color="Color.Primary"
                                  ValueChanged="@(value =>

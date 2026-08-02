@@ -5,6 +5,7 @@ public partial class WithdrawnApplicationComponent
 	private TableComponent<EmailInvitationRequestListDTO>? lockedUsersTable;
 	private string? _searchString;
 
+	private Guid? _loadingEmailInvitationId;
 	private async Task ConfirmResendApplicationForm(Guid emailInvitationId)
 	{
 		var confirmParam = new DialogParameters
@@ -22,7 +23,19 @@ public partial class WithdrawnApplicationComponent
 		if (result!.Canceled)
 			return;
 
-		await ResendApplicationForm(emailInvitationId);
+		try
+		{
+			_loadingEmailInvitationId = emailInvitationId;
+			StateHasChanged();
+
+			await ResendApplicationForm(emailInvitationId);
+		}
+		finally
+		{
+			_loadingEmailInvitationId = null;
+			StateHasChanged();
+		}
+		
 	}
 
 	private async Task<TableData<EmailInvitationRequestListDTO>> LoadWithdrawnServerData(TableState state, CancellationToken cancellationToken)

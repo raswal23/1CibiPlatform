@@ -177,4 +177,9 @@ public partial class SearchReportComponent
 			await InvokeAsync(StateHasChanged);
 		}
 	}
+
+	private string GetRowClass(ReportListDTO r, int index)
+	{
+		return r.Selected ? "ats-selected-row" : "";
+	}
 }

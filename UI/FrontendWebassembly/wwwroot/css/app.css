@@ -528,6 +528,14 @@ code {
     box-shadow: 0 0 10px rgba(42,119,174,0.8);
 }
 
+.responsive-table-container .mud-table-toolbar {
+    min-height: unset !important;
+    height: auto !important;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+    justify-content: space-between !important;
+}
+
 .ats-component-boxshadow {
     padding: 4px;
     border-radius: 4px;
@@ -2668,6 +2676,13 @@ code {
 .ats-appform-modern-sub,
 .philsys-modern-sub {
     color: var(--modern-sub);
+}
+
+.ats-selected-row,
+.ats-selected-row td {
+    background: #e8f0fe !important;
+    border-top: 1px solid #d2e3fc;
+    border-bottom: 1px solid #d2e3fc;
 }
 
 .philsys-modern {
