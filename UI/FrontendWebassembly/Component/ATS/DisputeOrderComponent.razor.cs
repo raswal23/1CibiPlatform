@@ -5,6 +5,7 @@ public partial class DisputeOrderComponent
   private TableComponent<DisputeOrderListDTO>? ordersTable;
 	private string? _searchString;
 
+	private Guid? _loadingDisputeId;
 	private string searchString
 	{
 		get => _searchString!;
@@ -36,12 +37,23 @@ public partial class DisputeOrderComponent
 		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>("Reason to Dispute", confirmParam);
 		var result = await dialog.Result;
 
-		if (!result!.Canceled)
+		if(result!.Canceled)
+			return;
+
+		try
 		{
-			if (ordersTable?.TableRef != null)
+			_loadingDisputeId = emailInvitationId;
+			StateHasChanged();
+
+			if(ordersTable?.TableRef != null)
 				await ordersTable.TableRef.ReloadServerData();
 
 			Snackbar.Add("Dispute reason submitted successfully.", Severity.Success);
+		}
+		finally
+		{
+			_loadingDisputeId = null;
+			StateHasChanged();
 		}
 	}
 }

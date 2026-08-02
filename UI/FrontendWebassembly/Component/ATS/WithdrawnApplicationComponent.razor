@@ -22,16 +22,30 @@
     </HeaderTemplate>
 
     <RowTemplate Context="item">
-        <MudTd DataLabel="Email">@item.EmailAddress</MudTd>
-        <MudTd DataLabel="First Name">@item.FirstName</MudTd>
-        <MudTd DataLabel="Last Name">@item.LastName</MudTd>
-        <MudTd DataLabel="Ticket Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(item.OrderStatus)">@item.OrderStatus</span></MudTd>
-        <MudTd DataLabel="Action">
-            <MudIconButton Icon="@Icons.Material.Filled.Send"
-                            Color="Color.Primary"
-                            Size="Size.Medium"
-                            OnClick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))" />
-        </MudTd>
+        @if(_loadingEmailInvitationId == item.EmailInvitationID)
+        {
+            <MudTd><MudSkeleton Height="20px" Width="90%" /></MudTd>
+            <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
+            <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
+            <MudTd><MudSkeleton Height="24px" Width="100px" /></MudTd>
+            <MudTd>
+                <MudSkeleton Height="36px" Width="36px" />
+            </MudTd>
+        }
+        else
+        {
+            <MudTd DataLabel="Email">@item.EmailAddress</MudTd>
+            <MudTd DataLabel="First Name">@item.FirstName</MudTd>
+            <MudTd DataLabel="Last Name">@item.LastName</MudTd>
+            <MudTd DataLabel="Ticket Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(item.OrderStatus)">@item.OrderStatus</span></MudTd>
+            <MudTd DataLabel="Action">
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               Size="Size.Medium"
+                               OnClick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))" />
+            </MudTd>
+        }
+
     </RowTemplate>
 
     <NoRecordsTemplate>

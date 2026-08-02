@@ -23,29 +23,55 @@
         </HeaderTemplate>
 
         <RowTemplate Context="o">
-            <MudTd Class="ats-table-cell-center" DataLabel="Subject Name">
-                @($"{o.FirstName} {o.LastName}".Trim())
-            </MudTd>
+            @if(_loadingDisputeId == o.EmailInvitationID)
+            {
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="20px" Width="80%" />
+                </MudTd>
 
-            <MudTd Class="ats-table-cell-center " DataLabel="Status">
-                <span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">
-                    @o.DisputeCategory
-                </span>
-            </MudTd>
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="24px" Width="90px" />
+                </MudTd>
 
-            <MudTd Class="ats-table-cell-center" DataLabel="Order Date">
-                @o.OrderCreatedAt?.ToString("MMMM dd, yyyy")
-            </MudTd>
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="20px" Width="120px" />
+                </MudTd>
 
-            <MudTd Class="ats-table-cell-center " DataLabel="Date Completed">
-                @(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")
-            </MudTd>
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="20px" Width="120px" />
+                </MudTd>
 
-            <MudTd Class="ats-table-cell-center" DataLabel="Send Dispute">
-                <MudIconButton Icon="@Icons.Material.Filled.Send"
-                               Color="Color.Error"
-                               OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
-            </MudTd>
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="36px" Width="36px" />
+                </MudTd>
+            }
+            else
+            {
+                <MudTd Class="ats-table-cell-center" DataLabel="Subject Name">
+                    @($"{o.FirstName} {o.LastName}".Trim())
+                </MudTd>
+
+                <MudTd Class="ats-table-cell-center " DataLabel="Status">
+                    <span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">
+                        @o.DisputeCategory
+                    </span>
+                </MudTd>
+
+                <MudTd Class="ats-table-cell-center" DataLabel="Order Date">
+                    @o.OrderCreatedAt?.ToString("MMMM dd, yyyy")
+                </MudTd>
+
+                <MudTd Class="ats-table-cell-center " DataLabel="Date Completed">
+                    @(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")
+                </MudTd>
+
+                <MudTd Class="ats-table-cell-center" DataLabel="Send Dispute">
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   Color="Color.Error"
+                                   OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
+                </MudTd>
+            }
+        
         </RowTemplate>
 
         <NoRecordsTemplate>
