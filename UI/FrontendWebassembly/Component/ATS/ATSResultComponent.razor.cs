@@ -4,7 +4,10 @@ public partial class ATSResultComponent
 {
 	private MudForm? form;
 	private bool IsLoaded = true;
+
+
 	private bool showReportUploader = false;
+
 	[Parameter]
 	public EventCallback OnUploadSucceededReload { get; set; }
 
@@ -45,7 +48,7 @@ public partial class ATSResultComponent
 			};
 
 			await OpenResultDialog<SelectFilesToDownloadComponent>(
-				"Select File/s to Download",
+				"",
 				parameters);
 		}
 		catch (Exception)

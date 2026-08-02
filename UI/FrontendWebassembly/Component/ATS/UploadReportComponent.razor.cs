@@ -8,6 +8,9 @@ public partial class UploadReportComponent
 	public EventCallback OnUploadSucceeded { get; set; }
 	[Parameter]
 	public EventCallback OnCancel { get; set; }
+
+	[CascadingParameter]
+	private IMudDialogInstance MudDialog { get; set; } = default!;
 	private MudForm? uploadReportForm;
 
 	private ReportDetailsDTO reportDetails = new();
@@ -45,9 +48,9 @@ public partial class UploadReportComponent
 		}
 	}
 
-	private async Task GoBack()
+	private void CloseDialog()
 	{
-		await OnCancel.InvokeAsync();
+		MudDialog.Close();
 	}
 
    private async Task SubmitUploadReport()

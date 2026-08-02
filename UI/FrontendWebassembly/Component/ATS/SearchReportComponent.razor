@@ -6,24 +6,19 @@
 @inject IReportService ReportService
 @inject ISnackbar Snackbar
 
+<PageTitle>ATS - Search Report</PageTitle>
+
 <MudPaper Class="pa-4" Elevation="0">
-    <MudGrid Class="mb-2" AlignItems="AlignItems.End">
-        <MudItem xs="12" md="4">
-            <MudDateRangePicker Margin="Margin.Dense"
-                                ReadOnly="false"
-                                Clearable="true"
-                                DateRangeChanged="OnDateRangeChanged"
-                                PlaceholderStart="Start Date"
-                                PlaceholderEnd="End Date"
-                                Label="Date range" />
-        </MudItem>
-    </MudGrid>
+    <div class="ats-console-notice">
+        <strong>Select at least one order.</strong>
+        Choose one or more orders from the list before downloading the report(s).
+    </div>
 
     <TableComponent TItem="ReportListDTO"
                     @ref="reportsTable"
                     Title="Query results"
                     EnableSearch="true"
-                    ColumnCount="7"
+                    ColumnCount="8"
                     RowsPerPage="10"
                     LoadServerData="LoadReportData"
                     SearchString="@searchString"
@@ -42,6 +37,7 @@
             </MudTh>
             <MudTh>Selected Package</MudTh>
             <MudTh>Hit Status</MudTh>
+            <MudTh>Upload Report</MudTh>
             <MudTh>Directory</MudTh>
         </HeaderTemplate>
 
@@ -62,6 +58,9 @@
             <MudTd DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
             <MudTd DataLabel="Selected Package">@r.SelectedPackage</MudTd>
             <MudTd DataLabel="Hit Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(r.HitStatus)">@r.HitStatus</span></MudTd>
+            <MudTd DataLabel="Report Directory">
+                <MudIconButton Icon="@Icons.Material.Filled.Upload" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenUploadReportDialog(r.EmailInvitationRequestId))" />
+            </MudTd>
             <MudTd DataLabel="Report Directory">
                 <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))" />
             </MudTd>
@@ -84,8 +83,8 @@
                    OnClick="DownloadSelected">Download selected</MudButton>
     </div>
 
-    <div class="ats-console-notice">
+    @* <div class="ats-console-notice">
         <strong>Reports are password protected</strong>
         Downloaded PDFs require this quarter's password. Please contact your account manager if you do not have it.
-    </div>
+    </div> *@
 </MudPaper>

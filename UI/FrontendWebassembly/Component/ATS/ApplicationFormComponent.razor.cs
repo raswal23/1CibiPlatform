@@ -63,8 +63,8 @@ public partial class ApplicationFormComponent
 	private DateTime? DatePermittedToContact3;
 	private DateTime? StartOfEmployment3;
 	private DateTime? EndOfEmployment3;
-	private bool AddEmployer2;
-	private bool AddEmployer3;
+	private bool AddEmployer2 = false;
+	private bool AddEmployer3 = false;
 
 	// Step 5 - references
 	private ReferenceDetailsDTO referenceDetails = new();
@@ -224,6 +224,42 @@ public partial class ApplicationFormComponent
 
 	}
 
+	private Task OnAddEmployer3Changed(bool value)
+	{
+		if (!value)
+		{
+			AddEmployer3 = false;
+			return Task.CompletedTask;
+		}
+
+		if (!CanAddEmployer3)
+		{
+			Snackbar.Add("Please complete Employer 2 before adding Employer 3.", Severity.Warning);
+			return Task.CompletedTask;
+		}
+
+		AddEmployer3 = true;
+		return Task.CompletedTask;
+	}
+
+	private Task OnAddEmployer2Changed(bool value)
+	{
+		if (!value)
+		{
+			AddEmployer2 = false;
+			return Task.CompletedTask;
+		}
+
+		if (!CanAddEmployer2)
+		{
+			Snackbar.Add("Please complete Employer 1 before adding Employer 2.", Severity.Warning);
+			return Task.CompletedTask;
+		}
+
+		AddEmployer2 = true;
+		return Task.CompletedTask;
+	}
+
 	private bool ValidateUploads()
 	{
 		return _activeStep switch
@@ -235,7 +271,9 @@ public partial class ApplicationFormComponent
 			),
 
 			2 => !(
+				
 				(_diplomaError = educationalBackground.DiplomaFile == null
+								&& !string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment)
 								&& educationalBackground.HighestEducationalAttainment != "None"
 								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
 			),
@@ -249,7 +287,7 @@ public partial class ApplicationFormComponent
 			),
 
 			_ => true
-		};
+		}; ;
 	}
 
 	private async Task SkipStep()

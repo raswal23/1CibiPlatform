@@ -223,8 +223,6 @@ public partial class NewOrderComponent
 			isUploadingBulk = true;
 			StateHasChanged();
 
-			await Task.Yield();
-
 			var isSent = await EndorsementSubmissionService
 			.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
 
