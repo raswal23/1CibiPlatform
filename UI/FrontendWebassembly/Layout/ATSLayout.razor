@@ -10,8 +10,8 @@
         <aside class="ats-console-sidebar">
             <div>
                 <div class="ats-console-logo">
-                    <div class="ats-console-logo-mark">AT</div>
-                    <span>ATS Console</span>
+                    <div class="ats-console-logo-mark">ATS</div>
+                    <span style="text-align: center;">Application Tracking System</span>
                 </div>
 
             <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
@@ -41,10 +41,10 @@
 
             <div class="ats-console-nav-label">Manage</div>
 
-            <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+            @* <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                 <span class="ats-console-nav-ic">👥</span>
                 <span>Candidates</span>
-            </NavLink>
+            </NavLink> *@
 
             <NavLink href="/s&i/ats/settings" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                 <span class="ats-console-nav-ic">⚙</span>
@@ -65,8 +65,8 @@
         <div class="ats-console-main">
             <div class="ats-console-topbar">
                 <div>
-                    <div class="ats-console-crumb">ATS console / <b>@_pageTitle</b></div>
-                    <h1>@_pageTitle</h1>
+                    <div class="ats-console-crumb">ATS / <b>@_pageTitle</b></div>
+                    <h1> @_pageTitle</h1>
                 </div>
                 <div class="ats-console-topbar-right">
                     <button type="button" class="ats-console-icon-btn" aria-label="Search">🔍</button>

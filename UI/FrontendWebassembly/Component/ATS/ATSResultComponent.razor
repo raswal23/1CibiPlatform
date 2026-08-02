@@ -10,33 +10,15 @@
         {
             <LoaderComponent Height="200px" />
         }
-        else if (showReportUploader)
-        {
-            <div class="ats-upload-report-shell">
-                <div class="ats-upload-report-shell-header">
-                    <div>
-                        <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
-                        <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
-                    </div>
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   Class="ats-upload-report-shell-close"
-                                   OnClick="GoBackToSearchReport" />
-                </div>
-
-                <UploadReportComponent EmailInvitationRequestId="@EmailInvitationId"
-                                       OnUploadSucceeded="ReloadReportResult"
-                                       OnCancel="GoBackToSearchReport" />
-            </div>
-        }
         else
         {
             <div class="ats-result-shell">
                 <MudPaper Elevation="0" Class="ats-result-hero">
                     <div>
                         <MudText Typo="Typo.h5" Class="ats-result-hero-name">@ReportResult!.SubjectName</MudText>
-                        <MudText Typo="Typo.body2" Class="ats-result-hero-subtitle">@ReportResult.SelectedPackage</MudText>
+                        <MudText Typo="Typo.body2" Class="ats-result-hero-subtitle">@ReportResult!.SelectedPackage</MudText>
                     </div>
-                    <div class="ats-result-hero-status">@ReportResult.OrderStatus</div>
+                    <div class="ats-result-hero-status">@ReportResult!.OrderStatus</div>
                 </MudPaper>
 
                 <MudGrid GutterSize="3" Class="mt-4">
@@ -46,27 +28,27 @@
 
                             <div class="ats-result-summary-item">
                                 <MudText Typo="Typo.caption" Class="ats-result-label">Status</MudText>
-                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.OrderStatus</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.OrderStatus</MudText>
                             </div>
 
                             <div class="ats-result-summary-item">
                                 <MudText Typo="Typo.caption" Class="ats-result-label">Result</MudText>
-                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.HitStatus</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.HitStatus</MudText>
                             </div>
 
                             <div class="ats-result-summary-item">
                                 <MudText Typo="Typo.caption" Class="ats-result-label">Report type</MudText>
-                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult.SelectedPackage</MudText>
+                                <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.SelectedPackage</MudText>
                             </div>
 
                             <MudButton Class="theme-button theme-button-active mt-4"
-                                       Style="width: 100%; border-radius: 10px;"
-                                       OnClick="SelecFilesToDownload">↓ Download</MudButton>
+                            Style="width: 100%; border-radius: 10px;"
+                            OnClick="SelecFilesToDownload">↓ Download</MudButton>
 
                             <MudButton Variant="Variant.Outlined"
-                                       Class="ats-result-upload-button mt-3"
-                                       Style="width: 100%;"
-                                       OnClick="ShowUploadReport">Upload report</MudButton>
+                            Class="ats-result-upload-button mt-3"
+                            Style="width: 100%;"
+                            OnClick="ShowUploadReport">Upload report</MudButton>
                         </MudPaper>
                     </MudItem>
 
@@ -76,7 +58,7 @@
 
                             <div class="ats-result-doc-list mt-2">
                                 <div class="ats-result-doc-row">
-                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "missing" : "uploaded")">
+                                    <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName) ? "missing" : "uploaded")">
                                         <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
                                     </div>
                                     <div class="ats-result-doc-details">
@@ -113,7 +95,7 @@
                                         <MudText Class="ats-result-doc-title">Diploma / TOR</MudText>
                                         <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "Not yet uploaded" : $"{ReportResult.DiplomaFileName} · uploaded {ReportResult.UploadDiplomaAt}")</MudText>
                                     </div>
-   @*                                  @if (string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName))
+                                    @*                                  @if (string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName))
                                     {
                                         <MudText Class="ats-result-doc-request">Request</MudText>
                                     } *@

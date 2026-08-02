@@ -43,7 +43,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 						_batchesPending,
 						_batchesProcessing,
 						ListSide.Left,
-						ListSide.Left);
+						ListSide.Right);
 
 			if (string.IsNullOrEmpty(cacheKey))
 			{

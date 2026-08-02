@@ -92,23 +92,27 @@ public partial class SearchReportComponent
 	}
 
 	private async Task OpenResultDialog<TComponent>(
-	string title,
-	DialogParameters? parameters = null)
-	where TComponent : IComponent
+		string title,
+		DialogParameters? parameters = null,
+		MaxWidth maxWidth = MaxWidth.Large,
+		bool fullWidth = true,
+		bool noHeader = false)
+		where TComponent : IComponent
 	{
 		var options = new DialogOptions
 		{
-			CloseButton = true,
-			MaxWidth = MaxWidth.Large,
-			FullWidth = true
+			CloseButton = !noHeader,
+			NoHeader = noHeader,
+			MaxWidth = maxWidth,
+			FullWidth = fullWidth
 		};
 
 		var dialog = await DialogService.ShowAsync<TComponent>(
 			title,
-			parameters!,
+			parameters ?? new DialogParameters(),
 			options);
 
-		var result = await dialog.Result;
+		await dialog.Result;
 	}
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
@@ -126,13 +130,43 @@ public partial class SearchReportComponent
 			};
 
 			await OpenResultDialog<ATSResultComponent>(
-				"Subject Result",
+				"",
 				parameters);
 		}
 		catch (Exception)
 		{
 			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
 		}
+	}
+
+	private async Task OpenUploadReportDialog(Guid emailInvitationId)
+	{
+		IDialogReference? dialog = null;
+		var parameters = new DialogParameters
+		{
+			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId },
+			{ nameof(UploadReportComponent.OnCancel), EventCallback.Factory.Create(this, () => dialog?.Close()) },
+			{ nameof(UploadReportComponent.OnUploadSucceeded), EventCallback.Factory.Create(this, async () =>
+				{
+					dialog?.Close();
+					await ReloadTable();
+				}) }
+		};
+
+		var options = new DialogOptions
+		{
+			CloseButton = false,
+			NoHeader = true,
+			MaxWidth = MaxWidth.Small,
+			FullWidth = true
+		};
+
+		dialog = await DialogService.ShowAsync<UploadReportComponent>(
+			string.Empty,
+			parameters,
+			options);
+
+		await dialog.Result;
 	}
 
 	private async Task ReloadTable()
