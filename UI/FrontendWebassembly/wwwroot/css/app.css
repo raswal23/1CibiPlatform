@@ -2692,6 +2692,13 @@ code {
     color: var(--modern-sub);
 }
 
+.ats-selected-row,
+.ats-selected-row td {
+    background: #e8f0fe !important;
+    border-top: 1px solid #d2e3fc;
+    border-bottom: 1px solid #d2e3fc;
+}
+
 .philsys-modern {
     width: 100%;
 }

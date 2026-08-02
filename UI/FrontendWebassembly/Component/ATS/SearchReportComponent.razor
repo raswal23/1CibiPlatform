@@ -15,6 +15,7 @@
                     RowsPerPage="10"
                     LoadServerData="LoadReportData"
                     SearchString="@searchString"
+                    RowClassFunc="GetRowClass"
                     SearchStringChanged="@((string val) => searchString = val)">
         <ToolBarLeft>
             <MudDateRangePicker Margin="Margin.Dense"
