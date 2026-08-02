@@ -26,7 +26,7 @@
                                 Label="Date range" />
         </ToolBarLeft>
         <HeaderTemplate>
-            <MudTh> Selected</MudTh>
+            <MudTh> Action</MudTh>
             <MudTh>
                 <MudTableSortLabel T="ReportListDTO" SortLabel="SubjectName">Subject Name</MudTableSortLabel>
             </MudTh>
@@ -43,7 +43,7 @@
 
         <RowTemplate Context="r">
             <MudTd DataLabel="Action">
-                <div style="display:flex; justify-content:left; align-items:center;">
+                <div style="display:flex; justify-content:left; align-items:left;">
                     <MudCheckBox T="bool" @bind-Checked="r.Selected"
                                  Color="Color.Primary"
                                  ValueChanged="@(value =>

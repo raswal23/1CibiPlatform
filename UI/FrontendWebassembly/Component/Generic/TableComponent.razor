@@ -37,7 +37,7 @@
 
                         @if (EnableSearch)
                         {
-                            <div style="flex:1; justify-content:center;">
+                            <div style="margin-left:auto; width:500px;">
                                 <MudTextField T="string"
                                               Value="SearchString"
                                               ValueChanged="@(EventCallback.Factory.Create<string>(this, SearchChanged))"
@@ -48,7 +48,7 @@
                                               Adornment="Adornment.Start"
                                               AdornmentIcon="@Icons.Material.Filled.Search"
                                               IconSize="Size.Medium"
-                                              Style="width:100%;"
+                                              Style="width:100%; justify-content:left;"
                                               Class="mt-0" />
                             </div>
                         }
