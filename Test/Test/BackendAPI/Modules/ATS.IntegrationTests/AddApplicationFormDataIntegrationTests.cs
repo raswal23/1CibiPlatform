@@ -2,6 +2,7 @@
 using ATS.DTO;
 using ATS.Features.AddApplicationFormData;
 using FluentAssertions;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -12,7 +13,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
 	Guid EmailId = Guid.CreateVersion7();
-	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
+	byte[] sampleFileContent = File.ReadAllBytes("C:\\Users\\rcgu\\Documents\\GitHub\\1CibiPlatform\\Test\\Test\\BackendAPI\\Modules\\ATS.IntegrationTests\\TestFiles\\signature.png");
 	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
 	string govermentIdFileName = $"{Guid.CreateVersion7()}-govId.txt";
 	string nbiFileName = $"{Guid.CreateVersion7()}-nbiId.txt";
@@ -32,19 +33,48 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	{
 		_atsTestFolder = _configuration
 						.GetSection("AlibabaOss")
-						.GetValue<string>("ATSTestFolder") ?? string.Empty;
+						.GetValue<string>("ATSTestFolder", "");
 	}
 
-	private IFormFile CreateFakeFormFile(byte[] content, string fileName)
+	private IFormFile CreateFakeFormFile(
+	byte[] content,
+	string fileName,
+	string contentType = "application/octet-stream")
 	{
 		var stream = new MemoryStream(content);
+
 		return new FormFile(stream, 0, content.Length, "file", fileName)
 		{
 			Headers = new HeaderDictionary(),
-			ContentType = "text/plain"
+			ContentType = contentType
 		};
 	}
 
+	private async Task SeedEmailInvitationRequestData()
+	{
+		var emailInvitationRequest = new EmailInvitationRequest
+		{
+			EmailInvitationID = EmailId,
+			LastName = "Dela Cruz",
+			FirstName = "Juan",
+			MiddleInitial = "S",
+			EmailAddress = "jsdelacruz@cibi.com.ph",
+			MobileNumber = "09171234567",
+			SelectPackage = "Air BnB",
+			RushNormal = "Rush",
+			HashToken = "Hashtoken",
+			ApplicationFormStatus = "Pending",
+			EmailSentStatus = "Pending",
+			OrderStatus = "Pending Candidate Info",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
+		await _dbContext.SaveChangesAsync();
+	}
+
+	#region Positive Path
 	[Fact]
 	public async Task AddApplicationFormData_WithSamplePayload_ShouldReturnTrue()
 	{
@@ -60,7 +90,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Suffix = "Jr.",
 			Sex = "Male",
 			DOB = sampleDate,
-			MobileNumber = "+639171234567",
+			MobileNumber = "09171234567",
 			EmailAlternative = "juan.delacruz@gmail.com",
 			AdditionalGovtIDFile = CreateFakeFormFile(sampleFileContent, govermentIdFileName),
 			AdditionalGovtIDFileName = govermentIdFileName,
@@ -143,9 +173,10 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1EndDate = sampleDate,
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
-			Emp1SupervisorContactNumber = "+639171234567",
+			Emp1SupervisorContactNumber = "09171234567",
 			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, emp1COEFileName),
 			Emp1COEUploadFileName = emp1COEFileName,
+			Emp1DatePermittedToContact = sampleDate,
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
 			Emp2PermissionToContact = true,
@@ -157,9 +188,10 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2EndDate = sampleDate,
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
-			Emp2SupervisorContactNumber = "+639189876543",
+			Emp2SupervisorContactNumber = "09171234567",
 			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, emp2COEFileName),
 			Emp2COEUploadFileName = emp2COEFileName,
+			Emp2DatePermittedToContact = sampleDate,
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
 			Emp3PermissionToContact = true,
@@ -171,9 +203,10 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3EndDate = sampleDate,
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
-			Emp3SupervisorContactNumber = "+639155551234",
+			Emp3SupervisorContactNumber = "09171234567",
 			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, emp3COEFileName),
 			Emp3COEUploadFileName = emp3COEFileName,
+			Emp3DatePermittedToContact = sampleDate,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -184,21 +217,21 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Ref1ProfessionalRelationship = "Former Team Lead",
 			Ref1AffiliatedCompany = "Accenture Philippines",
 			Ref1Email = "michael.tan@accenture.com",
-			Ref1ContactNumber = "+639171111111",
+			Ref1ContactNumber = "09171234567",
 			Ref1ModeOfContact = "Email",
 			Ref1BestTimeToContact = DateTime.UtcNow,
 			Ref2FullName = "Sarah Lim",
 			Ref2ProfessionalRelationship = "Project Manager",
 			Ref2AffiliatedCompany = "Globe Telecom",
 			Ref2Email = "sarah.lim@globe.com.ph",
-			Ref2ContactNumber = "+639172222222",
+			Ref2ContactNumber = "09171234567",
 			Ref2ModeOfContact = "Phone",
 			Ref2BestTimeToContact = DateTime.UtcNow,
 			Ref3FullName = "John Bautista",
 			Ref3ProfessionalRelationship = "Engineering Director",
 			Ref3AffiliatedCompany = "Tech Innovators Inc.",
 			Ref3Email = "john.bautista@techinnovators.com",
-			Ref3ContactNumber = "+639173333333",
+			Ref3ContactNumber = "09171234567",
 			Ref3ModeOfContact = "Email",
 			Ref3BestTimeToContact = DateTime.UtcNow,
 			CreatedDate = DateTime.UtcNow
@@ -207,7 +240,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var signature = new SignatureDetailsDTO
 		{
 			EmailInvitationID = EmailId,
-			Signature = CreateFakeFormFile(sampleFileContent, signatureFileName),
+			Signature = CreateFakeFormFile(sampleFileContent,"signature.png","image/png"),
+			SignerName = "Juan S. Dela Cruz",
+			SignatureDate = sampleDate
 		};
 
 		var command = new AddApplicationFormDataCommand(personal, address, education, licenses, experiences, reference, signature);
@@ -218,6 +253,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.IsAdded.Should().BeTrue();
+
+		var consentFile = _dbContext.SignatureDetails.FirstOrDefault(e => e.EmailInvitationID == EmailId);
 
 		if (result.IsAdded == true)
 		{
@@ -234,9 +271,12 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp2COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp3COEFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{signatureFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{consentFile!.ConsentFormFileName}");
 		}
 	}
+	#endregion
 
+	#region Negative Path
 	[Fact]
 	public async Task AddApplicationFormData_MissingPersonal_ShouldThrowNullReferenceException()
 	{
@@ -302,7 +342,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LicenseUploadFileName = "aws_certificate.txt",
 			CreatedDate = DateTime.UtcNow
 		};
-
+		
 		var experiences = new ProfessionalExperiencesDTO
 		{
 			EmailInvitationID = EmailId,
@@ -317,7 +357,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1EndDate = sampleDate,
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
-			Emp1SupervisorContactNumber = "+639171234567",
+			Emp1SupervisorContactNumber = "09171234567",
 			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp1COEUploadFileName = "coe.txt",
 			Emp2CompanyName = "Globe Telecom",
@@ -331,7 +371,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2EndDate = sampleDate,
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
-			Emp2SupervisorContactNumber = "+639189876543",
+			Emp2SupervisorContactNumber = "09171234567",
 			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp2COEUploadFileName = "coe.txt",
 			Emp3CompanyName = "Tech Innovators Inc.",
@@ -345,7 +385,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3EndDate = sampleDate,
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
-			Emp3SupervisorContactNumber = "+639155551234",
+			Emp3SupervisorContactNumber = "09171234567",
 			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp3COEUploadFileName = "coe.txt",
 			CreatedDate = DateTime.UtcNow,
@@ -358,7 +398,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Ref1ProfessionalRelationship = "Former Team Lead",
 			Ref1AffiliatedCompany = "Accenture Philippines",
 			Ref1Email = "michael.tan@accenture.com",
-			Ref1ContactNumber = "+639171111111",
+			Ref1ContactNumber = "09171234567",
 			Ref1ModeOfContact = "Email",
 			Ref1BestTimeToContact = DateTime.UtcNow,
 
@@ -366,7 +406,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Ref2ProfessionalRelationship = "Project Manager",
 			Ref2AffiliatedCompany = "Globe Telecom",
 			Ref2Email = "sarah.lim@globe.com.ph",
-			Ref2ContactNumber = "+639172222222",
+			Ref2ContactNumber = "09171234567",
 			Ref2ModeOfContact = "Phone",
 			Ref2BestTimeToContact = DateTime.UtcNow,
 
@@ -374,7 +414,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Ref3ProfessionalRelationship = "Engineering Director",
 			Ref3AffiliatedCompany = "Tech Innovators Inc.",
 			Ref3Email = "john.bautista@techinnovators.com",
-			Ref3ContactNumber = "+639173333333",
+			Ref3ContactNumber = "09171234567",
 			Ref3ModeOfContact = "Email",
 			Ref3BestTimeToContact = DateTime.UtcNow,
 
@@ -391,30 +431,10 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var command = new AddApplicationFormDataCommand(null!, address, education, licenses, experiences, reference, signature);
 
 		// Act & Assert
-		await Assert.ThrowsAsync<NullReferenceException>(() =>
+		await Assert.ThrowsAsync<ValidationException>(() =>
 			_sender.Send(command));
 	}
+	#endregion
 
-	private async Task SeedEmailInvitationRequestData()
-	{
-		var emailInvitationRequest = new EmailInvitationRequest
-		{
-			EmailInvitationID = EmailId,
-			LastName = "Dela Cruz",
-			FirstName = "Juan",
-			MiddleInitial = "S",
-			EmailAddress = "jsdelacruz@cibi.com.ph",
-			MobileNumber = "+639171234567",
-			SelectPackage = "Air BnB",
-			RushNormal = "Rush",
-			HashToken = "Hashtoken",
-			IsFormCompleted = false,
-			EmailSentStatus = "Pending",
-			HashTokenCreatedAt = DateTime.UtcNow,
-			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
-		};
 
-		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
-		await _dbContext.SaveChangesAsync();
-	}
 }

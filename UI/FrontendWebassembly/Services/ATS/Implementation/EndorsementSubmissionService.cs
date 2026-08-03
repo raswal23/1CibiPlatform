@@ -1,105 +1,105 @@
-﻿namespace FrontendWebassembly.Services.ATS.Implementation
+﻿namespace FrontendWebassembly.Services.ATS.Implementation;
+
+public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
-	public class EndorsementSubmissionService : IEndorsementSubmissionService
+	private readonly string _userIdKey;
+	private readonly HttpClient _httpClient;
+	private readonly ILogger<EndorsementSubmissionService> _logger;
+	private readonly LocalStorageService _localStorageService;
+	private HubConnection? _hubConnection;
+
+	public event Action<string>? ATSResponseReceived;
+
+	public EndorsementSubmissionService(
+		IHttpClientFactory httpClientFactory,
+		ILogger<EndorsementSubmissionService> logger,
+		LocalStorageService localStorageService)
 	{
-		private readonly string _userIdKey;
-		private readonly HttpClient _httpClient;
-		private readonly ILogger<EndorsementSubmissionService> _logger;
-		private readonly LocalStorageService _localStorageService;
-		private HubConnection? _hubConnection;
+		_httpClient = httpClientFactory.CreateClient("API");
+		_logger = logger;
+		_localStorageService = localStorageService;
+		_userIdKey = "UserId";
+	}
 
-		public event Action<string>? ATSResponseReceived;
-
-		public EndorsementSubmissionService(
-			IHttpClientFactory httpClientFactory,
-			ILogger<EndorsementSubmissionService> logger,
-			LocalStorageService localStorageService)
+	public async Task StartAsync()
+	{
+		if (_hubConnection is not null && _hubConnection.State == HubConnectionState.Connected)
 		{
-			_httpClient = httpClientFactory.CreateClient("API");
-			_logger = logger;
-			_localStorageService = localStorageService;
-			_userIdKey = "UserId";
+			return;
 		}
+		var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.CreateVersion7().ToString();
+		var baseUri = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
+		var hubUrl = $"{baseUri}/hubs/atsbulk?userId={userId}";
 
-		public async Task StartAsync()
+		_hubConnection = new HubConnectionBuilder()
+			.WithUrl(hubUrl)
+			.WithAutomaticReconnect()
+			.Build();
+
+		_hubConnection.On<string>("ReceiveATSResponse", (message) =>
 		{
-			if (_hubConnection is not null && _hubConnection.State == HubConnectionState.Connected)
+			try
 			{
-				return;
+				ATSResponseReceived?.Invoke(message);
 			}
-			var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.CreateVersion7().ToString();
-			var baseUri = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
-			var hubUrl = $"{baseUri}/hubs/atsbulk?userId={userId}";
+			catch { }
+		});
 
-			_hubConnection = new HubConnectionBuilder()
-				.WithUrl(hubUrl)
-				.WithAutomaticReconnect()
-				.Build();
-
-			_hubConnection.On<string>("ReceiveATSResponse", (message) =>
-			{
-				try
-				{
-					ATSResponseReceived?.Invoke(message);
-				}
-				catch { }
-			});
-
-			_hubConnection.On("SessionCleared", () =>
-			{
-				try
-				{
-					ATSResponseReceived?.Invoke(string.Empty);
-				}
-				catch { }
-			});
-
-			_hubConnection.Closed += async (ex) =>
-			{
-				_logger.LogWarning(ex, "ATS hub connection closed.");
-				await Task.CompletedTask;
-			};
-
-			await _hubConnection.StartAsync();
-		}
-
-		public async Task<string?> DownloadBulkTemplateAsync()
+		_hubConnection.On("SessionCleared", () =>
 		{
-			var response = await _httpClient.GetAsync("ats/downloadbulktemplate");
-
-			if (!response.IsSuccessStatusCode)
+			try
 			{
-				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+				ATSResponseReceived?.Invoke(string.Empty);
 			}
+			catch { }
+		});
 
-			var result = await response.Content.ReadFromJsonAsync<string>();
+		_hubConnection.Closed += async (ex) =>
+		{
+			_logger.LogWarning(ex, "ATS hub connection closed.");
+			await Task.CompletedTask;
+		};
 
-			return result;
+		await _hubConnection.StartAsync();
+	}
+
+	public async Task<string?> DownloadBulkTemplateAsync()
+	{
+		var response = await _httpClient.GetAsync("ats/downloadbulktemplate");
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
+		var result = await response.Content.ReadFromJsonAsync<string>();
+
+		return result;
+	}
+
+	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
+	{
+		var request = new { emailInvitationRequestDTO };
+
+		var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
+
+		if (!response.IsSuccessStatusCode)
 		{
-			var request = new { emailInvitationRequestDTO };
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
-
-			if (!response.IsSuccessStatusCode)
-			{
-				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-			}
-
-			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
-
-			return successContentInfo;
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-		public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetails)
-		{
-			using var content = new MultipartFormDataContent();
+		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+
+		return successContentInfo;
+	}
+
+	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetails)
+	{
+		using var content = new MultipartFormDataContent();
 
 				void AddString(string? value, string name)
 				{
@@ -125,19 +125,56 @@
 				AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
 				AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
 
-			var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
+		var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
 
-			if (!response.IsSuccessStatusCode)
-			{
-				var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-				throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-			}
-
-			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
-
-			return successContentInfo;
-
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
+
+		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+
+		return successContentInfo;
+
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+	{
+		var query = $"ats/getwithdrawnapplicationforms?pageNumber={PageNumber}&pageSize={PageSize}";
+		if (!string.IsNullOrEmpty(SearchTerm))
+			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
+
+		var response = await _httpClient.GetAsync(query);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var result = await response.Content.ReadFromJsonAsync<GetWithdrawnEmailInvitationRequestsResponseDTO>();
+
+		return result!.Requests!;
+	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId)
+	{
+		var request = new { emailInvitationId };
+
+		var response = await _httpClient.PatchAsJsonAsync("ats/resendapplicationform", request);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var successContent = await response.Content.ReadFromJsonAsync<bool>();
+
+		return successContent;
 	}
 }

@@ -16,7 +16,7 @@ public class AddAppSubRoleEndpoint : ICarterModule
 		})
 		.WithName("AddAppSubRole")
 		.WithTags("User Management")
-		.Produces<AddAppSubRoleResponse>()
+		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add AppSubRole")
 		.WithDescription("Add an application, submenu, and a role for a user in OnePlatform")

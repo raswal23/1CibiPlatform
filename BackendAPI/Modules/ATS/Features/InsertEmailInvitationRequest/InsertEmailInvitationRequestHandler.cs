@@ -23,7 +23,8 @@ public class EmailInvitationRequestCommandValidator : AbstractValidator<EmailInv
 
 		RuleFor(x => x.emailInvitationRequestDTO.MobileNumber)
 			.NotEmpty().WithMessage("Mobile number is required.")
-			.MaximumLength(20).WithMessage("Mobile number must not exceed 20 characters.");
+			.Matches(@"^\d{11}$")
+			.WithMessage("Mobile Contact Information must be 11 digits.");
 
 		RuleFor(x => x.emailInvitationRequestDTO.SelectPackage)
 			.NotEmpty().WithMessage("Package selection is required.")

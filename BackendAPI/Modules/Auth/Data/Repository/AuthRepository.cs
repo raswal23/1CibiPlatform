@@ -13,13 +13,14 @@ public class AuthRepository : IAuthRepository
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext
+		var usersQuery = _dbcontext
 			.AuthUsers
-			.Where(au => au.IsApproved == true && au.IsActive)
-			.LongCountAsync(cancellationToken);
+			.AsNoTracking()
+			.Where(au => au.IsApproved == true && au.IsActive);
 
-		var users = await _dbcontext.AuthUsers
-					.Where(a => a.IsApproved == true & a.IsActive)
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var users = await usersQuery
 					.OrderBy(a => a.Id)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -30,7 +31,6 @@ public class AuthRepository : IAuthRepository
 						au.MiddleName ?? "",
 						au.LastName,
 						au.IsApproved))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<UsersDTO>
@@ -46,13 +46,14 @@ public class AuthRepository : IAuthRepository
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext
+		var usersQuery = _dbcontext
 			.AuthUsers
-			.Where(a => a.IsApproved == false && a.IsActive)
-			.LongCountAsync(cancellationToken);
+			.AsNoTracking()
+			.Where(a => a.IsApproved == false && a.IsActive);
 
-		var users = await _dbcontext.AuthUsers
-					.Where(a => a.IsApproved == false && a.IsActive)
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var users = await usersQuery
 					.OrderBy(a => a.Id)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -63,7 +64,6 @@ public class AuthRepository : IAuthRepository
 						au.MiddleName ?? "",
 						au.LastName,
 						au.IsApproved))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<UsersDTO>
@@ -77,13 +77,14 @@ public class AuthRepository : IAuthRepository
 
 	public async Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext
+		var usersQuery = _dbcontext
 			.AuthApplications
-			.Where(aa => aa.IsActive)
-			.LongCountAsync(cancellationToken);
+			.AsNoTracking()
+			.Where(aa => aa.IsActive);
 
-		var applications = await _dbcontext.AuthApplications
-						.Where(a => a.IsActive)
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var applications = await usersQuery
 						.OrderBy(a => a.AppId)
 						.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 						.Take(paginationRequest.PageSize)
@@ -92,7 +93,6 @@ public class AuthRepository : IAuthRepository
 							aa.AppName,
 							aa.Description ?? "",
 							aa.IsActive))
-						.AsNoTracking()
 						.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<ApplicationsDTO>
@@ -106,12 +106,14 @@ public class AuthRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AuthAttempts>> GetLockedUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext
+		var usersQuery = _dbcontext
 			.AuthAttempts
-			.LongCountAsync(cancellationToken);
+			.Where(aa => aa.LockReleaseAt > DateTime.UtcNow)
+			.AsNoTracking();
 
-		var lockedUsers = await _dbcontext.AuthAttempts
-						.Where(aa => aa.LockReleaseAt > DateTime.UtcNow)
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var lockedUsers = await usersQuery
 						.OrderBy(a => a.UserId)
 						.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 						.Take(paginationRequest.PageSize)
@@ -122,7 +124,6 @@ public class AuthRepository : IAuthRepository
 							Email = aa.Email,
 							UserId = aa.UserId
 						})
-						.AsNoTracking()
 						.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<AuthAttempts>
@@ -150,13 +151,14 @@ public class AuthRepository : IAuthRepository
 
 	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var totalRecords = await _dbcontext
+		var usersQuery = _dbcontext
 			.AuthSubmenu
-			.Where(asm => asm.IsActive)
-			.LongCountAsync(cancellationToken);
+			.AsNoTracking()
+			.Where(asm => asm.IsActive);
 
-		var subMenus = await _dbcontext.AuthSubmenu
-						.Where(asm => asm.IsActive)
+		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+
+		var subMenus = await usersQuery
 						.OrderBy(asm => asm.SubMenuId)
 						.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 						.Take(paginationRequest.PageSize)
@@ -165,7 +167,6 @@ public class AuthRepository : IAuthRepository
 							asm.SubMenuName,
 							asm.Description ?? "",
 							asm.IsActive))
-						.AsNoTracking()
 						.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<SubMenusDTO>
@@ -180,17 +181,16 @@ public class AuthRepository : IAuthRepository
 	{
 
 		var usersQuery = _dbcontext.AuthUsers
+			    .AsNoTracking()
 				.Where(au => au.IsApproved == true && au.IsActive &&
 					(EF.Functions.ILike(au.FirstName, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(au.MiddleName!, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(au.LastName, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(au.Email, $"%{paginationRequest.SearchTerm}%")));
 
-
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
 		var users = await usersQuery
-					.Where(au => au.IsApproved == true && au.IsActive)
 					.OrderBy(au => au.Id)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -201,7 +201,6 @@ public class AuthRepository : IAuthRepository
 						au.MiddleName ?? "",
 						au.LastName,
 						au.IsApproved))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<UsersDTO>
@@ -217,13 +216,13 @@ public class AuthRepository : IAuthRepository
 	{
 
 		var usersQuery = _dbcontext.AuthUsers
+			    .AsNoTracking()
 				.Where(au => au.IsApproved == false && au.IsActive &&
 					(EF.Functions.ILike(au.Email, $"%{paginationRequest.SearchTerm}%")));
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
 		var users = await usersQuery
-					.Where(a => a.IsApproved == false && a.IsActive)
 					.OrderBy(au => au.Id)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -234,7 +233,6 @@ public class AuthRepository : IAuthRepository
 						au.MiddleName ?? "",
 						au.LastName,
 						au.IsApproved))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<UsersDTO>
@@ -248,14 +246,14 @@ public class AuthRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AuthAttempts>> SearchLockedUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-
 		var usersQuery = _dbcontext.AuthAttempts
-				.Where(aa => (EF.Functions.ILike(aa.Email!, $"%{paginationRequest.SearchTerm}%")));
+			    .AsNoTracking()
+				.Where(aa => aa.LockReleaseAt > DateTime.UtcNow && 
+					(EF.Functions.ILike(aa.Email!, $"%{paginationRequest.SearchTerm}%")));
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
 		var lockedUsers = await usersQuery
-					.Where(aa => aa.LockReleaseAt > DateTime.UtcNow)
 					.OrderBy(aa => aa.UserId)
 					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 					.Take(paginationRequest.PageSize)
@@ -266,7 +264,6 @@ public class AuthRepository : IAuthRepository
 						Email = aa.Email,
 						CreatedAt = aa.CreatedAt
 					})
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<AuthAttempts>
@@ -281,6 +278,7 @@ public class AuthRepository : IAuthRepository
 	public async Task<PaginatedResult<ApplicationsDTO>> SearchApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var applicationsQuery = _dbcontext.AuthApplications
+				.AsNoTracking()
 				.Where(au => au.IsActive &&
 					(EF.Functions.ILike(au.AppName, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(au.Description!, $"%{paginationRequest.SearchTerm}%")));
@@ -296,7 +294,6 @@ public class AuthRepository : IAuthRepository
 								asm.AppName,
 								asm.Description ?? "",
 								asm.IsActive))
-							.AsNoTracking()
 							.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<ApplicationsDTO>
@@ -310,6 +307,7 @@ public class AuthRepository : IAuthRepository
 	public async Task<PaginatedResult<SubMenusDTO>> SearchSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var subMenusQuery = _dbcontext.AuthSubmenu
+			    .AsNoTracking()
 				.Where(asm => asm.IsActive &&
 					(EF.Functions.ILike(asm.SubMenuName, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(asm.Description!, $"%{paginationRequest.SearchTerm}%")));
@@ -325,7 +323,6 @@ public class AuthRepository : IAuthRepository
 							asm.SubMenuName,
 							asm.Description ?? "",
 							asm.IsActive))
-						.AsNoTracking()
 						.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<SubMenusDTO>
@@ -363,10 +360,9 @@ public class AuthRepository : IAuthRepository
 											 .Select(g => g.Select(r => r.Submenu).ToList())
 											 .ToList(),
 							   userRolesGroup.Select(r => r.RoleId).Distinct().ToList()
-							  )
-			).AsNoTracking()
-			 .FirstOrDefaultAsync();
-
+							  ))
+							 .AsNoTracking()
+							 .FirstOrDefaultAsync();
 
 		return userData!;
 	}
@@ -393,10 +389,9 @@ public class AuthRepository : IAuthRepository
 											 .Select(g => g.Select(r => r.Submenu).ToList())
 											 .ToList(),
 							   userRolesGroup.Select(r => r.RoleId).Distinct().ToList()
-							  )
-			).AsNoTracking()
-			 .FirstOrDefaultAsync();
-
+							  ))
+							 .AsNoTracking()
+							 .FirstOrDefaultAsync();
 
 		return userData!;
 	}
@@ -480,7 +475,6 @@ public class AuthRepository : IAuthRepository
 			.Where(art => art.UserId == userId && art.IsActive)
 			.ToListAsync();
 	}
-
 
 	public async Task<Authusers> IsUserEmailExistAsync(string email)
 	{
@@ -776,15 +770,14 @@ public class AuthRepository : IAuthRepository
 				sub
 			};
 
-		if (!string.IsNullOrWhiteSpace(search))
-		{
-			baseQuery = baseQuery.Where(x =>
-				EF.Functions.ILike(x.sub.SubMenuName, $"%{search}%") ||
-				EF.Functions.ILike(x.role.RoleName!, $"%{search}%") ||
-				EF.Functions.ILike(x.user.Email!, $"%{search}%") ||
-				EF.Functions.ILike(x.app.AppName!, $"%{search}%")
-			);
-		}
+		baseQuery = baseQuery
+			.AsNoTracking()
+			.Where(x =>
+			EF.Functions.ILike(x.sub.SubMenuName, $"%{search}%") ||
+			EF.Functions.ILike(x.role.RoleName!, $"%{search}%") ||
+			EF.Functions.ILike(x.user.Email!, $"%{search}%") ||
+			EF.Functions.ILike(x.app.AppName!, $"%{search}%")
+		);
 
 		var totalRecords = await baseQuery.CountAsync(cancellationToken);
 
@@ -856,6 +849,7 @@ public class AuthRepository : IAuthRepository
 	{
 		var totalRecords = await _dbcontext
 			.AuthRoles
+			.AsNoTracking()
 			.LongCountAsync(cancellationToken);
 
 		var roles = await _dbcontext.AuthRoles
@@ -866,7 +860,6 @@ public class AuthRepository : IAuthRepository
 						asr.RoleId,
 						asr.RoleName,
 						asr.Description ?? ""))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<RolesDTO>
@@ -882,6 +875,7 @@ public class AuthRepository : IAuthRepository
 	{
 
 		var rolesQuery = _dbcontext.AuthRoles
+				.AsNoTracking()
 				.Where(ar =>
 					(EF.Functions.ILike(ar.RoleName, $"%{paginationRequest.SearchTerm}%") ||
 					 EF.Functions.ILike(ar.Description!, $"%{paginationRequest.SearchTerm}%")));
@@ -896,7 +890,6 @@ public class AuthRepository : IAuthRepository
 						ar.RoleId,
 						ar.RoleName,
 						ar.Description ?? ""))
-					.AsNoTracking()
 					.ToListAsync(cancellationToken);
 
 		return new PaginatedResult<RolesDTO>

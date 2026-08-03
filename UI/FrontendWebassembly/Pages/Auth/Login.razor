@@ -8,7 +8,7 @@
 @if (!_isLoading)
 {
     <div class="login-container">
-       <MudPaper Class="login-card" Elevation="2">
+       <MudPaper Class="login-card transparent-paper" Elevation="2">
            <div class="login-header">
                <div class="login-logo">
                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: white;" />
@@ -16,7 +16,7 @@
                <div class="login-title gradient-text">One Platform</div>
                <div class="login-subtitle">Sign in to your account to continue</div>
            </div>
-   
+    
            <div class="login-body">
    
                @if (!isUserValid)

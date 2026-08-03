@@ -16,7 +16,7 @@ public class EditApplicationEndpoint : ICarterModule
 		})
 		.WithName("EditApplication")
 		.WithTags("User Management")
-		.Produces<EditApplicationResponse>()
+		.Produces<ApplicationDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Edit Application")
 		.WithDescription("Edits an existing application in OnePlatform.")

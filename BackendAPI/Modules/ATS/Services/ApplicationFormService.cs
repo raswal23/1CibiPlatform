@@ -7,12 +7,13 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
+    private readonly IFilePdfService _filePdfService;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
-
 	private string resumeFileKey = "";
 	private string nbiKey = "";
 	private string govtIdKey = "";
+	private string biometricFileKey = "";
 	private string highSchoolDiplomaKey = "";
 	private string seniorHighSchoolDiplomaKey = "";
 	private string bachelorsDiplomaKey = "";
@@ -23,20 +24,23 @@ public class ApplicationFormService : IApplicationFormService
 	private string emp3COEKey = "";
 	private string licenseKey = "";
 	private string signatureKey = "";
+	private string consentFormKey = "";
 
 	public ApplicationFormService(ILogger<ApplicationFormService> logger, 
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,
-					  IObjectStorageService objectStorageService)
+                      IObjectStorageService objectStorageService,
+					  IFilePdfService filePdfService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_applicationFormBaseUrl = _configuration["ATS:ApplicationFormBaseUrl"] ?? "";
-		_folderName = _configuration["ATS:ATSUploadFolderName"] ?? "";
+		_filePdfService = filePdfService;
+		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
+		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
 
 	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
@@ -99,7 +103,8 @@ public class ApplicationFormService : IApplicationFormService
 				emp2COEKey,
 				emp3COEKey,
 				licenseKey,
-				signatureKey
+                signatureKey,
+				consentFormKey
 			};
 
 			foreach (var key in keys.Where(k => !string.IsNullOrWhiteSpace(k)))
@@ -116,7 +121,7 @@ public class ApplicationFormService : IApplicationFormService
 			}
 			await _unitOfWork.RollbackAsync(ct);
 			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
-			throw new InternalServerException($"Failed to add transaction. {ex.InnerException!.Message}");
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
 	}
@@ -141,11 +146,29 @@ public class ApplicationFormService : IApplicationFormService
 			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
 		}
 
+		if (personalDetailsDTO.BiometricFile != null)
+		{
+			await using var pdfStream =
+				await _filePdfService.ConvertImageToPdfAsync(
+					personalDetailsDTO.BiometricFile,
+					cancellationToken);
+
+			personalDetailsDTO.BiometricFileName =
+				System.IO.Path.ChangeExtension(personalDetailsDTO.BiometricFileName, ".pdf");
+
+			biometricFileKey = await _objectStorageService.UploadAsync(
+				_folderName,
+				personalDetailsDTO.BiometricFileName!,
+				pdfStream,
+				cancellationToken);
+		}
+
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
 		personalDetails.PersonalID = Guid.CreateVersion7();
 		personalDetails.ResumeFileKey = resumeFileKey;
 		personalDetails.NBIClearanceFileKey = nbiKey;
 		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
+		personalDetails.BiometricFileKey = biometricFileKey;
 		personalDetails.CreatedDate = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddPersonalDetailsAsync(personalDetails);
@@ -171,27 +194,27 @@ public class ApplicationFormService : IApplicationFormService
 		EducationalBackgroundDTO educationalBackgroundDTO,
 		CancellationToken cancellationToken)
 	{
-		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Junior High School Graduate", StringComparison.OrdinalIgnoreCase))
+		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.JuniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
 			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Senior High School Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.SeniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
 			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("College Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.CollegeGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
 			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Master's Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.MastersGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
 			mastersDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken);
 		}
-		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains("Doctorate Graduate", StringComparison.OrdinalIgnoreCase))
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.DoctorateGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
 			doctorateDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken);
@@ -308,16 +331,33 @@ public class ApplicationFormService : IApplicationFormService
 		SignatureDetailsDTO signatureDetailsDTO,
 		CancellationToken cancellationToken)
 	{
-		signatureDetailsDTO.SignatureFileName = $"{Guid.CreateVersion7():N}-{signatureDetailsDTO.EmailInvitationID}";
-		if (signatureDetailsDTO.Signature != null)
-		{
-			await using var signatureStream = signatureDetailsDTO.Signature.OpenReadStream();
-			signatureKey = await _objectStorageService.UploadAsync(_folderName, signatureDetailsDTO.SignatureFileName!, signatureStream, cancellationToken);
-		}
+       if (signatureDetailsDTO.Signature == null)
+			throw new BadRequestException("Signature is required.");
+
+		await using var stream = signatureDetailsDTO.Signature.OpenReadStream();
+
+		using var memory = new MemoryStream();
+		await stream.CopyToAsync(memory, cancellationToken);
+
+		var signatureBytes = memory.ToArray();
+
+		var test = 
+	BitConverter.ToString(signatureBytes.Take(16).ToArray());
+
+		var consentFormFileName = $"{signatureDetailsDTO.SignerName}_ConsentForm.pdf";
+		await using var consentPdfStream = await _filePdfService.GenerateConsentFormPdfAsync(
+			signatureDetailsDTO.SignerName ?? string.Empty,
+			signatureDetailsDTO.SignatureDate,
+			signatureBytes,
+			cancellationToken);
+
+		consentFormKey = await _objectStorageService.UploadAsync(_folderName, consentFormFileName, consentPdfStream, cancellationToken);
 
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
 		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
-		signatureDetails.SignatureFileKey = signatureKey;
+		signatureDetails.ConsentFormFileKey = consentFormKey;
+		signatureDetails.ConsentFormFileName = consentFormFileName;
+		signatureDetails.ConsentGeneratedAt = DateTime.UtcNow;
 
 		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
 		return isAdded;
@@ -347,5 +387,16 @@ public class ApplicationFormService : IApplicationFormService
 
 		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormBaseUrl;
 		return emailIdAndApplicationFormPath;
+	}
+
+	public async Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default)
+	{
+		var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
+
+		if (isUpdated == 0)
+		{
+			throw new NotFoundException("No record found for the provided hash token.");
+		}
+		return true;
 	}
 }

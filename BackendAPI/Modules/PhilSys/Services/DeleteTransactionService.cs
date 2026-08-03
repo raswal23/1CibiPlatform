@@ -1,5 +1,5 @@
 ﻿namespace PhilSys.Services;
-public class DeleteTransactionService
+public class DeleteTransactionService : IDeleteTransactionService
 {
 	private readonly IPhilSysRepository _philSysRepository;
 	private readonly ILogger<DeleteTransactionService> _logger;

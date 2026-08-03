@@ -1,7 +1,7 @@
 ﻿
 namespace PhilSys.Services;
 
-public class PartnerSystemService
+public class PartnerSystemService : IPartnerSystemService
 {
 	private readonly ILogger<PartnerSystemService> _logger;
 	private readonly IPhilSysRepository _repository;
@@ -11,6 +11,7 @@ public class PartnerSystemService
 	private readonly IATSQueries _atsQuery;
 	private readonly double _livenessExpiryMinutes;
 	private readonly string _livenessBaseUrl;
+
 	public PartnerSystemService(
 		ILogger<PartnerSystemService> logger, 
 		IPhilSysRepository repository,
@@ -25,16 +26,21 @@ public class PartnerSystemService
 		_hashService = hashService;
 		_securetoken = securetoken;
 		_atsQuery = atsQuery;
-		_livenessExpiryMinutes = int.Parse(_configuration["PhilSys:LivenessSessionExpiryInMinutes"] ?? "10");
-		_livenessBaseUrl = _configuration["PhilSys:LivenessBaseUrl"] ?? "";
+		_livenessExpiryMinutes = _configuration.GetSection("PhilSys").GetValue<double>("LivenessSessionExpiryInMinutes", 10);
+		_livenessBaseUrl = _configuration.GetSection("PhilSys").GetValue<string>("LivenessBaseUrl", "");
 	}
-	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(string callback_url, string inquiry_type, IdentityData identity_data)
+
+	public async Task<PartnerSystemResponseDTO> PartnerSystemQueryAsync(
+		string callback_url, 
+		string inquiry_type, 
+		IdentityData identity_data, 
+		CancellationToken cancellationToken = default)
 	{
 		PhilSysTransaction transaction = new();
 
 		if (!string.IsNullOrEmpty(identity_data.ATSSession))
 		{
-			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, CancellationToken.None);
+			var IsATSSessionValid = await _atsQuery.IsHashTokenValidAsync(identity_data.ATSSession, cancellationToken);
 			if (!IsATSSessionValid)
 			{
 				throw new NotFoundException("Invalid ATS Session provided.");

@@ -22,8 +22,15 @@ public class AccessService : IAccessService
 
 	public async Task<bool> HasAccessAsync(int appId, int subMenuId)
 	{
-		var apps = JsonSerializer.Deserialize<List<int>>(await _localStorage.GetItemAsync<string>(_appIdKey));
-		var subMenus = JsonSerializer.Deserialize<List<List<int>>>(await _localStorage.GetItemAsync<string>(_subMenuKey));
+		var appsJson = await _localStorage.GetItemAsync<string>(_appIdKey);
+		List<int>? apps = string.IsNullOrWhiteSpace(appsJson)
+			? null
+			: JsonSerializer.Deserialize<List<int>?>(appsJson);
+
+		var subMenusJson = await _localStorage.GetItemAsync<string>(_subMenuKey);
+		List<List<int>>? subMenus = string.IsNullOrWhiteSpace(subMenusJson)
+			? null
+			: JsonSerializer.Deserialize<List<List<int>>?>(subMenusJson);
 
 		_logger.LogDebug("Apps: {Apps}", string.Join(", ", apps ?? new List<int>()));
 		_logger.LogDebug("SubMenus: {SubMenus}", string.Join(", ", subMenus?.SelectMany(sm => sm) ?? new List<int>()));

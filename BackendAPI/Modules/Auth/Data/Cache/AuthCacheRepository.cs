@@ -280,6 +280,7 @@ public class AuthCacheRepository : IAuthRepository
 
 		if (updated != null)
 			await _hybridCache.RemoveByTagAsync(ApplicationsTag);
+			await _hybridCache.RemoveByTagAsync(AppSubRolesTag);
 
 		return updated!;
 	}
@@ -310,6 +311,7 @@ public class AuthCacheRepository : IAuthRepository
 
 		if (updated != null)
 			await _hybridCache.RemoveByTagAsync(SubMenusTag);
+			await _hybridCache.RemoveByTagAsync(AppSubRolesTag);
 
 		return updated!;
 	}
@@ -321,7 +323,7 @@ public class AuthCacheRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"authsubrole_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
 			cacheKey,
@@ -333,7 +335,7 @@ public class AuthCacheRepository : IAuthRepository
 
 	public async Task<PaginatedResult<AppSubRolesDTO>> SearchAppSubRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"applications_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
 			cacheKey,
@@ -433,6 +435,7 @@ public class AuthCacheRepository : IAuthRepository
 
 		if (updated != null)
 			await _hybridCache.RemoveByTagAsync(RolesTag);
+		    await _hybridCache.RemoveByTagAsync(AppSubRolesTag);
 
 		return updated!;
 	}

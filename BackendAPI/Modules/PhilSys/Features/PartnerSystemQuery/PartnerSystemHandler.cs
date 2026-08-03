@@ -5,7 +5,6 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 {
 	public PartnerSystemCommandValidator()
 	{
-		// Always required fields
 		RuleFor(x => x.callback_url)
 			.NotEmpty().WithMessage("callback_url is required.")
 			.Must(url =>
@@ -19,7 +18,6 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 			.Must(t => t == "name_dob" || t == "pcn")
 			.WithMessage("inquiry_type must be either 'name_dob' or 'pcn'.");
 
-		// When InquiryType = "name_dob"
 		When(x => x.inquiry_type == "name_dob", () =>
 		{
 			RuleFor(x => x.identity_data.FirstName)
@@ -39,10 +37,9 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 			RuleFor(x => x.identity_data.BirthDate)
 				.NotEmpty().WithMessage("Birth Date is required for 'name_dob' inquiry.")
 				.Matches(@"^\d{4}-\d{2}-\d{2}$")
-				.WithMessage("Birth Date must be in format YYYY-MM-DD.");
+				.WithMessage("Birth Date must be in format yyyy-MM-dd.");
 		});
 
-		// When InquiryType = "pcn"
 		When(x => x.inquiry_type == "pcn", () =>
 		{
 			RuleFor(x => x.identity_data.PCN)
@@ -54,14 +51,14 @@ public class PartnerSystemCommandValidator : AbstractValidator<PartnerSystemComm
 }
 public class PartnerSystemHandler : ICommandHandler<PartnerSystemCommand, PartnerSystemResult>
 {
-	private readonly PartnerSystemService _partnerSystemService;
-	public PartnerSystemHandler(PartnerSystemService PartnerSystemService)
+	private readonly IPartnerSystemService _partnerSystemService;
+	public PartnerSystemHandler(IPartnerSystemService partnerSystemService)
 	{
-		_partnerSystemService = PartnerSystemService;
+		_partnerSystemService = partnerSystemService;
 	}
 	public async Task<PartnerSystemResult> Handle(PartnerSystemCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data);
+		var result = await _partnerSystemService.PartnerSystemQueryAsync(request.callback_url, request.inquiry_type, request.identity_data, cancellationToken);
 		return new PartnerSystemResult(result);
 	}
 }

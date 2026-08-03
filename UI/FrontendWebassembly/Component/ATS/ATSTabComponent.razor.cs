@@ -5,17 +5,26 @@ public partial class ATSTabComponent
 	[Parameter]
 	public EventCallback<int> ActiveTabChanged { get; set; }
 
-	private int _activeIndex = 0;
-
-	private async Task TabChangedAsync()
+	private int _activeIndex = 1;
+	private async Task NavigateToTab(int index)
 	{
-		await ActiveTabChanged.InvokeAsync(_activeIndex);
+		_activeIndex = index;
+
+		if (ActiveTabChanged.HasDelegate)
+			await ActiveTabChanged.InvokeAsync(index);
 	}
 
 	private string GetTabClass(int index)
 	{
 		return _activeIndex == index
-			? "philsys-tab-pannel-active"
-			: "philsys-tab-pannel-inactive";
+			? "ats-tab-active"
+			: "ats-tab-inactive";
+	}
+
+	private string GetOrderClass()
+	{
+		return (_activeIndex == 1 || _activeIndex == 2)
+			? "ats-tab-active"
+			: "ats-tab-inactive";
 	}
 }

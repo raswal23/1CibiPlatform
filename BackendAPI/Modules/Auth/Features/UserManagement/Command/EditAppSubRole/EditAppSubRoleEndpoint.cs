@@ -15,7 +15,7 @@ public class EditAppSubRoleEndpoint : ICarterModule
 		})
 		.WithName("EditAppSubRole")
 		.WithTags("User Management")
-		.Produces<EditAppSubRoleResponse>()
+		.Produces<AppSubRoleDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Edit AppSubRole")
 		.WithDescription("Edits an application, submenu, and a role of a user in OnePlatform")

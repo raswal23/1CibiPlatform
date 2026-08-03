@@ -3,6 +3,7 @@
 public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 {
 	private readonly IATSRepository _repository;
+	private readonly IServiceScopeFactory _serviceScopeFactory;
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
@@ -16,6 +17,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 	public BulkSubmissionProcessorService(
 		IATSRepository repository,
+		IServiceScopeFactory serviceScopeFactory,
 		IObjectStorageService objectStorageService,
 		ISecureToken secureToken,
 		IHashService hashService,
@@ -26,6 +28,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IConfiguration configuration)
 	{
 		_repository = repository;
+		_serviceScopeFactory = serviceScopeFactory;
 		_objectStorageService = objectStorageService;
 		_secureToken = secureToken;
 		_hashService = hashService;
@@ -63,6 +66,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 			try
 			{
+				using var scope = _serviceScopeFactory.CreateScope();
+				var scopedRepository = scope.ServiceProvider.GetRequiredService<IATSRepository>();
+
 				List<EmailInvitationRequest> subjects = new();
 
 				await using var stream = await _objectStorageService.DownloadAsync(file.FileKey!, cancellationToken);
@@ -133,13 +139,15 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						EmailAddress = row.EmailAddress,
 						MobileNumber = row.MobileNumber,
 						SelectPackage = file.PackageType,
-						EmailSentStatus = "Pending",
-						IsFormCompleted = false,
-						RushNormal = file.OrderType
+						EmailSentStatus = EmailStatus.Pending,
+						ApplicationFormStatus = ApplicationFormStatus.Pending,
+						OrderStatus = OrderStatus.PendingCandidateInfo,
+						RushNormal = file.OrderType,
+						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
 
-				await _repository.AddBulkEmailInvitationRequestAsync(subjects);
+				await scopedRepository.AddBulkEmailInvitationRequestAsync(subjects);
 
 				await _hubContext
 						.Clients

@@ -1,0 +1,138 @@
+@layout GenericLayout
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject IAuthService IAuthService
+@implements IDisposable
+
+@if (_isReady)
+{
+    <div class="ats-console">
+        <aside class="ats-console-sidebar">
+            <div>
+                <div class="ats-console-logo">
+                    <div class="ats-console-logo-mark">ATS</div>
+                </div>
+
+            <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">◉</span>
+                <span>Dashboard</span>
+            </NavLink>
+
+            <NavLink href="/s&i/ats/neworder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">＋</span>
+                <span>New order</span>
+            </NavLink>
+
+            <NavLink href="/s&i/ats/searchreport" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">📋</span>
+                <span>Orders & reports</span>
+            </NavLink>
+
+                <NavLink href="/s&i/ats/disputeorder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">⚠</span>
+                <span>Disputes</span>
+            </NavLink>
+
+            <NavLink href="/s&i/ats/withdrawn" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">↩</span>
+                <span>Withdrawn</span>
+            </NavLink>
+
+            <div class="ats-console-nav-label">Manage</div>
+
+            @* <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">👥</span>
+                <span>Candidates</span>
+            </NavLink> *@
+
+            <NavLink href="/s&i/ats/settings" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <span class="ats-console-nav-ic">⚙</span>
+                <span>Settings</span>
+            </NavLink>
+            </div>
+
+            <div class="ats-console-sidebar-bottom">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Class="ats-console-back-btn"
+                           OnClick="GoBackToOnePlatform">
+                    Back to OnePlatform
+                </MudButton>
+            </div>
+        </aside>
+
+        <div class="ats-console-main">
+            <div class="ats-console-topbar">
+                <div>
+                    <div class="ats-console-crumb">Applicant Tracking System / <b>@_pageTitle</b></div>
+                    <h1> @_pageTitle</h1>
+                </div>
+                <div class="ats-console-topbar-right">
+                    <button type="button" class="ats-console-icon-btn" aria-label="Search">🔍</button>
+                    <button type="button" class="ats-console-icon-btn" aria-label="Notifications">🔔</button>
+                    <div class="ats-console-avatar">AT</div>
+                </div>
+            </div>
+
+            <div class="ats-console-content">
+                @Body
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <LoaderComponent />
+}
+
+@code {
+    private string _pageTitle = "Dashboard";
+    private bool _isReady;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await IAuthService.IsAuthenticated();
+
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        SetTitleFromUri();
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        _isReady = true;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        SetTitleFromUri();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void SetTitleFromUri()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
+
+        _pageTitle = relative switch
+        {
+            "s&i/ats/neworder" => "New order",
+            "s&i/ats/searchreport" => "Orders & reports",
+            "s&i/ats/disputeorder" => "Disputes",
+            "s&i/ats/candidates" => "Candidates",
+            "s&i/ats/settings" => "Settings",
+            "s&i/ats/withdrawn" => "Withdrawn",
+            _ => "Dashboard"
+        };
+    }
+
+    private void GoBackToOnePlatform()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

@@ -42,7 +42,7 @@ public static class AuthServiceConfiguration
 		services.AddScoped<ISubMenuService, SubMenuService>();
 		services.AddScoped<IRoleService, RoleService>();
 		services.AddScoped<IAppSubRoleService, AppSubRoleService>();
-		services.AddScoped<IUserService, UserManagementService>();
+		services.AddScoped<IUserService, UserService>();
 		services.AddScoped<ILockerUserService, LockedUserService>();
 
 		services.Decorate<IAuthRepository, AuthCacheRepository>();

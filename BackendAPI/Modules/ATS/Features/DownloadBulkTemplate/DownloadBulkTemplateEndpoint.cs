@@ -15,12 +15,12 @@ public class DownloadBulkTemplateEndpoint : ICarterModule
 			var response = new DownloadBulkTemplateResponse(result.templateLink);
 			return Results.Json(response.templateLink);
 		})
-		  .WithName("DownloadBulkTemplate")
-		  .WithTags("ATS")
-		  .Produces<DownloadBulkTemplateResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Download Bulk Template")
-		  .WithDescription("Downloads the bulk template for inserting multiple subject entries.")
-		  .RequireAuthorization();
+		.WithName("DownloadBulkTemplate")
+		.WithTags("ATS")
+		.Produces<string>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Download Bulk Template")
+		.WithDescription("Downloads the bulk template for inserting multiple subject entries.")
+		.RequireAuthorization();
 	}
 }

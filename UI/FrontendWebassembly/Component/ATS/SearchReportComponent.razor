@@ -1,67 +1,96 @@
-﻿@inject IJSRuntime JS
+﻿@page "/s&i/ats/searchreport"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IJSRuntime JS
 @inject IDialogService DialogService
+@inject IReportService ReportService
+@inject ISnackbar Snackbar
 
-<MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Class="mb-3">
-    <MudPaper Style="padding: 15px; width: 100%; max-width: 500px; border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8);">
-        <MudDateRangePicker @bind-DateRange="@_dateRange"
-                            Margin="Margin.Dense"
-                            ReadOnly="false"
-                            Clearable="true"
-                            PlaceholderStart="Start Date"
-                            PlaceholderEnd="End Date"
-                            Label="Date Range" />
-    </MudPaper>
-</MudStack>
+<PageTitle>ATS - Search Report</PageTitle>
 
-<TableComponent TItem="ReportRow"
-                @ref="reportsTable"
-                Title="Query Results"
-                EnableSearch="true"
-                ColumnCount="8"
-                RowsPerPage="10"
-                LoadServerData="LoadReportData">
+<MudPaper Class="pa-4" Elevation="0">
+    <div class="ats-console-notice mb-3">
+        <strong>Select at least one order.</strong>
+        Choose one or more orders from the list before downloading the report(s).
+    </div>
 
-    <HeaderTemplate>
-        <MudTh> Selected</MudTh>
-        <MudTh>Subject Name</MudTh>
-        <MudTh>Ticket Number</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Result</MudTh>
-        <MudTh>Date Completed</MudTh>
-        <MudTh>Report Type</MudTh>
-        <MudTh>Directory</MudTh>
-    </HeaderTemplate>
+    <TableComponent TItem="ReportListDTO"
+                    @ref="reportsTable"
+                    Title="Query results"
+                    EnableSearch="true"
+                    ColumnCount="8"
+                    RowsPerPage="10"
+                    LoadServerData="LoadReportData"
+                    SearchString="@searchString"
+                    RowClassFunc="GetRowClass"
+                    SearchStringChanged="@((string val) => searchString = val)">
+        <ToolBarLeft>
+            <MudDateRangePicker Margin="Margin.Dense"
+                                ReadOnly="false"
+                                Clearable="true"
+                                DateRangeChanged="OnDateRangeChanged"
+                                PlaceholderStart="Start Date"
+                                PlaceholderEnd="End Date"
+                                Label="Date range" />
+        </ToolBarLeft>
+        <HeaderTemplate>
+            <MudTh> Action</MudTh>
+            <MudTh>
+                <MudTableSortLabel T="ReportListDTO" SortLabel="SubjectName">Subject Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="ReportListDTO" SortLabel="OrderStatus">Status</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="ReportListDTO" SortLabel="OrderCompletedAt">Date Completed</MudTableSortLabel>
+            </MudTh>
+            <MudTh>Selected Package</MudTh>
+            <MudTh>Hit Status</MudTh>
+            <MudTh>Upload Report</MudTh>
+            <MudTh>Directory</MudTh>
+        </HeaderTemplate>
 
-    <RowTemplate Context="r">
-        <MudTd DataLabel="Selected">
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <MudCheckBox T="bool" @bind-Checked="r.Selected" Color="Color.Primary" />
+        <RowTemplate Context="r">
+            <MudTd DataLabel="Action">
+                <div style="display:flex; justify-content:left;">
+                    <MudCheckBox T="bool" 
+                                 @bind-value="r.Selected"
+                                 CheckedChanged="@((bool value) => OnCheckboxChanged(r, value))"
+                                 Color="Color.Primary" />
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Subject Name">@r.SubjectName</MudTd>
+            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(r.OrderStatus)">@r.OrderStatus</span></MudTd>
+            <MudTd DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+            <MudTd DataLabel="Selected Package">@r.SelectedPackage</MudTd>
+            <MudTd DataLabel="Hit Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(r.HitStatus)">@r.HitStatus</span></MudTd>
+            <MudTd DataLabel="Report Directory">
+                <MudIconButton Icon="@Icons.Material.Filled.Upload" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenUploadReportDialog(r.EmailInvitationRequestId))" />
+            </MudTd>
+            <MudTd DataLabel="Report Directory">
+                <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))" />
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-console-empty-state">
+                <div class="ats-console-empty-icon">📄</div>
+                <div class="ats-console-empty-title">No reports match these filters</div>
+                <div class="ats-console-empty-sub">Try widening the date range, or clear filters to see everything.</div>
             </div>
-        </MudTd>
-        <MudTd DataLabel="Subject Name">@r.Subject</MudTd>
-        <MudTd DataLabel="Ticket Number">@r.Ticket</MudTd>
-        <MudTd DataLabel="Status">@r.Status</MudTd>
-        <MudTd DataLabel="Result">@r.Result</MudTd>
-        <MudTd DataLabel="Date Completed">@r.DateCompleted</MudTd>
-        <MudTd DataLabel="Type">@r.ReportType</MudTd>
-        <MudTd DataLabel="Report Directory">
-            <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@OpenResultTriggerDialog" />
-        </MudTd>
-    </RowTemplate>
+        </NoRecordsTemplate>
 
-</TableComponent>
+    </TableComponent>
 
-<MudGrid Class="mt-0">
-    <MudItem xs="12" md="8">
-        <MudButton Class="theme-button theme-button-active"
-                   Style="width: 120px; border-radius: 4px;"
-                   OnClick="DownloadSelected">Download</MudButton>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudText Typo="Typo.caption" Class="text-right">
-            <b class="gradient-text">IMPORTANT NOTICE!</b><br />
-            For security purposes, all reports downloaded are password protected and in PDF format. Please reach out to your account manager for your quarterly passwords.
-        </MudText>
-    </MudItem>
-</MudGrid>
+    <div class="ats-actions-right mt-3 mb-3" style="justify-content:space-between; align-items:center;">
+        <MudButton Variant="Variant.Outlined"
+                   Class="ats-ghost-btn"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="DownloadSelected">Download selected</MudButton>
+    </div>
 
+    @* <div class="ats-console-notice">
+        <strong>Reports are password protected</strong>
+        Downloaded PDFs require this quarter's password. Please contact your account manager if you do not have it.
+    </div> *@
+</MudPaper>

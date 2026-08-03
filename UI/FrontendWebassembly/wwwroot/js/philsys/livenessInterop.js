@@ -9,7 +9,8 @@
     }).then((data) => {
         if (data && data.result && data.result.session_id) {
             const sessionId = data.result.session_id;
-            dotNetHelper.invokeMethodAsync('OnLivenessCompleted', sessionId);
+            const photoUrl = data.result.photo_url
+            dotNetHelper.invokeMethodAsync('OnLivenessCompleted', sessionId, photoUrl);
 
         } else {
             console.warn("⚠️ No session_id found in SDK result:", data);

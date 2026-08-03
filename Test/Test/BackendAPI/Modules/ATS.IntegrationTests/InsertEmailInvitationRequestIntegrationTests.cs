@@ -24,7 +24,7 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 			LastName = "Tester",
 			MiddleInitial = "A",
 			EmailAddress = "integration.tester@example.com",
-			MobileNumber = "+639171234567",
+			MobileNumber = "09171234567",
 			SelectPackage = "Standard",
 			RushNormal = "Normal"
 		};

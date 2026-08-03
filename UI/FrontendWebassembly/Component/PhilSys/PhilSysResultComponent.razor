@@ -5,11 +5,9 @@
 
 @if (WebHookUrl == "/")
 {
-    <MudPaper Class="p-8 text-center philsys-form-wrapper"
-              Elevation="6"
-              Style="border-radius: 20px;
-                  padding: 25px;
-                  box-shadow: 0px 10px 45px rgba(0,0,0,0.1);
+    <MudPaper Class="p-8 text-center philsys-form-wrapper transparent-paper philsys-modern philsys-modern-card"
+              Elevation="0"
+              Style="padding: 25px;
                   width: 100%;
                   max-width: 950px;
                   max-height: 95%;
@@ -62,13 +60,13 @@
                 <div style="grid-column: 1; grid-row: 2; align-content: center; margin-bottom: 12px;">
                     @if (!string.IsNullOrEmpty(VerificationResult?.data_subject?.digital_id) || VerificationResult!.verified.Equals(true))
                     {
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #e8f5e9; color: #2e7d32; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
+                        <div class="philsys-modern-pill success" style="display: flex; justify-content: center; gap: 6px; margin-top: 10px; height: 40px;">
                             <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium" Color="Color.Success" /> Verified
                         </div>
                     }
                     @if (VerificationResult!.verified.Equals(false))
                     {
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fdecea; color: #c62828; border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 16px; margin-top: 10px; height: 40px;">
+                        <div class="philsys-modern-pill error" style="display: flex; justify-content: center; gap: 6px; margin-top: 10px; height: 40px;">
                             <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Medium" Color="Color.Error" /> Not Verified
                         </div>
                     }

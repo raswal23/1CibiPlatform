@@ -14,13 +14,13 @@ public class InsertBulkSubjectEndpoint : ICarterModule
 			var response = new InsertBulkSubjectResponse(result.isAdded);
 			return Results.Ok(response.isAdded);
 		})
-			.DisableAntiforgery()
-		  .WithName("InsertBulkSubject")
-		  .WithTags("ATS")
-		  .Produces<InsertBulkSubjectResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Insert Bulk Subject")
-		  .WithDescription("Uploads a file and inserts its metadata to the database in a transactional manner.")
-		  .RequireAuthorization();
+		.DisableAntiforgery()
+		.WithName("InsertBulkSubject")
+		.WithTags("ATS")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Insert Bulk Subject")
+		.WithDescription("Uploads a file and inserts its metadata to the database in a transactional manner.")
+		.RequireAuthorization();
 	}
 }

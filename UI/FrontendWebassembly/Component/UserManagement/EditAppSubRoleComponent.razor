@@ -1,68 +1,82 @@
 ﻿@inject LocalStorageService LocalStorageService
 @inject IUserManagementService UserManagementService
 
-<MudDialog Style="padding: 8px;">
+<MudDialog Class="um-dialog" Style="padding: 0;">
     <DialogContent>
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Edit application role</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Update linked user, application, submenu, and role</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
 
-        @if (!IsLoaded)
-        {
-            <LoaderComponent Height="200px" />
-        }
-        else
-        {
-            <MudForm @ref="EditAppSubRoleForm">
-                <MudAutocomplete T="UsersDTO" 
-                                 Label="User" 
-                                 @bind-Value="selectedUser" 
-                                 SearchFunc="@SearchUsers" 
-                                 ToStringFunc="u => u?.email" 
-                                 Variant="Variant.Outlined" 
-                                 ProgressIndicatorColor="Color.Default" 
-                                 ShowProgressIndicator="true" 
-                                 Class="oneplatform-rounded-input" />
+            <MudDivider />
 
-                <MudAutocomplete T="ApplicationsDTO" 
-                                 Label="Application" 
-                                 @bind-Value="selectedApp" 
-                                 SearchFunc="@SearchApplications" 
-                                 ToStringFunc="a => a?.applicationName" 
-                                 Variant="Variant.Outlined" 
-                                 ProgressIndicatorColor="Color.Default" 
-                                 ShowProgressIndicator="true" 
-                                 Class="oneplatform-rounded-input" />
+            @if (!IsLoaded)
+            {
+                <MudPaper Elevation="0" Class="um-dialog-body">
+                    <LoaderComponent Height="200px" />
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper Elevation="0" Class="um-dialog-body">
+                    <MudForm @ref="EditAppSubRoleForm">
+                        <MudStack Spacing="2">
+                            <MudAutocomplete T="UsersDTO"
+                                             Label="User"
+                                             @bind-Value="selectedUser"
+                                             SearchFunc="@SearchUsers"
+                                             ToStringFunc="u => u?.email"
+                                             Variant="Variant.Outlined"
+                                             ProgressIndicatorColor="Color.Default"
+                                             ShowProgressIndicator="true"
+                                             Class="oneplatform-rounded-input"
+                                             Required="true" />
 
-                <MudAutocomplete T="SubMenusDTO" 
-                                 Label="SubMenu" 
-                                 @bind-Value="selectedMenu" 
-                                 SearchFunc="@SearchSubMenus" 
-                                 ToStringFunc="s => s?.subMenuName" 
-                                 Variant="Variant.Outlined" 
-                                 ProgressIndicatorColor="Color.Default" 
-                                 ShowProgressIndicator="true" 
-                                 Class="oneplatform-rounded-input" />
+                            <MudAutocomplete T="ApplicationsDTO"
+                                             Label="Application"
+                                             @bind-Value="selectedApp"
+                                             SearchFunc="@SearchApplications"
+                                             ToStringFunc="a => a?.applicationName"
+                                             Variant="Variant.Outlined"
+                                             ProgressIndicatorColor="Color.Default"
+                                             ShowProgressIndicator="true"
+                                             Class="oneplatform-rounded-input"
+                                             Required="true" />
 
-                <MudAutocomplete T="RolesDTO" 
-                                 Label="Role" 
-                                 @bind-Value="selectedRole" 
-                                 SearchFunc="@SearchRoles" 
-                                 ToStringFunc="r => r?.roleName" 
-                                 Variant="Variant.Outlined" 
-                                 ProgressIndicatorColor="Color.Default" 
-                                 ShowProgressIndicator="true" 
-                                 Class="oneplatform-rounded-input" />
-            </MudForm>
-        }
+                            <MudAutocomplete T="SubMenusDTO"
+                                             Label="SubMenu"
+                                             @bind-Value="selectedMenu"
+                                             SearchFunc="@SearchSubMenus"
+                                             ToStringFunc="s => s?.subMenuName"
+                                             Variant="Variant.Outlined"
+                                             ProgressIndicatorColor="Color.Default"
+                                             ShowProgressIndicator="true"
+                                             Class="oneplatform-rounded-input"
+                                             Required="true" />
 
+                            <MudAutocomplete T="RolesDTO"
+                                             Label="Role"
+                                             @bind-Value="selectedRole"
+                                             SearchFunc="@SearchRoles"
+                                             ToStringFunc="r => r?.roleName"
+                                             Variant="Variant.Outlined"
+                                             ProgressIndicatorColor="Color.Default"
+                                             ShowProgressIndicator="true"
+                                             Class="oneplatform-rounded-input"
+                                             Required="true" />
+                        </MudStack>
+                    </MudForm>
+                </MudPaper>
+            }
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            </div>
+        </div>
     </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel"
-                   Style="border-radius: 4px; border: 2px solid gray;">
-            Cancel
-        </MudButton>
-        <MudButton OnClick="Submit"
-                   Class="theme-button theme-button-active"
-                   Style="border-radius: 4px;">
-            Save
-        </MudButton>
-    </DialogActions>
 </MudDialog>
