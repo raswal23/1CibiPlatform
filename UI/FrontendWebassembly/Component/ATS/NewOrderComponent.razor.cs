@@ -185,7 +185,7 @@ public partial class NewOrderComponent
 
 		if (!hasData)
 		{
-			Snackbar.Add("The Excel file is empty.", Severity.Error);
+			Snackbar.Add("The CSV file is empty.", Severity.Error);
 			return;
 		}
 
@@ -245,15 +245,15 @@ public partial class NewOrderComponent
 		}
 	}
 
-	public class ExcelPreviewData
+	public class CSVPreviewData
 	{
 		public List<string> Headers { get; set; } = [];
 		public List<List<string>> Rows { get; set; } = [];
 	}
 
-	private async Task<ExcelPreviewData> BuildCsvPreview()
+	private async Task<CSVPreviewData> BuildCsvPreview()
 	{
-		var result = new ExcelPreviewData();
+		var result = new CSVPreviewData();
 
 		using var stream = bulkUploadFileDetailsDTO.BulkFile!.OpenReadStream();
 
