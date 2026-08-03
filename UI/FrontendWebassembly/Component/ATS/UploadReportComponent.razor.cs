@@ -7,6 +7,9 @@ public partial class UploadReportComponent
 
 	[CascadingParameter]
 	private IMudDialogInstance MudDialog { get; set; } = default!;
+
+	[Parameter]
+	public EventCallback OnUploadSucceededReload { get; set; }
 	private MudForm? uploadReportForm;
 
 	private ReportDetailsDTO reportDetails = new();
@@ -82,6 +85,8 @@ public partial class UploadReportComponent
 				Snackbar.Add("Failed to upload report.", Severity.Error);
 				return;
 			}
+
+			await OnUploadSucceededReload.InvokeAsync();
 
 			Snackbar.Add("Report uploaded successfully.", Severity.Success);
 

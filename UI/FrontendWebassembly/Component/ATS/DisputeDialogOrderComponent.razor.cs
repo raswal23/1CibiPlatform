@@ -5,6 +5,8 @@ public partial class DisputeDialogOrderComponent
 	private MudForm? disputeForm;
 	private bool isMarkingAsDisputed = false;
 
+	private bool isUploading = false;
+
 	[CascadingParameter]
 	IMudDialogInstance? SubmitDisputeOrderDialog { get; set; }
 	[Parameter]
@@ -28,6 +30,7 @@ public partial class DisputeDialogOrderComponent
 
 			try
 			{
+				isUploading = true;
 				isMarkingAsDisputed = true;
 				await InvokeAsync(StateHasChanged);
 
@@ -45,6 +48,7 @@ public partial class DisputeDialogOrderComponent
 				if (!success)
 				{
 					Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
+					isUploading = false;
 					return;
 				}
 			}
@@ -60,5 +64,10 @@ public partial class DisputeDialogOrderComponent
 
 			SubmitDisputeOrderDialog!.Close();
 		}
+	}
+
+	private void CloseDialog()
+	{
+		SubmitDisputeOrderDialog!.Cancel();
 	}
 }

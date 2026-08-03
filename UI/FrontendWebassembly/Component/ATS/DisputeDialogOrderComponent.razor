@@ -3,6 +3,15 @@
 
 <MudDialog Class="ats-dispute-dialog" Style="padding: 0;">
     <DialogContent>
+        <div class="ats-upload-report-shell-header">
+            <div>
+                <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Reason for Dispute</MudText>
+                <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Review the reason provided for disputing the screening result.</MudText>
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.Close"
+                           Class="ats-upload-report-shell-close"
+                           OnClick="CloseDialog" />
+        </div>
         <div class="ats-dispute-dialog-content">
             <MudForm @ref="disputeForm">
                 <MudGrid Class="ats-dispute-dialog-grid" Spacing="1">
@@ -71,6 +80,7 @@
                         <MudItem xs="6">
                             <MudButton FullWidth="true"
                                        Variant="Variant.Filled"
+                                       Disabled="@isUploading"
                                        Class="theme-button theme-button-active"
                                        OnClick="SendDisputeAsync">
                                 @if (isMarkingAsDisputed)

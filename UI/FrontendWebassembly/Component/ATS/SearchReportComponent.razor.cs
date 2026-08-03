@@ -88,7 +88,7 @@ public partial class SearchReportComponent
 
 		var fileBytes = await response.Content.ReadAsByteArrayAsync();
 
-		using (var ms = new System.IO.MemoryStream(fileBytes))
+		using (var ms = new MemoryStream(fileBytes))
 		using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Read, leaveOpen: false))
 		{
 			if (!zip.Entries.Any())
@@ -108,9 +108,9 @@ public partial class SearchReportComponent
 	private async Task OpenResultDialog<TComponent>(
 		string title,
 		DialogParameters? parameters = null,
-		MaxWidth maxWidth = MaxWidth.Large,
+		MaxWidth maxWidth = MaxWidth.Medium,
 		bool fullWidth = true,
-		bool noHeader = false)
+		bool noHeader = true)
 		where TComponent : IComponent
 	{
 		var options = new DialogOptions
@@ -142,7 +142,7 @@ public partial class SearchReportComponent
 			};
 
 			await OpenResultDialog<ATSResultComponent>(
-				"Subject Result",
+				"",
 				parameters);
 		}
 		catch (Exception)
@@ -156,7 +156,9 @@ public partial class SearchReportComponent
 		IDialogReference? dialog = null;
 		var parameters = new DialogParameters
 		{
-			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId }
+			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId },
+			{ nameof(UploadReportComponent.OnUploadSucceededReload),
+				EventCallback.Factory.Create(this, ReloadTable) }
 		};
 
 		var options = new DialogOptions

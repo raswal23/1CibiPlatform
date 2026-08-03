@@ -760,6 +760,7 @@ code {
 
 .ats-result-shell {
     color: #1e2a3c;
+    margin: 20px;
 }
 
 .ats-result-title {
@@ -2891,6 +2892,8 @@ code {
 
 .philsys-lookup-form {
     width: 100%;
+    border-radius: 16px !important;
+    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
     max-width: 600px;
 }
 
@@ -2983,6 +2986,7 @@ code {
     gap: 10px;
     align-items: center;
     text-align: left;
+    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
     cursor: pointer;
 }
 

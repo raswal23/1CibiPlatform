@@ -113,7 +113,6 @@ public partial class NewOrderComponent
 
 		if (string.IsNullOrWhiteSpace(subject.RushNormal))
 		{
-			Console.WriteLine($"After validation: '{subject.RushNormal}'");
 			Snackbar.Add("Processing speed is required",Severity.Error);
 			return;
 		}
@@ -292,9 +291,4 @@ public partial class NewOrderComponent
 			bulkUploadFileDetailsDTO.FileName = null;
 		}
 	}
-
-
-	
-
-	
 }

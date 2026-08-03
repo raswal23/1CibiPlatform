@@ -7,6 +7,12 @@
 
 <PageTitle>ATS - Dispute Order</PageTitle>
 
+    <div class="ats-console-notice mb-3">
+        <strong>Dispute window applies</strong>
+        Disputes can only be filed for orders completed within the allowed window. Submit a new order if that window has closed or reverification is needed.
+    </div>
+     
+
     <TableComponent TItem="DisputeOrderListDTO"
                     @ref="ordersTable"
                     Title="Dispute orders"
@@ -86,12 +92,4 @@
         </NoRecordsTemplate>
     </TableComponent>
 
-    <MudGrid Class="mt-3" Justify="Justify.Center">
-        <MudItem xs="12" md="8">
-            <div class="ats-console-notice">
-                <strong>Dispute window applies</strong>
-                Disputes can only be filed for orders completed within the allowed window. Submit a new order if that window has closed or reverification is needed.
-            </div>
-        </MudItem>
-    </MudGrid>
-
+    

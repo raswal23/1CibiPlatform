@@ -25,6 +25,31 @@ public partial class DisputeOrderComponent
 	=> await LoadPagedDataAsync(state, (page, pageSize) =>
 				DisputeOrderService.GetDisputeOrdersAsync(page, pageSize, searchString));
 
+	private async Task OpenResultDialog<TComponent>(
+		string title,
+		DialogParameters? parameters = null,
+		MaxWidth maxWidth = MaxWidth.Small,
+		bool fullWidth = true,
+		bool noHeader = true)
+		where TComponent : IComponent
+	{
+		var options = new DialogOptions
+		{
+			CloseButton = !noHeader,
+			NoHeader = noHeader,
+			MaxWidth = maxWidth,
+			FullWidth = fullWidth
+		};
+
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters ?? new DialogParameters(),
+			options);
+
+		await dialog.Result;
+	}
+
+
 	private async Task MarkAsDisputed(Guid emailInvitationId, DateTime? orderCreatedAt, string subjectName)
 	{
 		var confirmParam = new DialogParameters
@@ -34,11 +59,7 @@ public partial class DisputeOrderComponent
 			{ nameof(DisputeDialogOrderComponent.SubjectName), subjectName }
 		};
 
-		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>("Reason to Dispute", confirmParam);
-		var result = await dialog.Result;
-
-		if(result!.Canceled)
-			return;
+		await OpenResultDialog<DisputeDialogOrderComponent>("", confirmParam);
 
 		try
 		{

@@ -6,13 +6,13 @@ public partial class ATSResultComponent
 	private bool IsLoaded = true;
 
 	[Parameter]
-	public EventCallback OnUploadSucceededReload { get; set; }
-
-	[Parameter]
 	public Guid EmailInvitationId { get; set; }
 
 	[Parameter]
 	public ATSResultDetailsDTO? ReportResult { get; set; }
+
+	[CascadingParameter]
+	private IMudDialogInstance MudDialog { get; set; } = default!;
 
 	private async Task OpenResultDialog<TComponent>(
 	string title,
@@ -23,6 +23,7 @@ public partial class ATSResultComponent
 		{
 			CloseButton = true,
 			MaxWidth = MaxWidth.ExtraSmall,
+			NoHeader = true,
 			FullWidth = true
 		};
 
@@ -53,4 +54,10 @@ public partial class ATSResultComponent
 			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
 		}
 	}
+
+	private void CloseDialog()
+	{
+		MudDialog.Close();
+	}
+
 }
