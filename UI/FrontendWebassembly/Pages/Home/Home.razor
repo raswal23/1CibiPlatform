@@ -1,0 +1,81 @@
+@page "/"
+@page "/dashboard"
+
+<PageTitle>CIBI OnePlatform</PageTitle>
+
+@if (isLoading)
+{
+    <LoaderComponent />
+}
+else
+{
+    <div class="home-shell">
+        <section class="home-hero">
+            <div>
+                <h1 class="home-hero-title">Welcome back, @DisplayName</h1>
+                <p class="home-hero-subtitle">Pick up where you left off, or jump into any application below.</p>
+            </div>
+            <span class="home-date-pill">@CurrentDateText</span>
+        </section>
+
+        <section>
+            <div class="home-section-title">
+                <h2>Your applications</h2>
+                <span class="home-section-count">@($"{AvailableApps.Count} available")</span>
+            </div>
+
+            <div class="home-app-grid">
+                @foreach (var app in AvailableApps)
+                {
+                    <article class="home-app-card">
+                        <div class="home-app-icon" style="background: @app.AccentGradient;">
+                            <MudIcon Icon="@app.Icon" Size="Size.Medium" />
+                        </div>
+
+                        <h3 class="home-app-title">@app.Name</h3>
+                        <p class="home-app-subtitle">@app.Subtitle</p>
+
+                        <div class="home-app-open-row">
+                            <span class="home-badge">Active</span>
+                            <a class="home-open-link" href="@app.OpenRoute">Open →</a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section class="home-bottom-grid">
+            <article class="home-panel">
+                <h3 class="home-panel-title">Recent activity</h3>
+
+                @* TODO: Replace this placeholder with a real shell-level activity/audit log data source and API once backend support is implemented. *@
+                <div class="home-empty-state">
+                    <div class="home-empty-icon-wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Class="home-empty-icon" />
+                    </div>
+                    <div class="home-empty-title">Recent activity coming soon</div>
+                    <div class="home-empty-subtitle">Actions across your apps — orders, lookups, and updates — will show up here.</div>
+                </div>
+            </article>
+
+            <article class="home-panel">
+                <div class="home-section-title home-announcement-header">
+                    <h3 class="home-panel-title">What's new</h3>
+                    <span class="home-placeholder-chip">Placeholder</span>
+                </div>
+
+                @* TODO: Replace editorial announcement placeholders with a real platform announcement/CMS source. *@
+                <div class="home-announcement-list">
+                    @foreach (var item in Announcements)
+                    {
+                        <div class="home-announcement-item">
+                            <div class="home-announcement-tag">@item.Tag</div>
+                            <div class="home-announcement-title">@item.Title</div>
+                            <div class="home-announcement-detail">@item.Detail</div>
+                        </div>
+                    }
+                </div>
+            </article>
+        </section>
+    </div>
+}
