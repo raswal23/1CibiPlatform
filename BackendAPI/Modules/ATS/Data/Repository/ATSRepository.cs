@@ -407,21 +407,32 @@ public class ATSRepository : IATSRepository
 					.FirstOrDefault()
 			});
 
-		usersQuery = sortColumn switch
+		if (string.IsNullOrWhiteSpace(sortColumn))
 		{
-			SortColumn.SubjectName => sortDescending
-				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
-				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
-			SortColumn.OrderStatus => sortDescending
-				? usersQuery.OrderByDescending(x => x.OrderStatus)
-				: usersQuery.OrderBy(x => x.OrderStatus),
-			SortColumn.OrderCompletedAt => sortDescending
-				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
-			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-		};
+			usersQuery = usersQuery
+						.OrderByDescending(x => x.OrderCompletedAt.HasValue)
+						.ThenByDescending(x => x.OrderCompletedAt)
+						.ThenBy(x => x.EmailInvitationID);
+		}
+		else
+		{
+			usersQuery = sortColumn switch
+			{
+				SortColumn.SubjectName => sortDescending
+					? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
+					: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
 
+				SortColumn.OrderStatus => sortDescending
+					? usersQuery.OrderByDescending(x => x.OrderStatus)
+					: usersQuery.OrderBy(x => x.OrderStatus),
 
+				SortColumn.OrderCompletedAt => sortDescending
+					? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+					: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
+
+				_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
+			};
+		}
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
@@ -512,6 +523,7 @@ public class ATSRepository : IATSRepository
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
+			.OrderByDescending(x => x.OrderCompletedAt)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
 			.Select(x => new ReportListDTO

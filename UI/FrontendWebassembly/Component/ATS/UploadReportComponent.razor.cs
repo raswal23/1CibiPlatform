@@ -4,10 +4,6 @@ public partial class UploadReportComponent
 {
 	[Parameter]
 	public Guid EmailInvitationRequestId { get; set; }
-	[Parameter]
-	public EventCallback OnUploadSucceeded { get; set; }
-	[Parameter]
-	public EventCallback OnCancel { get; set; }
 
 	[CascadingParameter]
 	private IMudDialogInstance MudDialog { get; set; } = default!;
@@ -86,8 +82,6 @@ public partial class UploadReportComponent
 				Snackbar.Add("Failed to upload report.", Severity.Error);
 				return;
 			}
-
-			await OnUploadSucceeded.InvokeAsync();
 
 			Snackbar.Add("Report uploaded successfully.", Severity.Success);
 

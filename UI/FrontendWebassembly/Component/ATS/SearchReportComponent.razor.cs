@@ -57,8 +57,6 @@ public partial class SearchReportComponent
     {
         _dateRange = range;
 
-        Console.WriteLine($"{_dateRange?.Start} - {_dateRange?.End}");
-
         await ReloadTable();
     }
 
@@ -124,13 +122,11 @@ public partial class SearchReportComponent
 			var parameters = new DialogParameters
 			{
 				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
-				{ nameof(ATSResultComponent.ReportResult), reportResult },
-				{ nameof(ATSResultComponent.OnUploadSucceededReload),
-				EventCallback.Factory.Create(this, ReloadTable) }
+				{ nameof(ATSResultComponent.ReportResult), reportResult }
 			};
 
 			await OpenResultDialog<ATSResultComponent>(
-				"",
+				"Subject Result",
 				parameters);
 		}
 		catch (Exception)
@@ -144,13 +140,7 @@ public partial class SearchReportComponent
 		IDialogReference? dialog = null;
 		var parameters = new DialogParameters
 		{
-			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId },
-			{ nameof(UploadReportComponent.OnCancel), EventCallback.Factory.Create(this, () => dialog?.Close()) },
-			{ nameof(UploadReportComponent.OnUploadSucceeded), EventCallback.Factory.Create(this, async () =>
-				{
-					dialog?.Close();
-					await ReloadTable();
-				}) }
+			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId }
 		};
 
 		var options = new DialogOptions

@@ -5,9 +5,6 @@ public partial class ATSResultComponent
 	private MudForm? form;
 	private bool IsLoaded = true;
 
-
-	private bool showReportUploader = false;
-
 	[Parameter]
 	public EventCallback OnUploadSucceededReload { get; set; }
 
@@ -55,25 +52,5 @@ public partial class ATSResultComponent
 		{
 			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
 		}
-	}
-
-	private void ShowUploadReport()
-	{
-		showReportUploader = true;
-	}
-
-	private void GoBackToSearchReport()
-	{
-		showReportUploader = false;
-	}
-
-	private async Task ReloadReportResult()
-	{
-		ReportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(EmailInvitationId);
-		showReportUploader = false;
-
-		StateHasChanged();
-
-		await OnUploadSucceededReload.InvokeAsync();
 	}
 }

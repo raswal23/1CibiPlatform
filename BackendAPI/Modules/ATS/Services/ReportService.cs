@@ -152,6 +152,11 @@ public class ReportService : IReportService
 
 		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken);
 
+		if (string.IsNullOrWhiteSpace(result!.HitStatus))
+		{
+			result.HitStatus = "-";
+		}
+
 		if (result is null)
 		{
 			_logger.LogError("Failed to upload report {@Context}", logContext);
@@ -164,7 +169,6 @@ public class ReportService : IReportService
 
 		if (!string.IsNullOrEmpty(result.BiometricPhotoFileKey))
 			result.UploadBiometricPhotoAt = result.FilledFormAt;
-
 
 		return result;
 	}

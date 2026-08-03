@@ -33,7 +33,10 @@ public partial class SelectFilesToDownloadComponent
 	public async Task DownloadDocumentsAsync()
 	{
 		if (!HasSelectedFile)
+		{
+			Snackbar.Add("Please select at least one file first.", Severity.Warning);
 			return;
+		}
 
 		DownloadRequest.FileDocuments.Clear();
 
