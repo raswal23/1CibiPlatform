@@ -1230,11 +1230,13 @@ code {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+
 }
 
 .ats-console-logo {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     padding: 0 8px 26px;
     font-weight: 700;
@@ -1243,14 +1245,14 @@ code {
 }
 
 .ats-console-logo-mark {
-    width: 30px;
-    height: 30px;
+    width: 60px;
+    height: 60px;
     border-radius: 8px;
     background: linear-gradient(135deg, var(--ats-sky-300), var(--ats-blue-500));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 30px;
     color: var(--ats-navy-900);
 }
 
