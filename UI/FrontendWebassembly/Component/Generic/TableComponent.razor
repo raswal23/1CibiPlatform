@@ -10,7 +10,8 @@
         RowClassFunc="RowClassFunc"
         HorizontalScrollbar="true"
         Hover="true"
-        RowsPerPage="@(RowsPerPage ?? 10)"
+        RowsPerPage="@_rowsPerPage"
+        RowsPerPageChanged="@((int value) => _rowsPerPage = value)"
         LoadingContent="@(UseLoadingContentBody ? null : LoadingContent)"
         LoadingContentBody="@(UseLoadingContentBody ? LoadingContentBody : null)"
         Style="border-radius: 12px; padding: 10px;">
@@ -94,7 +95,8 @@ else
                   Hover="true"
                   Class="responsive-title"
                   Style="border-radius: 4px; padding: 10px;"
-                  RowsPerPage="@(RowsPerPage ?? 10)"
+                  RowsPerPage="@_rowsPerPage"
+                  RowsPerPageChanged="@((int value) => _rowsPerPage = value)"
                   HorizontalScrollbar="true"
                   RowClassFunc="RowClassFunc">
 

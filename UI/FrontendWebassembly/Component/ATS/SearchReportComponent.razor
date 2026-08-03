@@ -52,14 +52,11 @@
 
         <RowTemplate Context="r">
             <MudTd DataLabel="Action">
-                <div style="display:flex; justify-content:left; align-items:left;">
-                    <MudCheckBox T="bool" @bind-Checked="r.Selected"
-                                 Color="Color.Primary"
-                                 ValueChanged="@(value =>
-                                 {
-                                    r.Selected = value;
-                                    StateHasChanged();
-                                 })" />
+                <div style="display:flex; justify-content:left;">
+                    <MudCheckBox T="bool" 
+                                 @bind-value="r.Selected"
+                                 CheckedChanged="@((bool value) => OnCheckboxChanged(r, value))"
+                                 Color="Color.Primary" />
                 </div>
             </MudTd>
             <MudTd DataLabel="Subject Name">@r.SubjectName</MudTd>
