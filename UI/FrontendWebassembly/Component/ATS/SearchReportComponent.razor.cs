@@ -82,7 +82,23 @@ public partial class SearchReportComponent
 
 		var response = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
 
+		if (!response.IsSuccessStatusCode)
+		{
+			Snackbar.Add("Failed to download records.", Severity.Error);
+			return;
+		}
+
 		var fileBytes = await response.Content.ReadAsByteArrayAsync();
+
+		using (var ms = new System.IO.MemoryStream(fileBytes))
+		using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Read, leaveOpen: false))
+		{
+			if (!zip.Entries.Any())
+			{
+				Snackbar.Add("The downloaded ZIP contains no files.", Severity.Warning);
+				return;
+			}
+		}
 
 		var fileName =
 			response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
