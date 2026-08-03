@@ -1,4 +1,6 @@
-﻿namespace FrontendWebassembly.Component.UserManagement;
+﻿using FrontendWebassembly.ShareData.Auth;
+
+namespace FrontendWebassembly.Component.UserManagement;
 
 public partial class AddSubMenuComponent
 {
@@ -8,6 +10,20 @@ public partial class AddSubMenuComponent
 
 	[Parameter]
 	public AddSubMenuDTO SubMenu { get; set; } = new AddSubMenuDTO { IsActive = true };
+
+	private Task<IEnumerable<string>> SearchSubMenus(string value, CancellationToken cancellationToken)
+	{
+		var result = SubMenuList.List.Values
+			.Select(x => x.Name);
+
+		if (!string.IsNullOrWhiteSpace(value))
+		{
+			result = result.Where(x =>
+				x.Contains(value, StringComparison.OrdinalIgnoreCase));
+		}
+
+		return Task.FromResult(result);
+	}
 
 	void Cancel() => MudDialog!.Cancel();
 

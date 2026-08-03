@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Quartz;
 using System.Security.Claims;
 using Testcontainers.PostgreSql;
 
@@ -34,7 +35,18 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureServices(services =>
 		{
-			services.RemoveAll<IHostedService>();
+			// Remove hosted services to avoid affecting other tests
+			var quartzHostedServices = services
+				.Where(s =>
+					s.ServiceType == typeof(IHostedService) &&
+					s.ImplementationType == typeof(QuartzHostedService))
+				.ToList();
+
+			foreach (var service in quartzHostedServices)
+			{
+				services.Remove(service);
+			}
+
 			services.RemoveAll<IDistributedCache>();
 
 			services.AddDistributedMemoryCache();
@@ -49,6 +61,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			// Register test DB context
 			services.AddDbContext<ATSDBContext>(options =>
 				options.UseNpgsql(_dbContainer.GetConnectionString()));
+
+			services.RemoveAll<IObjectStorageService>();
+			services.AddSingleton<IObjectStorageService, MockObjectStorageService>();
 
 			// Register HttpContextAccessor (scoped, not singleton)
 			services.RemoveAll<IHttpContextAccessor>();

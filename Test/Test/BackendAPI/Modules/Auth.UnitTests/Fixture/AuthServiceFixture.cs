@@ -28,7 +28,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 		public Mock<ILogger<LoginService>> MockLoginLogger { get; private set; }
 		public Mock<ILogger<RefreshTokenService>> MockRefreshLogger { get; private set; }
 		public Mock<ILogger<ForgotPasswordService>> MockForgotLogger { get; private set; }
-		public Mock<ILogger<UserManagementService>> MockUserManagementLogger { get; private set; }
+		public Mock<ILogger<UserService>> MockUserManagementLogger { get; private set; }
 		public Mock<ILogger<ApplicationService>> MockApplicationLogger { get; private set; }
 		public Mock<ILogger<SubMenuService>> MockSubMenuLogger { get; private set; }
 		public Mock<ILogger<AppSubRoleService>> MockAppSubRoleLogger { get; private set; }
@@ -43,7 +43,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 		public RefreshTokenService RefreshTokenService { get; private set; }
 		public ForgotPasswordService ForgotPasswordService { get; private set; }
 		public JWTService JwtService { get; private set; }
-		public UserManagementService UserManagementService { get; private set; }
+		public UserService UserManagementService { get; private set; }
 		public ApplicationService ApplicationService { get; private set; }
 		public SubMenuService SubMenuService { get; private set; }
 		public AppSubRoleService AppSubRoleService { get; private set; }
@@ -67,7 +67,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 			MockLoginLogger = new Mock<ILogger<LoginService>>();
 			MockRefreshLogger = new Mock<ILogger<RefreshTokenService>>();
 			MockForgotLogger = new Mock<ILogger<ForgotPasswordService>>();
-			MockUserManagementLogger = new Mock<ILogger<UserManagementService>>();
+			MockUserManagementLogger = new Mock<ILogger<UserService>>();
 			MockApplicationLogger = new Mock<ILogger<ApplicationService>>();
 			MockSubMenuLogger = new Mock<ILogger<SubMenuService>>();
 			MockAppSubRoleLogger = new Mock<ILogger<AppSubRoleService>>();
@@ -130,7 +130,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				MockHashService.Object,
 				MockPasswordHasherService.Object);
 
-			UserManagementService = new UserManagementService(
+			UserManagementService = new UserService(
 				MockAuthRepository.Object,
 				MockEmailService.Object,
 				MockUserManagementLogger.Object);

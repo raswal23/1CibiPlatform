@@ -18,5 +18,7 @@ public record PersonalDetailsDTO
 	public string? NBIClearanceFileName { get; set; }
 	public IFormFile? ResumeFile { get; set; }
 	public string? ResumeFileName { get; set; }
+	public IFormFile? BiometricFile { get; set; }
+	public string? BiometricFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

@@ -18,4 +18,6 @@ public record PersonalDetailsDTO
 	public string? NBIClearanceFileName { get; set; }
 	public byte[]? ResumeFile { get; set; }
 	public string? ResumeFileName { get; set; }
+	public byte[]? BiometricFile { get; set; }
+	public string? BiometricFileName { get; set; }
 }

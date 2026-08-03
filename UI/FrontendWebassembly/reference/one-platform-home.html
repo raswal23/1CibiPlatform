@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>One Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-900:#0B1F3A; --navy-700:#123A63; --blue-500:#2C7FB8; --sky-300:#7FC4E8;
+    --bg:#F4F7FB; --card:#FFFFFF; --text-main:#1E2A3C; --text-sub:#6B7B92;
+    --border:#E3E9F1; --success:#1E8E5A; --success-bg:#E7F5EC;
+    --warn:#B7791B; --warn-bg:#FCF3DE;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text-main);}
+  h1,h2,h3{font-family:'Sora',sans-serif;margin:0;}
+  .app{display:flex;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{width:236px;flex-shrink:0;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:22px 16px;}
+  .logo{display:flex;align-items:center;gap:10px;padding:4px 8px 28px;}
+  .logo .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy-900),var(--sky-300));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;font-family:'Sora',sans-serif;}
+  .logo .name{font-family:'Sora',sans-serif;font-weight:700;font-size:17px;color:var(--navy-900);}
+  .logo .name span{color:var(--blue-500);}
+
+  .nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-sub);margin-bottom:2px;transition:background .15s ease,color .15s ease;}
+  .nav-item:hover{background:#F0F5FB;color:var(--navy-900);}
+  .nav-item.active{background:var(--navy-900);color:#fff;}
+  .nav-item .ic{width:16px;text-align:center;font-size:14px;}
+  .nav-item .chev{margin-left:auto;font-size:10px;opacity:.6;}
+
+  .sidebar-bottom{margin-top:auto;}
+  .nav-item.logout{color:#B44E3C;}
+  .nav-item.logout:hover{background:#FCECE7;}
+
+  /* MAIN */
+  .main{flex:1;min-width:0;}
+  .topbar{height:64px;background:linear-gradient(100deg,var(--navy-900) 0%,var(--navy-700) 45%,var(--sky-300) 130%);display:flex;align-items:center;justify-content:space-between;padding:0 26px;color:#fff;}
+  .topbar .hamburger{font-size:18px;cursor:pointer;}
+  .topbar .right{display:flex;align-items:center;gap:16px;font-size:13.5px;}
+  .topbar .moon{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+
+  .content{padding:32px 36px 60px;max-width:1180px;}
+
+  .hero{
+    background:linear-gradient(100deg,var(--navy-900),var(--blue-500));
+    border-radius:18px;padding:30px 34px;color:#fff;margin-bottom:28px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .hero h1{font-size:22px;margin-bottom:6px;}
+  .hero p{font-size:13px;opacity:.85;margin:0;}
+  .hero .date{font-size:12px;background:rgba(255,255,255,.15);padding:7px 14px;border-radius:999px;font-weight:600;}
+
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .section-title h2{font-size:15.5px;color:var(--navy-900);}
+  .section-title .count{font-size:12px;color:var(--text-sub);}
+
+  .app-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:32px;}
+  .app-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:22px 22px 20px;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,transform .1s ease;
+    display:flex;flex-direction:column;
+  }
+  .app-card:hover{border-color:var(--blue-500);box-shadow:0 14px 30px -20px rgba(44,127,184,.35);transform:translateY(-2px);}
+  .app-icon{
+    width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    font-size:20px;color:#fff;margin-bottom:16px;
+  }
+  .app-card.si .app-icon{background:linear-gradient(135deg,var(--navy-900),var(--blue-500));}
+  .app-card.philsys .app-icon{background:linear-gradient(135deg,#1B6FA8,var(--sky-300));}
+  .app-card.cnx .app-icon{background:linear-gradient(135deg,#2C7FB8,#5FA8D3);}
+  .app-card.settings .app-icon{background:linear-gradient(135deg,#4A5A70,#8494A8);}
+
+  .app-card .title{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;color:var(--navy-900);margin-bottom:6px;}
+  .app-card .desc{font-size:12.5px;color:var(--text-sub);line-height:1.55;margin-bottom:18px;flex:1;}
+  .app-card .open-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--blue-500);}
+  .app-card .badge{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--success-bg);color:var(--success);}
+  .app-card .badge.soon{background:var(--warn-bg);color:var(--warn);}
+
+  .bottom-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;box-shadow:0 8px 24px -18px rgba(11,31,58,.15);}
+  .card h3{font-size:14px;color:var(--navy-900);margin-bottom:14px;}
+
+  .empty-state{padding:34px 16px;text-align:center;}
+  .empty-state .ic{width:42px;height:42px;border-radius:50%;background:#F0F5FB;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:17px;color:var(--blue-500);}
+  .empty-state .title{font-size:13.5px;font-weight:600;color:var(--text-main);margin-bottom:4px;}
+  .empty-state .sub{font-size:12px;color:var(--text-sub);max-width:260px;margin:0 auto;line-height:1.5;}
+
+  .announce-row{padding:12px 0;border-bottom:1px solid var(--border);}
+  .announce-row:last-child{border-bottom:none;}
+  .announce-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--blue-500);margin-bottom:4px;}
+  .announce-title{font-size:12.5px;font-weight:600;color:var(--text-main);margin-bottom:2px;}
+  .announce-sub{font-size:11.5px;color:var(--text-sub);}
+
+  @media (max-width:920px){
+    .app-grid{grid-template-columns:1fr 1fr;}
+    .bottom-grid{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><div class="mark">C</div><div class="name">Ci<span>Bi</span></div></div>
+
+    <div class="nav-item active"><span class="ic">&#9673;</span> Dashboard</div>
+    <div class="nav-item"><span class="ic">&#9638;</span> S&amp;I <span class="chev">&#9662;</span></div>
+    <div class="nav-item"><span class="ic">&#128681;</span> PhilSys <span class="chev">&#9662;</span></div>
+    <div class="nav-item"><span class="ic">&#128222;</span> CNX <span class="chev">&#9662;</span></div>
+    <div class="nav-item"><span class="ic">&#9881;</span> Settings <span class="chev">&#9662;</span></div>
+
+    <div class="sidebar-bottom">
+      <div class="nav-item logout"><span class="ic">&#8618;</span> Logout</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="hamburger">&#9776;</span>
+      <div class="right">Hi, Super Admin <div class="moon">&#9789;</div></div>
+    </div>
+
+    <div class="content">
+
+      <div class="hero">
+        <div>
+          <h1>Welcome back, Super Admin</h1>
+          <p>Pick up where you left off, or jump into any application below.</p>
+        </div>
+        <div class="date">Monday, Aug 3, 2026</div>
+      </div>
+
+      <div class="section-title">
+        <h2>Your applications</h2>
+        <span class="count">4 available</span>
+      </div>
+
+      <div class="app-grid">
+        <div class="app-card si">
+          <div class="app-icon">&#9638;</div>
+          <div class="title">S&amp;I &mdash; Applicant Tracking System</div>
+          <div class="desc">Screening &amp; investigation console — manage candidate orders, reports, and disputes.</div>
+          <div class="open-row"><span class="badge">Active</span><span>Open &#8594;</span></div>
+        </div>
+
+        <div class="app-card philsys">
+          <div class="app-icon">&#128681;</div>
+          <div class="title">PhilSys Registry</div>
+          <div class="desc">Look up and verify registrants using PSA national ID data.</div>
+          <div class="open-row"><span class="badge">Active</span><span>Open &#8594;</span></div>
+        </div>
+
+        <div class="app-card cnx">
+          <div class="app-icon">&#128222;</div>
+          <div class="title">CNX</div>
+          <div class="desc">Connect and manage outbound communications and call workflows.</div>
+          <div class="open-row"><span class="badge">Active</span><span>Open &#8594;</span></div>
+        </div>
+
+        <div class="app-card settings">
+          <div class="app-icon">&#9881;</div>
+          <div class="title">Settings</div>
+          <div class="desc">Manage users, roles, permissions, and platform-wide preferences.</div>
+          <div class="open-row"><span class="badge">Active</span><span>Open &#8594;</span></div>
+        </div>
+      </div>
+
+      <div class="bottom-grid">
+        <div class="card">
+          <h3>Recent activity</h3>
+          <!-- TODO: placeholder empty state — replace once a shared
+               activity-log data source exists (see backend note).
+               Do not populate with fake/sample rows. -->
+          <div class="empty-state">
+            <div class="ic">&#8987;</div>
+            <div class="title">Recent activity coming soon</div>
+            <div class="sub">Actions across your apps — orders, lookups, and updates — will show up here.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>What's new</h3>
+          <div class="announce-row">
+            <div class="announce-tag">Update</div>
+            <div class="announce-title">Dispute flow redesigned</div>
+            <div class="announce-sub">Faster filing with clearer category selection.</div>
+          </div>
+          <div class="announce-row">
+            <div class="announce-tag">Reminder</div>
+            <div class="announce-title">Quarterly report passwords rotate Aug 15</div>
+            <div class="announce-sub">Contact your account manager for the new password.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

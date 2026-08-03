@@ -1,47 +1,90 @@
 ﻿@inject LocalStorageService LocalStorageService
 @inject IUserManagementService UserManagementService
 
-<MudDialog Style="padding: 8px;">
+<MudDialog Class="um-dialog" Style="padding: 0;">
     <DialogContent>
-        <MudForm @ref="AddAppSubRoleForm">
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Assign application role</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Link a user, application, submenu, and role</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
 
-            <MudAutocomplete T="UsersDTO" Label="User" @bind-Value="selectedUser" SearchFunc="@SearchUsers" ToStringFunc="u => u?.email" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
-            @if (showUserError)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Error">User is required</MudText>
-            }
+            <MudDivider />
 
-            <MudAutocomplete T="ApplicationsDTO" Label="Application" @bind-Value="selectedApp" SearchFunc="@SearchApplications" ToStringFunc="a => a?.applicationName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
-            @if (showAppError)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Error">Application is required</MudText>
-            }
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="AddAppSubRoleForm">
+                    <MudStack Spacing="2">
+                        <MudAutocomplete T="UsersDTO"
+                                         Label="User"
+                                         @bind-Value="selectedUser"
+                                         SearchFunc="@SearchUsers"
+                                         ToStringFunc="u => u?.email"
+                                         Variant="Variant.Outlined"
+                                         ProgressIndicatorColor="Color.Default"
+                                         ShowProgressIndicator="true"
+                                         Class="oneplatform-rounded-input"
+                                         Required="true" />
+                        @if (showUserError)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">User is required</MudText>
+                        }
 
-            <MudAutocomplete T="SubMenusDTO" Label="SubMenu" @bind-Value="selectedMenu" SearchFunc="@SearchSubMenus" ToStringFunc="s => s?.subMenuName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
-            @if (showSubMenuError)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Error">SubMenu is required</MudText>
-            }
+                        <MudAutocomplete T="ApplicationsDTO"
+                                         Label="Application"
+                                         @bind-Value="selectedApp"
+                                         SearchFunc="@SearchApplications"
+                                         ToStringFunc="a => a?.applicationName"
+                                         Variant="Variant.Outlined"
+                                         ProgressIndicatorColor="Color.Default"
+                                         ShowProgressIndicator="true"
+                                         Class="oneplatform-rounded-input"
+                                         Required="true" />
+                        @if (showAppError)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">Application is required</MudText>
+                        }
 
-            <MudAutocomplete T="RolesDTO" Label="Role" @bind-Value="selectedRole" SearchFunc="@SearchRoles" ToStringFunc="r => r?.roleName" Variant="Variant.Outlined" ProgressIndicatorColor="Color.Default" ShowProgressIndicator="true" Class="oneplatform-rounded-input"/>
-            @if (showRoleError)
-            {
-                <MudText Typo="Typo.caption" Color="Color.Error">Role is required</MudText>
-            }
+                        <MudAutocomplete T="SubMenusDTO"
+                                         Label="SubMenu"
+                                         @bind-Value="selectedMenu"
+                                         SearchFunc="@SearchSubMenus"
+                                         ToStringFunc="s => s?.subMenuName"
+                                         Variant="Variant.Outlined"
+                                         ProgressIndicatorColor="Color.Default"
+                                         ShowProgressIndicator="true"
+                                         Class="oneplatform-rounded-input"
+                                         Required="true" />
+                        @if (showSubMenuError)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">SubMenu is required</MudText>
+                        }
 
-        </MudForm>
+                        <MudAutocomplete T="RolesDTO"
+                                         Label="Role"
+                                         @bind-Value="selectedRole"
+                                         SearchFunc="@SearchRoles"
+                                         ToStringFunc="r => r?.roleName"
+                                         Variant="Variant.Outlined"
+                                         ProgressIndicatorColor="Color.Default"
+                                         ShowProgressIndicator="true"
+                                         Class="oneplatform-rounded-input"
+                                         Required="true" />
+                        @if (showRoleError)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">Role is required</MudText>
+                        }
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            </div>
+        </div>
     </DialogContent>
-
-    <DialogActions>
-        <MudButton OnClick="Cancel" 
-                   Style="border-radius: 4px; border: 2px solid gray;">
-            Cancel
-        </MudButton>
-        <MudButton OnClick="Submit" 
-                   Class="theme-button theme-button-active" 
-                   Style="border-radius: 4px;">
-            Save
-        </MudButton>
-    </DialogActions>
 </MudDialog>
 

@@ -1,6 +1,26 @@
 ﻿namespace Auth.Features.UserManagement.Command.AddApplication;
 public record AddApplicationCommand(AddApplicationDTO application) : ICommand<AddApplicationResult>;
 public record AddApplicationResult(bool isAdded);
+
+public class AddApplicationCommandValidator : AbstractValidator<AddApplicationCommand>
+{
+	public AddApplicationCommandValidator()
+	{
+		RuleFor(x => x.application)
+			.NotNull().WithMessage("Application data is required.");
+
+		When(x => x.application != null, () =>
+		{
+			RuleFor(x => x.application.AppName)
+				.NotEmpty().WithMessage("AppName is required.");
+			RuleFor(x => x.application.Description)
+				.NotEmpty().WithMessage("AppDescription is required.");
+			RuleFor(x => x.application.IsActive)
+				.NotEmpty().WithMessage("IsActive is required.");
+		});
+	}
+}
+
 public class AddApplicationHandler : ICommandHandler<AddApplicationCommand, AddApplicationResult>
 {
 	private readonly IApplicationService _applicationService;

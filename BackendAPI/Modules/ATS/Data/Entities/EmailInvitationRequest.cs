@@ -11,12 +11,19 @@ public class EmailInvitationRequest
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
-	public bool IsFormCompleted { get; set; }
+	public string? ApplicationFormStatus { get; set; }
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }
 	public DateTime? EmailSentAt { get; set; }
 	public DateTime? HashTokenCreatedAt { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
+	public string? OrderStatus { get; set; }
+	public DateTime? OrderCreatedAt { get; set; }
+	public DateTime? OrderCompletedAt { get; set; }
+    public bool NeedsProjection { get; set; } = true;
+	public DateTime? ProjectionUpdatedAt { get; set; }
+	public string? DisputeCategory { get; set; }
+	public DateTime? DisputedAt { get; set; }
 
 	// Navigation properties
 	public PersonalDetails? PersonalDetails { get; set; }
@@ -27,4 +34,7 @@ public class EmailInvitationRequest
 	public ReferenceDetails? ReferenceDetails { get; set; }
 	public SignatureDetails? SignatureDetails { get; set; }
 	public ICollection<DocumentDetails>? Documents { get; set; }
+    public ICollection<ReportDetails>? ReportDetails { get; set; }
+	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
+   public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
 }

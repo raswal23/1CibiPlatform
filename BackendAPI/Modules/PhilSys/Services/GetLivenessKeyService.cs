@@ -1,6 +1,6 @@
 ﻿namespace PhilSys.Services;
 
-public class GetLivenessKeyService
+public class GetLivenessKeyService : IGetLivenessKeyService
 {
 	private readonly ILogger<GetLivenessKeyService> _logger;
 	private readonly IConfiguration _configuration;
@@ -10,8 +10,9 @@ public class GetLivenessKeyService
 	{
 		_logger = logger;
 		_configuration = configuration;
-		_livenessKey = _configuration["PhilSys:LivenessSDKPublicKey"] ?? "";
+		_livenessKey = _configuration.GetSection("PhilSys").GetValue<string>("LivenessSDKPublicKey", "");
 	}
+
 	public Task<string> GetLivenessKey()
 	{
 		var logContext = new

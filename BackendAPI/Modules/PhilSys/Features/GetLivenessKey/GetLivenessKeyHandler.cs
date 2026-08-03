@@ -5,11 +5,11 @@ public record GetLivenessKeyQueryRequest() : IRequest<GetLivenessKeyResult>;
 public record GetLivenessKeyResult(string LivenessKey);
 public class GetLivenessKeyHandler : IRequestHandler<GetLivenessKeyQueryRequest, GetLivenessKeyResult>
 {
-	private readonly GetLivenessKeyService _getLivenessKeyService;
+	private readonly IGetLivenessKeyService _getLivenessKeyService;
 
-	public GetLivenessKeyHandler(GetLivenessKeyService GetLivenessKeyService)
+	public GetLivenessKeyHandler(IGetLivenessKeyService getLivenessKeyService)
 	{
-		_getLivenessKeyService = GetLivenessKeyService;
+		_getLivenessKeyService = getLivenessKeyService;
 	}
 	public async Task<GetLivenessKeyResult> Handle(GetLivenessKeyQueryRequest request, CancellationToken cancellationToken)
 	{

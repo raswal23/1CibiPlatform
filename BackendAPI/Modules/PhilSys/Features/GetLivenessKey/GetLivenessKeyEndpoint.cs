@@ -15,11 +15,11 @@ public class GetLivenessKeyEndpoint : ICarterModule
 			var response = result.Result.Adapt<GetLivenessKeyResponse>();
 			return Results.Ok(response.LivenessKey);
 		})
-		  .WithName("GetLivenessKey")
-		  .WithTags("PhilSys")
-		  .Produces<GetLivenessKeyResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("Get Liveness Key")
-		  .WithDescription("Get Liveness Key for PhilSys verification");
+		.WithName("GetLivenessKey")
+		.WithTags("PhilSys")
+		.Produces<string>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("Get Liveness Key")
+		.WithDescription("Get Liveness Key for PhilSys verification");
 	}
 }

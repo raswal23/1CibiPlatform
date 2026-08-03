@@ -55,6 +55,8 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<LocalStorageService>();
 		services.AddScoped<EmailValidationService>();
+		services.AddScoped<FileValidationService>(); 
+		services.AddScoped<MobileNumberValidationService>();
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IUserManagementService, UserManagementService>();
@@ -65,6 +67,8 @@ public static class FrontendServiceConfig
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
+        services.AddScoped<IReportService, ReportService>();
 
 		services.AddMudServices(config =>
 		{

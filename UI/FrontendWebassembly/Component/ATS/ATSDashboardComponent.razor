@@ -1,74 +1,81 @@
-﻿<MudGrid Class="mb-4">
-    <MudItem xs="12" md="4">
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px;  padding: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8);  min-height: 300px;">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">
-                Job Offer Acceptance Rate
-            </MudText>
-            <MudChart ChartType="ChartType.Donut"
-                        Width="100%"
-                        Height="200px"
-                        ChartOptions="@donutChartOptions"
-                        ChartSeries="@JobAcceptanceRates.AsChartDataSet()"
-                        ChartLabels="@Departments">
-                <CustomGraphics>
-                    <text class="mud-donut-text mud-typography-h3" x="50%" y="50%">
-                        @JobAcceptanceRates.Sum()
-                    </text>
-                </CustomGraphics>
-            </MudChart>
-        </MudPaper>
-    </MudItem>
+﻿@page "/s&i/ats/dashboard"
+@layout ATSLayout
+@inherits SecurePageBase
+@attribute [RequirePermission(6, 7)]
 
-    <MudItem xs="12" md="4">
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; padding: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8); min-height: 300px;">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">
-                Year-To-Date Compliance
-            </MudText>
-            <MudChart ChartType="ChartType.Bar"
-                      ChartSeries="@BarSeries"
-                      Width="100%"
-                      ChartOptions="@barChartOptions"
-                      ChartLabels="@BarLabels"
-                      Height="200px" />
-        </MudPaper>
-    </MudItem>
 
-    <MudItem xs="12" md="4">
-        <MudPaper Elevation="1" Class="pa-4" Style="border-radius: 4px; padding: 10px; box-shadow: 0 0 10px rgba(42,119,174,0.8); min-height: 300px;">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-5 gradient-text" Style="font-size: 20px; font-weight: 700;">
-                Time-to-Hire Progression
-            </MudText>
-            <MudChart ChartType="ChartType.Line"
-                      ChartSeries="@LineSeries"
-                      ChartLabels="@LineLabels"
-                      ChartOptions="@lineChartOptions"
-                      Width="100%"
-                      Height="200px" />
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+<PageTitle>ATS - Dashboard</PageTitle>
 
-<!-- Recent transactions -->
-<TableComponent TItem="TransactionRow"
-                @ref="transactionsTable"
-                Title="Recent Transactions"
-                EnableSearch="true"
-                ColumnCount="4"
-                RowsPerPage="10"
-                LoadServerData="LoadTransactionData">
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
+                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
+                    Job Offer Acceptance Rate
+                </MudText>
+                <MudChart ChartType="ChartType.Donut"
+                          Width="100%"
+                          Height="210px"
+                          ChartOptions="@donutChartOptions"
+                          ChartSeries="@JobAcceptanceRates.AsChartDataSet()"
+                          ChartLabels="@Departments">
+                    <CustomGraphics>
+                        <text class="mud-donut-text mud-typography-h4" x="50%" y="50%">
+                            @JobAcceptanceRates.Sum()
+                        </text>
+                    </CustomGraphics>
+                </MudChart>
+            </MudPaper>
+        </MudItem>
 
-    <HeaderTemplate>
-        <MudTh>Ticket Number</MudTh>
-        <MudTh>Subject Name</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Result</MudTh>
-    </HeaderTemplate>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
+                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
+                    Year-To-Date Compliance
+                </MudText>
+                <MudChart ChartType="ChartType.Bar"
+                          ChartSeries="@BarSeries"
+                          Width="100%"
+                          ChartOptions="@barChartOptions"
+                          ChartLabels="@BarLabels"
+                          Height="210px" />
+            </MudPaper>
+        </MudItem>
 
-    <RowTemplate Context="tx">
-        <MudTd DataLabel="Ticket">@tx.Ticket</MudTd>
-        <MudTd DataLabel="Subject">@tx.Subject</MudTd>
-        <MudTd DataLabel="Status">@tx.Status</MudTd>
-        <MudTd DataLabel="Result">@tx.Result</MudTd>
-    </RowTemplate>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
+                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
+                    Time-to-Hire Progression
+                </MudText>
+                <MudChart ChartType="ChartType.Line"
+                          ChartSeries="@LineSeries"
+                          ChartLabels="@LineLabels"
+                          ChartOptions="@lineChartOptions"
+                          Width="100%"
+                          Height="210px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-</TableComponent>
+    <TableComponent TItem="TransactionRow"
+                    @ref="transactionsTable"
+                    Title="Recent Orders"
+                    EnableSearch="true"
+                    ColumnCount="4"
+                    RowsPerPage="10"
+                    LoadServerData="LoadTransactionData">
+
+        <HeaderTemplate>
+            <MudTh>Ticket Number</MudTh>
+            <MudTh>Subject Name</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Result</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="tx">
+            <MudTd DataLabel="Ticket">@tx.Ticket</MudTd>
+            <MudTd DataLabel="Subject">@tx.Subject</MudTd>
+            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Status)">@tx.Status</span></MudTd>
+            <MudTd DataLabel="Result"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Result)">@tx.Result</span></MudTd>
+        </RowTemplate>
+
+    </TableComponent>

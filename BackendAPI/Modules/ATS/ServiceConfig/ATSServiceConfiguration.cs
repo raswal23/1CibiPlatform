@@ -4,22 +4,22 @@ public static class ATSServiceConfiguration
     private const string assemblyName = "APIs";
     private const string connStringSegment = "OnePlatform_Connection";
 
-    #region Carter Config
-    //public static IServiceCollection AddATSCarterModules(this IServiceCollection services, Assembly assembly)
-    //{
-    //    services.AddCarter(configurator: c =>
-    //    {
-    //        var modules = assembly.GetTypes()
-				//.Where(t => typeof(ICarterModule).IsAssignableFrom(t) && !t.IsAbstract)
-    //            .ToArray();
-    //        c.WithModules(modules);
-    //    });
-    //    return services;
-    //}
-    #endregion
+	#region Carter Config
+	public static IServiceCollection AddATSCarterModules(this IServiceCollection services, Assembly assembly)
+	{
+		services.AddCarter(configurator: c =>
+		{
+			var modules = assembly.GetTypes()
+				.Where(t => typeof(ICarterModule).IsAssignableFrom(t) && !t.IsAbstract)
+				.ToArray();
+			c.WithModules(modules);
+		});
+		return services;
+	}
+	#endregion
 
-    #region MediatR Config
-    public static IServiceCollection AddATSMediaTR(this IServiceCollection services, Assembly assembly)
+	#region MediatR Config
+	public static IServiceCollection AddATSMediaTR(this IServiceCollection services, Assembly assembly)
     {
         services.AddMediatR(config =>
         {
@@ -41,15 +41,20 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
+		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
+		services.AddScoped<IFilePdfService, FilePdfService>();
 
-		services.AddHostedService<BulkSubmissionBackgroundService>();
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
-		services.AddHostedService<EmailNotificationBackgroundServiceForPending>();
-		services.AddHostedService<EmailNotificationBackgroundServiceForError>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddSignalR();
+
+		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
+		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
+		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
 
 		return services;
     }
@@ -68,7 +73,42 @@ public static class ATSServiceConfiguration
             );
         });
 
-        return services;
+
+		services.AddQuartz(q =>
+		{
+			q.SchedulerId = "ATS";
+
+			q.SchedulerName = "ATS Scheduler";
+
+			// This tells Quartz to create a pool of exactly 50 parallel threads
+			//q.SetProperty("quartz.threadPool.threadCount", "50");
+
+			q.UsePersistentStore(options =>
+			{
+				options.UsePostgres(postgres =>
+				{
+					postgres.ConnectionString =
+						configuration.GetConnectionString(connStringSegment)
+						?? throw new InvalidOperationException(
+							$"Connection string '{connStringSegment}' was not found.");
+
+					postgres.TablePrefix = "ats.qrtz_";
+				});
+
+				options.UseProperties = true;
+
+				options.UseNewtonsoftJsonSerializer();
+
+				options.UseClustering();
+			});
+		});
+
+		services.AddQuartzHostedService(options =>
+		{
+			options.WaitForJobsToComplete = true;
+		});
+
+		return services;
     }
 	#endregion
 

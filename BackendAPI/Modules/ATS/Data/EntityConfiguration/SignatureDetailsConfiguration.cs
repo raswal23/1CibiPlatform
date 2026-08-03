@@ -21,8 +21,14 @@ public class SignatureDetailsConfiguration : IEntityTypeConfiguration<SignatureD
 		builder.Property(e => e.SignatureDate)
 			   .HasColumnType("date");
 
-		builder.Property(p => p.SignatureFileKey)
-			   .HasMaxLength(255);
+		builder.Property(p => p.ConsentFormFileKey)
+			.HasMaxLength(255);
+
+		builder.Property(p => p.ConsentFormFileName)
+			.HasMaxLength(255);
+
+		builder.Property(p => p.ConsentGeneratedAt)
+			.IsRequired(false);
 
 		// Relationship to EmailInvitationRequest
 		builder.HasOne<EmailInvitationRequest>()

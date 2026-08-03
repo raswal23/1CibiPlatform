@@ -54,6 +54,14 @@ public class AuthInitialData
 					Submenu= 3,
 					RoleId = 3,
 					AssignedBy = this._Id
+				},
+				new AuthUserAppRole
+				{
+					UserId = this._Id,
+					AppId = 6,
+					Submenu= 7,
+					RoleId = 3,
+					AssignedBy = this._Id
 				}
 			};
 	}

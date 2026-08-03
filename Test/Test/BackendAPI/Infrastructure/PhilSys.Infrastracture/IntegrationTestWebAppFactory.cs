@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using PhilSys.Data.Context;
+using Quartz;
 using System.Net;
 using System.Text;
 using Testcontainers.PostgreSql;
@@ -38,7 +39,18 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		builder.ConfigureTestServices(services =>
 		{
-			services.RemoveAll<IHostedService>();
+			// Remove hosted services to avoid affecting other tests
+			var quartzHostedServices = services
+				.Where(s =>
+					s.ServiceType == typeof(IHostedService) &&
+					s.ImplementationType == typeof(QuartzHostedService))
+				.ToList();
+
+			foreach (var service in quartzHostedServices)
+			{
+				services.Remove(service);
+			}
+
 			services.RemoveAll<IDistributedCache>();
 
 			services.AddDistributedMemoryCache();

@@ -9,13 +9,64 @@ public partial class NewOrderComponent
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
+	private bool isPreview = false;
+	private bool isBulkMode = false;
 
 	protected override async Task OnInitializedAsync()
 	{
-		
+
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();
 
+	}
+
+	private void SetOrderMode(bool bulk)
+	{
+		isBulkMode = bulk;
+	}
+
+	private string GetSegmentClass(bool bulk)
+		=> isBulkMode == bulk ? "ats-segment-btn active" : "ats-segment-btn";
+
+	private static string GetSpeedCardClass(string? selectedValue, string cardValue)
+		=> selectedValue == cardValue ? "ats-speed-card selected" : "ats-speed-card";
+
+	private void SetCandidateSpeed(string speed)
+	{
+		subject.RushNormal = speed;
+	}
+
+	private string GetCandidateNormalCardClass()
+		=> GetSpeedCardClass(subject.RushNormal, "Normal");
+
+	private string GetCandidateRushCardClass()
+		=> GetSpeedCardClass(subject.RushNormal, "Rush");
+
+	private string GetBulkNormalCardClass()
+		=> GetSpeedCardClass(bulkUploadFileDetailsDTO.OrderType, "Normal");
+
+	private string GetBulkRushCardClass()
+		=> GetSpeedCardClass(bulkUploadFileDetailsDTO.OrderType, "Rush");
+
+	private void SelectCandidateNormal() => SetCandidateSpeed("Normal");
+	private void SelectCandidateRush() => SetCandidateSpeed("Rush");
+	private void SelectBulkNormal() => SetBulkSpeed("Normal");
+	private void SelectBulkRush() => SetBulkSpeed("Rush");
+
+	private void SetBulkSpeed(string speed)
+	{
+		bulkUploadFileDetailsDTO.OrderType = speed;
+	}
+
+	private async Task ResetBulkFormAsync()
+	{
+		bulkUploadFileDetailsDTO.BulkFile = null;
+		bulkUploadFileDetailsDTO.FileName = null;
+		bulkUploadFileDetailsDTO.OrderType = null;
+		bulkUploadFileDetailsDTO.PackageType = null;
+
+		if (bulkForm is not null)
+			await bulkForm.ResetAsync();
 	}
 	private async Task DownloadTemplate()
 	{
@@ -34,7 +85,16 @@ public partial class NewOrderComponent
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-	{
+	{	
+
+		var result = FileValidationService.ValidateExtension(e.File.Name, ".csv");
+
+		if (!result.IsValid)
+		{
+			Snackbar.Add(result.ErrorMessage!, Severity.Error);
+			return;
+		}
+
 		if (e.File is not null)
 		{
 			bulkUploadFileDetailsDTO.BulkFile = e.File;
@@ -50,6 +110,12 @@ public partial class NewOrderComponent
 
 		if (!candidateForm.IsValid)
 			return;
+
+		if (string.IsNullOrWhiteSpace(subject.RushNormal))
+		{
+			Snackbar.Add("Processing speed is required",Severity.Error);
+			return;
+		}
 
 		var confirmParam = new DialogParameters
 		{
@@ -79,30 +145,17 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				var successParam = new DialogParameters
-				{
-					{
-						nameof(SuccessSaveComponent.Message),
-						"Successfully saved the candidate's information."
-					}
-				};
+				Snackbar.Add("Candidate's information saved successfully.", Severity.Success);
 
-				await DialogService.ShowAsync<SuccessSaveComponent>(
-					"Success",
-					successParam);
+				subject.RushNormal = null;
 
-					subject.RushNormal = null;
-
-					await candidateForm.ResetAsync();
-				
+				await candidateForm.ResetAsync();
 			}
 		}
 		finally
 		{
 			isSavingCandidate = false;
-			
 		}
-
 	}
 	
 	private async Task OnSubmitBulk()
@@ -112,6 +165,18 @@ public partial class NewOrderComponent
 		if (!bulkForm.IsValid)
 			return;
 
+		if (string.IsNullOrWhiteSpace(bulkUploadFileDetailsDTO.OrderType))
+		{
+			Snackbar.Add("Processing speed is required", Severity.Error);
+			return;
+		}
+
+		if (bulkUploadFileDetailsDTO.BulkFile is null)
+		{
+			Snackbar.Add("File is required", Severity.Error);
+			return;
+		}
+
 		var previewData = await BuildCsvPreview();
 
 		var hasData = previewData.Rows.Any(row => 
@@ -119,12 +184,12 @@ public partial class NewOrderComponent
 
 		if (!hasData)
 		{
-			await DialogService.ShowMessageBoxAsync(
-				"Empty Excel File",
-				"The Excel file is empty.");
-
+			Snackbar.Add("The CSV file is empty.", Severity.Error);
 			return;
 		}
+
+		isPreview = true;
+		StateHasChanged();
 
 		var parameters = new DialogParameters
 		{
@@ -140,6 +205,8 @@ public partial class NewOrderComponent
 			CloseButton = true
 		};
 
+		isPreview = false;
+
 		var dialog = await DialogService.ShowAsync<PreviewComponent>(
 			"Preview Upload",
 			parameters,
@@ -150,34 +217,24 @@ public partial class NewOrderComponent
 		if (result!.Canceled)
 			return;
 
-
 		try
 		{
 			isUploadingBulk = true;
-			await InvokeAsync(StateHasChanged);
-
-			await Task.Yield();
+			StateHasChanged();
 
 			var isSent = await EndorsementSubmissionService
 			.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
 
 			if (isSent)
 			{
-				var successParams = new DialogParameters
-			{
-				{
-					nameof(SuccessSaveComponent.Message),
-					"Successfully uploaded the bulk candidates' information."
-				}
-			};
+				Snackbar.Add("Bulk upload successful.", Severity.Success);
 
-				await DialogService.ShowAsync<SuccessSaveComponent>(
-					"Success",
-					successParams);
-				
 				bulkUploadFileDetailsDTO.OrderType = null;
+				bulkUploadFileDetailsDTO.BulkFile = null;
 
 				await bulkForm.ResetAsync();
+
+				StateHasChanged();
 			}
 		}
 		finally
@@ -185,18 +242,17 @@ public partial class NewOrderComponent
 			isUploadingBulk = false;
 
 		}
-
 	}
 
-	public class ExcelPreviewData
+	public class CSVPreviewData
 	{
 		public List<string> Headers { get; set; } = [];
 		public List<List<string>> Rows { get; set; } = [];
 	}
 
-	private async Task<ExcelPreviewData> BuildCsvPreview()
+	private async Task<CSVPreviewData> BuildCsvPreview()
 	{
-		var result = new ExcelPreviewData();
+		var result = new CSVPreviewData();
 
 		using var stream = bulkUploadFileDetailsDTO.BulkFile!.OpenReadStream();
 
@@ -229,11 +285,10 @@ public partial class NewOrderComponent
 
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)
 	{
-		if (await bulkFileUpload.RemoveFileAsync(file))
+		if (await bulkFileUpload!.RemoveFileAsync(file))
 		{
 			bulkUploadFileDetailsDTO.BulkFile = null;
 			bulkUploadFileDetailsDTO.FileName = null;
-			return;
 		}
 	}
 }

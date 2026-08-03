@@ -21,7 +21,7 @@ public class PostPCNEndpoint : ICarterModule
 		})
 		.WithName("PostPCN")
 		.WithTags("PhilSys")
-		.Produces<PostPCNResponse>()
+		.Produces<BasicInformationOrPCNResponseDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Submit PCN For Identity Verification")
 		.WithDescription("Sends a request to the PhilSys API to submit Philsys Card Number for identity verification.");

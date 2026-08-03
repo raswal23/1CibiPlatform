@@ -21,11 +21,11 @@ public class AccountAssignmentNotificationEndpoint : ICarterModule
 			return Results.Ok(response.IsSent);
 
 		})
-		  .WithName("AccountAssignmentNotification")
-		  .WithTags("User Management")
-		  .Produces<AccountNotificationResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("accountnotification")
-		  .WithDescription("accountnotification");
+		.WithName("AccountAssignmentNotification")
+		.WithTags("User Management")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("accountnotification")
+		.WithDescription("accountnotification");
 	}
 }

@@ -5,6 +5,10 @@ public class ATSCacheRepository : IATSRepository
 	private readonly IATSRepository _atsRepository;
 	private readonly HybridCache _hybridCache;
 
+	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
+	private readonly string DisputeOrderTag = "disputeorder";
+	private readonly string ReportTag = "report";
+
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
 		_atsRepository = atsRepository;
@@ -100,7 +104,12 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)
 	{
-		return await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+		var result =  await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+
+		return result;
 	}
 
 	public async Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests)
@@ -108,9 +117,194 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(emailInvitationRequests);
 	}
 
-	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(Guid emailInvitationId)
+	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId)
 	{
-		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentNotEmailAsync(emailInvitationId);
+		return await _atsRepository.UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(emailInvitationId);
+	}
+
+	public async Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken);
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(req, token),
+			null,
+			tags: [WithdrawnApplicationTag],
+			cancellationToken);
+	}
+
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(req, token),
+			null,
+			tags: [WithdrawnApplicationTag],
+			cancellationToken);
+	}
+
+	public async Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationRequestByIdAsync(emailInvitationId, cancellationToken);
+	}
+
+	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
+
+		return result;
+	}
+
+	public async Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.UpdateOrderStatusAsync(EmailInvitationRequestId, orderStatus, orderCompletedAt, cancellationToken);
+
+		if (result)
+			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+
+		return result;
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetDisputeOrdersAsync(req, token),
+			null,
+			tags: [DisputeOrderTag],
+			cancellationToken);
+	}
+
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchDisputeOrdersAsync(req, token),
+			null,
+			tags: [DisputeOrderTag],
+			cancellationToken);
+	}
+
+	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
+
+		if (result)
+            await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+
+		return result;
+	}
+
+	public async Task<ReportDetails?> GetReportDetailsByStatusAsync(Guid emailInvitationRequestId, string reportStatus, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetReportDetailsByStatusAsync(emailInvitationRequestId, reportStatus, cancellationToken);
+	}
+
+	public async Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+        var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+		return result;
+	}
+
+	public async Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
+	{
+     var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+		return result;
+	}
+
+	public async Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
+	}
+
+ public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	{
+      var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
+			cacheKey,
+			paginationRequest,
+         async (req, token) => await _atsRepository.GetReportsAsync(req, sortColumn, sortDescending, token),
+			null,
+			tags: [ReportTag],
+			cancellationToken);
+	}
+
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"report_result_{emailInvitationRequestId}";
+
+		return await _hybridCache.GetOrCreateAsync(
+			cacheKey,
+			async _ => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken),
+			options: new HybridCacheEntryOptions
+			{
+				Expiration = TimeSpan.FromMinutes(5)
+			});
+	}
+
+  public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	{
+		var cacheKey =
+			$"report_page_{paginationRequest.PageIndex}" +
+			$"_size_{paginationRequest.PageSize}" +
+			$"_search_{paginationRequest.SearchTerm ?? "none"}" +
+			$"_start_{(paginationRequest.StartDate.HasValue ? paginationRequest.StartDate.Value.ToString("yyyyMMdd") : "none")}" +
+			$"_end_{(paginationRequest.EndDate.HasValue ? paginationRequest.EndDate.Value.ToString("yyyyMMdd") : "none")}" +
+			$"_sort_{sortColumn ?? "none"}" +
+			$"_desc_{sortDescending}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
+			cacheKey,
+			paginationRequest,
+          async (req, token) => await _atsRepository.SearchReportsAsync(req, sortColumn, sortDescending, token),
+			null,
+			tags: [ReportTag],
+			cancellationToken);
+	}
+
+	public async Task<List<EmailInvitationRequest>> GetEmailInvitationRequestsNeedingProjectionAsync(CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationRequestsNeedingProjectionAsync(cancellationToken);
+	}
+
+	public async Task<ApplicantSearchProjection?> GetApplicantSearchProjectionByIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetApplicantSearchProjectionByIdAsync(emailInvitationRequestId, cancellationToken);
+	}
+
+	public async Task<bool> AddApplicantSearchProjectionAsync(ApplicantSearchProjection projection, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.AddApplicantSearchProjectionAsync(projection, cancellationToken);
+	}
+
+	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
 	}
 }
-

@@ -1,41 +1,56 @@
-﻿<MudDialog Style="padding: 8px;">
+﻿<MudDialog Class="um-dialog" Style="padding: 0;">
     <DialogContent>
-        <MudForm @ref="AddApplicationForm">
-            <MudTextField @bind-Value="Application.AppName"
-                          Label="Application Name"
-                          Required="true"
-                          RequiredError="Application Name is required"
-                          Adornment="Adornment.Start"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" />
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Add application</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new application record</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
 
-            <MudTextField @bind-Value="Application.Description"
-                          Label="Description"
-                          Required="true"
-                          RequiredError="Description is required"
-                          Adornment="Adornment.Start"
-                          Variant="Variant.Outlined"
-                          Margin="Margin.Dense"
-                          MaxLength="100"
-                          Class="oneplatform-rounded-input philsys-uppercase-input" />
+            <MudDivider />
 
-            <MudCheckBox T="bool"
-                         @bind-Value="Application.IsActive"
-                         Label="Is Active" />
-        </MudForm>
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="AddApplicationForm">
+                    <MudStack Spacing="2">
+                        <MudAutocomplete T="string"
+                                         @bind-Value="Application.AppName"
+                                         Label="Application Name"
+                                         Required="true"
+                                         RequiredError="Application Name is required"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         MaxLength="100"
+                                         SearchFunc="SearchApplications"
+                                         ToStringFunc="@(x => x)"
+                                         ResetValueOnEmptyText="false"
+                                         Clearable="true"
+                                         Dense="true"
+                                         Class="oneplatform-rounded-input philsys-uppercase-input" />
+
+                        <MudTextField @bind-Value="Application.Description"
+                                      Label="Description"
+                                      Required="true"
+                                      RequiredError="Description is required"
+                                      Adornment="Adornment.Start"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="100"
+                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
+
+                        <div class="um-switch-row">
+                            <MudText Class="um-dialog-label">Is active</MudText>
+                            <MudCheckBox T="bool" @bind-Value="Application.IsActive" />
+                        </div>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            </div>
+        </div>
     </DialogContent>
-
-    <DialogActions>
-        <MudButton OnClick="Cancel"
-                   Style="border-radius: 4px; border: 2px solid gray;">
-            Cancel
-        </MudButton>
-        <MudButton OnClick="Submit"
-                   Class="theme-button theme-button-active"
-                   Style="border-radius: 4px;">
-            Save
-        </MudButton>
-    </DialogActions>
 </MudDialog>

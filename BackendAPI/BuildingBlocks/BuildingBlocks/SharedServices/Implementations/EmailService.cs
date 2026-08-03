@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Net;
-using System.Net.Mail;
+﻿
 
 namespace BuildingBlocks.SharedServices.Implementations;
 
@@ -292,6 +290,16 @@ public class EmailService : IEmailService
 	}
 
 	public Task<bool> SendATSEmailAsync(string toEmail, string subject, string body)
+	{
+		throw new NotImplementedException();
+	}
+
+	public string SendEmailForDispute(string gmail)
+	{
+		throw new NotImplementedException();
+	}
+
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string SubjectName)
 	{
 		throw new NotImplementedException();
 	}

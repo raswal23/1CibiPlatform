@@ -1,6 +1,6 @@
 ﻿@inject IDialogService DialogService
 
-<MudDialog Style="padding: 8px;">
+<MudDialog Style="padding: 8px; border-radius: 12px">
     <DialogContent>
 
         <TableComponent TItem="List<string>"
@@ -53,7 +53,7 @@
                   Spacing="2">
 
             <MudButton OnClick="Cancel"
-                       Style="border-radius:4px; border: 2px solid gray;">
+                       Style="border-radius:12px; border: 2px solid gray;">
                 Cancel
             </MudButton>
 
@@ -61,7 +61,7 @@
             <MudButton OnClick="Confirm"
                        Disabled=InvalidRows.Any()
                        Class="theme-button theme-button-active"
-                       Style="border-radius:4px;">
+                       Style="border-radius:12px;">
                 Confirm Upload
             </MudButton>
 

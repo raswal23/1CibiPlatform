@@ -20,7 +20,7 @@ public sealed class AlibabaOssStorageService : IObjectStorageService
 					 .GetValue<string>("BucketName") ?? "one-cibi";
 		_atsTestFolder = _configuration
 						.GetSection("AlibabaOss")
-						.GetValue<string>("ATSTestFolder") ?? string.Empty;
+						.GetValue<string>("ATSTestFolder", "");
 	}
 
 	public async Task<string> UploadAsync(

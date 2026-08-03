@@ -1,6 +1,6 @@
 ﻿namespace PhilSys.Services;
 
-public class UpdateFaceLivenessSessionService
+public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionService
 {
 	private readonly HttpClient _httpClient;
 	private readonly IPhilSysRepository _philSysRepository;
@@ -25,8 +25,8 @@ public class UpdateFaceLivenessSessionService
 		_philSysService = philsysService;
 		_unitOfWork = unitOfWork;
 		_configuration = configuration;
-		client_id = _configuration["PhilSys:ClientID"] ?? "";
-		client_secret = _configuration["PhilSys:ClientSecret"] ?? "";
+		client_id = _configuration.GetSection("PhilSys").GetValue<string>("ClientID", "");
+		client_secret = _configuration.GetSection("PhilSys").GetValue<string>("ClientSecret", "");
 	}
 
 	public async Task<VerificationResponseDTO> UpdateFaceLivenessSessionAsync(

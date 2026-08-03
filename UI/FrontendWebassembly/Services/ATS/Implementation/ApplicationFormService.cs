@@ -34,7 +34,7 @@ public class ApplicationFormService : IApplicationFormService
 			{
 				var stream = new MemoryStream(file);
 				var fileContent = new StreamContent(stream);
-				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 				content.Add(fileContent, name, name);
 			}
 		}
@@ -56,6 +56,8 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.NBIClearanceFileName, "PersonalDetails.NBIClearanceFileName");
 		AddFile(PersonalDetails.ResumeFile, "PersonalDetails.ResumeFile");
 		AddString(PersonalDetails.ResumeFileName, "PersonalDetails.ResumeFileName");
+		AddFile(PersonalDetails.BiometricFile, "PersonalDetails.BiometricFile");
+		AddString(PersonalDetails.BiometricFileName, "PersonalDetails.BiometricFileName");
 
 		// AddressDetails
 		AddString(AddressDetails.EmailInvitationID.ToString(), "AddressDetails.EmailInvitationID");
@@ -182,7 +184,18 @@ public class ApplicationFormService : IApplicationFormService
 
 		// Post
 		AddString(SignatureDetails.EmailInvitationID.ToString(), "SignatureDetails.EmailInvitationID");
-		AddFile(SignatureDetails.Signature, "SignatureDetails.Signature");
+		if (SignatureDetails.Signature is not null)
+		{
+			var dataUrl = Encoding.UTF8.GetString(SignatureDetails.Signature);
+
+			if (dataUrl.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+			{
+				var base64 = dataUrl[(dataUrl.IndexOf(',') + 1)..];
+				var imageBytes = Convert.FromBase64String(base64);
+
+				AddFile(imageBytes, "SignatureDetails.Signature");
+			}
+		}
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 
@@ -219,5 +232,27 @@ public class ApplicationFormService : IApplicationFormService
 		}
 
 		return result;
+	}
+
+	public async Task<bool> WithdrawApplicationForm(string HashToken)
+	{
+		var payload = new { HashToken };
+
+		var response = await _httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform", payload);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var successContent = await response.Content.ReadFromJsonAsync<bool>();
+		if (successContent == true)
+		{
+			return successContent;
+		}
+
+		return false;
 	}
 }
