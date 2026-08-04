@@ -6,7 +6,7 @@
 
 @if (_isReady)
 {
-    <div class="ats-console">
+    <div class="@($"ats-console {(_isSidebarCollapsed ? "ats-console-collapsed" : string.Empty)}")">
         <aside class="ats-console-sidebar">
             <div>
                 <div class="ats-console-logo">
@@ -19,46 +19,46 @@
                             <polygon points="10,70 50,95 50,50" fill="var(--ats-navy-900)" opacity="0.55"></polygon>
                             <polygon points="90,70 50,95 50,50" fill="var(--ats-navy-900)" opacity="0.85"></polygon>
                         </svg>
-                        <span class="ats-logo-text">ATS</span>
+                        <span class="ats-logo-text ats-console-brand-text">ATS</span>
                     </div>
                 </div>
 
-            <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">◉</span>
-                <span>Dashboard</span>
-            </NavLink>
+                <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">◉</span>
+                    <span class="ats-console-nav-text">Dashboard</span>
+                </NavLink>
 
-            <NavLink href="/s&i/ats/neworder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">＋</span>
-                <span>New order</span>
-            </NavLink>
+                <NavLink href="/s&i/ats/neworder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">＋</span>
+                    <span class="ats-console-nav-text">New order</span>
+                </NavLink>
 
-            <NavLink href="/s&i/ats/searchreport" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">📋</span>
-                <span>Orders & reports</span>
-            </NavLink>
+                <NavLink href="/s&i/ats/searchreport" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">📋</span>
+                    <span class="ats-console-nav-text">Orders & reports</span>
+                </NavLink>
 
                 <NavLink href="/s&i/ats/disputeorder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">⚠</span>
-                <span>Disputes</span>
-            </NavLink>
+                    <span class="ats-console-nav-ic">⚠</span>
+                    <span class="ats-console-nav-text">Disputes</span>
+                </NavLink>
 
-            <NavLink href="/s&i/ats/withdrawn" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                <NavLink href="/s&i/ats/withdrawn" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
                     <span class="ats-console-nav-ic">↩</span>
-                <span>Withdrawn</span>
-            </NavLink>
+                    <span class="ats-console-nav-text">Withdrawn</span>
+                </NavLink>
 
-            <div class="ats-console-nav-label">Manage</div>
+                <div class="ats-console-nav-label">Manage</div>
 
-            @* <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">👥</span>
-                <span>Candidates</span>
-            </NavLink> *@
+                @* <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">👥</span>
+                    <span class="ats-console-nav-text">Candidates</span>
+                </NavLink> *@
 
-            <NavLink href="/s&i/ats/settings" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                <span class="ats-console-nav-ic">⚙</span>
-                <span>Settings</span>
-            </NavLink>
+                <NavLink href="/s&i/ats/settings" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                    <span class="ats-console-nav-ic">⚙</span>
+                    <span class="ats-console-nav-text">Settings</span>
+                </NavLink>
             </div>
 
             <div class="ats-console-sidebar-bottom">
@@ -73,9 +73,19 @@
 
         <div class="ats-console-main">
             <div class="ats-console-topbar">
-                <div>
-                    <div class="ats-console-crumb">Applicant Tracking System / <b>@_pageTitle</b></div>
-                    <h1> @_pageTitle</h1>
+                <div class="ats-console-topbar-left">
+                    <button type="button"
+                            class="ats-console-icon-btn ats-console-menu-btn"
+                            aria-label="@(_isSidebarCollapsed ? "Expand drawer" : "Collapse drawer")"
+                            aria-expanded="@(!_isSidebarCollapsed)"
+                            title="@(_isSidebarCollapsed ? "Expand drawer" : "Collapse drawer")"
+                            @onclick="ToggleSidebar">
+                        ☰
+                    </button>
+                    <div>
+                        <div class="ats-console-crumb">Applicant Tracking System / <b>@_pageTitle</b></div>
+                        <h1>@_pageTitle</h1>
+                    </div>
                 </div>
                 <div class="ats-console-topbar-right">
                     <button type="button" class="ats-console-icon-btn" aria-label="Search">🔍</button>
@@ -98,6 +108,7 @@ else
 @code {
     private string _pageTitle = "Dashboard";
     private bool _isReady;
+    private bool _isSidebarCollapsed;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,6 +129,11 @@ else
     {
         SetTitleFromUri();
         InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleSidebar()
+    {
+        _isSidebarCollapsed = !_isSidebarCollapsed;
     }
 
     private void SetTitleFromUri()

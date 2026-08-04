@@ -1232,6 +1232,8 @@ code {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    overflow: hidden;
+    transition: width .2s ease, padding .2s ease;
 }
 
 .ats-console-logo {
@@ -1251,7 +1253,7 @@ code {
     }
 
     60% {
-        filter: drop-shadow(0 0 6px rgba(255,255,255,0)) drop-shadow(0 0 14px rgba(127,196,232,0));
+        filter: drop-shadow(0 0 20px rgba(255,255,255,0)) drop-shadow(0 0 14px rgba(127,196,232,0));
     }
 
     100% {
@@ -1260,19 +1262,18 @@ code {
 }
 
 .ats-logo-facets {
-    animation: ats-pulse-glow 2.2s ease-out infinite;
+    animation: ats-pulse-glow 2s ease-out infinite;
 }
 
 .ats-console-logo-mark {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--ats-sky-300), var(--ats-blue-500));
+    width: 80px;
+    height: 70px;
+    border-radius: 10px;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: visible;
-    animation: ats-pulse-glow 2.2s ease-out infinite;
+    overflow: hidden;
 }
 
 .ats-logo-facets {
@@ -1290,6 +1291,10 @@ code {
     letter-spacing: 0.1em;
     color: #fff;
     text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+.ats-console-nav-text {
+    white-space: nowrap;
 }
 
 .ats-console-nav-label {
@@ -1331,6 +1336,30 @@ code {
     font-size: 14px;
 }
 
+.ats-console-collapsed .ats-console-sidebar {
+    width: 72px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.ats-console-collapsed .ats-console-brand-text,
+.ats-console-collapsed .ats-console-nav-text,
+.ats-console-collapsed .ats-console-nav-label,
+.ats-console-collapsed .ats-console-sidebar-bottom {
+    display: none;
+}
+
+.ats-console-collapsed .ats-console-nav-item {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.ats-console-collapsed .ats-console-nav-ic {
+    width: auto;
+}
+
 .ats-console-main {
     flex: 1;
     min-width: 0;
@@ -1344,6 +1373,17 @@ code {
     align-items: center;
     justify-content: space-between;
     padding: 0 30px;
+}
+
+.ats-console-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-console-menu-btn {
+    flex-shrink: 0;
 }
 
 .ats-console-crumb {
@@ -2951,53 +2991,53 @@ code {
         min-height: 34px !important;
     }
 
-.philsys-lookup-card .mud-input-slot:not(.mud-select-input) {
-    min-height: 34px !important;
-    font-size: 14px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-}
+    .philsys-lookup-card .mud-input-slot:not(.mud-select-input) {
+        min-height: 34px !important;
+        font-size: 14px !important;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+    }
 
-.philsys-lookup-card .mud-select-input {
-    min-height: 18px !important;
-    padding-top: 8px !important;
-    padding-bottom: 6px !important;
-}
- 
-.philsys-lookup-card .mud-input{
-    min-height: 24px !important;
-    font-size: 12px;
-}
+    .philsys-lookup-card .mud-select-input {
+        min-height: 18px !important;
+        padding-top: 8px !important;
+        padding-bottom: 6px !important;
+    }
 
-.philsys-lookup-card .mud-input-label,
-.philsys-lookup-card .mud-input-label-inputcontrol {
-    font-size: 12px !important;
-}
+    .philsys-lookup-card .mud-input {
+        min-height: 24px !important;
+        font-size: 12px;
+    }
 
-.philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
-.philsys-lookup-card .oneplatform-rounded-input fieldset {
-    border-radius: 8px !important;
-}
+    .philsys-lookup-card .mud-input-label,
+    .philsys-lookup-card .mud-input-label-inputcontrol {
+        font-size: 12px !important;
+    }
 
-.philsys-lookup-card .mud-input-adornment {
-    margin-top: 0 !important;
-}
+    .philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
+    .philsys-lookup-card .oneplatform-rounded-input fieldset {
+        border-radius: 8px !important;
+    }
 
-.philsys-lookup-card .philsys-modern-title {
-    font-size: 16px;
-    line-height: 1.1;
-}
+    .philsys-lookup-card .mud-input-adornment {
+        margin-top: 0 !important;
+    }
 
-.philsys-lookup-card .philsys-modern-sub {
-    font-size: 11px;
-}
+    .philsys-lookup-card .philsys-modern-title {
+        font-size: 16px;
+        line-height: 1.1;
+    }
 
-.philsys-lookup-card .philsys-modern-actions .mud-button-root {
-    min-width: 120px;
-    min-height: 38px;
-    border-radius: 10px !important;
-    font-size: 13px !important;
-}
+    .philsys-lookup-card .philsys-modern-sub {
+        font-size: 11px;
+    }
+
+    .philsys-lookup-card .philsys-modern-actions .mud-button-root {
+        min-width: 120px;
+        min-height: 38px;
+        border-radius: 10px !important;
+        font-size: 13px !important;
+    }
 
 .philsys-lookup-tabs-wrap {
     margin-bottom: 16px;
