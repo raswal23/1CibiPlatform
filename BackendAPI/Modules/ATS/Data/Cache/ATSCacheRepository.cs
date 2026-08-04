@@ -8,6 +8,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
 	private readonly string DisputeOrderTag = "disputeorder";
 	private readonly string ReportTag = "report";
+	private readonly string ClientTag = "client";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -345,5 +346,44 @@ public class ATSCacheRepository : IATSRepository
 	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
 	{
 		return await _atsRepository.EditPackageAsync(packageDetails);
+	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetClientsAsync(req, token),
+			null,
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchClientsAsync(req, token),
+			null,
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
+	{
+		return await _atsRepository.AddClientAsync(clientDTO);
+	}
+
+	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
+	{
+		return await _atsRepository.GetClientAsync(clientId);
+	}
+
+	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
+	{
+		return await _atsRepository.EditClientAsync(clientDetails);
 	}
 }

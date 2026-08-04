@@ -70,6 +70,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
         services.AddScoped<IReportService, ReportService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IClientManagementService, ClientManagementService>();
 
 		services.AddMudServices(config =>
 		{

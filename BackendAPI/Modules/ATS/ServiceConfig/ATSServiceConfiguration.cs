@@ -46,6 +46,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
 		services.AddScoped<IFilePdfService, FilePdfService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IClientManagementService, ClientManagementService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

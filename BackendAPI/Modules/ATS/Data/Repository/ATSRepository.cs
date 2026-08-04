@@ -932,4 +932,88 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return packageDetails;
 	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var clientsQuery = _dbcontext.ClientDetails
+			.AsNoTracking()
+			.OrderBy(c => c.ClientName);
+
+		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
+
+		var items = await clientsQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(c => new ClientDetailsDTO
+			{
+				ClientId = c.ClientId,
+				ClientName = c.ClientName,
+				IsActive = c.IsActive,
+				CreatedAt = c.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ClientDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var clientsQuery = _dbcontext.ClientDetails
+			.AsNoTracking()
+			.Where(c => EF.Functions.ILike(c.ClientName!, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
+
+		var items = await clientsQuery
+			.OrderBy(c => c.ClientName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(c => new ClientDetailsDTO
+			{
+				ClientId = c.ClientId,
+				ClientName = c.ClientName,
+				IsActive = c.IsActive,
+				CreatedAt = c.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ClientDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
+	{
+		var clientDetails = new ClientDetails
+		{
+			ClientId = Guid.CreateVersion7(),
+			ClientName = clientDTO.ClientName,
+			IsActive = clientDTO.IsActive,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		await _dbcontext.ClientDetails.AddAsync(clientDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
+	{
+		return await _dbcontext.ClientDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(c => c.ClientId == clientId);
+	}
+
+	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
+	{
+		_dbcontext.ClientDetails.Update(clientDetails);
+		await _dbcontext.SaveChangesAsync();
+		return clientDetails;
+	}
 }

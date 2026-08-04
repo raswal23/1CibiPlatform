@@ -48,4 +48,9 @@ public interface IATSRepository
 	Task<bool> AddPackageAsync(AddPackageDTO packageDTO);
 	Task<PackageDetails?> GetPackageAsync(Guid packageId);
 	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails);
+	Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<bool> AddClientAsync(AddClientDTO clientDTO);
+	Task<ClientDetails?> GetClientAsync(Guid clientId);
+	Task<ClientDetails> EditClientAsync(ClientDetails clientDetails);
 }
