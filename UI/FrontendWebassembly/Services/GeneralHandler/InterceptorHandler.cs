@@ -2,7 +2,6 @@
 
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text.Json;
 
 public class InterceptorHandler : DelegatingHandler
 {
