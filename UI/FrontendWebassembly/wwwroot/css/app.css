@@ -1238,8 +1238,7 @@ code {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 0 8px 26px;
+    padding: 0 0 15px;
     font-weight: 700;
     font-size: 15px;
     color: #fff;
