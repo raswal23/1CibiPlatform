@@ -1230,14 +1230,13 @@ code {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-
 }
 
 .ats-console-logo {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 10px;
+    justify-content: center;
     padding: 0 8px 26px;
     font-weight: 700;
     font-size: 15px;
@@ -1245,8 +1244,8 @@ code {
 }
 
 .ats-console-logo-mark {
-    width: 60px;
-    height: 60px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
     background: linear-gradient(135deg, var(--ats-sky-300), var(--ats-blue-500));
     display: flex;
@@ -2913,13 +2912,20 @@ code {
     min-height: 34px !important;
 }
 
-.philsys-lookup-card .mud-input-slot {
+.philsys-lookup-card .mud-input-slot:not(.mud-select-input) {
     min-height: 34px !important;
     font-size: 14px !important;
     padding-top: 6px !important;
     padding-bottom: 6px !important;
 }
 
+.philsys-lookup-card .mud-select-input {
+    min-height: 18px !important;
+    padding-top: 8px !important;
+    padding-bottom: 6px !important;
+}
+
+ 
 .philsys-lookup-card .mud-input{
     min-height: 24px !important;
     font-size: 12px;
