@@ -26,6 +26,7 @@ public class IsAuthenticatedEndpoint : ICarterModule
 		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("IsAuthenticated")
-		.WithDescription("IsAuthenticated");
+		.WithDescription("IsAuthenticated")
+		.RequireAuthorization();
 	}
 }

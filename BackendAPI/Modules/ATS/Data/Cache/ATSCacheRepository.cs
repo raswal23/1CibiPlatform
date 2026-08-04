@@ -104,7 +104,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)
 	{
-		var result =  await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
+		var result = await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
 
 		if (result)
 			await _hybridCache.RemoveByTagAsync(ReportTag);
@@ -175,7 +175,7 @@ public class ATSCacheRepository : IATSRepository
 
 		if (result)
 			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
-			await _hybridCache.RemoveByTagAsync(ReportTag);
+		await _hybridCache.RemoveByTagAsync(ReportTag);
 
 		return result;
 	}
@@ -211,7 +211,7 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
 
 		if (result)
-            await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
 
 		return result;
 	}
@@ -223,7 +223,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
 	{
-        var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+		var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
 			await _hybridCache.RemoveByTagAsync(ReportTag);
 		return result;
@@ -231,7 +231,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken)
 	{
-     var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
+		var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
 			await _hybridCache.RemoveByTagAsync(ReportTag);
 		return result;
@@ -242,14 +242,14 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
 	}
 
- public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-      var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
+		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-         async (req, token) => await _atsRepository.GetReportsAsync(req, sortColumn, sortDescending, token),
+			async (req, token) => await _atsRepository.GetReportsAsync(req, sortColumn, sortDescending, token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);
@@ -268,7 +268,7 @@ public class ATSCacheRepository : IATSRepository
 			});
 	}
 
-  public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var cacheKey =
 			$"report_page_{paginationRequest.PageIndex}" +
@@ -282,7 +282,7 @@ public class ATSCacheRepository : IATSRepository
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-          async (req, token) => await _atsRepository.SearchReportsAsync(req, sortColumn, sortDescending, token),
+		  async (req, token) => await _atsRepository.SearchReportsAsync(req, sortColumn, sortDescending, token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);

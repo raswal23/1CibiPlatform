@@ -128,6 +128,7 @@ public static class ServiceConfiguration
 				ValidAudience = audience,
 				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!)),
 				RoleClaimType = ClaimTypes.Role,
+				ClockSkew = TimeSpan.Zero
 			};
 			options.Events = new JwtBearerEvents
 			{

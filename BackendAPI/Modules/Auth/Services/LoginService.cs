@@ -19,6 +19,7 @@ public class LoginService : ILoginService
 	private readonly int _maxFailedAttemptsBeforeLock;
 	private readonly string _isUserLoginTag = "is_user_login";
 	private readonly string _userAttemptTag = "user_attempt";
+	private readonly int _windowMinutesBeforeTokenExpiration = 3;
 
 	public LoginService(
 	IAuthRepository authRepository,
@@ -508,26 +509,13 @@ public class LoginService : ILoginService
 
 	public async Task<bool> IsAuthenticated()
 	{
-		var cachekey = $"{_isUserLoginTag}_{GetRefreshTokenFromCookie()}";
+		var accessToken = GetAccessTokenFromCookie();
+		var refreshToken = GetRefreshTokenFromCookie();
 
-		var logContext = new
+		if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(refreshToken))
 		{
-			Action = "AuthenticateUser",
-			Step = "StartAuthentication",
-			RefreshToken = GetRefreshTokenFromCookie(),
-			RequestId = Guid.CreateVersion7(),
-			Timestamp = DateTime.UtcNow
-		};
-
-		_logger.LogInformation("Checking authentication status... {@Context}", logContext);
-
-		if (string.IsNullOrEmpty(GetRefreshTokenFromCookie()))
-		{
-			_logger.LogWarning("Authentication check failed: No refresh token found in cookies.");
 			return false;
 		}
-
-		_logger.LogInformation("User is authenticated for {@Context}", logContext);
 
 		return true;
 	}
