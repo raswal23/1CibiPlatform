@@ -69,6 +69,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
         services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IPackageManagementService, PackageManagementService>();
 
 		services.AddMudServices(config =>
 		{

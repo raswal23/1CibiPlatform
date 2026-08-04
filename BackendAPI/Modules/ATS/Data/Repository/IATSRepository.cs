@@ -43,4 +43,9 @@ public interface IATSRepository
 	Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken);
 	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken);
+	Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<bool> AddPackageAsync(AddPackageDTO packageDTO);
+	Task<PackageDetails?> GetPackageAsync(Guid packageId);
+	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails);
 }

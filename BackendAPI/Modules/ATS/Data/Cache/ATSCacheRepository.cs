@@ -307,4 +307,43 @@ public class ATSCacheRepository : IATSRepository
 	{
 		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
 	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetPackagesAsync(req, token),
+			null,
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchPackagesAsync(req, token),
+			null,
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	{
+		return await _atsRepository.AddPackageAsync(packageDTO);
+	}
+
+	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
+	{
+		return await _atsRepository.GetPackageAsync(packageId);
+	}
+
+	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
+	{
+		return await _atsRepository.EditPackageAsync(packageDetails);
+	}
 }

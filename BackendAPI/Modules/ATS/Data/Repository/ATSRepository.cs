@@ -848,4 +848,88 @@ public class ATSRepository : IATSRepository
 
 		return true;
 	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var packagesQuery = _dbcontext.PackageDetails
+			.AsNoTracking()
+			.OrderBy(p => p.PackageName);
+
+		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
+
+		var items = await packagesQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(p => new PackageDetailsDTO
+			{
+				PackageId = p.PackageId,
+				PackageName = p.PackageName,
+				IsActive = p.IsActive,
+				CreatedAt = p.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<PackageDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var packagesQuery = _dbcontext.PackageDetails
+			.AsNoTracking()
+			.Where(p => EF.Functions.ILike(p.PackageName!, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
+
+		var items = await packagesQuery
+			.OrderBy(p => p.PackageName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(p => new PackageDetailsDTO
+			{
+				PackageId = p.PackageId,
+				PackageName = p.PackageName,
+				IsActive = p.IsActive,
+				CreatedAt = p.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<PackageDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	{
+		var packageDetails = new PackageDetails
+		{
+			PackageId = Guid.CreateVersion7(),
+			PackageName = packageDTO.PackageName,
+			IsActive = packageDTO.IsActive,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		await _dbcontext.PackageDetails.AddAsync(packageDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
+	{
+		return await _dbcontext.PackageDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(p => p.PackageId == packageId);
+	}
+
+	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
+	{
+		_dbcontext.PackageDetails.Update(packageDetails);
+		await _dbcontext.SaveChangesAsync();
+		return packageDetails;
+	}
 }

@@ -1,0 +1,118 @@
+@page "/s&i/ats/packagemanagement"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IPackageManagementService PackageManagementService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<PageTitle>ATS - Package Management</PageTitle>
+
+<TableComponent TItem="PackageDetailsDTO"
+                @ref="packagesTable"
+                Title="Packages"
+                EnableSearch="true"
+                ColumnCount="4"
+                RowsPerPage="10"
+                LoadServerData="LoadPackageData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
+
+    <HeaderTemplate>
+        <MudTh Class="ats-table-cell-center">Package Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Status</MudTh>
+        <MudTh Class="ats-table-cell-center">Created At</MudTh>
+        <MudTh Class="ats-table-cell-center">Actions</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="p">
+        <MudTd Class="ats-table-cell-center" DataLabel="Package Name">
+            @p.PackageName
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Status">
+            <span class="@(p.IsActive ? "badge-active" : "badge-inactive")">
+                @(p.IsActive ? "Active" : "Inactive")
+            </span>
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Created At">
+            @p.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => EditPackage(p))" />
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-console-empty-state">
+            <div class="ats-console-empty-icon">📦</div>
+            <div class="ats-console-empty-title">No packages</div>
+            <div class="ats-console-empty-sub">Create a new package to get started.</div>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+
+<div style="margin-top: 20px;">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewPackage">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Package
+    </MudButton>
+</div>
+
+@code {
+    private string searchString = string.Empty;
+    private TableComponent<PackageDetailsDTO>? packagesTable;
+
+    private async Task<TableData<PackageDetailsDTO>> LoadPackageData(TableState state, CancellationToken cancellationToken)
+    => await LoadPagedDataAsync(state, (page, pageSize) =>
+                PackageManagementService.GetPackagesAsync(page, pageSize, searchString));
+
+    private async Task AddNewPackage()
+    {
+        var dialog = await DialogService.ShowAsync<AddPackageComponent>("Add Package");
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var packageDTO = (AddPackageDTO)result.Data;
+                await PackageManagementService.AddPackageAsync(packageDTO);
+                Snackbar.Add("Package added successfully", Severity.Success);
+                if (packagesTable?.TableRef != null)
+                    await packagesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditPackage(PackageDetailsDTO package)
+    {
+        var parameters = new DialogParameters<EditPackageComponent> { { x => x.Package, package } };
+        var dialog = await DialogService.ShowAsync<EditPackageComponent>("Edit Package", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var editPackageDTO = (EditPackageDTO)result.Data;
+                await PackageManagementService.EditPackageAsync(editPackageDTO);
+                Snackbar.Add("Package updated successfully", Severity.Success);
+                if (packagesTable?.TableRef != null)
+                    await packagesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+}
