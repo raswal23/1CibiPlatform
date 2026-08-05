@@ -1,12 +1,15 @@
-@page "/s&i/ats/clientmanagement"
-@layout ATSLayout
-@attribute [RequirePermission(6, 7)]
 @inject IClientManagementService ClientManagementService
-@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Client Management</PageTitle>
+
+<div style="margin-bottom: 20px;">
+    <MudButton Class="theme-button theme-button-active" OnClick="AddNewClient">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Client
+    </MudButton>
+</div>
+
 
 <TableComponent TItem="ClientDetailsDTO"
                 @ref="clientsTable"
@@ -57,12 +60,6 @@
     </NoRecordsTemplate>
 </TableComponent>
 
-<div style="margin-top: 20px;">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewClient">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Client
-    </MudButton>
-</div>
-
 @code {
     private string searchString = string.Empty;
     private TableComponent<ClientDetailsDTO>? clientsTable;
@@ -80,15 +77,22 @@
 
     private async Task AddNewClient()
     {
-        var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client");
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client", options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)
         {
             try
             {
-                var clientDTO = (AddClientDTO)result.Data;
-                await ClientManagementService.AddClientAsync(clientDTO);
+                var clientDTO = (AddClientDTO)result.Data!;
+                await ClientManagementService.AddClientAsync(clientDTO!);
                 Snackbar.Add("Client added successfully", Severity.Success);
                 if (clientsTable?.TableRef != null)
                     await clientsTable.TableRef.ReloadServerData();
@@ -103,15 +107,22 @@
     private async Task EditClient(ClientDetailsDTO client)
     {
         var parameters = new DialogParameters<EditClientComponent> { { x => x.Client, client } };
-        var dialog = await DialogService.ShowAsync<EditClientComponent>("Edit Client", parameters);
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditClientComponent>("Edit Client", parameters, options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)
         {
             try
             {
-                var editClientDTO = (EditClientDTO)result.Data;
-                await ClientManagementService.EditClientAsync(editClientDTO);
+                var editClientDTO = (EditClientDTO)result.Data!;
+                await ClientManagementService.EditClientAsync(editClientDTO!);
                 Snackbar.Add("Client updated successfully", Severity.Success);
                 if (clientsTable?.TableRef != null)
                     await clientsTable.TableRef.ReloadServerData();
