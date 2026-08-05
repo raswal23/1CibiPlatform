@@ -463,6 +463,9 @@ code {
     width: 100%;
     height: auto;
     max-height: 100vh;
+    max-width: 50vh;
+    border-radius: 14px !important;
+    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
 }
 
 .philsys-loader-paper {
@@ -474,10 +477,10 @@ code {
     text-align: center;
     padding: 2rem;
     width: min(90%, 425px);
-    height: 200px;
+    height: 150px;
     max-height: 100vh;
     background: #fff;
-    box-sizing: border-box;
+    box-sizing: content-box;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1), 0 0 40px rgba(0, 0, 0, 0.05), 0 0 60px rgba(0, 0, 0, 0.03);
     animation: fadeIn 0.4s ease-in-out;
 }
@@ -2718,6 +2721,10 @@ code {
     border-radius: 14px !important;
     box-shadow: 0 8px 24px -18px rgba(11,31,58,.15) !important;
 }
+.philsys-shadow-box {
+    border-radius: 20px;    
+    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
+}
 
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
@@ -2815,7 +2822,7 @@ code {
             color: #D8503A;
         }
 
-.philsys-liveness-shell {
+.philsys-liveness-shell .philsys-shadow-box {
     width: 100%;
     display: flex;
     justify-content: center;
