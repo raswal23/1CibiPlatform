@@ -14,13 +14,6 @@
             <MudPaper Elevation="0" Class="um-dialog-body">
                 <MudForm @ref="EditClientForm">
                     <MudStack Spacing="2">
-                        <MudTextField @bind-Value="EditClient.ClientId"
-                                      Label="Client Id"
-                                      ReadOnly
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input" />
-
                         <MudTextField @bind-Value="EditClient.ClientName"
                                       Label="Client Name"
                                       Required="true"

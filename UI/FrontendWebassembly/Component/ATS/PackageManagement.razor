@@ -1,12 +1,14 @@
-@page "/s&i/ats/packagemanagement"
-@layout ATSLayout
-@attribute [RequirePermission(6, 7)]
 @inject IPackageManagementService PackageManagementService
-@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Package Management</PageTitle>
+
+<div style="margin-bottom: 20px;">
+    <MudButton Class="theme-button theme-button-active" OnClick="AddNewPackage">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Package
+    </MudButton>
+</div>
 
 <TableComponent TItem="PackageDetailsDTO"
                 @ref="packagesTable"
@@ -57,12 +59,6 @@
     </NoRecordsTemplate>
 </TableComponent>
 
-<div style="margin-top: 20px;">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddNewPackage">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Package
-    </MudButton>
-</div>
-
 @code {
     private string searchString = string.Empty;
     private TableComponent<PackageDetailsDTO>? packagesTable;
@@ -73,15 +69,22 @@
 
     private async Task AddNewPackage()
     {
-        var dialog = await DialogService.ShowAsync<AddPackageComponent>("Add Package");
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddPackageComponent>("Add Package", options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)
         {
             try
             {
-                var packageDTO = (AddPackageDTO)result.Data;
-                await PackageManagementService.AddPackageAsync(packageDTO);
+                var packageDTO = (AddPackageDTO)result.Data!;
+                await PackageManagementService.AddPackageAsync(packageDTO!);
                 Snackbar.Add("Package added successfully", Severity.Success);
                 if (packagesTable?.TableRef != null)
                     await packagesTable.TableRef.ReloadServerData();
@@ -96,14 +99,20 @@
     private async Task EditPackage(PackageDetailsDTO package)
     {
         var parameters = new DialogParameters<EditPackageComponent> { { x => x.Package, package } };
-        var dialog = await DialogService.ShowAsync<EditPackageComponent>("Edit Package", parameters);
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+        var dialog = await DialogService.ShowAsync<EditPackageComponent>("Edit Package", parameters, options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)
         {
             try
             {
-                var editPackageDTO = (EditPackageDTO)result.Data;
+                var editPackageDTO = (EditPackageDTO)result.Data!;
                 await PackageManagementService.EditPackageAsync(editPackageDTO);
                 Snackbar.Add("Package updated successfully", Severity.Success);
                 if (packagesTable?.TableRef != null)

@@ -9,6 +9,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string DisputeOrderTag = "disputeorder";
 	private readonly string ReportTag = "report";
 	private readonly string ClientTag = "client";
+	private readonly string PackageTag = "package";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -335,7 +336,10 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
 	{
-		return await _atsRepository.AddPackageAsync(packageDTO);
+		var result = await _atsRepository.AddPackageAsync(packageDTO);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(PackageTag);
+		return result;
 	}
 
 	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
@@ -345,7 +349,10 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
 	{
-		return await _atsRepository.EditPackageAsync(packageDetails);
+		var result = await _atsRepository.EditPackageAsync(packageDetails);
+		if (result is not null)
+			await _hybridCache.RemoveByTagAsync(PackageTag);
+		return result ?? new PackageDetails();
 	}
 
 	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -374,7 +381,10 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
 	{
-		return await _atsRepository.AddClientAsync(clientDTO);
+		var result = await _atsRepository.AddClientAsync(clientDTO);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ClientTag);
+		return result;
 	}
 
 	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
@@ -384,6 +394,10 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
 	{
-		return await _atsRepository.EditClientAsync(clientDetails);
+		var result = await _atsRepository.EditClientAsync(clientDetails);
+
+		if (result is not null)
+			await _hybridCache.RemoveByTagAsync(ClientTag);
+		return result ?? new ClientDetails();
 	}
 }

@@ -120,9 +120,9 @@ public partial class ApplicationFormComponent
 
 		if (!string.IsNullOrWhiteSpace(dobString))
 		{
-			if (DateTime.TryParse(dobString, out var dobDateTime))
+			if (DateOnly.TryParseExact(dobString, "yyyy-MM-dd", out var dob))
 			{
-				personalDetails.DOB = DateOnly.FromDateTime(dobDateTime);
+				personalDetails.DOB = dob;
 			}
 		}
 	}
