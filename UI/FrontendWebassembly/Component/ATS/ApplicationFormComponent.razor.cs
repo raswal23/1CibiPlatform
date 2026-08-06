@@ -264,21 +264,21 @@ public partial class ApplicationFormComponent
 	{
 		return _activeStep switch
 		{
-			1 => !(
+			2 => !(
 				(_govtIdError = personalDetails.AdditionalGovtIDFile == null) |
 				(_resumeError = personalDetails.ResumeFile == null) |
 				(_nbiError = personalDetails.NBIClearanceFile == null)
 			),
 
-			2 => !(
+			3 => !(
 				
 				(_diplomaError = educationalBackground.DiplomaFile == null
-								&& !string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment)
+								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
 								&& educationalBackground.HighestEducationalAttainment != "None"
 								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
 			),
 
-			3 => !(
+			4 => !(
 				(_licenseError = licensesDetails.LicenseUploadFile == null
 								&& hasProfessionalLicense) |
 				(_emp1Error = professionalExperiences.Emp1COEUploadFile == null) |
