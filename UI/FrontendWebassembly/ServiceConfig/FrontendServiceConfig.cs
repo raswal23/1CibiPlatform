@@ -10,6 +10,15 @@ public static class FrontendServiceConfig
 
 		var isUat = string.Equals(env.Environment, "UAT", StringComparison.OrdinalIgnoreCase);
 
+		var isSandbox = string.Equals(env.Environment, "Sandbox", StringComparison.OrdinalIgnoreCase);
+
+
+		if (isSandbox)
+		{
+			apiBaseFromConfig ??= configuration["ApiBase"];
+			ssoBaseFromConfig ??= configuration["SsoApiBase"];
+		}
+
 		if (isUat)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
