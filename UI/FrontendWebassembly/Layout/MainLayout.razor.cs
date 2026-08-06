@@ -26,8 +26,6 @@ public partial class MainLayout
 	private List<List<int>> SubMenus = new List<List<int>>();
 	private List<int> Roles = new List<int>();
 
-	private bool UseATSLayout => Navigation.Uri.Contains("/s&i/ats");
-
 	private string GetContainerStyle()
 	{
 		var background = !_isDarkMode

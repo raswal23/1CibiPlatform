@@ -83,7 +83,7 @@ public class ATSEmailService : IEmailService
                         <div class='content'>
                             <p>Dear {name},</p>
 							<p>
-								Princess Espiritu, TaskUs has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
+								Princess Espiritu, talent acquisition TaskUs company has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
 								<a href='{applicationFormLink}'>Application Form</a> 
 							</p>
 							<p>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>

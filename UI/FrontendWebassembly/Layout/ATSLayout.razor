@@ -56,15 +56,37 @@
 
                 <div class="ats-console-nav-label">Manage</div>
 
-                @* <NavLink href="/s&i/ats/candidates" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">👥</span>
-                    <span class="ats-console-nav-text">Candidates</span>
-                </NavLink> *@
+                <div class="ats-console-nav-group">
+                    <button type="button"
+                            class="@($"ats-console-nav-item ats-console-nav-item-toggle {(_isSettingsExpanded ? "ats-console-nav-item-expanded" : string.Empty)}")"
+                            aria-expanded="@_isSettingsExpanded"
+                            @onclick="ToggleSettingsExpanded">
+                        <span class="ats-console-nav-ic">⚙</span>
+                        <span class="ats-console-nav-text">Settings</span>
+                        <MudIcon Icon="@Icons.Material.Filled.ExpandMore"
+                                 Class="@( "ats-console-nav-chevron " + (_isSettingsExpanded ? "expanded" : "") )" />
+                    </button>
 
-                <NavLink href="/s&i/ats/settings" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">⚙</span>
-                    <span class="ats-console-nav-text">Settings</span>
-                </NavLink>
+                    @if (_isSettingsExpanded)
+                    {
+                        <div class="ats-console-nav-submenu">
+                            <NavLink href="/s&i/ats/settings/packagemanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+                                <span class="ats-console-nav-ic">🗂</span>
+                                <span class="ats-console-nav-text">Client Management</span>
+                            </NavLink>
+
+                            <NavLink href="/s&i/ats/settings/clientmanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+                                <span class="ats-console-nav-ic">🛡</span>
+                                <span class="ats-console-nav-text">Role Management</span>
+                            </NavLink>
+
+                            <NavLink href="/s&i/ats/settings/users" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+                                <span class="ats-console-nav-ic">👤</span>
+                                <span class="ats-console-nav-text">User Management</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
             </div>
 
             <div class="ats-console-sidebar-bottom">
@@ -111,7 +133,14 @@ else
     <LoaderComponent />
 }
 
+
 @code {
+    private bool _isSettingsExpanded;
+
+    private void ToggleSettingsExpanded()
+    {
+        _isSettingsExpanded = !_isSettingsExpanded;
+    }
     private const int MobileBreakpoint = 920;
     private string _pageTitle = "Dashboard";
     private bool _isReady;
@@ -197,7 +226,9 @@ else
             "s&i/ats/searchreport" => "Orders & reports",
             "s&i/ats/disputeorder" => "Disputes",
             "s&i/ats/candidates" => "Candidates",
-            "s&i/ats/settings" => "Settings",
+            "s&i/ats/settings/packagemanagement" => "Package Management",
+            "s&i/ats/settings/clientmanagement" => "Client Management",
+            "s&i/ats/settings/ordermanagement" => "Order Management",
             "s&i/ats/withdrawn" => "Withdrawn",
             _ => "Dashboard"
         };

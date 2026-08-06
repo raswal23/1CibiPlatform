@@ -116,7 +116,7 @@ public partial class PhilSysLiveness
 
 			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", photoUrl ?? string.Empty);
 			
-			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=1", false);
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=2", false);
 
 			return;
 		}

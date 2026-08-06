@@ -21,10 +21,16 @@
                                 MaxLength="255"
                                 Class="oneplatform-rounded-input" />
 
-                <div class="um-switch-row">
-                    <MudText Class="um-dialog-label">Is active</MudText>
-                    <MudCheckBox T="bool" @bind-Value="Package.IsActive" />
-                </div>
+                <MudSelect T="bool"
+                           @bind-Value="Package.IsActive"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Class="oneplatform-rounded-input">
+                    <MudSelectItem Value="true">Active</MudSelectItem>
+                    <MudSelectItem Value="false">Inactive</MudSelectItem>
+                </MudSelect>
+
             </MudStack>
         </MudForm>
     </MudPaper>

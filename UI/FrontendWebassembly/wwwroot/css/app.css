@@ -3217,3 +3217,80 @@ code {
             font-size: 11px;
         }
 }
+
+.ats-console-nav-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ats-console-nav-item-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.ats-console-nav-item-expanded {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.ats-console-nav-chevron {
+    margin-left: auto;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    transition: transform 0.25s ease;
+}
+
+.ats-console-nav-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.ats-console-nav-item-expanded .ats-console-nav-chevron {
+    transform: rotate(180deg);
+}
+
+.ats-console-nav-submenu {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-left: 1.15rem;
+    padding-left: 0.85rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ats-console-nav-subitem {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem 0.75rem;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-console-nav-subitem:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.ats-console-nav-subitem.active {
+    background-color: var(--ats-blue-500);
+    color: #fff;
+}
+
+.ats-console-nav-subitem .ats-console-nav-ic {
+    font-size: 0.9rem;
+    width: 1.1rem;
+    text-align: center;
+}
+
+.ats-console-collapsed .ats-console-nav-submenu,
+.ats-console-collapsed .ats-console-nav-chevron {
+    display: none;
+}

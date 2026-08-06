@@ -29,8 +29,125 @@
         <MudForm @ref="ApplicationForm" Disabled="@isSaving" Class="ats-appform-form">
             <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper ats-appform-stepper">
                 <ChildContent>
+
                     <!-- STEP 1 -->
-                    <MudStep Title="Part 1 - Step 1" Class="ats-step-one" Completed="@(_activeStep > 0)">
+                    <MudStep Title="Part 1 - Step 1" Class="ats-step-final" Completed="@(_activeStep > 0)">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudPaper Elevation="0" Style="width:100%;" Class="">
+                                    <MudItem xs="12">
+                                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 gradient-text">Consent to Collect and Disclose</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="12">
+                                        <MudPaper Elevation="0" Class="ats-consent-document">
+                                            <MudText Typo="Typo.body2">
+                                                I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
+                                            </MudText>
+
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Employment &amp; Education</MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                - Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedinas, collection actions
+                                                negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit
+                                                record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                - Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and | hereby authorize any public or private
+                                                educational institution to provide and release to CIBI information related to my educational/training record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                - Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide
+                                                and release to CIBI information related to my employment record.
+                                            </MudText>
+
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">References</MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                - References from any professional and personal associates I have provided or will provide, including information on my attendance, technical skills, interpersonal relations and any other
+                                                pertinent information and i hereby authorize any professional associations to provide and release to CIBI information related to my employment record.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                - Obtain information about myself and actions l am or have been involved in from judicial court, tribunal, regulatory body disciplinary committee of any other legal or quasi-legal authority i
+                                                the Philippines and I hereby authorize these judicial or quasi-judicial bodies to provide and release to CIBI information related to my records.
+                                            </MudText>
+
+                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Release and Discharge</MudText>
+                                            <MudText Typo="Typo.body2" class="mt-2">
+                                                Purpose of Consent: Background Screening /Credit (Due Diligence) Check
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" class="mt-4">
+                                                I understand that the information obtained because of this authorization and consent will be held in the strictest of confidentiality by CIBi and/or the Company and will be maintained in
+                                                accordance with their respective Privacy Policies. The information obtained will only be used in accordance with and to satisfy the scope for which this authorization/consent has been
+                                                signed. I release, waives and forever discharge anyone who provides information in relation to this release, from any and all liability for the disclosure of information to CIBI or the Company. I
+                                                certify that the information set out by me in this authorization/consent is correct.
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" class="mt-4">
+                                                You may reach out to the DPO at dpo@cibi.com.ph tor any privacy concerns.
+                                            </MudText>
+                                        </MudPaper>
+                                    </MudItem>
+                                </MudPaper>
+                            </MudItem>
+
+                            <MudItem xs="12">
+                                <MudPaper Elevation="0" Class="ats-signature-panel">
+                                    <MudGrid>
+                                        <MudItem xs="12">
+                                            <div class="ats-signature-block">
+                                                <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
+                                                <SignaturePad Value="signatureDetails.Signature"
+                                                              ValueChanged="OnSignatureChanged"
+                                                              ClearButtonClass="@(isSaving
+                                                                                                                                                                             ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
+                                                                                                                                                                             : "theme-button theme-button-active ats-signature-button")"
+                                                              Class="ats-signature mb-2"
+                                                              Disabled="@isSaving" />
+                                            </div>
+                                            @if (_signatureError)
+                                            {
+                                                <div class="ats-signature-error">
+                                                    <MudText Color="Color.Error"
+                                                             Typo="Typo.caption"
+                                                             Class="mb-2">
+                                                        Please provide your signature.
+                                                    </MudText>
+                                                </div>
+                                            }
+                                        </MudItem>
+
+                                        <MudItem xs="12">
+                                            <MudGrid Class="ats-signature-meta-row">
+                                                <MudItem xs="12" sm="6">
+                                                    <MudTextField T="string"
+                                                                  Label="Name"
+                                                                  @bind-Value="signatureDetails.SignerName"
+                                                                  Required="true"
+                                                                  RequiredError="Name is required"
+                                                                  Variant="Variant.Outlined"
+                                                                  Margin="Margin.Dense"
+                                                                  Class="oneplatform-rounded-input" />
+                                                </MudItem>
+
+                                                <MudItem xs="12" sm="6">
+                                                    <MudDatePicker @bind-Date="SignatureDate"
+                                                                   Label="Date"
+                                                                   Required="true"
+                                                                   RequiredError="Date is required"
+                                                                   Variant="Variant.Outlined"
+                                                                   Margin="Margin.Dense"
+                                                                   Class="oneplatform-rounded-input"
+                                                                   DateFormat="MM/dd/yyyy"
+                                                                   ReadOnly />
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                    </MudStep>
+
+                    <!-- STEP 2 -->
+                    <MudStep Title="Part 1 - Step 2" Class="ats-step-one" Completed="@(_activeStep > 1)">
                         <MudPaper Elevation="0" Class="ats-step-one-shell">
                             <MudGrid Class="ats-step-one-grid" Justify="Justify.Center" AlignItems="AlignItems.Center">
                                 <MudItem xs="12" md="6" Class="d-flex justify-center align-content-center">
@@ -89,8 +206,8 @@
                         </MudPaper>
                     </MudStep>
 
-                    <!-- STEP 2 -->
-                    <MudStep Title="Part 1 - Step 2" Class="ats-step-two" Completed="@(_activeStep > 1)">
+                    <!-- STEP 3 -->
+                    <MudStep Title="Part 1 - Step 3" Class="ats-step-two" Completed="@(_activeStep > 2)">
                         <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-3 mt-3 gradient-text">Personal Information</MudText>
                         <MudGrid Class="ats-step-two-grid" Spacing="1">
                             <!-- Left column: Personal information fields -->
@@ -350,8 +467,8 @@
                         </MudGrid>
                     </MudStep>
 
-                    <!-- STEP 3 -->
-                    <MudStep Title="Part 1 - Step 3" Class="ats-step-three" Completed="@(_activeStep > 2)">
+                    <!-- STEP 4 -->
+                    <MudStep Title="Part 1 - Step 4" Class="ats-step-three" Completed="@(_activeStep > 3)">
                         <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 ats-appform-section-title">Address</MudText>
                         <MudGrid>
                             <!-- Address section -->
@@ -611,8 +728,8 @@
                         </MudGrid>
                     </MudStep>
 
-                    <!-- STEP 4 -->
-                    <MudStep Title="Part 1 - Step 4" Class="ats-step-four" Completed="@(_activeStep > 3)">
+                    <!-- STEP 5 -->
+                    <MudStep Title="Part 1 - Step 5" Class="ats-step-four" Completed="@(_activeStep > 4)">
                         <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 ats-appform-section-title">Credentials, Licenses &amp; Professional Experience</MudText>
                         <MudGrid>
                             <MudItem xs="12">
@@ -1277,8 +1394,8 @@
                         </MudGrid>
                     </MudStep>
 
-                    <!-- STEP 5 -->
-                    <MudStep Title="Part 1 - Step 5" Class="ats-step-five" Completed="@(_activeStep > 4)">
+                    <!-- Final -->
+                    <MudStep Title="Final" Class="ats-step-five" Completed="@(_activeStep > 5)">
                         <MudGrid>
                             <MudItem xs="12">
                                 <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mt-4 gradient-text">Professional Character Reference</MudText>
@@ -1639,127 +1756,11 @@
                                 }
                             </MudItem>
                         </MudGrid>
-                    </MudStep>
-
-                    <!-- STEP 6 -->
-                    <MudStep Title="Final" Class="ats-step-final" Completed="@(_activeStep > 5)">
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudPaper Elevation="0" Style="width:100%;" Class="">
-                                    <MudItem xs="12">
-                                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 gradient-text">Consent to Collect and Disclose</MudText>
-                                    </MudItem>
-
-                                    <MudItem xs="12">
-                                        <MudPaper Elevation="0" Class="ats-consent-document">
-                                            <MudText Typo="Typo.body2">
-                                                I hereby give authorization and consent for CIBI Information Inc. ("CIBI"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.
-                                            </MudText>
-
-                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Employment &amp; Education</MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                - Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedinas, collection actions
-                                                negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit
-                                                record.
-                                            </MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                - Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and | hereby authorize any public or private
-                                                educational institution to provide and release to CIBI information related to my educational/training record.
-                                            </MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                - Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide
-                                                and release to CIBI information related to my employment record.
-                                            </MudText>
-
-                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">References</MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                - References from any professional and personal associates I have provided or will provide, including information on my attendance, technical skills, interpersonal relations and any other
-                                                pertinent information and i hereby authorize any professional associations to provide and release to CIBI information related to my employment record.
-                                            </MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                - Obtain information about myself and actions l am or have been involved in from judicial court, tribunal, regulatory body disciplinary committee of any other legal or quasi-legal authority i
-                                                the Philippines and I hereby authorize these judicial or quasi-judicial bodies to provide and release to CIBI information related to my records.
-                                            </MudText>
-
-                                            <MudText Typo="Typo.subtitle2" Class="ats-consent-subheading">Release and Discharge</MudText>
-                                            <MudText Typo="Typo.body2" class="mt-2">
-                                                Purpose of Consent: Background Screening /Credit (Due Diligence) Check
-                                            </MudText>
-                                            <MudText Typo="Typo.body2" class="mt-4">
-                                                I understand that the information obtained because of this authorization and consent will be held in the strictest of confidentiality by CIBi and/or the Company and will be maintained in
-                                                accordance with their respective Privacy Policies. The information obtained will only be used in accordance with and to satisfy the scope for which this authorization/consent has been
-                                                signed. I release, waives and forever discharge anyone who provides information in relation to this release, from any and all liability for the disclosure of information to CIBI or the Company. I
-                                                certify that the information set out by me in this authorization/consent is correct.
-                                            </MudText>
-                                            <MudText Typo="Typo.body2" class="mt-4">
-                                                You may reach out to the DPO at dpo@cibi.com.ph tor any privacy concerns.
-                                            </MudText>
-                                        </MudPaper>
-                                    </MudItem>
-                                </MudPaper>
-                            </MudItem>
-
-                            <MudItem xs="12">
-                                <MudPaper Elevation="0" Class="ats-signature-panel">
-                                    <MudGrid>
-                                        <MudItem xs="12">
-                                            <div class="ats-signature-block">
-                                                <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                <SignaturePad Value="signatureDetails.Signature"
-                                                              ValueChanged="OnSignatureChanged"
-                                                              ClearButtonClass="@(isSaving
-                                                               ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
-                                                               : "theme-button theme-button-active ats-signature-button")"
-                                                              Class="ats-signature mb-2"
-                                                              Disabled="@isSaving" />
-                                            </div>
-                                            @if (_signatureError)
-                                            {
-                                                <div class="ats-signature-error">
-                                                    <MudText Color="Color.Error"
-                                                             Typo="Typo.caption"
-                                                             Class="mb-2">
-                                                        Please provide your signature.
-                                                    </MudText>
-                                                </div>
-                                            }
-                                        </MudItem>
-
-                                        <MudItem xs="12">
-                                            <MudGrid Class="ats-signature-meta-row">
-                                                <MudItem xs="12" sm="6">
-                                                    <MudTextField T="string"
-                                                                  Label="Name"
-                                                                  @bind-Value="signatureDetails.SignerName"
-                                                                  Required="true"
-                                                                  RequiredError="Name is required"
-                                                                  Variant="Variant.Outlined"
-                                                                  Margin="Margin.Dense"
-                                                                  Class="oneplatform-rounded-input" />
-                                                </MudItem>
-
-                                                <MudItem xs="12" sm="6">
-                                                    <MudDatePicker @bind-Date="SignatureDate"
-                                                                   Label="Date"
-                                                                   Required="true"
-                                                                   RequiredError="Date is required"
-                                                                   Variant="Variant.Outlined"
-                                                                   Margin="Margin.Dense"
-                                                                   Class="oneplatform-rounded-input"
-                                                                   DateFormat="MM/dd/yyyy"
-                                                                   ReadOnly />
-                                                </MudItem>
-                                            </MudGrid>
-                                        </MudItem>
-                                    </MudGrid>
-                                </MudPaper>
-                            </MudItem>
-                        </MudGrid>
-                    </MudStep>
+                    </MudStep> 
                 </ChildContent>
 
                 <ActionContent Context="stepper">
-                    @if (_activeStep != 0)
+                    @if (_activeStep != 1)
                     {
                         <div class="d-flex justify-space-between w-100 pa-2 ats-step-action-bar">
 

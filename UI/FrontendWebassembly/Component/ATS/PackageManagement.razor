@@ -1,12 +1,16 @@
+@page "/s&i/ats/settings/packagemanagement"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
 @inject IPackageManagementService PackageManagementService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Package Management</PageTitle>
 
-<div style="margin-bottom: 20px;">
+<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
     <MudButton Class="theme-button theme-button-active" OnClick="AddNewPackage">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Package
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+        Add Package
     </MudButton>
 </div>
 
@@ -33,8 +37,8 @@
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
-            <span class="@(p.IsActive ? "badge-active" : "badge-inactive")">
-                @(p.IsActive ? "Active" : "Inactive")
+            <span class="@(p.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+                @(p.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
