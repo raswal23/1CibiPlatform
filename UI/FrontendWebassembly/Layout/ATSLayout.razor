@@ -2,11 +2,17 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IAuthService IAuthService
+@inject IJSRuntime JS
 @implements IDisposable
 
 @if (_isReady)
 {
-    <div class="@($"ats-console {(_isSidebarCollapsed ? "ats-console-collapsed" : string.Empty)}")">
+    <div class="@($"ats-console {(_isSidebarCollapsed ? "ats-console-collapsed" : string.Empty)} {(_isMobileDrawerOpen ? "ats-console-mobile-drawer-open" : string.Empty)}")">
+        @if (_isMobileDrawerOpen)
+        {
+            <button type="button" class="ats-console-mobile-overlay" aria-label="Close drawer" @onclick="CloseMobileDrawer"></button>
+        }
+
         <aside class="ats-console-sidebar">
             <div>
                 <div class="ats-console-logo">
@@ -106,9 +112,12 @@ else
 }
 
 @code {
+    private const int MobileBreakpoint = 920;
     private string _pageTitle = "Dashboard";
     private bool _isReady;
     private bool _isSidebarCollapsed;
+    private bool _isMobileDrawerOpen;
+    private bool _isMobileView;
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,15 +134,57 @@ else
         _isReady = true;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await UpdateViewportModeAsync();
+        StateHasChanged();
+    }
+
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         SetTitleFromUri();
+
+        if (_isMobileView)
+        {
+            _isMobileDrawerOpen = false;
+        }
+
         InvokeAsync(StateHasChanged);
     }
 
-    private void ToggleSidebar()
+    private async Task ToggleSidebar()
     {
+        await UpdateViewportModeAsync();
+
+        if (_isMobileView)
+        {
+            _isSidebarCollapsed = false;
+            _isMobileDrawerOpen = !_isMobileDrawerOpen;
+            return;
+        }
+
+        _isMobileDrawerOpen = false;
         _isSidebarCollapsed = !_isSidebarCollapsed;
+    }
+
+    private void CloseMobileDrawer()
+    {
+        _isMobileDrawerOpen = false;
+    }
+
+    private async Task UpdateViewportModeAsync()
+    {
+        _isMobileView = await JS.InvokeAsync<int>("getViewportWidth") <= MobileBreakpoint;
+
+        if (!_isMobileView)
+        {
+            _isMobileDrawerOpen = false;
+        }
     }
 
     private void SetTitleFromUri()

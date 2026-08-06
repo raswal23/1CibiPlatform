@@ -1,0 +1,136 @@
+@inject IClientManagementService ClientManagementService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<PageTitle>ATS - Client Management</PageTitle>
+
+<div style="margin-bottom: 20px;">
+    <MudButton Class="theme-button theme-button-active" OnClick="AddNewClient">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Client
+    </MudButton>
+</div>
+
+
+<TableComponent TItem="ClientDetailsDTO"
+                @ref="clientsTable"
+                Title="Clients"
+                EnableSearch="true"
+                ColumnCount="4"
+                RowsPerPage="10"
+                LoadServerData="LoadClientData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
+
+    <HeaderTemplate>
+        <MudTh Class="ats-table-cell-center">Client Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Status</MudTh>
+        <MudTh Class="ats-table-cell-center">Created At</MudTh>
+        <MudTh Class="ats-table-cell-center">Actions</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="c">
+        <MudTd Class="ats-table-cell-center" DataLabel="Client Name">
+            @c.ClientName
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Status">
+            <span class="@(c.IsActive ? "badge-active" : "badge-inactive")">
+                @(c.IsActive ? "Active" : "Inactive")
+            </span>
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Created At">
+            @c.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => EditClient(c))" />
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-console-empty-state">
+            <div class="ats-console-empty-icon">👥</div>
+            <div class="ats-console-empty-title">No clients</div>
+            <div class="ats-console-empty-sub">Create a new client to get started.</div>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+
+@code {
+    private string searchString = string.Empty;
+    private TableComponent<ClientDetailsDTO>? clientsTable;
+
+    private async Task<TableData<ClientDetailsDTO>> LoadClientData(TableState state, CancellationToken cancellationToken)
+    => await LoadPagedDataAsync(state, async (page, pageSize) =>
+    {
+        var result = await ClientManagementService.GetClientsAsync(page, pageSize, searchString, cancellationToken);
+        return new PaginatedResult<ClientDetailsDTO>(
+            result.PageIndex,
+            result.PageSize,
+            result.TotalRecords,
+            result.Items);
+    });
+
+    private async Task AddNewClient()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client", options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var clientDTO = (AddClientDTO)result.Data!;
+                await ClientManagementService.AddClientAsync(clientDTO!);
+                Snackbar.Add("Client added successfully", Severity.Success);
+                if (clientsTable?.TableRef != null)
+                    await clientsTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditClient(ClientDetailsDTO client)
+    {
+        var parameters = new DialogParameters<EditClientComponent> { { x => x.Client, client } };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditClientComponent>("Edit Client", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var editClientDTO = (EditClientDTO)result.Data!;
+                await ClientManagementService.EditClientAsync(editClientDTO!);
+                Snackbar.Add("Client updated successfully", Severity.Success);
+                if (clientsTable?.TableRef != null)
+                    await clientsTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+}

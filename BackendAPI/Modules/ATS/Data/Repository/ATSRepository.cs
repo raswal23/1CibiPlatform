@@ -848,4 +848,172 @@ public class ATSRepository : IATSRepository
 
 		return true;
 	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var packagesQuery = _dbcontext.PackageDetails
+			.AsNoTracking()
+			.OrderBy(p => p.PackageName);
+
+		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
+
+		var items = await packagesQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(p => new PackageDetailsDTO
+			{
+				PackageId = p.PackageId,
+				PackageName = p.PackageName,
+				IsActive = p.IsActive,
+				CreatedAt = p.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<PackageDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var packagesQuery = _dbcontext.PackageDetails
+			.AsNoTracking()
+			.Where(p => EF.Functions.ILike(p.PackageName!, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
+
+		var items = await packagesQuery
+			.OrderBy(p => p.PackageName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(p => new PackageDetailsDTO
+			{
+				PackageId = p.PackageId,
+				PackageName = p.PackageName,
+				IsActive = p.IsActive,
+				CreatedAt = p.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<PackageDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	{
+		var packageDetails = new PackageDetails
+		{
+			PackageId = Guid.CreateVersion7(),
+			PackageName = packageDTO.PackageName,
+			IsActive = packageDTO.IsActive,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		await _dbcontext.PackageDetails.AddAsync(packageDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
+	{
+		return await _dbcontext.PackageDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(p => p.PackageId == packageId);
+	}
+
+	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
+	{
+		_dbcontext.PackageDetails.Update(packageDetails);
+		await _dbcontext.SaveChangesAsync();
+		return packageDetails;
+	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var clientsQuery = _dbcontext.ClientDetails
+			.AsNoTracking()
+			.OrderBy(c => c.ClientName);
+
+		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
+
+		var items = await clientsQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(c => new ClientDetailsDTO
+			{
+				ClientId = c.ClientId,
+				ClientName = c.ClientName,
+				IsActive = c.IsActive,
+				CreatedAt = c.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ClientDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var clientsQuery = _dbcontext.ClientDetails
+			.AsNoTracking()
+			.Where(c => EF.Functions.ILike(c.ClientName!, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
+
+		var items = await clientsQuery
+			.OrderBy(c => c.ClientName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(c => new ClientDetailsDTO
+			{
+				ClientId = c.ClientId,
+				ClientName = c.ClientName,
+				IsActive = c.IsActive,
+				CreatedAt = c.CreatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ClientDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
+	{
+		var clientDetails = new ClientDetails
+		{
+			ClientId = Guid.CreateVersion7(),
+			ClientName = clientDTO.ClientName,
+			IsActive = clientDTO.IsActive,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		await _dbcontext.ClientDetails.AddAsync(clientDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
+	{
+		return await _dbcontext.ClientDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(c => c.ClientId == clientId);
+	}
+
+	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
+	{
+		_dbcontext.ClientDetails.Update(clientDetails);
+		await _dbcontext.SaveChangesAsync();
+		return clientDetails;
+	}
 }

@@ -19,6 +19,8 @@ public class ATSDBContext : DbContext
     public DbSet<ReportDetails> ReportDetails { get; set; }
     public DbSet<ArchiveReport> ArchiveReports { get; set; }
     public DbSet<ApplicantSearchProjection> ApplicantSearchProjections { get; set; }
+    public DbSet<PackageDetails> PackageDetails { get; set; }
+    public DbSet<ClientDetails> ClientDetails { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -393,6 +393,30 @@ namespace APIs.Migrations.ATS
                     b.ToTable("BulkUploadFileDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.ClientDetails", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("ClientId");
+
+                    b.HasIndex("ClientName")
+                        .IsUnique();
+
+                    b.ToTable("ClientDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
                 {
                     b.Property<Guid>("DocumentDetailsID")
@@ -718,6 +742,30 @@ namespace APIs.Migrations.ATS
                         .IsUnique();
 
                     b.ToTable("LicensesDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.PackageDetails", b =>
+                {
+                    b.Property<Guid>("PackageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PackageName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("PackageId");
+
+                    b.HasIndex("PackageName")
+                        .IsUnique();
+
+                    b.ToTable("PackageDetails", "ats");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.PersonalDetails", b =>

@@ -10,6 +10,15 @@ public static class FrontendServiceConfig
 
 		var isUat = string.Equals(env.Environment, "UAT", StringComparison.OrdinalIgnoreCase);
 
+		var isSandbox = string.Equals(env.Environment, "Sandbox", StringComparison.OrdinalIgnoreCase);
+
+
+		if (isSandbox)
+		{
+			apiBaseFromConfig ??= configuration["ApiBase"];
+			ssoBaseFromConfig ??= configuration["SsoApiBase"];
+		}
+
 		if (isUat)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
@@ -69,6 +78,8 @@ public static class FrontendServiceConfig
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
         services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IClientManagementService, ClientManagementService>();
 
 		services.AddMudServices(config =>
 		{

@@ -29,6 +29,10 @@
                 document.documentElement.classList.remove('dark-startup');
             }
         };
+
+        window.getViewportWidth = function () {
+            return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+        };
     </script>
 </head>
 
