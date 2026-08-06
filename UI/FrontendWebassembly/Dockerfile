@@ -42,16 +42,25 @@ RUN echo "Configuring appsettings for ENVIRONMENT = $ENVIRONMENT" && \
       echo "Using UAT configuration..." && \
       rm -f /app/publish/wwwroot/appsettings.Production.json && \
       mv /app/publish/wwwroot/appsettings.UAT.json /app/publish/wwwroot/appsettings.Production.json && \
-      rm -f /app/publish/wwwroot/appsettings.Development.json; \
+      rm -f /app/publish/wwwroot/appsettings.Development.json && \
+      rm -f /app/publish/wwwroot/appsettings.Sandbox.json; \
     elif [ "$ENVIRONMENT" = "Development" ]; then \
       echo "Using Development configuration..." && \
       rm -f /app/publish/wwwroot/appsettings.Production.json && \
       mv /app/publish/wwwroot/appsettings.Development.json /app/publish/wwwroot/appsettings.Production.json && \
-      rm -f /app/publish/wwwroot/appsettings.UAT.json; \
+      rm -f /app/publish/wwwroot/appsettings.UAT.json && \
+      rm -f /app/publish/wwwroot/appsettings.Sandbox.json; \
+    elif [ "$ENVIRONMENT" = "Sandbox" ]; then \
+      echo "Using Sandbox configuration..." && \
+      rm -f /app/publish/wwwroot/appsettings.Production.json && \
+      mv /app/publish/wwwroot/appsettings.Sandbox.json /app/publish/wwwroot/appsettings.Production.json && \
+      rm -f /app/publish/wwwroot/appsettings.UAT.json && \
+      rm -f /app/publish/wwwroot/appsettings.Development.json; \
     else \
       echo "Using Production configuration..." && \
       rm -f /app/publish/wwwroot/appsettings.Development.json && \
-      rm -f /app/publish/wwwroot/appsettings.UAT.json; \
+      rm -f /app/publish/wwwroot/appsettings.UAT.json && \
+      rm -f /app/publish/wwwroot/appsettings.Sandbox.json; \
     fi && \
     echo "Final appsettings files:" && \
     ls -la /app/publish/wwwroot/appsettings* && \
