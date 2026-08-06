@@ -12,7 +12,6 @@ public static class FrontendServiceConfig
 
 		var isSandbox = string.Equals(env.Environment, "Sandbox", StringComparison.OrdinalIgnoreCase);
 
-
 		if (isSandbox)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
@@ -31,7 +30,7 @@ public static class FrontendServiceConfig
 			ssoBaseFromConfig ??= configuration["SsoApiBase"];
 		}
 
-		if (!env.IsProduction() && !isUat)
+		if (!env.IsProduction() && !isUat && !isSandbox)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
 			ssoBaseFromConfig ??= configuration["SsoApiBase"];
