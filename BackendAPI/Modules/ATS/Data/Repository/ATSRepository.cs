@@ -869,8 +869,11 @@ public class ATSRepository : IATSRepository
 			{
 				PackageId = p.PackageId,
 				PackageName = p.PackageName,
+				PackageDescription = p.PackageDescription,
 				IsActive = p.IsActive,
-				CreatedAt = p.CreatedAt
+				FollowUpEmail = p.FollowUpEmail,
+				CreatedAt = p.CreatedAt,
+				UpdatedAt = p.UpdatedAt
 			})
 			.ToListAsync(cancellationToken);
 
@@ -885,7 +888,9 @@ public class ATSRepository : IATSRepository
 	{
 		var packagesQuery = _dbcontext.PackageDetails
 			.AsNoTracking()
-			.Where(p => EF.Functions.ILike(p.PackageName!, $"%{paginationRequest.SearchTerm}%"));
+			.Where(p =>
+				EF.Functions.ILike(p.PackageName, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(p.PackageDescription, $"%{paginationRequest.SearchTerm}%"));
 
 		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
 
@@ -897,8 +902,11 @@ public class ATSRepository : IATSRepository
 			{
 				PackageId = p.PackageId,
 				PackageName = p.PackageName,
+				PackageDescription = p.PackageDescription,
 				IsActive = p.IsActive,
-				CreatedAt = p.CreatedAt
+				FollowUpEmail = p.FollowUpEmail,
+				CreatedAt = p.CreatedAt,
+				UpdatedAt = p.UpdatedAt
 			})
 			.ToListAsync(cancellationToken);
 
@@ -909,31 +917,35 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)
 	{
+		var timestamp = DateTime.UtcNow;
 		var packageDetails = new PackageDetails
 		{
-			PackageName = packageDTO.PackageName,
+			PackageName = packageDTO.PackageName.Trim(),
+			PackageDescription = packageDTO.PackageDescription.Trim(),
 			IsActive = packageDTO.IsActive,
-			CreatedAt = DateTime.UtcNow
+			FollowUpEmail = packageDTO.FollowUpEmail,
+			CreatedAt = timestamp,
+			UpdatedAt = timestamp
 		};
 
-		await _dbcontext.PackageDetails.AddAsync(packageDetails);
-		await _dbcontext.SaveChangesAsync();
+		await _dbcontext.PackageDetails.AddAsync(packageDetails, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return true;
 	}
 
-	public async Task<PackageDetails?> GetPackageAsync(int packageId)
+	public async Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.PackageDetails
 			.AsNoTracking()
-			.FirstOrDefaultAsync(p => p.PackageId == packageId);
+			.FirstOrDefaultAsync(p => p.PackageId == packageId, cancellationToken);
 	}
 
-	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
+	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken)
 	{
 		_dbcontext.PackageDetails.Update(packageDetails);
-		await _dbcontext.SaveChangesAsync();
+		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return packageDetails;
 	}
 

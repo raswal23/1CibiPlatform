@@ -314,7 +314,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"package_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var cacheKey = $"package_v3_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			cacheKey,
@@ -327,7 +327,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"package_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var cacheKey = $"package_v3_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			cacheKey,
@@ -338,22 +338,22 @@ public class ATSCacheRepository : IATSRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.AddPackageAsync(packageDTO);
+		var result = await _atsRepository.AddPackageAsync(packageDTO, cancellationToken);
 		if (result)
 			await _hybridCache.RemoveByTagAsync(PackageTag);
 		return result;
 	}
 
-	public async Task<PackageDetails?> GetPackageAsync(int packageId)
+	public async Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken)
 	{
-		return await _atsRepository.GetPackageAsync(packageId);
+		return await _atsRepository.GetPackageAsync(packageId, cancellationToken);
 	}
 
-	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
+	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.EditPackageAsync(packageDetails);
+		var result = await _atsRepository.EditPackageAsync(packageDetails, cancellationToken);
 		if (result is not null)
 			await _hybridCache.RemoveByTagAsync(PackageTag);
 		return result ?? new PackageDetails();

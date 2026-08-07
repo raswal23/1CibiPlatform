@@ -16,10 +16,20 @@ public class PackageDetailsConfiguration : IEntityTypeConfiguration<PackageDetai
 			.HasMaxLength(255)
 			.IsRequired();
 
+		builder.Property(x => x.PackageDescription)
+			.HasMaxLength(500)
+			.IsRequired();
+
 		builder.Property(x => x.IsActive)
 			.IsRequired();
 
+		builder.Property(x => x.FollowUpEmail)
+			.IsRequired();
+
 		builder.Property(x => x.CreatedAt)
+			.IsRequired();
+
+		builder.Property(x => x.UpdatedAt)
 			.IsRequired();
 
 		builder.HasIndex(x => x.PackageName)

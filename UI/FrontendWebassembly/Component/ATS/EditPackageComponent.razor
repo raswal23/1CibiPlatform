@@ -22,6 +22,23 @@
                                 MaxLength="255"
                                 Class="oneplatform-rounded-input" />
 
+                <MudTextField @bind-Value="EditPackage.PackageDescription"
+                              Label="Package Description"
+                              Required="true"
+                              RequiredError="Package Description is required"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="3"
+                              MaxLength="500"
+                              Class="oneplatform-rounded-input" />
+
+                <MudNumericField T="int"
+                                 @bind-Value="EditPackage.FollowUpEmail"
+                                 Label="Follow Up Email"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Class="oneplatform-rounded-input" />
+
                 <MudSelect T="bool"
                            @bind-Value="EditPackage.IsActive"
                            Label="Status"

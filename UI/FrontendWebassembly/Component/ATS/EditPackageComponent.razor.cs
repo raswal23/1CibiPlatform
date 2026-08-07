@@ -18,7 +18,9 @@ public partial class EditPackageComponent
 		{
 			PackageId = Package.PackageId,
 			PackageName = Package.PackageName,
-			IsActive = Package.IsActive
+			PackageDescription = Package.PackageDescription,
+			IsActive = Package.IsActive,
+			FollowUpEmail = Package.FollowUpEmail
 		};
 	}
 

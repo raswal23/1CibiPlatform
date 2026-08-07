@@ -18,7 +18,7 @@
                 @ref="packagesTable"
                 Title="Packages"
                 EnableSearch="true"
-                ColumnCount="4"
+                ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadPackageData"
                 SearchString="@searchString"
@@ -26,8 +26,11 @@
 
     <HeaderTemplate>
         <MudTh Class="ats-table-cell-center">Package Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Follow Up Email</MudTh>
         <MudTh Class="ats-table-cell-center">Status</MudTh>
-        <MudTh Class="ats-table-cell-center">Created At</MudTh>
+        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
         <MudTh Class="ats-table-cell-center">Actions</MudTh>
     </HeaderTemplate>
 
@@ -36,14 +39,26 @@
             @p.PackageName
         </MudTd>
 
+        <MudTd Class="ats-table-cell-center" DataLabel="Description">
+            @p.PackageDescription
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Follow Up Email">
+            @p.FollowUpEmail
+        </MudTd>
+
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
             <span class="@(p.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
                 @(p.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Created At">
+        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
             @p.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+            @p.UpdatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">

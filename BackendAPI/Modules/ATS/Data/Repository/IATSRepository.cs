@@ -45,9 +45,9 @@ public interface IATSRepository
 	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken);
 	Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddPackageAsync(AddPackageDTO packageDTO);
-	Task<PackageDetails?> GetPackageAsync(int packageId);
-	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails);
+	Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken);
+	Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken);
+	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken);
 	Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken);
