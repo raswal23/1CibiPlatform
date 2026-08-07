@@ -94,21 +94,14 @@
                             </MudItem>
 
                             <MudItem xs="12">
-                                <MudPaper Elevation="0" Class="ats-signature-panel">
+                                <MudPaper Elevation="0" Class="ats-signature-section">
                                     <MudGrid>
                                         <MudItem xs="12">
                                             <div class="ats-signature-block">
-                                                <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                @if (_renderSignaturePad)
-                                                {
-                                                    <SafeSignaturePad Value="signatureDetails.Signature"
-                                                                      ValueChanged="OnSignatureChanged"
-                                                                      ClearButtonClass="@(isSaving
-                                                                       ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
-                                                                       : "theme-button theme-button-active ats-signature-button")"
-                                                                      Class="ats-signature mb-2"
-                                                                      Disabled="@isSaving" />
-                                                }
+                                                <SafeSignaturePad Value="signatureDetails.Signature"
+                                                                  ValueChanged="OnSignatureChanged"
+                                                                  Class="mb-2"
+                                                                  Disabled="@isSaving" />
                                             </div>
                                             @if (_signatureError)
                                             {
@@ -123,7 +116,7 @@
                                         </MudItem>
 
                                         <MudItem xs="12">
-                                            <MudGrid Class="ats-signature-meta-row">
+                                            <MudGrid>
                                                 <MudItem xs="12" sm="6">
                                                     <MudTextField T="string"
                                                                   Label="Name"
@@ -1760,14 +1753,12 @@
                 </ChildContent>
 
                 <ActionContent Context="stepper">
-                    @if (_activeStep != 1)
-                    {
-                        <div class="d-flex w-100 pa-2 ats-step-action-bar"
-                             style="@(_activeStep == 0 ? "justify-content: flex-end;" : "justify-content: space-between;")">
+                    <div class="d-flex w-100 pa-2 ats-step-action-bar"
+                         style="@(_activeStep == 0 ? "justify-content: flex-end;" : "justify-content: space-between;")">
 
                             @if (_activeStep != 0)
                             {
-                                <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray; height; 40px;"
+                                <MudButton Style="width: 150px; height: 40px; border-radius: 12px; border: 2px solid gray;"
                                            Class="mt-3 mb-4"
                                            OnClick="OnPreviousStepAsync">
                                     Previous
@@ -1777,7 +1768,8 @@
                             @if (_activeStep == stepper.Steps.Count - 1)
                             {
                                 <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                           Style="width: 150px; border-radius:12px; height; 40px; "
+                                           Style="width: 150px; height: 40px; border-radius: 12px;"
+                                           Disabled="@isSaving"
                                            OnClick="OnSubmitForm">
 
                                     @if (isSaving)
@@ -1795,16 +1787,19 @@
                             }
                             else
                             {
-                                <div>
-                                    <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                               Style="width: 150px; border-radius:12px;"
-                                               OnClick="OnSaveAndNextAsync">
-                                        Save & Next
-                                    </MudButton>
-                                </div>
+                                @if (_activeStep != 1)
+                                {
+                                    <div>
+                                        <MudButton Class="theme-button mt-3 theme-button-active mb-4"
+                                                   Style="width: 150px; height: 40px; border-radius: 12px;"
+                                                   Disabled="@isSaving"
+                                                   OnClick="OnSaveAndNextAsync">
+                                            Save &amp; Next
+                                        </MudButton>
+                                    </div>
+                                }
                             }
-                        </div>
-                    }
+                    </div>
                 </ActionContent>
             </MudStepper>
         </MudForm>

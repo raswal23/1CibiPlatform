@@ -80,7 +80,6 @@ public partial class ApplicationFormComponent
 	private SignatureDetailsDTO signatureDetails = new();
 	private DateTime? SignatureDate = DateTime.UtcNow;
 	private bool _signatureError;
-	private bool _renderSignaturePad;
 
 	//Validations
 	private bool _govtIdError;
@@ -146,13 +145,6 @@ public partial class ApplicationFormComponent
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		await JS.InvokeVoidAsync("general.attachNameFilter");
-
-		var shouldRenderSignaturePad = _activeStep == 0;
-		if (_renderSignaturePad != shouldRenderSignaturePad)
-		{
-			_renderSignaturePad = shouldRenderSignaturePad;
-			await InvokeAsync(StateHasChanged);
-		}
 	}
 
 	private bool CanAddEmployer2 =>
@@ -709,6 +701,18 @@ public partial class ApplicationFormComponent
 	private async Task OnSaveAndNextAsync()
 	{
 		await ApplicationForm!.ValidateAsync();
+
+		if (_activeStep == 0)
+		{
+			_signatureError = signatureDetails.Signature is null ||
+						  signatureDetails.Signature.Length == 0;
+
+			if (_signatureError)
+			{
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+		}
 
 		bool uploadsValid = ValidateUploads();
 

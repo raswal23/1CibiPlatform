@@ -99,6 +99,14 @@ export function clear(canvas) {
     state.context.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+export function setImage(canvas, source) {
+    const state = canvas ? pads.get(canvas) : null;
+    if (!state || !source) return;
+    const scale = window.devicePixelRatio || 1;
+    state.context.clearRect(0, 0, canvas.width, canvas.height);
+    drawImage(canvas, state.context, source, scale);
+}
+
 export function destroy(canvas) {
     const state = canvas ? pads.get(canvas) : null;
     if (!state) return;

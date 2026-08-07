@@ -624,7 +624,7 @@ code {
     font-weight: 700;
 }
 
-.ats-step-final .ats-signature-panel {
+.ats-step-final .ats-signature-section {
     margin-top: 14px;
     padding: 8px 0 0;
 }
@@ -642,9 +642,6 @@ code {
     margin-top: 3px;
 }
 
-.ats-step-final .ats-signature-meta-row {
-    margin-top: 14px;
-}
 
     .ats-step-final .ats-signature-meta-row .mud-item {
         margin-bottom: 4px;
@@ -3322,4 +3319,228 @@ code {
     min-height: 76px;
     flex: 1 1 auto;
     cursor: crosshair;
+}
+
+.ats-signature-modern {
+    width: min(680px, 100%);
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #e1e9f4;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 34, 71, 0.08);
+}
+
+.ats-signature-modern-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ats-signature-modern-title {
+    color: #102247;
+    font-weight: 700 !important;
+}
+
+.ats-signature-modern-subtitle {
+    color: #6f7d91;
+}
+
+.ats-signature-modern-close {
+    color: #78869a !important;
+}
+
+.ats-signature-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 16px;
+    border: 1px solid #e3eaf3;
+    border-radius: 12px;
+    background: #f7f9fc;
+}
+
+.ats-signature-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 9px;
+    color: #6d7889;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.ats-signature-tab.active {
+    color: #1769d2;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(16, 34, 71, 0.09);
+}
+
+.ats-signature-tab:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.ats-signature-panel {
+    display: none;
+}
+
+.ats-signature-panel.active {
+    display: block;
+}
+
+.ats-signature-draw-surface {
+    position: relative;
+    height: 230px;
+    overflow: hidden;
+    border: 2px dashed #62a8ff;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+}
+
+.ats-signature-draw-surface .ats-signature-canvas {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.ats-signature-draw-hint {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    color: #8794a8;
+    font-size: 13px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.ats-signature-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    color: #7d899a;
+    font-size: 12px;
+}
+
+.ats-signature-clear-link {
+    padding: 4px 0;
+    border: 0;
+    color: #1769d2;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ats-signature-upload-zone {
+    position: relative;
+    display: flex;
+    min-height: 230px;
+    padding: 24px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px dashed #62a8ff;
+    border-radius: 14px;
+    color: #7d899a;
+    text-align: center;
+    background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+    cursor: pointer;
+}
+
+.ats-signature-upload-zone.disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+.ats-signature-upload-input {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.ats-signature-upload-icon {
+    display: grid;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 14px;
+    place-items: center;
+    border-radius: 18px;
+    color: #1769d2;
+    background: #eaf4ff;
+    box-shadow: 0 8px 20px rgba(23, 105, 210, .13);
+}
+
+.ats-signature-upload-prompt {
+    color: #4f5d70;
+}
+
+.ats-signature-upload-prompt span {
+    color: #1769d2;
+    font-weight: 700;
+}
+
+.ats-signature-upload-preview {
+    max-width: 85%;
+    max-height: 130px;
+    margin-bottom: 10px;
+    object-fit: contain;
+}
+
+.ats-signature-upload-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: #263852;
+    font-weight: 600 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-signature-privacy-note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    color: #8793a5;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+    .ats-signature-modern {
+        padding: 14px;
+        border-radius: 14px;
+    }
+
+    .ats-signature-draw-surface,
+    .ats-signature-upload-zone {
+        min-height: 190px;
+        height: 190px;
+    }
+
+    .ats-signature-panel-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }

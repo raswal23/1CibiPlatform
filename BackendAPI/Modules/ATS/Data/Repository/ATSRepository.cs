@@ -410,9 +410,14 @@ public class ATSRepository : IATSRepository
 		if (string.IsNullOrWhiteSpace(sortColumn))
 		{
 			usersQuery = usersQuery
-						.OrderByDescending(x => x.OrderCompletedAt.HasValue)
-						.ThenByDescending(x => x.OrderCompletedAt)
-						.ThenBy(x => x.EmailInvitationID);
+				.OrderBy(x =>
+					x.OrderStatus == OrderStatus.Completed ? 0 :
+					x.OrderStatus == OrderStatus.InProgress ? 1 :
+					x.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
+					x.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
+					4)
+				.ThenByDescending(x => x.OrderCompletedAt)
+				.ThenBy(x => x.EmailInvitationID);
 		}
 		else
 		{
