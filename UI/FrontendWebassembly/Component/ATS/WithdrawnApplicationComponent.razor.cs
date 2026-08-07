@@ -8,15 +8,51 @@ public partial class WithdrawnApplicationComponent
 	private Guid? _loadingEmailInvitationId;
 	private async Task ConfirmResendApplicationForm(Guid emailInvitationId)
 	{
+
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Do you want to resend the application form?" }
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Resend Application"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will resend the application form."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Withdraw"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Withdraw' will resend the application form via email."
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor),"#FFF8E1"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
+			}
+
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
 		var result = await dialog.Result;
 

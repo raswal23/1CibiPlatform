@@ -187,6 +187,12 @@ code {
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
     }
 
+.theme-button-delete {
+    background: #F44336 !important;
+    color: white !important;
+    border-radius: 12px !important;
+}
+
 .theme-button-inactive {
     background: #cbd5e1 !important;
     cursor: not-allowed;
@@ -200,10 +206,25 @@ code {
     color: white !important;
 }
 
-.theme-button-delete {
-    background: #F44336 !important;
+.theme-button, .theme-button-warning {
+    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+    text-transform: none !important;
+    font-size: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+    .theme-button:hover, .theme-button-warning:hover {
+        transform: scale(1.06);
+        box-shadow: 0 12px 40px rgba(251, 140, 0, .25) !important;
+    }
+
+
+
+.theme-button-warning {
+    background: linear-gradient(90deg, #E65100 0%, #FB8C00 55%, #FFB74D 100%) !important;
     color: white !important;
-    border-radius: 4px !important;
+    border-radius: 12px !important;
 }
 
 .main-nav-item-custom {

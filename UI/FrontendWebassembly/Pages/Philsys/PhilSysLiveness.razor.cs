@@ -79,6 +79,40 @@ public partial class PhilSysLiveness
 			return;
 		}
 
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"PhilSys Verification"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be informed that you will be directed to PhilSys for completing the National ID verification."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Proceed"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Proceed' will redirect you to the PhilSys verification page."
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(null,confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
 		_dotNetRef = DotNetObjectReference.Create(this);
 		await JS.InvokeVoidAsync("startLivenessInterop", HashToken, _dotNetRef, livenessKey);
 	}
