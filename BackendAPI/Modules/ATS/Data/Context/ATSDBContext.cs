@@ -21,6 +21,7 @@ public class ATSDBContext : DbContext
     public DbSet<ApplicantSearchProjection> ApplicantSearchProjections { get; set; }
     public DbSet<PackageDetails> PackageDetails { get; set; }
     public DbSet<ClientDetails> ClientDetails { get; set; }
+    public DbSet<RoleDetails> RoleDetails { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

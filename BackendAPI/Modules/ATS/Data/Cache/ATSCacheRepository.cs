@@ -10,6 +10,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string ReportTag = "report";
 	private readonly string ClientTag = "client";
 	private readonly string PackageTag = "package";
+	private readonly string RoleTag = "role";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -319,6 +320,7 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.GetPackagesAsync(req, token),
 			null,
+			tags: [PackageTag],
 			cancellationToken: cancellationToken);
 	}
 
@@ -331,6 +333,7 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.SearchPackagesAsync(req, token),
 			null,
+			tags: [PackageTag],
 			cancellationToken: cancellationToken);
 	}
 
@@ -364,6 +367,7 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.GetClientsAsync(req, token),
 			null,
+			tags: [ClientTag],
 			cancellationToken: cancellationToken);
 	}
 
@@ -376,6 +380,7 @@ public class ATSCacheRepository : IATSRepository
 			paginationRequest,
 			async (req, token) => await _atsRepository.SearchClientsAsync(req, token),
 			null,
+			tags: [ClientTag],
 			cancellationToken: cancellationToken);
 	}
 
@@ -399,5 +404,52 @@ public class ATSCacheRepository : IATSRepository
 		if (result is not null)
 			await _hybridCache.RemoveByTagAsync(ClientTag);
 		return result ?? new ClientDetails();
+	}
+
+	public async Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"role_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RoleDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetRolesAsync(req, token),
+			null,
+			tags: [RoleTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"role_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RoleDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchRolesAsync(req, token),
+			null,
+			tags: [RoleTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> AddRoleAsync(AddRoleDTO roleDTO)
+	{
+		var result = await _atsRepository.AddRoleAsync(roleDTO);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(RoleTag);
+		return result;
+	}
+
+	public async Task<RoleDetails?> GetRoleAsync(int roleId)
+	{
+		return await _atsRepository.GetRoleAsync(roleId);
+	}
+
+	public async Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails)
+	{
+		var result = await _atsRepository.EditRoleAsync(roleDetails);
+		if (result is not null)
+			await _hybridCache.RemoveByTagAsync(RoleTag);
+		return result ?? new RoleDetails();
 	}
 }

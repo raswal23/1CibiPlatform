@@ -39,6 +39,7 @@ public static class ATSServiceConfiguration
     {
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.Decorate<IATSRepository, ATSCacheRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
@@ -47,6 +48,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IFilePdfService, FilePdfService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
+		services.AddScoped<IRoleManagementService, RoleManagementService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

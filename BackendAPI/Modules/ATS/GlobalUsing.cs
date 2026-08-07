@@ -2,6 +2,7 @@
 global using ATS.Data.Context;
 global using ATS.Services;
 global using ATS.Data.Repository;
+global using ATS.Data.Cache;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
 global using ATS.Data.DTO;

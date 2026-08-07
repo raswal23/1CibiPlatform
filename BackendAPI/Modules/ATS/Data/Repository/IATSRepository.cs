@@ -53,4 +53,9 @@ public interface IATSRepository
 	Task<bool> AddClientAsync(AddClientDTO clientDTO);
 	Task<ClientDetails?> GetClientAsync(Guid clientId);
 	Task<ClientDetails> EditClientAsync(ClientDetails clientDetails);
+	Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
+	Task<RoleDetails?> GetRoleAsync(int roleId);
+	Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails);
 }

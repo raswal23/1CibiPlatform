@@ -244,6 +244,39 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			new RouteDefinitionDTO(
+				RouteId: "GetATSRoles",
+				MatchPath: "/ats/getroles",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getroles" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AddATSRole",
+				MatchPath: "/ats/addrole",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/addrole" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "EditATSRole",
+				MatchPath: "/ats/editrole",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/editrole" }
+				}
+			),
+
 		};
 	}
 	public IEnumerable<ClusterDefinitionDTO> GetClusters()

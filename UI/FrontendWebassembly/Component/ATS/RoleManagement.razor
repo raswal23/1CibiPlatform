@@ -1,0 +1,141 @@
+@page "/s&i/ats/rolemanagement"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IRoleManagementService RoleManagementService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<PageTitle>ATS - Role Management</PageTitle>
+
+<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+    <MudButton Class="theme-button theme-button-active" OnClick="AddNewRole">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Role
+    </MudButton>
+</div>
+
+<TableComponent TItem="RoleDetailsDTO"
+                @ref="rolesTable"
+                Title="Roles"
+                EnableSearch="true"
+                ColumnCount="6"
+                RowsPerPage="10"
+                LoadServerData="LoadRoleData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
+
+    <HeaderTemplate>
+        <MudTh Class="ats-table-cell-center">Role Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Role Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Status</MudTh>
+        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Actions</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="r">
+        <MudTd Class="ats-table-cell-center" DataLabel="Role Name">
+            @r.RoleName
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Role Description">
+            @r.RoleDescription
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Status">
+            <span class="@(r.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+                @(r.IsActive ? "Active" : "Disabled")
+            </span>
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
+            @r.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+            @r.UpdatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => EditRole(r))" />
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-console-empty-state">
+            <div class="ats-console-empty-icon">👥</div>
+            <div class="ats-console-empty-title">No roles</div>
+            <div class="ats-console-empty-sub">Create a new role to get started.</div>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+
+@code {
+    private string searchString = string.Empty;
+    private TableComponent<RoleDetailsDTO>? rolesTable;
+
+    private async Task<TableData<RoleDetailsDTO>> LoadRoleData(TableState state, CancellationToken cancellationToken)
+        => await LoadPagedDataAsync(state, (page, pageSize) =>
+            RoleManagementService.GetRolesAsync(page, pageSize, searchString, cancellationToken));
+
+    private async Task AddNewRole()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddRoleComponent>("Add Role", options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var roleDTO = (AddATSRoleDTO)result.Data!;
+                await RoleManagementService.AddRoleAsync(roleDTO);
+                Snackbar.Add("Role added successfully", Severity.Success);
+                if (rolesTable?.TableRef != null)
+                    await rolesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditRole(RoleDetailsDTO role)
+    {
+        var parameters = new DialogParameters<EditRoleComponent> { { x => x.Role, role } };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditRoleComponent>("Edit Role", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var editRoleDTO = (EditATSRoleDTO)result.Data!;
+                await RoleManagementService.EditRoleAsync(editRoleDTO);
+                Snackbar.Add("Role updated successfully", Severity.Success);
+                if (rolesTable?.TableRef != null)
+                    await rolesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+}

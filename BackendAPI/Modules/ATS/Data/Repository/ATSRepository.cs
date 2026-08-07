@@ -1021,4 +1021,95 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return clientDetails;
 	}
+
+	public async Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var rolesQuery = _dbcontext.RoleDetails
+			.AsNoTracking()
+			.OrderBy(r => r.RoleName);
+
+		var totalRecords = await rolesQuery.CountAsync(cancellationToken);
+
+		var items = await rolesQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(r => new RoleDetailsDTO
+			{
+				RoleId = r.RoleId,
+				RoleName = r.RoleName,
+				RoleDescription = r.RoleDescription,
+				IsActive = r.IsActive,
+				CreatedAt = r.CreatedAt,
+				UpdatedAt = r.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<RoleDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var rolesQuery = _dbcontext.RoleDetails
+			.AsNoTracking()
+			.Where(r => EF.Functions.ILike(r.RoleName, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(r.RoleDescription, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await rolesQuery.CountAsync(cancellationToken);
+
+		var items = await rolesQuery
+			.OrderBy(r => r.RoleName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(r => new RoleDetailsDTO
+			{
+				RoleId = r.RoleId,
+				RoleName = r.RoleName,
+				RoleDescription = r.RoleDescription,
+				IsActive = r.IsActive,
+				CreatedAt = r.CreatedAt,
+				UpdatedAt = r.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<RoleDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddRoleAsync(AddRoleDTO roleDTO)
+	{
+		var timestamp = DateTime.UtcNow;
+		var roleDetails = new RoleDetails
+		{
+			RoleName = roleDTO.RoleName!,
+			RoleDescription = roleDTO.RoleDescription!,
+			IsActive = roleDTO.IsActive,
+			CreatedAt = timestamp,
+			UpdatedAt = timestamp
+		};
+
+		await _dbcontext.RoleDetails.AddAsync(roleDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<RoleDetails?> GetRoleAsync(int roleId)
+	{
+		return await _dbcontext.RoleDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(r => r.RoleId == roleId);
+	}
+
+	public async Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails)
+	{
+		_dbcontext.RoleDetails.Update(roleDetails);
+		await _dbcontext.SaveChangesAsync();
+		return roleDetails;
+	}
 }
