@@ -80,6 +80,7 @@ public partial class ApplicationFormComponent
 	private SignatureDetailsDTO signatureDetails = new();
 	private DateTime? SignatureDate = DateTime.UtcNow;
 	private bool _signatureError;
+	private bool _renderSignaturePad;
 
 	//Validations
 	private bool _govtIdError;
@@ -134,13 +135,24 @@ public partial class ApplicationFormComponent
 			if (DateOnly.TryParseExact(dobString, "yyyy-MM-dd", out var dob))
 			{
 				personalDetails.DOB = dob;
+				DateOfBirth = dob.ToDateTime(TimeOnly.MinValue);
 			}
 		}
+
+		await RestoreDraftAsync();
+		_draftPersistenceEnabled = true;
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		await JS.InvokeVoidAsync("general.attachNameFilter");
+
+		var shouldRenderSignaturePad = _activeStep == 0;
+		if (_renderSignaturePad != shouldRenderSignaturePad)
+		{
+			_renderSignaturePad = shouldRenderSignaturePad;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private bool CanAddEmployer2 =>
@@ -304,7 +316,19 @@ public partial class ApplicationFormComponent
 	private async Task SkipStep()
 	{
 		if (_stepper is not null)
+		{
 			await _stepper.SkipCurrentStepAsync();
+			await SaveDraftAsync();
+		}
+	}
+
+	private async Task OnPreviousStepAsync()
+	{
+		if (_stepper is not null)
+		{
+			await _stepper.PreviousStepAsync();
+			await SaveDraftAsync();
+		}
 	}
 
 	private async Task CancelTransaction()
@@ -658,6 +682,8 @@ public partial class ApplicationFormComponent
 			if (_stepper is not null)
 				await _stepper.NextStepAsync();
 		}
+
+		await SaveDraftAsync();
 	}
 
 	private Task OnSignatureChanged(byte[]? value)
@@ -678,6 +704,12 @@ public partial class ApplicationFormComponent
 
 		if (!ApplicationForm.IsValid || _signatureError)
 		{
+			if (_signatureError)
+			{
+				_activeStep = 0;
+				await SaveDraftAsync();
+			}
+
 			await InvokeAsync(StateHasChanged);
 			return;
 		}
@@ -783,18 +815,23 @@ public partial class ApplicationFormComponent
 		{
 			isSaving = true;
 			await InvokeAsync(StateHasChanged);
-			await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
-			IsSuccess = true;
+			var isAdded = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
+
+			if (isAdded)
+			{
+				IsSuccess = true;
+				await RemoveItemsAsync();
+			}
 		}
 		finally
 		{
-			await RemoveItemsAsync();
 			isSaving = false;
 		}
 	}
 
 	private async Task RemoveItemsAsync()
 	{
+		await ClearDraftAsync();
 		await OnChanged();
 		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
 		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");

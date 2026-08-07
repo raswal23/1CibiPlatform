@@ -1,0 +1,84 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<div class="@Class">
+    <canvas @ref="_canvas" class="ats-signature-canvas" aria-label="Signature pad"></canvas>
+    <button type="button"
+            class="@ClearButtonClass"
+            disabled="@Disabled"
+            @onclick="ClearAsync">
+        Clear
+    </button>
+</div>
+
+@code {
+    private ElementReference _canvas;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<SafeSignaturePad>? _componentReference;
+    private bool _initialized;
+
+    [Parameter] public byte[]? Value { get; set; }
+    [Parameter] public EventCallback<byte[]?> ValueChanged { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ClearButtonClass { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _module ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            "./js/generic/safeSignaturePad.js");
+
+        if (!_initialized)
+        {
+            _componentReference = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync(
+                "setup",
+                _canvas,
+                _componentReference,
+                Value is { Length: > 0 } ? Encoding.UTF8.GetString(Value) : null,
+                Disabled);
+            _initialized = true;
+        }
+        else
+        {
+            await _module.InvokeVoidAsync("setDisabled", _canvas, Disabled);
+        }
+    }
+
+    [JSInvokable]
+    public async Task SignatureChangedAsync(string dataUrl)
+    {
+        Value = Encoding.UTF8.GetBytes(dataUrl);
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task ClearAsync()
+    {
+        if (_module is not null && _initialized)
+            await _module.InvokeVoidAsync("clear", _canvas);
+
+        Value = null;
+        await ValueChanged.InvokeAsync(null);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null && _initialized)
+                await _module.InvokeVoidAsync("destroy", _canvas);
+
+            if (_module is not null)
+                await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The browser page is already being torn down.
+        }
+        finally
+        {
+            _componentReference?.Dispose();
+        }
+    }
+}

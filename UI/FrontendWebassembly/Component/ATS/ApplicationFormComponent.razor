@@ -1,5 +1,6 @@
 ﻿@inject IApplicationFormService ATSService
 @inject IDialogService DialogService
+@inject IApplicationFormStateService ApplicationFormStateService
 @inject HttpClient Http
 @inject LocalStorageService LocalStorageService
 @inject EmailValidationService EmailValidationService
@@ -7,7 +8,6 @@
 @inject MobileNumberValidationService MobileNumberValidationService
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
-@using SigPad   
 
 <MudPaper Elevation="6" Style="margin: 5px; max-width:1200px;" Class="ats-modern-card">
     @if (IsSuccess)
@@ -26,7 +26,12 @@
     }
     else
     {
-        <MudForm @ref="ApplicationForm" Disabled="@isSaving" Class="ats-appform-form">
+        <MudForm @ref="ApplicationForm"
+                 Disabled="@isSaving"
+                 Class="ats-appform-form"
+                 FieldChanged="ScheduleDraftSaveFromField"
+                 @oninput="ScheduleDraftSaveFromDom"
+                 >
             <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper ats-appform-stepper">
                 <ChildContent>
 
@@ -94,13 +99,16 @@
                                         <MudItem xs="12">
                                             <div class="ats-signature-block">
                                                 <MudText Typo="Typo.subtitle2" Class="mb-1">Signature</MudText>
-                                                <SignaturePad Value="signatureDetails.Signature"
-                                                              ValueChanged="OnSignatureChanged"
-                                                              ClearButtonClass="@(isSaving
-                                                               ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
-                                                               : "theme-button theme-button-active ats-signature-button")"
-                                                              Class="ats-signature mb-2"
-                                                              Disabled="@isSaving" />
+                                                @if (_renderSignaturePad)
+                                                {
+                                                    <SafeSignaturePad Value="signatureDetails.Signature"
+                                                                      ValueChanged="OnSignatureChanged"
+                                                                      ClearButtonClass="@(isSaving
+                                                                       ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
+                                                                       : "theme-button theme-button-active ats-signature-button")"
+                                                                      Class="ats-signature mb-2"
+                                                                      Disabled="@isSaving" />
+                                                }
                                             </div>
                                             @if (_signatureError)
                                             {
@@ -1761,7 +1769,7 @@
                             {
                                 <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray; height; 40px;"
                                            Class="mt-3 mb-4"
-                                           OnClick="@(() => stepper.PreviousStepAsync())">
+                                           OnClick="OnPreviousStepAsync">
                                     Previous
                                 </MudButton>
                             }

@@ -3294,3 +3294,11 @@ code {
 .ats-console-collapsed .ats-console-nav-chevron {
     display: none;
 }
+
+.ats-signature-canvas {
+    display: block;
+    width: 100%;
+    min-height: 76px;
+    flex: 1 1 auto;
+    cursor: crosshair;
+}
