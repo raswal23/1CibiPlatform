@@ -119,13 +119,32 @@ public partial class NewOrderComponent
 
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Do you want to save the candidate's information?" }
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Submit Candidate"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will send an email invitation to your candidate."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Proceed"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Proceed' will  send an email invitation. Would you like to proceed?"
+			}
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
 		var result = await dialog.Result;
 
@@ -145,7 +164,7 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				Snackbar.Add("Candidate's information saved successfully.", Severity.Success);
+				Snackbar.Add("An email invitation will be sent to your candidate.", Severity.Success);
 
 				subject.RushNormal = null;
 
@@ -227,7 +246,7 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				Snackbar.Add("Bulk upload successful.", Severity.Success);
+				Snackbar.Add("Bulk upload successful. An email invitation will be sent to your candidates.", Severity.Success);
 
 				bulkUploadFileDetailsDTO.OrderType = null;
 				bulkUploadFileDetailsDTO.BulkFile = null;

@@ -311,13 +311,48 @@ public partial class ApplicationFormComponent
 	{
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Are you sure you want to cancel this transaction?" }
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Withdraw Application"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will withdraw the application form."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Withdraw"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"By clicking 'Withdraw', the application form will be withdrawn and you will not be able to submit it."
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor),"#FFF8E1"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
+			}
+
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
 		var result = await dialog.Result;
 

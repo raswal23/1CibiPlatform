@@ -1,0 +1,64 @@
+﻿<MudDialog Style="border-radius:12px; padding-top:10px;"
+           Class="philsys-shadow-box">
+
+    <DialogContent>
+        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+
+            <MudAvatar Size="Size.Large"
+                       Color=@AvatarColor
+                       Variant="Variant.Filled">
+                <MudIcon Icon=@AvatarIcon />
+            </MudAvatar>
+
+            <MudText Typo="Typo.h5"
+                     Align="Align.Center"
+                     Style="font-weight:700;">
+                @Title
+            </MudText>
+
+            <MudText Align="Align.Center"
+                     Class="mt-2">
+                @Message
+            </MudText>
+
+        </MudStack>
+
+        <MudPaper Class="d-flex align-center pa-3 mt-6"
+                  Elevation="0"
+                  Style="@($"background:{InfoBGColor}; border-radius:12px;")">
+        
+            <MudIcon Icon="@Icons.Material.Filled.Info"
+                     Color=@InfoColor
+                     Class="me-2" />
+        
+            <MudText Typo="Typo.caption">
+                @InformationMessage
+            </MudText>
+        
+        </MudPaper>
+        
+    </DialogContent>
+
+    <DialogActions>
+
+        <div style="width:100%; display:flex; justify-content:left; padding-bottom:10px; padding-top:10px; padding-left:30px;">
+        
+            <MudButton Class="theme-button theme-button-inactive"
+                       Style="min-width:120px; border-radius:12px; "
+                       OnClick="Cancel">
+                Cancel
+            </MudButton>
+        </div>
+
+        <div style="width:100%; display:flex; justify-content:right; padding-bottom:10px; padding-top:10px; padding-right:30px;">
+        
+            <MudButton Class="@($"theme-button {ThemeButtonColor}")"
+                       Style="min-width:120px; border-radius:12px;"
+                       OnClick="Confirm">
+                @ConfirmText
+            </MudButton>
+        </div>
+
+    </DialogActions>
+
+</MudDialog>
