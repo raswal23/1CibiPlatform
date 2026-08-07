@@ -31,43 +31,43 @@ public class ClientManagementService : IClientManagementService
 			_atsRepository.SearchClientsAsync(paginationRequest, cancellationToken);
 	}
 
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
+	public async Task<bool> AddClientAsync(
+		IReadOnlyCollection<AddClientDTO> clientDTOs,
+		CancellationToken cancellationToken)
 	{
+		var client = clientDTOs.First();
 		var logContext = new
 		{
 			Action = "AddClient",
 			Step = "CreatingClient",
-			ClientName = clientDTO.ClientName,
+			ClientName = client.ClientName,
+			PackageCount = clientDTOs.Count,
 			Timestamp = DateTime.UtcNow
 		};
 
 		_logger.LogInformation("Adding client: {@Context}", logContext);
 
-		var isAdded = await _atsRepository.AddClientAsync(clientDTO);
+		var isAdded = await _atsRepository.AddClientAsync(clientDTOs, cancellationToken);
 		return isAdded;
 	}
 
-	public async Task<ClientDetailsDTO> EditClientAsync(EditClientDTO clientDTO)
+	public async Task<IReadOnlyList<ClientDetailsDTO>> EditClientAsync(
+		IReadOnlyCollection<EditClientDTO> clientDTOs,
+		CancellationToken cancellationToken)
 	{
+		var client = clientDTOs.First();
 		var logContext = new
 		{
 			Action = "EditClient",
-			Step = "FetchForUpdate",
-			ClientId = clientDTO.ClientId,
+			Step = "SynchronizingClientPackages",
+			ClientId = client.ClientId,
+			PackageCount = clientDTOs.Count,
 			Timestamp = DateTime.UtcNow
 		};
 
-		var existingClient = await _atsRepository.GetClientAsync(clientDTO.ClientId);
-		if (existingClient == null)
-		{
-			_logger.LogError("{ClientId} was not found during update operation: {@Context}", clientDTO.ClientId, logContext);
-			throw new NotFoundException($"Client with ID {clientDTO.ClientId} was not found.");
-		}
+		_logger.LogInformation("Synchronizing client package assignments: {@Context}", logContext);
 
-		existingClient.ClientName = clientDTO.ClientName!;
-		existingClient.IsActive = clientDTO.IsActive;
-
-		var client = await _atsRepository.EditClientAsync(existingClient);
-		return client.Adapt<ClientDetailsDTO>();
+		var updatedClients = await _atsRepository.EditClientAsync(clientDTOs, cancellationToken);
+		return updatedClients.Adapt<IReadOnlyList<ClientDetailsDTO>>();
 	}
 }

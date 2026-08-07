@@ -1,7 +1,8 @@
-@page "/s&i/ats/settings/clientmanagement"
+@page "/s&i/ats/clientmanagement"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
 @inject IClientManagementService ClientManagementService
+@inject IPackageManagementService PackageManagementService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
@@ -14,11 +15,11 @@
 </div>
 
 
-<TableComponent TItem="ClientDetailsDTO"
+<TableComponent TItem="ClientManagementViewModel"
                 @ref="clientsTable"
                 Title="Clients"
                 EnableSearch="true"
-                ColumnCount="4"
+                ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadClientData"
                 SearchString="@searchString"
@@ -26,8 +27,11 @@
 
     <HeaderTemplate>
         <MudTh Class="ats-table-cell-center">Client Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Packages</MudTh>
         <MudTh Class="ats-table-cell-center">Status</MudTh>
-        <MudTh Class="ats-table-cell-center">Created At</MudTh>
+        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
         <MudTh Class="ats-table-cell-center">Actions</MudTh>
     </HeaderTemplate>
 
@@ -36,14 +40,26 @@
             @c.ClientName
         </MudTd>
 
+        <MudTd Class="ats-table-cell-center" DataLabel="Description">
+            @c.ClientDescription
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Packages">
+            @string.Join(", ", c.Packages.Select(package => package.PackageName))
+        </MudTd>
+
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
             <span class="@(c.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
                 @(c.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Created At">
+        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
             @c.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+            @c.UpdatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">
@@ -65,21 +81,89 @@
 
 @code {
     private string searchString = string.Empty;
-    private TableComponent<ClientDetailsDTO>? clientsTable;
+    private TableComponent<ClientManagementViewModel>? clientsTable;
+    private IReadOnlyList<PackageDetailsDTO> packages = Array.Empty<PackageDetailsDTO>();
+    private Dictionary<int, PackageDetailsDTO> packageLookup = new();
+    private Task<IReadOnlyList<PackageDetailsDTO>>? packagesLoadTask;
+    private bool packagesLoaded;
 
-    private async Task<TableData<ClientDetailsDTO>> LoadClientData(TableState state, CancellationToken cancellationToken)
+    private async Task<TableData<ClientManagementViewModel>> LoadClientData(TableState state, CancellationToken cancellationToken)
     => await LoadPagedDataAsync(state, async (page, pageSize) =>
     {
-        var result = await ClientManagementService.GetClientsAsync(page, pageSize, searchString, cancellationToken);
-        return new PaginatedResult<ClientDetailsDTO>(
+        var packagesTask = EnsurePackagesLoadedAsync(cancellationToken);
+        var clientsTask = ClientManagementService.GetClientsAsync(page, pageSize, searchString, cancellationToken);
+        await Task.WhenAll(packagesTask, clientsTask);
+
+        var result = await clientsTask;
+        var groupedClients = result.Items
+            .GroupBy(client => client.ClientId)
+            .Select(group =>
+            {
+                var client = group.First();
+                return new ClientManagementViewModel
+                {
+                    ClientId = client.ClientId,
+                    ClientName = client.ClientName,
+                    ClientDescription = client.ClientDescription,
+                    IsActive = client.IsActive,
+                    Packages = group
+                        .Select(assignment => packageLookup.GetValueOrDefault(assignment.PackageId))
+                        .Where(package => package is not null)
+                        .Cast<PackageDetailsDTO>()
+                        .DistinctBy(package => package.PackageId)
+                        .OrderBy(package => package.PackageName)
+                        .ToList(),
+                    CreatedAt = group.Min(assignment => assignment.CreatedAt),
+                    UpdatedAt = group.Max(assignment => assignment.UpdatedAt)
+                };
+            })
+            .OrderBy(client => client.ClientName)
+            .ToArray();
+
+        return new PaginatedResult<ClientManagementViewModel>(
             result.PageIndex,
             result.PageSize,
             result.TotalRecords,
-            result.Items);
+            groupedClients);
     });
+
+    private async Task EnsurePackagesLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (packagesLoaded)
+            return;
+
+        packagesLoadTask ??= PackageManagementService.GetAllPackagesAsync(cancellationToken);
+
+        try
+        {
+            packages = await packagesLoadTask.WaitAsync(cancellationToken);
+            packageLookup = packages.ToDictionary(package => package.PackageId);
+            packagesLoaded = true;
+        }
+        catch
+        {
+            if (packagesLoadTask.IsCanceled || packagesLoadTask.IsFaulted)
+                packagesLoadTask = null;
+            throw;
+        }
+    }
 
     private async Task AddNewClient()
     {
+        try
+        {
+            await EnsurePackagesLoadedAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+
+        var parameters = new DialogParameters<AddClientComponent>
+        {
+            { component => component.Packages, packages }
+        };
         var options = new DialogOptions
         {
             NoHeader = true,
@@ -87,7 +171,7 @@
             FullWidth = true
         };
 
-        var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client", options);
+        var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client", parameters, options);
         var result = await dialog.Result;
 
         if (result is not null && !result.Canceled)
@@ -107,9 +191,13 @@
         }
     }
 
-    private async Task EditClient(ClientDetailsDTO client)
+    private async Task EditClient(ClientManagementViewModel client)
     {
-        var parameters = new DialogParameters<EditClientComponent> { { x => x.Client, client } };
+        var parameters = new DialogParameters<EditClientComponent>
+        {
+            { component => component.Client, client },
+            { component => component.Packages, packages }
+        };
         var options = new DialogOptions
         {
             NoHeader = true,

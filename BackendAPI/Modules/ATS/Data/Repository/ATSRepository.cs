@@ -913,7 +913,6 @@ public class ATSRepository : IATSRepository
 	{
 		var packageDetails = new PackageDetails
 		{
-			PackageId = Guid.CreateVersion7(),
 			PackageName = packageDTO.PackageName,
 			IsActive = packageDTO.IsActive,
 			CreatedAt = DateTime.UtcNow
@@ -924,7 +923,7 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
+	public async Task<PackageDetails?> GetPackageAsync(int packageId)
 	{
 		return await _dbcontext.PackageDetails
 			.AsNoTracking()
@@ -940,49 +939,190 @@ public class ATSRepository : IATSRepository
 
 	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var clientsQuery = _dbcontext.ClientDetails
-			.AsNoTracking()
-			.OrderBy(c => c.ClientName);
-
-		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
-
-		var items = await clientsQuery
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(c => new ClientDetailsDTO
-			{
-				ClientId = c.ClientId,
-				ClientName = c.ClientName,
-				IsActive = c.IsActive,
-				CreatedAt = c.CreatedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<ClientDetailsDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
+		return await GetClientPageAsync(paginationRequest, applySearch: false, cancellationToken);
 	}
 
 	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var clientsQuery = _dbcontext.ClientDetails
+		return await GetClientPageAsync(paginationRequest, applySearch: true, cancellationToken);
+	}
+
+	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
+	{
+		var clients = clientDTOs.ToArray();
+		if (clients.Length == 0)
+			throw new BadRequestException("At least one package must be selected.");
+
+		var clientName = clients[0].ClientName.Trim();
+		var alreadyExists = await _dbcontext.ClientDetails
 			.AsNoTracking()
-			.Where(c => EF.Functions.ILike(c.ClientName!, $"%{paginationRequest.SearchTerm}%"));
+			.AnyAsync(c => EF.Functions.ILike(c.ClientName, clientName), cancellationToken);
+		if (alreadyExists)
+			throw new BadRequestException($"Client '{clientName}' already exists.");
 
-		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
+		var packageIds = clients.Select(c => c.PackageId).Distinct().ToArray();
+		var activePackageCount = await _dbcontext.PackageDetails
+			.AsNoTracking()
+			.CountAsync(p => packageIds.Contains(p.PackageId) && p.IsActive, cancellationToken);
+		if (activePackageCount != packageIds.Length)
+			throw new BadRequestException("One or more selected packages do not exist or are inactive.");
 
-		var items = await clientsQuery
+		var now = DateTime.UtcNow;
+		await using var transaction = await _dbcontext.Database.BeginTransactionAsync(cancellationToken);
+
+		var firstClient = new ClientDetails
+		{
+			ClientName = clientName,
+			ClientDescription = clients[0].ClientDescription.Trim(),
+			IsActive = clients[0].IsActive,
+			PackageId = clients[0].PackageId,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+
+		await _dbcontext.ClientDetails.AddAsync(firstClient, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+
+		var remainingClients = clients.Skip(1).Select(client => new ClientDetails
+
+		{
+			ClientId = firstClient.ClientId,
+			ClientName = clientName,
+			ClientDescription = clients[0].ClientDescription.Trim(),
+			IsActive = clients[0].IsActive,
+			PackageId = client.PackageId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+
+		await _dbcontext.ClientDetails.AddRangeAsync(remainingClients, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await transaction.CommitAsync(cancellationToken);
+		return true;
+	}
+
+	public async Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.ClientDetails
+			.AsNoTracking()
+			.Where(c => c.ClientId == clientId)
+			.OrderBy(c => c.PackageId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
+	{
+		var clients = clientDTOs.ToArray();
+		if (clients.Length == 0)
+			throw new BadRequestException("At least one package must be selected.");
+
+		var clientId = clients[0].ClientId;
+		var existingClients = await _dbcontext.ClientDetails
+			.Where(c => c.ClientId == clientId)
+			.ToListAsync(cancellationToken);
+		if (existingClients.Count == 0)
+			throw new NotFoundException($"Client with ID {clientId} was not found.");
+
+		var clientName = clients[0].ClientName.Trim();
+		var duplicateName = await _dbcontext.ClientDetails
+			.AsNoTracking()
+			.AnyAsync(c => c.ClientId != clientId && EF.Functions.ILike(c.ClientName, clientName), cancellationToken);
+		if (duplicateName)
+			throw new BadRequestException($"Client '{clientName}' already exists.");
+
+		var selectedPackageIds = clients.Select(c => c.PackageId).Distinct().ToHashSet();
+		var existingPackageIds = existingClients.Select(c => c.PackageId).ToHashSet();
+		var newPackageIds = selectedPackageIds.Except(existingPackageIds).ToArray();
+		if (newPackageIds.Length > 0)
+		{
+			var activePackageCount = await _dbcontext.PackageDetails
+				.AsNoTracking()
+				.CountAsync(p => newPackageIds.Contains(p.PackageId) && p.IsActive, cancellationToken);
+			if (activePackageCount != newPackageIds.Length)
+				throw new BadRequestException("One or more newly selected packages do not exist or are inactive.");
+		}
+
+		var now = DateTime.UtcNow;
+		var createdAt = existingClients.Min(c => c.CreatedAt);
+		var description = clients[0].ClientDescription.Trim();
+		var isActive = clients[0].IsActive;
+
+		var removedClients = existingClients.Where(c => !selectedPackageIds.Contains(c.PackageId)).ToArray();
+		_dbcontext.ClientDetails.RemoveRange(removedClients);
+
+		foreach (var existingClient in existingClients.Where(c => selectedPackageIds.Contains(c.PackageId)))
+		{
+			existingClient.ClientName = clientName;
+			existingClient.ClientDescription = description;
+			existingClient.IsActive = isActive;
+			existingClient.UpdatedAt = now;
+		}
+
+		var addedClients = newPackageIds.Select(packageId => new ClientDetails
+		{
+			ClientId = clientId,
+			ClientName = clientName,
+			ClientDescription = description,
+			IsActive = isActive,
+			PackageId = packageId,
+			CreatedAt = createdAt,
+			UpdatedAt = now
+		}).ToArray();
+		await _dbcontext.ClientDetails.AddRangeAsync(addedClients, cancellationToken);
+
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return existingClients
+			.Where(c => selectedPackageIds.Contains(c.PackageId))
+			.Concat(addedClients)
+			.OrderBy(c => c.PackageId)
+			.ToArray();
+	}
+
+	private async Task<PaginatedResult<ClientDetailsDTO>> GetClientPageAsync(
+		PaginationRequest paginationRequest,
+		bool applySearch,
+		CancellationToken cancellationToken)
+	{
+		var clientsQuery = _dbcontext.ClientDetails.AsNoTracking();
+		if (applySearch)
+		{
+			var searchTerm = $"%{paginationRequest.SearchTerm}%";
+			clientsQuery = clientsQuery.Where(c =>
+				EF.Functions.ILike(c.ClientName, searchTerm) ||
+				EF.Functions.ILike(c.ClientDescription, searchTerm));
+		}
+
+		var logicalClients = clientsQuery
+			.GroupBy(c => c.ClientId)
+			.Select(group => new
+			{
+				ClientId = group.Key,
+				ClientName = group.Min(c => c.ClientName)
+			});
+
+		var totalRecords = await logicalClients.LongCountAsync(cancellationToken);
+		var clientIds = await logicalClients
 			.OrderBy(c => c.ClientName)
+			.ThenBy(c => c.ClientId)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
+			.Select(c => c.ClientId)
+			.ToListAsync(cancellationToken);
+
+		var items = await clientsQuery
+			.Where(c => clientIds.Contains(c.ClientId))
+			.OrderBy(c => c.ClientName)
+			.ThenBy(c => c.ClientId)
+			.ThenBy(c => c.PackageId)
 			.Select(c => new ClientDetailsDTO
 			{
 				ClientId = c.ClientId,
 				ClientName = c.ClientName,
+				ClientDescription = c.ClientDescription,
 				IsActive = c.IsActive,
-				CreatedAt = c.CreatedAt
+				PackageId = c.PackageId,
+				CreatedAt = c.CreatedAt,
+				UpdatedAt = c.UpdatedAt
 			})
 			.ToListAsync(cancellationToken);
 
@@ -991,35 +1131,6 @@ public class ATSRepository : IATSRepository
 			paginationRequest.PageSize,
 			totalRecords,
 			items);
-	}
-
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
-	{
-		var clientDetails = new ClientDetails
-		{
-			ClientId = Guid.CreateVersion7(),
-			ClientName = clientDTO.ClientName,
-			IsActive = clientDTO.IsActive,
-			CreatedAt = DateTime.UtcNow
-		};
-
-		await _dbcontext.ClientDetails.AddAsync(clientDetails);
-		await _dbcontext.SaveChangesAsync();
-		return true;
-	}
-
-	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
-	{
-		return await _dbcontext.ClientDetails
-			.AsNoTracking()
-			.FirstOrDefaultAsync(c => c.ClientId == clientId);
-	}
-
-	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
-	{
-		_dbcontext.ClientDetails.Update(clientDetails);
-		await _dbcontext.SaveChangesAsync();
-		return clientDetails;
 	}
 
 	public async Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)

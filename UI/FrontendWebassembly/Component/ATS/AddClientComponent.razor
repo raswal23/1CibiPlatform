@@ -23,12 +23,39 @@
                                       MaxLength="100"
                                       Class="oneplatform-rounded-input philsys-uppercase-input" />
 
+                        <MudTextField @bind-Value="Client.ClientDescription"
+                                      Label="Client Description"
+                                      Required="true"
+                                      RequiredError="Client Description is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="3"
+                                      MaxLength="500"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int"
+                                   MultiSelection="true"
+                                   SelectedValues="SelectedPackageIds"
+                                   SelectedValuesChanged="OnSelectedPackageIdsChanged"
+                                   MultiSelectionTextFunc="GetSelectedPackagesText"
+                                   Label="Packages"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@(!string.IsNullOrEmpty(PackageError))"
+                                   ErrorText="@PackageError"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var package in Packages.Where(package => package.IsActive))
+                            {
+                                <MudSelectItem T="int" Value="@package.PackageId">@package.PackageName</MudSelectItem>
+                            }
+                        </MudSelect>
+
                         <MudSelect T="bool"
-                                       @bind-Value="Client.IsActive"
-                                       Label="Status"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense"
-                                       Class="oneplatform-rounded-input">
+                                   @bind-Value="Client.IsActive"
+                                   Label="Status"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
                             <MudSelectItem Value="true">Active</MudSelectItem>
                             <MudSelectItem Value="false">Inactive</MudSelectItem>
                         </MudSelect>

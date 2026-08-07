@@ -10,7 +10,7 @@ public class PackageDetailsConfiguration : IEntityTypeConfiguration<PackageDetai
 
 		builder.Property(x => x.PackageId)
 			.IsRequired()
-			.ValueGeneratedNever();
+			.ValueGeneratedOnAdd();
 
 		builder.Property(x => x.PackageName)
 			.HasMaxLength(255)

@@ -6,14 +6,18 @@ public class ClientDetailsConfiguration : IEntityTypeConfiguration<ClientDetails
 	{
 		builder.ToTable("ClientDetails", "ats");
 
-		builder.HasKey(x => x.ClientId);
+		builder.HasKey(x => new { x.ClientId, x.PackageId });
 
 		builder.Property(x => x.ClientId)
 			.IsRequired()
-			.ValueGeneratedNever();
+			.ValueGeneratedOnAdd();
 
 		builder.Property(x => x.ClientName)
-			.HasMaxLength(255)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		builder.Property(x => x.ClientDescription)
+			.HasMaxLength(500)
 			.IsRequired();
 
 		builder.Property(x => x.IsActive)
@@ -22,7 +26,14 @@ public class ClientDetailsConfiguration : IEntityTypeConfiguration<ClientDetails
 		builder.Property(x => x.CreatedAt)
 			.IsRequired();
 
-		builder.HasIndex(x => x.ClientName)
-			.IsUnique();
+		builder.Property(x => x.UpdatedAt)
+			.IsRequired();
+
+		builder.HasOne(x => x.Package)
+			.WithMany()
+			.HasForeignKey(x => x.PackageId)
+			.OnDelete(DeleteBehavior.Restrict);
+
+		builder.HasIndex(x => x.ClientName);
 	}
 }

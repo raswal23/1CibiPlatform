@@ -46,13 +46,13 @@ public interface IATSRepository
 	Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddPackageAsync(AddPackageDTO packageDTO);
-	Task<PackageDetails?> GetPackageAsync(Guid packageId);
+	Task<PackageDetails?> GetPackageAsync(int packageId);
 	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails);
 	Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddClientAsync(AddClientDTO clientDTO);
-	Task<ClientDetails?> GetClientAsync(Guid clientId);
-	Task<ClientDetails> EditClientAsync(ClientDetails clientDetails);
+	Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken);
+	Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken);
+	Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken);
 	Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);

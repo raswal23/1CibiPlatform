@@ -314,7 +314,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var cacheKey = $"package_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			cacheKey,
@@ -327,7 +327,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var cacheKey = $"package_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			cacheKey,
@@ -346,7 +346,7 @@ public class ATSCacheRepository : IATSRepository
 		return result;
 	}
 
-	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
+	public async Task<PackageDetails?> GetPackageAsync(int packageId)
 	{
 		return await _atsRepository.GetPackageAsync(packageId);
 	}
@@ -361,7 +361,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var cacheKey = $"client_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
 			cacheKey,
@@ -374,7 +374,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var cacheKey = $"client_v2_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
 			cacheKey,
@@ -385,26 +385,25 @@ public class ATSCacheRepository : IATSRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
+	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.AddClientAsync(clientDTO);
+		var result = await _atsRepository.AddClientAsync(clientDTOs, cancellationToken);
 		if (result)
-			await _hybridCache.RemoveByTagAsync(ClientTag);
+			await _hybridCache.RemoveByTagAsync(ClientTag, cancellationToken);
 		return result;
 	}
 
-	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
+	public async Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken)
 	{
-		return await _atsRepository.GetClientAsync(clientId);
+		return await _atsRepository.GetClientAsync(clientId, cancellationToken);
 	}
 
-	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
+	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.EditClientAsync(clientDetails);
+		var result = await _atsRepository.EditClientAsync(clientDTOs, cancellationToken);
 
-		if (result is not null)
-			await _hybridCache.RemoveByTagAsync(ClientTag);
-		return result ?? new ClientDetails();
+		await _hybridCache.RemoveByTagAsync(ClientTag, cancellationToken);
+		return result;
 	}
 
 	public async Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)

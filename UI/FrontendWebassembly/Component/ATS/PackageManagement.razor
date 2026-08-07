@@ -69,7 +69,7 @@
 
     private async Task<TableData<PackageDetailsDTO>> LoadPackageData(TableState state, CancellationToken cancellationToken)
     => await LoadPagedDataAsync(state, (page, pageSize) =>
-                PackageManagementService.GetPackagesAsync(page, pageSize, searchString));
+                PackageManagementService.GetPackagesAsync(page, pageSize, searchString, cancellationToken));
 
     private async Task AddNewPackage()
     {

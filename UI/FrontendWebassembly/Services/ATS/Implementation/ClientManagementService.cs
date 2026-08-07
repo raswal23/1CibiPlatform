@@ -31,7 +31,17 @@ public class ClientManagementService : IClientManagementService
 
 	public async Task<bool> AddClientAsync(AddClientDTO clientDTO, CancellationToken cancellationToken = default)
 	{
-		var request = new { client = clientDTO };
+		var clients = clientDTO.PackageIds
+			.Distinct()
+			.Select(packageId => new
+			{
+				clientDTO.ClientName,
+				clientDTO.ClientDescription,
+				clientDTO.IsActive,
+				PackageId = packageId
+			})
+			.ToArray();
+		var request = new { clients };
 
 		var response = await _httpClient.PostAsJsonAsync("ats/addclient", request, cancellationToken);
 
@@ -45,9 +55,20 @@ public class ClientManagementService : IClientManagementService
 		return result;
 	}
 
-	public async Task<ClientDetailsDTO> EditClientAsync(EditClientDTO clientDTO, CancellationToken cancellationToken = default)
+	public async Task<IReadOnlyList<ClientDetailsDTO>> EditClientAsync(EditClientDTO clientDTO, CancellationToken cancellationToken = default)
 	{
-		var request = new { editClient = clientDTO };
+		var editClients = clientDTO.PackageIds
+			.Distinct()
+			.Select(packageId => new
+			{
+				clientDTO.ClientId,
+				clientDTO.ClientName,
+				clientDTO.ClientDescription,
+				clientDTO.IsActive,
+				PackageId = packageId
+			})
+			.ToArray();
+		var request = new { editClients };
 
 		var response = await _httpClient.PatchAsJsonAsync("ats/editclient", request, cancellationToken);
 
@@ -57,7 +78,7 @@ public class ClientManagementService : IClientManagementService
 			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
 		}
 
-		var result = await response.Content.ReadFromJsonAsync<ClientDetailsDTO>(cancellationToken: cancellationToken);
+		var result = await response.Content.ReadFromJsonAsync<List<ClientDetailsDTO>>(cancellationToken: cancellationToken);
 		return result!;
 	}
 }

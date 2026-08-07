@@ -23,6 +23,38 @@
                                       MaxLength="100"
                                       Class="oneplatform-rounded-input philsys-uppercase-input" />
 
+                        <MudTextField @bind-Value="EditClient.ClientDescription"
+                                      Label="Client Description"
+                                      Required="true"
+                                      RequiredError="Client Description is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Lines="3"
+                                      MaxLength="500"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int"
+                                   MultiSelection="true"
+                                   SelectedValues="SelectedPackageIds"
+                                   SelectedValuesChanged="OnSelectedPackageIdsChanged"
+                                   MultiSelectionTextFunc="GetSelectedPackagesText"
+                                   Label="Packages"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@(!string.IsNullOrEmpty(PackageError))"
+                                   ErrorText="@PackageError"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var package in Packages)
+                            {
+                                var isAssigned = SelectedPackageIds.Contains(package.PackageId);
+                                <MudSelectItem T="int"
+                                               Value="@package.PackageId"
+                                               Disabled="@(!package.IsActive && !isAssigned)">
+                                    @package.PackageName@(!package.IsActive ? " (Inactive)" : string.Empty)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
                         <MudSelect T="bool"
                                    @bind-Value="EditClient.IsActive"
                                    Label="Status"

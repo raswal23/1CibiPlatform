@@ -6,7 +6,11 @@ public interface IClientManagementService
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
-	Task<bool> AddClientAsync(AddClientDTO clientDTO);
+	Task<bool> AddClientAsync(
+		IReadOnlyCollection<AddClientDTO> clientDTOs,
+		CancellationToken cancellationToken);
 
-	Task<ClientDetailsDTO> EditClientAsync(EditClientDTO clientDTO);
+	Task<IReadOnlyList<ClientDetailsDTO>> EditClientAsync(
+		IReadOnlyCollection<EditClientDTO> clientDTOs,
+		CancellationToken cancellationToken);
 }
