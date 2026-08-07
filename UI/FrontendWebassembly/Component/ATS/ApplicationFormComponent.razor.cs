@@ -111,7 +111,18 @@ public partial class ApplicationFormComponent
 			var uri = new Uri(FaceUrl);
 
 			personalDetails.BiometricFileName = Path.GetFileName(uri.AbsolutePath);
-			personalDetails.BiometricFile = await Http.GetByteArrayAsync(FaceUrl);
+
+			try
+			{
+				personalDetails.BiometricFile = await Http.GetByteArrayAsync(FaceUrl);
+			}
+			catch (HttpRequestException exception) when (exception.StatusCode == System.Net.HttpStatusCode.Forbidden)
+			{
+				await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
+				FaceUrl = string.Empty;
+				personalDetails.BiometricFileName = null;
+				personalDetails.BiometricFile = null;
+			}
 		}
 
 		if (ActiveStep <= 1)

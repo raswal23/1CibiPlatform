@@ -97,8 +97,8 @@
                                                 <SignaturePad Value="signatureDetails.Signature"
                                                               ValueChanged="OnSignatureChanged"
                                                               ClearButtonClass="@(isSaving
-                                                                                                                                                                             ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
-                                                                                                                                                                             : "theme-button theme-button-active ats-signature-button")"
+                                                               ? "theme-button theme-button-active ats-signature-button theme-button-inactive "
+                                                               : "theme-button theme-button-active ats-signature-button")"
                                                               Class="ats-signature mb-2"
                                                               Disabled="@isSaving" />
                                             </div>
@@ -1005,6 +1005,15 @@
                                 </MudPaper>
                             </MudItem>
                             <MudItem xs="12">
+                                @if (!AddEmployer2)
+                                {
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-employer-card"
+                                                 Value="AddEmployer2"
+                                                 ValueChanged="OnAddEmployer2Changed"
+                                                 Label="+ Add Employer 2" />
+                                }
+
                                 <MudCollapse Expanded="@AddEmployer2">
                                     <MudPaper Elevation="0" Class="ats-employer-card">
                                         <MudGrid>
@@ -1188,6 +1197,15 @@
                             </MudItem>
 
                             <MudItem xs="12">
+                                @if (!AddEmployer3)
+                                {
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-employer-card"
+                                                 Value="AddEmployer3"
+                                                 ValueChanged="OnAddEmployer3Changed"
+                                                 Label="+ Add Employer 3" />
+                                }
+
                                 <MudCollapse Expanded="@AddEmployer3">
                                     <MudPaper Elevation="0" Class="ats-employer-card">
                                         <MudGrid>
@@ -1370,27 +1388,6 @@
                                     </MudPaper>
                                 </MudCollapse>
                             </MudItem>
-
-                            <MudItem xs="12" Class="ats-add-employer-row">
-                                @if (!AddEmployer2)
-                                {
-                                    <MudCheckBox T="bool"
-                                                 Class="ats-add-employer-card"
-                                                 Value="AddEmployer2"
-                                                 ValueChanged="OnAddEmployer2Changed"
-                                                 Label="+ Add Employer 2" />
-                                }
-
-                                @if (!AddEmployer3)
-                                {
-                                    <MudCheckBox T="bool"
-                                                 Class="ats-add-employer-card"
-                                                 Value="AddEmployer3"
-                                                 ValueChanged="OnAddEmployer3Changed"
-                                                 Label="+ Add Employer 3" />
-                                }
-                            </MudItem>
-
                         </MudGrid>
                     </MudStep>
 
@@ -1634,18 +1631,23 @@
 
                             <!-- Reference 3 -->
                             <MudItem xs="12">
+                                @if (!AddAnotherReference)
+                                {
+                                    <MudCheckBox T="bool"
+                                                 Class="ats-add-reference-card"
+                                                 @bind-Value="AddAnotherReference"
+                                                 Label="+ Add Reference 3" />
+                                }
                                 <MudCollapse Expanded="@AddAnotherReference">
                                     <MudPaper Elevation="0" Class="ats-reference-block">
                                         <MudGrid>
-                                            <MudItem xs="12" Class="d-flex justify-end">
+                                            <MudItem xs="12" Class="d-flex align-center justify-space-between">
+                                                <MudText Typo="Typo.subtitle2" Class="ats-reference-title mb-0">Reference 3</MudText>
                                                 <MudButton Variant="Variant.Text"
                                                            Class="ats-remove-reference-btn"
                                                            OnClick="@(() => AddAnotherReference = false)">
                                                     Remove ✕
                                                 </MudButton>
-                                            </MudItem>
-                                            <MudItem xs="12">
-                                                <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 3</MudText>
                                             </MudItem>
                                             <MudItem xs="12" sm="6">
                                                 <MudTextField FullWidth="true"
@@ -1745,16 +1747,6 @@
                                     </MudPaper>
                                 </MudCollapse>
                             </MudItem>
-
-                            <MudItem xs="12" Class="ats-add-reference-row">
-                                @if (!AddAnotherReference)
-                                {
-                                    <MudCheckBox T="bool"
-                                                 Class="ats-add-reference-card"
-                                                 @bind-Value="AddAnotherReference"
-                                                 Label="+ Add Reference 3" />
-                                }
-                            </MudItem>
                         </MudGrid>
                     </MudStep> 
                 </ChildContent>
@@ -1762,13 +1754,17 @@
                 <ActionContent Context="stepper">
                     @if (_activeStep != 1)
                     {
-                        <div class="d-flex justify-space-between w-100 pa-2 ats-step-action-bar">
+                        <div class="d-flex w-100 pa-2 ats-step-action-bar"
+                             style="@(_activeStep == 0 ? "justify-content: flex-end;" : "justify-content: space-between;")">
 
-                            <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray; height; 40px;"
-                                       Class="mt-3 mb-4"
-                                       OnClick="@(() => stepper.PreviousStepAsync())">
-                                Previous
-                            </MudButton>
+                            @if (_activeStep != 0)
+                            {
+                                <MudButton Style="width: 150px; border-radius:12px; border: 2px solid gray; height; 40px;"
+                                           Class="mt-3 mb-4"
+                                           OnClick="@(() => stepper.PreviousStepAsync())">
+                                    Previous
+                                </MudButton>
+                            }
 
                             @if (_activeStep == stepper.Steps.Count - 1)
                             {
@@ -1791,11 +1787,13 @@
                             }
                             else
                             {
-                                <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                           Style="width: 150px; border-radius:12px; "
-                                           OnClick="OnSaveAndNextAsync">
-                                    Save & Next
-                                </MudButton>
+                                <div>
+                                    <MudButton Class="theme-button mt-3 theme-button-active mb-4"
+                                               Style="width: 150px; border-radius:12px;"
+                                               OnClick="OnSaveAndNextAsync">
+                                        Save & Next
+                                    </MudButton>
+                                </div>
                             }
                         </div>
                     }
