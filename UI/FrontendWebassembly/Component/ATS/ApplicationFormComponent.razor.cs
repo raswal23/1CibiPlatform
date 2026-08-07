@@ -138,6 +138,7 @@ public partial class ApplicationFormComponent
 			}
 		}
 
+		await ApplicationFormStateService.CleanupExpiredAsync();
 		await RestoreDraftAsync();
 		_draftPersistenceEnabled = true;
 	}

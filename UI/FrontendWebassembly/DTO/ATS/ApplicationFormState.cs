@@ -4,7 +4,7 @@ public sealed class ApplicationFormState
 {
 	public int Version { get; set; } = 1;
 	public Guid EmailInvitationId { get; set; }
-	public int ActiveStep { get; set; }
+	public DateTime? LastModifiedAtUtc { get; set; }
 	public PersonalDetailsState PersonalDetails { get; set; } = new();
 	public AddressDetailsState AddressDetails { get; set; } = new();
 	public EducationalBackgroundState EducationalBackground { get; set; } = new();
@@ -26,10 +26,6 @@ public sealed class PersonalDetailsState
 	public string? MobileNumber { get; set; }
 	public string? EmailAlternative { get; set; }
 	public bool NoMiddleName { get; set; }
-	public FileState AdditionalGovernmentId { get; set; } = new();
-	public FileState NbiClearance { get; set; } = new();
-	public FileState Resume { get; set; } = new();
-	public FileState BiometricPhoto { get; set; } = new();
 }
 
 public sealed class AddressDetailsState
@@ -55,7 +51,6 @@ public sealed class EducationalBackgroundState
 	public DateTime? GraduationDate { get; set; }
 	public string? DegreeWithMajor { get; set; }
 	public string? AcademicInstitution { get; set; }
-	public FileState Diploma { get; set; } = new();
 }
 
 public sealed class LicensesDetailsState
@@ -64,7 +59,6 @@ public sealed class LicensesDetailsState
 	public string? LicenseName { get; set; }
 	public string? LicenseNumber { get; set; }
 	public DateTime? LicenseExpiryDate { get; set; }
-	public FileState LicenseDocument { get; set; } = new();
 }
 
 public sealed class ProfessionalExperiencesState
@@ -91,7 +85,6 @@ public sealed class EmployerState
 	public DateTime? EndDate { get; set; }
 	public string? SupervisorName { get; set; }
 	public string? SupervisorContactNumber { get; set; }
-	public FileState CertificateOfEmployment { get; set; } = new();
 }
 
 public sealed class ReferenceDetailsState
@@ -120,11 +113,4 @@ public sealed class SignatureDetailsState
 	public bool DeclineConsent { get; set; }
 	public string? SignerName { get; set; }
 	public DateTime? SignatureDate { get; set; }
-	public bool HadSignature { get; set; }
-}
-
-public sealed class FileState
-{
-	public string? FileName { get; set; }
-	public bool HasFile { get; set; }
 }

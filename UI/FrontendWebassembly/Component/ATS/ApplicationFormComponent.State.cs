@@ -45,7 +45,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		return new ApplicationFormState
 		{
 			EmailInvitationId = EmailId,
-			ActiveStep = _activeStep,
+			LastModifiedAtUtc = DateTime.UtcNow,
 			PersonalDetails = new PersonalDetailsState
 			{
 				PositionAppliedFor = personalDetails.PositionAppliedFor,
@@ -57,11 +57,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				DateOfBirth = DateOfBirth,
 				MobileNumber = personalDetails.MobileNumber,
 				EmailAlternative = personalDetails.EmailAlternative,
-				NoMiddleName = NoMiddleName,
-				AdditionalGovernmentId = FileMetadata(personalDetails.AdditionalGovtIDFileName, personalDetails.AdditionalGovtIDFile),
-				NbiClearance = FileMetadata(personalDetails.NBIClearanceFileName, personalDetails.NBIClearanceFile),
-				Resume = FileMetadata(personalDetails.ResumeFileName, personalDetails.ResumeFile),
-				BiometricPhoto = FileMetadata(personalDetails.BiometricFileName, personalDetails.BiometricFile)
+				NoMiddleName = NoMiddleName
 			},
 			AddressDetails = new AddressDetailsState
 			{
@@ -84,16 +80,14 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				HighestEducationalAttainment = educationalBackground.HighestEducationalAttainment,
 				GraduationDate = GraduationDate,
 				DegreeWithMajor = DegreeWithMajor,
-				AcademicInstitution = AcademicInstitution,
-				Diploma = FileMetadata(educationalBackground.DiplomaFileName, educationalBackground.DiplomaFile)
+				AcademicInstitution = AcademicInstitution
 			},
 			LicensesDetails = new LicensesDetailsState
 			{
 				HasProfessionalLicense = hasProfessionalLicense,
 				LicenseName = licensesDetails.LicenseName,
 				LicenseNumber = licensesDetails.LicenseNumber,
-				LicenseExpiryDate = LicenseExpiryDate,
-				LicenseDocument = FileMetadata(licensesDetails.LicenseUploadFileName, licensesDetails.LicenseUploadFile)
+				LicenseExpiryDate = LicenseExpiryDate
 			},
 			ProfessionalExperiences = new ProfessionalExperiencesState
 			{
@@ -115,8 +109,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				Consent = consent,
 				DeclineConsent = declineConsent,
 				SignerName = signatureDetails.SignerName,
-				SignatureDate = SignatureDate,
-				HadSignature = signatureDetails.Signature is { Length: > 0 }
+				SignatureDate = SignatureDate
 			}
 		};
 	}
@@ -137,8 +130,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment1,
 			EndDate = EndOfEmployment1,
 			SupervisorName = professionalExperiences.Emp1SupervisorName,
-			SupervisorContactNumber = professionalExperiences.Emp1SupervisorContactNumber,
-			CertificateOfEmployment = FileMetadata(professionalExperiences.Emp1COEUploadFileName, professionalExperiences.Emp1COEUploadFile)
+			SupervisorContactNumber = professionalExperiences.Emp1SupervisorContactNumber
 		},
 		2 => new EmployerState
 		{
@@ -154,8 +146,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment2,
 			EndDate = EndOfEmployment2,
 			SupervisorName = professionalExperiences.Emp2SupervisorName,
-			SupervisorContactNumber = professionalExperiences.Emp2SupervisorContactNumber,
-			CertificateOfEmployment = FileMetadata(professionalExperiences.Emp2COEUploadFileName, professionalExperiences.Emp2COEUploadFile)
+			SupervisorContactNumber = professionalExperiences.Emp2SupervisorContactNumber
 		},
 		3 => new EmployerState
 		{
@@ -171,8 +162,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment3,
 			EndDate = EndOfEmployment3,
 			SupervisorName = professionalExperiences.Emp3SupervisorName,
-			SupervisorContactNumber = professionalExperiences.Emp3SupervisorContactNumber,
-			CertificateOfEmployment = FileMetadata(professionalExperiences.Emp3COEUploadFileName, professionalExperiences.Emp3COEUploadFile)
+			SupervisorContactNumber = professionalExperiences.Emp3SupervisorContactNumber
 		},
 		_ => throw new ArgumentOutOfRangeException(nameof(employerNumber))
 	};
@@ -217,9 +207,16 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 
 	private async Task RestoreDraftAsync()
 	{
-		var state = await ApplicationFormStateService.LoadAsync();
+		var state = await ApplicationFormStateService.LoadAsync(EmailId);
 		if (state is null)
 			return;
+
+		if (!state.LastModifiedAtUtc.HasValue ||
+			DateTime.UtcNow - state.LastModifiedAtUtc.Value.ToUniversalTime() > TimeSpan.FromDays(1))
+		{
+			await ApplicationFormStateService.ClearAsync(EmailId);
+			return;
+		}
 
 		if (state.EmailInvitationId != EmailId ||
 			state.Version != 1 ||
@@ -237,7 +234,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			state.ReferenceDetails.Reference3 is null ||
 			state.SignatureDetails is null)
 		{
-			await ApplicationFormStateService.ClearAsync();
+			await ApplicationFormStateService.ClearAsync(EmailId);
 			return;
 		}
 
@@ -263,9 +260,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		personalDetails.Sex = state.Sex;
 		personalDetails.MobileNumber = state.MobileNumber;
 		personalDetails.EmailAlternative = state.EmailAlternative;
-		personalDetails.AdditionalGovtIDFileName = state.AdditionalGovernmentId?.FileName;
-		personalDetails.NBIClearanceFileName = state.NbiClearance?.FileName;
-		personalDetails.ResumeFileName = state.Resume?.FileName;
 		DateOfBirth = state.DateOfBirth;
 		NoMiddleName = state.NoMiddleName;
 	}
@@ -290,7 +284,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 	private void RestoreEducationalBackground(EducationalBackgroundState state)
 	{
 		educationalBackground.HighestEducationalAttainment = state.HighestEducationalAttainment;
-		educationalBackground.DiplomaFileName = state.Diploma?.FileName;
 		GraduationDate = state.GraduationDate;
 		DegreeWithMajor = state.DegreeWithMajor;
 		AcademicInstitution = state.AcademicInstitution;
@@ -301,7 +294,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		hasProfessionalLicense = state.HasProfessionalLicense;
 		licensesDetails.LicenseName = state.LicenseName;
 		licensesDetails.LicenseNumber = state.LicenseNumber;
-		licensesDetails.LicenseUploadFileName = state.LicenseDocument?.FileName;
 		LicenseExpiryDate = state.LicenseExpiryDate;
 	}
 
@@ -329,7 +321,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp1JobTitle = state.JobTitle;
 				professionalExperiences.Emp1SupervisorName = state.SupervisorName;
 				professionalExperiences.Emp1SupervisorContactNumber = state.SupervisorContactNumber;
-				professionalExperiences.Emp1COEUploadFileName = state.CertificateOfEmployment?.FileName;
 				DatePermittedToContact1 = state.DatePermittedToContact;
 				StartOfEmployment1 = state.StartDate;
 				EndOfEmployment1 = state.EndDate;
@@ -345,7 +336,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp2JobTitle = state.JobTitle;
 				professionalExperiences.Emp2SupervisorName = state.SupervisorName;
 				professionalExperiences.Emp2SupervisorContactNumber = state.SupervisorContactNumber;
-				professionalExperiences.Emp2COEUploadFileName = state.CertificateOfEmployment?.FileName;
 				DatePermittedToContact2 = state.DatePermittedToContact;
 				StartOfEmployment2 = state.StartDate;
 				EndOfEmployment2 = state.EndDate;
@@ -361,7 +351,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp3JobTitle = state.JobTitle;
 				professionalExperiences.Emp3SupervisorName = state.SupervisorName;
 				professionalExperiences.Emp3SupervisorContactNumber = state.SupervisorContactNumber;
-				professionalExperiences.Emp3COEUploadFileName = state.CertificateOfEmployment?.FileName;
 				DatePermittedToContact3 = state.DatePermittedToContact;
 				StartOfEmployment3 = state.StartDate;
 				EndOfEmployment3 = state.EndDate;
@@ -426,43 +415,8 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 	{
 		_draftCleared = true;
 		_draftSaveCancellation?.Cancel();
-		await ApplicationFormStateService.ClearAsync();
+		await ApplicationFormStateService.ClearAsync(EmailId);
 	}
-
-	public async Task ResetApplicationFormAsync()
-	{
-		personalDetails = new();
-		addressDetails = new();
-		educationalBackground = new();
-		licensesDetails = new();
-		professionalExperiences = new();
-		referenceDetails = new();
-		signatureDetails = new();
-		DateOfBirth = null;
-		GraduationDate = null;
-		DegreeWithMajor = null;
-		AcademicInstitution = null;
-		LicenseExpiryDate = null;
-		DatePermittedToContact1 = StartOfEmployment1 = EndOfEmployment1 = null;
-		DatePermittedToContact2 = StartOfEmployment2 = EndOfEmployment2 = null;
-		DatePermittedToContact3 = StartOfEmployment3 = EndOfEmployment3 = null;
-		Ref1BestDate = Ref2BestDate = Ref3BestDate = null;
-		Ref1BestTime = Ref2BestTime = Ref3BestTime = null;
-		NoMiddleName = SameAsPermanent = hasProfessionalLicense = false;
-		AddEmployer2 = AddEmployer3 = AddAnotherReference = false;
-		consent = declineConsent = false;
-		OwnershipOtherText = null;
-		SignatureDate = DateTime.UtcNow;
-		_activeStep = 0;
-		await ClearDraftAsync();
-		await InvokeAsync(StateHasChanged);
-	}
-
-	private static FileState FileMetadata(string? fileName, byte[]? content) => new()
-	{
-		FileName = fileName,
-		HasFile = content is { Length: > 0 }
-	};
 
 	public async ValueTask DisposeAsync()
 	{
