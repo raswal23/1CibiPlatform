@@ -138,7 +138,6 @@ public partial class ApplicationFormComponent
 			}
 		}
 
-		await ApplicationFormStateService.CleanupExpiredAsync();
 		await RestoreDraftAsync();
 		_draftPersistenceEnabled = true;
 	}
@@ -380,16 +379,9 @@ public partial class ApplicationFormComponent
 
 		if (!IsSuccess)
 			return;
-		try
-		{
-			await IsWithDrawn.InvokeAsync("Withdrawn");
-		}
 
-		finally
-		{
-			await RemoveItemsAsync();
-		}
-		
+		await IsWithDrawn.InvokeAsync("Withdrawn");
+		await RemoveItemsAsync();
 	}
 
 	private async Task ProceedClicked()

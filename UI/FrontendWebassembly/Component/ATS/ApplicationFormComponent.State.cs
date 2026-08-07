@@ -45,7 +45,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		return new ApplicationFormState
 		{
 			EmailInvitationId = EmailId,
-			LastModifiedAtUtc = DateTime.UtcNow,
 			PersonalDetails = new PersonalDetailsState
 			{
 				PositionAppliedFor = personalDetails.PositionAppliedFor,
@@ -210,13 +209,6 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		var state = await ApplicationFormStateService.LoadAsync(EmailId);
 		if (state is null)
 			return;
-
-		if (!state.LastModifiedAtUtc.HasValue ||
-			DateTime.UtcNow - state.LastModifiedAtUtc.Value.ToUniversalTime() > TimeSpan.FromDays(1))
-		{
-			await ApplicationFormStateService.ClearAsync(EmailId);
-			return;
-		}
 
 		if (state.EmailInvitationId != EmailId ||
 			state.Version != 1 ||

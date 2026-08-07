@@ -3,7 +3,6 @@ namespace FrontendWebassembly.Services.ATS.Implementation;
 public sealed class ApplicationFormStateService : IApplicationFormStateService
 {
 	public const string StorageKey = "ats:application-form-drafts";
-	private const string LegacyStorageKey = "ats:application-form-state";
 	private static readonly TimeSpan DraftLifetime = TimeSpan.FromDays(1);
 
 	private readonly LocalStorageService _localStorageService;
@@ -40,19 +39,6 @@ public sealed class ApplicationFormStateService : IApplicationFormStateService
 
 		await SaveDraftsAsync(drafts);
 	}
-
-	public async Task CleanupExpiredAsync()
-	{
-		// Remove the obsolete single-draft entry after migrating to invitation-scoped drafts.
-		await _localStorageService.RemoveItemAsync(LegacyStorageKey);
-
-		var drafts = await LoadDraftsAsync();
-		if (RemoveExpired(drafts, DateTime.UtcNow))
-			await SaveDraftsAsync(drafts);
-	}
-
-	public async Task<bool> HasSavedStateAsync(Guid emailInvitationId) =>
-		await LoadAsync(emailInvitationId) is not null;
 
 	private async Task<Dictionary<Guid, ApplicationFormState>> LoadDraftsAsync()
 	{
