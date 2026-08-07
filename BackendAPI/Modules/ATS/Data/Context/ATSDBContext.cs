@@ -22,6 +22,7 @@ public class ATSDBContext : DbContext
     public DbSet<PackageDetails> PackageDetails { get; set; }
     public DbSet<ClientDetails> ClientDetails { get; set; }
     public DbSet<RoleDetails> RoleDetails { get; set; }
+    public DbSet<ModuleDetails> ModuleDetails { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

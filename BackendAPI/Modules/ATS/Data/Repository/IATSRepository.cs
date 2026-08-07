@@ -58,4 +58,9 @@ public interface IATSRepository
 	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
 	Task<RoleDetails?> GetRoleAsync(int roleId);
 	Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails);
+	Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<bool> AddModuleAsync(AddModuleDTO moduleDTO);
+	Task<ModuleDetails?> GetModuleAsync(int moduleId);
+	Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails);
 }

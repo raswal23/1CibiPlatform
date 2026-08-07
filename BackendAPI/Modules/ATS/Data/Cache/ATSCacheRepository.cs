@@ -11,6 +11,7 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string ClientTag = "client";
 	private readonly string PackageTag = "package";
 	private readonly string RoleTag = "role";
+	private readonly string ModuleTag = "module";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -451,5 +452,52 @@ public class ATSCacheRepository : IATSRepository
 		if (result is not null)
 			await _hybridCache.RemoveByTagAsync(RoleTag);
 		return result ?? new RoleDetails();
+	}
+
+	public async Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"module_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.GetModulesAsync(req, token),
+			null,
+			tags: [ModuleTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"module_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (req, token) => await _atsRepository.SearchModulesAsync(req, token),
+			null,
+			tags: [ModuleTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
+	{
+		var result = await _atsRepository.AddModuleAsync(moduleDTO);
+		if (result)
+			await _hybridCache.RemoveByTagAsync(ModuleTag);
+		return result;
+	}
+
+	public async Task<ModuleDetails?> GetModuleAsync(int moduleId)
+	{
+		return await _atsRepository.GetModuleAsync(moduleId);
+	}
+
+	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails)
+	{
+		var result = await _atsRepository.EditModuleAsync(moduleDetails);
+		if (result is not null)
+			await _hybridCache.RemoveByTagAsync(ModuleTag);
+		return result ?? new ModuleDetails();
 	}
 }

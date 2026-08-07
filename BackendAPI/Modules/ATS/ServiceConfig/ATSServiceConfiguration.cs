@@ -49,6 +49,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
+		services.AddScoped<IModuleManagementService, ModuleManagementService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

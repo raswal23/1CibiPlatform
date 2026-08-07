@@ -1112,4 +1112,95 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return roleDetails;
 	}
+
+	public async Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var modulesQuery = _dbcontext.ModuleDetails
+			.AsNoTracking()
+			.OrderBy(m => m.ModuleName);
+
+		var totalRecords = await modulesQuery.CountAsync(cancellationToken);
+
+		var items = await modulesQuery
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(m => new ModuleDetailsDTO
+			{
+				ModuleId = m.ModuleId,
+				ModuleName = m.ModuleName,
+				ModuleDescription = m.ModuleDescription,
+				IsActive = m.IsActive,
+				CreatedAt = m.CreatedAt,
+				UpdatedAt = m.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ModuleDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var modulesQuery = _dbcontext.ModuleDetails
+			.AsNoTracking()
+			.Where(m => EF.Functions.ILike(m.ModuleName, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(m.ModuleDescription, $"%{paginationRequest.SearchTerm}%"));
+
+		var totalRecords = await modulesQuery.CountAsync(cancellationToken);
+
+		var items = await modulesQuery
+			.OrderBy(m => m.ModuleName)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(m => new ModuleDetailsDTO
+			{
+				ModuleId = m.ModuleId,
+				ModuleName = m.ModuleName,
+				ModuleDescription = m.ModuleDescription,
+				IsActive = m.IsActive,
+				CreatedAt = m.CreatedAt,
+				UpdatedAt = m.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<ModuleDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
+
+	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
+	{
+		var timestamp = DateTime.UtcNow;
+		var moduleDetails = new ModuleDetails
+		{
+			ModuleName = moduleDTO.ModuleName!,
+			ModuleDescription = moduleDTO.ModuleDescription!,
+			IsActive = moduleDTO.IsActive,
+			CreatedAt = timestamp,
+			UpdatedAt = timestamp
+		};
+
+		await _dbcontext.ModuleDetails.AddAsync(moduleDetails);
+		await _dbcontext.SaveChangesAsync();
+		return true;
+	}
+
+	public async Task<ModuleDetails?> GetModuleAsync(int moduleId)
+	{
+		return await _dbcontext.ModuleDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(m => m.ModuleId == moduleId);
+	}
+
+	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails)
+	{
+		_dbcontext.ModuleDetails.Update(moduleDetails);
+		await _dbcontext.SaveChangesAsync();
+		return moduleDetails;
+	}
 }

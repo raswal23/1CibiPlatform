@@ -1,0 +1,57 @@
+<div class="um-dialog-shell">
+    <div class="um-dialog-header">
+        <div>
+            <MudText Typo="Typo.h5" Class="um-dialog-title">Add module</MudText>
+            <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new module</MudText>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+    </div>
+
+    <MudDivider />
+
+    <MudPaper Elevation="0" Class="um-dialog-body">
+        <MudForm @ref="AddModuleForm">
+            <MudStack Spacing="2">
+                <MudAutocomplete T="string"
+                                 @bind-Value="Module.ModuleName"
+                                 Label="Module Name"
+                                 Required="true"
+                                 RequiredError="Module Name is required"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 MaxLength="100"
+                                 SearchFunc="SearchModules"
+                                 ToStringFunc="@(x => x)"
+                                 ResetValueOnEmptyText="false"
+                                 Clearable="true"
+                                 Dense="true"
+                                 Class="oneplatform-rounded-input philsys-uppercase-input" />
+
+                <MudTextField @bind-Value="Module.ModuleDescription"
+                              Label="Module Description"
+                              Required="true"
+                              RequiredError="Module Description is required"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Lines="3"
+                              MaxLength="500"
+                              Class="oneplatform-rounded-input" />
+
+                <MudSelect T="bool"
+                           @bind-Value="Module.IsActive"
+                           Label="Status"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Class="oneplatform-rounded-input">
+                    <MudSelectItem Value="true">Active</MudSelectItem>
+                    <MudSelectItem Value="false">Inactive</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+
+    <div class="um-dialog-footer">
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+        <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+    </div>
+</div>
