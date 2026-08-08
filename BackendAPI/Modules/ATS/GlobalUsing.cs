@@ -1,5 +1,6 @@
 ﻿global using ATS.Data.Entities;
 global using ATS.Data.Context;
+global using ATS.Data.DataSeed;
 global using ATS.Services;
 global using ATS.Data.Repository;
 global using ATS.Data.Cache;

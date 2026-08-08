@@ -7,10 +7,28 @@ public static class ATSDatabaseExtensions
 		using var scope = app.Services.CreateScope();
 
 		var context = scope.ServiceProvider.GetRequiredService<ATSDBContext>();
+		var initData = scope.ServiceProvider.GetRequiredService<ATSInitialData>();
 
 		await context.Database.MigrateAsync();
+		await SeedAsync(context, initData);
 
 		await InitializeQuartzAsync(context);
+	}
+
+	private static async Task SeedAsync(
+		ATSDBContext context,
+		ATSInitialData initData)
+	{
+		if (await context.EmailInvitationRequests
+			.AsNoTracking()
+			.AnyAsync())
+		{
+			return;
+		}
+
+		await context.EmailInvitationRequests.AddRangeAsync(
+			initData.GetEmailInvitationRequests());
+		await context.SaveChangesAsync();
 	}
 
 	private static async Task InitializeQuartzAsync(ATSDBContext context)

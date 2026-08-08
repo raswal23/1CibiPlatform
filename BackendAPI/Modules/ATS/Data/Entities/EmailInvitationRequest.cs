@@ -8,6 +8,7 @@ public class EmailInvitationRequest
 	public string? MiddleInitial { get; set; }
 	public string? EmailAddress { get; set; }
 	public string? MobileNumber { get; set; }
+	public string? Requestor { get; set; }
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
