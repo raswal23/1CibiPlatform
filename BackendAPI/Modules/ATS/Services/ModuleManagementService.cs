@@ -2,13 +2,13 @@ namespace ATS.Services;
 
 public class ModuleManagementService : IModuleManagementService
 {
-	private readonly IATSRepository _atsRepository;
+	private readonly IModuleRepository _moduleRepository;
 	private readonly ILogger<ModuleManagementService> _logger;
 
-	public ModuleManagementService(IATSRepository atsRepository,
+	public ModuleManagementService(IModuleRepository moduleRepository,
 						   ILogger<ModuleManagementService> logger)
 	{
-		_atsRepository = atsRepository;
+		_moduleRepository = moduleRepository;
 		_logger = logger;
 	}
 
@@ -27,8 +27,8 @@ public class ModuleManagementService : IModuleManagementService
 		_logger.LogInformation("Fetching modules with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_atsRepository.GetModulesAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchModulesAsync(paginationRequest, cancellationToken);
+			_moduleRepository.GetModulesAsync(paginationRequest, cancellationToken) :
+			_moduleRepository.SearchModulesAsync(paginationRequest, cancellationToken);
 	}
 
 	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
@@ -43,7 +43,7 @@ public class ModuleManagementService : IModuleManagementService
 
 		_logger.LogInformation("Adding module: {@Context}", logContext);
 
-		return await _atsRepository.AddModuleAsync(moduleDTO);
+		return await _moduleRepository.AddModuleAsync(moduleDTO);
 	}
 
 	public async Task<ModuleDetailsDTO> EditModuleAsync(EditModuleDTO moduleDTO)
@@ -56,7 +56,7 @@ public class ModuleManagementService : IModuleManagementService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var existingModule = await _atsRepository.GetModuleAsync(moduleDTO.ModuleId);
+		var existingModule = await _moduleRepository.GetModuleAsync(moduleDTO.ModuleId);
 		if (existingModule == null)
 		{
 			_logger.LogError("{ModuleId} was not found during update operation: {@Context}", moduleDTO.ModuleId, logContext);
@@ -68,7 +68,7 @@ public class ModuleManagementService : IModuleManagementService
 		existingModule.IsActive = moduleDTO.IsActive;
 		existingModule.UpdatedAt = DateTime.UtcNow;
 
-		var module = await _atsRepository.EditModuleAsync(existingModule);
+		var module = await _moduleRepository.EditModuleAsync(existingModule);
 		return module.Adapt<ModuleDetailsDTO>();
 	}
 }

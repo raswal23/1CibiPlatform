@@ -2,13 +2,13 @@ namespace ATS.Services;
 
 public class RoleManagementService : IRoleManagementService
 {
-	private readonly IATSRepository _atsRepository;
+	private readonly IRoleRepository _roleRepository;
 	private readonly ILogger<RoleManagementService> _logger;
 
-	public RoleManagementService(IATSRepository atsRepository,
+	public RoleManagementService(IRoleRepository roleRepository,
 						 ILogger<RoleManagementService> logger)
 	{
-		_atsRepository = atsRepository;
+		_roleRepository = roleRepository;
 		_logger = logger;
 	}
 
@@ -27,8 +27,8 @@ public class RoleManagementService : IRoleManagementService
 		_logger.LogInformation("Fetching roles with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_atsRepository.GetRolesAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchRolesAsync(paginationRequest, cancellationToken);
+			_roleRepository.GetRolesAsync(paginationRequest, cancellationToken) :
+			_roleRepository.SearchRolesAsync(paginationRequest, cancellationToken);
 	}
 
 	public async Task<bool> AddRoleAsync(AddRoleDTO roleDTO)
@@ -43,7 +43,7 @@ public class RoleManagementService : IRoleManagementService
 
 		_logger.LogInformation("Adding role: {@Context}", logContext);
 
-		return await _atsRepository.AddRoleAsync(roleDTO);
+		return await _roleRepository.AddRoleAsync(roleDTO);
 	}
 
 	public async Task<RoleDetailsDTO> EditRoleAsync(EditRoleDTO roleDTO)
@@ -56,7 +56,7 @@ public class RoleManagementService : IRoleManagementService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var existingRole = await _atsRepository.GetRoleAsync(roleDTO.RoleId);
+		var existingRole = await _roleRepository.GetRoleAsync(roleDTO.RoleId);
 		if (existingRole == null)
 		{
 			_logger.LogError("{RoleId} was not found during update operation: {@Context}", roleDTO.RoleId, logContext);
@@ -68,7 +68,7 @@ public class RoleManagementService : IRoleManagementService
 		existingRole.IsActive = roleDTO.IsActive;
 		existingRole.UpdatedAt = DateTime.UtcNow;
 
-		var role = await _atsRepository.EditRoleAsync(existingRole);
+		var role = await _roleRepository.EditRoleAsync(existingRole);
 		return role.Adapt<RoleDetailsDTO>();
 	}
 }

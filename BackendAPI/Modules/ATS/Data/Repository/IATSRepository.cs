@@ -1,6 +1,13 @@
 ﻿namespace ATS.Data.Repository;
 
-public interface IATSRepository
+// Transitional workflow repository. Administration capabilities are exposed through
+// focused interfaces so feature services do not depend on this entire contract.
+public interface IATSRepository :
+	IPackageRepository,
+	IClientRepository,
+	IRoleRepository,
+	IModuleRepository,
+	IATSUserRepository
 {
 	Task<bool> AddPersonalDetailsAsync(PersonalDetails personalDetails);
 	Task<bool> AddAddressDetailsAsync(AddressDetails addressDetails);
@@ -43,33 +50,4 @@ public interface IATSRepository
 	Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken);
 	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken);
-	Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken);
-	Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken);
-	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken);
-	Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken);
-	Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken);
-	Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken);
-	Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
-	Task<RoleDetails?> GetRoleAsync(int roleId);
-	Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails);
-	Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddModuleAsync(AddModuleDTO moduleDTO);
-	Task<ModuleDetails?> GetModuleAsync(int moduleId);
-	Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails);
-	Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddUserAsync(IReadOnlyCollection<AddUserDTO> userDTOs, CancellationToken cancellationToken);
-	Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken);
-	Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(Guid userId, CancellationToken cancellationToken);
-	Task<IReadOnlyList<UserDetails>> EditUserAsync(IReadOnlyCollection<EditUserDTO> userDTOs, CancellationToken cancellationToken);
-	Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(CancellationToken cancellationToken);
-	Task<UserClientDetails?> GetUserClientAssignmentAsync(Guid userId, CancellationToken cancellationToken);
-	Task<UserClientDetails> AssignUserClientAsync(AssignUserClientDTO assignment, CancellationToken cancellationToken);
 }

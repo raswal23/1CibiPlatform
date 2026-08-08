@@ -39,8 +39,19 @@ public static class ATSServiceConfiguration
     {
 		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
-		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<ATSRepository>();
+		services.AddScoped<IATSRepository>(provider => provider.GetRequiredService<ATSRepository>());
 		services.Decorate<IATSRepository, ATSCacheRepository>();
+		services.AddScoped<IPackageRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.Decorate<IPackageRepository, PackageCacheRepository>();
+		services.AddScoped<IClientRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.Decorate<IClientRepository, ClientCacheRepository>();
+		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.Decorate<IRoleRepository, RoleCacheRepository>();
+		services.AddScoped<IModuleRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.Decorate<IModuleRepository, ModuleCacheRepository>();
+		services.AddScoped<IATSUserRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();

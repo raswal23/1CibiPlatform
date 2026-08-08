@@ -3,7 +3,9 @@ global using ATS.Data.Context;
 global using ATS.Data.DataSeed;
 global using ATS.Services;
 global using ATS.Data.Repository;
+global using ATS.Data.Repository.Administration;
 global using ATS.Data.Cache;
+global using ATS.Data.Cache.Administration;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
 global using ATS.Data.DTO;
@@ -62,4 +64,3 @@ global using PdfSharp.Pdf.IO;
 global using QuestPDF.Fluent;
 global using QuestPDF.Infrastructure;
 global using QuestPDF.Helpers;
-

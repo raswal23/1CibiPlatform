@@ -2,13 +2,13 @@ namespace ATS.Services;
 
 public class ClientManagementService : IClientManagementService
 {
-	private readonly IATSRepository _atsRepository;
+	private readonly IClientRepository _clientRepository;
 	private readonly ILogger<ClientManagementService> _logger;
 
-	public ClientManagementService(IATSRepository atsRepository,
+	public ClientManagementService(IClientRepository clientRepository,
 					   ILogger<ClientManagementService> logger)
 	{
-		_atsRepository = atsRepository;
+		_clientRepository = clientRepository;
 		_logger = logger;
 	}
 
@@ -27,8 +27,8 @@ public class ClientManagementService : IClientManagementService
 		_logger.LogInformation("Fetching clients with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_atsRepository.GetClientsAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchClientsAsync(paginationRequest, cancellationToken);
+			_clientRepository.GetClientsAsync(paginationRequest, cancellationToken) :
+			_clientRepository.SearchClientsAsync(paginationRequest, cancellationToken);
 	}
 
 	public async Task<bool> AddClientAsync(
@@ -47,7 +47,7 @@ public class ClientManagementService : IClientManagementService
 
 		_logger.LogInformation("Adding client: {@Context}", logContext);
 
-		var isAdded = await _atsRepository.AddClientAsync(clientDTOs, cancellationToken);
+		var isAdded = await _clientRepository.AddClientAsync(clientDTOs, cancellationToken);
 		return isAdded;
 	}
 
@@ -67,7 +67,7 @@ public class ClientManagementService : IClientManagementService
 
 		_logger.LogInformation("Synchronizing client package assignments: {@Context}", logContext);
 
-		var updatedClients = await _atsRepository.EditClientAsync(clientDTOs, cancellationToken);
+		var updatedClients = await _clientRepository.EditClientAsync(clientDTOs, cancellationToken);
 		return updatedClients.Adapt<IReadOnlyList<ClientDetailsDTO>>();
 	}
 }

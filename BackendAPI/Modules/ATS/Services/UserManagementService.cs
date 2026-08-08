@@ -3,16 +3,16 @@ namespace ATS.Services;
 public class UserManagementService : IUserManagementService
 {
 	private const string SuperAdminEmail = "admin@cibi.com";
-	private readonly IATSRepository _atsRepository;
+	private readonly IATSUserRepository _userRepository;
 	private readonly IAuthQueries _authQueries;
 	private readonly ILogger<UserManagementService> _logger;
 
 	public UserManagementService(
-		IATSRepository atsRepository,
+		IATSUserRepository userRepository,
 		IAuthQueries authQueries,
 		ILogger<UserManagementService> logger)
 	{
-		_atsRepository = atsRepository;
+		_userRepository = userRepository;
 		_authQueries = authQueries;
 		_logger = logger;
 	}
@@ -26,7 +26,7 @@ public class UserManagementService : IUserManagementService
 	public Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
 		CancellationToken cancellationToken)
 	{
-		return _atsRepository.GetUserClientAssignmentsAsync(cancellationToken);
+		return _userRepository.GetUserClientAssignmentsAsync(cancellationToken);
 	}
 
 	public async Task<UserClientDetailsDTO> AssignUserClientAsync(
@@ -34,7 +34,7 @@ public class UserManagementService : IUserManagementService
 		CancellationToken cancellationToken)
 	{
 		await GetAssignedAuthUserAsync(assignment.UserId, cancellationToken);
-		var result = await _atsRepository.AssignUserClientAsync(assignment, cancellationToken);
+		var result = await _userRepository.AssignUserClientAsync(assignment, cancellationToken);
 		return result.Adapt<UserClientDetailsDTO>();
 	}
 
@@ -53,8 +53,8 @@ public class UserManagementService : IUserManagementService
 		_logger.LogInformation("Fetching users with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm)
-			? _atsRepository.GetUsersAsync(paginationRequest, cancellationToken)
-			: _atsRepository.SearchUsersAsync(paginationRequest, cancellationToken);
+			? _userRepository.GetUsersAsync(paginationRequest, cancellationToken)
+			: _userRepository.SearchUsersAsync(paginationRequest, cancellationToken);
 	}
 
 	public Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(
@@ -64,7 +64,7 @@ public class UserManagementService : IUserManagementService
 		if (userId == Guid.Empty)
 			throw new BadRequestException("Authenticated user ID is required.");
 
-		return _atsRepository.GetActiveUserModuleIdsAsync(userId, cancellationToken);
+		return _userRepository.GetActiveUserModuleIdsAsync(userId, cancellationToken);
 	}
 
 	public async Task<bool> AddUserAsync(
@@ -79,7 +79,7 @@ public class UserManagementService : IUserManagementService
 			throw new BadRequestException("All module assignments must use the same Auth user.");
 
 		var authUser = await GetAssignedAuthUserAsync(user.UserId, cancellationToken);
-		var clientAssignment = await _atsRepository.GetUserClientAssignmentAsync(
+		var clientAssignment = await _userRepository.GetUserClientAssignmentAsync(
 			authUser.UserId,
 			cancellationToken);
 		var clientId = ResolveClientId(authUser, clientAssignment, user.ClientId);
@@ -105,7 +105,7 @@ public class UserManagementService : IUserManagementService
 		};
 
 		_logger.LogInformation("Adding user: {@Context}", logContext);
-		return await _atsRepository.AddUserAsync(users, cancellationToken);
+		return await _userRepository.AddUserAsync(users, cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<UserDetailsDTO>> EditUserAsync(
@@ -120,7 +120,7 @@ public class UserManagementService : IUserManagementService
 			throw new BadRequestException("All module assignments must use the same Auth user.");
 
 		var authUser = await GetAssignedAuthUserAsync(user.UserId, cancellationToken);
-		var clientAssignment = await _atsRepository.GetUserClientAssignmentAsync(
+		var clientAssignment = await _userRepository.GetUserClientAssignmentAsync(
 			authUser.UserId,
 			cancellationToken);
 		var clientId = ResolveClientId(authUser, clientAssignment, user.ClientId);
@@ -147,7 +147,7 @@ public class UserManagementService : IUserManagementService
 
 		_logger.LogInformation("Synchronizing user module assignments: {@Context}", logContext);
 
-		var updatedUsers = await _atsRepository.EditUserAsync(users, cancellationToken);
+		var updatedUsers = await _userRepository.EditUserAsync(users, cancellationToken);
 		return updatedUsers.Adapt<IReadOnlyList<UserDetailsDTO>>();
 	}
 
