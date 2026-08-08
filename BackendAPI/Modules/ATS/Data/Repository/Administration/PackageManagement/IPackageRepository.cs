@@ -1,4 +1,4 @@
-namespace ATS.Data.Repository.Administration;
+namespace ATS.Data.Repository.Administration.PackageManagement;
 
 public interface IPackageRepository
 {

@@ -1,13 +1,6 @@
 ﻿namespace ATS.Data.Repository;
 
-// Transitional workflow repository. Administration capabilities are exposed through
-// focused interfaces so feature services do not depend on this entire contract.
-public interface IATSRepository :
-	IPackageRepository,
-	IClientRepository,
-	IRoleRepository,
-	IModuleRepository,
-	IATSUserRepository
+public interface IATSRepository
 {
 	Task<bool> AddPersonalDetailsAsync(PersonalDetails personalDetails);
 	Task<bool> AddAddressDetailsAsync(AddressDetails addressDetails);

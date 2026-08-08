@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Auth.Features.GetNewAccessToken;
-using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Auth.Data.Entities;
 using Test.BackendAPI.Infrastructure.Auth.Infrastructure;
@@ -42,7 +41,7 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.AuthUsers.Add(user);
 
 		var refreshToken = "valid-refresh-token";
-		var hashed = ComputeSha256Base64(refreshToken);
+		var hashed = ComputeSha512Base64(refreshToken);
 
 		var authRefresh = new AuthRefreshToken
 		{
@@ -92,7 +91,7 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.AuthUsers.Add(user);
 
 		var realToken = "real-refresh-token";
-		var hashed = ComputeSha256Base64(realToken);
+		var hashed = ComputeSha512Base64(realToken);
 
 		var authRefresh = new AuthRefreshToken
 		{
@@ -117,10 +116,10 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid refresh token.");
 	}
 
-	private static string ComputeSha256Base64(string input)
+	private static string ComputeSha512Base64(string input)
 	{
-		using var sha256 = SHA256.Create();
-		var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+		using var sha512 = SHA512.Create();
+		var hash = sha512.ComputeHash(Encoding.UTF8.GetBytes(input));
 		return Convert.ToBase64String(hash);
 	}
 }

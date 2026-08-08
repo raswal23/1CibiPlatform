@@ -39,18 +39,17 @@ public static class ATSServiceConfiguration
     {
 		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
-		services.AddScoped<ATSRepository>();
-		services.AddScoped<IATSRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IATSRepository, ATSRepository>();
 		services.Decorate<IATSRepository, ATSCacheRepository>();
-		services.AddScoped<IPackageRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IPackageRepository, PackageRepository>();
 		services.Decorate<IPackageRepository, PackageCacheRepository>();
-		services.AddScoped<IClientRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IClientRepository, ClientRepository>();
 		services.Decorate<IClientRepository, ClientCacheRepository>();
-		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.Decorate<IRoleRepository, RoleCacheRepository>();
-		services.AddScoped<IModuleRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IModuleRepository, ModuleRepository>();
 		services.Decorate<IModuleRepository, ModuleCacheRepository>();
-		services.AddScoped<IATSUserRepository>(provider => provider.GetRequiredService<ATSRepository>());
+		services.AddScoped<IATSUserRepository, ATSUserRepository>();
 		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();

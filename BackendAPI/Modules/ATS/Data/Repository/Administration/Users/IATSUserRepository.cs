@@ -1,4 +1,4 @@
-namespace ATS.Data.Repository.Administration;
+namespace ATS.Data.Repository.Administration.Users;
 
 public interface IATSUserRepository
 {
