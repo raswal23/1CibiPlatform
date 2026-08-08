@@ -1,59 +1,139 @@
-<div class="um-dialog-shell">
-    <div class="um-dialog-header">
-        <div>
-            <MudText Typo="Typo.h5" Class="um-dialog-title">Add package</MudText>
-            <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new package</MudText>
+<MudDialog Class="um-dialog ap-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        <div class="ap-shell">
+            <header class="ap-header">
+                <div class="ap-header-row">
+                    <div class="ap-header-left">
+                        <div class="ap-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z" />
+                                <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
+                            </svg>
+                        </div>
+                        <div class="ap-header-text">
+                            <h1>Add package</h1>
+                            <p>Create a new package</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ap-close" aria-label="Close add package dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="ap-body">
+                <MudForm @ref="AddPackageForm">
+                    <section class="ap-section" aria-labelledby="add-package-details-heading">
+                        <div class="ap-section-head">
+                            <span class="ap-section-number">1</span>
+                            <h2 id="add-package-details-heading">Package details</h2>
+                            <span class="ap-section-helper">Name and describe the package</span>
+                        </div>
+
+                        <div class="ap-section-body">
+                            <div class="ap-field">
+                                <label for="ap-package-name">Package name <span class="ap-required">*</span></label>
+                                <div class="ap-input-wrap ap-name-wrap">
+                                    <MudTextField @bind-Value="Package.PackageName"
+                                                  InputId="ap-package-name"
+                                                  Placeholder="e.g. Standard background check"
+                                                  Required="true"
+                                                  RequiredError="Package name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                                  Class="ap-control" />
+                                </div>
+                            </div>
+
+                            <div class="ap-field">
+                                <label for="ap-package-description">Package description <span class="ap-required">*</span></label>
+                                <div class="ap-input-wrap ap-description-wrap">
+                                    <MudTextField @bind-Value="Package.PackageDescription"
+                                                  InputId="ap-package-description"
+                                                  Placeholder="What does this package include?"
+                                                  Required="true"
+                                                  RequiredError="Package description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="ap-control ap-description-control" />
+                                </div>
+                                <div class="ap-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ap-section" aria-labelledby="add-package-availability-heading">
+                        <div class="ap-section-head">
+                            <span class="ap-section-number">2</span>
+                            <h2 id="add-package-availability-heading">Timing &amp; availability</h2>
+                            <span class="ap-section-helper">Follow-up and status</span>
+                        </div>
+
+                        <div class="ap-section-body">
+                            <div class="ap-field">
+                                <label for="ap-follow-up-email">Follow up email</label>
+                                <div class="ap-input-wrap ap-follow-up-wrap">
+                                    <MudNumericField T="int"
+                                                     @bind-Value="Package.FollowUpEmail"
+                                                     InputId="ap-follow-up-email"
+                                                     Min="0"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Outlined.Email"
+                                                     Class="ap-control" />
+                                    <span class="ap-unit-suffix">days after</span>
+                                </div>
+                                <p class="ap-hint">Sends a reminder email this many days after the order is placed. Use 0 to turn it off.</p>
+                            </div>
+
+                            <div class="ap-field">
+                                <label>Status</label>
+                                <div class="ap-status-row">
+                                    <div class="ap-status-copy">
+                                        <p>Package @(Package.IsActive ? "active" : "inactive")</p>
+                                        <span>Available to assign to clients once saved</span>
+                                    </div>
+                                    <div class="ap-status-control">
+                                        <span class="ap-status-badge @(Package.IsActive ? string.Empty : "is-off")">
+                                            @(Package.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ap-toggle @(Package.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@Package.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle package status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ap-footer">
+                <button type="button" class="ap-button ap-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ap-button ap-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
         </div>
-        <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
-    </div>
-
-    <MudDivider />
-
-    <MudPaper Elevation="0" Class="um-dialog-body">
-        <MudForm @ref="AddPackageForm">
-            <MudStack Spacing="2">
-                <MudTextField @bind-Value="Package.PackageName"
-                                Label="Package Name"
-                                Required="true"
-                                RequiredError="Package Name is required"
-                                Variant="Variant.Outlined"
-                                Margin="Margin.Dense"
-                                MaxLength="255"
-                                Class="oneplatform-rounded-input" />
-
-                <MudTextField @bind-Value="Package.PackageDescription"
-                              Label="Package Description"
-                              Required="true"
-                              RequiredError="Package Description is required"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="3"
-                              MaxLength="500"
-                              Class="oneplatform-rounded-input" />
-
-                <MudNumericField T="int"
-                                 @bind-Value="Package.FollowUpEmail"
-                                 Label="Follow Up Email"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="oneplatform-rounded-input" />
-
-                <MudSelect T="bool"
-                           @bind-Value="Package.IsActive"
-                           Label="Status"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Class="oneplatform-rounded-input">
-                    <MudSelectItem Value="true">Active</MudSelectItem>
-                    <MudSelectItem Value="false">Inactive</MudSelectItem>
-                </MudSelect>
-
-            </MudStack>
-        </MudForm>
-    </MudPaper>
-
-    <div class="um-dialog-footer">
-        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-        <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
-    </div>
-</div>
+    </DialogContent>
+</MudDialog>

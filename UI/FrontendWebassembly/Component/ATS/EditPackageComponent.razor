@@ -1,60 +1,139 @@
-<div class="um-dialog-shell">
-    <div class="um-dialog-header">
-        <div>
-            <MudText Typo="Typo.h5" Class="um-dialog-title">Edit package</MudText>
-            <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Update package details</MudText>
+<MudDialog Class="um-dialog ep-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        <div class="ep-shell">
+            <header class="ep-header">
+                <div class="ep-header-row">
+                    <div class="ep-header-left">
+                        <div class="ep-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </div>
+                        <div class="ep-header-text">
+                            <h1>Edit package</h1>
+                            <p>Update package details</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ep-close" aria-label="Close edit package dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="ep-body">
+                <MudForm @ref="EditPackageForm">
+                    <section class="ep-section" aria-labelledby="edit-package-details-heading">
+                        <div class="ep-section-head">
+                            <span class="ep-section-number">1</span>
+                            <h2 id="edit-package-details-heading">Package details</h2>
+                            <span class="ep-section-helper">Name and describe the package</span>
+                        </div>
+
+                        <div class="ep-section-body">
+                            <div class="ep-field">
+                                <label for="ep-package-name">Package name <span class="ep-required">*</span></label>
+                                <div class="ep-input-wrap ep-name-wrap">
+                                    <MudTextField @bind-Value="EditPackage.PackageName"
+                                                  InputId="ep-package-name"
+                                                  Placeholder="e.g. Standard background check"
+                                                  Required="true"
+                                                  RequiredError="Package name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                                  Class="ep-control" />
+                                </div>
+                            </div>
+
+                            <div class="ep-field">
+                                <label for="ep-package-description">Package description <span class="ep-required">*</span></label>
+                                <div class="ep-input-wrap ep-description-wrap">
+                                    <MudTextField @bind-Value="EditPackage.PackageDescription"
+                                                  InputId="ep-package-description"
+                                                  Placeholder="What does this package include?"
+                                                  Required="true"
+                                                  RequiredError="Package description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="ep-control ep-description-control" />
+                                </div>
+                                <div class="ep-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ep-section" aria-labelledby="edit-package-availability-heading">
+                        <div class="ep-section-head">
+                            <span class="ep-section-number">2</span>
+                            <h2 id="edit-package-availability-heading">Timing &amp; availability</h2>
+                            <span class="ep-section-helper">Follow-up and status</span>
+                        </div>
+
+                        <div class="ep-section-body">
+                            <div class="ep-field">
+                                <label for="ep-follow-up-email">Follow up email</label>
+                                <div class="ep-input-wrap ep-follow-up-wrap">
+                                    <MudNumericField T="int"
+                                                     @bind-Value="EditPackage.FollowUpEmail"
+                                                     InputId="ep-follow-up-email"
+                                                     Min="0"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Outlined.Email"
+                                                     Class="ep-control" />
+                                    <span class="ep-unit-suffix">days after</span>
+                                </div>
+                                <p class="ep-hint">Sends a reminder email this many days after the order is placed. Use 0 to turn it off.</p>
+                            </div>
+
+                            <div class="ep-field">
+                                <label>Status</label>
+                                <div class="ep-status-row">
+                                    <div class="ep-status-copy">
+                                        <p>Package @(EditPackage.IsActive ? "active" : "inactive")</p>
+                                        <span>Available to assign to clients</span>
+                                    </div>
+                                    <div class="ep-status-control">
+                                        <span class="ep-status-badge @(EditPackage.IsActive ? string.Empty : "is-off")">
+                                            @(EditPackage.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ep-toggle @(EditPackage.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@EditPackage.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle package status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ep-footer">
+                <button type="button" class="ep-button ep-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ep-button ep-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
         </div>
-        <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
-    </div>
-
-    <MudDivider />
-
-    <MudPaper Elevation="0" Class="um-dialog-body">
-        <MudForm @ref="EditPackageForm">
-            <MudStack Spacing="2">
-
-                <MudTextField @bind-Value="EditPackage.PackageName"
-                                Label="Package Name"
-                                Required="true"
-                                RequiredError="Package Name is required"
-                                Variant="Variant.Outlined"
-                                Margin="Margin.Dense"
-                                MaxLength="255"
-                                Class="oneplatform-rounded-input" />
-
-                <MudTextField @bind-Value="EditPackage.PackageDescription"
-                              Label="Package Description"
-                              Required="true"
-                              RequiredError="Package Description is required"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="3"
-                              MaxLength="500"
-                              Class="oneplatform-rounded-input" />
-
-                <MudNumericField T="int"
-                                 @bind-Value="EditPackage.FollowUpEmail"
-                                 Label="Follow Up Email"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Class="oneplatform-rounded-input" />
-
-                <MudSelect T="bool"
-                           @bind-Value="EditPackage.IsActive"
-                           Label="Status"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Class="oneplatform-rounded-input">
-                    <MudSelectItem Value="true">Active</MudSelectItem>
-                    <MudSelectItem Value="false">Inactive</MudSelectItem>
-                </MudSelect>
-
-            </MudStack>
-        </MudForm>
-    </MudPaper>
-
-    <div class="um-dialog-footer">
-        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-        <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
-    </div>
-</div>
+    </DialogContent>
+</MudDialog>
