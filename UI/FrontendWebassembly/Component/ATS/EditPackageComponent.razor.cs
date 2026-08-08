@@ -11,6 +11,7 @@ public partial class EditPackageComponent
 	public PackageDetailsDTO Package { get; set; } = new();
 
 	private EditPackageDTO EditPackage = new();
+	private int DescriptionLength => EditPackage.PackageDescription?.Length ?? 0;
 
 	protected override void OnParametersSet()
 	{
@@ -25,6 +26,8 @@ public partial class EditPackageComponent
 	}
 
 	void Cancel() => EditPackageDialog!.Cancel();
+
+	private void ToggleStatus() => EditPackage.IsActive = !EditPackage.IsActive;
 
 	async Task Submit()
 	{

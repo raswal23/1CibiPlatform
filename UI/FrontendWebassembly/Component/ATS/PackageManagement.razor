@@ -21,7 +21,7 @@
 <TableComponent TItem="PackageDetailsDTO"
                 @ref="packagesTable"
                 Title="Packages"
-                ContainerClass="ats-management-card"
+                ContainerClass="ats-management-card ats-package-card"
                 EnableSearch="true"
                 SearchLabel=""
                 SearchPlaceholder="Search packages"
@@ -43,15 +43,36 @@
 
     <RowTemplate Context="p">
         <MudTd Class="ats-management-primary" DataLabel="Package Name">
-            @p.PackageName
+            <div class="ats-management-package-cell">
+                <span class="ats-management-package-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z" />
+                        <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
+                    </svg>
+                </span>
+                    <span style="font-weight: 600;">@p.PackageName</span>
+            </div>
         </MudTd>
 
         <MudTd Class="ats-management-description" DataLabel="Description">
-            @p.PackageDescription
+            @if (string.IsNullOrWhiteSpace(p.PackageDescription))
+            {
+                <span class="ats-management-package-empty">No description</span>
+            }
+            else
+            {
+                @p.PackageDescription
+            }
         </MudTd>
 
-        <MudTd Class="ats-management-description" DataLabel="Follow Up Email">
-            @p.FollowUpEmail
+        <MudTd DataLabel="Follow Up Email">
+            <span class="ats-management-email-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                    <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                @(p.FollowUpEmail == 0 ? "Not set" : p.FollowUpEmail.ToString())
+            </span>
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
@@ -69,10 +90,15 @@
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                           Class="ats-management-edit"
-                           Size="Size.Small"
-                           OnClick="@(() => EditPackage(p))" />
+            <button type="button"
+                    class="ats-management-edit ats-management-edit-button"
+                    aria-label="Edit @p.PackageName"
+                    @onclick="@(() => EditPackage(p))">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </button>
         </MudTd>
     </RowTemplate>
 

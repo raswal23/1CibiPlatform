@@ -1,3 +1,10 @@
+.eu-shell,
+.eu-shell *,
+.eu-shell *::before,
+.eu-shell *::after {
+    box-sizing: border-box;
+}
+
 .eu-shell {
     --eu-navy-900: #0b1b3d;
     --eu-navy-800: #132a54;
@@ -302,6 +309,11 @@
     width: 16px;
     height: 16px;
     font-size: 16px;
+}
+
+.eu-input-wrap ::deep .mud-input-adornment-start,
+.eu-input-wrap ::deep .mud-input-adornment-end {
+    align-self: center;
 }
 
 .eu-input-wrap ::deep .mud-input.mud-disabled {

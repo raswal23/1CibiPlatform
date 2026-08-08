@@ -1,3 +1,10 @@
+.au-shell,
+.au-shell *,
+.au-shell *::before,
+.au-shell *::after {
+    box-sizing: border-box;
+}
+
 .au-shell {
     --au-navy-900: #0b1b3d;
     --au-navy-800: #132a54;
@@ -254,9 +261,11 @@
 }
 
 .au-input-wrap ::deep .mud-input-slot {
+    height: 42px;
     min-height: 42px;
-    padding-top: 9px;
-    padding-bottom: 9px;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 42px;
     color: var(--au-text-1);
     font-family: "Inter", sans-serif;
     font-size: 14px;
@@ -292,6 +301,11 @@
     width: 16px;
     height: 16px;
     font-size: 16px;
+}
+
+.au-input-wrap ::deep .mud-input-adornment-start,
+.au-input-wrap ::deep .mud-input-adornment-end {
+    align-self: center;
 }
 
 .au-input-wrap ::deep .mud-input.mud-disabled,
