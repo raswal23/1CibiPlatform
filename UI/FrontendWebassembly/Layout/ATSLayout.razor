@@ -4,6 +4,7 @@
 @inject IAuthService IAuthService
 @inject IAccessService AccessService
 @inject IATSUserManagementService UserManagementService
+@inject LocalStorageService LocalStorageService
 @inject IJSRuntime JS
 @implements IDisposable
 @using FrontendWebassembly.ShareData.ATS
@@ -130,6 +131,7 @@ else
 
 @code {
     private bool _isSettingsExpanded;
+    private const string RoleIdStorageKey = "RoleId";
 
     private void ToggleSettingsExpanded()
     {
@@ -159,7 +161,14 @@ else
 			return;
 		}
 
-		_accessibleModuleIds = (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
+		var storedRoleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
+		var storedRoleIds = string.IsNullOrWhiteSpace(storedRoleIdsJson)
+			? []
+			: JsonSerializer.Deserialize<List<int>>(storedRoleIdsJson) ?? [];
+
+		_accessibleModuleIds = storedRoleIds.Contains(1)
+			? ModuleList.List.Keys.ToHashSet()
+			: (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
 		if (!CanAccessRoute(NavigationManager.Uri))
 		{
 			NavigationManager.NavigateTo("/access-denied");
