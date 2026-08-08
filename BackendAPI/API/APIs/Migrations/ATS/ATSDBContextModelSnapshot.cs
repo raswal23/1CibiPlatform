@@ -1321,6 +1321,78 @@ namespace APIs.Migrations.ATS
                     b.ToTable("SignatureDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.UserClientDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("UserClientDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Site")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("UserId", "ModuleId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserEmail");
+
+                    b.ToTable("UserDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.AddressDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -1435,6 +1507,25 @@ namespace APIs.Migrations.ATS
                         .HasForeignKey("ATS.Data.Entities.SignatureDetails", "EmailInvitationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.ModuleDetails", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ATS.Data.Entities.RoleDetails", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.EmailInvitationRequest", b =>

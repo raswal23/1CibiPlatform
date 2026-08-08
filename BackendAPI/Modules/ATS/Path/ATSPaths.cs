@@ -310,6 +310,83 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			new RouteDefinitionDTO(
+				RouteId: "GetATSUsers",
+				MatchPath: "/ats/getusers",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getusers" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetATSAuthUsers",
+				MatchPath: "/ats/getauthusers",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getauthusers" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetATSMyModules",
+				MatchPath: "/ats/getmymodules",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getmymodules" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetATSUserClientAssignments",
+				MatchPath: "/ats/getuserclientassignments",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getuserclientassignments" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AssignATSUserClient",
+				MatchPath: "/ats/assignuserclient",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/assignuserclient" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AddATSUser",
+				MatchPath: "/ats/adduser",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/adduser" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "EditATSUser",
+				MatchPath: "/ats/edituser",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/edituser" }
+				}
+			),
+
 		};
 	}
 	public IEnumerable<ClusterDefinitionDTO> GetClusters()

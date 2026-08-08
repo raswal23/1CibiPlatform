@@ -1,0 +1,131 @@
+<MudDialog Class="um-dialog" Style="padding: 0;">
+    <DialogContent>
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Edit user</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Update ATS role and module access</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
+
+            <MudDivider />
+
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="UserForm">
+                    <MudStack Spacing="2">
+                        <MudAutocomplete T="ATSUserLookupDTO"
+                                         Label="User"
+                                         Value="SelectedAuthUser"
+                                         SearchFunc="SearchAuthUsers"
+                                         ToStringFunc="GetAuthUserText"
+                                         Disabled="true"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         Class="oneplatform-rounded-input" />
+                        @if (!string.IsNullOrWhiteSpace(AuthUserError))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">@AuthUserError</MudText>
+                        }
+
+                        <MudTextField @bind-Value="EditUser.UserName"
+                                      Label="User Name"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudTextField @bind-Value="EditUser.UserEmail"
+                                      Label="User Email"
+                                      InputType="InputType.Email"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int?"
+                                   @bind-Value="EditUser.ClientId"
+                                   Label="Client"
+                                   Disabled="true"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var client in Clients)
+                            {
+                                var isAssigned = client.ClientId == EditUser.ClientId;
+                                <MudSelectItem T="int?" Value="@((int?)client.ClientId)" Disabled="@(!client.IsActive && !isAssigned)">
+                                    @client.ClientName@(!client.IsActive ? " (Inactive)" : string.Empty)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            Use Assign Client on the User Management page to change this user's client.
+                        </MudAlert>
+
+                        <MudTextField @bind-Value="EditUser.Site"
+                                      Label="Site"
+                                      Required="true"
+                                      RequiredError="Site is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="100"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int"
+                                   @bind-Value="EditUser.RoleId"
+                                   Label="Role"
+                                   Required="true"
+                                   RequiredError="Role is required"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var role in Roles)
+                            {
+                                var isAssigned = role.RoleId == EditUser.RoleId;
+                                <MudSelectItem T="int" Value="@role.RoleId" Disabled="@(!role.IsActive && !isAssigned)">
+                                    @role.RoleName@(!role.IsActive ? " (Inactive)" : string.Empty)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="int"
+                                   MultiSelection="true"
+                                   SelectedValues="SelectedModuleIds"
+                                   SelectedValuesChanged="OnSelectedModuleIdsChanged"
+                                   MultiSelectionTextFunc="GetSelectedModulesText"
+                                   Label="Modules"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@(!string.IsNullOrEmpty(ModuleError))"
+                                   ErrorText="@ModuleError"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var module in Modules)
+                            {
+                                var isAssigned = SelectedModuleIds.Contains(module.ModuleId);
+                                <MudSelectItem T="int" Value="@module.ModuleId" Disabled="@(!module.IsActive && !isAssigned)">
+                                    @module.ModuleName@(!module.IsActive ? " (Inactive)" : string.Empty)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="bool"
+                                   @bind-Value="EditUser.IsActive"
+                                   Label="Status"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
+                            <MudSelectItem Value="true">Active</MudSelectItem>
+                            <MudSelectItem Value="false">Inactive</MudSelectItem>
+                        </MudSelect>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>

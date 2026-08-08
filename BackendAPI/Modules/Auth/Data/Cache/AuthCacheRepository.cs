@@ -38,6 +38,18 @@ public class AuthCacheRepository : IAuthRepository
 			cancellationToken);
 	}
 
+	public async Task<List<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
+		CancellationToken cancellationToken)
+	{
+		const string cacheKey = "ats_assigned_users";
+
+		return await _hybridCache.GetOrCreateAsync<List<ATSUserLookupDTO>>(
+			cacheKey,
+			async token => await _authRepository.GetATSAssignedUsersAsync(token),
+			tags: [UsersTag, AppSubRolesTag],
+			cancellationToken: cancellationToken);
+	}
+
 	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"submenus_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";

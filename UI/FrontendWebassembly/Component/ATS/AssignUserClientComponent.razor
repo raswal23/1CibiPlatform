@@ -1,0 +1,64 @@
+<MudDialog Class="um-dialog" Style="padding: 0;">
+    <DialogContent>
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Assign client</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Assign or reassign an ATS user to a client</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
+
+            <MudDivider />
+
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="AssignmentForm">
+                    <MudStack Spacing="2">
+                        <MudAutocomplete T="ATSUserLookupDTO"
+                                         Label="User"
+                                         Value="SelectedAuthUser"
+                                         ValueChanged="OnAuthUserChanged"
+                                         SearchFunc="SearchAuthUsers"
+                                         ToStringFunc="GetAuthUserText"
+                                         Required="true"
+                                         RequiredError="User is required"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         ShowProgressIndicator="true"
+                                         Error="@(!string.IsNullOrEmpty(AuthUserError))"
+                                         ErrorText="@AuthUserError"
+                                         Class="oneplatform-rounded-input" />
+
+                        <MudTextField Value="@(SelectedAuthUser?.UserEmail ?? string.Empty)"
+                                      Label="User Email"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int"
+                                   @bind-Value="Assignment.ClientId"
+                                   Label="Client"
+                                   Required="true"
+                                   RequiredError="Client is required"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@(!string.IsNullOrEmpty(ClientError))"
+                                   ErrorText="@ClientError"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var client in Clients.Where(client => client.IsActive))
+                            {
+                                <MudSelectItem T="int" Value="@client.ClientId">@client.ClientName</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save Assignment</MudButton>
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>

@@ -40,3 +40,5 @@ global using BuildingBlocks.SharedDTO;
 global using BuildingBlocks.SharedConstants;
 global using Auth.Data.Cache;
 global using BuildingBlocks.SharedServices.Implementations;
+global using Auth.Shared.Contracts;
+global using Auth.Shared.Implementations;

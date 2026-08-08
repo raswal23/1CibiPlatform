@@ -8,6 +8,8 @@ public interface IModuleManagementService
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);
 
+	Task<IReadOnlyList<ModuleDetailsDTO>> GetAllModulesAsync(CancellationToken cancellationToken = default);
+
 	Task<bool> AddModuleAsync(AddATSModuleDTO moduleDTO, CancellationToken cancellationToken = default);
 
 	Task<ModuleDetailsDTO> EditModuleAsync(EditATSModuleDTO moduleDTO, CancellationToken cancellationToken = default);

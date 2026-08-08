@@ -1,0 +1,353 @@
+@page "/s&i/ats/usermanagement"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@inject IATSUserManagementService UserManagementService
+@inject IClientManagementService ClientManagementService
+@inject IRoleManagementService RoleManagementService
+@inject IModuleManagementService ModuleManagementService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<PageTitle>ATS - User Management</PageTitle>
+
+<div style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AssignClient">
+        <MudIcon Icon="@Icons.Material.Filled.AssignmentInd" Class="mr-2" /> Assign Client
+    </MudButton>
+    <MudButton Class="theme-button theme-button-active" OnClick="AddNewUser">
+        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add User
+    </MudButton>
+</div>
+
+<TableComponent TItem="UserManagementViewModel"
+                @ref="usersTable"
+                Title="Users"
+                EnableSearch="true"
+                ColumnCount="10"
+                RowsPerPage="10"
+                LoadServerData="LoadUserData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string value) => searchString = value)">
+
+    <HeaderTemplate>
+        <MudTh Class="ats-table-cell-center">User</MudTh>
+        <MudTh Class="ats-table-cell-center">Email</MudTh>
+        <MudTh Class="ats-table-cell-center">Client</MudTh>
+        <MudTh Class="ats-table-cell-center">Site</MudTh>
+        <MudTh Class="ats-table-cell-center">Role</MudTh>
+        <MudTh Class="ats-table-cell-center">Modules</MudTh>
+        <MudTh Class="ats-table-cell-center">Status</MudTh>
+        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Actions</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="user">
+        <MudTd Class="ats-table-cell-center" DataLabel="User">@user.UserName</MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Email">
+            @if (!string.IsNullOrWhiteSpace(user.UserEmail))
+            {
+                <a href="@($"mailto:{user.UserEmail}")">@user.UserEmail</a>
+            }
+            else
+            {
+                <span>Auth user unavailable</span>
+            }
+        </MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Client">@user.ClientName</MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Site">@user.Site</MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Role">@user.RoleName</MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Modules">
+            @string.Join(", ", user.Modules.Select(module => module.ModuleName))
+        </MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Status">
+            <span class="@(user.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+                @(user.IsActive ? "Active" : "Disabled")
+            </span>
+        </MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
+            @user.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+            @user.UpdatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => EditUser(user))" />
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-console-empty-state">
+            <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Class="ats-console-empty-icon" />
+            <div class="ats-console-empty-title">No users</div>
+            <div class="ats-console-empty-sub">Create a new user to get started.</div>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+
+@code {
+    private const string SuperAdminEmail = "admin@cibi.com";
+    private string searchString = string.Empty;
+    private TableComponent<UserManagementViewModel>? usersTable;
+    private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
+    private IReadOnlyList<ClientDetailsDTO> clients = Array.Empty<ClientDetailsDTO>();
+    private IReadOnlyList<RoleDetailsDTO> roles = Array.Empty<RoleDetailsDTO>();
+    private IReadOnlyList<ModuleDetailsDTO> modules = Array.Empty<ModuleDetailsDTO>();
+    private IReadOnlyList<UserClientDetailsDTO> userClientAssignments = Array.Empty<UserClientDetailsDTO>();
+    private Dictionary<int, ClientDetailsDTO> clientLookup = new();
+    private Dictionary<int, RoleDetailsDTO> roleLookup = new();
+    private Dictionary<int, ModuleDetailsDTO> moduleLookup = new();
+    private Dictionary<Guid, ATSUserLookupDTO> authUserLookup = new();
+    private Dictionary<Guid, UserClientDetailsDTO> userClientAssignmentLookup = new();
+    private Task? referenceDataLoadTask;
+    private bool referenceDataLoaded;
+
+    private async Task<TableData<UserManagementViewModel>> LoadUserData(TableState state, CancellationToken cancellationToken)
+        => await LoadPagedDataAsync(state, async (page, pageSize) =>
+        {
+            var referenceTask = EnsureReferenceDataLoadedAsync(cancellationToken);
+            var usersTask = UserManagementService.GetUsersAsync(page, pageSize, searchString, cancellationToken);
+            await Task.WhenAll(referenceTask, usersTask);
+
+            var result = await usersTask;
+            var groupedUsers = result.Items
+                .GroupBy(user => user.UserId)
+                .Select(group =>
+                {
+                    var user = group.First();
+                    var authUser = authUserLookup.GetValueOrDefault(user.UserId);
+                    var clientId = userClientAssignmentLookup.GetValueOrDefault(user.UserId)?.ClientId ?? user.ClientId;
+                    var client = clientId.HasValue ? clientLookup.GetValueOrDefault(clientId.Value) : null;
+                    var role = roleLookup.GetValueOrDefault(user.RoleId);
+                    var moduleIds = group.Select(assignment => assignment.ModuleId).Distinct().ToHashSet();
+
+                    return new UserManagementViewModel
+                    {
+                        UserId = user.UserId,
+                        UserName = authUser?.UserName ?? "Auth user unavailable",
+                        UserEmail = authUser?.UserEmail ?? string.Empty,
+                        IsActive = user.IsActive,
+                        ClientId = clientId,
+                        ClientName = client?.ClientName ?? (clientId.HasValue ? $"Client #{clientId}" : "All Clients"),
+                        Site = user.Site,
+                        RoleId = user.RoleId,
+                        RoleName = role?.RoleName ?? $"Role #{user.RoleId}",
+                        ModuleIds = moduleIds,
+                        Modules = moduleIds
+                            .Select(moduleId => moduleLookup.GetValueOrDefault(moduleId))
+                            .Where(module => module is not null)
+                            .Cast<ModuleDetailsDTO>()
+                            .OrderBy(module => module.ModuleName)
+                            .ToList(),
+                        CreatedAt = group.Min(assignment => assignment.CreatedAt),
+                        UpdatedAt = group.Max(assignment => assignment.UpdatedAt)
+                    };
+                })
+                .OrderBy(user => user.UserName)
+                .ThenBy(user => user.UserEmail)
+                .ToArray();
+
+            return new PaginatedResult<UserManagementViewModel>(
+                result.PageIndex,
+                result.PageSize,
+                result.TotalRecords,
+                groupedUsers);
+        });
+
+    private async Task EnsureReferenceDataLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (referenceDataLoaded)
+            return;
+
+        referenceDataLoadTask ??= LoadReferenceDataAsync(cancellationToken);
+
+        try
+        {
+            await referenceDataLoadTask.WaitAsync(cancellationToken);
+            referenceDataLoaded = true;
+        }
+        catch
+        {
+            if (referenceDataLoadTask.IsCanceled || referenceDataLoadTask.IsFaulted)
+                referenceDataLoadTask = null;
+            throw;
+        }
+    }
+
+    private async Task LoadReferenceDataAsync(CancellationToken cancellationToken)
+    {
+        var authUsersTask = UserManagementService.GetAuthUsersAsync(cancellationToken);
+        var clientsTask = ClientManagementService.GetAllClientsAsync(cancellationToken);
+        var rolesTask = RoleManagementService.GetAllRolesAsync(cancellationToken);
+        var modulesTask = ModuleManagementService.GetAllModulesAsync(cancellationToken);
+        var assignmentsTask = UserManagementService.GetUserClientAssignmentsAsync(cancellationToken);
+        await Task.WhenAll(authUsersTask, clientsTask, rolesTask, modulesTask, assignmentsTask);
+
+        authUsers = (await authUsersTask).OrderBy(user => user.UserName).ToArray();
+        clients = (await clientsTask)
+            .GroupBy(client => client.ClientId)
+            .Select(group => group.First())
+            .OrderBy(client => client.ClientName)
+            .ToArray();
+        roles = (await rolesTask).OrderBy(role => role.RoleName).ToArray();
+        modules = (await modulesTask).OrderBy(module => module.ModuleName).ToArray();
+        userClientAssignments = (await assignmentsTask).ToArray();
+
+        clientLookup = clients.ToDictionary(client => client.ClientId);
+        roleLookup = roles.ToDictionary(role => role.RoleId);
+        moduleLookup = modules.ToDictionary(module => module.ModuleId);
+        authUserLookup = authUsers.ToDictionary(user => user.UserId);
+        userClientAssignmentLookup = userClientAssignments.ToDictionary(assignment => assignment.UserId);
+    }
+
+    private async Task AddNewUser()
+    {
+        if (!await EnsureReferencesForDialogAsync())
+            return;
+
+        var eligibleAuthUsers = authUsers
+            .Where(user =>
+                userClientAssignmentLookup.ContainsKey(user.UserId) ||
+                string.Equals(user.UserEmail, SuperAdminEmail, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        if (eligibleAuthUsers.Length == 0)
+        {
+            Snackbar.Add("Assign a client to an ATS user before adding user access.", Severity.Info);
+            return;
+        }
+
+        var parameters = new DialogParameters<AddUserComponent>
+        {
+            { component => component.AuthUsers, eligibleAuthUsers },
+            { component => component.Roles, roles },
+            { component => component.Modules, modules },
+            { component => component.Assignments, userClientAssignments }
+        };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddUserComponent>("Add User", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var addedUser = (AddATSUserDTO)result.Data!;
+                await UserManagementService.AddUserAsync(addedUser);
+                Snackbar.Add("User added successfully", Severity.Success);
+                if (usersTable?.TableRef is not null)
+                    await usersTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task AssignClient()
+    {
+        if (!await EnsureReferencesForDialogAsync())
+            return;
+
+        var parameters = new DialogParameters<AssignUserClientComponent>
+        {
+            { component => component.AuthUsers, authUsers },
+            { component => component.Clients, clients },
+            { component => component.Assignments, userClientAssignments }
+        };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AssignUserClientComponent>("Assign Client", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var assignment = await UserManagementService.AssignUserClientAsync(
+                    (AssignATSUserClientDTO)result.Data!);
+                userClientAssignments = userClientAssignments
+                    .Where(item => item.UserId != assignment.UserId)
+                    .Append(assignment)
+                    .OrderBy(item => item.UserId)
+                    .ToArray();
+                userClientAssignmentLookup[assignment.UserId] = assignment;
+
+                Snackbar.Add("Client assignment saved successfully", Severity.Success);
+                if (usersTable?.TableRef is not null)
+                    await usersTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditUser(UserManagementViewModel user)
+    {
+        if (!await EnsureReferencesForDialogAsync())
+            return;
+
+        var parameters = new DialogParameters<EditUserComponent>
+        {
+            { component => component.User, user },
+            { component => component.AuthUsers, authUsers },
+            { component => component.Clients, clients },
+            { component => component.Roles, roles },
+            { component => component.Modules, modules }
+        };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<EditUserComponent>("Edit User", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                await UserManagementService.EditUserAsync((EditATSUserDTO)result.Data!);
+                Snackbar.Add("User updated successfully", Severity.Success);
+                if (usersTable?.TableRef is not null)
+                    await usersTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task<bool> EnsureReferencesForDialogAsync()
+    {
+        try
+        {
+            await EnsureReferenceDataLoadedAsync(CancellationToken.None);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return false;
+        }
+    }
+}

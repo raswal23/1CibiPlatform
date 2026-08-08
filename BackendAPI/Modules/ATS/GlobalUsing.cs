@@ -10,6 +10,8 @@ global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
 global using ATS.Hubs;
 global using ATS.Constants;
+global using ATSUserLookupDTO = Auth.DTO.ATSUserLookupDTO;
+global using Auth.Shared.Contracts;
 global using ATS.Services.FilePDFService;
 global using ATS.Services.EmailService;
 global using ATS.BackgroundJobs.BulkSubmission;

@@ -8,6 +8,8 @@ public interface IRoleManagementService
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);
 
+	Task<IReadOnlyList<RoleDetailsDTO>> GetAllRolesAsync(CancellationToken cancellationToken = default);
+
 	Task<bool> AddRoleAsync(AddATSRoleDTO roleDTO, CancellationToken cancellationToken = default);
 
 	Task<RoleDetailsDTO> EditRoleAsync(EditATSRoleDTO roleDTO, CancellationToken cancellationToken = default);

@@ -33,6 +33,25 @@ public class ModuleManagementService : IModuleManagementService
 		return result!.Modules!;
 	}
 
+	public async Task<IReadOnlyList<ModuleDetailsDTO>> GetAllModulesAsync(CancellationToken cancellationToken = default)
+	{
+		const int pageSize = 100;
+		var pageNumber = 1;
+		var modules = new List<ModuleDetailsDTO>();
+
+		while (true)
+		{
+			var page = await GetModulesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageItems = page.Data.ToArray();
+			modules.AddRange(pageItems);
+
+			if (modules.Count >= page.Count || pageItems.Length == 0)
+				return modules;
+
+			pageNumber++;
+		}
+	}
+
 	public async Task<bool> AddModuleAsync(AddATSModuleDTO moduleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { module = moduleDTO };

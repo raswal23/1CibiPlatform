@@ -1,0 +1,106 @@
+<MudDialog Class="um-dialog" Style="padding: 0;">
+    <DialogContent>
+        <div class="um-dialog-shell">
+            <div class="um-dialog-header">
+                <div>
+                    <MudText Typo="Typo.h5" Class="um-dialog-title">Add user</MudText>
+                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Configure ATS role and module access</MudText>
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
+            </div>
+
+            <MudDivider />
+
+            <MudPaper Elevation="0" Class="um-dialog-body">
+                <MudForm @ref="UserForm">
+                    <MudStack Spacing="2">
+                        <MudAutocomplete T="ATSUserLookupDTO"
+                                         Label="User"
+                                         Value="SelectedAuthUser"
+                                         ValueChanged="OnAuthUserChanged"
+                                         SearchFunc="SearchAuthUsers"
+                                         ToStringFunc="GetAuthUserText"
+                                         Required="true"
+                                         RequiredError="User is required"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         ShowProgressIndicator="true"
+                                         Error="@(!string.IsNullOrEmpty(AuthUserError))"
+                                         ErrorText="@AuthUserError"
+                                         Class="oneplatform-rounded-input" />
+
+                        <MudTextField @bind-Value="User.UserName"
+                                      Label="User Name"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudTextField @bind-Value="User.UserEmail"
+                                      Label="User Email"
+                                      InputType="InputType.Email"
+                                      Disabled="true"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudTextField @bind-Value="User.Site"
+                                      Label="Site"
+                                      Required="true"
+                                      RequiredError="Site is required"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      MaxLength="100"
+                                      Class="oneplatform-rounded-input" />
+
+                        <MudSelect T="int"
+                                   @bind-Value="User.RoleId"
+                                   Label="Role"
+                                   Required="true"
+                                   RequiredError="Role is required"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var role in Roles.Where(role => role.IsActive))
+                            {
+                                <MudSelectItem T="int" Value="@role.RoleId">@role.RoleName</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="int"
+                                   MultiSelection="true"
+                                   SelectedValues="SelectedModuleIds"
+                                   SelectedValuesChanged="OnSelectedModuleIdsChanged"
+                                   MultiSelectionTextFunc="GetSelectedModulesText"
+                                   Label="Modules"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Error="@(!string.IsNullOrEmpty(ModuleError))"
+                                   ErrorText="@ModuleError"
+                                   Class="oneplatform-rounded-input">
+                            @foreach (var module in Modules.Where(module => module.IsActive))
+                            {
+                                <MudSelectItem T="int" Value="@module.ModuleId">@module.ModuleName</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudSelect T="bool"
+                                   @bind-Value="User.IsActive"
+                                   Label="Status"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="oneplatform-rounded-input">
+                            <MudSelectItem Value="true">Active</MudSelectItem>
+                            <MudSelectItem Value="false">Inactive</MudSelectItem>
+                        </MudSelect>
+                    </MudStack>
+                </MudForm>
+            </MudPaper>
+
+            <div class="um-dialog-footer">
+                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
+                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Add User</MudButton>
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>

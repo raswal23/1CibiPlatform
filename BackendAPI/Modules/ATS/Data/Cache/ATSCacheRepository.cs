@@ -12,6 +12,8 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string PackageTag = "package";
 	private readonly string RoleTag = "role";
 	private readonly string ModuleTag = "module";
+	private readonly string UserTag = "user";
+	private readonly string UserClientTag = "userclient";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -498,5 +500,99 @@ public class ATSCacheRepository : IATSRepository
 		if (result is not null)
 			await _hybridCache.RemoveByTagAsync(ModuleTag);
 		return result ?? new ModuleDetails();
+	}
+
+	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+		CancellationToken cancellationToken)
+	{
+		const string cacheKey = "user_client_assignments";
+		return await _hybridCache.GetOrCreateAsync<List<UserClientDetailsDTO>>(
+			cacheKey,
+			async token => (await _atsRepository.GetUserClientAssignmentsAsync(token)).ToList(),
+			tags: [UserClientTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<UserClientDetails?> GetUserClientAssignmentAsync(
+		Guid userId,
+		CancellationToken cancellationToken)
+	{
+		var cacheKey = $"user_client_assignment_{userId}";
+		return await _hybridCache.GetOrCreateAsync<UserClientDetails?>(
+			cacheKey,
+			async token => await _atsRepository.GetUserClientAssignmentAsync(userId, token),
+			tags: [UserClientTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<UserClientDetails> AssignUserClientAsync(
+		AssignUserClientDTO assignment,
+		CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.AssignUserClientAsync(assignment, cancellationToken);
+		await _hybridCache.RemoveByTagAsync(UserClientTag, cancellationToken);
+		await _hybridCache.RemoveByTagAsync(UserTag, cancellationToken);
+		return result;
+	}
+
+	public async Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"user_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (request, token) => await _atsRepository.GetUsersAsync(request, token),
+			null,
+			tags: [UserTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		var cacheKey = $"user_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+
+		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
+			cacheKey,
+			paginationRequest,
+			async (request, token) => await _atsRepository.SearchUsersAsync(request, token),
+			null,
+			tags: [UserTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<bool> AddUserAsync(IReadOnlyCollection<AddUserDTO> userDTOs, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.AddUserAsync(userDTOs, cancellationToken);
+		if (result)
+		{
+			await _hybridCache.RemoveByTagAsync(UserTag, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(UserClientTag, cancellationToken);
+		}
+		return result;
+	}
+
+	public async Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetUserAsync(userId, cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(
+		Guid userId,
+		CancellationToken cancellationToken)
+	{
+		var cacheKey = $"user_active_modules_{userId}";
+		return await _hybridCache.GetOrCreateAsync<List<int>>(
+			cacheKey,
+			async token => (await _atsRepository.GetActiveUserModuleIdsAsync(userId, token)).ToList(),
+			tags: [UserTag, ModuleTag],
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<UserDetails>> EditUserAsync(IReadOnlyCollection<EditUserDTO> userDTOs, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.EditUserAsync(userDTOs, cancellationToken);
+		await _hybridCache.RemoveByTagAsync(UserTag, cancellationToken);
+		return result;
 	}
 }

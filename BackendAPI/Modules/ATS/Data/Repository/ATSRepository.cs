@@ -1326,4 +1326,343 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return moduleDetails;
 	}
+
+	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+		CancellationToken cancellationToken)
+	{
+		return await _dbcontext.UserClientDetails
+			.AsNoTracking()
+			.OrderBy(assignment => assignment.UserId)
+			.Select(assignment => new UserClientDetailsDTO
+			{
+				UserId = assignment.UserId,
+				ClientId = assignment.ClientId,
+				CreatedAt = assignment.CreatedAt,
+				UpdatedAt = assignment.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<UserClientDetails?> GetUserClientAssignmentAsync(
+		Guid userId,
+		CancellationToken cancellationToken)
+	{
+		return await _dbcontext.UserClientDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(assignment => assignment.UserId == userId, cancellationToken);
+	}
+
+	public async Task<UserClientDetails> AssignUserClientAsync(
+		AssignUserClientDTO assignment,
+		CancellationToken cancellationToken)
+	{
+		var clientExists = await _dbcontext.ClientDetails
+			.AsNoTracking()
+			.AnyAsync(client =>
+				client.ClientId == assignment.ClientId && client.IsActive,
+				cancellationToken);
+		if (!clientExists)
+			throw new BadRequestException("The selected client does not exist or is inactive.");
+
+		var now = DateTime.UtcNow;
+		var userClient = await _dbcontext.UserClientDetails
+			.FirstOrDefaultAsync(item => item.UserId == assignment.UserId, cancellationToken);
+
+		if (userClient is null)
+		{
+			userClient = new UserClientDetails
+			{
+				UserId = assignment.UserId,
+				ClientId = assignment.ClientId,
+				CreatedAt = now,
+				UpdatedAt = now
+			};
+			await _dbcontext.UserClientDetails.AddAsync(userClient, cancellationToken);
+		}
+		else
+		{
+			userClient.ClientId = assignment.ClientId;
+			userClient.UpdatedAt = now;
+		}
+
+		var existingAccessRows = await _dbcontext.UserDetails
+			.Where(user => user.UserId == assignment.UserId)
+			.ToListAsync(cancellationToken);
+		foreach (var accessRow in existingAccessRows)
+		{
+			accessRow.ClientId = assignment.ClientId;
+			accessRow.UpdatedAt = now;
+		}
+
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return userClient;
+	}
+
+	public async Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		return await GetUserPageAsync(paginationRequest, applySearch: false, cancellationToken);
+	}
+
+	public async Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	{
+		return await GetUserPageAsync(paginationRequest, applySearch: true, cancellationToken);
+	}
+
+	public async Task<bool> AddUserAsync(IReadOnlyCollection<AddUserDTO> userDTOs, CancellationToken cancellationToken)
+	{
+		var users = userDTOs.ToArray();
+		if (users.Length == 0)
+			throw new BadRequestException("At least one module must be selected.");
+
+		var user = users[0];
+		var userEmail = user.UserEmail.Trim();
+		var alreadyExists = await _dbcontext.UserDetails
+			.AsNoTracking()
+			.AnyAsync(existing =>
+				existing.UserId == user.UserId ||
+				EF.Functions.ILike(existing.UserEmail, userEmail), cancellationToken);
+		if (alreadyExists)
+			throw new BadRequestException("The selected Auth user already exists in ATS User Management.");
+
+		if (user.ClientId.HasValue)
+		{
+			var clientExists = await _dbcontext.ClientDetails
+				.AsNoTracking()
+				.AnyAsync(client => client.ClientId == user.ClientId.Value && client.IsActive, cancellationToken);
+			if (!clientExists)
+				throw new BadRequestException("The selected client does not exist or is inactive.");
+		}
+
+		var roleExists = await _dbcontext.RoleDetails
+			.AsNoTracking()
+			.AnyAsync(role => role.RoleId == user.RoleId && role.IsActive, cancellationToken);
+		if (!roleExists)
+			throw new BadRequestException("The selected role does not exist or is inactive.");
+
+		var moduleIds = users.Select(item => item.ModuleId).Distinct().ToArray();
+		var activeModuleCount = await _dbcontext.ModuleDetails
+			.AsNoTracking()
+			.CountAsync(module => moduleIds.Contains(module.ModuleId) && module.IsActive, cancellationToken);
+		if (activeModuleCount != moduleIds.Length)
+			throw new BadRequestException("One or more selected modules do not exist or are inactive.");
+
+		var userId = user.UserId;
+		var now = DateTime.UtcNow;
+		if (user.ClientId.HasValue)
+		{
+			var hasClientAssignment = await _dbcontext.UserClientDetails
+				.AsNoTracking()
+				.AnyAsync(assignment => assignment.UserId == userId, cancellationToken);
+			if (!hasClientAssignment)
+			{
+				await _dbcontext.UserClientDetails.AddAsync(new UserClientDetails
+				{
+					UserId = userId,
+					ClientId = user.ClientId.Value,
+					CreatedAt = now,
+					UpdatedAt = now
+				}, cancellationToken);
+			}
+		}
+
+		var userDetails = moduleIds.Select(moduleId => new UserDetails
+		{
+			UserId = userId,
+			UserName = user.UserName.Trim(),
+			UserEmail = userEmail,
+			IsActive = user.IsActive,
+			ClientId = user.ClientId,
+			Site = user.Site.Trim(),
+			RoleId = user.RoleId,
+			ModuleId = moduleId,
+			CreatedAt = now,
+			UpdatedAt = now
+		}).ToArray();
+
+		await _dbcontext.UserDetails.AddRangeAsync(userDetails, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return true;
+	}
+
+	public async Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.UserDetails
+			.AsNoTracking()
+			.Where(user => user.UserId == userId)
+			.OrderBy(user => user.ModuleId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(
+		Guid userId,
+		CancellationToken cancellationToken)
+	{
+		return await _dbcontext.UserDetails
+			.AsNoTracking()
+			.Where(user => user.UserId == userId && user.IsActive && user.Module.IsActive)
+			.Select(user => user.ModuleId)
+			.Distinct()
+			.OrderBy(moduleId => moduleId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<UserDetails>> EditUserAsync(IReadOnlyCollection<EditUserDTO> userDTOs, CancellationToken cancellationToken)
+	{
+		var users = userDTOs.ToArray();
+		if (users.Length == 0)
+			throw new BadRequestException("At least one module must be selected.");
+
+		var userId = users[0].UserId;
+		var existingUsers = await _dbcontext.UserDetails
+			.Where(user => user.UserId == userId)
+			.ToListAsync(cancellationToken);
+		if (existingUsers.Count == 0)
+			throw new NotFoundException($"User with ID {userId} was not found.");
+
+		var user = users[0];
+		var userEmail = user.UserEmail.Trim();
+		var duplicateEmail = await _dbcontext.UserDetails
+			.AsNoTracking()
+			.AnyAsync(existing => existing.UserId != userId && EF.Functions.ILike(existing.UserEmail, userEmail), cancellationToken);
+		if (duplicateEmail)
+			throw new BadRequestException($"User with email '{userEmail}' already exists.");
+
+		var currentUser = existingUsers[0];
+		if (currentUser.ClientId != user.ClientId)
+		{
+			if (user.ClientId.HasValue)
+			{
+				var clientExists = await _dbcontext.ClientDetails
+					.AsNoTracking()
+					.AnyAsync(client => client.ClientId == user.ClientId.Value && client.IsActive, cancellationToken);
+				if (!clientExists)
+					throw new BadRequestException("The selected client does not exist or is inactive.");
+			}
+		}
+
+		if (currentUser.RoleId != user.RoleId)
+		{
+			var roleExists = await _dbcontext.RoleDetails
+				.AsNoTracking()
+				.AnyAsync(role => role.RoleId == user.RoleId && role.IsActive, cancellationToken);
+			if (!roleExists)
+				throw new BadRequestException("The selected role does not exist or is inactive.");
+		}
+
+		var selectedModuleIds = users.Select(item => item.ModuleId).Distinct().ToHashSet();
+		var existingModuleIds = existingUsers.Select(item => item.ModuleId).ToHashSet();
+		var newModuleIds = selectedModuleIds.Except(existingModuleIds).ToArray();
+		if (newModuleIds.Length > 0)
+		{
+			var activeModuleCount = await _dbcontext.ModuleDetails
+				.AsNoTracking()
+				.CountAsync(module => newModuleIds.Contains(module.ModuleId) && module.IsActive, cancellationToken);
+			if (activeModuleCount != newModuleIds.Length)
+				throw new BadRequestException("One or more newly selected modules do not exist or are inactive.");
+		}
+
+		var now = DateTime.UtcNow;
+		var createdAt = existingUsers.Min(existing => existing.CreatedAt);
+		var userName = user.UserName.Trim();
+		var site = user.Site.Trim();
+
+		var removedUsers = existingUsers.Where(existing => !selectedModuleIds.Contains(existing.ModuleId)).ToArray();
+		_dbcontext.UserDetails.RemoveRange(removedUsers);
+
+		foreach (var existingUser in existingUsers.Where(existing => selectedModuleIds.Contains(existing.ModuleId)))
+		{
+			existingUser.UserName = userName;
+			existingUser.UserEmail = userEmail;
+			existingUser.IsActive = user.IsActive;
+			existingUser.ClientId = user.ClientId;
+			existingUser.Site = site;
+			existingUser.RoleId = user.RoleId;
+			existingUser.UpdatedAt = now;
+		}
+
+		var addedUsers = newModuleIds.Select(moduleId => new UserDetails
+		{
+			UserId = userId,
+			UserName = userName,
+			UserEmail = userEmail,
+			IsActive = user.IsActive,
+			ClientId = user.ClientId,
+			Site = site,
+			RoleId = user.RoleId,
+			ModuleId = moduleId,
+			CreatedAt = createdAt,
+			UpdatedAt = now
+		}).ToArray();
+
+		await _dbcontext.UserDetails.AddRangeAsync(addedUsers, cancellationToken);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+
+		return existingUsers
+			.Where(existing => selectedModuleIds.Contains(existing.ModuleId))
+			.Concat(addedUsers)
+			.OrderBy(existing => existing.ModuleId)
+			.ToArray();
+	}
+
+	private async Task<PaginatedResult<UserDetailsDTO>> GetUserPageAsync(
+		PaginationRequest paginationRequest,
+		bool applySearch,
+		CancellationToken cancellationToken)
+	{
+		var usersQuery = _dbcontext.UserDetails.AsNoTracking();
+		if (applySearch)
+		{
+			var searchTerm = $"%{paginationRequest.SearchTerm}%";
+			usersQuery = usersQuery.Where(user =>
+				EF.Functions.ILike(user.UserName, searchTerm) ||
+				EF.Functions.ILike(user.UserEmail, searchTerm) ||
+				EF.Functions.ILike(user.Site, searchTerm));
+		}
+
+		var logicalUsers = usersQuery
+			.GroupBy(user => user.UserId)
+			.Select(group => new
+			{
+				UserId = group.Key,
+				UserName = group.Min(user => user.UserName),
+				UserEmail = group.Min(user => user.UserEmail)
+			});
+
+		var totalRecords = await logicalUsers.LongCountAsync(cancellationToken);
+		var userIds = await logicalUsers
+			.OrderBy(user => user.UserName)
+			.ThenBy(user => user.UserEmail)
+			.ThenBy(user => user.UserId)
+			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+			.Take(paginationRequest.PageSize)
+			.Select(user => user.UserId)
+			.ToListAsync(cancellationToken);
+
+		var items = await usersQuery
+			.Where(user => userIds.Contains(user.UserId))
+			.OrderBy(user => user.UserName)
+			.ThenBy(user => user.UserEmail)
+			.ThenBy(user => user.UserId)
+			.ThenBy(user => user.ModuleId)
+			.Select(user => new UserDetailsDTO
+			{
+				UserId = user.UserId,
+				UserName = user.UserName,
+				UserEmail = user.UserEmail,
+				IsActive = user.IsActive,
+				ClientId = user.ClientId,
+				Site = user.Site,
+				RoleId = user.RoleId,
+				ModuleId = user.ModuleId,
+				CreatedAt = user.CreatedAt,
+				UpdatedAt = user.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new PaginatedResult<UserDetailsDTO>(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			totalRecords,
+			items);
+	}
 }

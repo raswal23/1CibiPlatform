@@ -50,6 +50,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();
+		services.AddScoped<IUserManagementService, UserManagementService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

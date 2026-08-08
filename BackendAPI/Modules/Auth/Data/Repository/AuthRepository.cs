@@ -42,6 +42,42 @@ public class AuthRepository : IAuthRepository
 			);
 	}
 
+	public async Task<List<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
+		CancellationToken cancellationToken)
+	{
+		var users = await _dbcontext.AuthUsers
+			.AsNoTracking()
+			.Where(user =>
+				user.IsApproved &&
+				user.IsActive &&
+				_dbcontext.AuthUserAppRoles.Any(role =>
+					role.UserId == user.Id && role.Submenu == 7))
+			.OrderBy(user => user.LastName)
+			.ThenBy(user => user.FirstName)
+			.ThenBy(user => user.Id)
+			.Select(user => new
+			{
+				UserId = user.Id,
+				UserEmail = user.Email,
+				user.FirstName,
+				user.MiddleName,
+				user.LastName
+			})
+			.ToListAsync(cancellationToken);
+
+		return users.Select(user => new ATSUserLookupDTO
+		{
+			UserId = user.UserId,
+			UserEmail = user.UserEmail,
+			UserName = string.Join(" ", new[]
+			{
+				user.FirstName,
+				user.MiddleName,
+				user.LastName
+			}.Where(name => !string.IsNullOrWhiteSpace(name)))
+		}).ToList();
+	}
+
 	public async Task<PaginatedResult<UsersDTO>> GetUnapprovedUserAsync(
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken)

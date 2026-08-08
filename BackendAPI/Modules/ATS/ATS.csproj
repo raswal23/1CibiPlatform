@@ -36,8 +36,9 @@
 	  <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj" />
-  </ItemGroup>
+	  <ProjectReference Include="..\Auth\Auth.csproj" />
+	</ItemGroup>
 
 </Project>

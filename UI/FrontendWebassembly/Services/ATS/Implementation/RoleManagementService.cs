@@ -33,6 +33,25 @@ public class RoleManagementService : IRoleManagementService
 		return result!.Roles!;
 	}
 
+	public async Task<IReadOnlyList<RoleDetailsDTO>> GetAllRolesAsync(CancellationToken cancellationToken = default)
+	{
+		const int pageSize = 100;
+		var pageNumber = 1;
+		var roles = new List<RoleDetailsDTO>();
+
+		while (true)
+		{
+			var page = await GetRolesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageItems = page.Data.ToArray();
+			roles.AddRange(pageItems);
+
+			if (roles.Count >= page.Count || pageItems.Length == 0)
+				return roles;
+
+			pageNumber++;
+		}
+	}
+
 	public async Task<bool> AddRoleAsync(AddATSRoleDTO roleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { role = roleDTO };

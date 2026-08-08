@@ -2,8 +2,10 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IAuthService IAuthService
+@inject IATSUserManagementService UserManagementService
 @inject IJSRuntime JS
 @implements IDisposable
+@using FrontendWebassembly.ShareData.ATS
 
 @if (_isReady)
 {
@@ -29,74 +31,50 @@
                     </div>
                 </div>
 
-                <NavLink href="/s&i/ats/dashboard" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">◉</span>
-                    <span class="ats-console-nav-text">Dashboard</span>
-                </NavLink>
+                @foreach (var module in ModuleList.List
+                    .Where(item => item.Key <= 5 && _accessibleModuleIds.Contains(item.Key))
+                    .OrderBy(item => item.Key))
+                {
+                    <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                        <MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
+                        <span class="ats-console-nav-text">@module.Value.Name</span>
+                    </NavLink>
+                }
 
-                <NavLink href="/s&i/ats/neworder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">＋</span>
-                    <span class="ats-console-nav-text">New order</span>
-                </NavLink>
+                @{ var settingsModules = ModuleList.List
+                    .Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
+                    .OrderBy(item => item.Key)
+                    .ToArray(); }
 
-                <NavLink href="/s&i/ats/searchreport" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">📋</span>
-                    <span class="ats-console-nav-text">Orders & reports</span>
-                </NavLink>
+                @if (settingsModules.Length > 0)
+                {
+                    <div class="ats-console-nav-label">Manage</div>
 
-                <NavLink href="/s&i/ats/disputeorder" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">⚠</span>
-                    <span class="ats-console-nav-text">Disputes</span>
-                </NavLink>
+                    <div class="ats-console-nav-group">
+                        <button type="button"
+                                class="@($"ats-console-nav-item ats-console-nav-item-toggle {(_isSettingsExpanded ? "ats-console-nav-item-expanded" : string.Empty)}")"
+                                aria-expanded="@_isSettingsExpanded"
+                                @onclick="ToggleSettingsExpanded">
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Class="ats-console-nav-ic" />
+                            <span class="ats-console-nav-text">Settings</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ExpandMore"
+                                     Class="@( "ats-console-nav-chevron " + (_isSettingsExpanded ? "expanded" : "") )" />
+                        </button>
 
-                <NavLink href="/s&i/ats/withdrawn" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
-                    <span class="ats-console-nav-ic">↩</span>
-                    <span class="ats-console-nav-text">Withdrawn</span>
-                </NavLink>
-
-                <div class="ats-console-nav-label">Manage</div>
-
-                <div class="ats-console-nav-group">
-                    <button type="button"
-                            class="@($"ats-console-nav-item ats-console-nav-item-toggle {(_isSettingsExpanded ? "ats-console-nav-item-expanded" : string.Empty)}")"
-                            aria-expanded="@_isSettingsExpanded"
-                            @onclick="ToggleSettingsExpanded">
-                        <span class="ats-console-nav-ic">⚙</span>
-                        <span class="ats-console-nav-text">Settings</span>
-                        <MudIcon Icon="@Icons.Material.Filled.ExpandMore"
-                                 Class="@( "ats-console-nav-chevron " + (_isSettingsExpanded ? "expanded" : "") )" />
-                    </button>
-
-                    @if (_isSettingsExpanded)
-                    {
-                        <div class="ats-console-nav-submenu">
-                            <NavLink href="/s&i/ats/settings/packagemanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                <span class="ats-console-nav-ic">🗂</span>
-                                <span class="ats-console-nav-text">Package Management</span>
-                            </NavLink>
-
-                            <NavLink href="/s&i/ats/clientmanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                <span class="ats-console-nav-ic">🛡</span>
-                                <span class="ats-console-nav-text">Client Management</span>
-                            </NavLink>
-
-                            <NavLink href="/s&i/ats/rolemanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                <span class="ats-console-nav-ic">👥</span>
-                                <span class="ats-console-nav-text">Role Management</span>
-                            </NavLink>
-
-                            <NavLink href="/s&i/ats/modulemanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                <span class="ats-console-nav-ic">▦</span>
-                                <span class="ats-console-nav-text">Module Management</span>
-                            </NavLink>
-
-                            <NavLink href="/s&i/ats/settings/usermanagement" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                <span class="ats-console-nav-ic">👤</span>
-                                <span class="ats-console-nav-text">User Management</span>
-                            </NavLink>
-                        </div>
-                    }
-                </div>
+                        @if (_isSettingsExpanded)
+                        {
+                            <div class="ats-console-nav-submenu">
+                                @foreach (var module in settingsModules)
+                                {
+                                    <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+                                        <MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
+                                        <span class="ats-console-nav-text">@module.Value.Name</span>
+                                    </NavLink>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
             </div>
 
             <div class="ats-console-sidebar-bottom">
@@ -157,6 +135,7 @@ else
     private bool _isSidebarCollapsed;
     private bool _isMobileDrawerOpen;
     private bool _isMobileView;
+    private HashSet<int> _accessibleModuleIds = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -167,6 +146,8 @@ else
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+		_accessibleModuleIds = (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
 
         SetTitleFromUri();
         NavigationManager.LocationChanged += HandleLocationChanged;
@@ -229,20 +210,10 @@ else
     private void SetTitleFromUri()
     {
         var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
-
-        _pageTitle = relative switch
-        {
-            "s&i/ats/neworder" => "New order",
-            "s&i/ats/searchreport" => "Orders & reports",
-            "s&i/ats/disputeorder" => "Disputes",
-            "s&i/ats/candidates" => "Candidates",
-            "s&i/ats/settings/packagemanagement" => "Package Management",
-            "s&i/ats/clientmanagement" => "Client Management",
-            "s&i/ats/rolemanagement" => "Role Management",
-            "s&i/ats/modulemanagement" => "Module Management",
-            "s&i/ats/withdrawn" => "Withdrawn",
-            _ => "Dashboard"
-        };
+		var path = relative.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+		_pageTitle = ModuleList.List.Values
+			.FirstOrDefault(module => string.Equals(module.path, path, StringComparison.OrdinalIgnoreCase))
+			.Name ?? "Dashboard";
     }
 
     private void GoBackToOnePlatform()

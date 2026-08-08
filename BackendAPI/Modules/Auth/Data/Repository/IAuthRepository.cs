@@ -20,6 +20,7 @@ public interface IAuthRepository
 	Task<AuthRole> GetRoleAsync(int roleId);
 	Task<Authusers> GetUserAsync(string email);
 	Task<AuthAttempts> GetLockedUserAsync(Guid userId);
+	Task<List<ATSUserLookupDTO>> GetATSAssignedUsersAsync(CancellationToken cancellationToken);
 
 	// Search methods
 	Task<PaginatedResult<UsersDTO>> SearchUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
