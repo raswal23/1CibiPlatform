@@ -57,8 +57,8 @@
 
 		public virtual string HashToken(string token)
 		{
-			using var sha256 = SHA256.Create();
-			var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
+			using var sHA512 = SHA512.Create();
+			var hashBytes = sHA512.ComputeHash(Encoding.UTF8.GetBytes(token));
 			return Convert.ToBase64String(hashBytes);
 		}
 
