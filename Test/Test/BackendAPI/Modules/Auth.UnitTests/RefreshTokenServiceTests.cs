@@ -50,18 +50,15 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	}
 
 	[Fact]
-	public async Task GetNewAccessTokenAsync_ShouldThrow_WhenUserNotFound()
+	public async Task GetNewAccessTokenAsync_ShouldThrow_WhenCookieIsMissing()
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.CreateVersion7();
-		_fixture.MockAuthRepository.Setup(x => x.GetNewUserDataAsync(userId)).ReturnsAsync((UserDataDTO?)null);
-
 		// Act
-		Func<Task> act = async () => await service.GetNewAccessTokenAsync(userId);
+		Func<Task> act = async () => await service.GetNewAccessTokenAsync();
 
 		// Assert
-		await act.Should().ThrowAsync<NotFoundException>().WithMessage("Refresh Token is not found.");
+		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid refresh token.");
 	}
 
 	[Fact]
@@ -69,21 +66,16 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	{
 		// Arrange
 		var service = _fixture.RefreshTokenService;
-		var userId = Guid.CreateVersion7();
-		// stored hash is for a different token
-		var storedHash = service.HashToken("storedtoken");
-		var userData = new UserDataDTO(userId, "pw", "email@example.com", "F", "L", null, string.Empty, new List<int> { 1 }, new List<List<int>> { new List<int> { 1 } }, new List<int> { 1 });
+		var suppliedHash = service.HashToken("sampletoken");
+		_fixture.MockAuthRepository.Setup(x => x.FindActiveRefreshTokenByHashAsync(suppliedHash))
+			.ReturnsAsync((AuthRefreshToken?)null);
 
-		_fixture.MockAuthRepository.Setup(x => x.GetNewUserDataAsync(userId)).ReturnsAsync(userData);
-		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
-
-		// set cookie present to simulate reuse by adding Cookie header
 		var context = _fixture.MockHttpContextAccessor.Object.HttpContext!;
 		context.Request.Headers["Cookie"] = $"refreshKey=sampletoken";
 
 
 		// Act
-		Func<Task> act = async () => await service.GetNewAccessTokenAsync(userId);
+		Func<Task> act = async () => await service.GetNewAccessTokenAsync();
 
 		// Assert
 		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid refresh token.");
@@ -110,7 +102,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 
 
 		_fixture.MockAuthRepository.Setup(x => x.GetNewUserDataAsync(userId)).ReturnsAsync(userData);
-		_fixture.MockAuthRepository.Setup(x => x.SearchUserRefreshToken(userId, storedHash)).ReturnsAsync(authRefreshToken);
+		_fixture.MockAuthRepository.Setup(x => x.FindActiveRefreshTokenByHashAsync(storedHash)).ReturnsAsync(authRefreshToken);
 		_fixture.MockAuthRepository.Setup(x => x.UpdateRefreshTokenAsync(It.IsAny<AuthRefreshToken>())).ReturnsAsync(true);
 		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
 
@@ -119,7 +111,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 		context.Request.Headers["Cookie"] = $"refreshKey={refreshToken}";
 
 		// Act
-		var result = await service.GetNewAccessTokenAsync(userId);
+		var result = await service.GetNewAccessTokenAsync();
 
 		// Assert
 		result.Should().NotBeNull();
@@ -150,7 +142,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 		};
 
 		_fixture.MockAuthRepository.Setup(x => x.GetNewUserDataAsync(userId)).ReturnsAsync(userData);
-		_fixture.MockAuthRepository.Setup(x => x.SearchUserRefreshToken(userId, storedHash)).ReturnsAsync(authRefreshToken);
+		_fixture.MockAuthRepository.Setup(x => x.FindActiveRefreshTokenByHashAsync(storedHash)).ReturnsAsync(authRefreshToken);
 		_fixture.MockAuthRepository.Setup(x => x.UpdateRefreshTokenAsync(It.IsAny<AuthRefreshToken>())).ReturnsAsync(false);
 		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
 
@@ -159,7 +151,7 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 		context.Request.Headers["Cookie"] = $"refreshKey={refreshToken}";
 
 		// Act
-		Func<Task> act = async () => await service.GetNewAccessTokenAsync(userId);
+		Func<Task> act = async () => await service.GetNewAccessTokenAsync();
 
 		// Assert
 		await act.Should().ThrowAsync<Exception>().WithMessage("Failed to update refresh token.");

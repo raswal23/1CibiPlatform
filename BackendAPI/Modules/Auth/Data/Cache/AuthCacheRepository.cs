@@ -473,6 +473,11 @@ public class AuthCacheRepository : IAuthRepository
 		return _authRepository.SearchUserRefreshToken(userId, refreshToken);
 	}
 
+	public Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash)
+	{
+		return _authRepository.FindActiveRefreshTokenByHashAsync(tokenHash);
+	}
+
 	public async Task<Authusers> GetUserAsync(string email)
 	{
 		return await _authRepository.GetUserAsync(email);

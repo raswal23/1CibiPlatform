@@ -983,4 +983,13 @@ public class AuthRepository : IAuthRepository
 
 		return userRefreshTokenData;
 	}
+
+	public async Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash)
+	{
+		return (await _dbcontext.AuthRefreshToken
+			.FirstOrDefaultAsync(token =>
+				token.TokenHash == tokenHash &&
+				token.IsActive &&
+				token.ExpiresAt > DateTime.UtcNow))!;
+	}
 }

@@ -31,6 +31,7 @@ public interface IAuthRepository
 	Task<PaginatedResult<RolesDTO>> SearchRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<AuthAttempts>> SearchLockedUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<AuthRefreshToken> SearchUserRefreshToken(Guid userId, string refreshToken);
+	Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash);
 
 	// Delete methods
 	Task<bool> DeleteLockedUserAsync(AuthAttempts authAttempts);

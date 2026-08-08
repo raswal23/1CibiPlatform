@@ -15,18 +15,15 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task GetNewAccessToken_ShouldThrowNotFound_WhenUserDoesNotExist()
+	public async Task GetNewAccessToken_ShouldThrowUnauthorized_WhenRefreshCookieIsMissing()
 	{
-		// Arrange
-		var nonExistentUserId = Guid.CreateVersion7();
-
-		var command = new GetNewAccessTokenCommand(nonExistentUserId);
+		var command = new GetNewAccessTokenCommand();
 
 		// Act
 		Func<Task> act = async () => { await _sender.Send(command); };
 
 		// Assert
-		await act.Should().ThrowAsync<NotFoundException>().WithMessage("Refresh Token is not found.");
+		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid refresh token.");
 	}
 
 	[Fact]
@@ -60,7 +57,9 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 
 
-		var command = new GetNewAccessTokenCommand(user.Id);
+		var refreshCookieName = _configuration["AuthWeb:AuthWebHttpCookieOnlyKey"]!;
+		_httpContextAccessor.HttpContext!.Request.Headers.Cookie = $"{refreshCookieName}={refreshToken}";
+		var command = new GetNewAccessTokenCommand();
 
 		// Act
 		var result = await _sender.Send(command);
@@ -77,11 +76,10 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 
 
 	[Fact]
-	public async Task GetNewAccessToken_ShouldThrowNotFoundException_WhenUserIsInvalid()
+	public async Task GetNewAccessToken_ShouldThrowUnauthorized_WhenRefreshCookieIsInvalid()
 	{
 		// Arrange
 		var olduUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-		var differentUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 		var user = new Authusers
 		{
 			Id = olduUserId,
@@ -108,13 +106,15 @@ public class GetAccessTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.AuthRefreshToken.Add(authRefresh);
 		await _dbContext.SaveChangesAsync();
 
-		var command = new GetNewAccessTokenCommand(differentUserId);
+		var refreshCookieName = _configuration["AuthWeb:AuthWebHttpCookieOnlyKey"]!;
+		_httpContextAccessor.HttpContext!.Request.Headers.Cookie = $"{refreshCookieName}=invalid-refresh-token";
+		var command = new GetNewAccessTokenCommand();
 
 		// Act
 		Func<Task> act = async () => { await _sender.Send(command); };
 
 		// Assert
-		await act.Should().ThrowAsync<NotFoundException>().WithMessage("Refresh Token is not found.");
+		await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid refresh token.");
 	}
 
 	private static string ComputeSha256Base64(string input)

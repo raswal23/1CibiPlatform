@@ -13,6 +13,7 @@
 		private readonly string _refreshTokenKey;
 		private readonly bool _isHttps;
 		private readonly int _cookieExpiryinDaysKey;
+		private readonly double _expiryinMinutesKeyInCookie;
 
 		public RefreshTokenService(
 			IAuthRepository authRepository,
@@ -29,6 +30,7 @@
 
 			_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
 			_expiryinMinutesKey = double.Parse(_configuration.GetSection("Jwt:ExpiryInMinutes").Value! ?? "");
+			_expiryinMinutesKeyInCookie = _expiryinMinutesKey + 30;
 			_refreshTokenKey = _configuration.GetSection("AuthWeb:AuthWebHttpCookieOnlyKey").Value! ?? "";
 			_isHttps = bool.Parse(_configuration.GetSection("AuthWeb:isHttps").Value!);
 			_cookieExpiryinDaysKey = _configuration.GetValue<int>("AuthWeb:CookieExpiryInDayIsRememberMe");
@@ -77,17 +79,35 @@
 			throw new NotImplementedException();
 		}
 
-		public virtual async Task<LoginResponseWebDTO> GetNewAccessTokenAsync(Guid userId)
+		public virtual async Task<LoginResponseWebDTO> GetNewAccessTokenAsync()
 		{
-
 			var logContext = new
 			{
 				Action = "GettingNewAccessToken",
 				Step = "StartGetting",
-				userId = userId,
 				Timestamp = DateTime.UtcNow
 			};
 
+			var rawRefreshToken = _httpContextAccessor.HttpContext?
+			   .Request.Cookies[_refreshTokenKey];
+
+			if (string.IsNullOrWhiteSpace(rawRefreshToken))
+			{
+				_logger.LogWarning("Refresh token cookie is missing {@Context}", logContext);
+				throw new UnauthorizedAccessException("Invalid refresh token.");
+			}
+
+			var refreshTokenHash = HashToken(rawRefreshToken);
+			var storedRefreshToken = await _authRepository
+				.FindActiveRefreshTokenByHashAsync(refreshTokenHash);
+
+			if (storedRefreshToken is null)
+			{
+				_logger.LogWarning("Refresh token is invalid or expired {@Context}", logContext);
+				throw new UnauthorizedAccessException("Invalid refresh token.");
+			}
+
+			var userId = storedRefreshToken.UserId;
 			var userData = await _authRepository.GetNewUserDataAsync(userId);
 
 			if (userData == null)
@@ -101,50 +121,32 @@
 			var subMenuId = userData.SubMenuId;
 
 
-			// produce access token
+			// Generate the replacement tokens only after the cookie has been
+			// authenticated and the user id has been derived from its DB record.
 			var loginDTO = userData.Adapt<LoginDTO>();
 			string jwtToken = this._jWTService.GetAccessToken(loginDTO);
-			SetAccessTokenCookie(jwtToken);
 
-			// reuse refresh token
 			var (newRefreshToken, newRefreshTokenHash) = this.GenerateRefreshToken();
-			SetRefreshTokenCookie(newRefreshToken, false);
 
 			var name = !string.IsNullOrEmpty(userData.MiddleName) ?
 				  $"{userData.FirstName} {userData.MiddleName} {userData.LastName}" :
 				  $"{userData.FirstName} {userData.LastName}";
 
-			var authRefreshToken = new AuthRefreshToken
-			{
-				UserId = userData.Id,
-				TokenHash = newRefreshTokenHash,
-				CreatedAt = DateTime.UtcNow,
-				ExpiresAt = DateTime.UtcNow.AddDays(7),
-				IsActive = true
-			};
+			storedRefreshToken.TokenHash = newRefreshTokenHash;
+			storedRefreshToken.CreatedAt = DateTime.UtcNow;
+			storedRefreshToken.ExpiresAt = DateTime.UtcNow.AddMinutes(_expiryinMinutesKeyInCookie);
+			storedRefreshToken.IsActive = true;
 
-			var userDataRefreshToken = await _authRepository.SearchUserRefreshToken(
-				userData.Id,
-				userData.refreshToken);
-
-			if (userDataRefreshToken is null)
-			{
-				_logger.LogWarning("No matching refresh token found for user: {@Context}", logContext);
-				throw new UnauthorizedAccessException("Invalid refresh token.");
-			}
-
-			userDataRefreshToken.TokenHash = newRefreshTokenHash;
-			userDataRefreshToken.CreatedAt = DateTime.UtcNow;
-			userDataRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(7);
-
-			// add validation
-			var isUpdated = await _authRepository.UpdateRefreshTokenAsync(authRefreshToken);
+			var isUpdated = await _authRepository.UpdateRefreshTokenAsync(storedRefreshToken);
 
 			if (!isUpdated)
 			{
 				_logger.LogError("Failed to update refresh token for user: {@Context}", logContext);
 				throw new Exception("Failed to update refresh token.");
 			}
+
+			SetAccessTokenCookie(jwtToken);
+			SetRefreshTokenCookie(newRefreshToken, false);
 
 			// reuse existing refresh token if not expired
 			return new LoginResponseWebDTO(
@@ -177,7 +179,7 @@
 				HttpOnly = true,
 				Secure = _isHttps,
 				SameSite = SameSiteMode.None,
-				Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKey)
+				Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKeyInCookie)
 			};
 
 
@@ -196,7 +198,7 @@
 				HttpOnly = true,
 				Secure = _isHttps,
 				SameSite = SameSiteMode.Lax,
-				Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryinMinutesKey))
+				Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryinMinutesKeyInCookie))
 			};
 
 
