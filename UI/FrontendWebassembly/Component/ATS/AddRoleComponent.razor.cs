@@ -9,7 +9,11 @@ public partial class AddRoleComponent
 	[Parameter]
 	public AddATSRoleDTO Role { get; set; } = new() { IsActive = true };
 
+	private int DescriptionLength => Role.RoleDescription?.Length ?? 0;
+
 	void Cancel() => AddRoleDialog!.Cancel();
+
+	private void ToggleStatus() => Role.IsActive = !Role.IsActive;
 
 	async Task Submit()
 	{

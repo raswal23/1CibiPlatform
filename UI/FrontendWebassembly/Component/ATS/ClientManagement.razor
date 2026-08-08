@@ -1,6 +1,7 @@
 @page "/s&i/ats/clientmanagement"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(7)]
 @inject IClientManagementService ClientManagementService
 @inject IPackageManagementService PackageManagementService
 @inject ISnackbar Snackbar
@@ -8,17 +9,24 @@
 
 <PageTitle>ATS - Client Management</PageTitle>
 
-<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
-    <MudButton Class="theme-button theme-button-active" OnClick="AddNewClient">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Client
-    </MudButton>
+<div class="ats-management-page">
+<div class="ats-management-actions">
+    <button type="button" class="ats-management-button" @onclick="AddNewClient">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+        </svg>
+        Add client
+    </button>
 </div>
 
 
 <TableComponent TItem="ClientManagementViewModel"
                 @ref="clientsTable"
                 Title="Clients"
+                ContainerClass="ats-management-card ats-client-card"
                 EnableSearch="true"
+                SearchLabel=""
+                SearchPlaceholder="Search clients"
                 ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadClientData"
@@ -36,48 +44,70 @@
     </HeaderTemplate>
 
     <RowTemplate Context="c">
-        <MudTd Class="ats-table-cell-center" DataLabel="Client Name">
-            @c.ClientName
+        <MudTd Class="ats-management-primary" DataLabel="Client Name">
+            <div class="ats-management-client-cell">
+                <span class="ats-management-client-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
+                    </svg>
+                </span>
+                <span style="font-weight: 600;">@c.ClientName</span>
+            </div>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Description">
+        <MudTd Class="ats-management-description" DataLabel="Description">
             @c.ClientDescription
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Packages">
-            @string.Join(", ", c.Packages.Select(package => package.PackageName))
+            <div class="ats-management-chips">
+                @foreach (var package in c.Packages.Take(4))
+                {
+                    <span class="ats-management-chip">@package.PackageName</span>
+                }
+                @if (c.Packages.Count > 4)
+                {
+                    <span class="ats-management-chip ats-management-chip-more">+@(c.Packages.Count - 4) more</span>
+                }
+            </div>
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
-            <span class="@(c.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+            <span class="ats-management-status @(!c.IsActive ? "is-disabled" : string.Empty)">
                 @(c.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
+        <MudTd Class="ats-management-date" DataLabel="Created Date">
             @c.CreatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+        <MudTd Class="ats-management-date" DataLabel="Updated Date">
             @c.UpdatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           OnClick="@(() => EditClient(c))" />
+            <button type="button"
+                    class="ats-management-edit ats-management-edit-button"
+                    aria-label="Edit @c.ClientName"
+                    @onclick="@(() => EditClient(c))">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </button>
         </MudTd>
     </RowTemplate>
 
     <NoRecordsTemplate>
-        <div class="ats-console-empty-state">
-            <div class="ats-console-empty-icon">👥</div>
-            <div class="ats-console-empty-title">No clients</div>
-            <div class="ats-console-empty-sub">Create a new client to get started.</div>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Business" />
+            <strong>No clients</strong>
+            <span>Create a new client to get started.</span>
         </div>
     </NoRecordsTemplate>
 </TableComponent>
+</div>
 
 @code {
     private string searchString = string.Empty;

@@ -1,6 +1,6 @@
 ﻿@typeparam TItem
 
-<div class="responsive-table-container">
+<div class="@($"responsive-table-container {ContainerClass}")">
 @if (LoadServerData != null)
     {
         <MudTable T="TItem"
@@ -17,7 +17,7 @@
         Style="border-radius: 12px; padding: 10px;">
 
             <ToolBarContent>
-                <div style="width:100%;">
+                <div class="table-component-toolbar" style="width:100%;">
 
                     @if (!string.IsNullOrWhiteSpace(Title))
                     {
@@ -28,23 +28,24 @@
                         </MudText>
                     }
 
-                    <div style="display:flex; align-items:center; width:100%; gap:12px;">
+                    <div class="table-component-toolbar-row" style="display:flex; align-items:center; width:100%; gap:12px;">
 
                         @if (ToolBarLeft != null)
                         {
-                            <div style="width:350px; flex-shrink:0;">
+                            <div class="table-component-toolbar-left" style="width:350px; flex-shrink:0;">
                                 @ToolBarLeft
                             </div>
                         }
 
                         @if (EnableSearch)
                         {
-                            <div style="margin-left:auto; width:500px;">
+                            <div class="table-component-search" style="margin-left:auto; width:500px;">
                                 <MudTextField T="string"
                                               Value="SearchString"
                                               ValueChanged="@(EventCallback.Factory.Create<string>(this, SearchChanged))"
                                               ValueExpression="(() => SearchString)"
-                                              Label="Search"
+                                              Label="@SearchLabel"
+                                              Placeholder="@SearchPlaceholder"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Adornment="Adornment.Start"

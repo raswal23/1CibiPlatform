@@ -1,6 +1,7 @@
 ﻿@page "/s&i/ats/neworder"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(2)]
 @inject IJSRuntime JS
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject ISnackbar Snackbar

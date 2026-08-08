@@ -1,22 +1,30 @@
 @page "/s&i/ats/rolemanagement"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(8)]
 @inject IRoleManagementService RoleManagementService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Role Management</PageTitle>
 
-<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
-    <MudButton Class="theme-button theme-button-active" OnClick="AddNewRole">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add Role
-    </MudButton>
+<div class="ats-management-page">
+<div class="ats-management-actions">
+    <button type="button" class="ats-management-button" @onclick="AddNewRole">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+        </svg>
+        Add role
+    </button>
 </div>
 
 <TableComponent TItem="RoleDetailsDTO"
                 @ref="rolesTable"
                 Title="Roles"
+                ContainerClass="ats-management-card ats-role-card"
                 EnableSearch="true"
+                SearchLabel=""
+                SearchPlaceholder="Search roles"
                 ColumnCount="6"
                 RowsPerPage="10"
                 LoadServerData="LoadRoleData"
@@ -33,44 +41,57 @@
     </HeaderTemplate>
 
     <RowTemplate Context="r">
-        <MudTd Class="ats-table-cell-center" DataLabel="Role Name">
-            @r.RoleName
+        <MudTd Class="ats-management-primary" DataLabel="Role Name">
+            <div class="ats-management-role-cell">
+                <span class="ats-management-role-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 3l7 3v5c0 4.6-3 7.9-7 10-4-2.1-7-5.4-7-10V6l7-3Z" />
+                    </svg>
+                </span>
+                    <span style="font-weight: 600;">@r.RoleName</span>
+            </div>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Role Description">
+        <MudTd Class="ats-management-description" DataLabel="Role Description">
             @r.RoleDescription
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
-            <span class="@(r.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+            <span class="ats-management-status @(!r.IsActive ? "is-disabled" : string.Empty)">
                 @(r.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
+        <MudTd Class="ats-management-date" DataLabel="Created Date">
             @r.CreatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+        <MudTd Class="ats-management-date" DataLabel="Updated Date">
             @r.UpdatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           OnClick="@(() => EditRole(r))" />
+            <button type="button"
+                    class="ats-management-edit ats-management-edit-button"
+                    aria-label="Edit @r.RoleName role"
+                    @onclick="@(() => EditRole(r))">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </button>
         </MudTd>
     </RowTemplate>
 
     <NoRecordsTemplate>
-        <div class="ats-console-empty-state">
-            <div class="ats-console-empty-icon">👥</div>
-            <div class="ats-console-empty-title">No roles</div>
-            <div class="ats-console-empty-sub">Create a new role to get started.</div>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Group" />
+            <strong>No roles</strong>
+            <span>Create a new role to get started.</span>
         </div>
     </NoRecordsTemplate>
 </TableComponent>
+</div>
 
 @code {
     private string searchString = string.Empty;

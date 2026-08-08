@@ -14,6 +14,9 @@ public partial class NewOrderComponent
 
 	protected override async Task OnInitializedAsync()
 	{
+		await base.OnInitializedAsync();
+		if (!IsPageAuthorized)
+			return;
 
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();

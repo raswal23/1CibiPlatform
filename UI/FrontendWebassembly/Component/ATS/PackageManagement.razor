@@ -1,23 +1,30 @@
 @page "/s&i/ats/packagemanagement"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(6)]
 @inject IPackageManagementService PackageManagementService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Package Management</PageTitle>
 
-<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
-    <MudButton Class="theme-button theme-button-active" OnClick="AddNewPackage">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
-        Add Package
-    </MudButton>
+<div class="ats-management-page">
+<div class="ats-management-actions">
+    <button type="button" class="ats-management-button" @onclick="AddNewPackage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+        </svg>
+        Add package
+    </button>
 </div>
 
 <TableComponent TItem="PackageDetailsDTO"
                 @ref="packagesTable"
                 Title="Packages"
+                ContainerClass="ats-management-card"
                 EnableSearch="true"
+                SearchLabel=""
+                SearchPlaceholder="Search packages"
                 ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadPackageData"
@@ -35,48 +42,49 @@
     </HeaderTemplate>
 
     <RowTemplate Context="p">
-        <MudTd Class="ats-table-cell-center" DataLabel="Package Name">
+        <MudTd Class="ats-management-primary" DataLabel="Package Name">
             @p.PackageName
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Description">
+        <MudTd Class="ats-management-description" DataLabel="Description">
             @p.PackageDescription
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Follow Up Email">
+        <MudTd Class="ats-management-description" DataLabel="Follow Up Email">
             @p.FollowUpEmail
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Status">
-            <span class="@(p.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
+            <span class="ats-management-status @(!p.IsActive ? "is-disabled" : string.Empty)">
                 @(p.IsActive ? "Active" : "Disabled")
             </span>
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
+        <MudTd Class="ats-management-date" DataLabel="Created Date">
             @p.CreatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
-        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
+        <MudTd Class="ats-management-date" DataLabel="Updated Date">
             @p.UpdatedAt.ToString("MMMM dd, yyyy")
         </MudTd>
 
         <MudTd Class="ats-table-cell-center" DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                           Color="Color.Primary"
+                           Class="ats-management-edit"
                            Size="Size.Small"
                            OnClick="@(() => EditPackage(p))" />
         </MudTd>
     </RowTemplate>
 
     <NoRecordsTemplate>
-        <div class="ats-console-empty-state">
-            <div class="ats-console-empty-icon">📦</div>
-            <div class="ats-console-empty-title">No packages</div>
-            <div class="ats-console-empty-sub">Create a new package to get started.</div>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory2" />
+            <strong>No packages</strong>
+            <span>Create a new package to get started.</span>
         </div>
     </NoRecordsTemplate>
 </TableComponent>
+</div>
 
 @code {
     private string searchString = string.Empty;

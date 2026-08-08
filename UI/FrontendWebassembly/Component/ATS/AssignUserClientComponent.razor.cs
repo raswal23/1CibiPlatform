@@ -20,6 +20,13 @@ public partial class AssignUserClientComponent
 	private ATSUserLookupDTO? SelectedAuthUser { get; set; }
 	private string? AuthUserError { get; set; }
 	private string? ClientError { get; set; }
+	private string PreviewInitial => string.IsNullOrWhiteSpace(SelectedAuthUser?.UserEmail)
+		? "?"
+		: char.ToUpperInvariant(SelectedAuthUser.UserEmail[0]).ToString();
+	private string PreviewUserEmail => SelectedAuthUser?.UserEmail ?? "No user selected";
+	private string PreviewClientName => Clients
+		.FirstOrDefault(client => client.ClientId == Assignment.ClientId)?.ClientName
+		?? "No client selected";
 
 	private void Cancel() => AssignClientDialog!.Cancel();
 
@@ -44,6 +51,12 @@ public partial class AssignUserClientComponent
 			: Assignments.FirstOrDefault(item => item.UserId == authUser.UserId)?.ClientId ?? 0;
 		AuthUserError = authUser is null ? "User is required" : null;
 		ClientError = null;
+	}
+
+	private void OnClientChanged(int clientId)
+	{
+		Assignment.ClientId = clientId;
+		ClientError = clientId <= 0 ? "Client is required" : null;
 	}
 
 	private Task<IEnumerable<ATSUserLookupDTO>> SearchAuthUsers(

@@ -2,6 +2,7 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IAuthService IAuthService
+@inject IAccessService AccessService
 @inject IATSUserManagementService UserManagementService
 @inject IJSRuntime JS
 @implements IDisposable
@@ -9,6 +10,10 @@
 
 @if (_isReady)
 {
+    <CascadingValue TValue="IReadOnlySet<int>"
+                    Name="ATSAccessibleModuleIds"
+                    Value="_accessibleModuleIds"
+                    IsFixed="true">
     <div class="@($"ats-console {(_isSidebarCollapsed ? "ats-console-collapsed" : string.Empty)} {(_isMobileDrawerOpen ? "ats-console-mobile-drawer-open" : string.Empty)}")">
         @if (_isMobileDrawerOpen)
         {
@@ -115,6 +120,7 @@
             </div>
         </div>
     </div>
+    </CascadingValue>
 }
 else
 {
@@ -141,13 +147,24 @@ else
     {
         var isAuthenticated = await IAuthService.IsAuthenticated();
 
-        if (!isAuthenticated)
+		if (!isAuthenticated)
         {
             NavigationManager.NavigateTo("/login", true);
             return;
         }
 
+		if (!await AccessService.HasAccessAsync(6, 7))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
+
 		_accessibleModuleIds = (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
+		if (!CanAccessRoute(NavigationManager.Uri))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
 
         SetTitleFromUri();
         NavigationManager.LocationChanged += HandleLocationChanged;
@@ -167,6 +184,12 @@ else
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+		if (!CanAccessRoute(e.Location))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
+
         SetTitleFromUri();
 
         if (_isMobileView)
@@ -176,6 +199,30 @@ else
 
         InvokeAsync(StateHasChanged);
     }
+
+	private bool CanAccessRoute(string uri)
+	{
+		var relativePath = NavigationManager.ToBaseRelativePath(uri)
+			.Split('?', '#')[0]
+			.Trim('/');
+		const string atsRoot = "s&i/ats";
+
+		if (string.Equals(relativePath, atsRoot, StringComparison.OrdinalIgnoreCase))
+			return _accessibleModuleIds.Count > 0;
+
+		if (!relativePath.StartsWith($"{atsRoot}/", StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		var routeSegment = relativePath[(atsRoot.Length + 1)..]
+			.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+		var module = ModuleList.List.FirstOrDefault(item =>
+			string.Equals(item.Value.path, routeSegment, StringComparison.OrdinalIgnoreCase));
+		if (module.Key > 0)
+			return _accessibleModuleIds.Contains(module.Key);
+
+		return string.Equals(routeSegment, "settings", StringComparison.OrdinalIgnoreCase) &&
+			_accessibleModuleIds.Overlaps([6, 7, 8]);
+	}
 
     private async Task ToggleSidebar()
     {

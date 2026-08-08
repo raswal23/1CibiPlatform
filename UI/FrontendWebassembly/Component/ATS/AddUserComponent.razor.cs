@@ -27,6 +27,24 @@ public partial class AddUserComponent
 	private ATSUserLookupDTO? SelectedAuthUser { get; set; }
 	private string? AuthUserError { get; set; }
 	private string? ModuleError { get; set; }
+	private IEnumerable<ModuleDetailsDTO> SelectedModules => Modules
+		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+	private string UserInitials
+	{
+		get
+		{
+			if (string.IsNullOrWhiteSpace(User.UserName))
+				return "?";
+
+			var nameParts = User.UserName.Split(
+				' ',
+				StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+			if (nameParts.Length == 1)
+				return nameParts[0][..Math.Min(2, nameParts[0].Length)].ToUpperInvariant();
+
+			return $"{nameParts[0][0]}{nameParts[1][0]}".ToUpperInvariant();
+		}
+	}
 
 	private void Cancel() => AddUserDialog!.Cancel();
 
@@ -97,11 +115,17 @@ public partial class AddUserComponent
 		ModuleError = SelectedModuleIds.Count == 0 ? "At least one module is required" : null;
 	}
 
-	private string GetSelectedModulesText(IReadOnlyList<string> selectedValues)
+	private void ToggleModule(int moduleId)
 	{
-		var selectedIds = SelectedModuleIds.ToHashSet();
-		return string.Join(", ", Modules
-			.Where(module => selectedIds.Contains(module.ModuleId))
-			.Select(module => module.ModuleName));
+		var moduleIds = SelectedModuleIds.ToHashSet();
+		if (!moduleIds.Add(moduleId))
+			moduleIds.Remove(moduleId);
+
+		OnSelectedModuleIdsChanged(moduleIds);
 	}
+
+	private void RemoveModule(int moduleId) =>
+		OnSelectedModuleIdsChanged(SelectedModuleIds.Where(id => id != moduleId));
+
+	private void ToggleStatus() => User.IsActive = !User.IsActive;
 }

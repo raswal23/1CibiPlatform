@@ -16,6 +16,10 @@ public partial class EditClientComponent
 	private EditClientDTO EditClient = new();
 	private IReadOnlyCollection<int> SelectedPackageIds { get; set; } = new HashSet<int>();
 	private string? PackageError { get; set; }
+	private int DescriptionLength => EditClient.ClientDescription?.Length ?? 0;
+	private IEnumerable<PackageDetailsDTO> SelectedPackages => Packages
+		.Where(package => SelectedPackageIds.Contains(package.PackageId))
+		.OrderBy(package => package.PackageName);
 
 	protected override void OnParametersSet()
 	{
@@ -30,6 +34,8 @@ public partial class EditClientComponent
 	}
 
 	void Cancel() => EditClientDialog!.Cancel();
+
+	private void ToggleStatus() => EditClient.IsActive = !EditClient.IsActive;
 
 	async Task Submit()
 	{
@@ -50,11 +56,19 @@ public partial class EditClientComponent
 		PackageError = SelectedPackageIds.Count == 0 ? "At least one package is required" : null;
 	}
 
-	private string GetSelectedPackagesText(IReadOnlyList<string> selectedValues)
+	private void TogglePackage(int packageId)
 	{
 		var selectedIds = SelectedPackageIds.ToHashSet();
-		return string.Join(", ", Packages
-			.Where(package => selectedIds.Contains(package.PackageId))
-			.Select(package => package.PackageName));
+		if (!selectedIds.Add(packageId))
+			selectedIds.Remove(packageId);
+
+		OnSelectedPackageIdsChanged(selectedIds);
+	}
+
+	private void RemovePackage(int packageId)
+	{
+		var selectedIds = SelectedPackageIds.ToHashSet();
+		selectedIds.Remove(packageId);
+		OnSelectedPackageIdsChanged(selectedIds);
 	}
 }

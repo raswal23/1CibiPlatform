@@ -1,51 +1,121 @@
-<div class="um-dialog-shell">
-    <div class="um-dialog-header">
-        <div>
-            <MudText Typo="Typo.h5" Class="um-dialog-title">Add role</MudText>
-            <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new role</MudText>
+<MudDialog Class="um-dialog ar-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+    <DialogContent>
+        <div class="ar-shell">
+            <header class="ar-header">
+                <div class="ar-header-row">
+                    <div class="ar-header-left">
+                        <div class="ar-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 3l7 3v5c0 4.6-3 7.9-7 10-4-2.1-7-5.4-7-10V6l7-3Z" />
+                            </svg>
+                        </div>
+                        <div class="ar-header-text">
+                            <h1>Add role</h1>
+                            <p>Create a new role</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ar-close" aria-label="Close add role dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="ar-body">
+                <MudForm @ref="AddRoleForm">
+                    <section class="ar-section" aria-labelledby="add-role-details-heading">
+                        <div class="ar-section-head">
+                            <span class="ar-section-number">1</span>
+                            <h2 id="add-role-details-heading">Role details</h2>
+                            <span class="ar-section-helper">Name and describe the role</span>
+                        </div>
+
+                        <div class="ar-section-body">
+                            <div class="ar-field">
+                                <label for="ar-role-name">Role name <span class="ar-required">*</span></label>
+                                <div class="ar-input-wrap ar-name-wrap">
+                                    <MudTextField @bind-Value="Role.RoleName"
+                                                  InputId="ar-role-name"
+                                                  Placeholder="e.g. Account Manager"
+                                                  Required="true"
+                                                  RequiredError="Role name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="100"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Shield"
+                                                  Class="ar-control" />
+                                </div>
+                            </div>
+
+                            <div class="ar-field">
+                                <label for="ar-role-description">Role description <span class="ar-required">*</span></label>
+                                <div class="ar-input-wrap ar-description-wrap">
+                                    <MudTextField @bind-Value="Role.RoleDescription"
+                                                  InputId="ar-role-description"
+                                                  Placeholder="What can users with this role do?"
+                                                  Required="true"
+                                                  RequiredError="Role description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="ar-control ar-description-control" />
+                                </div>
+                                <div class="ar-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ar-section" aria-labelledby="add-role-availability-heading">
+                        <div class="ar-section-head">
+                            <span class="ar-section-number">2</span>
+                            <h2 id="add-role-availability-heading">Availability</h2>
+                            <span class="ar-section-helper">Turn the role on or off</span>
+                        </div>
+
+                        <div class="ar-section-body">
+                            <div class="ar-field">
+                                <label>Status</label>
+                                <div class="ar-status-row">
+                                    <div class="ar-status-copy">
+                                        <p>Role @(Role.IsActive ? "active" : "inactive")</p>
+                                        <span>Available to assign to users once saved</span>
+                                    </div>
+                                    <div class="ar-status-control">
+                                        <span class="ar-status-badge @(Role.IsActive ? string.Empty : "is-off")">
+                                            @(Role.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ar-toggle @(Role.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@Role.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle role status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ar-footer">
+                <button type="button" class="ar-button ar-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ar-button ar-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
         </div>
-        <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
-    </div>
-
-    <MudDivider />
-
-    <MudPaper Elevation="0" Class="um-dialog-body">
-        <MudForm @ref="AddRoleForm">
-            <MudStack Spacing="2">
-                <MudTextField @bind-Value="Role.RoleName"
-                              Label="Role Name"
-                              Required="true"
-                              RequiredError="Role Name is required"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              MaxLength="100"
-                              Class="oneplatform-rounded-input" />
-
-                <MudTextField @bind-Value="Role.RoleDescription"
-                              Label="Role Description"
-                              Required="true"
-                              RequiredError="Role Description is required"
-                              Variant="Variant.Outlined"
-                              Margin="Margin.Dense"
-                              Lines="3"
-                              MaxLength="500"
-                              Class="oneplatform-rounded-input" />
-
-                <MudSelect T="bool"
-                           @bind-Value="Role.IsActive"
-                           Label="Status"
-                           Variant="Variant.Outlined"
-                           Margin="Margin.Dense"
-                           Class="oneplatform-rounded-input">
-                    <MudSelectItem Value="true">Active</MudSelectItem>
-                    <MudSelectItem Value="false">Inactive</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-        </MudForm>
-    </MudPaper>
-
-    <div class="um-dialog-footer">
-        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-        <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
-    </div>
-</div>
+    </DialogContent>
+</MudDialog>

@@ -11,6 +11,8 @@ public partial class AddModuleComponent
 	[Parameter]
 	public AddATSModuleDTO Module { get; set; } = new() { IsActive = true };
 
+	private int DescriptionLength => Module.ModuleDescription?.Length ?? 0;
+
 	private Task<IEnumerable<string>> SearchModules(string value, CancellationToken cancellationToken)
 	{
 		var result = ModuleList.List.Values
@@ -26,6 +28,8 @@ public partial class AddModuleComponent
 	}
 
 	void Cancel() => AddModuleDialog!.Cancel();
+
+	private void ToggleStatus() => Module.IsActive = !Module.IsActive;
 
 	async Task Submit()
 	{

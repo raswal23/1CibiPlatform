@@ -3,7 +3,10 @@
 public partial class TableComponent<TItem>
 {
 	[Parameter] public string? Title { get; set; }
+	[Parameter] public string? ContainerClass { get; set; }
 	[Parameter] public bool EnableSearch { get; set; } = true;
+	[Parameter] public string? SearchLabel { get; set; } = "Search";
+	[Parameter] public string? SearchPlaceholder { get; set; }
 	[Parameter] public string? AddButtonText { get; set; }
 	[Parameter] public RenderFragment? NoRecordsTemplate { get; set; }
 	[Parameter] public EventCallback OnAddClicked { get; set; }

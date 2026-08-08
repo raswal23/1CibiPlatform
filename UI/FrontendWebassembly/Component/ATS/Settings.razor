@@ -2,13 +2,24 @@
 @using FrontendWebassembly.Pages.ATS
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(6, 7, 8)]
+@inherits SecurePageBase
 
 <PageTitle>ATS - Settings</PageTitle>
 
 <div class="ats-segmented">
-    <button class="@GetPackageSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Package"))'>Package</button>
-    <button class="@GetClientSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Client"))'>Client</button>
-    <button class="@GetRoleSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Role"))'>Role</button>
+    @if (AccessibleATSModuleIds.Contains(6))
+    {
+        <button class="@GetPackageSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Package"))'>Package</button>
+    }
+    @if (AccessibleATSModuleIds.Contains(7))
+    {
+        <button class="@GetClientSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Client"))'>Client</button>
+    }
+    @if (AccessibleATSModuleIds.Contains(8))
+    {
+        <button class="@GetRoleSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Role"))'>Role</button>
+    }
 </div>
     
 
@@ -20,13 +31,26 @@ else if (ManagementType == "Client")
 {
     <ClientManagement/>
 }
-else
+else if (ManagementType == "Role")
 {
     <RoleManagement/>
 }
 
 @code {
-    private string? ManagementType = "Package";
+    private string? ManagementType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (!IsPageAuthorized)
+            return;
+
+        ManagementType = AccessibleATSModuleIds.Contains(6)
+            ? "Package"
+            : AccessibleATSModuleIds.Contains(7)
+                ? "Client"
+                : "Role";
+    }
 
     private string GetPackageSegmentClass()
     {

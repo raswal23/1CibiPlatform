@@ -1,6 +1,7 @@
 @page "/s&i/ats/usermanagement"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(10)]
 @inject IATSUserManagementService UserManagementService
 @inject IClientManagementService ClientManagementService
 @inject IRoleManagementService RoleManagementService
@@ -10,88 +11,141 @@
 
 <PageTitle>ATS - User Management</PageTitle>
 
-<div style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 12px;">
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AssignClient">
-        <MudIcon Icon="@Icons.Material.Filled.AssignmentInd" Class="mr-2" /> Assign Client
-    </MudButton>
-    <MudButton Class="theme-button theme-button-active" OnClick="AddNewUser">
-        <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> Add User
-    </MudButton>
+<div class="ats-users-page">
+    <div class="ats-users-actions">
+        <button type="button" class="ats-users-button ats-users-button-outline" @onclick="AssignClient">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 20V6.5A1.5 1.5 0 0 1 5.5 5h5A1.5 1.5 0 0 1 12 6.5V20" />
+                <path d="M12 11h6.5a1.5 1.5 0 0 1 1.5 1.5V20" />
+                <path d="M7 9h1M7 12h1M7 15h1" stroke-linecap="round" />
+            </svg>
+            Assign client
+        </button>
+        <button type="button" class="ats-users-button ats-users-button-primary" @onclick="AddNewUser">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add user
+        </button>
+    </div>
+
+    <section class="ats-users-card" aria-labelledby="ats-users-heading">
+        <MudTable T="UserManagementViewModel"
+                  @ref="usersTable"
+                  ServerData="LoadUserData"
+                  Class="ats-users-table"
+                  HorizontalScrollbar="true"
+                  Hover="true"
+                  RowsPerPage="10">
+            <ToolBarContent>
+                <div class="ats-users-topbar">
+                    <h1 id="ats-users-heading">Users</h1>
+                    <div class="ats-users-search-wrap">
+                        <MudTextField T="string"
+                                      Value="searchString"
+                                      ValueChanged="SearchUsers"
+                                      Placeholder="Search users"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      DebounceInterval="300"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Search"
+                                      Class="ats-users-search" />
+                    </div>
+                </div>
+            </ToolBarContent>
+
+            <HeaderContent>
+                <MudTh Class="ats-users-user-column">User</MudTh>
+                <MudTh Class="ats-users-email-column">Email</MudTh>
+                <MudTh>Client</MudTh>
+                <MudTh>Site</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh Class="ats-users-modules-column">Modules</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Created date</MudTh>
+                <MudTh>Updated date</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate Context="user">
+                <MudTd DataLabel="User">
+                    <div class="ats-users-user-cell">
+                        <span class="ats-users-avatar">@GetUserInitials(user.UserName)</span>
+                        <span class="ats-users-name">@user.UserName</span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Email" Class="ats-users-muted">
+                    @if (!string.IsNullOrWhiteSpace(user.UserEmail))
+                    {
+                        <a href="@($"mailto:{user.UserEmail}")">@user.UserEmail</a>
+                    }
+                    else
+                    {
+                        <span>Auth user unavailable</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Client">@user.ClientName</MudTd>
+                <MudTd DataLabel="Site">@user.Site</MudTd>
+                <MudTd DataLabel="Role">@user.RoleName</MudTd>
+                <MudTd DataLabel="Modules">
+                    <div class="ats-users-chips">
+                        @foreach (var module in user.Modules.Take(4))
+                        {
+                            <span class="ats-users-chip">@module.ModuleName</span>
+                        }
+                        @if (user.Modules.Count > 4)
+                        {
+                            <span class="ats-users-chip ats-users-chip-more">+@(user.Modules.Count - 4) more</span>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <span class="ats-users-status @(user.IsActive ? string.Empty : "is-disabled")">
+                        @(user.IsActive ? "Active" : "Disabled")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Created date" Class="ats-users-date">
+                    @user.CreatedAt.ToString("MMMM dd, yyyy")
+                </MudTd>
+                <MudTd DataLabel="Updated date" Class="ats-users-date">
+                    @user.UpdatedAt.ToString("MMMM dd, yyyy")
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <button type="button"
+                            class="ats-users-edit"
+                            aria-label="Edit @user.UserName"
+                            @onclick="() => EditUser(user)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                    </button>
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <div class="ats-users-empty">
+                    <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" />
+                    <strong>No users</strong>
+                    <span>Create a new user to get started.</span>
+                </div>
+            </NoRecordsContent>
+
+            <PagerContent>
+                <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })"
+                               RowsPerPageString="Rows per page:"
+                               InfoFormat="{first_item}-{last_item} of {all_items}" />
+            </PagerContent>
+        </MudTable>
+    </section>
 </div>
-
-<TableComponent TItem="UserManagementViewModel"
-                @ref="usersTable"
-                Title="Users"
-                EnableSearch="true"
-                ColumnCount="10"
-                RowsPerPage="10"
-                LoadServerData="LoadUserData"
-                SearchString="@searchString"
-                SearchStringChanged="@((string value) => searchString = value)">
-
-    <HeaderTemplate>
-        <MudTh Class="ats-table-cell-center">User</MudTh>
-        <MudTh Class="ats-table-cell-center">Email</MudTh>
-        <MudTh Class="ats-table-cell-center">Client</MudTh>
-        <MudTh Class="ats-table-cell-center">Site</MudTh>
-        <MudTh Class="ats-table-cell-center">Role</MudTh>
-        <MudTh Class="ats-table-cell-center">Modules</MudTh>
-        <MudTh Class="ats-table-cell-center">Status</MudTh>
-        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
-        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
-        <MudTh Class="ats-table-cell-center">Actions</MudTh>
-    </HeaderTemplate>
-
-    <RowTemplate Context="user">
-        <MudTd Class="ats-table-cell-center" DataLabel="User">@user.UserName</MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Email">
-            @if (!string.IsNullOrWhiteSpace(user.UserEmail))
-            {
-                <a href="@($"mailto:{user.UserEmail}")">@user.UserEmail</a>
-            }
-            else
-            {
-                <span>Auth user unavailable</span>
-            }
-        </MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Client">@user.ClientName</MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Site">@user.Site</MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Role">@user.RoleName</MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Modules">
-            @string.Join(", ", user.Modules.Select(module => module.ModuleName))
-        </MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Status">
-            <span class="@(user.IsActive ? "ats-status-badge ats-status-success" : "ats-status-badge ats-status-error")">
-                @(user.IsActive ? "Active" : "Disabled")
-            </span>
-        </MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Created Date">
-            @user.CreatedAt.ToString("MMMM dd, yyyy")
-        </MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Updated Date">
-            @user.UpdatedAt.ToString("MMMM dd, yyyy")
-        </MudTd>
-        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           OnClick="@(() => EditUser(user))" />
-        </MudTd>
-    </RowTemplate>
-
-    <NoRecordsTemplate>
-        <div class="ats-console-empty-state">
-            <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Class="ats-console-empty-icon" />
-            <div class="ats-console-empty-title">No users</div>
-            <div class="ats-console-empty-sub">Create a new user to get started.</div>
-        </div>
-    </NoRecordsTemplate>
-</TableComponent>
 
 @code {
     private const string SuperAdminEmail = "admin@cibi.com";
     private string searchString = string.Empty;
-    private TableComponent<UserManagementViewModel>? usersTable;
+    private MudTable<UserManagementViewModel>? usersTable;
     private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
     private IReadOnlyList<ClientDetailsDTO> clients = Array.Empty<ClientDetailsDTO>();
     private IReadOnlyList<RoleDetailsDTO> roles = Array.Empty<RoleDetailsDTO>();
@@ -104,6 +158,27 @@
     private Dictionary<Guid, UserClientDetailsDTO> userClientAssignmentLookup = new();
     private Task? referenceDataLoadTask;
     private bool referenceDataLoaded;
+
+    private async Task SearchUsers(string value)
+    {
+        searchString = value;
+        if (usersTable is not null)
+            await usersTable.ReloadServerData();
+    }
+
+    private static string GetUserInitials(string? userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+            return "?";
+
+        var nameParts = userName.Split(
+            ' ',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (nameParts.Length == 1)
+            return nameParts[0][..Math.Min(2, nameParts[0].Length)].ToUpperInvariant();
+
+        return $"{nameParts[0][0]}{nameParts[1][0]}".ToUpperInvariant();
+    }
 
     private async Task<TableData<UserManagementViewModel>> LoadUserData(TableState state, CancellationToken cancellationToken)
         => await LoadPagedDataAsync(state, async (page, pageSize) =>
@@ -243,8 +318,8 @@
                 var addedUser = (AddATSUserDTO)result.Data!;
                 await UserManagementService.AddUserAsync(addedUser);
                 Snackbar.Add("User added successfully", Severity.Success);
-                if (usersTable?.TableRef is not null)
-                    await usersTable.TableRef.ReloadServerData();
+                if (usersTable is not null)
+                    await usersTable.ReloadServerData();
             }
             catch (Exception ex)
             {
@@ -288,8 +363,8 @@
                 userClientAssignmentLookup[assignment.UserId] = assignment;
 
                 Snackbar.Add("Client assignment saved successfully", Severity.Success);
-                if (usersTable?.TableRef is not null)
-                    await usersTable.TableRef.ReloadServerData();
+                if (usersTable is not null)
+                    await usersTable.ReloadServerData();
             }
             catch (Exception ex)
             {
@@ -327,8 +402,8 @@
             {
                 await UserManagementService.EditUserAsync((EditATSUserDTO)result.Data!);
                 Snackbar.Add("User updated successfully", Severity.Success);
-                if (usersTable?.TableRef is not null)
-                    await usersTable.TableRef.ReloadServerData();
+                if (usersTable is not null)
+                    await usersTable.ReloadServerData();
             }
             catch (Exception ex)
             {

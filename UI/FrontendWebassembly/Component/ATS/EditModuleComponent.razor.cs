@@ -14,6 +14,8 @@ public partial class EditModuleComponent
 
 	private EditATSModuleDTO EditModule = new();
 
+	private int DescriptionLength => EditModule.ModuleDescription?.Length ?? 0;
+
 	private Task<IEnumerable<string>> SearchModules(string value, CancellationToken cancellationToken)
 	{
 		var result = ModuleList.List.Values
@@ -40,6 +42,8 @@ public partial class EditModuleComponent
 	}
 
 	void Cancel() => EditModuleDialog!.Cancel();
+
+	private void ToggleStatus() => EditModule.IsActive = !EditModule.IsActive;
 
 	async Task Submit()
 	{

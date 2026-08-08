@@ -12,6 +12,8 @@ public partial class EditRoleComponent
 
 	private EditATSRoleDTO EditRole = new();
 
+	private int DescriptionLength => EditRole.RoleDescription?.Length ?? 0;
+
 	protected override void OnParametersSet()
 	{
 		EditRole = new EditATSRoleDTO
@@ -24,6 +26,8 @@ public partial class EditRoleComponent
 	}
 
 	void Cancel() => EditRoleDialog!.Cancel();
+
+	private void ToggleStatus() => EditRole.IsActive = !EditRole.IsActive;
 
 	async Task Submit()
 	{

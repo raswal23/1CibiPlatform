@@ -1,72 +1,159 @@
-<MudDialog Class="um-dialog" Style="padding: 0;">
+<MudDialog Class="um-dialog ac-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
     <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Add client</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new client record</MudText>
+        <div class="ac-shell">
+            <header class="ac-header">
+                <div class="ac-header-row">
+                    <div class="ac-header-left">
+                        <div class="ac-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M4 20V6.5A1.5 1.5 0 0 1 5.5 5h5A1.5 1.5 0 0 1 12 6.5V20" />
+                                <path d="M12 11h6.5a1.5 1.5 0 0 1 1.5 1.5V20" />
+                                <path d="M7 9h1M7 12h1M7 15h1" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="ac-header-text">
+                            <h1>Add client</h1>
+                            <p>Create a new client record</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ac-close" aria-label="Close add client dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
-            </div>
+            </header>
 
-            <MudDivider />
-
-            <MudPaper Elevation="0" Class="um-dialog-body">
+            <main class="ac-body">
                 <MudForm @ref="AddClientForm">
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="Client.ClientName"
-                                      Label="Client Name"
-                                      Required="true"
-                                      RequiredError="Client Name is required"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
+                    <section class="ac-section" aria-labelledby="add-client-details-heading">
+                        <div class="ac-section-head">
+                            <span class="ac-section-number">1</span>
+                            <h2 id="add-client-details-heading">Client details</h2>
+                            <span class="ac-section-helper">Name and describe the client</span>
+                        </div>
 
-                        <MudTextField @bind-Value="Client.ClientDescription"
-                                      Label="Client Description"
-                                      Required="true"
-                                      RequiredError="Client Description is required"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Lines="3"
-                                      MaxLength="500"
-                                      Class="oneplatform-rounded-input" />
+                        <div class="ac-section-body">
+                            <div class="ac-field">
+                                <label for="ac-client-name">Client name <span class="ac-required">*</span></label>
+                                <div class="ac-input-wrap ac-name-wrap">
+                                    <MudTextField @bind-Value="Client.ClientName"
+                                                  InputId="ac-client-name"
+                                                  Placeholder="e.g. Acme Talent Group"
+                                                  Required="true"
+                                                  RequiredError="Client name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="100"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Apartment"
+                                                  Class="ac-control" />
+                                </div>
+                            </div>
 
-                        <MudSelect T="int"
-                                   MultiSelection="true"
-                                   SelectedValues="SelectedPackageIds"
-                                   SelectedValuesChanged="OnSelectedPackageIdsChanged"
-                                   MultiSelectionTextFunc="GetSelectedPackagesText"
-                                   Label="Packages"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Error="@(!string.IsNullOrEmpty(PackageError))"
-                                   ErrorText="@PackageError"
-                                   Class="oneplatform-rounded-input">
-                            @foreach (var package in Packages.Where(package => package.IsActive))
-                            {
-                                <MudSelectItem T="int" Value="@package.PackageId">@package.PackageName</MudSelectItem>
-                            }
-                        </MudSelect>
+                            <div class="ac-field">
+                                <label for="ac-client-description">Client description <span class="ac-required">*</span></label>
+                                <div class="ac-input-wrap ac-description-wrap">
+                                    <MudTextField @bind-Value="Client.ClientDescription"
+                                                  InputId="ac-client-description"
+                                                  Placeholder="A short note about this client"
+                                                  Required="true"
+                                                  RequiredError="Client description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="ac-control ac-description-control" />
+                                </div>
+                                <div class="ac-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
 
-                        <MudSelect T="bool"
-                                   @bind-Value="Client.IsActive"
-                                   Label="Status"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Class="oneplatform-rounded-input">
-                            <MudSelectItem Value="true">Active</MudSelectItem>
-                            <MudSelectItem Value="false">Inactive</MudSelectItem>
-                        </MudSelect>
-                    </MudStack>
+                    <section class="ac-section" aria-labelledby="add-client-packages-heading">
+                        <div class="ac-section-head">
+                            <span class="ac-section-number">2</span>
+                            <h2 id="add-client-packages-heading">Packages &amp; availability</h2>
+                            <span class="ac-section-helper">Assigned packages and status</span>
+                        </div>
+
+                        <div class="ac-section-body">
+                            <div class="ac-field">
+                                <label>Packages</label>
+                                <div class="ac-chip-box @(PackageError is not null ? "has-error" : string.Empty)">
+                                    @foreach (var package in SelectedPackages)
+                                    {
+                                        <span class="ac-chip">
+                                            @package.PackageName
+                                            <button type="button" aria-label="Remove @package.PackageName" @onclick="() => RemovePackage(package.PackageId)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                                                    <path d="M7 7l10 10M17 7 7 17" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    }
+
+                                    <MudMenu Label="Add package"
+                                             StartIcon="@Icons.Material.Filled.Add"
+                                             Variant="Variant.Text"
+                                             Dense="true"
+                                             Class="ac-package-menu">
+                                        @foreach (var package in Packages.Where(package => package.IsActive))
+                                        {
+                                            var isSelected = SelectedPackageIds.Contains(package.PackageId);
+                                            <MudMenuItem OnClick="@(() => TogglePackage(package.PackageId))">
+                                                <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" Size="Size.Small" />
+                                                <span>@package.PackageName</span>
+                                            </MudMenuItem>
+                                        }
+                                    </MudMenu>
+                                </div>
+                                @if (PackageError is not null)
+                                {
+                                    <span class="ac-error" role="alert">@PackageError</span>
+                                }
+                            </div>
+
+                            <div class="ac-field">
+                                <label>Status</label>
+                                <div class="ac-status-row">
+                                    <div class="ac-status-copy">
+                                        <p>Client @(Client.IsActive ? "active" : "inactive")</p>
+                                        <span>Visible for assignment once saved</span>
+                                    </div>
+                                    <div class="ac-status-control">
+                                        <span class="ac-status-badge @(Client.IsActive ? string.Empty : "is-off")">
+                                            @(Client.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ac-toggle @(Client.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@Client.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle client status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </MudForm>
-            </MudPaper>
+            </main>
 
-            <div class="um-dialog-footer">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
-            </div>
+            <footer class="ac-footer">
+                <button type="button" class="ac-button ac-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ac-button ac-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
         </div>
     </DialogContent>
 </MudDialog>

@@ -1,6 +1,7 @@
 ﻿@page "/s&i/ats/withdrawn"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(5)]
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase

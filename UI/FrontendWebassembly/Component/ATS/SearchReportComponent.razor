@@ -1,6 +1,8 @@
 ﻿@page "/s&i/ats/searchreport"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(3)]
+@inherits SecurePageBase
 @inject IJSRuntime JS
 @inject IDialogService DialogService
 @inject IReportService ReportService
