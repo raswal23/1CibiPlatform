@@ -59,7 +59,19 @@ public partial class DisputeOrderComponent
 			{ nameof(DisputeDialogOrderComponent.SubjectName), subjectName }
 		};
 
-		await OpenResultDialog<DisputeDialogOrderComponent>("", confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
 
 		try
 		{

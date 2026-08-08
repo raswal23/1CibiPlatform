@@ -7,6 +7,13 @@ public partial class DisputeDialogOrderComponent
 
 	private bool isUploading = false;
 
+	[Inject]
+	private IDialogService DialogService { get; set; } = default!;
+	[Inject]
+	private ISnackbar Snackbar { get; set; } = default!;
+	[Inject]
+	private IDisputeOrderService DisputeOrderService { get; set; } = default!;
+
 	[CascadingParameter]
 	IMudDialogInstance? SubmitDisputeOrderDialog { get; set; }
 	[Parameter]
@@ -25,45 +32,100 @@ public partial class DisputeDialogOrderComponent
 	async Task SendDisputeAsync()
 	{
 		await disputeForm!.ValidateAsync();
-		if (disputeForm!.IsValid)
+
+		if (!disputeForm.IsValid)
+			return;
+
+		try
 		{
+			isUploading = true;
+			isMarkingAsDisputed = true;
+			await InvokeAsync(StateHasChanged);
 
-			try
+			if (disputeRequest.DisputeReason == "Others")
 			{
-				isUploading = true;
-				isMarkingAsDisputed = true;
-				await InvokeAsync(StateHasChanged);
+				disputeRequest.DisputeReason = otherReason;
+			}
 
-				if (disputeRequest.DisputeReason == "Others")
+			disputeRequest.EmailInvitationId = EmailInvitationId;
+			disputeRequest.OrderCreatedAt = OrderCreatedAt;
+			disputeRequest.SubjectName = SubjectName;
+
+			var confirmParam = new DialogParameters
+			{
 				{
-					disputeRequest.DisputeReason = otherReason;
+					nameof(YesNoDialogComponent.Title),
+					"Dispute Application"
+				},
+				{
+					nameof(YesNoDialogComponent.Message),
+					"Please be advised that this action will dispute the candidate application."
+				},
+				{
+					nameof(YesNoDialogComponent.ConfirmText),
+					"Dispute"
+				},
+				{
+					nameof(YesNoDialogComponent.InformationMessage),
+					"Clicking 'Dispute' will mark the application as disputed."
+				},
+				{
+					nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
+				},
+				{
+					nameof(YesNoDialogComponent.AvatarColor),Color.Warning
+				},
+				{
+					nameof(YesNoDialogComponent.InfoColor),Color.Warning
+				},
+				{
+					nameof(YesNoDialogComponent.InfoBGColor),"#FFF8E1"
+				},
+				{
+					nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
 				}
 
-				disputeRequest.EmailInvitationId = EmailInvitationId;
-				disputeRequest.OrderCreatedAt = OrderCreatedAt;
-				disputeRequest.SubjectName = SubjectName;
+			};
 
-				var success = await DisputeOrderService.MarkAsDisputedAsync(disputeRequest);
-
-				if (!success)
-				{
-					Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
-					isUploading = false;
-					return;
-				}
-			}
-			catch (Exception)
+			var options = new DialogOptions
 			{
-				Snackbar.Add("Failed to dispute order as disputed.", Severity.Error);
-			}
-			finally
-			{
-				isMarkingAsDisputed = false;
-				await InvokeAsync(StateHasChanged);
-			}
+				NoHeader = true,
+				MaxWidth = MaxWidth.ExtraSmall,
+				FullWidth = true
+			};
 
-			SubmitDisputeOrderDialog!.Close();
+			var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+
+			var result = await dialog.Result;
+
+			if (result!.Canceled)
+			{
+				isUploading = false;
+				return;
+			}
+				
+
+			var success = await DisputeOrderService.MarkAsDisputedAsync(disputeRequest);
+
+			if (!success)
+			{
+				Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
+				isUploading = false;
+				return;
+			}
 		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to dispute order as disputed.", Severity.Error);
+		}
+		finally
+		{
+			isMarkingAsDisputed = false;
+			await InvokeAsync(StateHasChanged);
+		}
+
+		SubmitDisputeOrderDialog!.Close();
+		
 	}
 
 	private void CloseDialog()
