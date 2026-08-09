@@ -102,16 +102,34 @@
                             aria-expanded="@(!_isSidebarCollapsed)"
                             title="@(_isSidebarCollapsed ? "Expand drawer" : "Collapse drawer")"
                             @onclick="ToggleSidebar">
-                        ☰
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
                     </button>
-                    <div>
-                        <div class="ats-console-crumb">Applicant Tracking System / <b>@_pageTitle</b></div>
+                    <div class="ats-console-title-block">
+                        <div class="ats-console-crumb">
+                            <span>Applicant Tracking System</span>
+                            <span class="ats-console-crumb-separator">/</span>
+                            <strong>@_pageTitle</strong>
+                        </div>
                         <h1>@_pageTitle</h1>
                     </div>
                 </div>
                 <div class="ats-console-topbar-right">
-                    <button type="button" class="ats-console-icon-btn" aria-label="Search">🔍</button>
-                    <button type="button" class="ats-console-icon-btn" aria-label="Notifications">🔔</button>
+                    <button type="button" class="ats-console-icon-btn" aria-label="Search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button type="button" class="ats-console-icon-btn" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.7 21a2 2 0 01-3.4 0" />
+                        </svg>
+                        <span class="ats-console-notification-dot" aria-hidden="true"></span>
+                    </button>
+                    <div class="ats-console-topbar-divider" aria-hidden="true"></div>
                     <div class="ats-console-avatar">AT</div>
                 </div>
             </div>
