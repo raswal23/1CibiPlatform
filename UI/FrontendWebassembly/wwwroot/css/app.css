@@ -364,6 +364,22 @@ code {
         padding: 0 !important;
     }
 
+.um-dialog.ats-upload-report-dialog,
+.um-dialog.ats-result-modal-dialog {
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+}
+
+.um-dialog.ats-upload-report-dialog > .mud-dialog-content,
+.um-dialog.ats-result-modal-dialog > .mud-dialog-content {
+    display: block;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
 .um-dialog-shell {
     width: 100%;
     background: #fff;
@@ -1075,12 +1091,6 @@ code {
     color: #6b7b92;
 }
 
-.ats-upload-report-shell-close {
-    background: #eef3f9 !important;
-    border-radius: 12px !important;
-    color: #7d91ab !important;
-}
-
 .ats-upload-report-card {
     width: 100%;
     border-radius: 0 0 20px 20px;
@@ -1535,6 +1545,21 @@ code {
     background: #fff;
 }
 
+.ats-console .responsive-table-container > .mud-table > .mud-table-pagination {
+    position: relative;
+    z-index: 1;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    background: #fff;
+}
+
+.ats-console .responsive-table-container > .mud-table > .mud-table-pagination .mud-table-pagination-toolbar {
+    height: auto !important;
+    min-height: 62px;
+    padding: 16px 0 18px !important;
+    border-top: 0 !important;
+}
+
 .ats-console .mud-table {
     background: #fff;
 }
@@ -1555,7 +1580,7 @@ code {
     }
 
     .ats-console .mud-table tbody .mud-table-row:last-child .mud-table-cell {
-        border-bottom: 0;
+        border-bottom: 1px solid var(--ats-border) !important;
     }
 
 .ats-console .mud-input-outlined .mud-input-outlined-border,
@@ -1563,7 +1588,7 @@ code {
     border-color: var(--ats-border);
 }
 
-.ats-console .mud-input-control {
+.ats-console .mud-input-control:not(.ats-select) {
     margin-top: 3px;
 }
 
@@ -3275,13 +3300,29 @@ code {
     transform: rotate(180deg);
 }
 
+.ats-console-nav-submenu-shell {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows 0.28s ease, opacity 0.2s ease, visibility 0s linear 0.28s;
+}
+
+.ats-console-nav-submenu-shell.is-expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows 0.28s ease, opacity 0.2s ease, visibility 0s linear 0s;
+}
+
 .ats-console-nav-submenu {
     display: flex;
     flex-direction: column;
     position: relative;
-    margin-left: 1.15rem;
+    min-height: 0;
+    overflow: hidden;
+    margin-left: .3rem;
     padding-left: 0.85rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .ats-console-nav-subitem {
@@ -3297,12 +3338,12 @@ code {
 }
 
 .ats-console-nav-subitem:hover {
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: rgba(255, 255, 255, 0.08);
     color: #fff;
 }
 
 .ats-console-nav-subitem.active {
-    background-color: var(--ats-blue-500);
+    background-color: rgba(255, 255, 255, 0.14);
     color: #fff;
 }
 
@@ -3312,7 +3353,7 @@ code {
     text-align: center;
 }
 
-.ats-console-collapsed .ats-console-nav-submenu,
+.ats-console-collapsed .ats-console-nav-submenu-shell,
 .ats-console-collapsed .ats-console-nav-chevron {
     display: none;
 }

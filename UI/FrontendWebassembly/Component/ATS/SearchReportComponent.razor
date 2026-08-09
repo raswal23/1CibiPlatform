@@ -34,13 +34,17 @@
                     RowClassFunc="GetRowClass"
                     SearchStringChanged="@((string val) => searchString = val)">
         <ToolBarLeft>
-            <MudDateRangePicker Margin="Margin.Dense"
-                                ReadOnly="false"
-                                Clearable="true"
-                                DateRangeChanged="OnDateRangeChanged"
-                                PlaceholderStart="Start Date"
-                                PlaceholderEnd="End Date"
-                                Label="Date range" />
+            <div class="search-report-date-field">
+                <label>Date range</label>
+                <MudDateRangePicker Class="search-report-date-range"
+                                    Variant="Variant.Outlined"
+                                    Margin="Margin.Dense"
+                                    ReadOnly="false"
+                                    Clearable="true"
+                                    DateRangeChanged="OnDateRangeChanged"
+                                    PlaceholderStart="Start Date"
+                                    PlaceholderEnd="End Date" />
+            </div>
         </ToolBarLeft>
         <HeaderTemplate>
             <MudTh> Action</MudTh>

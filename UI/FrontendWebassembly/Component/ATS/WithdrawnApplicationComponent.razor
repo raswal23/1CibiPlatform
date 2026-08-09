@@ -65,8 +65,10 @@
     </RowTemplate>
 
     <NoRecordsTemplate>
-        <div class="ats-no-records-center">
-            <MudText Typo="Typo.body2">No withdrawn application forms found.</MudText>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.PersonOff" />
+            <strong>No withdrawn applications</strong>
+            <span>Withdrawn candidate applications will appear here.</span>
         </div>
     </NoRecordsTemplate>
 </TableComponent>

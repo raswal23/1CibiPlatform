@@ -1,27 +1,47 @@
 ﻿<div class="philsys-modern philsys-lookup-tabs-wrap">
-    <div class="philsys-lookup-caption">LOOK UP THE REGISTRANT BY</div>
+    <div class="philsys-lookup-caption">Look up the registrant by</div>
 
     <div class="philsys-lookup-tabs">
         <button type="button"
                 class="@(GetTabClass(0))"
+                aria-pressed="@(_activeIndex == 0)"
                 @onclick="() => SelectTabAsync(0)">
-            <span class="philsys-lookup-tab-icon">👤</span>
-            <span>
+            <span class="philsys-lookup-tab-radio" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12l5 5L20 7" />
+                </svg>
+            </span>
+            <span class="philsys-lookup-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="3.4" />
+                    <path d="M4.5 20c0-3.9 3.1-6.8 7.5-6.8s7.5 2.9 7.5 6.8" />
+                </svg>
+            </span>
+            <span class="philsys-lookup-tab-text">
                 <span class="philsys-lookup-tab-title">Personal information</span>
                 <span class="philsys-lookup-tab-sub">Search using name and birth date</span>
             </span>
-            <span class="philsys-lookup-tab-check">@( _activeIndex == 0 ? "✓" : "○")</span>
         </button>
 
         <button type="button"
                 class="@(GetTabClass(1))"
+                aria-pressed="@(_activeIndex == 1)"
                 @onclick="() => SelectTabAsync(1)">
-            <span class="philsys-lookup-tab-icon">💳</span>
-            <span>
+            <span class="philsys-lookup-tab-radio" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12l5 5L20 7" />
+                </svg>
+            </span>
+            <span class="philsys-lookup-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2.5" y="5" width="19" height="14" rx="2.4" />
+                    <path d="M2.5 9.5h19M6 15h5" stroke-linecap="round" />
+                </svg>
+            </span>
+            <span class="philsys-lookup-tab-text">
                 <span class="philsys-lookup-tab-title">PhilSys card number</span>
                 <span class="philsys-lookup-tab-sub">Search using the 16-digit PCN</span>
             </span>
-            <span class="philsys-lookup-tab-check">@( _activeIndex == 1 ? "✓" : "○")</span>
         </button>
     </div>
 </div>

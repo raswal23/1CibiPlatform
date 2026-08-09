@@ -140,17 +140,7 @@
 
 .dispute-action:hover { background: #f9dcc8; }
 .dispute-action svg { width: 15px; height: 15px; }
-::deep .dispute-orders .mud-table-pagination { min-height: 0; padding: 0 4px 8px; border-top: 0; color: var(--text-2); font-family: Inter, sans-serif; font-size: 13px; }
-::deep .dispute-orders .mud-table-pagination-select .mud-input { min-height: 28px; border: 1px solid var(--border-strong); border-radius: 8px; background: #fff; color: var(--text-1); }
-::deep .dispute-orders .mud-table-pagination-actions .mud-icon-button {
-    width: 28px;
-    height: 28px;
-    padding: 5px;
-    border: 1px solid var(--border-strong);
-    border-radius: 7px;
-    color: var(--text-2);
-}
-::deep .dispute-orders .mud-table-pagination-actions .mud-icon-button + .mud-icon-button { margin-left: 6px; }
+::deep .dispute-orders .mud-table-pagination { margin-top: 12px; }
 
 /* Keep the shared table toolbar aligned with Package Management. */
 ::deep .dispute-orders .mud-table-toolbar { min-height: 0 !important; height: auto !important; margin: 0 !important; padding: 0 0 22px !important; background: transparent; }
@@ -166,11 +156,9 @@
 ::deep .dispute-orders .table-component-search .mud-input-adornment-start .mud-icon-root { width: 16px; height: 16px; font-size: 16px; }
 
 @media (max-width: 768px) {
-    ::deep .dispute-orders .mud-table { padding: 22px 18px 8px !important; }
     ::deep .dispute-orders .table-component-toolbar { align-items: stretch; flex-direction: column; }
     ::deep .dispute-orders .table-component-toolbar-row,
     ::deep .dispute-orders .table-component-search { width: 100% !important; }
-    ::deep .dispute-orders .mud-table-pagination { flex-wrap: wrap; justify-content: center; gap: 8px; }
 }
 
 @media (max-width: 900px) {

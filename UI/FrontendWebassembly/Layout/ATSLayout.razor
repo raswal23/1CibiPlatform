@@ -67,18 +67,18 @@
                                      Class="@( "ats-console-nav-chevron " + (_isSettingsExpanded ? "expanded" : "") )" />
                         </button>
 
-                        @if (_isSettingsExpanded)
-                        {
-                            <div class="ats-console-nav-submenu">
-                                @foreach (var module in settingsModules)
-                                {
-                                    <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
-                                        <MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
-                                        <span class="ats-console-nav-text">@module.Value.Name</span>
-                                    </NavLink>
-                                }
-                            </div>
-                        }
+						<div class="@($"ats-console-nav-submenu-shell {(_isSettingsExpanded ? "is-expanded" : string.Empty)}")"
+							 aria-hidden="@(!_isSettingsExpanded)">
+							<div class="ats-console-nav-submenu">
+								@foreach (var module in settingsModules)
+								{
+									<NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+										<MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
+										<span class="ats-console-nav-text">@module.Value.Name</span>
+									</NavLink>
+								}
+							</div>
+						</div>
                     </div>
                 }
             </div>

@@ -11,10 +11,19 @@ public sealed class ModuleRepository : IModuleRepository
 
 	public async Task<bool> AddModuleAsync(AddModuleDTO dto)
 	{
+		var moduleName = dto.ModuleName!.Trim();
+		var normalizedModuleName = moduleName.ToUpperInvariant();
+		var moduleExists = await _dbContext.ModuleDetails
+			.AsNoTracking()
+			.AnyAsync(module => module.ModuleName.Trim().ToUpper() == normalizedModuleName);
+
+		if (moduleExists)
+			throw new BadRequestException($"Module '{moduleName}' already exists.");
+
 		var now = DateTime.UtcNow;
 		await _dbContext.ModuleDetails.AddAsync(new ModuleDetails
 		{
-			ModuleName = dto.ModuleName!, ModuleDescription = dto.ModuleDescription!, IsActive = dto.IsActive,
+			ModuleName = moduleName, ModuleDescription = dto.ModuleDescription!.Trim(), IsActive = dto.IsActive,
 			CreatedAt = now, UpdatedAt = now
 		});
 		await _dbContext.SaveChangesAsync();

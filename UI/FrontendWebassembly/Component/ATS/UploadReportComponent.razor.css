@@ -47,11 +47,36 @@
 .ats-upload-report-header-icon svg { width: 21px; height: 21px; }
 ::deep .ats-upload-report-shell-title { margin: 0; color: #fff; font-family: Poppins, Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: .2px; }
 ::deep .ats-upload-report-shell-subtitle { margin-top: 4px; color: #c6d5f5; font-size: 13px; }
-.ats-upload-report-shell-close { display: flex; width: 34px; height: 34px; padding: 0; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.2); border-radius: 9px; background: rgba(255,255,255,.1); color: #fff; cursor: pointer; transition: background .15s ease; }
+.ats-upload-report-shell-close {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
 .ats-upload-report-shell-close:hover,
-.ats-upload-report-shell-close:focus-visible { background: rgba(255,255,255,.22); }
-.ats-upload-report-shell-close:focus-visible { outline: 3px solid rgba(143,201,255,.6); outline-offset: 2px; }
-.ats-upload-report-shell-close svg { width: 15px; height: 15px; }
+.ats-upload-report-shell-close:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.ats-upload-report-shell-close svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ats-upload-report-shell-close:focus-visible {
+    outline: 3px solid rgba(143, 201, 255, 0.6);
+    outline-offset: 2px;
+}
 .ats-upload-report-body { padding: 26px 30px 6px; }
 .ats-upload-report-section { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 14px; background: #fcfdff; overflow: hidden; }
 .ats-upload-report-section-head { display: flex; padding: 12px 16px; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); background: var(--blue-tint); }
@@ -64,10 +89,36 @@
 ::deep .ats-upload-report-select .mud-input-outlined-border { border-width: 1.5px; border-color: var(--border-strong); border-radius: 10px; }
 ::deep .ats-upload-report-select.mud-input-control { margin: 0; }
 ::deep .ats-upload-report-select .mud-input-control-input-container { margin: 0; }
-::deep .ats-upload-report-select .mud-input { height: 42px; margin: 0; }
-::deep .ats-upload-report-select .mud-input-slot { min-height: 42px; padding-top: 0; padding-bottom: 0; color: var(--text-1); font-size: 14px; }
+::deep .ats-upload-report-select .mud-input,
+::deep .ats-upload-report-select .mud-select-input { height: 42px; min-height: 42px; margin: 0; }
+::deep .ats-upload-report-select .mud-input-slot {
+    display: flex;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    align-items: center;
+    color: var(--text-1);
+    font-size: 14px;
+    line-height: 42px;
+}
 ::deep .ats-upload-report-select .mud-input-helper-text { display: none; }
-::deep .ats-upload-report-select .mud-input-adornment-start { color: var(--text-3); }
+::deep .ats-upload-report-select .mud-input-adornment-start,
+::deep .ats-upload-report-select .mud-input-adornment-end {
+    align-self: center;
+}
+::deep .ats-upload-report-select .mud-input-adornment-start {
+    margin-left: 12px;
+    margin-right: 8px;
+    color: var(--text-3);
+}
+::deep .ats-upload-report-select .mud-input-adornment-end { margin-right: 12px; }
+::deep .ats-upload-report-select .mud-input-adornment-start .mud-icon-root,
+::deep .ats-upload-report-select .mud-input-adornment-end .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
 ::deep .ats-upload-dropzone { padding: 28px 16px; border: 2px dashed var(--border-strong); border-radius: 12px; background: #fbfcff; text-align: center; cursor: pointer; }
 ::deep .ats-upload-dropzone:hover { border-color: var(--blue-500); background: var(--blue-tint); }
 .ats-upload-dropzone-icon { display: flex; width: 40px; height: 40px; margin: 0 auto 10px; align-items: center; justify-content: center; border: 1px solid var(--border-strong); border-radius: 50%; background: var(--blue-tint-2); color: var(--blue-600); }

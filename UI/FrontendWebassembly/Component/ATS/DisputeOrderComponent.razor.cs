@@ -71,7 +71,7 @@ public partial class DisputeOrderComponent
 		var options = new DialogOptions
 		{
 			NoHeader = true,
-			MaxWidth = MaxWidth.ExtraSmall,
+			MaxWidth = MaxWidth.Small,
 			FullWidth = true
 		};
 

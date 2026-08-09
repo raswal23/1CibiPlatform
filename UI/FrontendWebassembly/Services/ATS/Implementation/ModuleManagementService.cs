@@ -61,7 +61,7 @@ public class ModuleManagementService : IModuleManagementService
 		if (!response.IsSuccessStatusCode)
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+			throw new Exception(errorContent?.Detail ?? "Unable to add the module.");
 		}
 
 		return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);

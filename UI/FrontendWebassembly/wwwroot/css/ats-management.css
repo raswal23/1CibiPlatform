@@ -220,9 +220,9 @@
     background: #fafbff;
 }
 
-/* The paginator provides the table's closing separation. */
+/* Keep the final row visually separate from the paginator. */
 .ats-management-card tbody .mud-table-row:last-child .mud-table-cell {
-    border-bottom: 0;
+    border-bottom: 1px solid var(--management-border) !important;
 }
 
 .ats-management-card .ats-management-primary {
@@ -663,7 +663,8 @@
 
 .ats-management-card .mud-table-pagination {
     min-height: 0;
-    padding: 0px 4px 8px;
+    margin: 0 !important;
+    padding: 0 4px !important;
     border-top: 0;
     color: var(--management-text-2);
     font-family: "Inter", sans-serif;
@@ -682,7 +683,7 @@
     width: 28px;
     height: 28px;
     padding: 5px;
-    border: 1px solid var(--management-border-strong);
+    border: 1.5px solid var(--management-border-strong);
     border-radius: 7px;
     color: var(--management-text-2);
 }
