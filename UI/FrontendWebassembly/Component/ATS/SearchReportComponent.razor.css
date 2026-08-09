@@ -1,4 +1,5 @@
 .search-report-warning,
+.search-report-legend,
 ::deep .search-report-results {
     --navy-900: #0b1b3d;
     --blue-600: #1d5fd1;
@@ -29,6 +30,126 @@
 
 .search-report-warning-title { margin: 0; color: #7a5209; font-size: 13.5px; font-weight: 700; }
 .search-report-warning-text { margin: 4px 0 0; color: #8a6212; font-size: 12.5px; line-height: 1.5; }
+/* Compact horizontal workflow legend between the warning and the results card. */
+.search-report-legend {
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fcfdff;
+    font-family: Inter, sans-serif;
+}
+
+.search-report-legend-title {
+    margin: 0 0 10px;
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.search-report-legend-track {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px 14px;
+}
+
+.search-report-legend-item {
+    display: flex;
+    flex: 1 1 220px;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.search-report-legend-icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+}
+
+.search-report-legend-icon ::deep .mud-icon-root {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+}
+
+.search-report-legend-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.search-report-legend-label {
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.search-report-legend-text {
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+/* Secondary annotation: withdrawal loops back into In progress rather than being its own status. */
+.search-report-legend-loop {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 3px 8px 3px 6px;
+    align-items: center;
+    gap: 4px;
+    border: 1px dashed #e6d3a8;
+    border-radius: 20px;
+    background: #fdf7ec;
+    color: #8a6212;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.search-report-legend-loop ::deep .mud-icon-root {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    font-size: 12px;
+    transform: scaleX(-1);
+}
+
+/* Match the table's existing status colours so the legend reads as the same system. */
+.search-report-legend-item.is-pending .search-report-legend-icon { background: #f8f9fc; color: var(--text-3); }
+.search-report-legend-item.is-progress .search-report-legend-icon { background: #fcf1dd; color: #b5790f; }
+.search-report-legend-item.is-completed .search-report-legend-icon { background: #e4f7ed; color: #1e9e64; }
+
+/* Anchor the connectors to the icon row so they stay level regardless of item height. */
+.search-report-legend-arrow {
+    display: inline-flex;
+    margin-top: 6px;
+    flex: 0 0 auto;
+    align-items: center;
+    align-self: flex-start;
+    color: var(--border-strong);
+}
+
+.search-report-legend-arrow ::deep .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
 .search-report-results-scope { width: 100%; }
 ::deep .search-report-results { width: 100%; max-width: none; margin: 0; }
 
@@ -270,6 +391,12 @@
 
 .report-icon-action:hover { background: var(--blue-tint-2); }
 .report-icon-action svg { width: 14px; height: 14px; }
+
+/* Once the three items can no longer share a row, drop the connectors instead of leaving them orphaned. */
+@media (max-width: 860px) {
+    .search-report-legend-arrow { display: none; }
+    .search-report-legend-item { flex: 1 1 100%; }
+}
 
 @media (max-width: 900px) {
     ::deep .search-report-results .table-component-toolbar {

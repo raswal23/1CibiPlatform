@@ -19,6 +19,53 @@
         </div>
     </div>
 
+    <div class="search-report-legend">
+        <p class="search-report-legend-title">Status legend</p>
+        <div class="search-report-legend-track">
+            <div class="search-report-legend-item is-pending">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.MailOutline" Size="Size.Small" />
+                </span>
+                <div class="search-report-legend-copy">
+                    <span class="search-report-legend-label">Pending</span>
+                    <span class="search-report-legend-text">Candidate information pending — the applicant has not yet responded to the email invitation.</span>
+                </div>
+            </div>
+
+            <span class="search-report-legend-arrow" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
+            </span>
+
+            <div class="search-report-legend-item is-progress">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.EditNote" Size="Size.Small" />
+                </span>
+                <div class="search-report-legend-copy">
+                    <span class="search-report-legend-label">In progress</span>
+                    <span class="search-report-legend-text">The applicant has started or completed the application form, but the screening process is not yet complete.</span>
+                    <span class="search-report-legend-loop">
+                        <MudIcon Icon="@Icons.Material.Outlined.Replay" Size="Size.Small" />
+                        Withdrawn returns to In progress
+                    </span>
+                </div>
+            </div>
+
+            <span class="search-report-legend-arrow" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" />
+            </span>
+
+            <div class="search-report-legend-item is-completed">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.CheckCircleOutline" Size="Size.Small" />
+                </span>
+                <div class="search-report-legend-copy">
+                    <span class="search-report-legend-label">Completed</span>
+                    <span class="search-report-legend-text">Screening is complete — the final report has been uploaded and the final hit status determined.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="search-report-results-scope">
     <TableComponent TItem="ReportListDTO"
                     @ref="reportsTable"
