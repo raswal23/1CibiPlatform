@@ -2,38 +2,11 @@
 
 public partial class MainLayout
 {
-	private readonly Dictionary<int, int> AppOrder = new()
-	{
-		{ 5, 1 }, // Credit Bureau
-        { 6, 2 }, // S&I
-        { 2, 3 }, // PhilSys
-        { 1, 4 }, // CNX
-        { 4, 5 }, // AI
-        { 3, int.MaxValue } // Settings
-    };
-
-	private bool _drawerOpen = true;
 	private bool _isDarkMode = false;
 	private bool _isLoading = true;
 	private string name = "";
 
-	private const string _appIdKey = "AppId";
-	private const string _subMenuKey = "SubMenuId";
-	private const string _roleIdKey = "RoleId";
 	private const string _userNameKey = "Name";
-
-	private List<int> Apps = new List<int>();
-	private List<List<int>> SubMenus = new List<List<int>>();
-	private List<int> Roles = new List<int>();
-
-	private string GetContainerStyle()
-	{
-		var background = !_isDarkMode
-			? "white"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%)";
-
-		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
-	}
 
 	private MudTheme _myTheme = new MudTheme()
 	{
@@ -60,12 +33,10 @@ public partial class MainLayout
 		LayoutProperties = new LayoutProperties()
 		{
 			DefaultBorderRadius = "4px",
-			DrawerWidthLeft = "260px",
 			AppbarHeight = "69px"
 		}
 	};
 
-	private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 	private async Task ToggleDarkMode()
 	{
 		_isDarkMode = !_isDarkMode;
@@ -80,22 +51,11 @@ public partial class MainLayout
 			? "linear-gradient(90deg, #68c0d6 0%, #2a77ae 50%, #102247 100%)"
 			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%)";
 
-		// dynamically adjust margin-left if drawer is open
-
-
 		return $@"
         width: auto !important;
         background: {gradient} !important;
 		border-radius: 4px;
-        transition: margin-left 0.3s ease, margin-right 0.3s ease;
     ";
-	}
-
-	private string GetMenuIconStyle()
-	{
-		return _isDarkMode
-			? "color: #102247;"
-			: "color: white;";
 	}
 	protected override async Task OnInitializedAsync()
 	{
@@ -109,15 +69,6 @@ public partial class MainLayout
 
 				return;
 			}
-
-			Apps = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_appIdKey) ?? string.Empty) ?? new List<int>();
-			Console.WriteLine($"Apps: {string.Join(", ", Apps)}");
-
-			SubMenus = JsonSerializer.Deserialize<List<List<int>>>(await LocalStorageService.GetItemAsync<string>(_subMenuKey) ?? string.Empty) ?? new List<List<int>>();
-			Console.WriteLine($"SubMenus: {string.Join(", ", SubMenus.SelectMany(sm => sm))}");
-
-			Roles = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_roleIdKey) ?? string.Empty) ?? new List<int>();
-			Console.WriteLine($"Roles: {string.Join(", ", Roles)}");
 
 			name = await LocalStorageService.GetItemAsync<string>(_userNameKey) ?? string.Empty;
 
@@ -138,33 +89,4 @@ public partial class MainLayout
 		}
 	}
 
-	private string GetActiveNavClass()
-	{
-		return _isDarkMode ? "nav-active-light" : "nav-active-dark";
-	}
-
-	private async Task HandleLogout()
-	{
-		Console.WriteLine("Logging out...");
-
-		try
-		{
-			var logout = await IAuthService.Logout();
-
-
-			if (logout)
-			{
-				Console.WriteLine(logout ? "Logout successful." : "Logout failed.");
-				Navigation.NavigateTo("/login", true);
-
-				return;
-			}
-		}
-		catch (Exception ex)
-		{
-			_isLoading = true;
-			Console.WriteLine($"Authentication Error: {ex.Message}");
-			throw;
-		}
-	}
 }
