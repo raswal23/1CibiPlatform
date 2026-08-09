@@ -5,11 +5,12 @@ public partial class ATSDashboardComponent
 	private const string AllRequesters = "All";
 	private const double StackedChartWidth = 400;
 	private const double StackedChartHeight = 245;
-	private const double StackedChartLeft = 35;
-	private const double StackedChartRight = 8;
-	private const double StackedChartTop = 8;
-	private const double StackedChartBottom = 25;
-
+	private const double StackedChartLeft = 44;
+	private const double StackedChartRight = 16;
+	private const double StackedChartTop = 14;
+	private const double StackedChartBottom = 36;
+	private const string DummyTicketNumberPrefix = "2026-";
+	private const int DummyTicketNumberUpperBound = 10_000_000;
 	private static readonly string[] AreaChartColors =
 	[
 		"#4D8DE8",
@@ -113,6 +114,39 @@ public partial class ATSDashboardComponent
 		await LoadDashboardAsync();
 	}
 
+	private async Task OpenChartDetailDialogAsync(string chartKey)
+	{
+		var parameters = new DialogParameters<DashboardChartDetailComponent>
+		{
+			{ component => component.ChartKey, chartKey },
+			{ component => component.Requester, _selectedRequester },
+			{ component => component.DashboardData, _dashboard }
+		};
+		var options = new DialogOptions
+		{
+			CloseButton = false,
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraLarge,
+			FullWidth = true,
+			BackdropClick = true
+		};
+
+		var dialog = await DialogService.ShowAsync<DashboardChartDetailComponent>(
+			string.Empty,
+			parameters,
+			options);
+
+		await dialog.Result;
+	}
+
+	private async Task OnChartCardKeyDown(KeyboardEventArgs eventArgs, string chartKey)
+	{
+		if (eventArgs.Key is "Enter" or " ")
+		{
+			await OpenChartDetailDialogAsync(chartKey);
+		}
+	}
+
 	private async Task LoadDashboardAsync()
 	{
 		SetDashboardSectionsLoading(true);
@@ -206,15 +240,36 @@ public partial class ATSDashboardComponent
 			.Select(category => category.Name)
 			.ToArray();
 
+		var dummyTicketNumbers = CreateDummyTicketNumbers(_dashboard.RecentOrders.Count);
 		_recentOrders = _dashboard.RecentOrders
-			.Select(order => new TransactionRow(
-				order.Ticket,
+			.Select((order, index) => new TransactionRow(
+				dummyTicketNumbers[index],
 				order.SubjectName,
 				order.OrderStatus,
 				order.HitStatus,
 				order.OrderCreatedAt,
 				order.OrderCompletedAt))
 			.ToArray();
+	}
+
+	private static IReadOnlyList<string> CreateDummyTicketNumbers(int count)
+	{
+		var ticketNumbers = new string[count];
+		var usedNumbers = new HashSet<int>();
+
+		for (var index = 0; index < count; index++)
+		{
+			int number;
+			do
+			{
+				number = Random.Shared.Next(DummyTicketNumberUpperBound);
+			}
+			while (!usedNumbers.Add(number));
+
+			ticketNumbers[index] = $"{DummyTicketNumberPrefix}{number:D7}";
+		}
+
+		return ticketNumbers;
 	}
 
 	private void BuildYtdHireChart()
@@ -366,6 +421,33 @@ public partial class ATSDashboardComponent
 	private static string GetPaletteColor(IReadOnlyList<string> palette, int index) =>
 		palette[index % palette.Count];
 
+	private static string GetRecentOrderInitials(string? subjectName) =>
+		string.Join(string.Empty, (subjectName ?? string.Empty)
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+			.Take(2)
+			.Select(part => char.ToUpperInvariant(part[0])));
+
+	private static string GetRecentOrderStatusClass(string? status) =>
+		status?.Contains("complete", StringComparison.OrdinalIgnoreCase) == true
+			? "completed"
+			: "progress";
+
+	private static string GetRecentOrderResultClass(string? result)
+	{
+		if (string.Equals(result, "Clear", StringComparison.OrdinalIgnoreCase))
+		{
+			return "clear";
+		}
+
+		if (string.Equals(result, "Not Clear", StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(result, "NotClear", StringComparison.OrdinalIgnoreCase))
+		{
+			return "not-clear";
+		}
+
+		return "pending";
+	}
+
 	private Task<TableData<TransactionRow>> LoadTransactionData(
 		TableState state,
 		CancellationToken cancellationToken)
@@ -385,7 +467,7 @@ public partial class ATSDashboardComponent
 	}
 
 	private record TransactionRow(
-		string? Ticket,
+		string DummyTicketNumber,
 		string? Subject,
 		string? Status,
 		string? Result,

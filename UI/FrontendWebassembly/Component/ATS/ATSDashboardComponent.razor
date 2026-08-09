@@ -4,6 +4,7 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(1)]
 @inject IDashboardService DashboardService
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 <PageTitle>ATS - Dashboard</PageTitle>
@@ -12,7 +13,7 @@
     <MudGrid>
         <MudItem xs="12" md="4">
             <MudSelect T="string"
-                       Label="Requester / Function"
+                       Label="Requester"
                        Value="_selectedRequester"
                        ValueChanged="OnRequesterChanged"
                        Variant="Variant.Outlined"
@@ -29,7 +30,13 @@
 </MudPaper>
 
 <div class="ats-dashboard-grid mb-4">
-        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+        <MudPaper Elevation="0"
+                  Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Open User YTD Hire chart in a larger view"
+                  @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.UserYtdHire))"
+                  @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.UserYtdHire))">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
                 User YTD Hire
             </MudText>
@@ -61,7 +68,10 @@
                         @foreach (var tick in _ytdHireYAxisTicks)
                         {
                             <line class="ats-stacked-area-grid-line"
-                                  x1="35" x2="392" y1="@tick.Position" y2="@tick.Position" />
+                                  x1="@FormatSvgNumber(StackedChartLeft)"
+                                  x2="@FormatSvgNumber(StackedChartWidth - StackedChartRight)"
+                                  y1="@tick.Position"
+                                  y2="@tick.Position" />
                         }
                         @foreach (var layer in _ytdHireLayers)
                         {
@@ -102,7 +112,11 @@
                                     r="5"
                                     fill="@_ytdHireHover.Color" />
                         }
-                        <line class="ats-stacked-area-axis-line" x1="35" x2="392" y1="220" y2="220" />
+                        <line class="ats-stacked-area-axis-line"
+                              x1="@FormatSvgNumber(StackedChartLeft)"
+                              x2="@FormatSvgNumber(StackedChartWidth - StackedChartRight)"
+                              y1="@FormatSvgNumber(StackedChartHeight - StackedChartBottom)"
+                              y2="@FormatSvgNumber(StackedChartHeight - StackedChartBottom)" />
                     </svg>
                     @if (_ytdHireHover is not null)
                     {
@@ -135,7 +149,13 @@
             }
         </MudPaper>
 
-        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+        <MudPaper Elevation="0"
+                  Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Open Candidate Response Rate chart in a larger view"
+                  @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.CandidateResponseRate))"
+                  @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.CandidateResponseRate))">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
                 Candidate Response Rate
             </MudText>
@@ -172,7 +192,13 @@
             }
         </MudPaper>
 
-        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+        <MudPaper Elevation="0"
+                  Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Open Turnaround Time Trend chart in a larger view"
+                  @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.TurnaroundTimeTrend))"
+                  @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.TurnaroundTimeTrend))">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
                 Turnaround Time Trend
             </MudText>
@@ -194,12 +220,14 @@
                         </span>
                     }
                 </div>
-                <MudChart ChartType="ChartType.Line"
-                          ChartSeries="@_turnaroundTimeSeries"
-                          ChartLabels="@_turnaroundTimeLabels"
-                          ChartOptions="@_lineChartOptions"
-                          Width="100%"
-                          Height="245px" />
+                <div class="ats-line-chart-shell">
+                    <MudChart ChartType="ChartType.Line"
+                              ChartSeries="@_turnaroundTimeSeries"
+                              ChartLabels="@_turnaroundTimeLabels"
+                              ChartOptions="@_lineChartOptions"
+                              Width="100%"
+                              Height="227px" />
+                </div>
             }
             else
             {
@@ -207,7 +235,13 @@
             }
         </MudPaper>
 
-        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+        <MudPaper Elevation="0"
+                  Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Open Completion Rate chart in a larger view"
+                  @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.CompletionRate))"
+                  @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.CompletionRate))">
             <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
                 Completion Rate
             </MudText>
@@ -246,36 +280,55 @@
     </div>
 
 <div class="ats-dashboard-table-shell" aria-busy="@_isRecentOrdersLoading">
-    <TableComponent TItem="TransactionRow"
-                    @ref="transactionsTable"
-                    Title="Recent Orders"
-                    EnableSearch="false"
-                    ColumnCount="6"
-                    RowsPerPage="10"
-                    LoadServerData="LoadTransactionData">
+    <div class="search-report-results-scope">
+        <TableComponent TItem="TransactionRow"
+                        @ref="transactionsTable"
+                        Title="Recent Orders"
+                        ContainerClass="ats-management-card search-report-results"
+                        EnableSearch="false"
+                        ColumnCount="6"
+                        RowsPerPage="10"
+						PageSizeOptions="@(new[] { 10, 25, 50, 100 })"
+                        LoadServerData="LoadTransactionData">
 
-        <HeaderTemplate>
-            <MudTh>Ticket Number</MudTh>
-            <MudTh>Subject Name</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh>Result</MudTh>
-            <MudTh>Date Endorsed</MudTh>
-            <MudTh>Completion Date</MudTh>
-        </HeaderTemplate>
+            <HeaderTemplate>
+                <MudTh>Ticket Number</MudTh>
+                <MudTh>Subject Name</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Result</MudTh>
+                <MudTh>Date Endorsed</MudTh>
+                <MudTh>Completion Date</MudTh>
+            </HeaderTemplate>
 
-        <RowTemplate Context="tx">
-            <MudTd DataLabel="Ticket">@(tx.Ticket ?? "-")</MudTd>
-            <MudTd DataLabel="Subject">@(tx.Subject ?? "-")</MudTd>
-            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Status)">@(tx.Status ?? "-")</span></MudTd>
-            <MudTd DataLabel="Result"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Result)">@(tx.Result ?? "-")</span></MudTd>
-            <MudTd DataLabel="Date Endorsed">@(tx.DateEndorsed?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-            <MudTd DataLabel="Completion Date">@(tx.CompletionDate?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-        </RowTemplate>
+            <RowTemplate Context="tx">
+                <MudTd DataLabel="Ticket Number">
+                    <span class="report-ticket">@tx.DummyTicketNumber</span>
+                </MudTd>
+                <MudTd DataLabel="Subject Name">
+                    <div class="report-subject">
+                        <span class="report-avatar">@GetRecentOrderInitials(tx.Subject)</span>
+                        <span class="report-name">@(tx.Subject ?? "-")</span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <span class="report-status @GetRecentOrderStatusClass(tx.Status)">@(tx.Status ?? "-")</span>
+                </MudTd>
+                <MudTd DataLabel="Result">
+                    <span class="report-hit @GetRecentOrderResultClass(tx.Result)">@(tx.Result ?? "-")</span>
+                </MudTd>
+                <MudTd Class="report-date" DataLabel="Date Endorsed">@(tx.DateEndorsed?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+                <MudTd Class="report-date" DataLabel="Completion Date">@(tx.CompletionDate?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+            </RowTemplate>
 
-        <NoRecordsTemplate>
-            <MudText Align="Align.Center" Class="pa-4">No recent orders are available.</MudText>
-        </NoRecordsTemplate>
-    </TableComponent>
+            <NoRecordsTemplate>
+                <div class="ats-console-empty-state">
+                    <div class="ats-console-empty-icon">📄</div>
+                    <div class="ats-console-empty-title">No recent orders are available</div>
+                    <div class="ats-console-empty-sub">New orders will appear here when they become available.</div>
+                </div>
+            </NoRecordsTemplate>
+        </TableComponent>
+    </div>
     @if (_isRecentOrdersLoading)
     {
         <div class="ats-dashboard-table-loading-overlay"

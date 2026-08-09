@@ -53,7 +53,6 @@ public record CompletionRateDTO
 
 public record DashboardRecentOrderDTO
 {
-	public string? Ticket { get; init; }
 	public string? SubjectName { get; init; }
 	public string? OrderStatus { get; init; }
 	public string? HitStatus { get; init; }

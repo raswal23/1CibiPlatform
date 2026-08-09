@@ -528,10 +528,8 @@ public class ATSRepository : IATSRepository
 		var recentOrders = await invitations
 			.OrderByDescending(x => x.OrderCreatedAt)
 			.ThenByDescending(x => x.EmailInvitationID)
-			.Take(10)
 			.Select(x => new DashboardRecentOrderDTO
 			{
-				Ticket = x.HashToken,
 				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
 				OrderStatus = x.OrderStatus,
 				HitStatus = x.ReportDetails!
