@@ -55,6 +55,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
 		services.AddScoped<IFilePdfService, FilePdfService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
