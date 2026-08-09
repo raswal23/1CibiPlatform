@@ -1,0 +1,289 @@
+.ats-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+}
+
+.ats-dashboard-chart-card {
+    min-width: 0;
+    min-height: 330px;
+    padding: 14px 10px 10px;
+    overflow: hidden;
+    border: 1px solid rgba(11, 31, 58, 0.06);
+}
+
+.ats-dashboard-chart-title {
+    margin-bottom: 8px;
+    color: #0b1f3a;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.ats-chart-legend {
+    display: flex;
+    min-height: 28px;
+    margin: 0 4px 2px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 14px;
+    color: #3e4b5e;
+    font-size: 11px;
+}
+
+.ats-chart-legend-item {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.ats-chart-legend-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+}
+
+.ats-chart-total {
+    padding-left: 8px;
+    color: #0b1f3a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-stacked-area-shell {
+    position: relative;
+    width: 100%;
+    height: 245px;
+}
+
+.ats-stacked-area-chart {
+    display: block;
+    width: 100%;
+    height: 245px;
+    overflow: visible;
+}
+
+.ats-stacked-area-grid-line {
+    stroke: rgba(62, 75, 94, 0.12);
+    stroke-width: 1;
+}
+
+.ats-stacked-area-axis-line {
+    stroke: rgba(62, 75, 94, 0.35);
+    stroke-width: 1;
+}
+
+.ats-stacked-area-hover-target {
+    fill: transparent;
+    stroke: transparent;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.ats-stacked-area-hover-target:focus {
+    fill: rgba(255, 255, 255, 0.2);
+    stroke: rgba(11, 31, 58, 0.35);
+    stroke-width: 1.5;
+    outline: none;
+}
+
+.ats-stacked-area-hover-marker {
+    stroke: #fff;
+    stroke-width: 2;
+    filter: drop-shadow(0 1px 2px rgba(11, 31, 58, 0.35));
+    pointer-events: none;
+}
+
+.ats-stacked-area-tooltip {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    min-width: 120px;
+    padding: 7px 9px;
+    align-items: flex-start;
+    gap: 7px;
+    color: #344054;
+    background: #fff;
+    border: 1px solid rgba(11, 31, 58, 0.12);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(11, 31, 58, 0.18);
+    font-size: 11px;
+    line-height: 1.25;
+    transform: translate(-50%, calc(-100% - 11px));
+    pointer-events: none;
+}
+
+.ats-stacked-area-tooltip-below {
+    transform: translate(-50%, 11px);
+}
+
+.ats-stacked-area-tooltip > span:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+.ats-stacked-area-tooltip strong {
+    color: #0b1f3a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-stacked-area-tooltip-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 2px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+}
+
+.ats-stacked-area-y-label {
+    position: absolute;
+    left: 0;
+    width: 30px;
+    color: #3e4b5e;
+    font-size: 10px;
+    line-height: 12px;
+    text-align: right;
+    transform: translateY(-50%);
+}
+
+.ats-stacked-area-x-labels {
+    position: absolute;
+    right: 2%;
+    bottom: 0;
+    left: 8.75%;
+    display: flex;
+    justify-content: space-between;
+    color: #3e4b5e;
+    font-size: 10px;
+}
+
+.ats-dashboard-empty {
+    display: flex;
+    min-height: 260px;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.ats-dashboard-section-loading {
+    display: flex;
+    min-height: 260px;
+    align-items: center;
+    justify-content: center;
+}
+
+.ats-dashboard-table-shell {
+    position: relative;
+    min-height: 280px;
+}
+
+.ats-dashboard-table-loading-overlay {
+    position: absolute;
+    z-index: 10;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.82);
+    border-radius: 12px;
+}
+
+.ats-donut-shell {
+    position: relative;
+    width: 100%;
+    height: 270px;
+    margin: 0 auto;
+}
+
+.ats-donut-chart {
+    position: absolute;
+    top: 31px;
+    left: 50%;
+    width: 210px;
+    height: 210px;
+    transform: translateX(-50%);
+}
+
+.ats-donut-label {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    max-width: 88px;
+    flex-direction: column;
+    color: #344054;
+    font-size: 10px;
+    line-height: 1.15;
+    pointer-events: none;
+}
+
+.ats-donut-label strong {
+    color: #0b1f3a;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.ats-candidate-label-0 {
+    top: 126px;
+    right: 0;
+    text-align: left;
+}
+
+.ats-candidate-label-1 {
+    top: 166px;
+    left: 0;
+    text-align: right;
+}
+
+.ats-candidate-label-2 {
+    top: 7px;
+    left: 7px;
+    text-align: center;
+}
+
+.ats-completion-label-0 {
+    top: 145px;
+    right: 0;
+    text-align: left;
+}
+
+.ats-completion-label-1 {
+    top: 177px;
+    left: 0;
+    text-align: right;
+}
+
+.ats-completion-label-2 {
+    top: 75px;
+    left: 2px;
+    text-align: right;
+}
+
+.ats-completion-label-3 {
+    top: 5px;
+    left: 50%;
+    text-align: center;
+    transform: translateX(-50%);
+}
+
+::deep .mud-chart-serie-axis,
+::deep .mud-chart-serie-label {
+    font-size: 10px;
+}
+
+@media (max-width: 1199.98px) {
+    .ats-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ats-dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

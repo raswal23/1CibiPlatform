@@ -117,6 +117,17 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetATSDashboard",
+				MatchPath: "/ats/getdashboard",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getdashboard" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetReportResult",
 				MatchPath: "/ats/getreportresult",
 				ClusterId: GatewayConstants.OnePlatformApi,

@@ -1,66 +1,256 @@
-﻿@page "/s&i/ats/dashboard"
+@page "/s&i/ats/dashboard"
 @layout ATSLayout
 @inherits SecurePageBase
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(1)]
+@inject IDashboardService DashboardService
+@inject ISnackbar Snackbar
 
 <PageTitle>ATS - Dashboard</PageTitle>
 
-    <MudGrid Class="mb-4">
+<MudPaper Elevation="0" Class="pa-4 mb-4">
+    <MudGrid>
         <MudItem xs="12" md="4">
-            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
-                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
-                    Job Offer Acceptance Rate
-                </MudText>
-                <MudChart ChartType="ChartType.Donut"
-                          Width="100%"
-                          Height="210px"
-                          ChartOptions="@donutChartOptions"
-                          ChartSeries="@JobAcceptanceRates.AsChartDataSet()"
-                          ChartLabels="@Departments">
-                    <CustomGraphics>
-                        <text class="mud-donut-text mud-typography-h4" x="50%" y="50%">
-                            @JobAcceptanceRates.Sum()
-                        </text>
-                    </CustomGraphics>
-                </MudChart>
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
-                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
-                    Year-To-Date Compliance
-                </MudText>
-                <MudChart ChartType="ChartType.Bar"
-                          ChartSeries="@BarSeries"
-                          Width="100%"
-                          ChartOptions="@barChartOptions"
-                          ChartLabels="@BarLabels"
-                          Height="210px" />
-            </MudPaper>
-        </MudItem>
-
-        <MudItem xs="12" md="4">
-            <MudPaper Elevation="0" Class="pa-4" Style="min-height: 300px;">
-                <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="mb-4" Style="font-size: 15px; font-weight: 700; color: #0B1F3A;">
-                    Time-to-Hire Progression
-                </MudText>
-                <MudChart ChartType="ChartType.Line"
-                          ChartSeries="@LineSeries"
-                          ChartLabels="@LineLabels"
-                          ChartOptions="@lineChartOptions"
-                          Width="100%"
-                          Height="210px" />
-            </MudPaper>
+            <MudSelect T="string"
+                       Label="Requester / Function"
+                       Value="_selectedRequester"
+                       ValueChanged="OnRequesterChanged"
+                       Variant="Variant.Outlined"
+                       Margin="Margin.Dense"
+                       Disabled="IsAnyDashboardSectionLoading">
+                <MudSelectItem T="string" Value="@AllRequesters">All</MudSelectItem>
+                @foreach (var requester in _dashboard.Requesters)
+                {
+                    <MudSelectItem T="string" Value="@requester">@requester</MudSelectItem>
+                }
+            </MudSelect>
         </MudItem>
     </MudGrid>
+</MudPaper>
 
+<div class="ats-dashboard-grid mb-4">
+        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
+                User YTD Hire
+            </MudText>
+            @if (_isYtdHireLoading)
+            {
+                <div class="ats-dashboard-section-loading" role="status" aria-label="Loading User YTD Hire chart">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (HasYtdHireData)
+            {
+                <div class="ats-chart-legend">
+                    @for (var index = 0; index < _dashboard.YtdHireSeries.Count; index++)
+                    {
+                        var series = _dashboard.YtdHireSeries[index];
+                        <span class="ats-chart-legend-item">
+                            <span class="ats-chart-legend-dot" style="background-color: @GetAreaLegendColor(index)"></span>
+                            @series.Name
+                        </span>
+                    }
+                    <span class="ats-chart-total">YTD Total: @_ytdHireGrandTotal</span>
+                </div>
+                <div class="ats-stacked-area-shell">
+                    <svg class="ats-stacked-area-chart"
+                         viewBox="0 0 400 245"
+                         preserveAspectRatio="none"
+                         role="img"
+                         aria-label="Monthly hires by requester">
+                        @foreach (var tick in _ytdHireYAxisTicks)
+                        {
+                            <line class="ats-stacked-area-grid-line"
+                                  x1="35" x2="392" y1="@tick.Position" y2="@tick.Position" />
+                        }
+                        @foreach (var layer in _ytdHireLayers)
+                        {
+                            <polygon points="@layer.PolygonPoints"
+                                     fill="@layer.Color"
+                                     fill-opacity="0.20">
+                                <title>@layer.Name</title>
+                            </polygon>
+                        }
+                        @foreach (var layer in _ytdHireLayers)
+                        {
+                            <polyline points="@layer.LinePoints"
+                                      fill="none"
+                                      stroke="@layer.Color"
+                                      stroke-width="2" />
+                            @foreach (var point in layer.Points)
+                            {
+                                <circle class="ats-stacked-area-hover-target"
+                                        cx="@FormatSvgNumber(point.X)"
+                                        cy="@FormatSvgNumber(point.Y)"
+                                        r="6"
+                                        tabindex="0"
+                                        focusable="true"
+                                        aria-label="@($"{layer.Name}, {point.Month}: {point.Value}")"
+                                        @onmouseenter="@(() => ShowYtdHireHover(layer, point))"
+                                        @onmouseleave="ClearYtdHireHover"
+                                        @onfocus="@(() => ShowYtdHireHover(layer, point))"
+                                        @onblur="ClearYtdHireHover">
+                                    <title>@layer.Name - @point.Month: @point.Value</title>
+                                </circle>
+                            }
+                        }
+                        @if (_ytdHireHover is not null)
+                        {
+                            <circle class="ats-stacked-area-hover-marker"
+                                    cx="@FormatSvgNumber(_ytdHireHover.X)"
+                                    cy="@FormatSvgNumber(_ytdHireHover.Y)"
+                                    r="5"
+                                    fill="@_ytdHireHover.Color" />
+                        }
+                        <line class="ats-stacked-area-axis-line" x1="35" x2="392" y1="220" y2="220" />
+                    </svg>
+                    @if (_ytdHireHover is not null)
+                    {
+                        <div class="@GetYtdHireTooltipClass(_ytdHireHover)"
+                             style="@GetYtdHireTooltipStyle(_ytdHireHover)"
+                             role="status">
+                            <span class="ats-stacked-area-tooltip-dot"
+                                  style="background-color: @_ytdHireHover.Color"></span>
+                            <span>
+                                <strong>@_ytdHireHover.SeriesName</strong>
+                                <span>@_ytdHireHover.Month: @_ytdHireHover.Value</span>
+                            </span>
+                        </div>
+                    }
+                    @foreach (var tick in _ytdHireYAxisTicks)
+                    {
+                        <span class="ats-stacked-area-y-label" style="top: @(tick.Position)px">@tick.Label</span>
+                    }
+                    <div class="ats-stacked-area-x-labels">
+                    @foreach (var tick in _ytdHireXAxisTicks)
+                    {
+                        <span>@tick.Label</span>
+                    }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No hire data is available for this period.</MudText>
+            }
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
+                Candidate Response Rate
+            </MudText>
+            @if (_isCandidateResponseLoading)
+            {
+                <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Candidate Response Rate chart">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (HasCandidateResponseData)
+            {
+                <div class="ats-donut-shell ats-candidate-donut">
+                    <div class="ats-donut-chart">
+                        <MudChart ChartType="ChartType.Donut"
+                                  Width="210px"
+                                  Height="210px"
+                                  ChartOptions="@_donutChartOptions"
+                                  ChartSeries="@_candidateResponseData.AsChartDataSet()"
+                                  ChartLabels="@_candidateResponseLabels" />
+                    </div>
+                    @for (var index = 0; index < _dashboard.CandidateResponseRate.Categories.Count; index++)
+                    {
+                        var category = _dashboard.CandidateResponseRate.Categories[index];
+                        <div class="@($"ats-donut-label ats-candidate-label-{index}")">
+                            <span>@category.Name</span>
+                            <strong>@category.Percentage.ToString("0.#")%</strong>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No sent invitation data is available.</MudText>
+            }
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
+                Turnaround Time Trend
+            </MudText>
+            @if (_isTurnaroundTimeLoading)
+            {
+                <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Turnaround Time Trend chart">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (HasTurnaroundTimeData)
+            {
+                <div class="ats-chart-legend">
+                    @for (var index = 0; index < _dashboard.TurnaroundTimeTrend.Count; index++)
+                    {
+                        var series = _dashboard.TurnaroundTimeTrend[index];
+                        <span class="ats-chart-legend-item">
+                            <span class="ats-chart-legend-dot" style="background-color: @GetAreaLegendColor(index)"></span>
+                            @series.Name
+                        </span>
+                    }
+                </div>
+                <MudChart ChartType="ChartType.Line"
+                          ChartSeries="@_turnaroundTimeSeries"
+                          ChartLabels="@_turnaroundTimeLabels"
+                          ChartOptions="@_lineChartOptions"
+                          Width="100%"
+                          Height="245px" />
+            }
+            else
+            {
+                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No report-volume data is available for the last seven reporting days.</MudText>
+            }
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="ats-dashboard-chart-card">
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
+                Completion Rate
+            </MudText>
+            @if (_isCompletionRateLoading)
+            {
+                <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Completion Rate chart">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                </div>
+            }
+            else if (HasCompletionRateData)
+            {
+                <div class="ats-donut-shell ats-completion-donut">
+                    <div class="ats-donut-chart">
+                        <MudChart ChartType="ChartType.Donut"
+                                  Width="210px"
+                                  Height="210px"
+                                  ChartOptions="@_donutChartOptions"
+                                  ChartSeries="@_completionRateData.AsChartDataSet()"
+                                  ChartLabels="@_completionRateLabels" />
+                    </div>
+                    @for (var index = 0; index < _dashboard.CompletionRate.Categories.Count; index++)
+                    {
+                        var category = _dashboard.CompletionRate.Categories[index];
+                        <div class="@($"ats-donut-label ats-completion-label-{index}")">
+                            <span>@category.Name</span>
+                            <strong>@category.Percentage.ToString("0.#")%</strong>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No report completion data is available.</MudText>
+            }
+        </MudPaper>
+    </div>
+
+<div class="ats-dashboard-table-shell" aria-busy="@_isRecentOrdersLoading">
     <TableComponent TItem="TransactionRow"
                     @ref="transactionsTable"
                     Title="Recent Orders"
-                    EnableSearch="true"
-                    ColumnCount="4"
+                    EnableSearch="false"
+                    ColumnCount="6"
                     RowsPerPage="10"
                     LoadServerData="LoadTransactionData">
 
@@ -69,13 +259,29 @@
             <MudTh>Subject Name</MudTh>
             <MudTh>Status</MudTh>
             <MudTh>Result</MudTh>
+            <MudTh>Date Endorsed</MudTh>
+            <MudTh>Completion Date</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="tx">
-            <MudTd DataLabel="Ticket">@tx.Ticket</MudTd>
-            <MudTd DataLabel="Subject">@tx.Subject</MudTd>
-            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Status)">@tx.Status</span></MudTd>
-            <MudTd DataLabel="Result"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Result)">@tx.Result</span></MudTd>
+            <MudTd DataLabel="Ticket">@(tx.Ticket ?? "-")</MudTd>
+            <MudTd DataLabel="Subject">@(tx.Subject ?? "-")</MudTd>
+            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Status)">@(tx.Status ?? "-")</span></MudTd>
+            <MudTd DataLabel="Result"><span class="@ATSStatusBadgeResolver.GetBadgeClass(tx.Result)">@(tx.Result ?? "-")</span></MudTd>
+            <MudTd DataLabel="Date Endorsed">@(tx.DateEndorsed?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
+            <MudTd DataLabel="Completion Date">@(tx.CompletionDate?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
         </RowTemplate>
 
+        <NoRecordsTemplate>
+            <MudText Align="Align.Center" Class="pa-4">No recent orders are available.</MudText>
+        </NoRecordsTemplate>
     </TableComponent>
+    @if (_isRecentOrdersLoading)
+    {
+        <div class="ats-dashboard-table-loading-overlay"
+             role="status"
+             aria-label="Loading Recent Orders table">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        </div>
+    }
+</div>

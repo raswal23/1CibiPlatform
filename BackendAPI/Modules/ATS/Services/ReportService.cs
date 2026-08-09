@@ -58,8 +58,10 @@ public class ReportService : IReportService
 				cancellationToken);
 
 			if (reportDetailsDTO.ReportStatus != ReportStatus.InitialReport)
+			{
 				orderStatus = OrderStatus.Completed;
-			    orderCompletedAt = DateTime.UtcNow;
+				orderCompletedAt = DateTime.UtcNow;
+			}
 
 			await _atsRepository.UpdateOrderStatusAsync(
 					reportDetailsDTO.EmailInvitationRequestId,
