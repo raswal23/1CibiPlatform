@@ -10,16 +10,23 @@
 
 <PageTitle>ATS - Search Report</PageTitle>
 
-<MudPaper Class="pa-4" Elevation="0">
-    <div class="ats-console-notice mb-3">
-        <strong>Select at least one order.</strong>
-        Choose one or more orders from the list before downloading the report(s).
+<div class="ats-management-page">
+    <div class="search-report-warning">
+        <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" />
+        <div>
+            <p class="search-report-warning-title">Select at least one order</p>
+            <p class="search-report-warning-text">Choose one or more orders from the list before downloading the report(s).</p>
+        </div>
     </div>
 
+    <div class="search-report-results-scope">
     <TableComponent TItem="ReportListDTO"
                     @ref="reportsTable"
                     Title="Query results"
+                    ContainerClass="ats-management-card search-report-results"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search query results"
                     ColumnCount="8"
                     RowsPerPage="10"
                     LoadServerData="LoadReportData"
@@ -54,23 +61,27 @@
 
         <RowTemplate Context="r">
             <MudTd DataLabel="Action">
-                <div style="display:flex; justify-content:left;">
-                    <MudCheckBox T="bool" 
-                                 @bind-value="r.Selected"
-                                 CheckedChanged="@((bool value) => OnCheckboxChanged(r, value))"
-                                 Color="Color.Primary" />
-                </div>
+                <button type="button" class="report-checkbox @(r.Selected ? "checked" : null)"
+                        role="checkbox" aria-checked="@r.Selected.ToString().ToLowerInvariant()"
+                        aria-label="@($"Select {r.SubjectName}")"
+                        @onclick="@(() => OnCheckboxChanged(r, !r.Selected))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+                </button>
             </MudTd>
-            <MudTd DataLabel="Subject Name">@r.SubjectName</MudTd>
-            <MudTd DataLabel="Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(r.OrderStatus)">@r.OrderStatus</span></MudTd>
-            <MudTd DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-            <MudTd DataLabel="Selected Package">@r.SelectedPackage</MudTd>
-            <MudTd DataLabel="Hit Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(r.HitStatus)">@r.HitStatus</span></MudTd>
-            <MudTd DataLabel="Report Directory">
-                <MudIconButton Icon="@Icons.Material.Filled.Upload" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenUploadReportDialog(r.EmailInvitationRequestId))" />
+            <MudTd DataLabel="Subject Name"><div class="report-subject"><span class="report-avatar">@GetInitials(r.SubjectName)</span><span class="report-name">@r.SubjectName</span></div></MudTd>
+            <MudTd DataLabel="Status"><span class="report-status @GetOrderStatusClass(r.OrderStatus)">@GetOrderStatusText(r.OrderStatus)</span></MudTd>
+            <MudTd Class="report-date" DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "—")</MudTd>
+            <MudTd DataLabel="Selected Package"><span class="report-package">@r.SelectedPackage</span></MudTd>
+            <MudTd DataLabel="Hit Status"><span class="report-hit @GetHitStatusClass(r.HitStatus)">@GetHitStatusText(r.HitStatus)</span></MudTd>
+            <MudTd DataLabel="Upload Report">
+                <button type="button" class="report-icon-action" aria-label="@($"Upload report for {r.SubjectName}")" @onclick="@(() => OpenUploadReportDialog(r.EmailInvitationRequestId))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M12 4l-4.5 4.5M12 4l4.5 4.5" /><path d="M4 16v2.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V16" /></svg>
+                </button>
             </MudTd>
-            <MudTd DataLabel="Report Directory">
-                <MudIconButton Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))" />
+            <MudTd DataLabel="Directory">
+                <button type="button" class="report-icon-action" aria-label="@($"Open directory for {r.SubjectName}")" @onclick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 014.5 6h4.4l1.8 2h8.8A1.5 1.5 0 0121 9.5v8A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-10z" /></svg>
+                </button>
             </MudTd>
         </RowTemplate>
 
@@ -83,6 +94,8 @@
         </NoRecordsTemplate>
 
     </TableComponent>
+    </div>
+</div>
 
     <div class="ats-actions-right mt-3 mb-3" style="justify-content:space-between; align-items:center;">
         <MudButton Variant="Variant.Outlined"
@@ -95,4 +108,3 @@
         <strong>Reports are password protected</strong>
         Downloaded PDFs require this quarter's password. Please contact your account manager if you do not have it.
     </div> *@
-</MudPaper>

@@ -220,6 +220,11 @@
     background: #fafbff;
 }
 
+/* The paginator provides the table's closing separation. */
+.ats-management-card tbody .mud-table-row:last-child .mud-table-cell {
+    border-bottom: 0;
+}
+
 .ats-management-card .ats-management-primary {
     min-width: 150px !important;
     color: var(--management-text-1);
@@ -711,6 +716,58 @@
 }
 
 @media (max-width: 600px) {
+    /* Keep add/edit dialog chrome visible while only the form body scrolls. */
+    .um-dialog {
+        max-height: calc(100dvh - 24px);
+        overflow: hidden;
+    }
+
+    .um-dialog > .mud-dialog-content {
+        display: flex;
+        max-height: inherit;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .um-dialog :is(
+        .ac-shell, .ec-shell,
+        .am-shell, .em-shell,
+        .ap-shell, .ep-shell,
+        .ar-shell, .er-shell,
+        .au-shell, .eu-shell) {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        max-height: inherit;
+    }
+
+    .um-dialog :is(
+        .ac-header, .ec-header,
+        .am-header, .em-header,
+        .ap-header, .ep-header,
+        .ar-header, .er-header,
+        .au-header, .eu-header,
+        .ac-footer, .ec-footer,
+        .am-footer, .em-footer,
+        .ap-footer, .ep-footer,
+        .ar-footer, .er-footer,
+        .au-footer, .eu-footer) {
+        flex: 0 0 auto;
+    }
+
+    .um-dialog :is(
+        .ac-body, .ec-body,
+        .am-body, .em-body,
+        .ap-body, .ep-body,
+        .ar-body, .er-body,
+        .au-body, .eu-body) {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
     .ats-management-button {
         justify-content: center;
         width: 100%;

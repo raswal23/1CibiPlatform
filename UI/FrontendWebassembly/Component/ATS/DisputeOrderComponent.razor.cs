@@ -6,6 +6,15 @@ public partial class DisputeOrderComponent
 	private string? _searchString;
 
 	private Guid? _loadingDisputeId;
+
+	private static string GetInitials(string? firstName, string? lastName)
+	{
+		var firstInitial = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
+		var lastInitial = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
+
+		return $"{firstInitial}{lastInitial}".ToUpperInvariant();
+	}
+
 	private string searchString
 	{
 		get => _searchString!;

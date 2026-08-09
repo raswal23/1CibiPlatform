@@ -1,38 +1,40 @@
 ﻿@inject IReportService ReportService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-       
+
+<MudDialog Class="um-dialog ats-result-modal-dialog" Style="padding: 0; width: min(820px, calc(100vw - 24px)); max-width: 820px;">
+    <DialogContent>
 <div class="ats-result-shell">
-    <div class="ats-upload-report-shell-header">
-        <div >
-            <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
-            <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
+    <div class="ats-result-top-header">
+        <div>
+            <MudText Typo="Typo.h5" Class="ats-result-title">Uploaded files &amp; report</MudText>
+            <MudText Typo="Typo.body1" Class="ats-result-subtitle">View the submitted documents and screening report</MudText>
         </div>
-        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                        Class="ats-upload-report-shell-close"
-                        OnClick="CloseDialog" />
+        <button type="button" class="ats-result-close" aria-label="Close" @onclick="CloseDialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
     </div>
     <MudPaper Elevation="0" Class="ats-result-hero">
         <div>
             <MudText Typo="Typo.h5" Class="ats-result-hero-name">@ReportResult!.SubjectName</MudText>
             <MudText Typo="Typo.body2" Class="ats-result-hero-subtitle">@ReportResult!.SelectedPackage</MudText>
         </div>
-        <div class="ats-result-hero-status">@ReportResult!.OrderStatus</div>
+        <div class="ats-result-hero-status">@GetOrderStatusText()</div>
     </MudPaper>
 
-    <MudGrid GutterSize="3" Class="mt-4">
-        <MudItem xs="12" md="4">
+    <div class="ats-result-body">
+        <div>
             <MudPaper Elevation="0" Class="oneplatform-surface-card ats-result-summary-card">
                 <MudText Typo="Typo.h6" Class="ats-result-section-title">Screening summary</MudText>
 
                 <div class="ats-result-summary-item">
                     <MudText Typo="Typo.caption" Class="ats-result-label">Status</MudText>
-                    <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.OrderStatus</MudText>
+                    <span class="ats-result-summary-status">@GetOrderStatusText()</span>
                 </div>
 
                 <div class="ats-result-summary-item">
                     <MudText Typo="Typo.caption" Class="ats-result-label">Result</MudText>
-                    <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.HitStatus</MudText>
+                    <MudText Typo="Typo.body1" Class="@($"ats-result-value {GetResultValueClass()}")">@GetResultText()</MudText>
                 </div>
 
                 <div class="ats-result-summary-item">
@@ -40,13 +42,13 @@
                     <MudText Typo="Typo.body1" Class="ats-result-value">@ReportResult!.SelectedPackage</MudText>
                 </div>
 
-                <MudButton Class="theme-button theme-button-active mt-4"
-                Style="width: 100%; border-radius: 10px;"
-                OnClick="SelecFilesToDownload">↓ Download</MudButton>
+                <MudButton Class="ats-result-download"
+                           StartIcon="@Icons.Material.Outlined.Download"
+                           OnClick="SelecFilesToDownload">Download</MudButton>
             </MudPaper>
-        </MudItem>
+        </div>
 
-        <MudItem xs="12" md="8">
+        <div>
             <MudPaper Elevation="0" Class="oneplatform-surface-card ats-result-docs-card">
                 <MudText Typo="Typo.h6" Class="ats-result-section-title">Submitted documents</MudText>
 
@@ -126,6 +128,8 @@
                     </div>
                 </div>
             </MudPaper>
-        </MudItem>
-    </MudGrid>
+        </div>
+    </div>
 </div>
+    </DialogContent>
+</MudDialog>

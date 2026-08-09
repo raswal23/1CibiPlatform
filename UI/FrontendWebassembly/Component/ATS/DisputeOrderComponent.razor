@@ -8,16 +8,24 @@
 
 <PageTitle>ATS - Dispute Order</PageTitle>
 
-    <div class="ats-console-notice mb-3">
-        <strong>Dispute window applies</strong>
-        Disputes can only be filed for orders completed within the allowed window. Submit a new order if that window has closed or reverification is needed.
+<div class="ats-management-page">
+    <div class="dispute-warning">
+        <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" />
+        <div>
+            <p class="dispute-warning-title">Dispute window applies</p>
+            <p class="dispute-warning-text">Disputes can only be filed for orders completed within the allowed window. Submit a new order if that window has closed or reverification is needed.</p>
+        </div>
     </div>
      
 
+    <div class="dispute-orders-scope">
     <TableComponent TItem="DisputeOrderListDTO"
                     @ref="ordersTable"
                     Title="Dispute orders"
+                    ContainerClass="ats-management-card dispute-orders"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search dispute orders"
                     ColumnCount="5"
                     RowsPerPage="10"
                     LoadServerData="LoadOrderData"
@@ -25,11 +33,11 @@
                     SearchStringChanged="@((string val) => searchString = val)">
 
         <HeaderTemplate>
-            <MudTh Class="ats-table-cell-center">Subject Name</MudTh>
-            <MudTh Class="ats-table-cell-center">Status</MudTh>
-            <MudTh Class="ats-table-cell-center">Order Date</MudTh>
-            <MudTh Class="ats-table-cell-center">Date Completed</MudTh>
-            <MudTh Class="ats-table-cell-center">Send Dispute</MudTh>
+            <MudTh>Subject Name</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Order Date</MudTh>
+            <MudTh>Date Completed</MudTh>
+            <MudTh>Send Dispute</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="o">
@@ -57,28 +65,41 @@
             }
             else
             {
-                <MudTd Class="ats-table-cell-center" DataLabel="Subject Name">
-                    @($"{o.FirstName} {o.LastName}".Trim())
+                <MudTd DataLabel="Subject Name">
+                    <div class="dispute-subject">
+                        <span class="dispute-avatar">@GetInitials(o.FirstName, o.LastName)</span>
+                        <span class="dispute-name">@($"{o.FirstName} {o.LastName}".Trim())</span>
+                    </div>
                 </MudTd>
 
-                <MudTd Class="ats-table-cell-center " DataLabel="Status">
-                    <span class="@ATSStatusBadgeResolver.GetBadgeClass(o.DisputeCategory)">
-                        @o.DisputeCategory
-                    </span>
+                <MudTd DataLabel="Status">
+                    @if (string.IsNullOrWhiteSpace(o.DisputeCategory))
+                    {
+                        <span class="dispute-chip muted">Not set</span>
+                    }
+                    else
+                    {
+                        <span class="dispute-chip">@o.DisputeCategory</span>
+                    }
                 </MudTd>
 
-                <MudTd Class="ats-table-cell-center" DataLabel="Order Date">
+                <MudTd Class="dispute-date" DataLabel="Order Date">
                     @o.OrderCreatedAt?.ToString("MMMM dd, yyyy")
                 </MudTd>
 
-                <MudTd Class="ats-table-cell-center " DataLabel="Date Completed">
+                <MudTd Class="dispute-date" DataLabel="Date Completed">
                     @(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")
                 </MudTd>
 
-                <MudTd Class="ats-table-cell-center" DataLabel="Send Dispute">
-                    <MudIconButton Icon="@Icons.Material.Filled.Send"
-                                   Color="Color.Error"
-                                   OnClick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))" />
+                <MudTd DataLabel="Send Dispute">
+                    <button type="button"
+                            class="dispute-action"
+                            aria-label="@($"Send dispute for {o.FirstName} {o.LastName}")"
+                            @onclick="@(() => MarkAsDisputed(o.EmailInvitationID, o.OrderCreatedAt, $"{o.FirstName} {o.LastName}"))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                        </svg>
+                    </button>
                 </MudTd>
             }
         
@@ -92,5 +113,7 @@
             </div>
         </NoRecordsTemplate>
     </TableComponent>
+    </div>
+</div>
 
     

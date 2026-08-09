@@ -198,7 +198,8 @@
         {
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
-            FullWidth = true
+            FullWidth = true,
+            BackdropClick = true
         };
 
         var dialog = await DialogService.ShowAsync<AddClientComponent>("Add Client", parameters, options);
@@ -232,7 +233,8 @@
         {
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
-            FullWidth = true
+            FullWidth = true,
+            BackdropClick = true
         };
 
         var dialog = await DialogService.ShowAsync<EditClientComponent>("Edit Client", parameters, options);

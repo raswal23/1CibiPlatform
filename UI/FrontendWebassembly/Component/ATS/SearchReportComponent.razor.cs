@@ -7,6 +7,34 @@ public partial class SearchReportComponent
     private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
 
+	private static string GetInitials(string? name)
+		=> string.Join(string.Empty, (name ?? string.Empty)
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+			.Take(2)
+			.Select(part => char.ToUpperInvariant(part[0])));
+
+	private static bool IsCompleted(string? status)
+		=> string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase);
+
+	private static string GetOrderStatusClass(string? status) => IsCompleted(status) ? "completed" : "progress";
+	private static string GetOrderStatusText(string? status) => IsCompleted(status) ? "Completed" : "In progress";
+
+	private static string GetHitStatusClass(string? status)
+	{
+		if (string.Equals(status, "Clear", StringComparison.OrdinalIgnoreCase)) return "clear";
+		if (string.Equals(status, "Not clear", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(status, "NotClear", StringComparison.OrdinalIgnoreCase)) return "not-clear";
+		return "pending";
+	}
+
+	private static string GetHitStatusText(string? status)
+	{
+		if (string.Equals(status, "Clear", StringComparison.OrdinalIgnoreCase)) return "Clear";
+		if (string.Equals(status, "Not clear", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(status, "NotClear", StringComparison.OrdinalIgnoreCase)) return "Not clear";
+		return "Pending";
+	}
+
 	private string searchString
 	{
       get => _searchString!;
@@ -143,7 +171,9 @@ public partial class SearchReportComponent
 
 			await OpenResultDialog<ATSResultComponent>(
 				"",
-				parameters);
+				parameters,
+				MaxWidth.Medium,
+				fullWidth: false);
 		}
 		catch (Exception)
 		{
@@ -166,7 +196,7 @@ public partial class SearchReportComponent
 			CloseButton = false,
 			NoHeader = true,
 			MaxWidth = MaxWidth.Small,
-			FullWidth = true
+			FullWidth = false
 		};
 
 		dialog = await DialogService.ShowAsync<UploadReportComponent>(

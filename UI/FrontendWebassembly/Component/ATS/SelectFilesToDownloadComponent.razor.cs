@@ -30,6 +30,14 @@ public partial class SelectFilesToDownloadComponent
 	private bool HasSelectedFile =>
 		ResumeSelected || GovernmentIdSelected || DiplomaSelected || CoeSelected || ConsentSelected || ReportSelected;
 
+	private int SelectedFileCount =>
+		(ResumeSelected ? 1 : 0)
+		+ (GovernmentIdSelected ? 1 : 0)
+		+ (DiplomaSelected ? 1 : 0)
+		+ (CoeSelected ? 1 : 0)
+		+ (ConsentSelected ? 1 : 0)
+		+ (ReportSelected ? 1 : 0);
+
 	public async Task DownloadDocumentsAsync()
 	{
 		if (!HasSelectedFile)

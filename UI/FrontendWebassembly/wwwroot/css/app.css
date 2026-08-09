@@ -1554,6 +1554,10 @@ code {
         color: var(--ats-text-main);
     }
 
+    .ats-console .mud-table tbody .mud-table-row:last-child .mud-table-cell {
+        border-bottom: 0;
+    }
+
 .ats-console .mud-input-outlined .mud-input-outlined-border,
 .ats-console .mud-select-outlined .mud-input-outlined-border {
     border-color: var(--ats-border);

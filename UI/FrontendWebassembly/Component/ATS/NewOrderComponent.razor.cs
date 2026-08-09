@@ -4,8 +4,8 @@ public partial class NewOrderComponent
 {
 	private MudForm? candidateForm;
 	private MudForm? bulkForm;
-	private EmailInvitationRequestDTO subject = new();
-	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
+	private EmailInvitationRequestDTO subject = new() { RushNormal = "Normal" };
+	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new() { OrderType = "Normal" };
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
@@ -65,7 +65,7 @@ public partial class NewOrderComponent
 	{
 		bulkUploadFileDetailsDTO.BulkFile = null;
 		bulkUploadFileDetailsDTO.FileName = null;
-		bulkUploadFileDetailsDTO.OrderType = null;
+		bulkUploadFileDetailsDTO.OrderType = "Normal";
 		bulkUploadFileDetailsDTO.PackageType = null;
 
 		if (bulkForm is not null)
@@ -169,7 +169,7 @@ public partial class NewOrderComponent
 			{
 				Snackbar.Add("An email invitation will be sent to your candidate.", Severity.Success);
 
-				subject.RushNormal = null;
+				subject.RushNormal = "Normal";
 
 				await candidateForm.ResetAsync();
 			}
@@ -251,7 +251,7 @@ public partial class NewOrderComponent
 			{
 				Snackbar.Add("Bulk upload successful. An email invitation will be sent to your candidates.", Severity.Success);
 
-				bulkUploadFileDetailsDTO.OrderType = null;
+				bulkUploadFileDetailsDTO.OrderType = "Normal";
 				bulkUploadFileDetailsDTO.BulkFile = null;
 
 				await bulkForm.ResetAsync();

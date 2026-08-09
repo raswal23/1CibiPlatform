@@ -305,7 +305,8 @@
         {
             NoHeader = true,
             MaxWidth = MaxWidth.Medium,
-            FullWidth = true
+            FullWidth = true,
+            BackdropClick = true
         };
 
         var dialog = await DialogService.ShowAsync<AddUserComponent>("Add User", parameters, options);
@@ -390,7 +391,8 @@
         {
             NoHeader = true,
             MaxWidth = MaxWidth.Medium,
-            FullWidth = true
+            FullWidth = true,
+            BackdropClick = true
         };
 
         var dialog = await DialogService.ShowAsync<EditUserComponent>("Edit User", parameters, options);
