@@ -11,7 +11,7 @@
 
 <PageTitle>ATS - User Management</PageTitle>
 
-<div class="ats-users-page">
+<div class="ats-users-page ats-management-page">
     <div class="ats-users-actions">
         <button type="button" class="ats-users-button ats-users-button-outline" @onclick="AssignClient">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -29,34 +29,24 @@
         </button>
     </div>
 
-    <section class="ats-users-card" aria-labelledby="ats-users-heading">
-        <MudTable T="UserManagementViewModel"
-                  @ref="usersTable"
-                  ServerData="LoadUserData"
-                  Class="ats-users-table"
-                  HorizontalScrollbar="true"
-                  Hover="true"
-                  RowsPerPage="10">
-            <ToolBarContent>
-                <div class="ats-users-topbar">
-                    <h1 id="ats-users-heading">Users</h1>
-                    <div class="ats-users-search-wrap">
-                        <MudTextField T="string"
-                                      Value="searchString"
-                                      ValueChanged="SearchUsers"
-                                      Placeholder="Search users"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Immediate="true"
-                                      DebounceInterval="300"
-                                      Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Outlined.Search"
-                                      Class="ats-users-search" />
-                    </div>
-                </div>
-            </ToolBarContent>
+    <section class="ats-users-table-scope">
+        <TableComponent TItem="UserManagementViewModel"
+                        @ref="usersTable"
+                        Title="Users"
+                        TitleId="ats-users-heading"
+                        ContainerClass="ats-management-card ats-users-card"
+                        TableClass="ats-users-table"
+                        EnableSearch="true"
+                        SearchLabel=""
+                        SearchPlaceholder="Search users"
+                        ColumnCount="10"
+                        RowsPerPage="10"
+                        PageSizeOptions="@(new[] { 10, 25, 50 })"
+                        LoadServerData="LoadUserData"
+                        SearchString="@searchString"
+                        SearchStringChanged="@((string value) => searchString = value)">
 
-            <HeaderContent>
+            <HeaderTemplate>
                 <MudTh Class="ats-users-user-column">User</MudTh>
                 <MudTh Class="ats-users-email-column">Email</MudTh>
                 <MudTh>Client</MudTh>
@@ -67,7 +57,7 @@
                 <MudTh>Created date</MudTh>
                 <MudTh>Updated date</MudTh>
                 <MudTh>Actions</MudTh>
-            </HeaderContent>
+            </HeaderTemplate>
 
             <RowTemplate Context="user">
                 <MudTd DataLabel="User">
@@ -125,27 +115,21 @@
                 </MudTd>
             </RowTemplate>
 
-            <NoRecordsContent>
+            <NoRecordsTemplate>
                 <div class="ats-users-empty">
                     <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" />
                     <strong>No users</strong>
                     <span>Create a new user to get started.</span>
                 </div>
-            </NoRecordsContent>
-
-            <PagerContent>
-                <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50 })"
-                               RowsPerPageString="Rows per page:"
-                               InfoFormat="{first_item}-{last_item} of {all_items}" />
-            </PagerContent>
-        </MudTable>
+            </NoRecordsTemplate>
+        </TableComponent>
     </section>
 </div>
 
 @code {
     private const string SuperAdminEmail = "admin@cibi.com";
     private string searchString = string.Empty;
-    private MudTable<UserManagementViewModel>? usersTable;
+    private TableComponent<UserManagementViewModel>? usersTable;
     private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
     private IReadOnlyList<ClientDetailsDTO> clients = Array.Empty<ClientDetailsDTO>();
     private IReadOnlyList<RoleDetailsDTO> roles = Array.Empty<RoleDetailsDTO>();
@@ -158,13 +142,6 @@
     private Dictionary<Guid, UserClientDetailsDTO> userClientAssignmentLookup = new();
     private Task? referenceDataLoadTask;
     private bool referenceDataLoaded;
-
-    private async Task SearchUsers(string value)
-    {
-        searchString = value;
-        if (usersTable is not null)
-            await usersTable.ReloadServerData();
-    }
 
     private static string GetUserInitials(string? userName)
     {

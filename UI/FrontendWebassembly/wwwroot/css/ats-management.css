@@ -90,16 +90,7 @@
     background: transparent;
 }
 
-.ats-management-card .table-component-toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: center;
-    gap: 20px;
-}
-
 .ats-management-card .table-component-toolbar > .mud-typography {
-    grid-column: 1;
-    grid-row: 1;
     width: auto !important;
     margin: 0 !important;
     background: none !important;
@@ -108,21 +99,6 @@
     font-size: 22px !important;
     font-weight: 700 !important;
     -webkit-text-fill-color: currentColor !important;
-}
-
-.ats-management-card .table-component-toolbar-row {
-    display: contents !important;
-}
-
-.ats-management-card .table-component-search {
-    grid-column: 2;
-    grid-row: 1;
-    width: 320px !important;
-    margin-left: 0 !important;
-}
-
-.ats-management-card .table-component-toolbar-row > div:last-child:empty {
-    display: none;
 }
 
 .ats-management-card .table-component-search .mud-input-control,
@@ -696,24 +672,6 @@
     .ats-management-card.responsive-table-container {
         padding: 22px 20px 8px;
     }
-
-    .ats-management-card .table-component-toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .ats-management-card .table-component-toolbar > .mud-typography,
-    .ats-management-card .table-component-search {
-        grid-column: 1;
-    }
-
-    .ats-management-card .table-component-toolbar > .mud-typography {
-        grid-row: 1;
-    }
-
-    .ats-management-card .table-component-search {
-        grid-row: 2;
-        width: 100% !important;
-    }
 }
 
 @media (max-width: 600px) {
@@ -783,11 +741,6 @@
         font-size: 20px !important;
     }
 
-    .ats-management-card .mud-table-pagination-toolbar {
-        align-items: flex-end;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

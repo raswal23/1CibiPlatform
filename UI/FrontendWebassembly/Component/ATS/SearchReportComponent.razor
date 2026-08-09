@@ -38,9 +38,12 @@
                 <label>Date range</label>
                 <MudDateRangePicker Class="search-report-date-range"
                                     Variant="Variant.Outlined"
-                                    Margin="Margin.Dense"
                                     ReadOnly="false"
                                     Clearable="true"
+                                    SeparatorIcon="@Icons.Material.Filled.ArrowRightAlt"
+                                    AdornmentIcon="@Icons.Material.Outlined.CalendarToday"
+                                    AdornmentColor="Color.Primary"
+                                    DateFormat="MM/dd/yyyy"
                                     DateRangeChanged="OnDateRangeChanged"
                                     PlaceholderStart="Start Date"
                                     PlaceholderEnd="End Date" />
@@ -102,8 +105,8 @@
 </div>
 
     <div class="ats-actions-right mt-3 mb-3" style="justify-content:space-between; align-items:center;">
-        <MudButton Variant="Variant.Outlined"
-                   Class="ats-ghost-btn"
+        <MudButton Variant="Variant.Filled"
+                   Class="search-report-download-button"
                    StartIcon="@Icons.Material.Filled.Download"
                    OnClick="DownloadSelected">Download selected</MudButton>
     </div>

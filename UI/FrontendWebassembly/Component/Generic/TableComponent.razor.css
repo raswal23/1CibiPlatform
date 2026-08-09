@@ -1,0 +1,192 @@
+.responsive-table-container {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    overflow: hidden;
+}
+
+.responsive-table-container ::deep .generic-responsive-table {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.responsive-table-container ::deep .mud-table-toolbar {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+}
+
+.table-component-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 31.25rem);
+    align-items: center;
+    gap: 1rem 1.25rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.table-component-toolbar.has-left-content {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.responsive-table-container ::deep .table-component-title {
+    grid-column: 1;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+}
+
+.table-component-toolbar-row {
+    display: flex;
+    grid-column: 2;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.table-component-toolbar:not(.has-title) .table-component-toolbar-row,
+.table-component-toolbar.has-left-content .table-component-toolbar-row {
+    grid-column: 1 / -1;
+}
+
+.table-component-toolbar-left {
+    flex: 0 1 20rem;
+    min-width: 0;
+    margin-left: auto;
+}
+
+.table-component-search {
+    flex: 0 1 31.25rem;
+    width: 100%;
+    max-width: 31.25rem;
+    min-width: 12rem;
+    margin-left: 0;
+}
+
+.table-component-search ::deep .table-component-search-input {
+    width: 100%;
+}
+
+.table-component-toolbar-actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+.responsive-table-container ::deep .mud-table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+.responsive-table-container ::deep .mud-table-root {
+    width: 100%;
+}
+
+.responsive-table-container ::deep .mud-table-pagination {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.responsive-table-container ::deep .mud-table-pagination-toolbar {
+    box-sizing: border-box;
+    height: auto !important;
+    min-height: 3.5rem;
+    min-width: min(100%, 32rem);
+    flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+    .table-component-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: stretch;
+    }
+
+    .responsive-table-container ::deep .table-component-title,
+    .table-component-toolbar-row {
+        grid-column: 1;
+    }
+
+    .table-component-toolbar-row {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .table-component-search {
+        max-width: none;
+    }
+
+    .responsive-table-container ::deep .mud-sm-table .mud-table-root {
+        min-width: 100% !important;
+        table-layout: auto !important;
+    }
+
+    .responsive-table-container ::deep .mud-sm-table .mud-table-container {
+        overflow-x: hidden !important;
+    }
+
+    .responsive-table-container ::deep .mud-sm-table .mud-table-cell {
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0 !important;
+        gap: 1rem;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+
+    .responsive-table-container ::deep .mud-sm-table .mud-table-cell::before {
+        flex: 0 0 min(42%, 12rem);
+        color: var(--mud-palette-text-secondary);
+        text-align: left;
+    }
+
+    .responsive-table-container ::deep .mud-sm-table .mud-table-cell > * {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .responsive-table-container ::deep .generic-responsive-table {
+        padding: 0.5rem;
+    }
+
+    .responsive-table-container ::deep .table-component-title {
+        font-size: 1.125rem !important;
+    }
+
+    .table-component-toolbar-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .table-component-toolbar-left,
+    .table-component-search,
+    .table-component-toolbar-actions {
+        flex-basis: auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .table-component-toolbar-actions ::deep .mud-button-root {
+        width: 100%;
+    }
+
+    .responsive-table-container ::deep .mud-table-pagination-toolbar {
+        justify-content: center;
+        gap: 0.5rem;
+        padding-inline: 0 !important;
+    }
+}

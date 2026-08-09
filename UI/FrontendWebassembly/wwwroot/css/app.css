@@ -3249,3 +3249,742 @@ code {
         flex-direction: column;
     }
 }
+
+/* ATS application form: Step 2 identity verification */
+.ats-application-card .ats-step-one .ats-step-one-shell {
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0 !important;
+    background: #FFFFFF;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 36px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    padding: 0;
+    flex: none;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid > .mud-grid-item:first-child {
+    display: flex;
+    align-items: stretch;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-hero {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0 0;
+    border-radius: 0 !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-hero-content {
+    display: flex;
+    min-height: 100%;
+    gap: 20px;
+    width: 100%;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-title {
+    max-width: 410px;
+    margin: 0;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+}
+
+/* Keep the existing PhilSys artwork; only size it for the refreshed layout. */
+.ats-application-card .ats-step-one .ats-step-one-logo {
+    width: min(270px, 100%);
+    max-width: 270px;
+    height: auto;
+    object-fit: contain;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice {
+    width: 100%;
+    max-width: none;
+    padding: 22px;
+    border: 1.5px solid var(--ats-border-strong);
+    border-radius: 14px !important;
+    background: var(--ats-blue-tint);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice-title {
+    margin: 0 0 8px;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice-text {
+    margin: 0 0 18px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-actions,
+.ats-application-card .ats-step-one .ats-step-one-choice-group {
+    gap: 10px;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card {
+    min-height: 0;
+    margin: 0 !important;
+    padding: 13px 16px;
+    border: 2px solid var(--ats-border-strong);
+    border-radius: 11px;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card:hover {
+    border-color: #4F93EA;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card.selected,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-checked,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-radio-checked {
+    border-color: var(--ats-blue-500);
+    background: #FFFFFF;
+    box-shadow: 0 4px 14px -6px rgba(29, 95, 209, .25);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card .mud-radio-icon {
+    margin-right: 12px;
+    color: var(--ats-border-strong);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card.selected .mud-radio-icon,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-checked .mud-radio-icon,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-radio-checked .mud-radio-icon {
+    color: var(--ats-blue-600);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card .mud-typography {
+    color: var(--ats-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-button-row {
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed,
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn {
+    min-height: 40px;
+    border-radius: 9px !important;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed.theme-button-active {
+    border: 0 !important;
+    background: linear-gradient(120deg, var(--ats-navy-800), var(--ats-blue-500)) !important;
+    box-shadow: 0 8px 18px -6px rgba(29, 95, 209, .5) !important;
+    color: #FFFFFF !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed.theme-button-active:hover {
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, .65) !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn {
+    border: 1.5px solid var(--ats-border-strong) !important;
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+    color: var(--ats-text-3) !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn:hover:not(:disabled) {
+    background: #F4F7FC !important;
+    color: var(--ats-text-2) !important;
+}
+
+@media (max-width: 760px) {
+    .ats-application-card .ats-step-one .ats-step-one-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .ats-application-card .ats-step-one .ats-step-one-hero {
+        padding-top: 0;
+    }
+
+    .ats-application-card .ats-step-one .ats-step-one-title {
+        max-width: 100%;
+        font-size: 20px;
+    }
+}
+
+/* ATS application form: consent step */
+.ats-appform-modern {
+    --ats-navy-900: #0B1B3D;
+    --ats-navy-800: #132A54;
+    --ats-blue-600: #1D5FD1;
+    --ats-blue-500: #2E7CE0;
+    --ats-blue-tint: #EDF3FC;
+    --ats-blue-tint-2: #E3ECFB;
+    --ats-border: #DCE6F7;
+    --ats-border-strong: #C2D2F0;
+    --ats-text-1: #16233F;
+    --ats-text-2: #5B6B8C;
+    --ats-text-3: #8A97B5;
+    align-items: flex-start;
+    padding: 40px 20px;
+    background: #EEF2F9;
+    color: var(--ats-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-appform-modern,
+.ats-appform-modern * {
+    box-sizing: border-box;
+}
+
+.ats-appform-modern .ats-application-card {
+    width: min(900px, 100%);
+    max-width: 900px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--ats-border);
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
+}
+
+.ats-application-card .ats-appform-stepper {
+    padding: 30px 34px 34px;
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: none !important;
+    color: var(--ats-text-1);
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: 0 0 30px;
+}
+
+.ats-application-card .ats-appform-stepper.mud-stepper__horizontal.mud-stepper__center-labels > .mud-stepper-nav > .mud-step {
+    min-width: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    flex-basis: auto;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label {
+    gap: 8px !important;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-icon {
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 auto !important;
+    border: 2px solid var(--ats-border-strong) !important;
+    background: var(--ats-blue-tint-2) !important;
+    color: var(--ats-text-3) !important;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px !important;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) !important;
+    box-shadow: 0 0 0 4px var(--ats-blue-tint);
+    color: #FFFFFF !important;
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed {
+    border-color: var(--ats-blue-500) !important;
+    background: var(--ats-blue-500) !important;
+    color: #FFFFFF !important;
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon::before,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed::before {
+    content: none !important;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-content {
+    width: auto !important;
+    margin-top: 0 !important;
+    color: var(--ats-text-2) !important;
+    text-align: center !important;
+    white-space: nowrap;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-content-title {
+    color: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-content {
+    color: var(--ats-navy-900) !important;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav > .mud-stepper-nav-connector {
+    min-width: 20px;
+    height: 2px;
+    margin: 15px 6px 0 !important;
+    align-self: flex-start;
+}
+
+.ats-application-card .ats-appform-stepper .mud-stepper-nav-connector-line {
+    border-color: var(--ats-border-strong) !important;
+    border-top-width: 2px !important;
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-content {
+    margin-top: 0;
+    padding: 0;
+    background: #FFFFFF;
+}
+
+.ats-consent-step .ats-consent-step-grid {
+    width: 100%;
+    margin: 0;
+    gap: 26px;
+    row-gap: 26px !important;
+}
+
+.ats-consent-step .ats-consent-step-grid > .mud-grid-item {
+    padding: 0;
+}
+
+.ats-consent-step .ats-consent-copy-section {
+    width: 100%;
+    border-radius: 0 !important;
+}
+
+.ats-consent-step .ats-consent-title {
+    margin: 0 0 20px;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.ats-consent-step .ats-consent-document {
+    max-height: 190px;
+    margin: 0;
+    padding: 18px 20px;
+    overflow-y: auto;
+    border: 1.5px solid var(--ats-border-strong);
+    border-radius: 12px;
+    background: var(--ats-blue-tint);
+    scrollbar-color: #939393 #F0F4FA;
+    scrollbar-width: auto;
+}
+
+.ats-consent-step .ats-consent-document .mud-typography {
+    margin: 0 0 12px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.ats-consent-step .ats-consent-document .mud-typography:last-child {
+    margin-bottom: 0;
+}
+
+.ats-consent-step .ats-consent-document .ats-consent-subheading {
+    margin: 14px 0 8px;
+    color: var(--ats-text-1) !important;
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-consent-step .ats-signature-section {
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+}
+
+.ats-consent-step .ats-signature-section > .mud-grid {
+    width: 100%;
+    margin: 0;
+    gap: 18px;
+    row-gap: 18px !important;
+}
+
+.ats-consent-step .ats-signature-section > .mud-grid > .mud-grid-item {
+    padding: 0;
+}
+
+.ats-consent-step .ats-signature-block {
+    display: block;
+}
+
+.ats-consent-step .ats-consent-signature-pad {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 22px 24px 26px;
+    border: 1px solid var(--ats-border);
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-shadow: 0 8px 24px -14px rgba(11, 27, 61, 0.20);
+}
+
+.ats-consent-step .ats-signature-modern-header {
+    margin-bottom: 16px;
+}
+
+.ats-consent-step .ats-signature-modern-title {
+    margin: 0 0 4px;
+    color: var(--ats-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 15.5px;
+    font-weight: 700 !important;
+}
+
+.ats-consent-step .ats-signature-modern-subtitle {
+    color: var(--ats-text-2);
+    font-size: 12.5px;
+}
+
+.ats-consent-step .ats-signature-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--ats-blue-tint);
+}
+
+.ats-consent-step .ats-signature-tab {
+    width: 50%;
+    min-width: 0;
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 10px;
+    border-radius: 8px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.12s ease;
+}
+
+.ats-consent-step .ats-signature-tab.active {
+    color: var(--ats-blue-600);
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(11, 27, 61, 0.10);
+}
+
+.ats-consent-step .ats-signature-tab .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.ats-consent-step .ats-signature-draw-surface,
+.ats-consent-step .ats-signature-upload-zone {
+    height: 170px;
+    min-height: 170px;
+    border: 2px dashed var(--ats-border-strong);
+    border-radius: 12px;
+    background: #FBFCFF;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ats-consent-step .ats-signature-draw-surface:hover,
+.ats-consent-step .ats-signature-upload-zone:hover {
+    border-color: #4F93EA;
+    background: var(--ats-blue-tint);
+}
+
+.ats-consent-step .ats-signature-draw-hint {
+    color: var(--ats-text-3);
+    font-size: 13px;
+    font-style: italic;
+}
+
+.ats-consent-step .ats-signature-panel-footer {
+    margin-top: 10px;
+    color: var(--ats-text-3);
+    font-size: 12px;
+}
+
+.ats-consent-step .ats-signature-clear-link {
+    color: var(--ats-blue-600);
+    font-weight: 700;
+}
+
+.ats-consent-step .ats-signature-clear-link:hover {
+    text-decoration: underline;
+}
+
+.ats-consent-step .ats-signature-privacy-note {
+    margin-top: 14px;
+    color: var(--ats-text-2);
+    font-size: 11.5px;
+}
+
+.ats-consent-step .ats-signature-privacy-note .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--ats-text-3);
+    font-size: 14px;
+}
+
+.ats-consent-step .ats-signature-error {
+    justify-content: flex-start;
+    margin: 8px 0 0;
+}
+
+.ats-consent-step .ats-consent-fields-wrap {
+    margin-top: 0;
+}
+
+.ats-consent-step .ats-consent-fields {
+    margin: -8px;
+}
+
+.ats-consent-step .ats-consent-field-label {
+    display: block;
+    margin: 0 0 6px;
+    color: var(--ats-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
+}
+
+.ats-consent-step .ats-consent-field-label span {
+    margin-left: 2px;
+    color: #D64545;
+}
+
+.ats-consent-step .ats-consent-field {
+    display: flex;
+    min-width: 0;
+    align-self: flex-start;
+    flex-direction: column;
+}
+
+.ats-consent-step .ats-consent-field > .mud-input-control,
+.ats-consent-step .ats-consent-date-wrap,
+.ats-consent-step .ats-consent-date-wrap .mud-picker,
+.ats-consent-step .ats-consent-date-wrap .mud-picker-inline,
+.ats-consent-step .ats-consent-date-wrap .mud-input-control {
+    width: 100%;
+    margin: 0;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined {
+    width: 100%;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    color: var(--ats-text-1);
+    background: #FFFFFF;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined-border {
+    border: 1.5px solid var(--ats-border-strong) !important;
+    border-radius: 10px !important;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-slot {
+    height: 44px !important;
+    min-height: 44px !important;
+    box-sizing: border-box;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-family: "Inter", sans-serif;
+    font-size: 14px !important;
+    line-height: 44px;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-adornment {
+    color: var(--ats-text-3);
+}
+
+.ats-consent-step .ats-consent-input .mud-input-adornment .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--ats-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-consent-step .ats-consent-input input::placeholder {
+    color: var(--ats-text-3);
+    opacity: 1;
+}
+
+.ats-consent-step .ats-consent-date-wrap {
+    position: relative;
+}
+
+.ats-consent-step .ats-consent-date-leading-icon {
+    position: absolute;
+    z-index: 2;
+    top: 22px;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    color: var(--ats-text-3);
+    font-size: 16px;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.ats-consent-step .ats-consent-date-wrap input.mud-input-root,
+.ats-consent-step .ats-consent-date-wrap input.mud-input-root-outlined,
+.ats-consent-step .ats-consent-date-wrap .mud-input-slot {
+    padding-left: 38px !important;
+}
+
+.ats-consent-step .ats-consent-date-wrap .mud-input-adornment-end {
+    display: flex;
+    height: 44px;
+    margin-top: 0 !important;
+    margin-right: 12px;
+    align-items: center;
+    align-self: center;
+}
+
+.ats-consent-step .ats-consent-date-wrap .mud-input-adornment-end .mud-icon-button {
+    padding: 0;
+}
+
+.ats-application-card .ats-step-action-bar:has(.ats-save-next-button) {
+    padding: 0 !important;
+}
+
+.ats-application-card .ats-save-next-button {
+    height: 46px;
+    min-width: 0;
+    margin-top: 16px;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(120deg, var(--ats-navy-800), var(--ats-blue-500));
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.50);
+    color: #FFFFFF;
+    font-family: "Inter", sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: box-shadow 0.15s ease, transform 0.10s ease;
+}
+
+.ats-application-card .ats-save-next-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65);
+}
+
+.ats-application-card .ats-save-next-button:active {
+    transform: scale(0.97);
+}
+
+.ats-application-card .ats-save-next-button .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+@media (max-width: 700px) {
+    .ats-appform-modern {
+        padding: 12px 8px;
+    }
+
+    .ats-appform-modern .ats-application-card {
+        width: 100%;
+    }
+
+    .ats-application-card .ats-appform-stepper {
+        padding: 22px 18px 26px;
+    }
+
+    .ats-application-card .ats-appform-stepper > .mud-stepper-nav {
+        padding: 4px;
+        overflow-x: auto;
+    }
+
+    .ats-application-card .ats-appform-stepper .mud-step-label-content-title {
+        font-size: 10px;
+    }
+
+    .ats-application-card .ats-appform-stepper > .mud-stepper-nav > .mud-stepper-nav-connector {
+        min-width: 24px;
+    }
+
+    .ats-consent-step .ats-signature-panel-footer {
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .ats-application-card .ats-step-action-bar:has(.ats-save-next-button) {
+        justify-content: stretch !important;
+    }
+
+    .ats-application-card .ats-save-next-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 599px) {
+    .ats-consent-step .ats-consent-fields {
+        width: 100%;
+        margin: 0;
+        gap: 14px;
+        row-gap: 14px !important;
+    }
+
+    .ats-consent-step .ats-consent-fields > .mud-grid-item {
+        padding: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-consent-step .ats-signature-tab,
+    .ats-consent-step .ats-signature-draw-surface,
+    .ats-consent-step .ats-signature-upload-zone,
+    .ats-application-card .ats-save-next-button {
+        transition: none;
+    }
+}

@@ -9,6 +9,9 @@
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
 @inject MobileNumberValidationService MobileNumberValidationService
+@inject LocalStorageService LocalStorageService
+@inject IClientManagementService ClientManagementService
+@inject IPackageManagementService PackageManagementService
 @inherits CrudPageBase
 
 <PageTitle>ATS - New Order</PageTitle>
@@ -118,14 +121,18 @@
                                    Class="ats-input ats-select"
                                    Adornment="Adornment.Start"
                                    AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                   Disabled="@isLoadingPackages"
                                    Required="true"
                                    RequiredError="Package is required">
-                            <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
-                            <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
-                            <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
-                            <MudSelectItem Value="@("Package 1")">Package 1</MudSelectItem>
-                            <MudSelectItem Value="@("AirBNB")">AirBNB</MudSelectItem>
+                            @foreach (var package in availablePackages)
+                            {
+                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                            }
                         </MudSelect>
+                        @if (!isLoadingPackages && availablePackages.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
+                        }
                     </div>
                 </section>
 
@@ -189,14 +196,18 @@
                                    Class="ats-input ats-select"
                                    Adornment="Adornment.Start"
                                    AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                   Disabled="@isLoadingPackages"
                                    Required="true"
                                    RequiredError="Package is required">
-                            <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
-                            <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
-                            <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
-                            <MudSelectItem Value="@("Package 1")">Package 1</MudSelectItem>
-                            <MudSelectItem Value="@("AirBNB")">AirBNB</MudSelectItem>
+                            @foreach (var package in availablePackages)
+                            {
+                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                            }
                         </MudSelect>
+                        @if (!isLoadingPackages && availablePackages.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
+                        }
                     </div>
                 </section>
 

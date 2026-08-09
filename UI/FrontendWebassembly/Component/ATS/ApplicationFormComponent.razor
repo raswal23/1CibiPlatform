@@ -9,7 +9,8 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-<MudPaper Elevation="6" Style="margin: 5px; max-width:1200px;" Class="ats-modern-card">
+<MudPaper Elevation="0"
+          Class="@($"ats-modern-card {(!showPhilSys && !IsSuccess ? "ats-application-card" : string.Empty)}")">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
@@ -32,16 +33,20 @@
                  FieldChanged="ScheduleDraftSaveFromField"
                  @oninput="ScheduleDraftSaveFromDom"
                  >
-            <MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" Class="custom-stepper ats-appform-stepper">
+            <MudStepper @ref="_stepper"
+                        @bind-ActiveIndex="_activeStep"
+                        CenterLabels="true"
+                        Class="custom-stepper ats-appform-stepper">
                 <ChildContent>
 
                     <!-- STEP 1 -->
-                    <MudStep Title="Part 1 - Step 1" Class="ats-step-final" Completed="@(_activeStep > 0)">
-                        <MudGrid>
+                    <MudStep Title="Step 1" Class="ats-step-final" Completed="@(_activeStep > 0)">
+                        <div class="ats-consent-step">
+                            <MudGrid Class="ats-consent-step-grid">
                             <MudItem xs="12">
-                                <MudPaper Elevation="0" Style="width:100%;" Class="">
+                                <MudPaper Elevation="0" Class="ats-consent-copy-section">
                                     <MudItem xs="12">
-                                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 gradient-text">Consent to Collect and Disclose</MudText>
+                                        <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-consent-title">Consent to Collect and Disclose</MudText>
                                     </MudItem>
 
                                     <MudItem xs="12">
@@ -100,7 +105,7 @@
                                             <div class="ats-signature-block">
                                                 <SafeSignaturePad Value="signatureDetails.Signature"
                                                                   ValueChanged="OnSignatureChanged"
-                                                                  Class="mb-2"
+                                                                  Class="ats-consent-signature-pad"
                                                                   Disabled="@isSaving" />
                                             </div>
                                             @if (_signatureError)
@@ -115,40 +120,53 @@
                                             }
                                         </MudItem>
 
-                                        <MudItem xs="12">
-                                            <MudGrid>
-                                                <MudItem xs="12" sm="6">
+                                        <MudItem xs="12" Class="ats-consent-fields-wrap">
+                                            <MudGrid Class="ats-consent-fields" Spacing="2">
+                                                <MudItem xs="12" sm="6" Class="ats-consent-field">
+                                                    <label class="ats-consent-field-label">
+                                                        Name <span aria-hidden="true">*</span>
+                                                    </label>
                                                     <MudTextField T="string"
-                                                                  Label="Name"
                                                                   @bind-Value="signatureDetails.SignerName"
+                                                                  Placeholder="Juan Dela Cruz"
                                                                   Required="true"
                                                                   RequiredError="Name is required"
                                                                   Variant="Variant.Outlined"
                                                                   Margin="Margin.Dense"
-                                                                  Class="oneplatform-rounded-input" />
+                                                                  Adornment="Adornment.Start"
+                                                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                                  Class="oneplatform-rounded-input ats-consent-input" />
                                                 </MudItem>
 
-                                                <MudItem xs="12" sm="6">
-                                                    <MudDatePicker @bind-Date="SignatureDate"
-                                                                   Label="Date"
-                                                                   Required="true"
-                                                                   RequiredError="Date is required"
-                                                                   Variant="Variant.Outlined"
-                                                                   Margin="Margin.Dense"
-                                                                   Class="oneplatform-rounded-input"
-                                                                   DateFormat="MM/dd/yyyy"
-                                                                   ReadOnly />
+                                                <MudItem xs="12" sm="6" Class="ats-consent-field">
+                                                    <label class="ats-consent-field-label">
+                                                        Date <span aria-hidden="true">*</span>
+                                                    </label>
+                                                    <div class="ats-consent-date-wrap">
+                                                        <MudIcon Icon="@Icons.Material.Outlined.CalendarToday"
+                                                                 Class="ats-consent-date-leading-icon" />
+                                                        <MudDatePicker @bind-Date="SignatureDate"
+                                                                       Adornment="Adornment.End"
+                                                                       Required="true"
+                                                                       RequiredError="Date is required"
+                                                                       Variant="Variant.Outlined"
+                                                                       Margin="Margin.Dense"
+                                                                       Class="oneplatform-rounded-input ats-consent-input ats-consent-date-input"
+                                                                       DateFormat="MM/dd/yyyy"
+                                                                       ReadOnly />
+                                                    </div>
                                                 </MudItem>
                                             </MudGrid>
                                         </MudItem>
                                     </MudGrid>
                                 </MudPaper>
                             </MudItem>
-                        </MudGrid>
+                            </MudGrid>
+                        </div>
                     </MudStep>
 
                     <!-- STEP 2 -->
-                    <MudStep Title="Part 1 - Step 2" Class="ats-step-one" Completed="@(_activeStep > 1)">
+                    <MudStep Title="Step 2" Class="ats-step-one" Completed="@(_activeStep > 1)">
                         <MudPaper Elevation="0" Class="ats-step-one-shell">
                             <MudGrid Class="ats-step-one-grid" Justify="Justify.Center" AlignItems="AlignItems.Center">
                                 <MudItem xs="12" md="6" Class="d-flex justify-center align-content-center">
@@ -208,7 +226,7 @@
                     </MudStep>
 
                     <!-- STEP 3 -->
-                    <MudStep Title="Part 1 - Step 3" Class="ats-step-two" Completed="@(_activeStep > 2)">
+                    <MudStep Title="Step 3" Class="ats-step-two" Completed="@(_activeStep > 2)">
                         <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-3 mt-3 gradient-text">Personal Information</MudText>
                         <MudGrid Class="ats-step-two-grid" Spacing="1">
                             <!-- Left column: Personal information fields -->
@@ -469,7 +487,7 @@
                     </MudStep>
 
                     <!-- STEP 4 -->
-                    <MudStep Title="Part 1 - Step 4" Class="ats-step-three" Completed="@(_activeStep > 3)">
+                    <MudStep Title="Step 4" Class="ats-step-three" Completed="@(_activeStep > 3)">
                         <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 ats-appform-section-title">Address</MudText>
                         <MudGrid>
                             <!-- Address section -->
@@ -730,7 +748,7 @@
                     </MudStep>
 
                     <!-- STEP 5 -->
-                    <MudStep Title="Part 1 - Step 5" Class="ats-step-four" Completed="@(_activeStep > 4)">
+                    <MudStep Title="Step 5" Class="ats-step-four" Completed="@(_activeStep > 4)">
                         <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 ats-appform-section-title">Credentials, Licenses &amp; Professional Experience</MudText>
                         <MudGrid>
                             <MudItem xs="12">
@@ -1787,16 +1805,25 @@
                             }
                             else
                             {
-                                @if (_activeStep != 1)
+                                @if (_activeStep == 0)
                                 {
-                                    <div>
-                                        <MudButton Class="theme-button mt-3 theme-button-active mb-4"
-                                                   Style="width: 150px; height: 40px; border-radius: 12px;"
+                                    <MudButton Class="ats-save-next-button"
+                                               Variant="Variant.Filled"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward"
+                                               Disabled="@isSaving"
+                                               OnClick="OnSaveAndNextAsync">
+                                        Save &amp; Next
+                                    </MudButton>
+                                }
+                                else if (_activeStep != 1)
+                                {
+                                    <MudButton Class="ats-save-next-button"
+                                                   Variant="Variant.Filled"
+                                                   EndIcon="@Icons.Material.Filled.ArrowForward"
                                                    Disabled="@isSaving"
                                                    OnClick="OnSaveAndNextAsync">
-                                            Save &amp; Next
-                                        </MudButton>
-                                    </div>
+                                        Save &amp; Next
+                                    </MudButton>
                                 }
                             }
                     </div>

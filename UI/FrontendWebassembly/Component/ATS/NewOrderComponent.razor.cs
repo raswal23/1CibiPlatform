@@ -11,6 +11,8 @@ public partial class NewOrderComponent
 	private bool isUploadingBulk = false;
 	private bool isPreview = false;
 	private bool isBulkMode = false;
+	private bool isLoadingPackages = true;
+	private IReadOnlyList<PackageDetailsDTO> availablePackages = Array.Empty<PackageDetailsDTO>();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -18,9 +20,55 @@ public partial class NewOrderComponent
 		if (!IsPageAuthorized)
 			return;
 
+		await LoadAvailablePackagesAsync();
+
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();
 
+	}
+
+	private async Task LoadAvailablePackagesAsync()
+	{
+		try
+		{
+			var userId = await LocalStorageService.GetItemAsync<Guid>("UserId");
+			if (userId == Guid.Empty)
+			{
+				Snackbar.Add("Unable to identify the signed-in user.", Severity.Error);
+				return;
+			}
+
+			var assignments = await ATSUserManagementService.GetUserClientAssignmentsAsync();
+			var clientId = assignments.FirstOrDefault(assignment => assignment.UserId == userId)?.ClientId;
+			if (clientId is not > 0)
+			{
+				Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
+				return;
+			}
+
+			var clientsTask = ClientManagementService.GetAllClientsAsync();
+			var packagesTask = PackageManagementService.GetAllPackagesAsync();
+			await Task.WhenAll(clientsTask, packagesTask);
+
+			var assignedPackageIds = clientsTask.Result
+				.Where(client => client.ClientId == clientId && client.IsActive)
+				.Select(client => client.PackageId)
+				.ToHashSet();
+
+			availablePackages = packagesTask.Result
+				.Where(package => package.IsActive && assignedPackageIds.Contains(package.PackageId))
+				.DistinctBy(package => package.PackageId)
+				.OrderBy(package => package.PackageName)
+				.ToArray();
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Unable to load the packages assigned to your client.", Severity.Error);
+		}
+		finally
+		{
+			isLoadingPackages = false;
+		}
 	}
 
 	private void SetOrderMode(bool bulk)
