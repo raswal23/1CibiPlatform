@@ -1,0 +1,278 @@
+.philsys-result-shell,
+.philsys-result-shell *,
+.philsys-result-shell *::before,
+.philsys-result-shell *::after {
+    box-sizing: border-box;
+}
+
+.philsys-result-shell {
+    --philsys-navy-900: #0b1b3d;
+    --philsys-navy-800: #132a54;
+    --philsys-blue-500: #2e7ce0;
+    --philsys-blue-tint: #edf3fc;
+    --philsys-border: #e4eaf6;
+    --philsys-border-strong: #c2d2f0;
+    --philsys-text-1: #16233f;
+    --philsys-text-2: #5b6b8c;
+    --philsys-text-3: #8a97b5;
+    --philsys-green: #1e8e5a;
+    --philsys-green-tint: #e7f5ec;
+    --philsys-red: #d64545;
+    --philsys-red-tint: #fdecec;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding: 24px 16px;
+    font-family: Inter, sans-serif;
+}
+
+.philsys-result-shell ::deep .philsys-result-card {
+    width: 100%;
+    max-width: 950px;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 1px solid var(--philsys-border) !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: 0 12px 32px -12px rgba(11, 27, 61, .12) !important;
+}
+
+.philsys-result-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 28px 18px;
+    border-bottom: 1px solid var(--philsys-border);
+}
+
+.philsys-result-head-text {
+    min-width: 0;
+}
+
+.philsys-result-title {
+    margin: 0 0 4px;
+    color: var(--philsys-navy-900);
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.philsys-result-subtitle {
+    margin: 0;
+    color: var(--philsys-text-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.philsys-result-pill {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.philsys-result-pill svg {
+    width: 12px;
+    height: 12px;
+}
+
+.philsys-result-pill.is-verified {
+    background: var(--philsys-green-tint);
+    color: var(--philsys-green);
+}
+
+.philsys-result-pill.is-not-verified {
+    background: var(--philsys-red-tint);
+    color: var(--philsys-red);
+}
+
+.philsys-result-body {
+    display: grid;
+    gap: 22px;
+    padding: 22px 28px;
+    grid-template-columns: 225px minmax(0, 1fr);
+}
+
+.philsys-result-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.philsys-result-photo {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border: 1px solid var(--philsys-border-strong);
+    border-radius: 12px;
+    background: var(--philsys-blue-tint);
+}
+
+.philsys-result-photo ::deep .philsys-result-photo-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.philsys-result-details {
+    min-width: 0;
+}
+
+.philsys-result-list {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--philsys-border);
+    border-radius: 12px;
+}
+
+.philsys-result-row {
+    display: grid;
+    gap: 12px;
+    padding: 9px 14px;
+    grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+    align-items: baseline;
+}
+
+.philsys-result-row:nth-child(odd) {
+    background: #fcfdff;
+}
+
+.philsys-result-row + .philsys-result-row {
+    border-top: 1px solid var(--philsys-border);
+}
+
+.philsys-result-row dt {
+    margin: 0;
+    color: var(--philsys-text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .2px;
+}
+
+.philsys-result-row dd {
+    margin: 0;
+    min-width: 0;
+    color: var(--philsys-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+    overflow-wrap: break-word;
+}
+
+.philsys-result-row dd.is-empty {
+    color: var(--philsys-text-3);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.philsys-result-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 28px 24px;
+}
+
+.philsys-result-shell ::deep .philsys-result-button {
+    height: 44px;
+    min-width: 180px;
+    padding: 0 22px !important;
+    border-radius: 11px !important;
+    font-family: Inter, sans-serif;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0;
+    text-transform: none !important;
+    transition: box-shadow .15s ease, transform .1s ease, background .15s ease;
+}
+
+.philsys-result-shell ::deep .philsys-result-button:active {
+    transform: scale(.97);
+}
+
+.philsys-result-shell ::deep .philsys-result-button .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+}
+
+.philsys-result-shell ::deep .philsys-result-button-primary {
+    border: 0;
+    background: linear-gradient(120deg, var(--philsys-navy-800), var(--philsys-blue-500)) !important;
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, .5) !important;
+    color: #fff !important;
+}
+
+.philsys-result-shell ::deep .philsys-result-button-primary:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, .65) !important;
+}
+
+.philsys-result-shell ::deep .philsys-result-button-secondary {
+    min-width: 0;
+    border: 1.5px solid var(--philsys-border-strong) !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    color: var(--philsys-text-2) !important;
+}
+
+.philsys-result-shell ::deep .philsys-result-button-secondary:hover {
+    background: #eef1f7 !important;
+}
+
+@media (max-width: 780px) {
+    .philsys-result-body {
+        grid-template-columns: 1fr;
+    }
+
+    .philsys-result-aside {
+        max-width: 260px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .philsys-result-shell {
+        padding: 16px 12px;
+    }
+
+    .philsys-result-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 20px 18px 16px;
+    }
+
+    .philsys-result-title {
+        font-size: 18px;
+    }
+
+    .philsys-result-body {
+        padding: 18px;
+    }
+
+    .philsys-result-actions {
+        padding: 0 18px 20px;
+    }
+
+    .philsys-result-shell ::deep .philsys-result-button-primary {
+        width: 100%;
+    }
+
+    .philsys-result-row {
+        gap: 2px;
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .philsys-result-shell ::deep .philsys-result-button {
+        transition-duration: .01ms !important;
+    }
+}

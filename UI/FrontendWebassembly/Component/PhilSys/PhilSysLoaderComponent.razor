@@ -1,13 +1,8 @@
-﻿@layout GenericLayout
+@layout GenericLayout
 
-<div class="philsys-loader-overlay philsys-modern">
-    <div class="philsys-loader-grid">
-        <MudPaper Class="philsys-loader-paper philsys-shadow-box" Elevation="0">
-            <LoaderComponent />
-            <MudText Typo="Typo.subtitle1" Class="mt-4 philsys-loader-text" Align="Align.Center">
-                Processing Your Verification Result...
-            </MudText>
-        </MudPaper>
-    </div>
+<div class="philsys-loader-overlay">
+    <MudPaper Class="philsys-loader-paper" Elevation="0">
+        <LoaderComponent />
+        <p class="philsys-loader-text">Processing Your Verification Result...</p>
+    </MudPaper>
 </div>
-

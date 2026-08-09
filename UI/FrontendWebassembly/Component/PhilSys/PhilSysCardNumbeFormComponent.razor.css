@@ -1,4 +1,4 @@
-.philsys-basic-form-scope {
+.philsys-pcn-form-scope {
     --philsys-navy-900: #0b1b3d;
     --philsys-navy-800: #132a54;
     --philsys-blue-500: #2e7ce0;
@@ -15,7 +15,7 @@
     font-family: Inter, sans-serif;
 }
 
-.philsys-basic-form-scope ::deep .philsys-lookup-form {
+.philsys-pcn-form-scope ::deep .philsys-lookup-form {
     width: 100%;
     max-width: none;
     margin: 0;
@@ -23,7 +23,7 @@
     box-shadow: none !important;
 }
 
-.philsys-basic-form-scope ::deep .philsys-lookup-card {
+.philsys-pcn-form-scope ::deep .philsys-lookup-card {
     width: 100%;
     padding: 30px !important;
     border: 1px solid var(--philsys-border) !important;
@@ -53,12 +53,6 @@
     gap: 14px;
 }
 
-.philsys-basic-row-two {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    gap: 14px;
-}
-
 .philsys-field {
     min-width: 0;
 }
@@ -76,11 +70,6 @@
 .philsys-required {
     margin-left: 2px;
     color: #d64545;
-}
-
-.philsys-optional {
-    color: var(--philsys-text-3);
-    font-weight: 500;
 }
 
 .philsys-field ::deep .mud-input-control {
@@ -125,47 +114,14 @@
     line-height: 44px;
 }
 
-/* MudSelect: `mud-select-input` is on the CONTAINER (.mud-input). The visible
-   value is rendered by MudInput either as an <input class="mud-input-root...">
-   or, when the item has ChildContent, as a <div class="mud-input-slot ...">
-   carrying an INLINE style="display:inline" attribute. That inline style beats
-   any stylesheet `display` rule, so flex centring silently did nothing and the
-   text sat on the baseline near the top of the 44px box.
-   Fix: don't rely on display/flex at all — zero the vertical padding and set
-   line-height equal to the control height, which centres text in both cases. */
-.philsys-suffix-field ::deep .mud-input.mud-select-input {
-    height: 44px !important;
-    min-height: 44px !important;
-    box-sizing: border-box;
-    padding: 0 !important;
-}
-
-.philsys-suffix-field ::deep .mud-input.mud-select-input > input.mud-input-root,
-.philsys-suffix-field ::deep .mud-input.mud-select-input > .mud-input-slot,
-.philsys-suffix-field ::deep div.mud-input-slot.mud-input-root-outlined,
-.philsys-suffix-field ::deep input.mud-input-root-outlined {
-    height: 44px !important;
-    min-height: 44px !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    padding: 0 0 0 14px !important;
-    color: var(--philsys-text-1);
-    font-family: Inter, sans-serif;
-    font-size: 14px !important;
-    line-height: 44px !important;
-    vertical-align: middle;
-}
-
-.philsys-suffix-field ::deep .mud-input-adornment-end {
-    display: flex;
-    height: 44px;
-    align-items: center;
-    align-self: center;
-    margin-top: 0 !important;
+.philsys-field ::deep .philsys-pcn-input input.mud-input-root-outlined {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1.5px;
 }
 
 .philsys-field ::deep input::placeholder {
     color: var(--philsys-text-3);
+    letter-spacing: 1.5px;
     opacity: 1;
 }
 
@@ -178,20 +134,10 @@
     color: var(--philsys-text-3);
 }
 
-.philsys-field ::deep .mud-input-adornment-start .mud-icon-root,
-.philsys-field ::deep .mud-input-adornment-end .mud-icon-root {
+.philsys-field ::deep .mud-input-adornment-start .mud-icon-root {
     width: 16px;
     height: 16px;
     font-size: 16px;
-}
-
-.philsys-field ::deep .mud-input-adornment-end {
-    margin-right: 12px;
-    color: var(--philsys-text-3);
-}
-
-.philsys-field ::deep .mud-input-adornment-end .mud-icon-button {
-    padding: 0;
 }
 
 .philsys-field ::deep .mud-input-helper-text,
@@ -200,43 +146,11 @@
     font-size: 12px !important;
 }
 
-.philsys-date-input-wrap {
-    position: relative;
-}
-
-.philsys-date-input-wrap ::deep .philsys-date-leading-icon {
-    position: absolute;
-    top: 22px;
-    left: 12px;
-    z-index: 2;
-    width: 16px;
-    height: 16px;
-    color: var(--philsys-text-3);
-    font-size: 16px !important;
-    pointer-events: none;
-    transform: translateY(-50%);
-}
-
-/* MudDatePicker puts the `philsys-date-input` class on the picker root, not on
-   the inner .mud-input, so scoping the padding to that class silently missed
-   the input and the placeholder ran under the leading icon. Target the input
-   directly inside the wrapper instead. */
-.philsys-date-input-wrap ::deep input.mud-input-root,
-.philsys-date-input-wrap ::deep input.mud-input-root-outlined,
-.philsys-date-input-wrap ::deep .mud-input-slot {
-    padding-left: 38px !important;
-}
-
 .philsys-field-hint {
     margin: 8px 0 10px;
     color: var(--philsys-text-2);
     font-size: 12px;
     line-height: 1.4;
-}
-
-.philsys-field-hint strong {
-    color: var(--philsys-text-1);
-    font-weight: 600;
 }
 
 .philsys-modern-actions {
@@ -277,7 +191,7 @@
 }
 
 @media (max-width: 640px) {
-    .philsys-basic-form-scope ::deep .philsys-lookup-card {
+    .philsys-pcn-form-scope ::deep .philsys-lookup-card {
         padding: 20px !important;
         border-radius: 14px !important;
     }
@@ -286,18 +200,12 @@
         font-size: 18px;
     }
 
-    .philsys-basic-row-two {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
     .philsys-basic-fields {
         gap: 12px;
     }
 
     .philsys-field ::deep .mud-input.mud-input-outlined,
-    .philsys-field ::deep input.mud-input-root-outlined,
-    .philsys-field ::deep .mud-select-input.mud-input-root-outlined {
+    .philsys-field ::deep input.mud-input-root-outlined {
         height: 42px !important;
         min-height: 42px !important;
         font-size: 13.5px !important;

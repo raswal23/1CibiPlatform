@@ -478,57 +478,9 @@ code {
     }
 }
 
-.philsys-loader-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    background-color: white;
-    overflow: hidden;
-}
-
-.philsys-loader-grid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    max-height: 100vh;
-    max-width: 50vh;
-    border-radius: 14px !important;
-    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
-}
-
-.philsys-loader-paper {
-    border-radius: 4px !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 2rem;
-    width: min(90%, 425px);
-    height: 150px;
-    max-height: 100vh;
-    background: #fff;
-    box-sizing: content-box;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1), 0 0 40px rgba(0, 0, 0, 0.05), 0 0 60px rgba(0, 0, 0, 0.03);
-    animation: fadeIn 0.4s ease-in-out;
-}
-
-.philsys-loader-text {
-    margin-top: 3px !important;
-    color: #333;
-    letter-spacing: 0.3px;
-    word-wrap: break-word;
-    max-width: 100%;
-    font-size: clamp(0.9rem, 2.5vw, 1.3rem) !important;
-}
+/* PhilSys loader styling now lives in PhilSysLoaderComponent.razor.css.
+   The old global rules (incl. the teal .philsys-loader-grid glow) were removed
+   because they fought the scoped PhilSys theme. */
 
 .mud-table th {
     font-weight: 700 !important;
@@ -777,6 +729,13 @@ code {
     align-items: center;
     padding: 24px;
     background: #F4F7FB;
+}
+
+/* The result card is tall enough to overflow the viewport on short screens;
+   centring it there would clip the top. Allow it to scroll from the top. */
+.philsys-liveness-page:has(.philsys-result-shell) {
+    align-items: flex-start;
+    padding: 0;
 }
 
 .ats-result-dialog {
@@ -2868,153 +2827,9 @@ code {
             color: #D8503A;
         }
 
-.philsys-liveness-shell .philsys-shadow-box {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.philsys-liveness-card {
-    width: 100%;
-    max-width: 440px;
-    padding: 34px 28px 30px !important;
-    border-radius: 20px !important;
-    background: #FFFFFF !important;
-    border: 1px solid #E3E9F1 !important;
-    box-shadow: 0 20px 45px -28px rgba(11,31,58,.28) !important;
-    text-align: center;
-}
-
-.philsys-liveness-badge-wrap {
-    position: relative;
-    width: 84px;
-    height: 84px;
-    margin: 0 auto 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.philsys-liveness-badge-pulse {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: rgba(44,127,184,.14);
-    animation: philsys-liveness-pulse 2s ease-out infinite;
-}
-
-.philsys-liveness-badge {
-    position: relative;
-    z-index: 1;
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg,#102247,#2C7FB8);
-    color: #fff;
-    box-shadow: 0 10px 22px -16px rgba(16,34,71,.7);
-}
-
-.philsys-liveness-title {
-    margin-bottom: 10px;
-    color: #0B1F3A;
-    font-weight: 700;
-    font-size: 20px;
-}
-
-.philsys-liveness-subtitle {
-    margin: 0 auto 20px;
-    color: #6B7B92;
-    line-height: 1.6;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.philsys-liveness-tips {
-    border: 1px solid #E3E9F1;
-    border-radius: 14px;
-    background: #FAFCFF;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-}
-
-.philsys-liveness-tip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #1E2A3C;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-    .philsys-liveness-tip + .philsys-liveness-tip {
-        margin-top: 10px;
-    }
-
-.philsys-liveness-tip-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #E7F5EC;
-    color: #1E8E5A;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.philsys-liveness-action {
-    width: 100%;
-    margin-bottom: 16px;
-}
-
-.philsys-liveness-button {
-    min-height: 48px !important;
-    border-radius: 14px !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    text-transform: none !important;
-}
-
-.philsys-liveness-privacy {
-    color: #7A8CA8;
-    font-size: 12px;
-    line-height: 1.6;
-    margin: 0;
-}
-
-.philsys-liveness-privacy-link {
-    display: inline-block;
-    margin-left: 4px;
-    color: #2C7FB8;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-    .philsys-liveness-privacy-link:hover {
-        text-decoration: underline;
-    }
-
-@keyframes philsys-liveness-pulse {
-    0% {
-        transform: scale(.82);
-        opacity: .75;
-    }
-
-    70% {
-        transform: scale(1.22);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1.22);
-        opacity: 0;
-    }
-}
+/* Liveness check styling now lives in LivenessCheckComponent.razor.css.
+   The old global rules were removed because their !important card overrides
+   (and the teal .philsys-shadow-box glow) fought the scoped PhilSys theme. */
 
 .philsys-lookup-shell {
     display: flex;
@@ -3024,153 +2839,14 @@ code {
 
     .philsys-lookup-shell > * {
         width: 100%;
-        max-width: 700px;
+        max-width: 820px;
     }
 
-.philsys-lookup-form {
-    width: 100%;
-    border-radius: 16px !important;
-    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
-    max-width: 600px;
-}
-
-.philsys-lookup-card {
-    border-radius: 16px !important;
-    padding: 5px !important;
-    width: 100% !important;
-}
-
-    .philsys-lookup-card .mud-input-control {
-        margin-top: 3px;
-    }
-
-    .philsys-lookup-card .mud-input-outlined {
-        min-height: 34px !important;
-    }
-
-    .philsys-lookup-card .mud-input-slot:not(.mud-select-input) {
-        min-height: 34px !important;
-        font-size: 14px !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-    }
-
-    .philsys-lookup-card .mud-select-input {
-        min-height: 18px !important;
-        padding-top: 8px !important;
-        padding-bottom: 6px !important;
-    }
-
-    .philsys-lookup-card .mud-input {
-        min-height: 24px !important;
-        font-size: 12px;
-    }
-
-    .philsys-lookup-card .mud-input-label,
-    .philsys-lookup-card .mud-input-label-inputcontrol {
-        font-size: 12px !important;
-    }
-
-    .philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
-    .philsys-lookup-card .oneplatform-rounded-input fieldset {
-        border-radius: 8px !important;
-    }
-
-    .philsys-lookup-card .mud-input-adornment {
-        margin-top: 0 !important;
-    }
-
-    .philsys-lookup-card .philsys-modern-title {
-        font-size: 16px;
-        line-height: 1.1;
-    }
-
-    .philsys-lookup-card .philsys-modern-sub {
-        font-size: 11px;
-    }
-
-    .philsys-lookup-card .philsys-modern-actions .mud-button-root {
-        min-width: 120px;
-        min-height: 38px;
-        border-radius: 10px !important;
-        font-size: 13px !important;
-    }
-
-.philsys-lookup-tabs-wrap {
-    margin-bottom: 16px;
-}
-
-.philsys-lookup-caption {
-    text-align: center;
-    font-size: 12px;
-    letter-spacing: .09em;
-    font-weight: 700;
-    color: #7A8CA8;
-    margin-bottom: 10px;
-}
-
-.philsys-lookup-tabs {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.philsys-lookup-tab {
-    border: 1px solid #DCE7F4;
-    border-radius: 12px;
-    background: #fff;
-    padding: 10px 12px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 10px;
-    align-items: center;
-    text-align: left;
-    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
-    cursor: pointer;
-}
-
-    .philsys-lookup-tab.active {
-        border-color: #2C7FB8;
-        background: #F4F9FE;
-    }
-
-.philsys-tab-button {
-    width: 100% !important;
-}
-
-.philsys-lookup-tab-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg,#102247,#2C7FB8);
-    color: #fff;
-    font-size: 13px;
-}
-
-.philsys-lookup-tab-title {
-    display: block;
-    font-size: 14px;
-    font-weight: 700;
-    color: #0B1F3A;
-}
-
-.philsys-lookup-tab-sub {
-    display: block;
-    font-size: 12px;
-    color: #6B7B92;
-}
-
-.philsys-lookup-tab-check {
-    color: #2C7FB8;
-    font-size: 16px;
-    font-weight: 700;
-}
+/* Visual styling for .philsys-lookup-form / -card / -tab* now lives in the
+   component-scoped stylesheets (PhilSysFormTabComponent.razor.css,
+   BasicInformationFormComponent.razor.css, PhilSysCardNumbeFormComponent.razor.css).
+   The old global rules were removed because their !important input overrides
+   fought the scoped theme. */
 
 @media (max-width: 920px) {
     .ats-console-sidebar {
@@ -3243,26 +2919,10 @@ code {
         flex-wrap: wrap;
     }
 
-    .philsys-lookup-tabs {
-        grid-template-columns: 1fr;
-    }
-
     .ats-table-cell-center {
         text-align: center;
         vertical-align: middle;
     }
-
-    .philsys-lookup-card {
-        padding: 12px 10px !important;
-    }
-
-        .philsys-lookup-card .philsys-modern-title {
-            font-size: 17px;
-        }
-
-        .philsys-lookup-card .philsys-modern-sub {
-            font-size: 11px;
-        }
 }
 
 .ats-console-nav-group {

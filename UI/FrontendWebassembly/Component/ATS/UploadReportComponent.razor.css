@@ -29,31 +29,86 @@
     margin: 0;
 }
 
+/* Header copied from .dd-header in DisputeDialogOrderComponent.razor.css.
+   That component nests a .dd-header-row inside .dd-header; this markup has no
+   row wrapper, so the row's flex/z-index properties are merged onto the header
+   itself and applied to its direct children. */
 .ats-upload-report-shell-header {
     position: relative;
-    display: flex;
+    overflow: hidden;
     padding: 26px 30px 22px;
+    background: linear-gradient(120deg, var(--navy-900) 0%, #1c3a70 55%, var(--blue-600) 130%);
+    display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    background: linear-gradient(120deg, var(--navy-900) 0%, #1c3a70 55%, var(--blue-600) 130%);
-    overflow: hidden;
 }
 
-.ats-upload-report-shell-header::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.14) 1px, transparent 1.5px); background-size: 16px 16px; opacity: .35; mask-image: linear-gradient(to bottom right, #000, transparent 70%); }
-.ats-upload-report-shell-header > * { position: relative; }
-.ats-upload-report-header-left { display: flex; align-items: center; gap: 14px; }
-.ats-upload-report-header-icon { display: flex; width: 44px; height: 44px; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid rgba(255,255,255,.22); border-radius: 13px; background: rgba(255,255,255,.14); color: #fff; }
-.ats-upload-report-header-icon svg { width: 21px; height: 21px; }
-::deep .ats-upload-report-shell-title { margin: 0; color: #fff; font-family: Poppins, Inter, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: .2px; }
-::deep .ats-upload-report-shell-subtitle { margin-top: 4px; color: #c6d5f5; font-size: 13px; }
+.ats-upload-report-shell-header::before {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+.ats-upload-report-shell-header > * {
+    position: relative;
+    z-index: 1;
+}
+
+.ats-upload-report-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.ats-upload-report-header-icon {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.ats-upload-report-header-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+::deep .ats-upload-report-shell-title {
+    margin: 0;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+::deep .ats-upload-report-shell-subtitle {
+    margin: 4px 0 0;
+    color: #c6d5f5;
+    font-size: 13px;
+    font-weight: 400;
+}
+
 .ats-upload-report-shell-close {
     display: flex;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     padding: 0;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 9px;
@@ -69,8 +124,8 @@
 }
 
 .ats-upload-report-shell-close svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
 }
 
 .ats-upload-report-shell-close:focus-visible {
@@ -138,4 +193,21 @@
     .ats-upload-report-body,
     .ats-upload-report-actions { padding-left: 20px; padding-right: 20px; }
     .ats-upload-report-fields { grid-template-columns: 1fr; }
+}
+
+/* Matches the .dd-header breakpoints in DisputeDialogOrderComponent.razor.css */
+@media (max-width: 520px) {
+    .ats-upload-report-shell-header {
+        padding: 22px 20px 20px;
+    }
+}
+
+@media (max-width: 390px) {
+    ::deep .ats-upload-report-shell-title {
+        font-size: 18px;
+    }
+
+    ::deep .ats-upload-report-shell-subtitle {
+        font-size: 12px;
+    }
 }

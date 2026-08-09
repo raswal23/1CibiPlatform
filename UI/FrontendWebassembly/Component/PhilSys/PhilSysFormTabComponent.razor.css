@@ -35,9 +35,9 @@
     position: relative;
     display: flex;
     min-width: 0;
-    padding: 16px 48px 16px 18px;
+    padding: 14px 44px 14px 12px;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     border: 2px solid var(--philsys-border-strong);
     border-radius: 14px;
     background: #fff;
@@ -147,7 +147,7 @@
     }
 
     .philsys-lookup-tab {
-        padding: 14px 44px 14px 14px;
+        padding: 13px 40px 13px 11px;
     }
 
     .philsys-lookup-tab-icon {
