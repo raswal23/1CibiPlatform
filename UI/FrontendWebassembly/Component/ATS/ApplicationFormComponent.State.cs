@@ -65,8 +65,8 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				CurrentProvince = addressDetails.CurrentProvince,
 				CurrentCountry = addressDetails.CurrentCountry,
 				CurrentPostalCode = addressDetails.CurrentPostalCode,
-				TypeOfOwnership = addressDetails.TypeOfOwnership,
-				OwnershipOtherText = OwnershipOtherText,
+				TypeOfOwnership = SelectedOwnershipType,
+				OwnershipOtherText = IsOtherOwnershipSelected ? OwnershipOtherText : null,
 				PermanentAddress = addressDetails.PermanentAddress,
 				PermanentCity = addressDetails.PermanentCity,
 				PermanentProvince = addressDetails.PermanentProvince,
@@ -263,13 +263,13 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 		addressDetails.CurrentProvince = state.CurrentProvince;
 		addressDetails.CurrentCountry = state.CurrentCountry;
 		addressDetails.CurrentPostalCode = state.CurrentPostalCode;
-		addressDetails.TypeOfOwnership = state.TypeOfOwnership;
+		SelectedOwnershipType = state.TypeOfOwnership;
 		addressDetails.PermanentAddress = state.PermanentAddress;
 		addressDetails.PermanentCity = state.PermanentCity;
 		addressDetails.PermanentProvince = state.PermanentProvince;
 		addressDetails.PermanentCountry = state.PermanentCountry;
 		addressDetails.PermanentPostalCode = state.PermanentPostalCode;
-		OwnershipOtherText = state.OwnershipOtherText;
+		OwnershipOtherText = IsOtherOwnershipSelected ? state.OwnershipOtherText : null;
 		SameAsPermanent = state.SameAsPermanent;
 	}
 
@@ -284,6 +284,13 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 	private void RestoreLicensesDetails(LicensesDetailsState state)
 	{
 		hasProfessionalLicense = state.HasProfessionalLicense;
+
+		if (!hasProfessionalLicense)
+		{
+			ClearProfessionalLicenseDetails();
+			return;
+		}
+
 		licensesDetails.LicenseName = state.LicenseName;
 		licensesDetails.LicenseNumber = state.LicenseNumber;
 		LicenseExpiryDate = state.LicenseExpiryDate;

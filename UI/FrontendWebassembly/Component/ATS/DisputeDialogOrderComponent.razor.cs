@@ -2,10 +2,12 @@
 
 public partial class DisputeDialogOrderComponent
 {
+	private const string OtherDisputeCategory = "Others";
 	private MudForm? disputeForm;
-	private bool isMarkingAsDisputed = false;
-
-	private bool isUploading = false;
+	private bool isMarkingAsDisputed;
+	private bool isUploading;
+	private string? selectedDisputeCategory;
+	private string otherReason = string.Empty;
 
 	[Inject]
 	private IDialogService DialogService { get; set; } = default!;
@@ -25,7 +27,24 @@ public partial class DisputeDialogOrderComponent
 	[Parameter]
 	public string? SubjectName { get; set; }
 	private DisputeOrderRequestDTO disputeRequest = new();
-	private string? otherReason = string.Empty;
+
+	private string? SelectedDisputeCategory
+	{
+		get => selectedDisputeCategory;
+		set
+		{
+			if (string.Equals(selectedDisputeCategory, value, StringComparison.Ordinal))
+				return;
+
+			selectedDisputeCategory = value;
+
+			if (!string.Equals(value, OtherDisputeCategory, StringComparison.Ordinal))
+				otherReason = string.Empty;
+		}
+	}
+
+	private bool IsOtherDisputeSelected =>
+		string.Equals(SelectedDisputeCategory, OtherDisputeCategory, StringComparison.Ordinal);
 
 	void Cancel() => SubmitDisputeOrderDialog!.Cancel();
 
@@ -36,20 +55,29 @@ public partial class DisputeDialogOrderComponent
 		if (!disputeForm.IsValid)
 			return;
 
+		if (IsOtherDisputeSelected && string.IsNullOrWhiteSpace(otherReason))
+		{
+			otherReason = string.Empty;
+			await disputeForm.ValidateAsync();
+			return;
+		}
+
+		var requestToSend = new DisputeOrderRequestDTO
+		{
+			EmailInvitationId = EmailInvitationId,
+			OrderCreatedAt = OrderCreatedAt,
+			SubjectName = SubjectName,
+			Company = disputeRequest.Company?.Trim(),
+			DisputeReason = IsOtherDisputeSelected
+				? otherReason.Trim()
+				: SelectedDisputeCategory
+		};
+		var submissionSucceeded = false;
+
 		try
 		{
 			isUploading = true;
-			isMarkingAsDisputed = true;
 			await InvokeAsync(StateHasChanged);
-
-			if (disputeRequest.DisputeReason == "Others")
-			{
-				disputeRequest.DisputeReason = otherReason;
-			}
-
-			disputeRequest.EmailInvitationId = EmailInvitationId;
-			disputeRequest.OrderCreatedAt = OrderCreatedAt;
-			disputeRequest.SubjectName = SubjectName;
 
 			var confirmParam = new DialogParameters
 			{
@@ -98,20 +126,17 @@ public partial class DisputeDialogOrderComponent
 
 			var result = await dialog.Result;
 
-			if (result!.Canceled)
-			{
-				isUploading = false;
+			if (result is null || result.Canceled)
 				return;
-			}
-				
 
-			var success = await DisputeOrderService.MarkAsDisputedAsync(disputeRequest);
+			isMarkingAsDisputed = true;
+			await InvokeAsync(StateHasChanged);
 
-			if (!success)
+			submissionSucceeded = await DisputeOrderService.MarkAsDisputedAsync(requestToSend);
+
+			if (!submissionSucceeded)
 			{
 				Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
-				isUploading = false;
-				return;
 			}
 		}
 		catch (Exception)
@@ -120,12 +145,13 @@ public partial class DisputeDialogOrderComponent
 		}
 		finally
 		{
+			isUploading = false;
 			isMarkingAsDisputed = false;
 			await InvokeAsync(StateHasChanged);
 		}
 
-		SubmitDisputeOrderDialog!.Close();
-		
+		if (submissionSucceeded)
+			SubmitDisputeOrderDialog!.Close();
 	}
 
 	private void CloseDialog()

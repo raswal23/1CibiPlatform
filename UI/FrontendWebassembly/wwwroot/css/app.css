@@ -3415,12 +3415,12 @@ code {
     border: 1.5px solid var(--ats-border-strong) !important;
     background: #FFFFFF !important;
     box-shadow: none !important;
-    color: var(--ats-text-3) !important;
+    color: var(--ats-blue-600) !important;
 }
 
 .ats-application-card .ats-step-one .ats-step-one-secondary-btn:hover:not(:disabled) {
     background: #F4F7FC !important;
-    color: var(--ats-text-2) !important;
+    color: var(--ats-blue-600) !important;
 }
 
 @media (max-width: 760px) {
@@ -3477,6 +3477,79 @@ code {
         0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
 }
 
+/* Keep the PhilSys lookup shell specific to ApplicationFormComponent. */
+.ats-appform-modern .ats-modern-card.ats-philsys-card {
+    width: min(900px, 100%);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 26px 34px 34px;
+    overflow: hidden;
+    border: 1px solid var(--ats-border);
+    border-radius: 20px;
+    background: #FFFFFF;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
+    color: var(--ats-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-philsys-card .ats-philsys-state {
+    width: 100%;
+}
+
+.ats-philsys-card .ats-philsys-back-button {
+    width: 36px;
+    height: 36px;
+    margin: 0 0 14px;
+    padding: 8px !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: var(--ats-text-2) !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-philsys-card .ats-philsys-back-button:hover {
+    background: var(--ats-blue-tint) !important;
+    color: var(--ats-blue-600) !important;
+}
+
+.ats-philsys-card .ats-philsys-back-button .mud-icon-root {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+.ats-philsys-card .ats-philsys-wrap {
+    padding: 0 !important;
+    overflow: visible;
+}
+
+.ats-philsys-card .ats-philsys-wrap > .mud-grid {
+    width: 100%;
+    margin: 0;
+}
+
+.ats-philsys-card .ats-philsys-wrap > .mud-grid > .mud-grid-item {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+.ats-appform-modern .ats-philsys-card .philsys-lookup-tab {
+    padding: 16px 18px;
+    gap: 14px;
+}
+
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-button,
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-root {
+    color: var(--ats-blue-600) !important;
+}
+
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-button {
+    --mud-ripple-color: var(--ats-blue-600) !important;
+}
+
 .ats-application-card .ats-appform-stepper {
     padding: 30px 34px 34px;
     border-radius: 18px;
@@ -3488,7 +3561,7 @@ code {
 .ats-application-card .ats-appform-stepper > .mud-stepper-nav {
     align-items: flex-start;
     justify-content: space-between;
-    margin: 0 0 30px;
+    margin: 0 0 34px;
 }
 
 .ats-application-card .ats-appform-stepper.mud-stepper__horizontal.mud-stepper__center-labels > .mud-stepper-nav > .mud-step {
@@ -3496,6 +3569,7 @@ code {
     padding: 0;
     flex: 0 0 auto;
     flex-basis: auto;
+    flex-shrink: 0;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step-label {
@@ -3506,31 +3580,45 @@ code {
     width: 32px !important;
     height: 32px !important;
     margin: 0 auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 2px solid var(--ats-border-strong) !important;
+    border-radius: 50%;
     background: var(--ats-blue-tint-2) !important;
     color: var(--ats-text-3) !important;
+    box-sizing: border-box;
     font-family: "Poppins", sans-serif;
     font-size: 13px !important;
     font-weight: 700;
+    transition: transform 0.12s ease;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
     border-color: transparent !important;
     background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) !important;
-    box-shadow: 0 0 0 4px var(--ats-blue-tint);
+    box-shadow: none !important;
     color: #FFFFFF !important;
+    transform: scale(1.08);
 }
 
 .ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
 .ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed {
-    border-color: var(--ats-blue-500) !important;
-    background: var(--ats-blue-500) !important;
+    border-color: transparent !important;
+    background: linear-gradient(135deg, #34C77E, #0E7A4C) !important;
     color: #FFFFFF !important;
+    font-size: 13px !important;
 }
 
 .ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon::before,
 .ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed::before {
     content: none !important;
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon svg,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed svg {
+    width: 15px;
+    height: 15px;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step-label-content {
@@ -3554,6 +3642,7 @@ code {
 }
 
 .ats-application-card .ats-appform-stepper > .mud-stepper-nav > .mud-stepper-nav-connector {
+    flex: 1 1 auto;
     min-width: 20px;
     height: 2px;
     margin: 15px 6px 0 !important;
@@ -3561,8 +3650,17 @@ code {
 }
 
 .ats-application-card .ats-appform-stepper .mud-stepper-nav-connector-line {
+    height: 2px;
+    border: 0 !important;
     border-color: var(--ats-border-strong) !important;
-    border-top-width: 2px !important;
+    background: var(--ats-border-strong);
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav >
+    .mud-step:is(.mud-step-completed, .mud-completed) + .mud-stepper-nav-connector .mud-stepper-nav-connector-line,
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav >
+    .mud-step:has(.mud-step-label-icon.mud-completed) + .mud-stepper-nav-connector .mud-stepper-nav-connector-line {
+    background: linear-gradient(90deg, #34C77E, #0E7A4C);
 }
 
 .ats-application-card .ats-appform-stepper > .mud-stepper-content {
@@ -3924,6 +4022,17 @@ code {
 @media (max-width: 700px) {
     .ats-appform-modern {
         padding: 12px 8px;
+    }
+
+    .ats-appform-modern .ats-modern-card.ats-philsys-card {
+        width: calc(100% - 12px);
+        margin: 8px 6px;
+        padding: 18px 16px 24px;
+        border-radius: 16px;
+    }
+
+    .ats-appform-modern .ats-philsys-card .philsys-lookup-tab {
+        padding: 14px;
     }
 
     .ats-appform-modern .ats-application-card {

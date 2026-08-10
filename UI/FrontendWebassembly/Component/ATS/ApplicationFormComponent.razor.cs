@@ -39,9 +39,29 @@ public partial class ApplicationFormComponent
 	private DateTime? DateOfBirth;
 
 	// AddressDetails
+	private const string OtherOwnershipType = "Others";
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
 	private string? OwnershipOtherText = null;
+	private string? selectedOwnershipType;
+
+	private string? SelectedOwnershipType
+	{
+		get => selectedOwnershipType;
+		set
+		{
+			selectedOwnershipType = value;
+			addressDetails.TypeOfOwnership = value;
+
+			if (!string.Equals(value, OtherOwnershipType, StringComparison.Ordinal))
+			{
+				OwnershipOtherText = null;
+			}
+		}
+	}
+
+	private bool IsOtherOwnershipSelected =>
+		string.Equals(SelectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal);
 
 	// Educational background
 	private EducationalBackgroundDTO educationalBackground = new();
@@ -523,8 +543,35 @@ public partial class ApplicationFormComponent
 			licensesDetails.LicenseUploadFileName = e.File.Name;
 		}
 
+		if (!hasProfessionalLicense)
+		{
+			ClearProfessionalLicenseDetails();
+			return;
+		}
+
 		_licenseError = false;
 		return;
+	}
+
+	private async Task SetProfessionalLicenseAsync(bool value)
+	{
+		hasProfessionalLicense = value;
+
+		if (!value)
+			ClearProfessionalLicenseDetails();
+
+		await SaveDraftAsync();
+	}
+
+	private void ClearProfessionalLicenseDetails()
+	{
+		licensesDetails.LicenseName = null;
+		licensesDetails.LicenseNumber = null;
+		licensesDetails.LicenseExpiryDate = null;
+		licensesDetails.LicenseUploadFile = null;
+		licensesDetails.LicenseUploadFileName = null;
+		LicenseExpiryDate = null;
+		_licenseError = false;
 	}
 
 	private async Task OnCoe1Upload(InputFileChangeEventArgs e)
@@ -807,10 +854,9 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		if (!string.IsNullOrEmpty(OwnershipOtherText))
-		{
-			addressDetails.TypeOfOwnership = OwnershipOtherText;
-		}
+		addressDetails.TypeOfOwnership = IsOtherOwnershipSelected
+			? OwnershipOtherText?.Trim()
+			: SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{

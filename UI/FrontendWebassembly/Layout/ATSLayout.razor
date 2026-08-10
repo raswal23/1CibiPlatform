@@ -130,7 +130,12 @@
                         <span class="ats-console-notification-dot" aria-hidden="true"></span>
                     </button>
                     <div class="ats-console-topbar-divider" aria-hidden="true"></div>
-                    <div class="ats-console-avatar">AT</div>
+                    <div class="ats-console-avatar"
+                         role="img"
+                         aria-label="@($"{_userDisplayName} profile initials")"
+                         title="@_userDisplayName">
+                        @_userInitials
+                    </div>
                 </div>
             </div>
 
@@ -150,6 +155,7 @@ else
 @code {
     private bool _isSettingsExpanded;
     private const string RoleIdStorageKey = "RoleId";
+    private const string UserNameStorageKey = "Name";
 
     private void ToggleSettingsExpanded()
     {
@@ -161,6 +167,8 @@ else
     private bool _isSidebarCollapsed;
     private bool _isMobileDrawerOpen;
     private bool _isMobileView;
+    private string _userDisplayName = "User";
+    private string _userInitials = "U";
     private HashSet<int> _accessibleModuleIds = new();
 
     protected override async Task OnInitializedAsync()
@@ -178,6 +186,10 @@ else
 			NavigationManager.NavigateTo("/access-denied");
 			return;
 		}
+
+		var storedUserName = await LocalStorageService.GetItemAsync<string>(UserNameStorageKey);
+		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
+		_userInitials = GetUserInitials(_userDisplayName);
 
 		var storedRoleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
 		var storedRoleIds = string.IsNullOrWhiteSpace(storedRoleIdsJson)
@@ -289,6 +301,23 @@ else
 			.FirstOrDefault(module => string.Equals(module.path, path, StringComparison.OrdinalIgnoreCase))
 			.Name ?? "Dashboard";
     }
+
+	private static string GetUserInitials(string? fullName)
+	{
+		var nameParts = fullName?
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			?? [];
+
+		if (nameParts.Length == 0)
+			return "U";
+
+		var firstInitial = char.ToUpperInvariant(nameParts[0][0]);
+		if (nameParts.Length == 1)
+			return firstInitial.ToString();
+
+		var lastInitial = char.ToUpperInvariant(nameParts[^1][0]);
+		return $"{firstInitial}{lastInitial}";
+	}
 
     private void GoBackToOnePlatform()
     {

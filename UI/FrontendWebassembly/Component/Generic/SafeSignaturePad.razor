@@ -7,14 +7,6 @@
             <MudText Typo="Typo.subtitle1" Class="ats-signature-modern-title">Create your signature</MudText>
             <MudText Typo="Typo.caption" Class="ats-signature-modern-subtitle">Draw your signature or upload a PNG image.</MudText>
         </div>
-        @if (Value is { Length: > 0 })
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                           Size="Size.Small"
-                           Disabled="@Disabled"
-                           OnClick="ClearAsync"
-                           Title="Clear signature" />
-        }
     </div>
 
     <div class="ats-signature-tabs" role="tablist" aria-label="Signature input method">

@@ -30,11 +30,18 @@ public partial class WithdrawnApplicationComponent
 			},
 			{
 				nameof(YesNoDialogComponent.ConfirmText),
-				"Withdraw"
+				"Resend"
 			},
 			{
 				nameof(YesNoDialogComponent.InformationMessage),
-				"Clicking 'Withdraw' will resend the application form via email."
+				"Clicking \"Resend\" will resend the application form via email."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.Refresh
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)(() => ResendApplicationForm(emailInvitationId))
 			},
 			{
 				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
@@ -46,7 +53,7 @@ public partial class WithdrawnApplicationComponent
 				nameof(YesNoDialogComponent.InfoColor),Color.Warning
 			},
 			{
-				nameof(YesNoDialogComponent.InfoBGColor),"#FFF8E1"
+				nameof(YesNoDialogComponent.InfoBGColor),"#FCF1DD"
 			},
 			{
 				nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
@@ -62,25 +69,7 @@ public partial class WithdrawnApplicationComponent
 		};
 
 		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
-
-		var result = await dialog.Result;
-
-		if (result!.Canceled)
-			return;
-
-		try
-		{
-			_loadingEmailInvitationId = emailInvitationId;
-			StateHasChanged();
-
-			await ResendApplicationForm(emailInvitationId);
-		}
-		finally
-		{
-			_loadingEmailInvitationId = null;
-			StateHasChanged();
-		}
-		
+		await dialog.Result;
 	}
 
 	private async Task<TableData<EmailInvitationRequestListDTO>> LoadWithdrawnServerData(TableState state, CancellationToken cancellationToken)
@@ -102,21 +91,50 @@ public partial class WithdrawnApplicationComponent
 		set => UpdateSearch(ref _searchString!, value, lockedUsersTable!);
 	}
 
-	private async Task ResendApplicationForm(Guid emailInvitationId)
+	private async Task<bool> ResendApplicationForm(Guid emailInvitationId)
 	{
-		var success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
+		_loadingEmailInvitationId = emailInvitationId;
+		await InvokeAsync(StateHasChanged);
 
-		if (!success)
+		try
 		{
-			Snackbar.Add("Failed to resend application form.", Severity.Error);
-			return;
-		}
+			bool success;
 
-		if (lockedUsersTable?.TableRef != null)
-		{
-			await lockedUsersTable.TableRef.ReloadServerData();
+			try
+			{
+				success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
+			}
+			catch (Exception)
+			{
+				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				return false;
+			}
+
+			if (!success)
+			{
+				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				return false;
+			}
+
+			if (lockedUsersTable?.TableRef != null)
+			{
+				try
+				{
+					await lockedUsersTable.TableRef.ReloadServerData();
+				}
+				catch (Exception)
+				{
+					Snackbar.Add("Application form was resent, but the list could not be refreshed.", Severity.Warning);
+				}
+			}
 
 			Snackbar.Add("Application form resent successfully.", Severity.Success);
+			return true;
+		}
+		finally
+		{
+			_loadingEmailInvitationId = null;
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 }

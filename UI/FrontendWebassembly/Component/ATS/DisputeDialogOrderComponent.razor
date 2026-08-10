@@ -62,43 +62,44 @@
                         <div class="dd-section-body">
                             <div class="dd-pills-wrap">
                                 <MudRadioGroup T="string"
-                                               @bind-Value="disputeRequest.DisputeReason"
+                                               @bind-Value="SelectedDisputeCategory"
                                                Required="true"
                                                RequiredError="Dispute category is required"
                                                Class="dd-pills">
                                     <MudRadio T="string"
                                               Value="@("Billing")"
-                                              Class="@($"dd-pill {(disputeRequest.DisputeReason == "Billing" ? "is-selected" : string.Empty)}")">
+                                              Class="@($"dd-pill {(SelectedDisputeCategory == "Billing" ? "is-selected" : string.Empty)}")">
                                         Billing
                                     </MudRadio>
                                     <MudRadio T="string"
                                               Value="@("Report")"
-                                              Class="@($"dd-pill {(disputeRequest.DisputeReason == "Report" ? "is-selected" : string.Empty)}")">
+                                              Class="@($"dd-pill {(SelectedDisputeCategory == "Report" ? "is-selected" : string.Empty)}")">
                                         Report
                                     </MudRadio>
                                     <MudRadio T="string"
-                                              Value="@("Others")"
-                                              Class="@($"dd-pill {(disputeRequest.DisputeReason == "Others" ? "is-selected" : string.Empty)}")">
+                                              Value="@OtherDisputeCategory"
+                                              Class="@($"dd-pill {(IsOtherDisputeSelected ? "is-selected" : string.Empty)}")">
                                         Others
                                     </MudRadio>
                                 </MudRadioGroup>
                             </div>
 
-                            @if (disputeRequest.DisputeReason == "Others")
+                            @if (IsOtherDisputeSelected)
                             {
                                 <div class="dd-field">
                                     <label for="dd-other-reason">Please specify <span class="dd-required">*</span></label>
                                     <div class="dd-input-wrap">
                                         <MudTextField @bind-Value="otherReason"
                                                       InputId="dd-other-reason"
-                                                      Placeholder="Enter dispute reason"
+                                                      Placeholder="Briefly describe the reason for this dispute"
                                                       FullWidth="true"
                                                       Required="true"
                                                       RequiredError="Please specify a reason"
+                                                      MaxLength="255"
                                                       Variant="Variant.Outlined"
                                                       Margin="Margin.Dense"
                                                       Adornment="Adornment.Start"
-                                                      AdornmentIcon="@Icons.Material.Outlined.EditNote"
+                                                      AdornmentIcon="@Icons.Material.Outlined.Article"
                                                       Class="dd-input" />
                                     </div>
                                 </div>

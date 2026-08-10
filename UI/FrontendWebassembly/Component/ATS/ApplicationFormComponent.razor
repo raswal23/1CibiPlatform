@@ -10,20 +10,23 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Elevation="0"
-          Class="@($"ats-modern-card {(!showPhilSys && !IsSuccess ? "ats-application-card" : string.Empty)}")">
+          Class="@($"ats-modern-card {(!showPhilSys && !IsSuccess ? "ats-application-card" : showPhilSys ? "ats-philsys-card" : string.Empty)}")">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />
     }
     else if (showPhilSys)
     {
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                       Color="Color.Default"
-                       Class="ml-2 mt-2"
-                       OnClick="@(()=> showPhilSys = false)"/>
-        <div class="philsys-modern ats-philsys-wrap">
-            <PhilSysComponent HashToken="@HashToken"></PhilSysComponent>
-        </div>
+        <section class="ats-philsys-state" aria-label="PhilSys registrant lookup">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Default"
+                           Class="ats-philsys-back-button"
+                           Title="Back to application form"
+                           OnClick="@(() => showPhilSys = false)" />
+            <div class="philsys-modern ats-philsys-wrap">
+                <PhilSysComponent HashToken="@HashToken"></PhilSysComponent>
+            </div>
+        </section>
     }
     else
     {
@@ -424,18 +427,18 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.AdditionalGovtIDFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.AdditionalGovtIDFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
                                                                            Size="Size.Small"
-                                                                           Class="ats-step-two-upload-remove"
+                                                                           Class="ats-step-two-upload-remove ats-file-upload-action-icon"
                                                                            OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.AdditionalGovtIDFile!))" />
                                                         }
                                                         else
                                                         {
                                                             <span class="ats-step-two-upload-icon-shell">
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon ats-file-upload-action-icon" />
                                                             </span>
                                                             <span class="ats-step-two-upload-btn-text">Upload unexpired government ID</span>
                                                         }
@@ -458,18 +461,18 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.NBIClearanceFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.NBIClearanceFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
                                                                            Size="Size.Small"
-                                                                           Class="ats-step-two-upload-remove"
+                                                                           Class="ats-step-two-upload-remove ats-file-upload-action-icon"
                                                                            OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.NBIClearanceFile!))" />
                                                         }
                                                         else
                                                         {
                                                             <span class="ats-step-two-upload-icon-shell">
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon ats-file-upload-action-icon" />
                                                             </span>
                                                             <span class="ats-step-two-upload-btn-text">Upload NBI clearance</span>
                                                         }
@@ -491,18 +494,18 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.ResumeFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.ResumeFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
                                                                            Size="Size.Small"
-                                                                           Class="ats-step-two-upload-remove"
+                                                                           Class="ats-step-two-upload-remove ats-file-upload-action-icon"
                                                                            OnClick="@(() => RemoveFileFromUploadsAsync(personalDetails.ResumeFile!))" />
                                                         }
                                                         else
                                                         {
                                                             <span class="ats-step-two-upload-icon-shell">
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon ats-file-upload-action-icon" />
                                                             </span>
                                                             <span class="ats-step-two-upload-btn-text">Upload resume file</span>
                                                         }
@@ -804,17 +807,17 @@
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-step-four-upload-file-icon" Color="Color.Error" />
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-step-four-upload-file-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                 <MudText Class="ats-step-four-upload-file-name">@educationalBackground.DiplomaFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="ats-step-four-upload-remove"
+                                                               Class="ats-step-four-upload-remove ats-file-upload-action-icon"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFile!))" />
                                             }
                                             else
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-file-upload-action-icon" />
                                                 <span class="ats-step-four-upload-copy">Upload diploma / TOR</span>
                                             }
                                         </MudButton>
@@ -847,7 +850,7 @@
                     <!-- STEP 5 -->
                     <MudStep Title="Step 5" Class="ats-step-four" Completed="@(_activeStep > 4)">
                         <div class="ats-step-five-scope">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-appform-section-title ats-step-five-title">Credentials, Licenses &amp; Professional Experience</MudText>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-appform-section-title ats-step-five-title">Credentials &amp; Licenses</MudText>
                         <MudGrid Class="ats-step-five-grid">
                             <MudItem xs="12" Class="ats-license-prompt">
                                 <div class="ats-license-prompt-content">
@@ -858,12 +861,12 @@
 
                                     <div class="ats-license-segment">
                                         <MudButton Class="@(hasProfessionalLicense ? "ats-license-segment-btn active" : "ats-license-segment-btn")"
-                                                   OnClick="() => hasProfessionalLicense = true">
+                                                   OnClick="@(() => SetProfessionalLicenseAsync(true))">
                                             Yes
                                         </MudButton>
 
                                         <MudButton Class="@(!hasProfessionalLicense ? "ats-license-segment-btn active no" : "ats-license-segment-btn")"
-                                                   OnClick="() => hasProfessionalLicense = false">
+                                                   OnClick="@(() => SetProfessionalLicenseAsync(false))">
                                             No
                                         </MudButton>
                                     </div>
@@ -922,17 +925,17 @@
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (licensesDetails.LicenseUploadFile is not null)
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                     <MudText Class="ats-upload-file-name">@licensesDetails.LicenseUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   Class="ats-upload-remove"
+                                                                   Class="ats-upload-remove ats-file-upload-action-icon"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFile!))" />
                                                 }
                                                 else
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-file-upload-action-icon" />
                                                     <span class="ats-upload-copy">Upload professional license</span>
                                                 }
                                             </MudButton>
@@ -1078,17 +1081,17 @@
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (professionalExperiences.Emp1COEUploadFile is not null)
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                 <MudText Class="ats-upload-file-name">@professionalExperiences.Emp1COEUploadFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="ats-upload-remove"
+                                                               Class="ats-upload-remove ats-file-upload-action-icon"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFile!))" />
                                             }
                                             else
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-file-upload-action-icon" />
                                                 <span class="ats-upload-copy">Upload COE / ID #1</span>
                                             }
                                         </MudButton>
@@ -1271,17 +1274,17 @@
                                                                     OnClick="@context.OpenFilePickerAsync">
                                                             @if (professionalExperiences.Emp2COEUploadFile is not null)
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                                 <MudText Class="ats-upload-file-name">@professionalExperiences.Emp2COEUploadFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="ats-upload-remove"
+                                                                               Class="ats-upload-remove ats-file-upload-action-icon"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-file-upload-action-icon" />
                                                                 <span class="ats-upload-copy">Upload COE / ID #2</span>
                                                             }
                                                         </MudButton>
@@ -1472,17 +1475,17 @@
                                                                     OnClick="@context.OpenFilePickerAsync">
                                                             @if (professionalExperiences.Emp3COEUploadFile is not null)
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon ats-file-upload-pdf-icon" Color="Color.Error" />
                                                                 <MudText Class="ats-upload-file-name">@professionalExperiences.Emp3COEUploadFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="ats-upload-remove"
+                                                                               Class="ats-upload-remove ats-file-upload-action-icon"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-file-upload-action-icon" />
                                                                 <span class="ats-upload-copy">Upload COE / ID #3</span>
                                                             }
                                                         </MudButton>

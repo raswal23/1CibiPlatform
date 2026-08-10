@@ -152,8 +152,10 @@
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-adornment-start {
-    margin-left: 12px;
+    margin-left: 0;
     margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
     color: var(--step3-text-3) !important;
 }
 
@@ -231,8 +233,8 @@
     min-height: 100%;
     flex-direction: column;
     align-items: stretch;
-    justify-content: space-between;
-    gap: 24px;
+    justify-content: flex-start;
+    gap: 16px;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-profile {
@@ -244,9 +246,9 @@
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar-frame {
     display: flex;
-    width: 110px;
-    height: 110px;
-    flex: 0 0 110px;
+    width: 132px;
+    height: 132px;
+    flex: 0 0 132px;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -257,11 +259,11 @@
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar-placeholder {
-    width: 78px;
-    height: 78px;
+    width: 94px;
+    height: 94px;
     margin-bottom: -8px;
     color: #a6b0c6 !important;
-    font-size: 78px;
+    font-size: 94px;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar {
@@ -371,9 +373,19 @@
     font-size: 15px;
 }
 
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-file-upload-action-icon,
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn:hover .ats-file-upload-action-icon {
+    color: var(--step3-blue-600) !important;
+}
+
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-pdf-icon,
-.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn:hover .ats-step-two-upload-pdf-icon {
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-file-upload-pdf-icon,
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn:hover .ats-file-upload-pdf-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
     color: var(--step3-red) !important;
+    font-size: 22px;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn-text {
@@ -503,7 +515,7 @@
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-other-field {
-    grid-column: span 8;
+    grid-column: 1 / -1;
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-main {
@@ -546,8 +558,9 @@
     min-width: 0;
 }
 
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control.mud-input-control,
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-control {
-    margin-top: 0;
+    margin: 0;
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-outlined {
@@ -590,8 +603,10 @@
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-adornment-start {
-    margin-left: 12px;
+    margin-left: 0;
     margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
     color: var(--step4-text-3) !important;
 }
 
@@ -715,7 +730,7 @@
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-title {
-    margin: 0 !important;
+    margin: 12px 0 0 !important;
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-upload .mud-file-upload {
@@ -786,6 +801,20 @@
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-remove {
     margin: 0;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-file-upload-action-icon,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-upload-outline-btn:hover .ats-file-upload-action-icon {
+    color: var(--step4-blue-600) !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-file-upload-pdf-icon,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-upload-outline-btn:hover .ats-file-upload-pdf-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    color: var(--step4-red) !important;
+    font-size: 22px;
 }
 
 .ats-step-four-action-bar {
@@ -946,6 +975,11 @@
     margin-top: 0;
 }
 
+.ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) .ats-step-five-control.mud-input-control,
+.ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) .ats-step-five-control .mud-input-control {
+    margin: 8px 0 4px;
+}
+
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined {
     width: 100%;
     height: 44px !important;
@@ -988,6 +1022,14 @@
     opacity: 1;
 }
 
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-adornment-start {
+    margin-left: 0;
+    margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
+    color: var(--step5-text-3) !important;
+}
+
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-adornment-end {
     margin-right: 10px;
     color: var(--step5-text-3) !important;
@@ -1007,11 +1049,12 @@
 
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-license-upload-spacer {
     display: block;
-    min-height: 20px;
-    margin-bottom: 2px;
+    height: 8px;
+    min-height: 8px;
+    margin: 0;
     color: transparent;
     font-size: 12px;
-    line-height: 18px;
+    line-height: 8px;
     user-select: none;
 }
 
@@ -1086,13 +1129,27 @@
     color: var(--step5-text-3) !important;
 }
 
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-file-upload-action-icon,
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-upload-btn:hover .ats-file-upload-action-icon {
+    color: var(--step5-blue-600) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-file-upload-pdf-icon,
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-upload-btn:hover .ats-file-upload-pdf-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    color: var(--step5-red) !important;
+    font-size: 22px;
+}
+
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-experience-heading {
     margin: 8px 0 4px !important;
     color: var(--step5-blue-600) !important;
     background: none !important;
     -webkit-text-fill-color: var(--step5-blue-600) !important;
     font-family: "Poppins", "Inter", sans-serif;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700 !important;
     line-height: 1.4;
 }
@@ -1387,6 +1444,11 @@
     margin-top: 0;
 }
 
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap .oneplatform-rounded-input.mud-input-control,
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap .oneplatform-rounded-input .mud-input-control {
+    margin: 8px 0 4px;
+}
+
 .ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-outlined {
     min-height: 42px !important;
 }
@@ -1423,6 +1485,14 @@
 .ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input input::placeholder {
     color: var(--final-subtle) !important;
     opacity: 1;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-adornment-start {
+    margin-left: 0;
+    margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
+    color: var(--final-subtle) !important;
 }
 
 .ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-adornment-end {
@@ -1579,7 +1649,7 @@
     border-radius: 10px !important;
     background: #fff !important;
     box-shadow: none !important;
-    color: #5b6b8c !important;
+    color: #1d5fd1 !important;
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 0.4px;
@@ -1593,6 +1663,7 @@
 .ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button .mud-icon-root {
     width: 14px;
     height: 14px;
+    color: #1d5fd1 !important;
     font-size: 14px;
 }
 
@@ -1693,4 +1764,18 @@
     .ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button {
         transition: none;
     }
+}
+
+/* Keep every trailing field icon close to the right edge without changing leading icons. */
+.ats-application-card.ats-application-card ::deep .oneplatform-rounded-input .mud-input-adornment-end {
+    margin-right: 0 !important;
+    margin-inline-end: 0 !important;
+}
+
+/* MudRadioGroup nests the choices in a row container; keep the Step 2 choices slightly separated. */
+.ats-application-card.ats-application-card ::deep .ats-step-one-choice-group .mud-radio-group {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
 }

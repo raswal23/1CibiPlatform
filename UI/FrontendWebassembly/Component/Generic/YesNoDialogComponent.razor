@@ -1,64 +1,45 @@
-﻿<MudDialog Style="border-radius:12px; padding-top:10px;"
-           Class="philsys-shadow-box">
-
+<MudDialog Class="yes-no-dialog">
     <DialogContent>
-        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+        <div class="@($"yes-no-dialog-shell {ToneCssClass}")">
+            <div class="yes-no-dialog-icon-badge" aria-hidden="true">
+                <MudIcon Icon="@AvatarIcon" />
+            </div>
 
-            <MudAvatar Size="Size.Large"
-                       Color=@AvatarColor
-                       Variant="Variant.Filled">
-                <MudIcon Icon=@AvatarIcon />
-            </MudAvatar>
+            <h1 class="yes-no-dialog-title">@Title</h1>
+            <p class="yes-no-dialog-description">@Message</p>
 
-            <MudText Typo="Typo.h5"
-                     Align="Align.Center"
-                     Style="font-weight:700;">
-                @Title
-            </MudText>
+            @if (!string.IsNullOrWhiteSpace(InformationMessage))
+            {
+                <div class="yes-no-dialog-info-banner" style="@InfoBannerStyle">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Class="yes-no-dialog-info-icon" />
+                    <p class="yes-no-dialog-info-message">@RenderInformationMessage()</p>
+                </div>
+            }
 
-            <MudText Align="Align.Center"
-                     Class="mt-2">
-                @Message
-            </MudText>
+            <div class="yes-no-dialog-footer">
+                <MudButton ButtonType="ButtonType.Button"
+                           Variant="Variant.Filled"
+                           Class="yes-no-dialog-button yes-no-dialog-cancel"
+                           Disabled="@isConfirming"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
 
-        </MudStack>
-
-        <MudPaper Class="d-flex align-center pa-3 mt-6"
-                  Elevation="0"
-                  Style="@($"background:{InfoBGColor}; border-radius:12px;")">
-        
-            <MudIcon Icon="@Icons.Material.Filled.Info"
-                     Color=@InfoColor
-                     Class="me-2" />
-        
-            <MudText Typo="Typo.caption">
-                @InformationMessage
-            </MudText>
-        
-        </MudPaper>
-        
+                <MudButton ButtonType="ButtonType.Button"
+                           Variant="Variant.Filled"
+                           StartIcon="@(isConfirming ? null : ConfirmIcon)"
+                           Class="yes-no-dialog-button yes-no-dialog-confirm"
+                           Disabled="@isConfirming"
+                           OnClick="Confirm">
+                    @if (isConfirming)
+                    {
+                        <MudProgressCircular Size="Size.Small"
+                                             Indeterminate="true"
+                                             Class="yes-no-dialog-progress" />
+                    }
+                    <span>@ConfirmText</span>
+                </MudButton>
+            </div>
+        </div>
     </DialogContent>
-
-    <DialogActions>
-
-        <div style="width:100%; display:flex; justify-content:left; padding-bottom:10px; padding-top:10px; padding-left:30px;">
-        
-            <MudButton Class="theme-button theme-button-inactive"
-                       Style="min-width:120px; border-radius:12px; "
-                       OnClick="Cancel">
-                Cancel
-            </MudButton>
-        </div>
-
-        <div style="width:100%; display:flex; justify-content:right; padding-bottom:10px; padding-top:10px; padding-right:30px;">
-        
-            <MudButton Class="@($"theme-button {ThemeButtonColor}")"
-                       Style="min-width:120px; border-radius:12px;"
-                       OnClick="Confirm">
-                @ConfirmText
-            </MudButton>
-        </div>
-
-    </DialogActions>
-
 </MudDialog>
