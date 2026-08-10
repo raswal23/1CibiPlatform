@@ -1,50 +1,168 @@
-.ats-dashboard-grid {
+/*
+ * Dashboard spacing scale.
+ * Single source of truth for card padding, card-to-card gaps and the inset that
+ * keeps plotting areas, axis labels and legends off the card boundary.
+ *
+ * NOTE: cards and titles are rendered by MudBlazor components (MudPaper, MudText),
+ * which do not receive this component's scope attribute. Descendant rules must
+ * therefore go through ::deep. The custom properties below are declared on the
+ * scoped root and still inherit across those component boundaries.
+ */
+.ats-dashboard {
+    --ats-dashboard-gap: 24px;
+    --ats-card-padding: 24px;
+    --ats-chart-inset: 6px;
+    --ats-stack-xs: 4px;
+    --ats-stack-sm: 10px;
+    --ats-stack-md: 16px;
+    --ats-stack-lg: 20px;
+}
+
+::deep .ats-dashboard-filter-card {
+    margin-bottom: var(--ats-dashboard-gap);
+    padding: var(--ats-stack-lg) var(--ats-card-padding);
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 16px;
+}
+
+/* Replaces MudGrid, whose negative margins cancelled the filter card padding. */
+::deep .ats-dashboard-filter-field {
+    max-width: 320px;
+}
+
+::deep .ats-dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
+    margin-bottom: var(--ats-dashboard-gap);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ats-dashboard-gap);
     align-items: stretch;
 }
 
-.ats-dashboard-chart-card {
+::deep .ats-dashboard-chart-card {
+    display: flex;
     min-width: 0;
-    min-height: 330px;
-    padding: 18px;
+    min-height: 424px;
+    padding: var(--ats-card-padding);
+    flex-direction: column;
     overflow: hidden;
-    border: 1px solid rgba(11, 31, 58, 0.06);
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(11, 31, 58, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.ats-dashboard-chart-card-clickable,
-.ats-dashboard-chart-card-clickable ::deep * {
+::deep .ats-dashboard-chart-card-clickable,
+::deep .ats-dashboard-chart-card-clickable * {
     cursor: pointer;
 }
 
-.ats-dashboard-chart-card-clickable:focus-visible {
+::deep .ats-dashboard-chart-card-clickable:hover {
+    border-color: #cfd8ee;
+    box-shadow: 0 10px 24px -16px rgba(11, 31, 58, 0.35);
+    transform: translateY(-1px);
+}
+
+/*
+ * Press-in cue. The card dips as it is clicked and the zoom dialog grows out of
+ * it (see .ats-chart-detail-dialog in app.css), so the two read as one gesture.
+ */
+::deep .ats-dashboard-chart-card-clickable:active {
+    box-shadow: 0 4px 12px -10px rgba(11, 31, 58, 0.35);
+    transform: scale(0.985);
+    transition-duration: 0.08s;
+}
+
+::deep .ats-dashboard-chart-card-clickable:focus-visible {
     outline: 2px solid #4d8de8;
     outline-offset: 2px;
 }
 
-.ats-dashboard-chart-title {
-    margin-bottom: 10px;
-    padding: 0 6px;
-    color: #0b1f3a;
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.25;
+::deep .ats-dashboard-chart-header {
+    display: grid;
+    margin-bottom: var(--ats-stack-lg);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--ats-stack-md);
 }
 
-.ats-chart-legend {
+::deep .ats-dashboard-chart-heading {
+    min-width: 0;
+}
+
+/*
+ * Export action. The wrapper is the plain element the stopPropagation directives
+ * hang off - MudIconButton renders its own markup, so the directives cannot go
+ * on it, and the card underneath is itself a button.
+ */
+::deep .ats-dashboard-chart-actions {
+    display: inline-flex;
+    margin-top: -4px;
+    align-items: center;
+}
+
+::deep .ats-dashboard-chart-export {
+    color: var(--ats-text-sub, #6b7b92);
+    background: #f4f7fb;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 10px;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+::deep .ats-dashboard-chart-export:hover {
+    color: #b3261e;
+    background: #fff5f4;
+    border-color: #f2c9c4;
+}
+
+::deep .ats-dashboard-chart-export:disabled {
+    /* Disabled means "nothing to export yet", so it recedes rather than shouting. */
+    background: #f8fafd;
+    border-color: #eef1f8;
+    opacity: 0.55;
+}
+
+::deep .ats-dashboard-chart-title {
+    color: #0b1f3a;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+::deep .ats-dashboard-chart-hint {
+    margin-top: var(--ats-stack-xs);
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+
+/*
+ * Chart content is inset from the card padding so plotting areas, axis labels
+ * and legends never sit against the card border.
+ */
+::deep .ats-dashboard-chart-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 0 var(--ats-chart-inset) var(--ats-chart-inset);
+    flex-direction: column;
+    justify-content: center;
+}
+
+::deep .ats-chart-legend {
     display: flex;
     min-height: 28px;
-    margin: 0 8px 4px;
+    margin: 0 0 var(--ats-stack-md);
+    padding: 0 var(--ats-stack-xs);
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 4px 14px;
+    gap: 6px 16px;
     color: #3e4b5e;
-    font-size: 11px;
+    font-size: 11.5px;
 }
 
-.ats-chart-legend-item {
+::deep .ats-chart-legend-item {
     display: inline-flex;
     min-width: 0;
     align-items: center;
@@ -52,65 +170,65 @@
     white-space: nowrap;
 }
 
-.ats-chart-legend-dot {
+::deep .ats-chart-legend-dot {
     width: 9px;
     height: 9px;
     flex: 0 0 9px;
     border-radius: 50%;
 }
 
-.ats-chart-total {
+::deep .ats-chart-total {
     padding-left: 8px;
     color: #0b1f3a;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.ats-stacked-area-shell {
+::deep .ats-stacked-area-shell {
     position: relative;
     width: 100%;
     height: 245px;
 }
 
-.ats-stacked-area-chart {
+::deep .ats-stacked-area-chart {
     display: block;
     width: 100%;
     height: 245px;
     overflow: visible;
 }
 
-.ats-stacked-area-grid-line {
+::deep .ats-stacked-area-grid-line {
     stroke: rgba(62, 75, 94, 0.12);
     stroke-width: 1;
 }
 
-.ats-stacked-area-axis-line {
+::deep .ats-stacked-area-axis-line {
     stroke: rgba(62, 75, 94, 0.35);
     stroke-width: 1;
 }
 
-.ats-stacked-area-hover-target {
+::deep .ats-stacked-area-hover-target {
     fill: transparent;
     stroke: transparent;
     cursor: pointer;
     pointer-events: all;
 }
 
-.ats-stacked-area-hover-target:focus {
+::deep .ats-stacked-area-hover-target:focus {
     fill: rgba(255, 255, 255, 0.2);
     stroke: rgba(11, 31, 58, 0.35);
     stroke-width: 1.5;
     outline: none;
 }
 
-.ats-stacked-area-hover-marker {
+::deep .ats-stacked-area-hover-marker {
     stroke: #fff;
     stroke-width: 2;
     filter: drop-shadow(0 1px 2px rgba(11, 31, 58, 0.35));
     pointer-events: none;
 }
 
-.ats-stacked-area-tooltip {
+::deep .ats-stacked-area-tooltip {
     position: absolute;
     z-index: 5;
     display: flex;
@@ -121,7 +239,7 @@
     color: #344054;
     background: #fff;
     border: 1px solid rgba(11, 31, 58, 0.12);
-    border-radius: 6px;
+    border-radius: 8px;
     box-shadow: 0 4px 12px rgba(11, 31, 58, 0.18);
     font-size: 11px;
     line-height: 1.25;
@@ -129,22 +247,22 @@
     pointer-events: none;
 }
 
-.ats-stacked-area-tooltip-below {
+::deep .ats-stacked-area-tooltip-below {
     transform: translate(-50%, 11px);
 }
 
-.ats-stacked-area-tooltip > span:last-child {
+::deep .ats-stacked-area-tooltip > span:last-child {
     display: flex;
     flex-direction: column;
 }
 
-.ats-stacked-area-tooltip strong {
+::deep .ats-stacked-area-tooltip strong {
     color: #0b1f3a;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.ats-stacked-area-tooltip-dot {
+::deep .ats-stacked-area-tooltip-dot {
     width: 8px;
     height: 8px;
     margin-top: 2px;
@@ -152,7 +270,7 @@
     border-radius: 50%;
 }
 
-.ats-stacked-area-y-label {
+::deep .ats-stacked-area-y-label {
     position: absolute;
     left: 4px;
     width: 34px;
@@ -163,7 +281,7 @@
     transform: translateY(-50%);
 }
 
-.ats-stacked-area-x-labels {
+::deep .ats-stacked-area-x-labels {
     position: absolute;
     right: 4%;
     bottom: 6px;
@@ -174,269 +292,172 @@
     font-size: 10px;
 }
 
-.ats-dashboard-empty {
+/*
+ * Empty state (no data) - not an error state.
+ * Fills the chart area so card dimensions stay constant and the dashboard grid
+ * does not jump between the populated and empty presentations.
+ */
+::deep .ats-dashboard-empty {
     display: flex;
     min-height: 260px;
+    flex: 1;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px;
-}
-
-.ats-dashboard-section-loading {
-    display: flex;
-    min-height: 260px;
-    align-items: center;
-    justify-content: center;
-}
-
-.ats-dashboard-table-shell {
-    position: relative;
-    min-height: 280px;
-}
-
-.search-report-results-scope {
-    width: 100%;
-}
-
-::deep .search-report-results {
-    --navy-900: #0b1b3d;
-    --blue-600: #1d5fd1;
-    --blue-500: #2e7ce0;
-    --blue-tint: #edf3fc;
-    --blue-tint-2: #e3ecfb;
-    --border: #e4eaf6;
-    --border-strong: #c2d2f0;
-    --text-1: #16233f;
-    --text-2: #5b6b8c;
-    --text-3: #8a97b5;
-    width: 100%;
-    max-width: none;
-    margin: 0;
-}
-
-::deep .search-report-results .mud-table-root {
-    min-width: 1100px;
-}
-
-::deep .ats-management-card.search-report-results .mud-table {
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-::deep .search-report-results .mud-table-head .mud-table-cell {
-    padding: 10px 14px 12px;
-    border-bottom: 1.5px solid var(--border-strong);
-    color: var(--text-1);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-::deep .search-report-results .mud-table-body .mud-table-cell {
-    padding: 14px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-1);
-    background-color: transparent;
-    font-size: 13.5px;
-    vertical-align: middle;
-    transition: background-color 0.32s ease;
-}
-
-::deep .search-report-results .mud-table-row:hover .mud-table-cell {
+    gap: var(--ats-stack-sm);
+    padding: var(--ats-stack-lg);
+    color: var(--ats-text-sub, #6b7b92);
     background: #fafbff;
+    border: 1px dashed #dbe1f0;
+    border-radius: 12px;
+    text-align: center;
 }
 
-::deep .search-report-results .report-ticket {
-    color: var(--text-1);
+::deep .ats-dashboard-empty-icon {
+    color: #a3accb;
+    font-size: 30px;
+}
+
+::deep .ats-dashboard-empty-title {
+    color: #3d4a68;
+    font-size: 14px;
     font-weight: 600;
-    white-space: nowrap;
 }
 
-::deep .search-report-results .report-subject {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    white-space: nowrap;
+::deep .ats-dashboard-empty-text {
+    max-width: 300px;
+    font-size: 12.5px;
+    line-height: 1.45;
 }
 
-::deep .search-report-results .report-avatar {
+::deep .ats-dashboard-section-loading {
     display: flex;
-    width: 30px;
-    height: 30px;
+    min-height: 260px;
+    flex: 1;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--blue-500), #132a54);
-    color: #fff;
-    font-family: Poppins, Inter, sans-serif;
-    font-size: 11.5px;
-    font-weight: 600;
 }
 
-::deep .search-report-results .report-name {
-    color: var(--text-1);
-    font-weight: 600;
-}
-
-::deep .search-report-results .report-status {
-    display: inline-flex;
-    padding: 4px 10px;
+::deep .ats-donut-body {
+    display: grid;
+    padding: var(--ats-stack-sm) 0;
+    grid-template-columns: 200px minmax(0, 1fr);
     align-items: center;
-    gap: 5px;
-    border-radius: 20px;
-    font-size: 11.5px;
-    font-weight: 700;
-    white-space: nowrap;
+    gap: var(--ats-dashboard-gap);
 }
 
-::deep .search-report-results .report-status::before {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    content: "";
+::deep .ats-donut-figure {
+    position: relative;
+    width: 200px;
+    height: 200px;
 }
 
-::deep .search-report-results .report-status.completed {
-    background: #e4f7ed;
-    color: #1e9e64;
-}
-
-::deep .search-report-results .report-status.progress {
-    background: #fcf1dd;
-    color: #b5790f;
-}
-
-::deep .search-report-results .report-hit {
-    display: inline-flex;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11.5px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-::deep .search-report-results .report-hit.clear {
-    background: #e4f7ed;
-    color: #1e9e64;
-}
-
-::deep .search-report-results .report-hit.not-clear {
-    background: #eef0f5;
-    color: #6b7690;
-}
-
-::deep .search-report-results .report-hit.pending {
-    border: 1px dashed var(--border-strong);
-    background: #f8f9fc;
-    color: var(--text-3);
-    font-style: italic;
-}
-
-::deep .search-report-results .report-date {
-    color: var(--text-2) !important;
-    white-space: nowrap;
-}
-
-.ats-dashboard-table-loading-overlay {
+::deep .ats-donut-center {
     position: absolute;
-    z-index: 10;
     inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.82);
-    border-radius: 12px;
-}
-
-.ats-donut-shell {
-    position: relative;
-    width: calc(100% - 16px);
-    height: 270px;
-    margin: 4px auto 0;
-}
-
-.ats-donut-chart {
-    position: absolute;
-    top: 34px;
-    left: 50%;
-    width: 210px;
-    height: 210px;
-    transform: translateX(-50%);
-}
-
-.ats-donut-label {
-    position: absolute;
-    z-index: 1;
-    display: flex;
-    max-width: 88px;
-    flex-direction: column;
-    color: #344054;
-    font-size: 10px;
-    line-height: 1.15;
+    padding: 0 38px;
+    text-align: center;
     pointer-events: none;
 }
 
-.ats-donut-label strong {
+::deep .ats-donut-center-value {
     color: #0b1f3a;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+::deep .ats-donut-center-label {
+    margin-top: 6px;
+    color: var(--ats-text-sub, #6b7b92);
     font-size: 10px;
     font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1.2;
+    text-transform: uppercase;
 }
 
-.ats-candidate-label-0 {
-    top: 126px;
-    right: 8px;
-    text-align: left;
+::deep .ats-donut-center-delta {
+    margin-top: 4px;
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 10.5px;
+    line-height: 1.3;
 }
 
-.ats-candidate-label-1 {
-    top: 166px;
-    left: 8px;
+::deep .ats-donut-stats {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--ats-stack-sm);
+}
+
+::deep .ats-donut-stat {
+    display: grid;
+    padding: 12px 14px;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 12px;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 12px;
+}
+
+::deep .ats-donut-stat-dot {
+    width: 10px;
+    height: 10px;
+    grid-row: 1 / 3;
+    border-radius: 50%;
+}
+
+::deep .ats-donut-stat-name {
+    color: #1b2337;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-donut-stat-value {
+    color: #0b1f3a;
+    font-size: 16px;
+    font-weight: 700;
+    grid-row: 1 / 3;
+    letter-spacing: -0.02em;
     text-align: right;
 }
 
-.ats-candidate-label-2 {
-    top: 12px;
-    left: 10px;
-    text-align: center;
+::deep .ats-donut-stat-meta {
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 11.5px;
+    line-height: 1.2;
 }
 
-.ats-completion-label-0 {
-    top: 145px;
-    right: 8px;
-    text-align: left;
+::deep .ats-donut-stat-bar {
+    display: block;
+    height: 5px;
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    overflow: hidden;
+    background: #eef1f8;
+    border-radius: 99px;
 }
 
-.ats-completion-label-1 {
-    top: 177px;
-    left: 8px;
-    text-align: right;
+::deep .ats-donut-stat-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
 }
 
-.ats-completion-label-2 {
-    top: 75px;
-    left: 10px;
-    text-align: right;
-}
-
-.ats-completion-label-3 {
-    top: 10px;
-    left: 50%;
-    text-align: center;
-    transform: translateX(-50%);
-}
-
-.ats-line-chart-shell {
+::deep .ats-line-chart-shell {
     box-sizing: border-box;
     width: 100%;
-    height: 245px;
-    padding: 6px 10px 12px;
+    padding: var(--ats-stack-sm) var(--ats-stack-sm) var(--ats-stack-md);
     overflow: visible;
 }
 
@@ -445,14 +466,51 @@
     font-size: 10px;
 }
 
-@media (max-width: 1199.98px) {
-    .ats-dashboard-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1399.98px) {
+    ::deep .ats-donut-body {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: var(--ats-stack-lg);
+    }
+
+    ::deep .ats-donut-stats {
+        width: 100%;
     }
 }
 
-@media (max-width: 767.98px) {
-    .ats-dashboard-grid {
+@media (max-width: 959.98px) {
+    ::deep .ats-dashboard-grid {
         grid-template-columns: minmax(0, 1fr);
+    }
+
+    ::deep .ats-donut-body {
+        grid-template-columns: 200px minmax(0, 1fr);
+        justify-items: stretch;
+        gap: var(--ats-dashboard-gap);
+    }
+}
+
+/* Tighten the spacing scale on small screens; the proportions stay the same. */
+@media (max-width: 599.98px) {
+    .ats-dashboard {
+        --ats-dashboard-gap: 16px;
+        --ats-card-padding: 18px;
+        --ats-chart-inset: 2px;
+        --ats-stack-lg: 16px;
+    }
+
+    ::deep .ats-donut-body {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: var(--ats-stack-lg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .ats-dashboard-chart-card,
+    ::deep .ats-dashboard-chart-card-clickable:hover,
+    ::deep .ats-dashboard-chart-card-clickable:active {
+        transition-duration: 0.01ms;
+        transform: none;
     }
 }

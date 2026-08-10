@@ -906,6 +906,53 @@ code {
         padding: 0 !important;
     }
 
+/* Chart zoom dialog. .mud-dialog-content is an ancestor of the scoped markup in
+   DashboardChartDetailComponent, so its padding cannot be reset from that
+   component's isolated stylesheet - it lives here with the other ATS dialogs.
+   No overflow:hidden on .ats-chart-detail-dialog: that element is .mud-dialog,
+   which is the scroll container - hiding its overflow would clip the chart.
+   Corner rounding is handled inside the component instead. */
+.ats-chart-detail-dialog .mud-dialog-content {
+    padding: 0 !important;
+}
+
+/* Zoom-open: the dialog grows out of the card the user clicked. Replaces
+   MudBlazor's mud-open-dialog-center (a flat scale from 0.5) with a softer
+   curve that starts lower and settles, so it reads as the card expanding.
+   The .mud-dialog qualifier is required, not cosmetic: MudBlazor.min.css loads
+   after this file and its `animation` shorthand on .mud-dialog has the same
+   specificity, so an unqualified rule here would be reset by it. */
+.mud-dialog.ats-chart-detail-dialog {
+    animation-name: ats-chart-zoom-in;
+    animation-duration: 0.28s;
+    animation-timing-function: cubic-bezier(0.2, 0.75, 0.3, 1);
+    animation-fill-mode: both;
+    transform-origin: center center;
+}
+
+@keyframes ats-chart-zoom-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.86) translateY(18px);
+    }
+
+    60% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mud-dialog.ats-chart-detail-dialog {
+        animation-duration: 0.01ms;
+        animation-delay: 0ms;
+    }
+}
+
 .ats-download-header {
     padding: 24px 28px 14px;
     border-bottom: 1px solid #e6edf5;

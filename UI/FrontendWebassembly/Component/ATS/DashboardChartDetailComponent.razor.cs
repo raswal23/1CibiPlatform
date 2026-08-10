@@ -57,10 +57,12 @@ public partial class DashboardChartDetailComponent
 	private double[] _completionRateData = [];
 	private string[] _completionRateLabels = [];
 
+	// Matches the dashboard card ring so the zoomed view reads as the same chart.
+	// The wider hole is also what makes room for the centred KPI overlay.
 	private readonly DonutChartOptions _donutChartOptions = new()
 	{
 		ChartPalette = CategoryChartColors,
-		DonutRingRatio = 0.42,
+		DonutRingRatio = 0.3,
 		ShowLegend = false,
 		ShowValues = false
 	};
@@ -79,21 +81,45 @@ public partial class DashboardChartDetailComponent
 
 	private string ChartTitle => _chartTitle;
 
+	// Header icon and caption mirror the wording already shown on the dashboard card
+	// so the zoomed view is recognisably the same chart.
+	private string ChartIcon => _normalizedChartKey switch
+	{
+		ATSDashboardChartKeys.UserYtdHire => Icons.Material.Outlined.BarChart,
+		ATSDashboardChartKeys.CandidateResponseRate => Icons.Material.Outlined.DonutLarge,
+		ATSDashboardChartKeys.TurnaroundTimeTrend => Icons.Material.Outlined.ShowChart,
+		ATSDashboardChartKeys.CompletionRate => Icons.Material.Outlined.TaskAlt,
+		_ => Icons.Material.Outlined.Insights
+	};
+
+	private string ChartDescription => _normalizedChartKey switch
+	{
+		ATSDashboardChartKeys.UserYtdHire => "Monthly hires recorded this year",
+		ATSDashboardChartKeys.CandidateResponseRate => "Invited candidates by background check form status",
+		ATSDashboardChartKeys.TurnaroundTimeTrend => "Reports by status over the last seven reporting days",
+		ATSDashboardChartKeys.CompletionRate => "Reports by completion status",
+		_ => "Select a chart from the dashboard"
+	};
+
 	private string RequesterDisplayName =>
 		string.IsNullOrWhiteSpace(Requester) ? AllRequesters : Requester;
 
 	private bool HasYtdHireData =>
 		_dashboard.YtdHireSeries.Any(series => series.Points.Any(point => point.Count > 0));
 
-	private bool HasCandidateResponseData =>
-		_dashboard.CandidateResponseRate.Categories.Sum(category => category.Count) > 0;
+	private int CandidateResponseTotal =>
+		_dashboard.CandidateResponseRate.Categories.Sum(category => category.Count);
+
+	private bool HasCandidateResponseData => CandidateResponseTotal > 0;
 
 	private bool HasTurnaroundTimeData =>
 		_dashboard.TurnaroundTimeTrend.Any(series =>
 			series.Points.Any(point => point.Count > 0));
 
-	private bool HasCompletionRateData =>
-		_dashboard.CompletionRate.Categories.Sum(category => category.Count) > 0;
+	private int CompletionRateTotal =>
+		_dashboard.CompletionRate.Categories.Sum(category => category.Count);
+
+	private bool HasCompletionRateData => CompletionRateTotal > 0;
 
 	protected override void OnParametersSet()
 	{
@@ -293,6 +319,12 @@ public partial class DashboardChartDetailComponent
 
 	private static string FormatSvgNumber(double value) =>
 		FormattableString.Invariant($"{value:0.###}");
+
+	private static string GetStatBarStyle(double percentage, string color)
+	{
+		var width = Math.Clamp(percentage, 0, 100);
+		return FormattableString.Invariant($"width: {width:0.###}%; background-color: {color};");
+	}
 
 	private static string GetAreaLegendColor(int index) =>
 		GetPaletteColor(AreaChartColors, index);
