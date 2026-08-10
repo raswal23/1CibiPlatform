@@ -14,6 +14,7 @@ public static class ModuleList
 			{ 7, ("clientmanagement", "Client Management", Icons.Material.Filled.Business) },
 			{ 8, ("rolemanagement", "Role Management", Icons.Material.Filled.Group) },
 			{ 9, ("modulemanagement", "Module Management", Icons.Material.Filled.Apps) },
-			{ 10, ("usermanagement", "User Management", Icons.Material.Filled.ManageAccounts) }
+			{ 10, ("usermanagement", "User Management", Icons.Material.Filled.ManageAccounts) },
+			{ 11, ("clientassigning", "Client Assigning", Icons.Material.Filled.AssignmentInd) }
 		};
 }

@@ -32,6 +32,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IModuleManagementService _moduleManagementService;
 	protected readonly IClientManagementService _clientManagementService;
 	protected readonly IUserManagementService _userManagementService;
+	protected readonly IClientAssignmentService _clientAssignmentService;
 	protected readonly IApplicantSearchProjectionService _applicantSearchProjectionService;
 	protected readonly IReportService _reportService;
 	protected readonly IATSRepository _atsRepository;
@@ -59,6 +60,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_moduleManagementService = _scope.ServiceProvider.GetRequiredService<IModuleManagementService>();
 		_clientManagementService = _scope.ServiceProvider.GetRequiredService<IClientManagementService>();
 		_userManagementService = _scope.ServiceProvider.GetRequiredService<IUserManagementService>();
+		_clientAssignmentService = _scope.ServiceProvider.GetRequiredService<IClientAssignmentService>();
 		_applicantSearchProjectionService = _scope.ServiceProvider.GetRequiredService<IApplicantSearchProjectionService>();
 		_reportService = _scope.ServiceProvider.GetRequiredService<IReportService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();

@@ -84,6 +84,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();
 		services.AddScoped<IATSUserManagementService, ATSUserManagementService>();
+		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 
 		services.AddMudServices(config =>
 		{

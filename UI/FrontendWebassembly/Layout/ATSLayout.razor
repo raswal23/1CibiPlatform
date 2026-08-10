@@ -48,7 +48,7 @@
                 }
 
                 @{ var settingsModules = ModuleList.List
-                    .Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
+					.Where(item => item.Key >= 6 && CanAccessModule(item.Key))
                     .OrderBy(item => item.Key)
                     .ToArray(); }
 
@@ -257,11 +257,14 @@ else
 		var module = ModuleList.List.FirstOrDefault(item =>
 			string.Equals(item.Value.path, routeSegment, StringComparison.OrdinalIgnoreCase));
 		if (module.Key > 0)
-			return _accessibleModuleIds.Contains(module.Key);
+			return CanAccessModule(module.Key);
 
 		return string.Equals(routeSegment, "settings", StringComparison.OrdinalIgnoreCase) &&
 			_accessibleModuleIds.Overlaps([6, 7, 8]);
 	}
+
+	private bool CanAccessModule(int moduleId) =>
+		_accessibleModuleIds.Contains(moduleId == 11 ? 10 : moduleId);
 
     private async Task ToggleSidebar()
     {

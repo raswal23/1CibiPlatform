@@ -377,6 +377,39 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetATSClientAssignments",
+				MatchPath: "/ats/getclientassignments",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getclientassignments" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetATSAssignableClients",
+				MatchPath: "/ats/getassignableclients",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getassignableclients" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AssignATSClient",
+				MatchPath: "/ats/assignclient",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Put },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/assignclient" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "AddATSUser",
 				MatchPath: "/ats/adduser",
 				ClusterId: GatewayConstants.OnePlatformApi,

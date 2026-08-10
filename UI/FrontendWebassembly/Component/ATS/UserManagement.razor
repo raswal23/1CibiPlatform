@@ -13,14 +13,6 @@
 
 <div class="ats-users-page ats-management-page">
     <div class="ats-users-actions">
-        <button type="button" class="ats-users-button ats-users-button-outline" @onclick="AssignClient">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M4 20V6.5A1.5 1.5 0 0 1 5.5 5h5A1.5 1.5 0 0 1 12 6.5V20" />
-                <path d="M12 11h6.5a1.5 1.5 0 0 1 1.5 1.5V20" />
-                <path d="M7 9h1M7 12h1M7 15h1" stroke-linecap="round" />
-            </svg>
-            Assign client
-        </button>
         <button type="button" class="ats-users-button ats-users-button-primary" @onclick="AddNewUser">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
@@ -296,51 +288,6 @@
                 var addedUser = (AddATSUserDTO)result.Data!;
                 await UserManagementService.AddUserAsync(addedUser);
                 Snackbar.Add("User added successfully", Severity.Success);
-                if (usersTable is not null)
-                    await usersTable.ReloadServerData();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
-        }
-    }
-
-    private async Task AssignClient()
-    {
-        if (!await EnsureReferencesForDialogAsync())
-            return;
-
-        var parameters = new DialogParameters<AssignUserClientComponent>
-        {
-            { component => component.AuthUsers, authUsers },
-            { component => component.Clients, clients },
-            { component => component.Assignments, userClientAssignments }
-        };
-        var options = new DialogOptions
-        {
-            NoHeader = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<AssignUserClientComponent>("Assign Client", parameters, options);
-        var result = await dialog.Result;
-
-        if (result is not null && !result.Canceled)
-        {
-            try
-            {
-                var assignment = await UserManagementService.AssignUserClientAsync(
-                    (AssignATSUserClientDTO)result.Data!);
-                userClientAssignments = userClientAssignments
-                    .Where(item => item.UserId != assignment.UserId)
-                    .Append(assignment)
-                    .OrderBy(item => item.UserId)
-                    .ToArray();
-                userClientAssignmentLookup[assignment.UserId] = assignment;
-
-                Snackbar.Add("Client assignment saved successfully", Severity.Success);
                 if (usersTable is not null)
                     await usersTable.ReloadServerData();
             }

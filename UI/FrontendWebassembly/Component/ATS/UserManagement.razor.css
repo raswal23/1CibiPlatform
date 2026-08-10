@@ -250,8 +250,7 @@
 
 @media (max-width: 600px) {
     .ats-users-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+		display: flex;
     }
 
     .ats-users-button {

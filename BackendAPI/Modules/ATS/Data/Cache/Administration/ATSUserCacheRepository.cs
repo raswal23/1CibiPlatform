@@ -23,6 +23,16 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 			async token => (await _repository.GetUserClientAssignmentsAsync(token)).ToList(),
 			tags: [UserClientTag], cancellationToken: cancellationToken);
 
+	public Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+		IReadOnlyCollection<Guid> userIds,
+		CancellationToken cancellationToken) =>
+		_repository.GetUserClientAssignmentsAsync(userIds, cancellationToken);
+
+	public Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
+		PaginationRequest paginationRequest,
+		CancellationToken cancellationToken) =>
+		_repository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
+
 	public Task<UserClientDetails?> GetUserClientAssignmentAsync(Guid userId, CancellationToken cancellationToken) =>
 		_cache.GetOrCreateAsync<UserClientDetails?>(
 			$"user_client_assignment_{userId}",

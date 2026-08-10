@@ -53,6 +53,85 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task GetAssignmentsAsync_ShouldPaginateActiveATSUsersAndIncludeUnassignedUsers()
+	{
+		// Arrange
+		var assignedUserId = await AddAuthUserAsync(
+			"assigned.alpha@example.com",
+			"Assigned",
+			"Alpha");
+		await AddAuthUserAsync(
+			"unassigned.middle@example.com",
+			"Unassigned",
+			"Middle");
+		await AddAuthUserAsync(
+			"unassigned.zulu@example.com",
+			"Unassigned",
+			"Zulu");
+		var clientId = await AddClientAsync("Assignment Grid Client");
+		await _clientAssignmentService.AssignClientAsync(
+			new AssignUserClientDTO { UserId = assignedUserId, ClientId = clientId },
+			CancellationToken.None);
+
+		// Act
+		var page = await _clientAssignmentService.GetAssignmentsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 2),
+			CancellationToken.None);
+		var search = await _clientAssignmentService.GetAssignmentsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "zulu@"),
+			CancellationToken.None);
+
+		// Assert
+		page.Count.Should().Be(3);
+		page.Data.Should().HaveCount(2);
+		page.Data.First().UserId.Should().Be(assignedUserId);
+		page.Data.First().ClientId.Should().Be(clientId);
+		page.Data.First().ClientName.Should().Be("Assignment Grid Client");
+		page.Data.Last().ClientId.Should().BeNull();
+		search.Data.Should().ContainSingle();
+		search.Data.Single().UserEmail.Should().Be("unassigned.zulu@example.com");
+	}
+
+	[Fact]
+	public async Task GetAssignableClientsAsync_ShouldSearchAndExcludeInactiveClients()
+	{
+		// Arrange
+		var expectedClientId = await AddClientAsync("Searchable Active Client");
+		await AddClientAsync("Searchable Inactive Client", isActive: false);
+		await AddClientAsync("Different Client");
+
+		// Act
+		var result = await _clientAssignmentService.GetAssignableClientsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "searchable"),
+			CancellationToken.None);
+
+		// Assert
+		result.Count.Should().Be(1);
+		result.Data.Should().ContainSingle();
+		result.Data.Single().ClientId.Should().Be(expectedClientId);
+	}
+
+	[Fact]
+	public async Task AssignClientAsync_ShouldNotChangeTimestamps_WhenClientIsUnchanged()
+	{
+		// Arrange
+		var userId = await AddAuthUserAsync("no.op@example.com", "No", "Op");
+		var clientId = await AddClientAsync("No-op Assignment Client");
+		var first = await _clientAssignmentService.AssignClientAsync(
+			new AssignUserClientDTO { UserId = userId, ClientId = clientId },
+			CancellationToken.None);
+
+		// Act
+		var second = await _clientAssignmentService.AssignClientAsync(
+			new AssignUserClientDTO { UserId = userId, ClientId = clientId },
+			CancellationToken.None);
+
+		// Assert
+		second.AssignedAt.Should().Be(first.AssignedAt);
+		second.UpdatedAt.Should().Be(first.UpdatedAt);
+	}
+
+	[Fact]
 	public async Task AssignUserClientAsync_ShouldUpsertAssignmentAndPropagateClientToAccessRows()
 	{
 		// Arrange
