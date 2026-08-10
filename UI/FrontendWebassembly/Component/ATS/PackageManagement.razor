@@ -127,7 +127,7 @@
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
-            BackdropClick = true
+            BackdropClick = false
         };
 
         var dialog = await DialogService.ShowAsync<AddPackageComponent>("Add Package", options);
@@ -158,7 +158,7 @@
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
-            BackdropClick = true
+            BackdropClick = false
         };
         var dialog = await DialogService.ShowAsync<EditPackageComponent>("Edit Package", parameters, options);
         var result = await dialog.Result;

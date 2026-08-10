@@ -70,7 +70,7 @@ public class ATSEmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background:linear-gradient(100deg,var(--navy-900) 0%, var(--navy-700) 35%, var(--blue-600) 75%, var(--blue-400) 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
                     </style>
@@ -119,7 +119,7 @@ public class ATSEmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background:linear-gradient(100deg,var(--navy-900) 0%, var(--navy-700) 35%, var(--blue-600) 75%, var(--blue-400) 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
 						.wrapper {{ width: 100%; display: flex; justify-content: center; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}

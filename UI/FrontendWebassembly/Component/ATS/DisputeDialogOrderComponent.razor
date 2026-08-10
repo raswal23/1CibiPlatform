@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog dd-dialog" Style="padding: 0; width: min(500px, calc(100vw - 24px)); max-width: 500px;">
+<MudDialog Class="um-dialog dd-dialog ats-scroll-dialog" Style="padding: 0; width: min(500px, calc(100vw - 24px)); max-width: 500px;">
     <DialogContent>
-        <div class="dd-shell">
-            <header class="dd-header">
+        <div class="dd-shell ats-dialog-shell">
+            <header class="dd-header ats-dialog-header">
                 <div class="dd-header-row">
                     <div class="dd-header-left">
                         <div class="dd-icon-badge" aria-hidden="true">
@@ -25,7 +25,7 @@
                 </div>
             </header>
 
-            <main class="dd-body">
+            <main class="dd-body ats-dialog-body">
                 <MudForm @ref="disputeForm">
                     <section class="dd-section" aria-labelledby="dd-company-heading">
                         <div class="dd-section-head">
@@ -117,7 +117,7 @@
                 </div>
             </main>
 
-            <footer class="dd-footer">
+            <footer class="dd-footer ats-dialog-footer">
                 <button type="button" class="dd-button dd-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button"
                         class="dd-button dd-button-send"

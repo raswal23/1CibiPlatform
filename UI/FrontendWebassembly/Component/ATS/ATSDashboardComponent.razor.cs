@@ -158,7 +158,7 @@ public partial class ATSDashboardComponent
 			NoHeader = true,
 			MaxWidth = MaxWidth.ExtraLarge,
 			FullWidth = true,
-			BackdropClick = true
+			BackdropClick = false
 		};
 
 		var dialog = await DialogService.ShowAsync<DashboardChartDetailComponent>(

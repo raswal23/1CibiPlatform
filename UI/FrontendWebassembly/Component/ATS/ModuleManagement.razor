@@ -111,7 +111,7 @@
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
-            BackdropClick = true
+            BackdropClick = false
         };
 
         var dialog = await DialogService.ShowAsync<AddModuleComponent>("Add Module", options);
@@ -142,7 +142,7 @@
             NoHeader = true,
             MaxWidth = MaxWidth.Small,
             FullWidth = true,
-            BackdropClick = true
+            BackdropClick = false
         };
 
         var dialog = await DialogService.ShowAsync<EditModuleComponent>("Edit Module", parameters, options);

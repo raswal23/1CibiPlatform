@@ -10,7 +10,7 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Elevation="0"
-          Class="@($"ats-modern-card {(!showPhilSys && !IsSuccess ? "ats-application-card" : showPhilSys ? "ats-philsys-card" : string.Empty)}")">
+          Class="@($"ats-modern-card {(IsSuccess ? "ats-success-card-host" : showPhilSys ? "ats-philsys-card" : "ats-application-card")}")">
     @if (IsSuccess)
     {
         <SuccessApplicationFormComponent />

@@ -1,0 +1,82 @@
+.ats-success-card,
+.ats-success-card *,
+.ats-success-card *::before,
+.ats-success-card *::after {
+    box-sizing: border-box;
+}
+
+.ats-success-card {
+    --success-navy-900: #0b1b3d;
+    --success-border: #e4eaf6;
+    --success-text-1: #16233f;
+    --success-text-2: #5b6b8c;
+    --success-green: #1e9e64;
+    --success-green-tint: #e4f7ed;
+    --success-green-border: #b9e6ce;
+    width: min(460px, calc(100vw - 40px));
+    max-width: 100%;
+    padding: 38px 34px 34px;
+    border: 1px solid var(--success-border);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.1),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25);
+    color: var(--success-text-1);
+    font-family: "Inter", sans-serif;
+    text-align: center;
+}
+
+.ats-success-icon-badge {
+    display: flex;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 22px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--success-green-border);
+    border-radius: 50%;
+    background: var(--success-green-tint);
+}
+
+.ats-success-icon-badge svg {
+    width: 32px;
+    height: 32px;
+    color: var(--success-green);
+}
+
+.ats-success-card h1 {
+    margin: 0 0 6px;
+    color: var(--success-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.35;
+}
+
+.ats-success-thanks {
+    margin: 0 0 14px;
+    color: var(--success-text-1);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.ats-success-description {
+    margin: 0;
+    color: var(--success-text-2);
+    font-size: 13.5px;
+    line-height: 1.65;
+}
+
+@media (max-width: 480px) {
+    .ats-success-card {
+        width: calc(100vw - 28px);
+        padding: 32px 24px 28px;
+    }
+
+    .ats-success-card h1 {
+        font-size: 21px;
+    }
+}

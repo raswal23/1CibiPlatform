@@ -254,8 +254,10 @@
 }
 
 .ec-input-wrap ::deep .mud-input-adornment-start {
-    margin-left: 12px;
+    margin-left: 0;
     margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
 }
 
 .ec-input-wrap ::deep .mud-input-adornment-start .mud-icon-root,
@@ -589,5 +591,4 @@
         transition-duration: 0.01ms !important;
     }
 }
-
 

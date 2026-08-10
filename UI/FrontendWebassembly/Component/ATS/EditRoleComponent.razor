@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog er-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+<MudDialog Class="um-dialog er-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
     <DialogContent>
-        <div class="er-shell">
-            <header class="er-header">
+        <div class="er-shell ats-dialog-shell">
+            <header class="er-header ats-dialog-header">
                 <div class="er-header-row">
                     <div class="er-header-left">
                         <div class="er-icon-badge" aria-hidden="true">
@@ -24,7 +24,7 @@
                 </div>
             </header>
 
-            <main class="er-body">
+            <main class="er-body ats-dialog-body">
                 <MudForm @ref="EditRoleForm">
                     <section class="er-section" aria-labelledby="edit-role-details-heading">
                         <div class="er-section-head">
@@ -108,7 +108,7 @@
                 </MudForm>
             </main>
 
-            <footer class="er-footer">
+            <footer class="er-footer ats-dialog-footer">
                 <button type="button" class="er-button er-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button" class="er-button er-button-save" @onclick="Submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

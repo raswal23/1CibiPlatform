@@ -7,6 +7,19 @@ public partial class MainLayout
 	private string name = "";
 
 	private const string _userNameKey = "Name";
+	private string UserInitials
+	{
+		get
+		{
+			var initials = name
+				.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Take(2)
+				.Select(part => char.ToUpperInvariant(part[0]));
+
+			var value = string.Concat(initials);
+			return string.IsNullOrEmpty(value) ? "U" : value;
+		}
+	}
 
 	private MudTheme _myTheme = new MudTheme()
 	{
@@ -33,7 +46,7 @@ public partial class MainLayout
 		LayoutProperties = new LayoutProperties()
 		{
 			DefaultBorderRadius = "4px",
-			AppbarHeight = "69px"
+			AppbarHeight = "64px"
 		}
 	};
 
@@ -45,18 +58,6 @@ public partial class MainLayout
 
 	}
 
-	private string GetAppBarStyle()
-	{
-		var gradient = _isDarkMode
-			? "linear-gradient(90deg, #68c0d6 0%, #2a77ae 50%, #102247 100%)"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%)";
-
-		return $@"
-        width: auto !important;
-        background: {gradient} !important;
-		border-radius: 4px;
-    ";
-	}
 	protected override async Task OnInitializedAsync()
 	{
 		try

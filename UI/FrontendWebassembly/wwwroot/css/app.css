@@ -134,6 +134,169 @@ code {
     border-radius: 4px !important;
 }
 
+.main-topbar.mud-appbar {
+    overflow: hidden;
+    border-radius: 0 !important;
+    background: linear-gradient(100deg, #0B1B3D 0%, #1C3A70 35%, #1D5FD1 75%, #4F93EA 100%) !important;
+    box-shadow: 0 6px 16px -8px rgba(11, 27, 61, 0.35) !important;
+    color: #FFFFFF !important;
+    font-family: "Inter", sans-serif;
+}
+
+.main-topbar.mud-appbar::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.3;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, #000, transparent 75%);
+    mask-image: linear-gradient(to right, #000, transparent 75%);
+}
+
+.main-topbar .mud-toolbar-appbar {
+    position: relative;
+    z-index: 1;
+    min-height: 64px !important;
+    height: 64px !important;
+    padding: 14px 22px !important;
+    gap: 16px;
+}
+
+.main-topbar-brand,
+.main-topbar-actions,
+.main-topbar-greeting {
+    display: flex;
+    align-items: center;
+}
+
+.main-topbar-brand {
+    min-width: 0;
+    gap: 10px;
+}
+
+.main-topbar-brand-badge {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.main-topbar-brand-badge svg {
+    width: 16px;
+    height: 16px;
+    color: #FFFFFF;
+}
+
+.main-topbar-brand-name {
+    overflow: hidden;
+    color: #FFFFFF;
+    font-family: "Poppins", sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-topbar-actions {
+    flex: 0 0 auto;
+    gap: 14px;
+}
+
+.main-topbar-greeting {
+    min-width: 0;
+    gap: 10px;
+}
+
+.main-topbar-greeting-text {
+    max-width: min(32vw, 360px);
+    overflow: hidden;
+    color: #EAF0FC;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-topbar-greeting-text strong {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.main-topbar-avatar {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    color: #FFFFFF;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.main-topbar-divider {
+    width: 1px;
+    height: 24px;
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF !important;
+    transition: background 0.15s ease;
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.main-topbar .main-topbar-theme-toggle .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    color: #FFFFFF !important;
+    font-size: 17px;
+}
+
+@media (max-width: 600px) {
+    .main-topbar .mud-toolbar-appbar {
+        padding-right: 14px !important;
+        padding-left: 14px !important;
+    }
+
+    .main-topbar-brand-name,
+    .main-topbar-greeting-text {
+        display: none;
+    }
+
+    .main-topbar-actions {
+        gap: 10px;
+    }
+}
+
 .nav-active-light {
     background: white !important;
     color: black !important;
@@ -914,6 +1077,58 @@ code {
    Corner rounding is handled inside the component instead. */
 .ats-chart-detail-dialog .mud-dialog-content {
     padding: 0 !important;
+}
+
+/* ATS dialogs keep their title and actions visible on short viewports.
+   Only the semantic dialog body becomes scrollable. */
+.ats-scroll-dialog.mud-dialog {
+    display: flex;
+    max-height: calc(100vh - 24px) !important;
+    max-height: min(90vh, calc(100dvh - 24px)) !important;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+.ats-scroll-dialog > .mud-dialog-content {
+    display: flex !important;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+.ats-scroll-dialog .ats-dialog-shell {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    max-height: calc(100vh - 24px);
+    max-height: min(90vh, calc(100dvh - 24px));
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ats-scroll-dialog .ats-dialog-header,
+.ats-scroll-dialog .ats-dialog-footer {
+    flex: 0 0 auto;
+}
+
+.ats-scroll-dialog .ats-dialog-body {
+    min-height: 0;
+    max-height: none !important;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ats-scroll-dialog .ats-dialog-form {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* Zoom-open: the dialog grows out of the card the user clicked. Replaces
@@ -2779,6 +2994,17 @@ code {
 
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
+}
+
+.ats-appform-modern .ats-modern-card.ats-success-card-host {
+    width: auto;
+    max-width: 100%;
+    margin: auto;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
 }
 
 .ats-appform-modern .mud-input-outlined .mud-input-outlined-border,

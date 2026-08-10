@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog ap-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+<MudDialog Class="um-dialog ap-dialog ats-scroll-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
     <DialogContent>
-        <div class="ap-shell">
-            <header class="ap-header">
+        <div class="ap-shell ats-dialog-shell">
+            <header class="ap-header ats-dialog-header">
                 <div class="ap-header-row">
                     <div class="ap-header-left">
                         <div class="ap-icon-badge" aria-hidden="true">
@@ -24,7 +24,7 @@
                 </div>
             </header>
 
-            <main class="ap-body">
+            <main class="ap-body ats-dialog-body">
                 <MudForm @ref="AddPackageForm">
                     <section class="ap-section" aria-labelledby="add-package-details-heading">
                         <div class="ap-section-head">
@@ -125,7 +125,7 @@
                 </MudForm>
             </main>
 
-            <footer class="ap-footer">
+            <footer class="ap-footer ats-dialog-footer">
                 <button type="button" class="ap-button ap-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button" class="ap-button ap-button-save" @onclick="Submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -2,9 +2,10 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-<MudDialog Class="ats-download-dialog" Style="padding: 0;">
+<MudDialog Class="ats-download-dialog ats-scroll-dialog" Style="padding: 0;">
     <DialogContent>
-        <div class="ats-download-header">
+        <div class="ats-download-shell ats-dialog-shell">
+        <div class="ats-download-header ats-dialog-header">
             <div class="ats-download-header-row">
                 <div class="ats-download-header-left">
                     <span class="ats-download-header-icon">
@@ -21,7 +22,7 @@
             </div>
         </div>
 
-        <div class="ats-download-list">
+        <div class="ats-download-list ats-dialog-body">
             <div class="ats-download-item">
                 <MudCheckBox @bind-Value="ResumeSelected"
                              Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName))"
@@ -89,7 +90,7 @@
             </div>
         </div>
 
-        <div class="ats-download-actions">
+        <div class="ats-download-actions ats-dialog-footer">
             <MudButton Variant="Variant.Outlined"
                        Class="ats-download-cancel"
                        OnClick="Cancel">Cancel</MudButton>
@@ -99,6 +100,7 @@
                        Class="@($"ats-download-submit {(HasSelectedFile ? "theme-button theme-button-active" : "theme-button-inactive")}")"
                        StartIcon="@Icons.Material.Outlined.Download"
                        OnClick="DownloadDocumentsAsync">@(HasSelectedFile ? $"Download ({SelectedFileCount})" : "Download")</MudButton>
+        </div>
         </div>
     </DialogContent>
 </MudDialog>

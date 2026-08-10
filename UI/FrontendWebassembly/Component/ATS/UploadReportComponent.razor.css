@@ -163,8 +163,10 @@
     align-self: center;
 }
 ::deep .ats-upload-report-select .mud-input-adornment-start {
-    margin-left: 12px;
+    margin-left: 0;
     margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
     color: var(--text-3);
 }
 ::deep .ats-upload-report-select .mud-input-adornment-end { margin-right: 12px; }

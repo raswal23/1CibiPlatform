@@ -6,7 +6,7 @@
 
 <MudThemeProvider Theme="@_myTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
-<MudDialogProvider />
+<MudDialogProvider BackdropClick="false" />
 <MudSnackbarProvider />
 @if (!_isLoading)
 {
@@ -15,12 +15,36 @@
 
             <MudLayout>
                 <!-- AppBar -->
-                <MudAppBar Style="@GetAppBarStyle()" Class="mb-8 mt-0">
+                <MudAppBar Elevation="0" Class="main-topbar">
+                    <div class="main-topbar-brand">
+                        <span class="main-topbar-brand-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                                <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
+                            </svg>
+                        </span>
+                        <span class="main-topbar-brand-name">One Platform</span>
+                    </div>
+
                     <MudSpacer />
-                    <MudText Typo="Typo.subtitle1" Class="mr-2">Hi @name</MudText>
-                    <MudIconButton Icon="@(_isDarkMode? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                                   Style="Color.Inherit;"
-                                   OnClick="@ToggleDarkMode" />
+
+                    <div class="main-topbar-actions">
+                        <div class="main-topbar-greeting">
+                            <span class="main-topbar-greeting-text">Hi, <strong>@name</strong></span>
+                            <span class="main-topbar-avatar" aria-hidden="true">@UserInitials</span>
+                        </div>
+                        <span class="main-topbar-divider" aria-hidden="true"></span>
+                        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                                       Color="Color.Inherit"
+                                       OnClick="@ToggleDarkMode"
+                                       Class="main-topbar-theme-toggle"
+                                       aria-label="Toggle dark mode" />
+                    </div>
                 </MudAppBar>
                 <!-- Main content -->
                 <MudMainContent>

@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog ep-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+<MudDialog Class="um-dialog ep-dialog ats-scroll-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
     <DialogContent>
-        <div class="ep-shell">
-            <header class="ep-header">
+        <div class="ep-shell ats-dialog-shell">
+            <header class="ep-header ats-dialog-header">
                 <div class="ep-header-row">
                     <div class="ep-header-left">
                         <div class="ep-icon-badge" aria-hidden="true">
@@ -24,7 +24,7 @@
                 </div>
             </header>
 
-            <main class="ep-body">
+            <main class="ep-body ats-dialog-body">
                 <MudForm @ref="EditPackageForm">
                     <section class="ep-section" aria-labelledby="edit-package-details-heading">
                         <div class="ep-section-head">
@@ -125,7 +125,7 @@
                 </MudForm>
             </main>
 
-            <footer class="ep-footer">
+            <footer class="ep-footer ats-dialog-footer">
                 <button type="button" class="ep-button ep-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button" class="ep-button ep-button-save" @onclick="Submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

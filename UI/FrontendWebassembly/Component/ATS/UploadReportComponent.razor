@@ -2,10 +2,10 @@
 @inject IReportService ReportUploadService
 @inject ISnackbar Snackbar
 
-<MudDialog Class="um-dialog ats-upload-report-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+<MudDialog Class="um-dialog ats-upload-report-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
     <DialogContent>
-<div class="ats-upload-report-shell">
-                <div class="ats-upload-report-shell-header">
+<div class="ats-upload-report-shell ats-dialog-shell">
+                <div class="ats-upload-report-shell-header ats-dialog-header">
                     <div class="ats-upload-report-header-left">
                         <span class="ats-upload-report-header-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v12M12 16l-4.5-4.5M12 16l4.5-4.5" /><path d="M4 18v1.5A1.5 1.5 0 005.5 21h13a1.5 1.5 0 001.5-1.5V18" /></svg>
@@ -19,8 +19,8 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
                     </button>
                 </div>
-<MudForm @ref="uploadReportForm">
-    <div class="ats-upload-report-body">
+<MudForm @ref="uploadReportForm" Class="ats-dialog-form">
+    <div class="ats-upload-report-body ats-dialog-body">
         <section class="ats-upload-report-section">
             <div class="ats-upload-report-section-head"><span>1</span><h2>Screening result</h2></div>
             <div class="ats-upload-report-section-body ats-upload-report-fields">
@@ -96,7 +96,7 @@
         </section>
     </div>
 
-                <div class="ats-upload-report-actions">
+                <div class="ats-upload-report-actions ats-dialog-footer">
                     <MudButton Variant="Variant.Outlined" Class="ats-upload-report-cancel" OnClick="CloseDialog">Cancel</MudButton>
                     <MudButton OnClick="SubmitUploadReport"
                                Disabled="@isUploading"

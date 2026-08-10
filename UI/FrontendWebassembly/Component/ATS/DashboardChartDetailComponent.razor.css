@@ -7,9 +7,8 @@
  * are declared on .ats-chart-detail-shell (a plain div) and inherit across those
  * component boundaries.
  *
- * Scrolling: no max-height/overflow here. MudBlazor already constrains
- * .mud-dialog and scrolls .mud-dialog-content; a second scroll container
- * produced two nested scrollbars.
+ * Scrolling is provided by the shared ATS dialog body class so the title and
+ * close action stay visible while the charts scroll on short viewports.
  *
  * The dialog is portalled out of .ats-console by MudDialogProvider, so the ATS
  * custom properties do not resolve inside it - the literal fallbacks are what
@@ -22,7 +21,7 @@
     --ats-detail-stack-sm: 10px;
     --ats-detail-stack-md: 16px;
     --ats-detail-stack-lg: 24px;
-    /* Rounds the shell itself; .mud-dialog cannot clip, it is the scroll container. */
+    /* Rounds the shell itself inside the shared clipped dialog container. */
     border-radius: 18px;
     background: #f6f9fd;
 }

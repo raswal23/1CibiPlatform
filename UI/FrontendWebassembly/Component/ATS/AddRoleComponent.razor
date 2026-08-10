@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog ar-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+<MudDialog Class="um-dialog ar-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
     <DialogContent>
-        <div class="ar-shell">
-            <header class="ar-header">
+        <div class="ar-shell ats-dialog-shell">
+            <header class="ar-header ats-dialog-header">
                 <div class="ar-header-row">
                     <div class="ar-header-left">
                         <div class="ar-icon-badge" aria-hidden="true">
@@ -23,7 +23,7 @@
                 </div>
             </header>
 
-            <main class="ar-body">
+            <main class="ar-body ats-dialog-body">
                 <MudForm @ref="AddRoleForm">
                     <section class="ar-section" aria-labelledby="add-role-details-heading">
                         <div class="ar-section-head">
@@ -107,7 +107,7 @@
                 </MudForm>
             </main>
 
-            <footer class="ar-footer">
+            <footer class="ar-footer ats-dialog-footer">
                 <button type="button" class="ar-button ar-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button" class="ar-button ar-button-save" @onclick="Submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

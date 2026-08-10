@@ -1,7 +1,7 @@
-<MudDialog Class="um-dialog ac-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+<MudDialog Class="um-dialog ac-dialog ats-scroll-dialog" Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
     <DialogContent>
-        <div class="ac-shell">
-            <header class="ac-header">
+        <div class="ac-shell ats-dialog-shell">
+            <header class="ac-header ats-dialog-header">
                 <div class="ac-header-row">
                     <div class="ac-header-left">
                         <div class="ac-icon-badge" aria-hidden="true">
@@ -25,7 +25,7 @@
                 </div>
             </header>
 
-            <main class="ac-body">
+            <main class="ac-body ats-dialog-body">
                 <MudForm @ref="AddClientForm">
                     <section class="ac-section" aria-labelledby="add-client-details-heading">
                         <div class="ac-section-head">
@@ -145,7 +145,7 @@
                 </MudForm>
             </main>
 
-            <footer class="ac-footer">
+            <footer class="ac-footer ats-dialog-footer">
                 <button type="button" class="ac-button ac-button-cancel" @onclick="Cancel">Cancel</button>
                 <button type="button" class="ac-button ac-button-save" @onclick="Submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
