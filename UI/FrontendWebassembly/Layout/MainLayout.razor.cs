@@ -90,4 +90,29 @@ public partial class MainLayout
 		}
 	}
 
+	private async Task HandleLogout()
+	{
+		Console.WriteLine("Logging out...");
+
+		try
+		{
+			var logout = await IAuthService.Logout();
+
+
+			if (logout)
+			{
+				Console.WriteLine(logout ? "Logout successful." : "Logout failed.");
+				Navigation.NavigateTo("/login", true);
+
+				return;
+			}
+		}
+		catch (Exception ex)
+		{
+			_isLoading = true;
+			Console.WriteLine($"Authentication Error: {ex.Message}");
+			throw;
+		}
+	}
+
 }

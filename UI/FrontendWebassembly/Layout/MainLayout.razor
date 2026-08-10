@@ -6,7 +6,7 @@
 
 <MudThemeProvider Theme="@_myTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
-<MudDialogProvider BackdropClick="false" />
+<MudDialogProvider />
 <MudSnackbarProvider />
 @if (!_isLoading)
 {
@@ -39,11 +39,18 @@
                             <span class="main-topbar-avatar" aria-hidden="true">@UserInitials</span>
                         </div>
                         <span class="main-topbar-divider" aria-hidden="true"></span>
-                        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                        @* <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                                        Color="Color.Inherit"
                                        OnClick="@ToggleDarkMode"
                                        Class="main-topbar-theme-toggle"
-                                       aria-label="Toggle dark mode" />
+                                       aria-label="Toggle dark mode" /> *@
+
+                        <MudButton OnClick="HandleLogout"
+                                   StartIcon="@Icons.Material.Filled.Logout"
+                                   Class="main-topbar-logout"
+                                   aria-label="Logout">
+                            <span class="main-topbar-logout-label">Logout</span>
+                        </MudButton>
                     </div>
                 </MudAppBar>
                 <!-- Main content -->

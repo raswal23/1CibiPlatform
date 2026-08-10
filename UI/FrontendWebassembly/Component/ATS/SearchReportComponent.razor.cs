@@ -13,27 +13,11 @@ public partial class SearchReportComponent
 			.Take(2)
 			.Select(part => char.ToUpperInvariant(part[0])));
 
-	private static bool IsCompleted(string? status)
-		=> string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase);
+	private static string GetOrderStatusClass(string? status) => OrderStatusDisplay.GetClass(status);
+	private static string GetOrderStatusText(string? status) => OrderStatusDisplay.GetText(status);
 
-	private static string GetOrderStatusClass(string? status) => IsCompleted(status) ? "completed" : "progress";
-	private static string GetOrderStatusText(string? status) => IsCompleted(status) ? "Completed" : "In progress";
-
-	private static string GetHitStatusClass(string? status)
-	{
-		if (string.Equals(status, "Clear", StringComparison.OrdinalIgnoreCase)) return "clear";
-		if (string.Equals(status, "Not clear", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(status, "NotClear", StringComparison.OrdinalIgnoreCase)) return "not-clear";
-		return "pending";
-	}
-
-	private static string GetHitStatusText(string? status)
-	{
-		if (string.Equals(status, "Clear", StringComparison.OrdinalIgnoreCase)) return "Clear";
-		if (string.Equals(status, "Not clear", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(status, "NotClear", StringComparison.OrdinalIgnoreCase)) return "Not clear";
-		return "Pending";
-	}
+	private static string GetHitStatusClass(string? status) => HitStatusDisplay.GetClass(status);
+	private static string GetHitStatusText(string? status) => HitStatusDisplay.GetText(status);
 
 	private string searchString
 	{

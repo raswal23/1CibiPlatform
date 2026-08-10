@@ -70,7 +70,7 @@ public class ATSEmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background:linear-gradient(100deg,var(--navy-900) 0%, var(--navy-700) 35%, var(--blue-600) 75%, var(--blue-400) 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
                     </style>
@@ -119,10 +119,11 @@ public class ATSEmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background:linear-gradient(100deg,var(--navy-900) 0%, var(--navy-700) 35%, var(--blue-600) 75%, var(--blue-400) 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
 						.wrapper {{ width: 100%; display: flex; justify-content: center; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+					    .table {{ width: 100%; }}
                     </style>
                 </head>
                 <body>
@@ -142,7 +143,7 @@ public class ATSEmailService : IEmailService
 
 								<p>Supplemental details are provided below:</p>
 
-								<table>
+								<table class=""table"">
 									<tr>
 										<td>Requestor Email:</td>
 										<td>{requestor}</td>

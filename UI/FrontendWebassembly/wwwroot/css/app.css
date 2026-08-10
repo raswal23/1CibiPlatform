@@ -281,6 +281,36 @@ code {
     font-size: 17px;
 }
 
+.main-topbar .main-topbar-logout.mud-button-root {
+    min-width: 0;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-transform: none;
+    transition: background 0.15s ease;
+}
+
+.main-topbar .main-topbar-logout.mud-button-root:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.main-topbar .main-topbar-logout.mud-button-root:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.main-topbar .main-topbar-logout .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+}
+
 @media (max-width: 600px) {
     .main-topbar .mud-toolbar-appbar {
         padding-right: 14px !important;
@@ -288,13 +318,27 @@ code {
     }
 
     .main-topbar-brand-name,
-    .main-topbar-greeting-text {
+    .main-topbar-greeting-text,
+    .main-topbar-logout-label {
         display: none;
     }
 
     .main-topbar-actions {
         gap: 10px;
     }
+
+    .main-topbar .main-topbar-logout.mud-button-root {
+        padding: 0 10px;
+    }
+
+    .main-topbar .main-topbar-logout .mud-button-label .mud-button-icon-start {
+        margin-right: 0;
+    }
+}
+
+.philsys-wrapper {
+    max-width: 900px;
+    margin: 0 auto !important;
 }
 
 .nav-active-light {
