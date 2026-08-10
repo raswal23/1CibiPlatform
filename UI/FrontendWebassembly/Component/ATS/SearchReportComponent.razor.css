@@ -41,8 +41,27 @@
     font-family: Inter, sans-serif;
 }
 
-.search-report-legend-title {
+/* The whole header row toggles the legend; it stays visually identical to the old title line. */
+.search-report-legend-header {
+    display: flex;
+    width: 100%;
     margin: 0 0 10px;
+    padding: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Collapsed: nothing below the header, so drop the spacing it reserved. */
+.search-report-legend.is-collapsed .search-report-legend-header { margin: 0; }
+
+.search-report-legend-title {
+    margin: 0;
     color: var(--text-2);
     font-size: 11.5px;
     font-weight: 700;
@@ -51,12 +70,43 @@
     text-transform: uppercase;
 }
 
+.search-report-legend-chevron {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    color: var(--text-3);
+}
+
+.search-report-legend-chevron ::deep .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
 .search-report-legend-track {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 10px 14px;
+    max-height: 500px;
+    opacity: 1;
+    overflow: hidden;
+    transform: translateY(0);
+    transition: max-height .7s ease, opacity .45s ease, transform .7s ease;
 }
+
+    .search-report-legend-track.is-collapsed {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-12px);
+        pointer-events: none;
+    }
+
+    .search-report-legend-track.is-expanded {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+    }
 
 .search-report-legend-item {
     display: flex;
