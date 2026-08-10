@@ -1,0 +1,1696 @@
+.ats-step-three-scope {
+    --step3-navy-800: #132a54;
+    --step3-blue-600: #1d5fd1;
+    --step3-blue-500: #2e7ce0;
+    --step3-blue-tint: #edf3fc;
+    --step3-blue-tint-2: #e3ecfb;
+    --step3-border-strong: #c2d2f0;
+    --step3-text-1: #16233f;
+    --step3-text-2: #5b6b8c;
+    --step3-text-3: #8a97b5;
+    --step3-red: #d64545;
+    width: 100%;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-title {
+    margin: 0 0 22px !important;
+    color: var(--step3-blue-600) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--step3-blue-600) !important;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 19px;
+    font-weight: 700 !important;
+    line-height: 1.35;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 26px;
+    align-items: stretch;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-grid > .mud-grid-item {
+    display: flex;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-form-card {
+    width: 100%;
+    min-height: 100%;
+    padding: 0 !important;
+    border: 0;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 14px !important;
+    align-items: start;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(1),
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(2),
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(5),
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(9),
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(10) {
+    grid-column: span 13;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(3) {
+    grid-column: span 7;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(4) {
+    grid-column: span 6;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(6),
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(8) {
+    grid-column: span 4;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(7) {
+    grid-column: span 5;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field {
+    align-self: end;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input {
+    width: 100%;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-control {
+    margin-top: 0;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-outlined {
+    width: 100%;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    background: #fff;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-outlined-border {
+    border-width: 1.5px !important;
+    border-color: var(--step3-border-strong) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--step3-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-label {
+    color: var(--step3-text-2) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-label-asterisk {
+    color: var(--step3-red) !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input :is(.mud-input, .mud-input-slot, input) {
+    color: var(--step3-text-1) !important;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input input::placeholder {
+    color: var(--step3-text-3) !important;
+    opacity: 1;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-adornment-start {
+    margin-left: 12px;
+    margin-right: 8px;
+    color: var(--step3-text-3) !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-adornment-end {
+    margin-right: 10px;
+    color: var(--step3-text-3) !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-adornment .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(4) {
+    display: flex;
+    align-self: stretch;
+    align-items: flex-end;
+}
+
+.ats-step-three-middle-check-wrap {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    padding-bottom: 5px;
+    align-items: center;
+    gap: 8px;
+}
+
+.ats-step-three-middle-check-wrap ::deep .small-checkbox-label {
+    margin: 0;
+}
+
+.ats-step-three-middle-check-wrap ::deep .small-checkbox-label .mud-icon-button {
+    width: 18px;
+    height: 18px;
+    margin-right: 9px;
+    padding: 0 !important;
+    color: var(--step3-border-strong);
+}
+
+.ats-step-three-middle-check-wrap ::deep .small-checkbox-label .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.ats-step-three-middle-check-wrap ::deep .small-checkbox-label .mud-typography {
+    color: var(--step3-text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-verification-column {
+    align-items: stretch;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-card {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    padding: 24px 20px !important;
+    border: 1.5px solid var(--step3-border-strong) !important;
+    border-radius: 16px !important;
+    background: var(--step3-blue-tint) !important;
+    box-shadow: none !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-shell {
+    display: flex;
+    width: 100%;
+    min-height: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar-frame {
+    display: flex;
+    width: 110px;
+    height: 110px;
+    flex: 0 0 110px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    background: #dce3ef;
+    box-shadow: 0 4px 14px -6px rgba(11, 27, 61, 0.25);
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar-placeholder {
+    width: 78px;
+    height: 78px;
+    margin-bottom: -8px;
+    color: #a6b0c6 !important;
+    font-size: 78px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-avatar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-status {
+    display: inline-flex;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 8px 14px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-status.not-verified {
+    border-color: #f1c7c7;
+    background: #fbe9e9;
+    color: var(--step3-red);
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-status.verified {
+    border-color: #b9dec2;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-status .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-list {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-list .mud-file-upload {
+    width: 100%;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
+    min-height: 56px;
+    padding: 10px 16px !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    border: 1.5px solid var(--step3-border-strong) !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    color: var(--step3-blue-600) !important;
+    text-transform: none !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn .mud-button-label {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn:hover {
+    border-color: var(--step3-blue-500) !important;
+    background: var(--step3-blue-tint-2) !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-icon-shell {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--step3-border-strong);
+    border-radius: 8px;
+    background: var(--step3-blue-tint-2);
+    color: var(--step3-blue-600);
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn-icon {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 auto;
+    color: inherit !important;
+    font-size: 15px;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-pdf-icon,
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn:hover .ats-step-two-upload-pdf-icon {
+    color: var(--step3-red) !important;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-btn-text {
+    min-width: 0;
+    flex: 1;
+    color: var(--step3-blue-600);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0.3px;
+    text-align: center;
+    white-space: normal;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-file-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    color: var(--step3-text-1);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-remove {
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+.ats-step-three-action-bar {
+    margin-top: 24px;
+    padding: 0 !important;
+    align-items: center;
+}
+
+@media (max-width: 760px) {
+    .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item {
+        grid-column: span 13 !important;
+    }
+
+    .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(4) {
+        align-items: center;
+    }
+
+    .ats-step-three-middle-check-wrap {
+        min-height: 0;
+        padding-bottom: 0;
+    }
+
+    .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-two-upload-card {
+        height: auto;
+        min-height: 0;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-step-three-scope.ats-step-three-scope ::deep :is(.mud-input-outlined-border, .ats-step-two-upload-btn) {
+        transition: none;
+    }
+}
+
+.ats-step-four-scope {
+    --step4-navy-800: #132a54;
+    --step4-blue-600: #1d5fd1;
+    --step4-blue-500: #2e7ce0;
+    --step4-blue-tint: #edf3fc;
+    --step4-border-strong: #c2d2f0;
+    --step4-text-1: #16233f;
+    --step4-text-2: #5b6b8c;
+    --step4-text-3: #8a97b5;
+    --step4-red: #d64545;
+    width: 100%;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-title,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-title {
+    color: var(--step4-blue-600) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--step4-blue-600) !important;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 18px;
+    font-weight: 700 !important;
+    line-height: 1.35;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-title {
+    margin: 0 0 20px !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: repeat(28, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 16px !important;
+    align-items: start;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-address-main {
+    grid-column: span 8;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-address-detail {
+    grid-column: span 5;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep :is(.ats-step-four-same-address, .ats-step-four-ownership, .ats-step-four-education-heading) {
+    grid-column: 1 / -1;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-other-field {
+    grid-column: span 8;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-main {
+    grid-column: span 17;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-side {
+    grid-column: span 11;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-academic-institution {
+    grid-column: 1 / -1;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-field-label {
+    display: block;
+    min-height: 18px;
+    margin: 0 0 6px;
+    color: var(--step4-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.2px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-required {
+    margin-left: 2px;
+    color: var(--step4-red);
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control {
+    width: 100%;
+    min-width: 0;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-control {
+    margin-top: 0;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-outlined {
+    width: 100%;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    background: #fff;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-permanent-detail .ats-step-four-control .mud-input-outlined,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-permanent-detail .ats-step-four-control :is(.mud-input-slot, input) {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    box-sizing: border-box;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-outlined-border {
+    border-width: 1.5px !important;
+    border-color: var(--step4-border-strong) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--step4-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control :is(.mud-input, .mud-input-slot, input) {
+    color: var(--step4-text-1) !important;
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control input::placeholder {
+    color: var(--step4-text-3) !important;
+    opacity: 1;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-adornment-start {
+    margin-left: 12px;
+    margin-right: 8px;
+    color: var(--step4-text-3) !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-adornment-end {
+    margin-right: 10px;
+    color: var(--step4-text-3) !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-adornment .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control.mud-disabled .mud-input-outlined,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-control .mud-input-outlined.mud-disabled {
+    background: #f7f9fc;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-same-address {
+    display: flex;
+    align-items: center;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-same-address .small-checkbox-label {
+    margin: 0;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-same-address .small-checkbox-label .mud-icon-button {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    padding: 0 !important;
+    color: var(--step4-border-strong);
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-same-address .small-checkbox-label .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-same-address .small-checkbox-label .mud-typography {
+    color: var(--step4-text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-ownership {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-ownership > .mud-typography {
+    margin: 0 0 10px;
+    color: var(--step4-text-1);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep :is(.ats-step-four-ownership-options, .ats-ownership-pills) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill {
+    display: inline-flex;
+    min-height: 34px;
+    margin: 0 !important;
+    padding: 0 15px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--step4-border-strong);
+    border-radius: 20px;
+    background: #fff;
+    color: var(--step4-text-1);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill :is(.mud-button-root, .mud-icon-button, .mud-radio-icon, .mud-radio-icons, svg) {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill :is(.mud-radio-label, .mud-radio-content, .mud-typography) {
+    width: 100%;
+    margin: 0 !important;
+    color: inherit !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill:hover {
+    border-color: var(--step4-blue-500);
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill:focus-within {
+    outline: 3px solid rgba(46, 124, 224, 0.2);
+    outline-offset: 2px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill:is(.selected, .mud-checked, .mud-radio-checked) {
+    border-color: transparent;
+    background: linear-gradient(120deg, var(--step4-navy-800), var(--step4-blue-600));
+    box-shadow: 0 6px 14px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-heading {
+    padding-top: 8px !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-title {
+    margin: 0 !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-education-upload .mud-file-upload {
+    width: 100%;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-upload-outline-btn {
+    display: flex !important;
+    width: 100% !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    min-width: 0;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1.5px dashed var(--step4-border-strong) !important;
+    border-radius: 10px !important;
+    background: #fbfcff !important;
+    box-shadow: none !important;
+    color: var(--step4-text-3) !important;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: none !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-upload-outline-btn .mud-button-label {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-upload-outline-btn:hover {
+    border-color: var(--step4-blue-500) !important;
+    background: var(--step4-blue-tint) !important;
+    color: var(--step4-blue-600) !important;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-copy {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-file-icon,
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-remove {
+    flex: 0 0 auto;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-file-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    color: var(--step4-text-1);
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-remove {
+    margin: 0;
+}
+
+.ats-step-four-action-bar {
+    margin-top: 26px;
+    padding: 0 !important;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .ats-step-four-scope.ats-step-four-scope ::deep :is(.ats-step-four-address-main, .ats-step-four-address-detail) {
+        grid-column: span 14;
+    }
+}
+
+@media (max-width: 700px) {
+    .ats-step-four-scope.ats-step-four-scope ::deep :is(.ats-step-four-address-main, .ats-step-four-address-detail, .ats-step-four-other-field, .ats-step-four-education-main, .ats-step-four-education-side) {
+        grid-column: 1 / -1;
+    }
+
+    .ats-step-four-scope.ats-step-four-scope ::deep .ats-step-four-upload-label {
+        display: none;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-step-four-scope.ats-step-four-scope ::deep :is(.mud-input-outlined-border, .ats-ownership-pill, .ats-upload-outline-btn) {
+        transition: none;
+    }
+}
+
+.ats-step-five-scope {
+    --step5-navy-900: #0b1b3d;
+    --step5-navy-800: #132a54;
+    --step5-blue-600: #1d5fd1;
+    --step5-blue-500: #2e7ce0;
+    --step5-blue-tint: #edf3fc;
+    --step5-blue-tint-2: #e3ecfb;
+    --step5-border-strong: #c2d2f0;
+    --step5-text-1: #16233f;
+    --step5-text-2: #5b6b8c;
+    --step5-text-3: #8a97b5;
+    --step5-red: #d64545;
+    width: 100%;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-title {
+    margin: 0 0 20px !important;
+    color: var(--step5-blue-600) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--step5-blue-600) !important;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 18px;
+    font-weight: 700 !important;
+    line-height: 1.35;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    column-gap: 14px;
+    row-gap: 14px !important;
+    align-items: start;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-grid > .mud-grid-item:not(.ats-license-main-field):not(.ats-license-side-field) {
+    grid-column: 1 / -1;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-main-field {
+    grid-column: span 8;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-side-field {
+    grid-column: span 5;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-prompt-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-question {
+    margin: 0 0 12px !important;
+    color: var(--step5-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-segment {
+    display: inline-flex;
+    width: fit-content;
+    margin: 0 auto 10px;
+    padding: 4px;
+    gap: 4px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--step5-blue-tint);
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-segment-btn {
+    width: 88px;
+    min-width: 88px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--step5-text-2) !important;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: none !important;
+    transition: color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-segment-btn.active {
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgba(11, 27, 61, 0.1) !important;
+    color: var(--step5-blue-600) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-segment-btn.active.no {
+    background: var(--step5-navy-900) !important;
+    color: #fff !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control {
+    width: 100%;
+    min-width: 0;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-control {
+    margin-top: 0;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined {
+    width: 100%;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    background: #fff;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined-border {
+    border-width: 1.5px !important;
+    border-color: var(--step5-border-strong) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--step5-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-label {
+    color: var(--step5-text-2) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-label-asterisk {
+    color: var(--step5-red) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control :is(.mud-input, .mud-input-slot, input) {
+    color: var(--step5-text-1) !important;
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control input::placeholder {
+    color: var(--step5-text-3) !important;
+    opacity: 1;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-adornment-end {
+    margin-right: 10px;
+    color: var(--step5-text-3) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-adornment-end .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control.mud-disabled .mud-input-outlined,
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined.mud-disabled {
+    background: #f3f5fa;
+    color: var(--step5-text-3) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-license-upload-spacer {
+    display: block;
+    min-height: 20px;
+    margin-bottom: 2px;
+    color: transparent;
+    font-size: 12px;
+    line-height: 18px;
+    user-select: none;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-file-upload {
+    width: 100%;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-upload-btn {
+    display: flex !important;
+    width: 100% !important;
+    height: 44px !important;
+    min-width: 0;
+    min-height: 44px !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    overflow: hidden;
+    border: 1.5px dashed var(--step5-border-strong) !important;
+    border-radius: 10px !important;
+    background: #fbfcff !important;
+    box-shadow: none !important;
+    color: var(--step5-text-3) !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    text-transform: none !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-upload-btn .mud-button-label {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-upload-btn:hover {
+    border-color: var(--step5-blue-500) !important;
+    background: var(--step5-blue-tint) !important;
+    color: var(--step5-blue-600) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-upload-copy {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-upload-file-icon, .ats-upload-remove) {
+    flex: 0 0 auto;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-upload-file-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    color: var(--step5-text-1);
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-upload-remove {
+    margin: 0;
+    color: var(--step5-text-3) !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-experience-heading {
+    margin: 8px 0 4px !important;
+    color: var(--step5-blue-600) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--step5-blue-600) !important;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 700 !important;
+    line-height: 1.4;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-card {
+    width: 100%;
+    margin: 0;
+    padding: 20px 20px 22px !important;
+    border: 1.5px solid var(--step5-border-strong) !important;
+    border-radius: 14px !important;
+    background: #fcfdff !important;
+    box-shadow: none !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 14px !important;
+    align-items: start;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-employer-header, .ats-employer-company, .ats-employer-checks, .ats-employer-upload) {
+    grid-column: 1 / -1;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-third {
+    grid-column: span 2;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-half {
+    grid-column: span 3;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-header {
+    display: flex;
+    min-height: 20px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-card-title {
+    margin: 0 !important;
+    color: var(--step5-blue-600) !important;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-remove-employer-btn {
+    min-height: 28px;
+    margin: 0;
+    padding: 0 4px;
+    color: var(--step5-red) !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: none !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-checks {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-checks .small-checkbox-label {
+    margin: 0;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-checks .small-checkbox-label .mud-icon-button {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    padding: 0 !important;
+    color: var(--step5-border-strong);
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-checks .small-checkbox-label .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-checks .small-checkbox-label .mud-typography {
+    color: var(--step5-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-upload {
+    order: 1;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-upload-label {
+    display: block;
+    min-height: 18px;
+    margin: 0 0 6px;
+    color: var(--step5-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.2px;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-add-employer-card {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--step5-border-strong);
+    border-radius: 12px;
+    background: #fbfcff;
+    color: var(--step5-blue-600);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-add-employer-card .mud-checkbox {
+    width: 100%;
+    margin: 0;
+    justify-content: center;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-add-employer-card :is(.mud-icon-button, .mud-icon-root, svg) {
+    display: none !important;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-add-employer-card .mud-typography {
+    color: var(--step5-blue-600);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-add-employer-card:hover {
+    border-color: var(--step5-blue-500);
+    background: var(--step5-blue-tint);
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-collapse-container {
+    width: 100%;
+}
+
+.ats-step-five-action-bar {
+    margin-top: 22px;
+    padding: 0 !important;
+    align-items: center;
+}
+
+@media (max-width: 700px) {
+    .ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) {
+        grid-column: 1 / -1;
+    }
+
+    .ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-grid > .mud-grid-item {
+        grid-column: 1 / -1;
+    }
+
+    .ats-step-five-scope.ats-step-five-scope ::deep .ats-employer-card {
+        padding: 16px !important;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-step-five-scope.ats-step-five-scope ::deep :is(.mud-input-outlined-border, .ats-license-segment-btn, .ats-step-five-upload-btn, .ats-add-employer-card) {
+        transition: none;
+    }
+}
+
+.ats-final-step-scope {
+    --final-navy: #132a54;
+    --final-blue: #1d5fd1;
+    --final-blue-hover: #2e7ce0;
+    --final-tint: #edf3fc;
+    --final-border: #c2d2f0;
+    --final-text: #16233f;
+    --final-muted: #5b6b8c;
+    --final-subtle: #8a97b5;
+    --final-danger: #d64545;
+    width: 100%;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-final-grid {
+    display: flex !important;
+    width: 100%;
+    margin: 0 !important;
+    gap: 0 !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-final-grid > .mud-grid-item {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-final-title {
+    margin: 0 0 22px !important;
+    color: var(--final-blue) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--final-blue) !important;
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 19px;
+    font-weight: 700 !important;
+    line-height: 1.35;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-block {
+    margin: 0 0 14px;
+    padding: 20px !important;
+    overflow: visible;
+    border: 1.5px solid var(--final-border) !important;
+    border-radius: 14px !important;
+    background: #fcfdff !important;
+    box-shadow: none !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-item-after-first {
+    margin-top: 14px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid {
+    display: grid !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 14px !important;
+    align-items: start;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    padding: 0 !important;
+    flex: none;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(1) {
+    grid-column: 1 / -1;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(2) {
+    grid-column: span 5;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(3) {
+    grid-column: span 7;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(4),
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(5),
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(6),
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(7) {
+    grid-column: span 4;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item:nth-child(8) {
+    grid-column: span 8;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-title {
+    margin: 0;
+    color: var(--final-text);
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input {
+    width: 100%;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-control {
+    margin-top: 0;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-outlined {
+    min-height: 42px !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-label {
+    color: var(--final-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-label-asterisk {
+    color: var(--final-danger) !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-outlined-border {
+    border-width: 1.5px !important;
+    border-color: var(--final-border) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-control:focus-within .mud-input-outlined-border {
+    border-color: var(--final-blue-hover) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input :is(.mud-input, .mud-input-slot) {
+    color: var(--final-text) !important;
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input input::placeholder {
+    color: var(--final-subtle) !important;
+    opacity: 1;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-adornment-end {
+    margin-right: 10px;
+    color: var(--final-subtle) !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-adornment-end .mud-icon-root {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-option-wrap {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-option-label {
+    margin: 0;
+    color: var(--final-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill {
+    display: inline-flex;
+    min-height: 34px;
+    margin: 0 !important;
+    padding: 0 13px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--final-border);
+    border-radius: 20px;
+    background: #fff;
+    color: var(--final-text);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill :is(.mud-button-root, .mud-icon-button, .mud-radio-icon, .mud-radio-icons, svg) {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill :is(.mud-radio-label, .mud-radio-content, .mud-typography) {
+    width: 100%;
+    margin: 0 !important;
+    color: inherit !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill:hover {
+    border-color: var(--final-blue-hover);
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill:focus-within {
+    outline: 3px solid rgba(46, 124, 224, 0.2);
+    outline-offset: 2px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill:is(.selected, .mud-checked, .mud-radio-checked) {
+    border-color: transparent;
+    background: linear-gradient(120deg, var(--final-navy), var(--final-blue));
+    box-shadow: 0 6px 14px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-date,
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-time {
+    width: 100%;
+    min-width: 0;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-add-reference-card {
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    margin: -2px 0 20px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px dashed var(--final-border);
+    border-radius: 12px;
+    background: #fbfcff;
+    color: var(--final-blue);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-add-reference-card .mud-checkbox {
+    width: 100%;
+    margin: 0;
+    justify-content: center;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-add-reference-card :is(.mud-icon-button, .mud-icon-root, svg) {
+    display: none !important;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-add-reference-card .mud-typography {
+    color: var(--final-blue);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-add-reference-card:hover {
+    border-color: var(--final-blue-hover);
+    background: var(--final-tint);
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-remove-reference-btn {
+    min-height: 28px;
+    padding: 0 4px;
+    color: var(--final-danger) !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: none !important;
+}
+
+.ats-final-action-bar {
+    margin-top: 6px;
+    padding: 0 !important;
+    align-items: center;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button {
+    width: auto !important;
+    height: 42px !important;
+    margin: 0 !important;
+    padding: 0 22px !important;
+    border: 1.5px solid #c2d2f0 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    color: #5b6b8c !important;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button:hover {
+    background: #f4f7fc !important;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button {
+    width: auto !important;
+    height: 46px !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 26px !important;
+    border: 0 !important;
+    border-radius: 11px !important;
+    background: linear-gradient(120deg, #132a54, #2e7ce0) !important;
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.5) !important;
+    color: #fff !important;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-transform: none;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65) !important;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button:active {
+    transform: scale(0.97);
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button {
+    width: auto !important;
+    height: 46px !important;
+    margin: 0 !important;
+    padding: 0 30px !important;
+    border: 0 !important;
+    border-radius: 11px !important;
+    background: linear-gradient(120deg, #132a54, #2e7ce0) !important;
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.5) !important;
+    color: #fff !important;
+    font-size: 14.5px;
+    font-weight: 700;
+    text-transform: none;
+}
+
+.ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button .mud-button-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+}
+
+.ats-final-action-bar.ats-final-action-bar ::deep .ats-submit-check {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65) !important;
+}
+
+@media (max-width: 760px) {
+    .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-grid > .mud-grid-item {
+        grid-column: 1 / -1 !important;
+    }
+
+    .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-block {
+        padding: 14px !important;
+    }
+
+    .ats-step-action-bar {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-save-next-button),
+    .ats-final-action-bar.ats-final-action-bar ::deep .ats-previous-button,
+    .ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 520px) {
+    .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-final-step-scope.ats-final-step-scope ::deep :is(.ats-reference-pill, .ats-add-reference-card),
+    .ats-final-action-bar.ats-final-action-bar ::deep :is(.ats-previous-button, .ats-final-submit-button),
+    .ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button {
+        transition: none;
+    }
+}

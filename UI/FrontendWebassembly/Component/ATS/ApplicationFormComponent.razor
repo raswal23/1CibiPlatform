@@ -227,21 +227,25 @@
 
                     <!-- STEP 3 -->
                     <MudStep Title="Step 3" Class="ats-step-two" Completed="@(_activeStep > 2)">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-3 mt-3 gradient-text">Personal Information</MudText>
+                        <div class="ats-step-three-scope">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-step-two-title">Personal Information</MudText>
                         <MudGrid Class="ats-step-two-grid" Spacing="1">
                             <!-- Left column: Personal information fields -->
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-step-two-column ats-step-two-fields-column">
                                 <MudPaper Class="pa-3 ats-step-two-form-card" Elevation="0">
-                                    <MudGrid>
+                                    <MudGrid Class="ats-step-three-fields-grid">
                                         <MudItem xs="12" Class="mt-1">
                                             <MudTextField FullWidth="true"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
                                                           @bind-Value="personalDetails.PositionAppliedFor"
                                                           Class="name-filter oneplatform-rounded-input"
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.WorkOutline"
+                                                          Placeholder="e.g. Software Engineer"
                                                           Required="true"
                                                           RequiredError="Position Applied For is required"
-                                                          Label="Position Applied For" />
+                                                          Label="Position applied for" />
                                         </MudItem>
 
                                         <MudItem xs="12">
@@ -252,7 +256,10 @@
                                                           Required="true"
                                                           RequiredError="First Name is required"
                                                           Class="oneplatform-rounded-input"
-                                                          Label="First Name" />
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                          Placeholder="Juan"
+                                                          Label="First name" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField FullWidth="true"
@@ -261,14 +268,17 @@
                                                           Disabled="@NoMiddleName"
                                                           @bind-Value="personalDetails.MiddleName"
                                                           Class="oneplatform-rounded-input"
-                                                          Label="Middle Name" />
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                          Placeholder="Santos"
+                                                          Label="Middle name" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6" Class="d-flex align-center">
-                                            <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                                            <div class="ats-step-three-middle-check-wrap">
                                                 <MudCheckBox T="bool"
                                                              Value="NoMiddleName"
                                                              ValueChanged="NoMiddleNameChange"
-                                                             Label="Check if no Middle Name"
+                                                             Label="Check if no middle name"
                                                              Class="small-checkbox-label" />
                                             </div>
                                         </MudItem>
@@ -281,7 +291,10 @@
                                                           Required="true"
                                                           RequiredError="Last Name is required"
                                                           Class="oneplatform-rounded-input"
-                                                          Label="Last Name" />
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                          Placeholder="Dela Cruz"
+                                                          Label="Last name" />
                                         </MudItem>
                                         <MudItem xs="12" sm="4">
                                             <MudSelect @bind-Value="personalDetails.Suffix"
@@ -291,7 +304,7 @@
                                                        Variant="Variant.Outlined"
                                                        Margin="Margin.Dense"
                                                        Class="oneplatform-rounded-input">
-                                                <MudSelectItem Value=@("N/A")>N/A</MudSelectItem>
+                                                <MudSelectItem Value=@("N/A")>None</MudSelectItem>
                                                 <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
                                                 <MudSelectItem Value=@("Sr.")>Sr.</MudSelectItem>
                                                 <MudSelectItem Value=@("III.")>III.</MudSelectItem>
@@ -304,9 +317,9 @@
                                                 <MudSelectItem Value=@("X.")>X.</MudSelectItem>
                                             </MudSelect>
                                         </MudItem>
-                                        <MudItem xs="12" sm="4">
+                                        <MudItem xs="12" sm="4" Class="ats-step-three-birthdate-field">
                                             <MudDatePicker @bind-Date="DateOfBirth"
-                                                           Label="Birth Date"
+                                                           Label="Birth date"
                                                            Adornment="Adornment.End"
                                                            Placeholder="Date"
                                                            Required="true"
@@ -341,8 +354,11 @@
                                                           Required="true"
                                                           RequiredError="Alternate Email Address is required"
                                                           Class="oneplatform-rounded-input"
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.Email"
+                                                          Placeholder="juan.delacruz@email.com"
                                                           Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
-                                                          Label="Alternate Email Address" />
+                                                          Label="Alternate email address" />
                                         </MudItem>
 
                                         <MudItem xs="12">
@@ -354,36 +370,48 @@
                                                           Required="true"
                                                           RequiredError="Phone Number is required"
                                                           Class="oneplatform-rounded-input"
-                                                          Label="Phone Number"
+                                                          Adornment="Adornment.Start"
+                                                          AdornmentIcon="@Icons.Material.Outlined.PhoneIphone"
+                                                          Placeholder="+63 9XX XXX XXXX"
+                                                          Label="Phone number"
                                                           Mask="@(new PatternMask("00000000000"))" />
                                         </MudItem>
                                     </MudGrid>
                                 </MudPaper>
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-step-two-column ats-step-two-verification-column">
                                 <MudPaper Class="ats-step-two-upload-card" Elevation="0">
                                     <div class="ats-step-two-upload-shell">
-                                        <div class="ats-step-two-avatar-frame">
-                                            <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
-                                                      Alt="User Profile"
-                                                      Class="ats-step-two-avatar" />
-                                        </div>
+                                        <div class="ats-step-two-profile">
+                                            <div class="ats-step-two-avatar-frame">
+                                                @if (string.IsNullOrWhiteSpace(FaceUrl))
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.Person" Class="ats-step-two-avatar-placeholder" />
+                                                }
+                                                else
+                                                {
+                                                    <MudImage Src="@FaceUrl"
+                                                              Alt="User Profile"
+                                                              Class="ats-step-two-avatar" />
+                                                }
+                                            </div>
 
-                                        @if (!string.IsNullOrEmpty(philSysId))
-                                        {
-                                            <div class="ats-step-two-status verified">
-                                                <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium" />
-                                                <span>PhilSys Verified</span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="ats-step-two-status not-verified">
-                                                <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Medium" />
-                                                <span>Not PhilSys Verified</span>
-                                            </div>
-                                        }
+                                            @if (!string.IsNullOrEmpty(philSysId))
+                                            {
+                                                <div class="ats-step-two-status verified">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" />
+                                                    <span>PhilSys verified</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="ats-step-two-status not-verified">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                                                    <span>Not PhilSys verified</span>
+                                                </div>
+                                            }
+                                        </div>
 
                                         <div class="ats-step-two-upload-list">
                                             <MudFileUpload T="IBrowserFile"
@@ -396,7 +424,7 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.AdditionalGovtIDFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.AdditionalGovtIDFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
@@ -406,8 +434,10 @@
                                                         }
                                                         else
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
-                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload Unexpired Government ID</span>
+                                                            <span class="ats-step-two-upload-icon-shell">
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                            </span>
+                                                            <span class="ats-step-two-upload-btn-text">Upload unexpired government ID</span>
                                                         }
                                                     </MudButton>
                                                 </CustomContent>
@@ -428,7 +458,7 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.NBIClearanceFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.NBIClearanceFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
@@ -438,8 +468,10 @@
                                                         }
                                                         else
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
-                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload NBI Clearance</span>
+                                                            <span class="ats-step-two-upload-icon-shell">
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                            </span>
+                                                            <span class="ats-step-two-upload-btn-text">Upload NBI clearance</span>
                                                         }
                                                     </MudButton>
                                                 </CustomContent>
@@ -459,7 +491,7 @@
                                                                OnClick="@context.OpenFilePickerAsync">
                                                         @if (personalDetails.ResumeFile is not null)
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" Color="Color.Error" />
+                                                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ats-step-two-upload-btn-icon ats-step-two-upload-pdf-icon" Color="Color.Error" />
                                                             <MudText Class="ats-step-two-upload-file-name">@personalDetails.ResumeFileName</MudText>
                                                             <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                            Color="Color.Default"
@@ -469,8 +501,10 @@
                                                         }
                                                         else
                                                         {
-                                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ats-step-two-upload-btn-icon" />
-                                                            <span class="ats-step-two-upload-btn-text ats-step-two-upload-btn-text-uppercase">Upload Resume File</span>
+                                                            <span class="ats-step-two-upload-icon-shell">
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="ats-step-two-upload-btn-icon" />
+                                                            </span>
+                                                            <span class="ats-step-two-upload-btn-text">Upload resume file</span>
                                                         }
                                                     </MudButton>
                                                 </CustomContent>
@@ -484,142 +518,186 @@
                                 </MudPaper>
                             </MudItem>
                         </MudGrid>
+                        </div>
                     </MudStep>
 
                     <!-- STEP 4 -->
                     <MudStep Title="Step 4" Class="ats-step-three" Completed="@(_activeStep > 3)">
-                        <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mb-4 mt-4 ats-appform-section-title">Address</MudText>
-                        <MudGrid>
+                        <div class="ats-step-four-scope">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-appform-section-title ats-step-four-title">Address</MudText>
+                        <MudGrid Class="ats-step-four-grid">
                             <!-- Address section -->
-                            <MudItem xs="12" sm="4">
+                            <MudItem xs="12" sm="4" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-main">
+                                <label class="ats-step-four-field-label" for="ats-current-address">
+                                    Current address <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-current-address"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="No., Street, Village"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Outlined.LocationOn"
                                               @bind-Value="addressDetails.CurrentAddress"
                                               Required="true"
-                                              RequiredError="Current Address (No., Street, Village, Brgy.) is required"
-                                              Label="Current Address (No., Street, Village, Brgy.)" />
+                                              RequiredError="Current address is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail">
+                                <label class="ats-step-four-field-label" for="ats-current-city">
+                                    City <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-current-city"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="City"
                                               @bind-Value="addressDetails.CurrentCity"
                                               Required="true"
-                                              RequiredError="City is required"
-                                              Label="City" />
+                                              RequiredError="City is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail">
+                                <label class="ats-step-four-field-label" for="ats-current-province">
+                                    State / Province <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-current-province"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="State / Province"
                                               @bind-Value="addressDetails.CurrentProvince"
                                               Required="true"
-                                              RequiredError="State / Province / Region is required"
-                                              Label="State / Province / Region" />
+                                              RequiredError="State / Province is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail">
+                                <label class="ats-step-four-field-label" for="ats-current-country">
+                                    Country <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-current-country"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="name-filter oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="Country"
                                               @bind-Value="addressDetails.CurrentCountry"
                                               Required="true"
-                                              RequiredError="Country is required"
-                                              Label="Country" />
+                                              RequiredError="Country is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail">
+                                <label class="ats-step-four-field-label" for="ats-current-postal-code">
+                                    Zip / Postal code <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-current-postal-code"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="Zip / Postal code"
                                               @bind-Value="addressDetails.CurrentPostalCode"
                                               Required="true"
                                               Mask="@(new PatternMask("00000000000"))"
-                                              RequiredError="Zip / Postal Code is required"
-                                              Label="Zip / Postal Code" />
+                                              RequiredError="Zip / Postal code is required" />
                             </MudItem>
 
-                            <MudItem xs="12" Style="margin-bottom:-10px;">
+                            <MudItem xs="12" Class="ats-step-four-same-address">
                                 <MudCheckBox T="bool"
                                              Class="small-checkbox-label"
-                                             Style="margin-bottom:-12px;"
                                              Value="SameAsPermanent"
                                              Disabled="@(string.IsNullOrEmpty(addressDetails.CurrentAddress))"
                                              ValueChanged="OnSameAsPermanentChanged"
                                              Label="Check if current address is the same as permanent address" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="4">
+                            <MudItem xs="12" sm="4" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-main">
+                                <label class="ats-step-four-field-label" for="ats-permanent-address">
+                                    Permanent address <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-permanent-address"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="No., Street, Village"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Outlined.LocationOn"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentAddress"
                                               Required="true"
-                                              RequiredError="Permanent Address (No., Street, Village, Brgy.) is required"
-                                              Label="Permanent Address (No., Street, Village, Brgy.)" />
+                                              RequiredError="Permanent address is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail ats-step-four-permanent-detail">
+                                <label class="ats-step-four-field-label" for="ats-permanent-city">
+                                    City <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-permanent-city"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="City"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentCity"
                                               Required="true"
-                                              RequiredError="City is required"
-                                              Label="City" />
+                                              RequiredError="City is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail ats-step-four-permanent-detail">
+                                <label class="ats-step-four-field-label" for="ats-permanent-province">
+                                    State / Province <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-permanent-province"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="State / Province"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentProvince"
                                               Required="true"
-                                              RequiredError="State / Province / Region is required"
-                                              Label="State / Province / Region" />
+                                              RequiredError="State / Province is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail ats-step-four-permanent-detail">
+                                <label class="ats-step-four-field-label" for="ats-permanent-country">
+                                    Country <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-permanent-country"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="name-filter oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="Country"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentCountry"
                                               Required="true"
-                                              RequiredError="Country is required"
-                                              Label="Country" />
+                                              RequiredError="Country is required" />
                             </MudItem>
-                            <MudItem xs="12" sm="2">
+                            <MudItem xs="12" sm="2" Class="ats-step-four-field ats-step-four-address-field ats-step-four-address-detail ats-step-four-permanent-detail">
+                                <label class="ats-step-four-field-label" for="ats-permanent-postal-code">
+                                    Zip / Postal code <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-permanent-postal-code"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="Zip / Postal code"
                                               Disabled="SameAsPermanent"
                                               @bind-Value="addressDetails.PermanentPostalCode"
                                               Required="true"
                                               Mask="@(new PatternMask("00000000000"))"
-                                              RequiredError="Zip / Postal Code is required"
-                                              Label="Zip / Postal Code" />
+                                              RequiredError="Zip / Postal code is required" />
                             </MudItem>
 
                             <!-- Ownership -->
-                            <MudItem xs="12">
-                                <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of Ownership (Current Address)</MudText>
-                                <div class="d-flex" style="gap:12px; flex-wrap:wrap;">
+                            <MudItem xs="12" Class="ats-step-four-ownership">
+                                <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of ownership (current address)</MudText>
+                                <div class="ats-step-four-ownership-options">
                                     <MudRadioGroup T="string"
                                                    @bind-Value="addressDetails.TypeOfOwnership"
                                                    Required="true"
                                                    RequiredError="Type of Ownership is required"
-                                                   Class="ats-ownership-pills d-flex flex-wrap"
-                                                   Style="gap:12px;">
+                                                   Class="ats-ownership-pills">
                                         <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Owned" ? "selected" : string.Empty)}")" Value="@("Owned")">
                                             Owned
                                         </MudRadio>
@@ -638,30 +716,40 @@
 
                             @if (addressDetails.TypeOfOwnership == "Others")
                             {
-                                <MudItem xs="12" sm="4">
+                                <MudItem xs="12" sm="4" Class="ats-step-four-field ats-step-four-other-field">
+                                    <label class="ats-step-four-field-label" for="ats-ownership-other">
+                                        Please specify <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                    </label>
                                     <MudTextField Variant="Variant.Outlined"
+                                                  InputId="ats-ownership-other"
                                                   Margin="Margin.Dense"
-                                                  Class="oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input ats-step-four-control"
+                                                  Placeholder="Type of ownership"
                                                   @bind-Value="OwnershipOtherText"
                                                   Required="true"
-                                                  RequiredError="Please specify is required"
-                                                  Label="Please specify" />
+                                                  RequiredError="Please specify is required" />
                                 </MudItem>
                             }
 
                             <!-- Educational Background -->
-                            <MudItem xs="12">
-                                <MudText Typo="Typo.h6" Class="ats-appform-section-title" Style="font-weight:700;" Align="Align.Center">Educational Background</MudText>
+                            <MudItem xs="12" Class="ats-step-four-education-heading">
+                                <MudText Typo="Typo.h6" Class="ats-appform-section-title ats-step-four-education-title" Align="Align.Center">Educational Background</MudText>
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-step-four-field ats-step-four-education-field ats-step-four-education-main">
+                                <label class="ats-step-four-field-label" for="ats-highest-attainment">
+                                    Highest educational attainment <span class="ats-step-four-required" aria-hidden="true">*</span>
+                                </label>
                                 <MudSelect T="string"
                                            @bind-Value="HighestEducationalAttainment"
-                                           Class="oneplatform-rounded-input"
+                                           InputId="ats-highest-attainment"
+                                           Class="oneplatform-rounded-input ats-step-four-control"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
                                            Required="true"
-                                           Label="Highest Educational Attainment"
+                                           Placeholder="Select attainment"
+                                           Adornment="Adornment.Start"
+                                           AdornmentIcon="@Icons.Material.Outlined.School"
                                            FullWidth="true">
                                     <MudSelectItem Value="@("None")">None</MudSelectItem>
                                     <MudSelectItem Value="@("Elementary Graduate")">Elementary Graduate</MudSelectItem>
@@ -673,13 +761,14 @@
                                 </MudSelect>
                             </MudItem>
 
-                            <MudItem xs="12" sm="3">
-                                <MudDatePicker Label="Graduation Date"
+                            <MudItem xs="12" sm="3" Class="ats-step-four-field ats-step-four-education-field ats-step-four-education-side">
+                                <label class="ats-step-four-field-label" for="ats-graduation-date">Graduation date</label>
+                                <MudDatePicker InputId="ats-graduation-date"
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                Placeholder="Date"
-                                               Class="oneplatform-rounded-input"
+                                               Class="oneplatform-rounded-input ats-step-four-control"
                                                Required="!DisableEducationFieldsForAboveCollege()"
                                                Disabled="DisableEducationFieldsForAboveCollege()"
                                                @bind-Date="GraduationDate"
@@ -687,18 +776,24 @@
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-step-four-field ats-step-four-education-field ats-step-four-education-main">
+                                <label class="ats-step-four-field-label" for="ats-degree-major">Degree with major</label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-degree-major"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="!DisableEducationForBelowCollege()"
                                               Disabled="DisableEducationForBelowCollege()"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="e.g. BS Computer Science"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Outlined.Description"
                                               @bind-Value="DegreeWithMajor"
-                                              Label="Degree with major" />
+                                              />
                             </MudItem>
 
-                            <MudItem xs="12" sm="3">
+                            <MudItem xs="12" sm="3" Class="ats-step-four-field ats-step-four-education-field ats-step-four-education-side ats-step-four-education-upload">
+                                <span class="ats-step-four-field-label ats-step-four-upload-label" aria-hidden="true">&nbsp;</span>
                                 <MudFileUpload T="IBrowserFile"
                                                Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                Accept=".pdf"
@@ -706,24 +801,21 @@
                                                OnFilesChanged="OnDiplomaUpload">
                                     <CustomContent>
                                         <MudButton Class="oneplatform-rounded-input w-100 ats-upload-outline-btn"
-                                                   Style="width:270px; min-height: 48px; max-height: 48px; margin-top: 4px;"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (educationalBackground.DiplomaFile is not null)
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@educationalBackground.DiplomaFileName</MudText>
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-step-four-upload-file-icon" Color="Color.Error" />
+                                                <MudText Class="ats-step-four-upload-file-name">@educationalBackground.DiplomaFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="mr-3 ml-3"
+                                                               Class="ats-step-four-upload-remove"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(educationalBackground.DiplomaFile!))" />
                                             }
                                             else
                                             {
-                                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 220px;  margin: 0px;">
-                                                        Upload Diploma / TOR
-                                                    </span>
+                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                <span class="ats-step-four-upload-copy">Upload diploma / TOR</span>
                                             }
                                         </MudButton>
                                     </CustomContent>
@@ -733,38 +825,44 @@
                                                                ErrorText="Diploma is required." />
                             </MudItem>
                             
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-step-four-field ats-step-four-academic-institution">
+                                <label class="ats-step-four-field-label" for="ats-academic-institution">Academic institution</label>
                                 <MudTextField FullWidth="true"
+                                              InputId="ats-academic-institution"
                                               Variant="Variant.Outlined"
                                               Required="!DisableEducationFieldsForAboveCollege()"
                                               Disabled="DisableEducationFieldsForAboveCollege()"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-four-control"
+                                              Placeholder="University or school name"
+                                              Adornment="Adornment.Start"
+                                              AdornmentIcon="@Icons.Material.Outlined.Apartment"
                                               @bind-Value="AcademicInstitution"
-                                              RequiredError="Academic Institution is required"
-                                              Label="Academic Institution" />
+                                              RequiredError="Academic institution is required" />
                             </MudItem>
                         </MudGrid>
+                        </div>
                     </MudStep>
 
                     <!-- STEP 5 -->
                     <MudStep Title="Step 5" Class="ats-step-four" Completed="@(_activeStep > 4)">
-                        <MudText Typo="Typo.h6" Style="font-weight:700;" Align="Align.Center" Class="mt-4 mb-4 ats-appform-section-title">Credentials, Licenses &amp; Professional Experience</MudText>
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <div style="display:flex; flex-direction:column; align-items:center; text-align:center;">
+                        <div class="ats-step-five-scope">
+                        <MudText Typo="Typo.h6" Align="Align.Center" Class="ats-appform-section-title ats-step-five-title">Credentials, Licenses &amp; Professional Experience</MudText>
+                        <MudGrid Class="ats-step-five-grid">
+                            <MudItem xs="12" Class="ats-license-prompt">
+                                <div class="ats-license-prompt-content">
 
-                                    <MudText Typo="Typo.h6">
+                                    <MudText Typo="Typo.h6" Class="ats-license-question">
                                         Do you have a Professional License?
                                     </MudText>
 
-                                    <div class="ats-license-segment mt-2">
+                                    <div class="ats-license-segment">
                                         <MudButton Class="@(hasProfessionalLicense ? "ats-license-segment-btn active" : "ats-license-segment-btn")"
                                                    OnClick="() => hasProfessionalLicense = true">
                                             Yes
                                         </MudButton>
 
-                                        <MudButton Class="@(!hasProfessionalLicense ? "ats-license-segment-btn active" : "ats-license-segment-btn")"
+                                        <MudButton Class="@(!hasProfessionalLicense ? "ats-license-segment-btn active no" : "ats-license-segment-btn")"
                                                    OnClick="() => hasProfessionalLicense = false">
                                             No
                                         </MudButton>
@@ -775,67 +873,67 @@
 
                             @if (hasProfessionalLicense == true)
                             {
-                                <MudItem xs="12" sm="8">
+                                <MudItem xs="12" sm="8" Class="ats-license-main-field">
                                     <MudTextField FullWidth="true"
-                                                  Variant="Variant.Outlined" f
+                                                  Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Class="oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input ats-step-five-control"
                                                   @bind-Value="licensesDetails.LicenseName"
                                                   Required="@hasProfessionalLicense"
                                                   RequiredError="Professional License is required"
-                                                  Label="Professional License" />
+                                                  Placeholder="Professional license"
+                                                  Label="Professional license" />
                                 </MudItem>
 
-                                <MudItem xs="12" sm="4">
+                                <MudItem xs="12" sm="4" Class="ats-license-side-field">
                                     <MudDatePicker Adornment="Adornment.End"
                                                    Required="@hasProfessionalLicense"
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
                                                    Placeholder="Date"
-                                                   Class="oneplatform-rounded-input"
+                                                   Class="oneplatform-rounded-input ats-step-five-control"
                                                    @bind-Date="LicenseExpiryDate"
-                                                   Label="License Expiry Date"
+                                                   Label="License expiry date"
                                                    MinDate="@DateTime.Now"
                                                    DateFormat="MM/dd/yyyy" />
                                 </MudItem>
 
-                                <MudItem xs="12" sm="8">
+                                <MudItem xs="12" sm="8" Class="ats-license-main-field">
                                     <MudTextField FullWidth="true"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Class="oneplatform-rounded-input"
+                                                  Class="oneplatform-rounded-input ats-step-five-control"
                                                   @bind-Value="licensesDetails.LicenseNumber"
                                                   Required="@hasProfessionalLicense"
                                                   Mask="@(new PatternMask("A00-00-000000"))"
                                                   RequiredError="License No. is required"
-                                                  Label="License No." />
+                                                  Placeholder="License no."
+                                                  Label="License no." />
                                 </MudItem>
 
-                                <MudItem xs="12" sm="4">
+                                <MudItem xs="12" sm="4" Class="ats-license-side-field">
+                                    <span class="ats-license-upload-spacer" aria-hidden="true">&nbsp;</span>
                                     <MudFileUpload T="IBrowserFile"
                                                    Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                    Accept=".pdf"
                                                    OnFilesChanged="OnProfessionalLicenseUpload">
                                         <CustomContent>
-                                            <MudButton Class="oneplatform-rounded-input w-100"
-                                                       Style="width:368px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                            <MudButton Class="oneplatform-rounded-input w-100 ats-step-five-upload-btn"
                                                        OnClick="@context.OpenFilePickerAsync">
                                                 @if (licensesDetails.LicenseUploadFile is not null)
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                    <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 268px;">@licensesDetails.LicenseUploadFileName</MudText>
+                                                    <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                    <MudText Class="ats-upload-file-name">@licensesDetails.LicenseUploadFileName</MudText>
                                                     <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                    Color="Color.Default"
                                                                    Size="Size.Small"
-                                                                   Class="mr-3 ml-3"
+                                                                   Class="ats-upload-remove"
                                                                    OnClick="@(() => RemoveFileFromUploadsAsync(licensesDetails.LicenseUploadFile!))" />
                                                 }
                                                 else
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                    <span style="width: 318px;  margin: 0px;">
-                                                        Upload Professional License
-                                                    </span>
+                                                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                    <span class="ats-upload-copy">Upload professional license</span>
                                                 }
                                             </MudButton>
                                         </CustomContent>
@@ -848,74 +946,79 @@
                            
 
                             <MudItem xs="12">
-                                <MudText Typo="Typo.h6" Class="ats-appform-section-title" Style="font-weight:700;" Align="Align.Center">Professional Experience</MudText>
+                                <MudText Typo="Typo.h6" Class="ats-appform-section-title ats-experience-heading" Align="Align.Center">Professional Experience</MudText>
                             </MudItem>
 
                             <MudItem xs="12">
                                 <MudPaper Elevation="0" Class="ats-employer-card">
-                                    <MudGrid>
-                                        <MudItem xs="12">
+                                    <MudGrid Class="ats-employer-grid">
+                                        <MudItem xs="12" Class="ats-employer-header">
                                             <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title">Employer 1</MudText>
                                         </MudItem>
 
-                                        <MudItem xs="12" sm="6">
+                                        <MudItem xs="12" Class="ats-employer-company">
                                             <MudTextField FullWidth="true"
                                                           Variant="Variant.Outlined"
                                                           Margin="Margin.Dense"
-                                                          Class="oneplatform-rounded-input"
+                                                          Class="oneplatform-rounded-input ats-step-five-control"
                                                           Required="true"
                                                           RequiredError="Company Name is required"
                                                           @bind-Value="professionalExperiences.Emp1CompanyName"
-                                                          Label="Company Name #1" />
+                                                          Placeholder="Company name"
+                                                          Label="Company name #1" />
                                         </MudItem>
 
-                            <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
-                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp1CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                            <MudItem xs="12" Class="d-flex ats-employer-checks">
+                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp1CurrentlyEmployed" Class="small-checkbox-label" Label="Currently employed?" />
                                 <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp1PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="4">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="Company City / Address is required"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               @bind-Value="professionalExperiences.Emp1CompanyCity"
-                                              Label="Company City / Address #1" />
+                                              Placeholder="City / address"
+                                              Label="Company city / address #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="4">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="State / Province / Region is required"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               @bind-Value="professionalExperiences.Emp1CompanyProvince"
-                                              Label="State / Province / Region #1" />
+                                              Placeholder="State / province"
+                                              Label="State / province / region #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="4">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="name-filter oneplatform-rounded-input"
+                                              Class="name-filter oneplatform-rounded-input ats-step-five-control"
                                               Required="true"
                                               RequiredError="Country is required"
                                               @bind-Value="professionalExperiences.Emp1CompanyCountry"
+                                              Placeholder="Country"
                                               Label="Country #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
                                               Mask="@(new PatternMask("0000000000"))"
                                               RequiredError="Zip Code is required"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               @bind-Value="professionalExperiences.Emp1CompanyPostalCode"
-                                              Label="Zip Code #1" />
+                                              Placeholder="Zip code"
+                                              Label="Zip code #1" />
                             </MudItem>
-                            <MudItem xs="4" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                 <MudDatePicker @bind-Date="DatePermittedToContact1"
                                                Label="Date permitted to contact #1"
                                                DateFormat="MM/dd/yyyy"
@@ -925,20 +1028,21 @@
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                MinDate="@DateTime.Now"
-                                               Class="oneplatform-rounded-input" />
+                                               Class="oneplatform-rounded-input ats-step-five-control" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="3">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="Job Title is required"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               @bind-Value="professionalExperiences.Emp1JobTitle"
-                                              Label="Job Title  #1" />
+                                              Placeholder="Job title"
+                                              Label="Job title #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="3">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudDatePicker DateFormat="MM/dd/yyyy"
                                                @bind-Date="StartOfEmployment1"
                                                Adornment="Adornment.End"
@@ -946,48 +1050,46 @@
                                                Placeholder="Date"
                                                Margin="Margin.Dense"
                                                Required="true"
-                                               Class="oneplatform-rounded-input"
-                                               Label="Start Date of Employment #1" />
+                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                               Label="Start date of employment #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="3">
+                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                 <MudDatePicker @bind-Date="EndOfEmployment1"
                                                Adornment="Adornment.End"
                                                Variant="Variant.Outlined"
                                                Margin="Margin.Dense"
                                                Placeholder="Date"
                                                Required="!professionalExperiences.Emp1CurrentlyEmployed"
-                                               Class="oneplatform-rounded-input"
-                                               Label="End Date of Employment #1"
+                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                               Label="End date of employment #1"
                                                Disabled="@(!StartOfEmployment1.HasValue)"
                                                MinDate="@StartOfEmployment1?.AddDays(1)"
                                                DateFormat="MM/dd/yyyy" />
                             </MudItem>
 
-                            <MudItem xs="12" sm="3">
+                            <MudItem xs="12" Class="ats-employer-upload">
+                                <MudText Typo="Typo.caption" Class="ats-employer-upload-label">Upload COE / ID #1</MudText>
                                 <MudFileUpload T="IBrowserFile"
                                                Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                Accept=".pdf"
                                                OnFilesChanged="OnCoe1Upload">
                                     <CustomContent>
-                                        <MudButton Class="oneplatform-rounded-input w-100"
-                                                   Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                        <MudButton Class="oneplatform-rounded-input w-100 ats-step-five-upload-btn"
                                                    OnClick="@context.OpenFilePickerAsync">
                                             @if (professionalExperiences.Emp1COEUploadFile is not null)
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp1COEUploadFileName</MudText>
+                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                <MudText Class="ats-upload-file-name">@professionalExperiences.Emp1COEUploadFileName</MudText>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                Color="Color.Default"
                                                                Size="Size.Small"
-                                                               Class="mr-3 ml-3"
+                                                               Class="ats-upload-remove"
                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp1COEUploadFile!))" />
                                             }
                                             else
                                             {
-                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                <span style="width: 220px;  margin: 0px;  margin-top: 2px;">
-                                                    Upload COE/ID #1
-                                                </span>
+                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                <span class="ats-upload-copy">Upload COE / ID #1</span>
                                             }
                                         </MudButton>
                                     </CustomContent>
@@ -997,27 +1099,29 @@
                                                                ErrorText="COE/ID is required." />
                             </MudItem>
 
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-supervisor">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
                                               RequiredError="Supervisor Name is required"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               @bind-Value="professionalExperiences.Emp1SupervisorName"
-                                              Label="Supervisor Name #1" />
+                                              Placeholder="Supervisor name"
+                                              Label="Supervisor name #1" />
                             </MudItem>
-                            <MudItem xs="12" sm="6">
+                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-contact">
                                 <MudTextField FullWidth="true"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
-                                              Class="oneplatform-rounded-input"
+                                              Class="oneplatform-rounded-input ats-step-five-control"
                                               Required="true"
                                               Mask="@(new PatternMask("00000000000"))"
                                               RequiredError="Supervisor Contact Number is required"
                                               @bind-Value="professionalExperiences.Emp1SupervisorContactNumber"
                                               Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))"
-                                              Label="Contact Information #1" />
+                                              Placeholder="Contact information"
+                                              Label="Contact information #1" />
 
                             </MudItem>
                                     </MudGrid>
@@ -1035,73 +1139,78 @@
 
                                 <MudCollapse Expanded="@AddEmployer2">
                                     <MudPaper Elevation="0" Class="ats-employer-card">
-                                        <MudGrid>
-                                            <MudItem xs="12" Class="d-flex align-center justify-space-between">
+                                        <MudGrid Class="ats-employer-grid">
+                                            <MudItem xs="12" Class="d-flex align-center justify-space-between ats-employer-header">
                                                 <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title mb-0">Employer 2</MudText>
                                                 <MudButton Variant="Variant.Text"
                                                                                          Class="ats-remove-employer-btn"
-                                                           OnClick="@(() => AddEmployer2 = false)">
+                                                           OnClick="RemoveEmployer2">
                                                     Remove ✕
                                                 </MudButton>
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" Class="ats-employer-company">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               Required="@AddEmployer2"
                                                               @bind-Value="professionalExperiences.Emp2CompanyName"
-                                                              Label="Company Name #2" />
+                                                              Placeholder="Company name"
+                                                              Label="Company name #2" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
-                                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                                            <MudItem xs="12" Class="d-flex ats-employer-checks">
+                                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2CurrentlyEmployed" Class="small-checkbox-label" Label="Currently employed?" />
                                                 <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp2PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer2"
                                                               RequiredError="Company City / Address is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp2CompanyCity"
-                                                              Label="Company City / Address #2" />
+                                                              Placeholder="City / address"
+                                                              Label="Company city / address #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer2"
                                                               RequiredError="State / Province / Region is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp2CompanyProvince"
-                                                              Label="State / Province / Region #2" />
+                                                              Placeholder="State / province"
+                                                              Label="State / province / region #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="name-filter oneplatform-rounded-input"
+                                                              Class="name-filter oneplatform-rounded-input ats-step-five-control"
                                                               Required="@AddEmployer2"
                                                               RequiredError="Country is required"
                                                               @bind-Value="professionalExperiences.Emp2CompanyCountry"
+                                                              Placeholder="Country"
                                                               Label="Country #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer2"
                                                               Mask="@(new PatternMask("0000000000"))"
                                                               RequiredError="Zip Code is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp2CompanyPostalCode"
-                                                              Label="Zip Code #2" />
+                                                              Placeholder="Zip code"
+                                                              Label="Zip code #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                                 <MudDatePicker @bind-Date="DatePermittedToContact2"
                                                                Label="Date permitted to contact #2"
                                                                DateFormat="MM/dd/yyyy"
@@ -1110,20 +1219,22 @@
                                                                Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                MinDate="@DateTime.Now"
-                                                               Class="oneplatform-rounded-input" />
+                                                               Placeholder="Date"
+                                                               Class="oneplatform-rounded-input ats-step-five-control" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer2"
                                                               RequiredError="Job Title is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp2JobTitle"
-                                                              Label="Job Title #2" />
+                                                              Placeholder="Job title"
+                                                              Label="Job title #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudDatePicker DateFormat="MM/dd/yyyy"
                                                                @bind-Date="StartOfEmployment2"
                                                                Adornment="Adornment.End"
@@ -1131,49 +1242,47 @@
                                                                Margin="Margin.Dense"
                                                                Required="@AddEmployer2"
                                                                Placeholder="Date"
-                                                               Class="oneplatform-rounded-input"
-                                                               Label="Start Date of Employment #2" />
+                                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                                               Label="Start date of employment #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudDatePicker @bind-Date="EndOfEmployment2"
                                                                Adornment="Adornment.End"
                                                                Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                Placeholder="Date"
                                                                Required="@(!professionalExperiences.Emp2CurrentlyEmployed && AddEmployer2)"
-                                                               Class="oneplatform-rounded-input"
-                                                               Label="End Date of Employment #2"
+                                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                                               Label="End date of employment #2"
                                                                Disabled="@(!StartOfEmployment2.HasValue)"
                                                                MinDate="@StartOfEmployment2?.AddDays(1)"
                                                                DateFormat="MM/dd/yyyy" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" Class="ats-employer-upload">
+                                                <MudText Typo="Typo.caption" Class="ats-employer-upload-label">Upload COE / ID #2</MudText>
                                                 <MudFileUpload T="IBrowserFile"
                                                                Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                                Accept=".pdf"
                                                                OnFilesChanged="OnCoe2Upload"
                                                                Required="@(professionalExperiences.Emp2COEUploadFile is null && AddEmployer2)">
                                                     <CustomContent>
-                                                        <MudButton Class="oneplatform-rounded-input w-100"
-                                                                    Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                        <MudButton Class="oneplatform-rounded-input w-100 ats-step-five-upload-btn"
                                                                     OnClick="@context.OpenFilePickerAsync">
                                                             @if (professionalExperiences.Emp2COEUploadFile is not null)
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp2COEUploadFileName</MudText>
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                                <MudText Class="ats-upload-file-name">@professionalExperiences.Emp2COEUploadFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="mr-3 ml-3"
+                                                                               Class="ats-upload-remove"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp2COEUploadFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 220px;  margin: 0px;  margin-top: 2px;">
-                                                                    Upload COE/ID #2
-                                                                </span>
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                                <span class="ats-upload-copy">Upload COE / ID #2</span>
                                                             }
                                                         </MudButton>
                                                     </CustomContent>
@@ -1183,21 +1292,22 @@
                                                                                ErrorText="COE is required." />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-supervisor">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer2"
                                                               RequiredError="Supervisor Name is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp2SupervisorName"
-                                                              Label="Supervisor Name #2" />
+                                                              Placeholder="Supervisor name"
+                                                              Label="Supervisor name #2" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-contact">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               Mask="@(new PatternMask("00000000000"))"
                                                               RequiredError="Supervisor Contact Number is required"
                                                               @bind-Value="professionalExperiences.Emp2SupervisorContactNumber"
@@ -1208,27 +1318,30 @@
 
                                                                     return MobileNumberValidationService.ValidateMobileNumber(value);
                                                                 })"
-                                                              Label="Contact Information #2" />
+                                                              Placeholder="Contact information"
+                                                              Label="Contact information #2" />
                                             </MudItem>
                                         </MudGrid>
                                     </MudPaper>
                                 </MudCollapse>
                             </MudItem>
 
-                            <MudItem xs="12">
-                                @if (!AddEmployer3)
-                                {
+                            @if (AddEmployer2)
+                            {
+                                <MudItem xs="12">
+                                    @if (!AddEmployer3)
+                                    {
                                     <MudCheckBox T="bool"
                                                  Class="ats-add-employer-card"
                                                  Value="AddEmployer3"
                                                  ValueChanged="OnAddEmployer3Changed"
                                                  Label="+ Add Employer 3" />
-                                }
+                                    }
 
                                 <MudCollapse Expanded="@AddEmployer3">
                                     <MudPaper Elevation="0" Class="ats-employer-card">
-                                        <MudGrid>
-                                            <MudItem xs="12" Class="d-flex align-center justify-space-between">
+                                        <MudGrid Class="ats-employer-grid">
+                                            <MudItem xs="12" Class="d-flex align-center justify-space-between ats-employer-header">
                                                 <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title mb-0">Employer 3</MudText>
                                                 <MudButton Variant="Variant.Text"
                                                             Class="ats-remove-employer-btn"
@@ -1237,63 +1350,68 @@
                                                 </MudButton>
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" Class="ats-employer-company">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               Required="@AddEmployer3"
                                                               @bind-Value="professionalExperiences.Emp3CompanyName"
-                                                              Label="Company Name #3" />
+                                                              Placeholder="Company name"
+                                                              Label="Company name #3" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6" Class="d-flex" Style="gap:12px;">
-                                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp3CurrentlyEmployed" Class="small-checkbox-label" Label="Currently Employed?" />
+                                            <MudItem xs="12" Class="d-flex ats-employer-checks">
+                                                <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp3CurrentlyEmployed" Class="small-checkbox-label" Label="Currently employed?" />
                                                 <MudCheckBox T="bool" @bind-Value="professionalExperiences.Emp3PermissionToContact" Class="small-checkbox-label" Label="With permission to contact?" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer3"
                                                               RequiredError="Company City / Address is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp3CompanyCity"
-                                                              Label="Company City / Address #3" />
+                                                              Placeholder="City / address"
+                                                              Label="Company city / address #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"                                                                                                                                  
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer3"
                                                               RequiredError="State / Province / Region is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp3CompanyProvince"
-                                                              Label="State / Province / Region #3" />
+                                                              Placeholder="State / province"
+                                                              Label="State / province / region #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="4">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="name-filter oneplatform-rounded-input"
+                                                              Class="name-filter oneplatform-rounded-input ats-step-five-control"
                                                               Required="@AddEmployer3"
                                                               RequiredError="Country is required"
                                                               @bind-Value="professionalExperiences.Emp3CompanyCountry"
+                                                              Placeholder="Country"
                                                               Label="Country #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer3"
                                                               Mask="@(new PatternMask("0000000000"))"
                                                               RequiredError="Zip Code is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp3CompanyPostalCode"
-                                                              Label="Zip Code #3" />
+                                                              Placeholder="Zip code"
+                                                              Label="Zip code #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half">
                                                 <MudDatePicker @bind-Date="DatePermittedToContact3"
                                                                Label="Date permitted to contact #3"
                                                                DateFormat="MM/dd/yyyy"
@@ -1303,20 +1421,21 @@
                                                                Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                MinDate="@DateTime.Now"
-                                                               Class="oneplatform-rounded-input" />
+                                                               Class="oneplatform-rounded-input ats-step-five-control" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer3"
                                                               RequiredError="Job Title is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp3JobTitle"
-                                                              Label="Job Title #3" />
+                                                              Placeholder="Job title"
+                                                              Label="Job title #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudDatePicker DateFormat="MM/dd/yyyy"
                                                                @bind-Date="StartOfEmployment3"
                                                                Placeholder="Date"
@@ -1324,49 +1443,47 @@
                                                                Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                Required="@AddEmployer3"
-                                                               Class="oneplatform-rounded-input"
-                                                               Label="Start Date of Employment #3" />
+                                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                                               Label="Start date of employment #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" sm="4" Class="ats-employer-third">
                                                 <MudDatePicker @bind-Date="EndOfEmployment3"
                                                                Adornment="Adornment.End"
                                                                Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                Placeholder="Date"
                                                                Required="@(!professionalExperiences.Emp3CurrentlyEmployed && AddEmployer3)"
-                                                               Class="oneplatform-rounded-input"
-                                                               Label="End Date of Employment #3"
+                                                               Class="oneplatform-rounded-input ats-step-five-control"
+                                                               Label="End date of employment #3"
                                                                Disabled="@(!StartOfEmployment3.HasValue)"
                                                                MinDate="@StartOfEmployment3?.AddDays(1)"
                                                                DateFormat="MM/dd/yyyy" />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="3">
+                                            <MudItem xs="12" Class="ats-employer-upload">
+                                                <MudText Typo="Typo.caption" Class="ats-employer-upload-label">Upload COE / ID #3</MudText>
                                                 <MudFileUpload T="IBrowserFile"
                                                                Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                                                Accept=".pdf"
                                                                OnFilesChanged="OnCoe3Upload"
                                                                Required="@(professionalExperiences.Emp3COEUploadFile is null && AddEmployer3)">
                                                     <CustomContent>
-                                                        <MudButton Class="oneplatform-rounded-input w-100"
-                                                                    Style="width:270px; border: 1px solid gray; border-radius:12px; min-height: 48px; max-height: 48px; margin-top: 4px;"
+                                                        <MudButton Class="oneplatform-rounded-input w-100 ats-step-five-upload-btn"
                                                                     OnClick="@context.OpenFilePickerAsync">
                                                             @if (professionalExperiences.Emp3COEUploadFile is not null)
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Medium" Class="ml-3 mr-4" Color="Color.Error" />
-                                                                <MudText Style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">@professionalExperiences.Emp3COEUploadFileName</MudText>
+                                                                <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="ats-upload-file-icon" Color="Color.Error" />
+                                                                <MudText Class="ats-upload-file-name">@professionalExperiences.Emp3COEUploadFileName</MudText>
                                                                 <MudIconButton Icon="@Icons.Material.Filled.Close"
                                                                                Color="Color.Default"
                                                                                Size="Size.Small"
-                                                                               Class="mr-3 ml-3"
+                                                                               Class="ats-upload-remove"
                                                                                OnClick="@(() => RemoveFileFromUploadsAsync(professionalExperiences.Emp3COEUploadFile!))" />
                                                             }
                                                             else
                                                             {
-                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Medium" Class="ml-3" />
-                                                                <span style="width: 220px;  margin: 0px;">
-                                                                    Upload COE/ID #3
-                                                                </span>
+                                                                <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" />
+                                                                <span class="ats-upload-copy">Upload COE / ID #3</span>
                                                             }
                                                         </MudButton>
                                                     </CustomContent>
@@ -1376,21 +1493,22 @@
                                                                                 ErrorText="COE is required." />
                                             </MudItem>
 
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-supervisor">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Required="@AddEmployer3"
                                                               RequiredError="Supervisor Name is required"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               @bind-Value="professionalExperiences.Emp3SupervisorName"
-                                                              Label="Supervisor Name #3" />
+                                                              Placeholder="Supervisor name"
+                                                              Label="Supervisor name #3" />
                                             </MudItem>
-                                            <MudItem xs="12" sm="6">
+                                            <MudItem xs="12" sm="6" Class="ats-employer-half ats-employer-contact">
                                                 <MudTextField FullWidth="true"
                                                               Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
-                                                              Class="oneplatform-rounded-input"
+                                                              Class="oneplatform-rounded-input ats-step-five-control"
                                                               Mask="@(new PatternMask("00000000000"))"
                                                               RequiredError="Supervisor Contact Number is required"
                                                               @bind-Value="professionalExperiences.Emp3SupervisorContactNumber"
@@ -1401,26 +1519,30 @@
 
                                                                     return MobileNumberValidationService.ValidateMobileNumber(value);
                                                                 })"
-                                                              Label="Contact Information #3" />
+                                                              Placeholder="Contact information"
+                                                              Label="Contact information #3" />
                                             </MudItem>
                                         </MudGrid>
                                     </MudPaper>
                                 </MudCollapse>
-                            </MudItem>
+                                </MudItem>
+                            }
                         </MudGrid>
+                        </div>
                     </MudStep>
 
                     <!-- Final -->
                     <MudStep Title="Final" Class="ats-step-five" Completed="@(_activeStep > 5)">
-                        <MudGrid>
+                        <div class="ats-final-step-scope">
+                            <MudGrid Class="ats-final-grid">
                             <MudItem xs="12">
-                                <MudText Typo="Typo.h6" Align="Align.Center" Style="font-weight:700;" Class="mt-4 gradient-text">Professional Character Reference</MudText>
+                                <MudText Typo="Typo.h6" Align="Align.Center" Class="gradient-text ats-final-title">Professional Character Reference</MudText>
                             </MudItem>
 
                             <!-- Reference 1 -->
                             <MudItem xs="12">
                                 <MudPaper Elevation="0" Class="ats-reference-block">
-                                    <MudGrid>
+                                    <MudGrid Class="ats-reference-grid">
                                     <MudItem xs="12">
                                         <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 1</MudText>
                                     </MudItem>
@@ -1534,9 +1656,9 @@
                             </MudItem>
 
                             <!-- Reference 2 -->
-                            <MudItem xs="12">
+                            <MudItem xs="12" Class="ats-reference-item-after-first">
                                 <MudPaper Elevation="0" Class="ats-reference-block">
-                                    <MudGrid>
+                                    <MudGrid Class="ats-reference-grid">
                                         <MudItem xs="12">
                                             <MudText Typo="Typo.subtitle2" Class="ats-reference-title">Reference 2</MudText>
                                         </MudItem>
@@ -1649,7 +1771,7 @@
                             </MudItem>
 
                             <!-- Reference 3 -->
-                            <MudItem xs="12">
+                            <MudItem xs="12" Class="ats-reference-item-after-first">
                                 @if (!AddAnotherReference)
                                 {
                                     <MudCheckBox T="bool"
@@ -1659,7 +1781,7 @@
                                 }
                                 <MudCollapse Expanded="@AddAnotherReference">
                                     <MudPaper Elevation="0" Class="ats-reference-block">
-                                        <MudGrid>
+                                        <MudGrid Class="ats-reference-grid">
                                             <MudItem xs="12" Class="d-flex align-center justify-space-between">
                                                 <MudText Typo="Typo.subtitle2" Class="ats-reference-title mb-0">Reference 3</MudText>
                                                 <MudButton Variant="Variant.Text"
@@ -1766,18 +1888,19 @@
                                     </MudPaper>
                                 </MudCollapse>
                             </MudItem>
-                        </MudGrid>
+                            </MudGrid>
+                        </div>
                     </MudStep> 
                 </ChildContent>
 
                 <ActionContent Context="stepper">
-                    <div class="d-flex w-100 pa-2 ats-step-action-bar"
+                    <div class="d-flex w-100 pa-2 ats-step-action-bar @(_activeStep == 2 ? "ats-step-three-action-bar" : string.Empty) @(_activeStep == 3 ? "ats-step-four-action-bar" : string.Empty) @(_activeStep == 4 ? "ats-step-five-action-bar" : string.Empty) @(_activeStep == stepper.Steps.Count - 1 ? "ats-final-action-bar" : string.Empty)"
                          style="@(_activeStep == 0 ? "justify-content: flex-end;" : "justify-content: space-between;")">
 
                             @if (_activeStep != 0)
                             {
-                                <MudButton Style="width: 150px; height: 40px; border-radius: 12px; border: 2px solid gray;"
-                                           Class="mt-3 mb-4"
+                                <MudButton Class="ats-previous-button"
+                                           StartIcon="@Icons.Material.Filled.ArrowBack"
                                            OnClick="OnPreviousStepAsync">
                                     Previous
                                 </MudButton>
@@ -1785,7 +1908,7 @@
 
                             @if (_activeStep == stepper.Steps.Count - 1)
                             {
-                                <MudButton Class="theme-button mt-3 theme-button-active mb-4"
+                                <MudButton Class="theme-button mt-3 theme-button-active mb-4 ats-final-submit-button"
                                            Style="width: 150px; height: 40px; border-radius: 12px;"
                                            Disabled="@isSaving"
                                            OnClick="OnSubmitForm">
@@ -1799,6 +1922,7 @@
                                     else
                                     {
                                         <span>Submit</span>
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="ats-submit-check" />
                                     }
                                     
                                 </MudButton>

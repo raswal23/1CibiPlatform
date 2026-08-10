@@ -261,7 +261,7 @@ public partial class ApplicationFormComponent
 	{
 		if (!value)
 		{
-			AddEmployer2 = false;
+			RemoveEmployer2();
 			return Task.CompletedTask;
 		}
 
@@ -273,6 +273,12 @@ public partial class ApplicationFormComponent
 
 		AddEmployer2 = true;
 		return Task.CompletedTask;
+	}
+
+	private void RemoveEmployer2()
+	{
+		AddEmployer3 = false;
+		AddEmployer2 = false;
 	}
 
 	private bool ValidateUploads()
