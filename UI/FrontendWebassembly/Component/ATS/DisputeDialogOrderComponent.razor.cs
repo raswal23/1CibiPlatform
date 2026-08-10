@@ -21,13 +21,6 @@ public partial class DisputeDialogOrderComponent
 	[Parameter]
 	public Guid EmailInvitationId { get; set; }
 
-	[Parameter]
-	public DateTime? OrderCreatedAt { get; set; }
-
-	[Parameter]
-	public string? SubjectName { get; set; }
-	private DisputeOrderRequestDTO disputeRequest = new();
-
 	private string? SelectedDisputeCategory
 	{
 		get => selectedDisputeCategory;
@@ -65,9 +58,6 @@ public partial class DisputeDialogOrderComponent
 		var requestToSend = new DisputeOrderRequestDTO
 		{
 			EmailInvitationId = EmailInvitationId,
-			OrderCreatedAt = OrderCreatedAt,
-			SubjectName = SubjectName,
-			Company = disputeRequest.Company?.Trim(),
 			DisputeReason = IsOtherDisputeSelected
 				? otherReason.Trim()
 				: SelectedDisputeCategory
@@ -139,9 +129,9 @@ public partial class DisputeDialogOrderComponent
 				Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
 			}
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
-			Snackbar.Add("Failed to dispute order as disputed.", Severity.Error);
+			Snackbar.Add(ex.Message, Severity.Error);
 		}
 		finally
 		{

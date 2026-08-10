@@ -59,13 +59,11 @@ public partial class DisputeOrderComponent
 	}
 
 
-	private async Task MarkAsDisputed(Guid emailInvitationId, DateTime? orderCreatedAt, string subjectName)
+	private async Task MarkAsDisputed(Guid emailInvitationId)
 	{
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId },
-			{ nameof(DisputeDialogOrderComponent.OrderCreatedAt), orderCreatedAt },
-			{ nameof(DisputeDialogOrderComponent.SubjectName), subjectName }
+			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId }
 		};
 
 		var options = new DialogOptions

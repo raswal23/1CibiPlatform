@@ -10,6 +10,6 @@ public class BulkSubmissionBackgroundJobSetup : IConfigureOptions<QuartzOptions>
 		options.AddTrigger(opts => opts
 			.ForJob(jobKey)
 			.WithIdentity("BulkSubmissionTrigger")
-			.WithSimpleSchedule(x => x.WithIntervalInMinutes(1).RepeatForever()));
+			.WithSimpleSchedule(x => x.WithIntervalInSeconds(10).RepeatForever()));
 	}
 }

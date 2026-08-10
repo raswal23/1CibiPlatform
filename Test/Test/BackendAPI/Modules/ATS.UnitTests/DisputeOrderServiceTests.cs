@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using ATS.Data.Entities;
 using ATS.Data.Repository;
+using ATS.Data.Repository.Administration.Users;
 using ATS.DTO;
 using ATS.Services;
 using BuildingBlocks.Exceptions;
@@ -17,11 +19,14 @@ public class DisputeOrderServiceTests
 {
 	private const string DisputeRecipient = "disputes@cibi.test";
 	private const string RequestorEmail = "requestor@cibi.test";
+	private const string CompanyName = "Analytical Engines Ltd.";
 	private const string EmailBody = "dispute-email-body";
+	private static readonly Guid AuthenticatedUserId = Guid.CreateVersion7();
 
 	private readonly Mock<ILogger<DisputeOrderService>> _logger = new();
 	private readonly Mock<IEmailService> _emailService = new();
 	private readonly Mock<IATSRepository> _repository = new();
+	private readonly Mock<IATSUserRepository> _userRepository = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
@@ -44,6 +49,7 @@ public class DisputeOrderServiceTests
 			_emailService.Object,
 			configuration,
 			_repository.Object,
+			_userRepository.Object,
 			_httpContextAccessor);
 	}
 
@@ -109,23 +115,24 @@ public class DisputeOrderServiceTests
 		// Arrange
 		var request = CreateDisputeRequest();
 		var cancellationToken = new CancellationTokenSource().Token;
+		var order = SetupResolvedDisputeContext(request, cancellationToken);
 		SetupSuccessfulEmail();
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, cancellationToken))
 			.ReturnsAsync(true);
 
 		// Act
-		var result = await _service.MarkAsDisputedAsync(request, cancellationToken);
+		var result = await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, cancellationToken);
 
 		// Assert
 		result.Should().BeTrue();
 		_emailService.Verify(emailService => emailService.SendEmailForDispute(
 			DisputeRecipient,
-			request.Company!,
+			CompanyName,
 			request.DisputeReason!,
-			request.OrderCreatedAt,
+			order.OrderCreatedAt,
 			RequestorEmail,
-			request.SubjectName!), Times.Once);
+			$"{order.FirstName} {order.LastName}"), Times.Once);
 		_emailService.Verify(emailService => emailService.SendATSEmailAsync(
 			DisputeRecipient,
 			"CIBI | Dispute Order Notification",
@@ -143,23 +150,24 @@ public class DisputeOrderServiceTests
 		_httpContextAccessor.HttpContext = CreateHttpContext(new Claim("email", fallbackEmail));
 
 		var request = CreateDisputeRequest();
+		var order = SetupResolvedDisputeContext(request, CancellationToken.None);
 		SetupSuccessfulEmail();
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
 			.ReturnsAsync(true);
 
 		// Act
-		var result = await _service.MarkAsDisputedAsync(request, CancellationToken.None);
+		var result = await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
 
 		// Assert
 		result.Should().BeTrue();
 		_emailService.Verify(emailService => emailService.SendEmailForDispute(
 			DisputeRecipient,
-			request.Company!,
+			CompanyName,
 			request.DisputeReason!,
-			request.OrderCreatedAt,
+			order.OrderCreatedAt,
 			fallbackEmail,
-			request.SubjectName!), Times.Once);
+			$"{order.FirstName} {order.LastName}"), Times.Once);
 	}
 
 	#endregion
@@ -167,10 +175,85 @@ public class DisputeOrderServiceTests
 	#region Bad Path
 
 	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldRejectMissingOrderBeforeSendingEmail()
+	{
+		// Arrange
+		var request = CreateDisputeRequest();
+		_repository
+			.Setup(repository => repository.GetEmailInvitationRequestByIdAsync(
+				request.EmailInvitationId,
+				CancellationToken.None))
+			.ReturnsAsync(new EmailInvitationRequest());
+
+		// Act
+		Func<Task> act = () => _service.MarkAsDisputedAsync(
+			request,
+			AuthenticatedUserId,
+			CancellationToken.None);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<NotFoundException>()
+			.WithMessage("Email invitation request not found.");
+		_emailService.Verify(
+			emailService => emailService.SendATSEmailAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>()),
+			Times.Never);
+		_repository.Verify(
+			repository => repository.MarkAsDisputedAsync(
+				It.IsAny<DisputeOrderRequestDTO>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldRejectUserWithoutClientAssignment()
+	{
+		// Arrange
+		var request = CreateDisputeRequest();
+		var order = CreateOrder(request.EmailInvitationId);
+		_repository
+			.Setup(repository => repository.GetEmailInvitationRequestByIdAsync(
+				request.EmailInvitationId,
+				CancellationToken.None))
+			.ReturnsAsync(order);
+		_userRepository
+			.Setup(repository => repository.GetUserClientAssignmentsAsync(
+				It.IsAny<IReadOnlyCollection<Guid>>(),
+				CancellationToken.None))
+			.ReturnsAsync(Array.Empty<UserClientDetailsDTO>());
+
+		// Act
+		Func<Task> act = () => _service.MarkAsDisputedAsync(
+			request,
+			AuthenticatedUserId,
+			CancellationToken.None);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<BadRequestException>()
+			.WithMessage("The authenticated user does not have a valid client assignment.");
+		_emailService.Verify(
+			emailService => emailService.SendATSEmailAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>()),
+			Times.Never);
+		_repository.Verify(
+			repository => repository.MarkAsDisputedAsync(
+				It.IsAny<DisputeOrderRequestDTO>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
 	public async Task MarkAsDisputedAsync_ShouldThrowAndSkipRepository_WhenEmailReturnsFalse()
 	{
 		// Arrange
 		var request = CreateDisputeRequest();
+		SetupResolvedDisputeContext(request, CancellationToken.None);
 		_emailService
 			.Setup(emailService => emailService.SendEmailForDispute(
 				It.IsAny<string>(),
@@ -188,7 +271,7 @@ public class DisputeOrderServiceTests
 			.ReturnsAsync(false);
 
 		// Act
-		Func<Task> act = () => _service.MarkAsDisputedAsync(request, CancellationToken.None);
+		Func<Task> act = () => _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
 
 		// Assert
 		await act.Should()
@@ -206,13 +289,14 @@ public class DisputeOrderServiceTests
 	{
 		// Arrange
 		var request = CreateDisputeRequest();
+		SetupResolvedDisputeContext(request, CancellationToken.None);
 		SetupSuccessfulEmail();
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
 			.ThrowsAsync(new InvalidOperationException("Database unavailable."));
 
 		// Act
-		Func<Task> act = () => _service.MarkAsDisputedAsync(request, CancellationToken.None);
+		Func<Task> act = () => _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
 
 		// Assert
 		await act.Should()
@@ -248,6 +332,41 @@ public class DisputeOrderServiceTests
 			.ReturnsAsync(true);
 	}
 
+	private EmailInvitationRequest SetupResolvedDisputeContext(
+		DisputeOrderRequestDTO request,
+		CancellationToken cancellationToken)
+	{
+		var order = CreateOrder(request.EmailInvitationId);
+		_repository
+			.Setup(repository => repository.GetEmailInvitationRequestByIdAsync(
+				request.EmailInvitationId,
+				cancellationToken))
+			.ReturnsAsync(order);
+		_userRepository
+			.Setup(repository => repository.GetUserClientAssignmentsAsync(
+				It.Is<IReadOnlyCollection<Guid>>(userIds =>
+					userIds.Count == 1 && userIds.Contains(AuthenticatedUserId)),
+				cancellationToken))
+			.ReturnsAsync([
+				new UserClientDetailsDTO
+				{
+					UserId = AuthenticatedUserId,
+					ClientId = 7,
+					ClientName = CompanyName
+				}
+			]);
+
+		return order;
+	}
+
+	private static EmailInvitationRequest CreateOrder(Guid emailInvitationId) => new()
+	{
+		EmailInvitationID = emailInvitationId,
+		FirstName = "Ada",
+		LastName = "Lovelace",
+		OrderCreatedAt = new DateTime(2026, 8, 1, 8, 30, 0, DateTimeKind.Utc)
+	};
+
 	private static DefaultHttpContext CreateHttpContext(Claim emailClaim)
 	{
 		var context = new DefaultHttpContext
@@ -261,10 +380,7 @@ public class DisputeOrderServiceTests
 	private static DisputeOrderRequestDTO CreateDisputeRequest() => new()
 	{
 		EmailInvitationId = Guid.CreateVersion7(),
-		SubjectName = "Ada Lovelace",
-		Company = "Analytical Engines Ltd.",
-		DisputeReason = "Report",
-		OrderCreatedAt = new DateTime(2026, 8, 1, 8, 30, 0, DateTimeKind.Utc)
+		DisputeReason = "Report"
 	};
 
 	private static PaginatedResult<DisputeOrderListDTO> CreatePaginatedResult(

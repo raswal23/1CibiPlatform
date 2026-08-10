@@ -27,35 +27,9 @@
 
             <main class="dd-body ats-dialog-body">
                 <MudForm @ref="disputeForm">
-                    <section class="dd-section" aria-labelledby="dd-company-heading">
-                        <div class="dd-section-head">
-                            <span class="dd-section-number">1</span>
-                            <h2 id="dd-company-heading">Company</h2>
-                        </div>
-
-                        <div class="dd-section-body">
-                            <div class="dd-field">
-                                <label for="dd-company">Company <span class="dd-required">*</span></label>
-                                <div class="dd-input-wrap">
-                                    <MudTextField @bind-Value="disputeRequest.Company"
-                                                  InputId="dd-company"
-                                                  Placeholder="Enter company name"
-                                                  FullWidth="true"
-                                                  Required="true"
-                                                  RequiredError="Company is required"
-                                                  Variant="Variant.Outlined"
-                                                  Margin="Margin.Dense"
-                                                  Adornment="Adornment.Start"
-                                                  AdornmentIcon="@Icons.Material.Outlined.Business"
-                                                  Class="dd-input" />
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
                     <section class="dd-section" aria-labelledby="dd-category-heading">
                         <div class="dd-section-head">
-                            <span class="dd-section-number">2</span>
+                            <span class="dd-section-number">1</span>
                             <h2 id="dd-category-heading">Dispute category</h2>
                         </div>
 

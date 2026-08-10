@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using ATS.Data.Entities;
+using ATS.Data.Repository.Administration.Users;
 using ATS.DTO;
 using ATS.Services;
 using BuildingBlocks.Exceptions;
@@ -15,6 +16,9 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 {
+	private const string CompanyName = "Integration Test Company";
+	private static readonly Guid AuthenticatedUserId = Guid.CreateVersion7();
+
 	public DisputeOrderServiceIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
@@ -173,15 +177,15 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var request = new DisputeOrderRequestDTO
 		{
 			EmailInvitationId = order.EmailInvitationID,
-			SubjectName = "Ada Lovelace",
-			Company = "Analytical Engines Ltd.",
-			DisputeReason = "Report",
-			OrderCreatedAt = order.OrderCreatedAt
+			DisputeReason = "Report"
 		};
 		var startedAt = DateTime.UtcNow;
 
 		// Act
-		var result = await service.MarkAsDisputedAsync(request, CancellationToken.None);
+		var result = await service.MarkAsDisputedAsync(
+			request,
+			AuthenticatedUserId,
+			CancellationToken.None);
 
 		// Assert
 		result.Should().BeTrue();
@@ -201,7 +205,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var recipient = _configuration["ATS:DisputeOrderEmailRecipient"] ?? string.Empty;
 		emailService.Verify(serviceMock => serviceMock.SendEmailForDispute(
 			recipient,
-			"Analytical Engines Ltd.",
+			CompanyName,
 			"Report",
 			order.OrderCreatedAt,
 			requestor,
@@ -249,7 +253,10 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var request = CreateDisputeRequest(order);
 
 		// Act
-		Func<Task> act = () => service.MarkAsDisputedAsync(request, CancellationToken.None);
+		Func<Task> act = () => service.MarkAsDisputedAsync(
+			request,
+			AuthenticatedUserId,
+			CancellationToken.None);
 
 		// Assert
 		await act.Should()
@@ -283,7 +290,10 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		cancellationSource.Cancel();
 
 		// Act
-		Func<Task> act = () => service.MarkAsDisputedAsync(request, cancellationSource.Token);
+		Func<Task> act = () => service.MarkAsDisputedAsync(
+			request,
+			AuthenticatedUserId,
+			cancellationSource.Token);
 
 		// Assert
 		await act.Should()
@@ -304,13 +314,31 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 	#endregion
 
-	private DisputeOrderService CreateService(Mock<IEmailService> emailService) =>
-		new(
+	private DisputeOrderService CreateService(Mock<IEmailService> emailService)
+	{
+		var userRepository = new Mock<IATSUserRepository>();
+		userRepository
+			.Setup(repository => repository.GetUserClientAssignmentsAsync(
+				It.Is<IReadOnlyCollection<Guid>>(userIds =>
+					userIds.Count == 1 && userIds.Contains(AuthenticatedUserId)),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync([
+				new UserClientDetailsDTO
+				{
+					UserId = AuthenticatedUserId,
+					ClientId = 7,
+					ClientName = CompanyName
+				}
+			]);
+
+		return new DisputeOrderService(
 			NullLogger<DisputeOrderService>.Instance,
 			emailService.Object,
 			_configuration,
 			_atsRepository,
+			userRepository.Object,
 			_httpContextAccessor);
+	}
 
 	private static Mock<IEmailService> CreateSuccessfulEmailService()
 	{
@@ -344,10 +372,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	private static DisputeOrderRequestDTO CreateDisputeRequest(EmailInvitationRequest order) => new()
 	{
 		EmailInvitationId = order.EmailInvitationID,
-		SubjectName = $"{order.FirstName} {order.LastName}",
-		Company = "Integration Test Company",
-		DisputeReason = "Billing",
-		OrderCreatedAt = order.OrderCreatedAt
+		DisputeReason = "Billing"
 	};
 
 	private static EmailInvitationRequest CreateOrder(

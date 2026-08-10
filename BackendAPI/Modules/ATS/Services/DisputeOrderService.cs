@@ -4,6 +4,7 @@ public class DisputeOrderService : IDisputeOrderService
 {
 	private readonly ILogger<DisputeOrderService> _logger;
 	private readonly IATSRepository _atsRepository;
+	private readonly IATSUserRepository _userRepository;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
@@ -14,6 +15,7 @@ public class DisputeOrderService : IDisputeOrderService
 		[FromKeyedServices("ats")] IEmailService emailService,
 		IConfiguration configuration,
 		IATSRepository atsRepository,
+		IATSUserRepository userRepository,
 		IHttpContextAccessor httpContextAccessor)
 	{
 		_logger = logger;
@@ -21,6 +23,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_configuration = configuration;
 		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
+		_userRepository = userRepository;
 		_httpContextAccessor = httpContextAccessor;
 	}
 
@@ -41,7 +44,10 @@ public class DisputeOrderService : IDisputeOrderService
 				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
 	}
 
-	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
+	public async Task<bool> MarkAsDisputedAsync(
+		DisputeOrderRequestDTO disputeRequest,
+		Guid authenticatedUserId,
+		CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -51,14 +57,35 @@ public class DisputeOrderService : IDisputeOrderService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var requestor = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value ?? 
+		var order = await _atsRepository.GetEmailInvitationRequestByIdAsync(
+			disputeRequest.EmailInvitationId,
+			cancellationToken);
+		if (order.EmailInvitationID == Guid.Empty)
+			throw new NotFoundException("Email invitation request not found.");
+
+		var assignment = (await _userRepository.GetUserClientAssignmentsAsync(
+			[authenticatedUserId],
+			cancellationToken)).SingleOrDefault();
+		if (string.IsNullOrWhiteSpace(assignment?.ClientName))
+			throw new BadRequestException("The authenticated user does not have a valid client assignment.");
+
+		var requestor = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value ??
 					_httpContextAccessor.HttpContext?.User.FindFirst("email")?.Value;
+		var subjectName = string.Join(
+			" ",
+			new[] { order.FirstName, order.LastName }.Where(name => !string.IsNullOrWhiteSpace(name)));
 
 		_logger.LogInformation("Marking order as disputed: {@Context}", logContext);
 
 		try
 		{
-			await SendDisputeOrderEmailAsync(_disputeOrderEmailRecipient, disputeRequest, requestor!);
+			await SendDisputeOrderEmailAsync(
+				_disputeOrderEmailRecipient,
+				assignment.ClientName,
+				disputeRequest.DisputeReason!,
+				order.OrderCreatedAt,
+				requestor!,
+				subjectName);
 		}
 		catch (Exception ex)
 		{
@@ -87,7 +114,13 @@ public class DisputeOrderService : IDisputeOrderService
 		return true;
 	}
 
-	public async Task<bool> SendDisputeOrderEmailAsync(string gmail, DisputeOrderRequestDTO disputeRequest, string requestor)
+	private async Task<bool> SendDisputeOrderEmailAsync(
+		string gmail,
+		string company,
+		string disputeReason,
+		DateTime? orderCreatedAt,
+		string requestor,
+		string subjectName)
 	{
 		var logContext = new
 		{
@@ -99,7 +132,13 @@ public class DisputeOrderService : IDisputeOrderService
 
 		_logger.LogInformation("Sending dispute order notification for email: {@Context}", logContext);
 
-		var otpBody = _emailService.SendEmailForDispute(gmail, disputeRequest.Company!, disputeRequest.DisputeReason!, disputeRequest.OrderCreatedAt, requestor, disputeRequest.SubjectName);
+		var otpBody = _emailService.SendEmailForDispute(
+			gmail,
+			company,
+			disputeReason,
+			orderCreatedAt,
+			requestor,
+			subjectName);
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
