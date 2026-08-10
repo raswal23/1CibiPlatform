@@ -1,125 +1,296 @@
+/*
+ * Chart detail (zoom) dialog.
+ *
+ * Scoping: only the plain elements written in this razor file carry the scope
+ * attribute. MudText/MudIcon/MudIconButton/MudChart render their own markup and
+ * do not, so every descendant rule goes through ::deep. The custom properties
+ * are declared on .ats-chart-detail-shell (a plain div) and inherit across those
+ * component boundaries.
+ *
+ * Scrolling: no max-height/overflow here. MudBlazor already constrains
+ * .mud-dialog and scrolls .mud-dialog-content; a second scroll container
+ * produced two nested scrollbars.
+ *
+ * The dialog is portalled out of .ats-console by MudDialogProvider, so the ATS
+ * custom properties do not resolve inside it - the literal fallbacks are what
+ * actually apply, and they are kept in sync with the ATS tokens on purpose.
+ */
 .ats-chart-detail-shell {
-    max-height: calc(100vh - 48px);
-    overflow: auto;
-    background: #fff;
+    --ats-detail-gutter: 28px;
+    --ats-detail-card-padding: 26px;
+    --ats-detail-stack-xs: 4px;
+    --ats-detail-stack-sm: 10px;
+    --ats-detail-stack-md: 16px;
+    --ats-detail-stack-lg: 24px;
+    /* Rounds the shell itself; .mud-dialog cannot clip, it is the scroll container. */
+    border-radius: 18px;
+    background: #f6f9fd;
 }
 
-.ats-chart-detail-header {
+/* Sticky so the chart title and requester stay readable while the body scrolls. */
+::deep .ats-chart-detail-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     display: grid;
-    padding: 18px 24px;
-    grid-template-columns: minmax(100px, 1fr) minmax(260px, 3fr) minmax(100px, 1fr);
+    padding: 20px var(--ats-detail-gutter);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 16px;
-    border-bottom: 1px solid rgba(11, 31, 58, 0.08);
+    gap: var(--ats-detail-stack-md);
+    background: linear-gradient(135deg, #ffffff 0%, #f2f7ff 100%);
+    border-bottom: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 18px 18px 0 0;
 }
 
-.ats-chart-detail-header .mud-button-root {
-    justify-self: end;
-}
-
-.ats-chart-detail-heading {
-    min-width: 0;
-}
-
-.ats-chart-detail-title {
-    color: #0b1f3a;
-    font-weight: 700;
-}
-
-.ats-chart-detail-card {
-    min-height: 620px;
-    padding: 24px;
-    overflow: hidden;
-}
-
-.ats-chart-detail-state {
+::deep .ats-chart-detail-badge {
     display: flex;
-    min-height: 560px;
+    width: 46px;
+    height: 46px;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e8f1ff 0%, #dbe9fb 100%);
+    border: 1px solid #d3e2f7;
+    border-radius: 14px;
+}
+
+::deep .ats-chart-detail-badge-icon {
+    color: #2c7fb8;
+    font-size: 24px;
+}
+
+::deep .ats-chart-detail-heading {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+::deep .ats-chart-detail-eyebrow {
+    color: #8593ab;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .ats-chart-detail-title {
+    color: #0b1f3a;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+::deep .ats-chart-detail-subtitle {
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+::deep .ats-chart-detail-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--ats-detail-stack-sm);
+}
+
+::deep .ats-chart-detail-chip {
+    display: inline-flex;
+    max-width: 260px;
+    padding: 7px 14px;
+    flex-direction: column;
+    gap: 1px;
+    background: #fff;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 999px;
+    line-height: 1.2;
+}
+
+::deep .ats-chart-detail-chip-label {
+    color: #8593ab;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+::deep .ats-chart-detail-chip-value {
+    color: #0b1f3a;
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-chart-detail-close {
+    color: #55637d;
+    background: #fff;
+    border: 1px solid var(--ats-border, #e3e9f1);
+}
+
+::deep .ats-chart-detail-close:hover {
+    color: #0b1f3a;
+    background: #eef3fb;
+}
+
+::deep .ats-chart-detail-body {
+    padding: var(--ats-detail-gutter);
+}
+
+::deep .ats-chart-detail-card {
+    display: flex;
+    min-height: 600px;
+    padding: var(--ats-detail-card-padding);
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(11, 31, 58, 0.05);
+}
+
+/*
+ * Empty state (no data) - not an error state. Mirrors the dashboard card
+ * treatment so the zoomed view reads as the same component, and fills the card
+ * so its dimensions stay constant between the populated and empty views.
+ */
+::deep .ats-chart-detail-empty {
+    display: flex;
+    min-height: 520px;
+    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: var(--ats-detail-stack-sm);
+    padding: var(--ats-detail-stack-lg);
+    color: var(--ats-text-sub, #6b7b92);
+    background: #fafbff;
+    border: 1px dashed #dbe1f0;
+    border-radius: 14px;
+    text-align: center;
 }
 
-.ats-detail-chart-legend {
+::deep .ats-chart-detail-empty-badge {
     display: flex;
-    min-height: 42px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--ats-detail-stack-xs);
     align-items: center;
     justify-content: center;
-    gap: 8px 24px;
-    color: #3e4b5e;
-    font-size: 14px;
-}
-
-.ats-detail-chart-legend-item {
-    display: inline-flex;
-    min-width: 0;
-    align-items: center;
-    gap: 7px;
-    white-space: nowrap;
-}
-
-.ats-detail-chart-legend-dot {
-    width: 11px;
-    height: 11px;
-    flex: 0 0 11px;
+    background: #f0f4fc;
     border-radius: 50%;
 }
 
-.ats-detail-chart-total {
-    padding-left: 10px;
+::deep .ats-chart-detail-empty-icon {
+    color: #a3accb;
+    font-size: 32px;
+}
+
+::deep .ats-chart-detail-empty-title {
+    color: #3d4a68;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+::deep .ats-chart-detail-empty-text {
+    max-width: 340px;
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+::deep .ats-detail-chart-legend {
+    display: flex;
+    min-height: 34px;
+    margin-bottom: var(--ats-detail-stack-lg);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ats-detail-stack-sm) 10px;
+    color: #3e4b5e;
+    font-size: 13px;
+}
+
+::deep .ats-detail-chart-legend-item {
+    display: inline-flex;
+    min-width: 0;
+    padding: 5px 12px;
+    align-items: center;
+    gap: 7px;
+    background: #f6f8fc;
+    border: 1px solid #e8edf6;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+::deep .ats-detail-chart-legend-dot {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    border-radius: 50%;
+}
+
+::deep .ats-detail-chart-total {
+    padding: 5px 14px;
     color: #0b1f3a;
+    background: #eef4ff;
+    border: 1px solid #dbe6fb;
+    border-radius: 999px;
     font-weight: 700;
     white-space: nowrap;
 }
 
-.ats-detail-area-shell {
+/*
+ * The SVG margins are C# constants and the axis labels are anchored to the plot
+ * box in percentages, so the breathing room is added around the shell rather
+ * than inside the chart - padding here would desynchronise the labels.
+ */
+::deep .ats-detail-area-shell {
     position: relative;
     width: 100%;
     height: 500px;
 }
 
-.ats-detail-area-chart {
+::deep .ats-detail-area-chart {
     display: block;
     width: 100%;
     height: 480px;
     overflow: visible;
 }
 
-.ats-detail-area-grid-line {
+::deep .ats-detail-area-grid-line {
     stroke: rgba(62, 75, 94, 0.13);
     stroke-width: 1;
 }
 
-.ats-detail-area-axis-line {
+::deep .ats-detail-area-axis-line {
     stroke: rgba(62, 75, 94, 0.4);
     stroke-width: 1;
 }
 
-.ats-detail-area-hover-target {
+::deep .ats-detail-area-hover-target {
     fill: transparent;
     stroke: transparent;
     cursor: pointer;
     pointer-events: all;
 }
 
-.ats-detail-area-hover-target:focus {
+::deep .ats-detail-area-hover-target:focus {
     fill: rgba(255, 255, 255, 0.2);
     stroke: rgba(11, 31, 58, 0.4);
     stroke-width: 2;
     outline: none;
 }
 
-.ats-detail-area-hover-marker {
+::deep .ats-detail-area-hover-marker {
     stroke: #fff;
     stroke-width: 3;
     filter: drop-shadow(0 2px 3px rgba(11, 31, 58, 0.35));
     pointer-events: none;
 }
 
-.ats-detail-area-tooltip {
+::deep .ats-detail-area-tooltip {
     position: absolute;
     z-index: 5;
     display: flex;
@@ -130,29 +301,29 @@
     color: #344054;
     background: #fff;
     border: 1px solid rgba(11, 31, 58, 0.12);
-    border-radius: 7px;
-    box-shadow: 0 5px 14px rgba(11, 31, 58, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(11, 31, 58, 0.18);
     font-size: 13px;
     line-height: 1.3;
     transform: translate(-50%, calc(-100% - 14px));
     pointer-events: none;
 }
 
-.ats-detail-area-tooltip-below {
+::deep .ats-detail-area-tooltip-below {
     transform: translate(-50%, 14px);
 }
 
-.ats-detail-area-tooltip > span:last-child {
+::deep .ats-detail-area-tooltip > span:last-child {
     display: flex;
     flex-direction: column;
 }
 
-.ats-detail-area-tooltip strong {
+::deep .ats-detail-area-tooltip strong {
     color: #0b1f3a;
     white-space: nowrap;
 }
 
-.ats-detail-area-tooltip-dot {
+::deep .ats-detail-area-tooltip-dot {
     width: 10px;
     height: 10px;
     margin-top: 3px;
@@ -160,7 +331,7 @@
     border-radius: 50%;
 }
 
-.ats-detail-area-y-label {
+::deep .ats-detail-area-y-label {
     position: absolute;
     left: 0;
     width: 52px;
@@ -171,7 +342,7 @@
     transform: translateY(-50%);
 }
 
-.ats-detail-area-x-labels {
+::deep .ats-detail-area-x-labels {
     position: absolute;
     right: 2%;
     bottom: 0;
@@ -182,63 +353,142 @@
     font-size: 12px;
 }
 
-.ats-detail-donut-chart,
-.ats-detail-line-chart {
+::deep .ats-detail-line-chart {
     width: min(100%, 1050px);
     margin: 0 auto;
+    padding: var(--ats-detail-stack-sm) var(--ats-detail-stack-sm) var(--ats-detail-stack-md);
+    box-sizing: border-box;
+    overflow: visible;
 }
 
-.ats-detail-category-legend {
+/* Donut: figure plus a stat rail, the same pairing used on the dashboard card. */
+::deep .ats-detail-donut-body {
     display: grid;
-    width: min(100%, 920px);
-    margin: 8px auto 0;
-    grid-template-columns: repeat(4, minmax(130px, 1fr));
+    grid-template-columns: 360px minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+}
+
+::deep .ats-detail-donut-figure {
+    position: relative;
+    width: 360px;
+    height: 360px;
+}
+
+/*
+ * The overlay sits in the ring hole (DonutRingRatio 0.3 over a 360px box gives a
+ * 252px hole). The side padding keeps the widest line inside the chord at the
+ * delta row rather than letting it run under the ring.
+ */
+::deep .ats-detail-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 72px;
+    text-align: center;
+    pointer-events: none;
+}
+
+::deep .ats-detail-donut-center-value {
+    color: #0b1f3a;
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+::deep .ats-detail-donut-center-label {
+    margin-top: var(--ats-detail-stack-sm);
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .ats-detail-donut-center-delta {
+    margin-top: 6px;
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+::deep .ats-detail-stats {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
     gap: 12px;
 }
 
-.ats-detail-category-item {
+::deep .ats-detail-stat {
     display: grid;
-    padding: 12px;
-    grid-template-columns: auto 1fr auto;
+    padding: 14px 16px;
+    grid-template-columns: 12px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 4px 8px;
-    color: #344054;
-    background: #f8fafc;
-    border: 1px solid rgba(11, 31, 58, 0.08);
-    border-radius: 8px;
+    gap: 2px 14px;
+    background: #fff;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.ats-detail-category-item strong {
+::deep .ats-detail-stat:hover {
+    border-color: #cfd8ee;
+    box-shadow: 0 8px 20px -16px rgba(11, 31, 58, 0.4);
+}
+
+::deep .ats-detail-stat-dot {
+    width: 12px;
+    height: 12px;
+    grid-row: 1 / 3;
+    border-radius: 50%;
+}
+
+::deep .ats-detail-stat-name {
+    color: #1b2337;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-detail-stat-value {
     color: #0b1f3a;
+    font-size: 20px;
+    font-weight: 700;
+    grid-row: 1 / 3;
+    letter-spacing: -0.02em;
+    text-align: right;
 }
 
-.ats-detail-category-item small {
-    grid-column: 2 / -1;
-    color: #667085;
+::deep .ats-detail-stat-meta {
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 13px;
+    line-height: 1.25;
 }
 
-.ats-detail-candidate-category-item {
-    grid-template-columns: auto auto;
-    justify-content: center;
-    justify-items: center;
-    text-align: center;
-}
-
-.ats-detail-candidate-category-item > strong,
-.ats-detail-candidate-category-item > small {
+::deep .ats-detail-stat-bar {
+    display: block;
+    height: 6px;
     grid-column: 1 / -1;
+    margin-top: var(--ats-detail-stack-sm);
+    overflow: hidden;
+    background: #eef1f8;
+    border-radius: 99px;
 }
 
-.ats-detail-candidate-category-legend {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-    justify-content: center;
-}
-
-.ats-detail-candidate-category-legend > .ats-detail-category-item {
-    min-width: 130px;
-    flex: 0 1 calc((100% - 36px) / 4);
+::deep .ats-detail-stat-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    /* The fill sweeps from the left; the width itself is set inline from the data. */
+    transform-origin: left center;
 }
 
 ::deep .mud-chart-serie-axis,
@@ -246,49 +496,221 @@
     font-size: 12px;
 }
 
-::deep .mud-dialog-content {
-    padding: 0;
+/*
+ * Open sequence. The dialog itself zooms (see .ats-chart-detail-dialog in
+ * app.css); these unfold its contents just behind it so the panel does not
+ * arrive fully formed. Delays are staggered header -> card -> chart, and every
+ * animation is fill-mode: both so nothing flashes before its delay elapses.
+ */
+::deep .ats-chart-detail-header {
+    animation: ats-detail-fade-down 0.34s cubic-bezier(0.2, 0.75, 0.3, 1) 0.06s both;
+}
+
+::deep .ats-chart-detail-card {
+    animation: ats-detail-unfold 0.42s cubic-bezier(0.2, 0.75, 0.3, 1) 0.1s both;
+    transform-origin: top center;
+}
+
+/* The chart itself lands last, once the card has finished opening. */
+::deep .ats-detail-area-shell,
+::deep .ats-detail-line-chart,
+::deep .ats-detail-donut-figure,
+::deep .ats-chart-detail-empty {
+    animation: ats-detail-rise 0.4s cubic-bezier(0.2, 0.75, 0.3, 1) 0.26s both;
+}
+
+::deep .ats-detail-chart-legend {
+    animation: ats-detail-rise 0.36s cubic-bezier(0.2, 0.75, 0.3, 1) 0.2s both;
+}
+
+/*
+ * Stat rows cascade after the donut. The row count is fixed by the repository
+ * (CreateCategories always emits three or four), so the delays are enumerated
+ * rather than computed.
+ */
+::deep .ats-detail-stat {
+    animation: ats-detail-rise 0.36s cubic-bezier(0.2, 0.75, 0.3, 1) both;
+}
+
+::deep .ats-detail-stat:nth-child(1) {
+    animation-delay: 0.3s;
+}
+
+::deep .ats-detail-stat:nth-child(2) {
+    animation-delay: 0.36s;
+}
+
+::deep .ats-detail-stat:nth-child(3) {
+    animation-delay: 0.42s;
+}
+
+::deep .ats-detail-stat:nth-child(4) {
+    animation-delay: 0.48s;
+}
+
+/* Bars sweep out from zero once their row has settled. */
+::deep .ats-detail-stat-bar > i {
+    animation: ats-detail-bar-grow 0.5s cubic-bezier(0.2, 0.75, 0.3, 1) 0.44s both;
+}
+
+@keyframes ats-detail-fade-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Folds open from the top edge, like a panel being unfolded. */
+@keyframes ats-detail-unfold {
+    from {
+        opacity: 0;
+        transform: perspective(1200px) rotateX(-6deg) scaleY(0.94);
+    }
+
+    to {
+        opacity: 1;
+        transform: perspective(1200px) rotateX(0) scaleY(1);
+    }
+}
+
+@keyframes ats-detail-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ats-detail-bar-grow {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
+/* Stack the donut and its stat rail before either has to squeeze. */
+@media (max-width: 899.98px) {
+    ::deep .ats-detail-donut-body {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: var(--ats-detail-stack-lg);
+    }
+
+    ::deep .ats-detail-stats {
+        width: 100%;
+    }
 }
 
 @media (max-width: 767.98px) {
-    .ats-chart-detail-header {
-        padding: 14px 16px;
+    .ats-chart-detail-shell {
+        --ats-detail-gutter: 16px;
+        --ats-detail-card-padding: 16px;
+        --ats-detail-stack-lg: 18px;
+    }
+
+    /* The badge is dropped, so the heading and actions take the two tracks. */
+    ::deep .ats-chart-detail-header {
+        padding: 16px var(--ats-detail-gutter);
         grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
     }
 
-    .ats-chart-detail-header .mud-button-root {
-        justify-self: end;
-    }
-
-    .ats-chart-detail-header-spacer {
+    ::deep .ats-chart-detail-badge {
         display: none;
     }
 
-    .ats-chart-detail-card {
+    ::deep .ats-chart-detail-chip {
+        max-width: 150px;
+        padding: 6px 12px;
+    }
+
+    ::deep .ats-chart-detail-title {
+        font-size: 18px;
+    }
+
+    ::deep .ats-chart-detail-card {
         min-height: 520px;
-        padding: 16px 8px;
+        padding: var(--ats-detail-card-padding) 8px;
         overflow-x: auto;
     }
 
-    .ats-detail-area-shell {
+    ::deep .ats-chart-detail-empty {
+        min-height: 440px;
+    }
+
+    ::deep .ats-detail-area-shell {
         min-width: 680px;
-    }
-
-    .ats-detail-category-legend {
-        grid-template-columns: repeat(2, minmax(130px, 1fr));
-    }
-
-    .ats-detail-candidate-category-legend > .ats-detail-category-item {
-        flex-basis: calc((100% - 12px) / 2);
     }
 }
 
+/*
+ * Below the donut's 360px box, scale it down. MudBlazor writes width/height
+ * straight onto the <svg> and .mud-chart carries min-width/min-height:
+ * fit-content, so both have to be overridden - sizing the wrapper alone does
+ * nothing. The viewBox makes the svg scale uniformly.
+ */
 @media (max-width: 479.98px) {
-    .ats-detail-category-legend {
-        grid-template-columns: 1fr;
+    ::deep .ats-chart-detail-chip {
+        display: none;
     }
 
-    .ats-detail-candidate-category-legend > .ats-detail-category-item {
-        flex-basis: 100%;
+    ::deep .ats-detail-donut-body {
+        gap: var(--ats-detail-stack-md);
+    }
+
+    ::deep .ats-detail-donut-figure {
+        width: 280px;
+        height: 280px;
+    }
+
+    ::deep .ats-detail-donut-figure .mud-chart {
+        width: 280px;
+        height: 280px;
+        min-width: 0;
+        min-height: 0;
+    }
+
+    ::deep .ats-detail-donut-figure .mud-chart-donut {
+        width: 280px;
+        height: 280px;
+    }
+
+    ::deep .ats-detail-donut-center {
+        padding: 0 58px;
+    }
+
+    ::deep .ats-detail-donut-center-value {
+        font-size: 34px;
+    }
+
+    ::deep .ats-detail-donut-center-delta {
+        font-size: 12px;
+    }
+}
+
+/*
+ * Reduced motion: collapse the open sequence rather than removing it, so the
+ * content still ends in its final state (fill-mode: both means an animation
+ * that never runs would leave elements stuck at opacity 0).
+ */
+@media (prefers-reduced-motion: reduce) {
+    .ats-chart-detail-shell ::deep *,
+    .ats-chart-detail-shell ::deep *::before,
+    .ats-chart-detail-shell ::deep *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
     }
 }

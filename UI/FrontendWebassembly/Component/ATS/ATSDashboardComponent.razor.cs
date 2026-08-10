@@ -9,8 +9,6 @@ public partial class ATSDashboardComponent
 	private const double StackedChartRight = 16;
 	private const double StackedChartTop = 14;
 	private const double StackedChartBottom = 36;
-	private const string DummyTicketNumberPrefix = "2026-";
-	private const int DummyTicketNumberUpperBound = 10_000_000;
 	private static readonly string[] AreaChartColors =
 	[
 		"#4D8DE8",
@@ -29,16 +27,12 @@ public partial class ATSDashboardComponent
 		"#9C79DF"
 	];
 
-	private TableComponent<TransactionRow>? transactionsTable;
 	private ATSDashboardDTO _dashboard = new();
-	private IReadOnlyList<TransactionRow> _recentOrders = [];
 	private string _selectedRequester = AllRequesters;
 	private bool _isYtdHireLoading = true;
 	private bool _isCandidateResponseLoading = true;
 	private bool _isTurnaroundTimeLoading = true;
 	private bool _isCompletionRateLoading = true;
-	private bool _isRecentOrdersLoading = true;
-	private bool _shouldReloadRecentOrders;
 
 	private IReadOnlyList<StackedAreaLayer> _ytdHireLayers = [];
 	private int _ytdHireGrandTotal;
@@ -55,7 +49,7 @@ public partial class ATSDashboardComponent
 	private readonly DonutChartOptions _donutChartOptions = new()
 	{
 		ChartPalette = CategoryChartColors,
-		DonutRingRatio = 0.42,
+		DonutRingRatio = 0.3,
 		ShowLegend = false,
 		ShowValues = false
 	};
@@ -75,22 +69,58 @@ public partial class ATSDashboardComponent
 	private bool HasYtdHireData =>
 		_dashboard.YtdHireSeries.Any(series => series.Points.Any(point => point.Count > 0));
 
-	private bool HasCandidateResponseData =>
-		_dashboard.CandidateResponseRate.Categories.Sum(category => category.Count) > 0;
+	private int CandidateResponseTotal =>
+		_dashboard.CandidateResponseRate.Categories.Sum(category => category.Count);
+
+	private bool HasCandidateResponseData => CandidateResponseTotal > 0;
 
 	private bool HasTurnaroundTimeData =>
 		_dashboard.TurnaroundTimeTrend.Any(series =>
 			series.Points.Any(point => point.Count > 0));
 
-	private bool HasCompletionRateData =>
-		_dashboard.CompletionRate.Categories.Sum(category => category.Count) > 0;
+	private int CompletionRateTotal =>
+		_dashboard.CompletionRate.Categories.Sum(category => category.Count);
+
+	private bool HasCompletionRateData => CompletionRateTotal > 0;
+
+	// Chart key currently being exported, or null. Only one export runs at a time -
+	// html2canvas rasterises off-screen and two concurrent captures are needlessly
+	// heavy on a WASM client.
+	private string? _exportingChartKey;
+
+	/*
+	 * Export availability, per chart. Blocked while that section is loading (there
+	 * is nothing to capture yet), while any export is in flight, and when the chart
+	 * has no data - a PDF of the empty-state panel is not a chart.
+	 */
+	private bool IsChartExportDisabled(string chartKey) =>
+		_exportingChartKey is not null
+		|| IsChartSectionLoading(chartKey)
+		|| !HasChartData(chartKey);
+
+	private bool IsChartSectionLoading(string chartKey) => chartKey switch
+	{
+		ATSDashboardChartKeys.UserYtdHire => _isYtdHireLoading,
+		ATSDashboardChartKeys.CandidateResponseRate => _isCandidateResponseLoading,
+		ATSDashboardChartKeys.TurnaroundTimeTrend => _isTurnaroundTimeLoading,
+		ATSDashboardChartKeys.CompletionRate => _isCompletionRateLoading,
+		_ => false
+	};
+
+	private bool HasChartData(string chartKey) => chartKey switch
+	{
+		ATSDashboardChartKeys.UserYtdHire => HasYtdHireData,
+		ATSDashboardChartKeys.CandidateResponseRate => HasCandidateResponseData,
+		ATSDashboardChartKeys.TurnaroundTimeTrend => HasTurnaroundTimeData,
+		ATSDashboardChartKeys.CompletionRate => HasCompletionRateData,
+		_ => false
+	};
 
 	private bool IsAnyDashboardSectionLoading =>
 		_isYtdHireLoading
 		|| _isCandidateResponseLoading
 		|| _isTurnaroundTimeLoading
-		|| _isCompletionRateLoading
-		|| _isRecentOrdersLoading;
+		|| _isCompletionRateLoading;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -147,9 +177,86 @@ public partial class ATSDashboardComponent
 		}
 	}
 
+	/*
+	 * Exports one dashboard card to PDF.
+	 *
+	 * The chart is captured from the DOM rather than re-plotted, so the PDF matches
+	 * what is on screen exactly - including the requester filter that produced it,
+	 * which is why the filter is carried into the subtitle.
+	 */
+	private async Task ExportChartAsPdfAsync(string chartKey)
+	{
+		if (IsChartExportDisabled(chartKey))
+		{
+			return;
+		}
+
+		_exportingChartKey = chartKey;
+
+		try
+		{
+			var title = ATSDashboardChartKeys.TryGetTitle(chartKey, out var chartTitle)
+				? chartTitle
+				: "ATS Dashboard Chart";
+			var exported = await JS.InvokeAsync<bool>(
+				"atsChartExport.downloadChartAsPdf",
+				chartKey,
+				BuildChartExportFileName(title),
+				title,
+				$"Requester: {_selectedRequester}",
+				$"Generated from the CIBI OnePlatform ATS dashboard on {DateTime.Now:MMMM d, yyyy h:mm tt}.");
+
+			if (!exported)
+			{
+				Snackbar.Add("The chart is no longer on screen. Try again.", Severity.Warning);
+				return;
+			}
+
+			Snackbar.Add($"{title} exported to PDF.", Severity.Success);
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to export the chart to PDF.", Severity.Error);
+		}
+		finally
+		{
+			_exportingChartKey = null;
+		}
+	}
+
+	private string BuildChartExportFileName(string title)
+	{
+		var requesterSuffix = _selectedRequester == AllRequesters
+			? string.Empty
+			: $"-{ToFileNameToken(_selectedRequester)}";
+
+		return $"{ToFileNameToken(title)}{requesterSuffix}-{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+	}
+
+	// Keeps the download name safe on every OS: letters, digits and single dashes.
+	private static string ToFileNameToken(string value)
+	{
+		var builder = new StringBuilder(value.Length);
+		foreach (var character in value)
+		{
+			if (char.IsLetterOrDigit(character))
+			{
+				builder.Append(character);
+			}
+			else if (builder.Length > 0 && builder[^1] != '-')
+			{
+				builder.Append('-');
+			}
+		}
+
+		return builder.ToString().Trim('-') is { Length: > 0 } token
+			? token
+			: "chart";
+	}
+
 	private async Task LoadDashboardAsync()
 	{
-		SetDashboardSectionsLoading(true);
+		SetChartSectionsLoading(true);
 
 		try
 		{
@@ -169,35 +276,7 @@ public partial class ATSDashboardComponent
 		finally
 		{
 			SetChartSectionsLoading(false);
-			_shouldReloadRecentOrders = true;
 		}
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		await base.OnAfterRenderAsync(firstRender);
-
-		if (!_shouldReloadRecentOrders || transactionsTable?.TableRef is null)
-		{
-			return;
-		}
-
-		_shouldReloadRecentOrders = false;
-		try
-		{
-			await transactionsTable.TableRef.ReloadServerData();
-		}
-		finally
-		{
-			_isRecentOrdersLoading = false;
-			await InvokeAsync(StateHasChanged);
-		}
-	}
-
-	private void SetDashboardSectionsLoading(bool isLoading)
-	{
-		SetChartSectionsLoading(isLoading);
-		_isRecentOrdersLoading = isLoading;
 	}
 
 	private void SetChartSectionsLoading(bool isLoading)
@@ -239,37 +318,6 @@ public partial class ATSDashboardComponent
 		_completionRateLabels = _dashboard.CompletionRate.Categories
 			.Select(category => category.Name)
 			.ToArray();
-
-		var dummyTicketNumbers = CreateDummyTicketNumbers(_dashboard.RecentOrders.Count);
-		_recentOrders = _dashboard.RecentOrders
-			.Select((order, index) => new TransactionRow(
-				dummyTicketNumbers[index],
-				order.SubjectName,
-				order.OrderStatus,
-				order.HitStatus,
-				order.OrderCreatedAt,
-				order.OrderCompletedAt))
-			.ToArray();
-	}
-
-	private static IReadOnlyList<string> CreateDummyTicketNumbers(int count)
-	{
-		var ticketNumbers = new string[count];
-		var usedNumbers = new HashSet<int>();
-
-		for (var index = 0; index < count; index++)
-		{
-			int number;
-			do
-			{
-				number = Random.Shared.Next(DummyTicketNumberUpperBound);
-			}
-			while (!usedNumbers.Add(number));
-
-			ticketNumbers[index] = $"{DummyTicketNumberPrefix}{number:D7}";
-		}
-
-		return ticketNumbers;
 	}
 
 	private void BuildYtdHireChart()
@@ -418,61 +466,16 @@ public partial class ATSDashboardComponent
 
 	private static string GetAreaLegendColor(int index) => GetPaletteColor(AreaChartColors, index);
 
+	private static string GetCategoryLegendColor(int index) => GetPaletteColor(CategoryChartColors, index);
+
 	private static string GetPaletteColor(IReadOnlyList<string> palette, int index) =>
 		palette[index % palette.Count];
 
-	private static string GetRecentOrderInitials(string? subjectName) =>
-		string.Join(string.Empty, (subjectName ?? string.Empty)
-			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-			.Take(2)
-			.Select(part => char.ToUpperInvariant(part[0])));
-
-	private static string GetRecentOrderStatusClass(string? status) =>
-		status?.Contains("complete", StringComparison.OrdinalIgnoreCase) == true
-			? "completed"
-			: "progress";
-
-	private static string GetRecentOrderResultClass(string? result)
+	private static string GetStatBarStyle(double percentage, string color)
 	{
-		if (string.Equals(result, "Clear", StringComparison.OrdinalIgnoreCase))
-		{
-			return "clear";
-		}
-
-		if (string.Equals(result, "Not Clear", StringComparison.OrdinalIgnoreCase)
-			|| string.Equals(result, "NotClear", StringComparison.OrdinalIgnoreCase))
-		{
-			return "not-clear";
-		}
-
-		return "pending";
+		var width = Math.Clamp(percentage, 0, 100);
+		return FormattableString.Invariant($"width: {width:0.###}%; background-color: {color};");
 	}
-
-	private Task<TableData<TransactionRow>> LoadTransactionData(
-		TableState state,
-		CancellationToken cancellationToken)
-	{
-		cancellationToken.ThrowIfCancellationRequested();
-
-		var items = _recentOrders
-			.Skip(state.Page * state.PageSize)
-			.Take(state.PageSize)
-			.ToArray();
-
-		return Task.FromResult(new TableData<TransactionRow>
-		{
-			Items = items,
-			TotalItems = _recentOrders.Count
-		});
-	}
-
-	private record TransactionRow(
-		string DummyTicketNumber,
-		string? Subject,
-		string? Status,
-		string? Result,
-		DateTime? DateEndorsed,
-		DateTime? CompletionDate);
 
 	private sealed record StackedAreaLayer(
 		string Name,

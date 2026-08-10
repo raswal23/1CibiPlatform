@@ -6,30 +6,30 @@
 @inject IDashboardService DashboardService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <PageTitle>ATS - Dashboard</PageTitle>
 
-<MudPaper Elevation="0" Class="pa-4 mb-4">
-    <MudGrid>
-        <MudItem xs="12" md="4">
-            <MudSelect T="string"
-                       Label="Requester"
-                       Value="_selectedRequester"
-                       ValueChanged="OnRequesterChanged"
-                       Variant="Variant.Outlined"
-                       Margin="Margin.Dense"
-                       Disabled="IsAnyDashboardSectionLoading">
-                <MudSelectItem T="string" Value="@AllRequesters">All</MudSelectItem>
-                @foreach (var requester in _dashboard.Requesters)
-                {
-                    <MudSelectItem T="string" Value="@requester">@requester</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
-    </MudGrid>
+<div class="ats-dashboard">
+<MudPaper Elevation="0" Class="ats-dashboard-filter-card">
+    <div class="ats-dashboard-filter-field">
+        <MudSelect T="string"
+                   Label="Requester"
+                   Value="_selectedRequester"
+                   ValueChanged="OnRequesterChanged"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Disabled="IsAnyDashboardSectionLoading">
+            <MudSelectItem T="string" Value="@AllRequesters">All</MudSelectItem>
+            @foreach (var requester in _dashboard.Requesters)
+            {
+                <MudSelectItem T="string" Value="@requester">@requester</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
 </MudPaper>
 
-<div class="ats-dashboard-grid mb-4">
+<div class="ats-dashboard-grid">
         <MudPaper Elevation="0"
                   Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
                   role="button"
@@ -37,9 +37,34 @@
                   aria-label="Open User YTD Hire chart in a larger view"
                   @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.UserYtdHire))"
                   @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.UserYtdHire))">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
-                User YTD Hire
-            </MudText>
+            <div class="ats-dashboard-chart-header">
+                <div class="ats-dashboard-chart-heading">
+                    <MudText Typo="Typo.subtitle1" Class="ats-dashboard-chart-title">
+                        User YTD Hire
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="ats-dashboard-chart-hint">
+                        Monthly hires recorded this year
+                    </MudText>
+                </div>
+                @*
+                    The card itself is a button that opens the zoom dialog, so the
+                    export control has to swallow both click and keydown - otherwise
+                    exporting would also open the dialog. The wrapper carries the
+                    directives because they are only valid on plain elements.
+                *@
+                <span class="ats-dashboard-chart-actions"
+                      @onclick:stopPropagation="true"
+                      @onkeydown:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.PictureAsPdf"
+                                   Class="ats-dashboard-chart-export"
+                                   Size="Size.Small"
+                                   title="Download as PDF"
+                                   aria-label="Download User YTD Hire chart as PDF"
+                                   Disabled="@IsChartExportDisabled(ATSDashboardChartKeys.UserYtdHire)"
+                                   OnClick="@(() => ExportChartAsPdfAsync(ATSDashboardChartKeys.UserYtdHire))" />
+                </span>
+            </div>
+            <div class="ats-dashboard-chart-body" data-chart-export="@ATSDashboardChartKeys.UserYtdHire">
             @if (_isYtdHireLoading)
             {
                 <div class="ats-dashboard-section-loading" role="status" aria-label="Loading User YTD Hire chart">
@@ -145,8 +170,15 @@
             }
             else
             {
-                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No hire data is available for this period.</MudText>
+                <div class="ats-dashboard-empty" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.BarChart" Class="ats-dashboard-empty-icon" />
+                    <span class="ats-dashboard-empty-title">No hires yet</span>
+                    <span class="ats-dashboard-empty-text">
+                        Data appears after the first hire is logged for this period.
+                    </span>
+                </div>
             }
+            </div>
         </MudPaper>
 
         <MudPaper Elevation="0"
@@ -156,9 +188,28 @@
                   aria-label="Open Candidate Response Rate chart in a larger view"
                   @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.CandidateResponseRate))"
                   @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.CandidateResponseRate))">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
-                Candidate Response Rate
-            </MudText>
+            <div class="ats-dashboard-chart-header">
+                <div class="ats-dashboard-chart-heading">
+                    <MudText Typo="Typo.subtitle1" Class="ats-dashboard-chart-title">
+                        Candidate Response Rate
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="ats-dashboard-chart-hint">
+                        Invited candidates by background check form status
+                    </MudText>
+                </div>
+                <span class="ats-dashboard-chart-actions"
+                      @onclick:stopPropagation="true"
+                      @onkeydown:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.PictureAsPdf"
+                                   Class="ats-dashboard-chart-export"
+                                   Size="Size.Small"
+                                   title="Download as PDF"
+                                   aria-label="Download Candidate Response Rate chart as PDF"
+                                   Disabled="@IsChartExportDisabled(ATSDashboardChartKeys.CandidateResponseRate)"
+                                   OnClick="@(() => ExportChartAsPdfAsync(ATSDashboardChartKeys.CandidateResponseRate))" />
+                </span>
+            </div>
+            <div class="ats-dashboard-chart-body" data-chart-export="@ATSDashboardChartKeys.CandidateResponseRate">
             @if (_isCandidateResponseLoading)
             {
                 <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Candidate Response Rate chart">
@@ -167,29 +218,54 @@
             }
             else if (HasCandidateResponseData)
             {
-                <div class="ats-donut-shell ats-candidate-donut">
-                    <div class="ats-donut-chart">
+                var candidateCategories = _dashboard.CandidateResponseRate.Categories;
+                var candidatePrimary = candidateCategories[0];
+                <div class="ats-donut-body">
+                    <div class="ats-donut-figure">
                         <MudChart ChartType="ChartType.Donut"
-                                  Width="210px"
-                                  Height="210px"
+                                  Width="200px"
+                                  Height="200px"
                                   ChartOptions="@_donutChartOptions"
                                   ChartSeries="@_candidateResponseData.AsChartDataSet()"
                                   ChartLabels="@_candidateResponseLabels" />
-                    </div>
-                    @for (var index = 0; index < _dashboard.CandidateResponseRate.Categories.Count; index++)
-                    {
-                        var category = _dashboard.CandidateResponseRate.Categories[index];
-                        <div class="@($"ats-donut-label ats-candidate-label-{index}")">
-                            <span>@category.Name</span>
-                            <strong>@category.Percentage.ToString("0.#")%</strong>
+                        <div class="ats-donut-center">
+                            <span class="ats-donut-center-value">@candidatePrimary.Percentage.ToString("0.#")%</span>
+                            <span class="ats-donut-center-label">@candidatePrimary.Name</span>
+                            <span class="ats-donut-center-delta">
+                                @candidatePrimary.Count of @CandidateResponseTotal candidate(s)
+                            </span>
                         </div>
-                    }
+                    </div>
+                    <div class="ats-donut-stats">
+                        @for (var index = 0; index < candidateCategories.Count; index++)
+                        {
+                            var category = candidateCategories[index];
+                            <div class="ats-donut-stat">
+                                <span class="ats-donut-stat-dot"
+                                      style="background-color: @GetCategoryLegendColor(index)"></span>
+                                <span class="ats-donut-stat-name">@category.Name</span>
+                                <strong class="ats-donut-stat-value">@category.Percentage.ToString("0.#")%</strong>
+                                <span class="ats-donut-stat-meta">@category.Count candidate(s)</span>
+                                <span class="ats-donut-stat-bar">
+                                    <i style="@GetStatBarStyle(category.Percentage, GetCategoryLegendColor(index))"></i>
+                                </span>
+                            </div>
+                        }
+                    </div>
                 </div>
             }
             else
             {
-                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No sent invitation data is available.</MudText>
+                <div class="ats-dashboard-empty" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.DonutLarge" Class="ats-dashboard-empty-icon" />
+                    <span class="ats-dashboard-empty-title">Nothing to measure yet</span>
+                    <span class="ats-dashboard-empty-text">
+                        No candidates have been invited in this period.
+                        Response rate appears once invitations go out.
+                    </span>
+                </div>
             }
+            </div>
         </MudPaper>
 
         <MudPaper Elevation="0"
@@ -199,9 +275,28 @@
                   aria-label="Open Turnaround Time Trend chart in a larger view"
                   @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.TurnaroundTimeTrend))"
                   @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.TurnaroundTimeTrend))">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
-                Turnaround Time Trend
-            </MudText>
+            <div class="ats-dashboard-chart-header">
+                <div class="ats-dashboard-chart-heading">
+                    <MudText Typo="Typo.subtitle1" Class="ats-dashboard-chart-title">
+                        Turnaround Time Trend
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="ats-dashboard-chart-hint">
+                        Reports by status over the last seven reporting days
+                    </MudText>
+                </div>
+                <span class="ats-dashboard-chart-actions"
+                      @onclick:stopPropagation="true"
+                      @onkeydown:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.PictureAsPdf"
+                                   Class="ats-dashboard-chart-export"
+                                   Size="Size.Small"
+                                   title="Download as PDF"
+                                   aria-label="Download Turnaround Time Trend chart as PDF"
+                                   Disabled="@IsChartExportDisabled(ATSDashboardChartKeys.TurnaroundTimeTrend)"
+                                   OnClick="@(() => ExportChartAsPdfAsync(ATSDashboardChartKeys.TurnaroundTimeTrend))" />
+                </span>
+            </div>
+            <div class="ats-dashboard-chart-body" data-chart-export="@ATSDashboardChartKeys.TurnaroundTimeTrend">
             @if (_isTurnaroundTimeLoading)
             {
                 <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Turnaround Time Trend chart">
@@ -231,8 +326,15 @@
             }
             else
             {
-                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No report-volume data is available for the last seven reporting days.</MudText>
+                <div class="ats-dashboard-empty" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.ShowChart" Class="ats-dashboard-empty-icon" />
+                    <span class="ats-dashboard-empty-title">No reports in the last 7 days</span>
+                    <span class="ats-dashboard-empty-text">
+                        The trend builds up as reports close.
+                    </span>
+                </div>
             }
+            </div>
         </MudPaper>
 
         <MudPaper Elevation="0"
@@ -242,9 +344,28 @@
                   aria-label="Open Completion Rate chart in a larger view"
                   @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.CompletionRate))"
                   @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.CompletionRate))">
-            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="ats-dashboard-chart-title">
-                Completion Rate
-            </MudText>
+            <div class="ats-dashboard-chart-header">
+                <div class="ats-dashboard-chart-heading">
+                    <MudText Typo="Typo.subtitle1" Class="ats-dashboard-chart-title">
+                        Completion Rate
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="ats-dashboard-chart-hint">
+                        Reports by completion status
+                    </MudText>
+                </div>
+                <span class="ats-dashboard-chart-actions"
+                      @onclick:stopPropagation="true"
+                      @onkeydown:stopPropagation="true">
+                    <MudIconButton Icon="@Icons.Material.Outlined.PictureAsPdf"
+                                   Class="ats-dashboard-chart-export"
+                                   Size="Size.Small"
+                                   title="Download as PDF"
+                                   aria-label="Download Completion Rate chart as PDF"
+                                   Disabled="@IsChartExportDisabled(ATSDashboardChartKeys.CompletionRate)"
+                                   OnClick="@(() => ExportChartAsPdfAsync(ATSDashboardChartKeys.CompletionRate))" />
+                </span>
+            </div>
+            <div class="ats-dashboard-chart-body" data-chart-export="@ATSDashboardChartKeys.CompletionRate">
             @if (_isCompletionRateLoading)
             {
                 <div class="ats-dashboard-section-loading" role="status" aria-label="Loading Completion Rate chart">
@@ -253,88 +374,53 @@
             }
             else if (HasCompletionRateData)
             {
-                <div class="ats-donut-shell ats-completion-donut">
-                    <div class="ats-donut-chart">
+                var completionCategories = _dashboard.CompletionRate.Categories;
+                var completionPrimary = completionCategories[0];
+                <div class="ats-donut-body">
+                    <div class="ats-donut-figure">
                         <MudChart ChartType="ChartType.Donut"
-                                  Width="210px"
-                                  Height="210px"
+                                  Width="200px"
+                                  Height="200px"
                                   ChartOptions="@_donutChartOptions"
                                   ChartSeries="@_completionRateData.AsChartDataSet()"
                                   ChartLabels="@_completionRateLabels" />
-                    </div>
-                    @for (var index = 0; index < _dashboard.CompletionRate.Categories.Count; index++)
-                    {
-                        var category = _dashboard.CompletionRate.Categories[index];
-                        <div class="@($"ats-donut-label ats-completion-label-{index}")">
-                            <span>@category.Name</span>
-                            <strong>@category.Percentage.ToString("0.#")%</strong>
+                        <div class="ats-donut-center">
+                            <span class="ats-donut-center-value">@completionPrimary.Percentage.ToString("0.#")%</span>
+                            <span class="ats-donut-center-label">@completionPrimary.Name</span>
+                            <span class="ats-donut-center-delta">
+                                @completionPrimary.Count of @CompletionRateTotal report(s)
+                            </span>
                         </div>
-                    }
+                    </div>
+                    <div class="ats-donut-stats">
+                        @for (var index = 0; index < completionCategories.Count; index++)
+                        {
+                            var category = completionCategories[index];
+                            <div class="ats-donut-stat">
+                                <span class="ats-donut-stat-dot"
+                                      style="background-color: @GetCategoryLegendColor(index)"></span>
+                                <span class="ats-donut-stat-name">@category.Name</span>
+                                <strong class="ats-donut-stat-value">@category.Percentage.ToString("0.#")%</strong>
+                                <span class="ats-donut-stat-meta">@category.Count report(s)</span>
+                                <span class="ats-donut-stat-bar">
+                                    <i style="@GetStatBarStyle(category.Percentage, GetCategoryLegendColor(index))"></i>
+                                </span>
+                            </div>
+                        }
+                    </div>
                 </div>
             }
             else
             {
-                <MudText Color="Color.Secondary" Align="Align.Center" Class="ats-dashboard-empty">No report completion data is available.</MudText>
-            }
-        </MudPaper>
-    </div>
-
-<div class="ats-dashboard-table-shell" aria-busy="@_isRecentOrdersLoading">
-    <div class="search-report-results-scope">
-        <TableComponent TItem="TransactionRow"
-                        @ref="transactionsTable"
-                        Title="Recent Orders"
-                        ContainerClass="ats-management-card search-report-results"
-                        EnableSearch="false"
-                        ColumnCount="6"
-                        RowsPerPage="10"
-						PageSizeOptions="@(new[] { 10, 25, 50, 100 })"
-                        LoadServerData="LoadTransactionData">
-
-            <HeaderTemplate>
-                <MudTh>Ticket Number</MudTh>
-                <MudTh>Subject Name</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>Result</MudTh>
-                <MudTh>Date Endorsed</MudTh>
-                <MudTh>Completion Date</MudTh>
-            </HeaderTemplate>
-
-            <RowTemplate Context="tx">
-                <MudTd DataLabel="Ticket Number">
-                    <span class="report-ticket">@tx.DummyTicketNumber</span>
-                </MudTd>
-                <MudTd DataLabel="Subject Name">
-                    <div class="report-subject">
-                        <span class="report-avatar">@GetRecentOrderInitials(tx.Subject)</span>
-                        <span class="report-name">@(tx.Subject ?? "-")</span>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Status">
-                    <span class="report-status @GetRecentOrderStatusClass(tx.Status)">@(tx.Status ?? "-")</span>
-                </MudTd>
-                <MudTd DataLabel="Result">
-                    <span class="report-hit @GetRecentOrderResultClass(tx.Result)">@(tx.Result ?? "-")</span>
-                </MudTd>
-                <MudTd Class="report-date" DataLabel="Date Endorsed">@(tx.DateEndorsed?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-                <MudTd Class="report-date" DataLabel="Completion Date">@(tx.CompletionDate?.ToString("MMMM dd, yyyy") ?? "-")</MudTd>
-            </RowTemplate>
-
-            <NoRecordsTemplate>
-                <div class="ats-console-empty-state">
-                    <div class="ats-console-empty-icon">📄</div>
-                    <div class="ats-console-empty-title">No recent orders are available</div>
-                    <div class="ats-console-empty-sub">New orders will appear here when they become available.</div>
+                <div class="ats-dashboard-empty" role="status">
+                    <MudIcon Icon="@Icons.Material.Outlined.TaskAlt" Class="ats-dashboard-empty-icon" />
+                    <span class="ats-dashboard-empty-title">No completed reports</span>
+                    <span class="ats-dashboard-empty-text">
+                        Completion rate is shown once reports start closing.
+                    </span>
                 </div>
-            </NoRecordsTemplate>
-        </TableComponent>
-    </div>
-    @if (_isRecentOrdersLoading)
-    {
-        <div class="ats-dashboard-table-loading-overlay"
-             role="status"
-             aria-label="Loading Recent Orders table">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-        </div>
-    }
+            }
+            </div>
+        </MudPaper>
+</div>
 </div>
