@@ -6,6 +6,9 @@ public partial class SearchReportComponent
 	private DateRange? _dateRange { get; set; }
     private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
+	private bool _isStatusLegendExpanded = false;
+
+	private void ToggleStatusLegend() => _isStatusLegendExpanded = !_isStatusLegendExpanded;
 
 	private static string GetInitials(string? name)
 		=> string.Join(string.Empty, (name ?? string.Empty)
