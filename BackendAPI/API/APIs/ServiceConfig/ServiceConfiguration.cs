@@ -269,7 +269,7 @@ public static class ServiceConfiguration
 			{
 				Expiration = TimeSpan.FromMinutes(5),
 				LocalCacheExpiration = TimeSpan.FromMinutes(5),
-				//Flags = HybridCacheEntryFlags.DisableDistributedCache
+				Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
 
