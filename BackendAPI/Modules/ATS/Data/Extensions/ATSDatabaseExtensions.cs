@@ -21,25 +21,34 @@ public static class ATSDatabaseExtensions
 		ATSInitialData initData,
 		IAuthQueries authQueries)
 	{
-		if (await context.EmailInvitationRequests
-			.AsNoTracking()
-			.AnyAsync())
-		{
-			return;
-		}
 
-		// Auth owns the user identifiers, so the ATS rows are keyed by the auth ids
-		// resolved from the seeded emails instead of ids generated here.
-		var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
+		if (!await context.EmailInvitationRequests.AsNoTracking().AnyAsync())
+		{
+
+			var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
 			ATSInitialData.GetATSUserEmails().ToArray(),
 			CancellationToken.None);
 
-		await context.EmailInvitationRequests.AddRangeAsync(
-			initData.GetEmailInvitationRequests(userIdsByEmail));
-		await context.RoleDetails.AddRangeAsync
+			await context.EmailInvitationRequests.AddRangeAsync(
+				initData.GetEmailInvitationRequests(userIdsByEmail));
+		}
+
+		
+		if(!await context.RoleDetails.AnyAsync())
+		{
+			await context.RoleDetails.AddRangeAsync
 			(initData.GetATSRoles());
-		await context.UserDetails.AddRangeAsync(
-			initData.GetATSUsers(userIdsByEmail));
+		}
+		
+		if(!await context.UserDetails.AnyAsync())
+		{
+			var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
+				ATSInitialData.GetATSUserEmails().ToArray(),
+				CancellationToken.None);
+
+			await context.UserDetails.AddRangeAsync(
+				initData.GetATSUsers(userIdsByEmail));
+		}
 
 		await context.SaveChangesAsync();
 	}
