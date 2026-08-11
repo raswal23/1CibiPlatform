@@ -119,7 +119,6 @@
 </div>
 
 @code {
-    private const string SuperAdminEmail = "admin@cibi.com";
     private string searchString = string.Empty;
     private TableComponent<UserManagementViewModel>? usersTable;
     private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
@@ -252,14 +251,16 @@
         if (!await EnsureReferencesForDialogAsync())
             return;
 
-        var eligibleAuthUsers = authUsers
-            .Where(user =>
-                userClientAssignmentLookup.ContainsKey(user.UserId) ||
-                string.Equals(user.UserEmail, SuperAdminEmail, StringComparison.OrdinalIgnoreCase))
-            .ToArray();
+        var isPlatformSuperAdmin = await AccessService.HasRoleAsync(RoleList.SuperAdminId);
+        var eligibleAuthUsers = isPlatformSuperAdmin
+            ? authUsers.ToArray()
+            : authUsers
+                .Where(user => userClientAssignmentLookup.ContainsKey(user.UserId))
+                .ToArray();
+
         if (eligibleAuthUsers.Length == 0)
         {
-            Snackbar.Add("Assign a client to an ATS user before adding user access.", Severity.Info);
+            Snackbar.Add("No users are available for your ATS access.", Severity.Info);
             return;
         }
 
@@ -268,7 +269,8 @@
             { component => component.AuthUsers, eligibleAuthUsers },
             { component => component.Roles, roles },
             { component => component.Modules, modules },
-            { component => component.Assignments, userClientAssignments }
+            { component => component.Assignments, userClientAssignments },
+            { component => component.IsPlatformSuperAdmin, isPlatformSuperAdmin }
         };
         var options = new DialogOptions
         {

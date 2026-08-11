@@ -17,6 +17,25 @@ public sealed class UserClientRepository : IUserClientRepository
 			}).ToListAsync(cancellationToken);
 
 	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+		int clientId,
+		CancellationToken cancellationToken) =>
+		await _dbContext.UserClientDetails.AsNoTracking()
+			.Where(assignment => assignment.ClientId == clientId)
+			.OrderBy(assignment => assignment.UserId)
+			.Select(assignment => new UserClientDetailsDTO
+			{
+				UserId = assignment.UserId,
+				ClientId = assignment.ClientId,
+				ClientName = _dbContext.ClientDetails
+					.Where(client => client.ClientId == assignment.ClientId)
+					.Select(client => client.ClientName)
+					.FirstOrDefault(),
+				CreatedAt = assignment.CreatedAt,
+				UpdatedAt = assignment.UpdatedAt
+			})
+			.ToListAsync(cancellationToken);
+
+	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
 		IReadOnlyCollection<Guid> userIds,
 		CancellationToken cancellationToken)
 	{

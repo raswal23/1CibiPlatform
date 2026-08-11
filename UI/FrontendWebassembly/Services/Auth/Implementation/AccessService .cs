@@ -12,6 +12,7 @@ public class AccessService : IAccessService
 	private readonly ILogger<AccessService> _logger;
 	private const string _appIdKey = "AppId";
 	private const string _subMenuKey = "SubMenuId";
+	private const string _roleIdKey = "RoleId";
 
 	public AccessService(LocalStorageService localStorage, ILogger<AccessService> logger)
 	{
@@ -22,20 +23,13 @@ public class AccessService : IAccessService
 
 	public async Task<bool> HasAccessAsync(int appId, int subMenuId)
 	{
-		var appsJson = await _localStorage.GetItemAsync<string>(_appIdKey);
-		List<int>? apps = string.IsNullOrWhiteSpace(appsJson)
-			? null
-			: JsonSerializer.Deserialize<List<int>?>(appsJson);
-
-		var subMenusJson = await _localStorage.GetItemAsync<string>(_subMenuKey);
-		List<List<int>>? subMenus = string.IsNullOrWhiteSpace(subMenusJson)
-			? null
-			: JsonSerializer.Deserialize<List<List<int>>?>(subMenusJson);
+		var apps = await GetStoredValueAsync<List<int>>(_appIdKey);
+		var subMenus = await GetStoredValueAsync<List<List<int>>>(_subMenuKey);
 
 		_logger.LogDebug("Apps: {Apps}", string.Join(", ", apps ?? new List<int>()));
 		_logger.LogDebug("SubMenus: {SubMenus}", string.Join(", ", subMenus?.SelectMany(sm => sm) ?? new List<int>()));
 
-		if (apps is null && subMenus is null)
+		if (apps is null || subMenus is null)
 		{
 			return false;
 		}
@@ -49,7 +43,7 @@ public class AccessService : IAccessService
 		var index = apps.IndexOf(appId);
 		_logger.LogDebug("Index of AppId {AppId}: {Index}", appId, index);
 
-		if (!subMenus[index].Contains(subMenuId))
+		if (index < 0 || index >= subMenus.Count || !subMenus[index].Contains(subMenuId))
 		{
 			_logger.LogWarning("SubMenuId {SubMenuId} not found for AppId {AppId}.", subMenuId, appId);
 			return false;
@@ -57,6 +51,32 @@ public class AccessService : IAccessService
 
 
 		return true;
+	}
+
+	public async Task<bool> HasRoleAsync(int roleId)
+	{
+		if (roleId <= 0)
+			return false;
+
+		var roleIds = await GetStoredValueAsync<List<int>>(_roleIdKey);
+		return roleIds?.Contains(roleId) == true;
+	}
+
+	private async Task<T?> GetStoredValueAsync<T>(string key)
+	{
+		var json = await _localStorage.GetItemAsync<string>(key);
+		if (string.IsNullOrWhiteSpace(json))
+			return default;
+
+		try
+		{
+			return JsonSerializer.Deserialize<T>(json);
+		}
+		catch (JsonException exception)
+		{
+			_logger.LogWarning(exception, "Ignoring malformed local-storage value for {StorageKey}", key);
+			return default;
+		}
 	}
 
 }

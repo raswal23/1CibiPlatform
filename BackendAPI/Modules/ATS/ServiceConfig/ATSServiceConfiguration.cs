@@ -71,6 +71,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
+		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
 		services.AddSignalR();
 
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();

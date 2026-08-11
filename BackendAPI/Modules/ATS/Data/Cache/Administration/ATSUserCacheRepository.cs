@@ -14,19 +14,21 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest request, CancellationToken cancellationToken)
+	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var key = $"user_page_{request.PageIndex}_size_{request.PageSize}";
+		var scope = clientId.HasValue ? $"client_{clientId.Value}" : "all";
+		var key = $"user_scope_{scope}_page_{request.PageIndex}_size_{request.PageSize}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetUsersAsync(value, token), null,
+			key, request, async (value, token) => await _repository.GetUsersAsync(value, clientId, token), null,
 			tags: [UserTag], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest request, CancellationToken cancellationToken)
+	public Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var key = $"user_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
+		var scope = clientId.HasValue ? $"client_{clientId.Value}" : "all";
+		var key = $"user_scope_{scope}_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchUsersAsync(value, token), null,
+			key, request, async (value, token) => await _repository.SearchUsersAsync(value, clientId, token), null,
 			tags: [UserTag], cancellationToken: cancellationToken).AsTask();
 	}
 

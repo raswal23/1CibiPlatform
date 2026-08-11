@@ -2,7 +2,6 @@ namespace FrontendWebassembly.Component.ATS;
 
 public partial class AddUserComponent
 {
-	private const string SuperAdminEmail = "admin@cibi.com";
 	private MudForm? UserForm;
 
 	[CascadingParameter]
@@ -22,6 +21,9 @@ public partial class AddUserComponent
 
 	[Parameter]
 	public IReadOnlyList<UserClientDetailsDTO> Assignments { get; set; } = Array.Empty<UserClientDetailsDTO>();
+
+	[Parameter]
+	public bool IsPlatformSuperAdmin { get; set; }
 
 	private IReadOnlyCollection<int> SelectedModuleIds { get; set; } = new HashSet<int>();
 	private ATSUserLookupDTO? SelectedAuthUser { get; set; }
@@ -86,7 +88,7 @@ public partial class AddUserComponent
 
 	private bool RequiresClientAssignment =>
 		SelectedAuthUser is not null &&
-		!string.Equals(SelectedAuthUser.UserEmail, SuperAdminEmail, StringComparison.OrdinalIgnoreCase);
+		!IsPlatformSuperAdmin;
 
 	private Task<IEnumerable<ATSUserLookupDTO>> SearchAuthUsers(
 		string value,

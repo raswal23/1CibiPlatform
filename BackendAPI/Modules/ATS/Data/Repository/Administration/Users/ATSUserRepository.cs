@@ -6,8 +6,8 @@ public sealed class ATSUserRepository : IATSUserRepository
 
 	public ATSUserRepository(ATSDBContext dbContext) => _dbContext = dbContext;
 
-	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest request, CancellationToken cancellationToken) => GetPageAsync(request, false, cancellationToken);
-	public Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest request, CancellationToken cancellationToken) => GetPageAsync(request, true, cancellationToken);
+	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken) => GetPageAsync(request, clientId, false, cancellationToken);
+	public Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken) => GetPageAsync(request, clientId, true, cancellationToken);
 
 	public async Task<bool> AddUserAsync(IReadOnlyCollection<AddUserDTO> userDTOs, CancellationToken cancellationToken)
 	{
@@ -102,9 +102,11 @@ public sealed class ATSUserRepository : IATSUserRepository
 		return existing.Where(item => selectedModuleIds.Contains(item.ModuleId)).Concat(added).OrderBy(item => item.ModuleId).ToArray();
 	}
 
-	private async Task<PaginatedResult<UserDetailsDTO>> GetPageAsync(PaginationRequest request, bool search, CancellationToken cancellationToken)
+	private async Task<PaginatedResult<UserDetailsDTO>> GetPageAsync(PaginationRequest request, int? clientId, bool search, CancellationToken cancellationToken)
 	{
 		var query = _dbContext.UserDetails.AsNoTracking();
+		if (clientId.HasValue)
+			query = query.Where(user => user.ClientId == clientId.Value);
 		if (search)
 		{
 			var term = $"%{request.SearchTerm}%";

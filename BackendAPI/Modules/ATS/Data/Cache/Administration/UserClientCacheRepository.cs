@@ -22,6 +22,14 @@ public sealed class UserClientCacheRepository : IUserClientRepository
 			async token => (await _repository.GetUserClientAssignmentsAsync(token)).ToList(),
 			tags: [UserClientTag], cancellationToken: cancellationToken);
 
+	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+		int clientId,
+		CancellationToken cancellationToken) =>
+		await _cache.GetOrCreateAsync<List<UserClientDetailsDTO>>(
+			$"user_client_assignments_client_{clientId}",
+			async token => (await _repository.GetUserClientAssignmentsAsync(clientId, token)).ToList(),
+			tags: [UserClientTag], cancellationToken: cancellationToken);
+
 	public Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
 		IReadOnlyCollection<Guid> userIds,
 		CancellationToken cancellationToken) =>

@@ -11,6 +11,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IConnectionMultiplexer _redis;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
+	private readonly ICurrentUser _currentUser;
 	private readonly IConfiguration _configuration;
 	private readonly int _applicationFormExpiryInHours;
 	private readonly string _batchesPending;
@@ -25,6 +26,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IConnectionMultiplexer redis,
 		IHubContext<ATSHub, IATSClient> hubContext,
 		ILogger<BulkSubmissionProcessorService> logger,
+		ICurrentUser currentUser,
 		IConfiguration configuration)
 	{
 		_repository = repository;
@@ -36,6 +38,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_redis = redis;
 		_hubContext = hubContext;
 		_logger = logger;
+		_currentUser = currentUser;
 		_configuration = configuration;
 		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -143,6 +146,8 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,
+						ClientId = _currentUser.AtsClientId,
+						RequestorId = _currentUser.UserId,
 						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
@@ -151,7 +156,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 				await _hubContext
 						.Clients
-						.Group(file.UploadedByUserId.ToString())
+						.Group(file.UploadedByUserId.ToString()!)
 						.ReceiveATSResponse($"Your bulk upload \"{file.FileName}\" has been received and is now being processed.");
 
 				return subjects;

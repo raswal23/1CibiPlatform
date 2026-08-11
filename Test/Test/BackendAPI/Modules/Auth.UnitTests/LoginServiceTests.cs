@@ -5,6 +5,7 @@ using Auth.DTO;
 using BuildingBlocks.Exceptions;
 using Auth.Data.Entities;
 using Microsoft.Extensions.Caching.Hybrid;
+using Auth.Shared.Contracts;
 
 namespace Test.BackendAPI.Modules.Auth.UnitTests;
 
@@ -63,6 +64,9 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);
 		_fixture.MockPasswordHasherService.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
+		_fixture.MockAtsAccessClaimsProvider
+			.Setup(x => x.GetClaimsAsync(userId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessClaims(2, 42));
 		_fixture.MockAuthRepository.Setup(x => x.GetLockedUserAsync(userId)).ReturnsAsync((AuthAttempts?)null);
 
 		// Act
@@ -72,6 +76,8 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 		resp.Should().NotBeNull();
 		resp.userId.Should().NotBeNull();
 		resp.name.Should().Be("John Doe");
+		_fixture.MockJwtService.Verify(x => x.GetAccessToken(It.Is<LoginDTO>(user =>
+			user.AtsRoleId == 2 && user.AtsClientId == 42)));
 	}
 
 	[Fact]

@@ -11,6 +11,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IATSRepository _atsRepository;
 	private readonly IObjectStorageService _objectStorageService;
+	private readonly ICurrentUser _currentUser;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
@@ -25,6 +26,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		HybridCache hybridCache,
 		ISecureToken secureToken,
 		IHttpContextAccessor httpContextAccessor,
+		ICurrentUser currentUser,
 		IObjectStorageService objectStorageService)
 	{
 		_logger = logger;
@@ -36,6 +38,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_configuration = configuration;
 		_atsRepository = atsRepository;
 		_objectStorageService = objectStorageService;
+		_currentUser = currentUser;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -96,6 +99,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
 		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
+		emailInvitationRequest.RequestorId = _currentUser.UserId;
+		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		try
@@ -206,6 +211,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
 		bulkUploadFileDetails.Status = BulkFileStatus.Pending;
 		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
+		bulkUploadFileDetails.ClientId = _currentUser.AtsClientId;
+		bulkUploadFileDetails.UploadedByUserId = _currentUser.UserId;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
 
 		try

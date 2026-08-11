@@ -154,8 +154,7 @@ else
 
 @code {
     private bool _isSettingsExpanded;
-    private const string RoleIdStorageKey = "RoleId";
-    private const string UserNameStorageKey = "Name";
+	private const string UserNameStorageKey = "Name";
 
     private void ToggleSettingsExpanded()
     {
@@ -194,12 +193,7 @@ else
 		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
 		_userInitials = GetUserInitials(_userDisplayName);
 
-		var storedRoleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
-		var storedRoleIds = string.IsNullOrWhiteSpace(storedRoleIdsJson)
-			? []
-			: JsonSerializer.Deserialize<List<int>>(storedRoleIdsJson) ?? [];
-
-		_accessibleModuleIds = storedRoleIds.Contains(1)
+		_accessibleModuleIds = await AccessService.HasRoleAsync(RoleList.SuperAdminId)
 			? ModuleList.List.Keys.ToHashSet()
 			: (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
 		if (!CanAccessRoute(NavigationManager.Uri))
