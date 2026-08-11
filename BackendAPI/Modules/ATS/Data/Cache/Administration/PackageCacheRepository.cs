@@ -3,6 +3,7 @@ namespace ATS.Data.Cache.Administration;
 public sealed class PackageCacheRepository : IPackageRepository
 {
 	private const string PackageTag = "package";
+	private const string ClientTag = "client";
 	private readonly IPackageRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -43,6 +44,7 @@ public sealed class PackageCacheRepository : IPackageRepository
 	{
 		var result = await _repository.EditPackageAsync(packageDetails, cancellationToken);
 		await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
+		await _cache.RemoveByTagAsync(ClientTag, cancellationToken);
 		return result;
 	}
 }
