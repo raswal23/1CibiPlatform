@@ -49,16 +49,21 @@
                 </span>
 
                 <div class="search-report-legend-copy">
-                    <span class="report-status::before">Pending Candidate Info</span>
+                    <span class="report-status pending" 
+                          style="display: inline-flex; width: fit-content; flex: 0 0 auto;">
+                        Pending</span>
 
                     <span class="search-report-legend-text">
                         Candidate information pending — the applicant has not yet responded to the email invitation.
                     </span>
-
-                    <span class="report-status withdrawn">
+                    
+                    <div class="report-status withdrawn2">
                         <MudIcon Icon="@Icons.Material.Outlined.Replay" Size="Size.Small" />
-                        Withdrawn applications are marked Withdrawn and can be re-invited
-                    </span>
+                        <span>
+                            Withdrawn applications are marked Withdrawn and can be re-invited
+                        </span>
+                    </div>
+                    
 
                 </div>
             </div>
