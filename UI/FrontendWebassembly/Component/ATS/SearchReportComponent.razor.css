@@ -153,7 +153,6 @@
     line-height: 1.45;
 }
 
-/* Secondary annotation: withdrawal loops back into In progress rather than being its own status. */
 .search-report-legend-loop {
     display: inline-flex;
     width: fit-content;
@@ -421,6 +420,8 @@
 .report-status.progress { background: #fcf1dd; color: #b5790f; }
 .report-status.pending { background: #f8f9fc; color: #7d8aa8; border: 1px dashed var(--border-strong); }
 .report-status.withdrawn { background: #fdecec; color: #c0453e; }
+.report-status.withdrawn2 { display: flex; width: fit-content; margin-top: 4px; background: #fdecec; color: #c0453e; white-space: normal; overflow-wrap: break-word}
+.report-status.withdrawn2::before{ display: none; }
 .report-status.unknown { background: #eef0f5; color: #6b7690; }
 ::deep .report-date { color: var(--text-2) !important; white-space: nowrap; }
 .report-package { display: inline-flex; padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--blue-tint-2); color: var(--blue-600); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
@@ -441,6 +442,10 @@
     background: var(--blue-tint);
     color: var(--blue-600);
     cursor: pointer;
+}
+.report-status.withdrawn span {
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .report-icon-action:hover { background: var(--blue-tint-2); }

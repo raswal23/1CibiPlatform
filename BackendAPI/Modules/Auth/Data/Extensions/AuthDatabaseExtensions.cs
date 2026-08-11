@@ -38,12 +38,8 @@ public static class AuthDatabaseExtensions
 		}
 		await context.SaveChangesAsync();
 
-		// The rows above carry explicit keys, so the identity sequences still point at
-		// their old values and would hand out keys that are already taken.
 		await SyncIdentitySequences(context);
 
-		// The assignments reference the rows above, so they can only be built once
-		// those rows are persisted and their keys are known.
 		await SeedUserAppRoles(context, initData);
 	}
 
