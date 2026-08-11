@@ -28,6 +28,8 @@ public partial class Login
 		}
 
 		_isLoading = false;
+
+		return;
 	}
 
 	private void TogglePasswordVisibility()

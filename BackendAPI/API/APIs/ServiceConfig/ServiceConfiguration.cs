@@ -267,8 +267,8 @@ public static class ServiceConfiguration
 		{
 			options.DefaultEntryOptions = new HybridCacheEntryOptions
 			{
-				Expiration = TimeSpan.FromMinutes(5),
-				LocalCacheExpiration = TimeSpan.FromMinutes(5),
+				Expiration = TimeSpan.FromMinutes(10),
+				LocalCacheExpiration = TimeSpan.FromMinutes(10),
 				Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
