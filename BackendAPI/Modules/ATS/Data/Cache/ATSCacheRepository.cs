@@ -8,7 +8,6 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
 	private readonly string DisputeOrderTag = "disputeorder";
 	private readonly string ReportTag = "report";
-
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
 		_atsRepository = atsRepository;

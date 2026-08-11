@@ -4,6 +4,7 @@ public sealed class UserClientCacheRepository : IUserClientRepository
 {
 	private const string UserTag = "user";
 	private const string UserClientTag = "userclient";
+	private readonly string PackageTag = "package";
 	private readonly IUserClientRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -51,6 +52,7 @@ public sealed class UserClientCacheRepository : IUserClientRepository
 		var result = await _repository.AssignUserClientAsync(assignment, cancellationToken);
 		await _cache.RemoveByTagAsync(UserClientTag, cancellationToken);
 		await _cache.RemoveByTagAsync(UserTag, cancellationToken);
+		await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
 		return result;
 	}
 }
