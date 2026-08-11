@@ -4,15 +4,18 @@ public class UserManagementService : IUserManagementService
 {
 	private const string SuperAdminEmail = "admin@cibi.com";
 	private readonly IATSUserRepository _userRepository;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly IAuthQueries _authQueries;
 	private readonly ILogger<UserManagementService> _logger;
 
 	public UserManagementService(
 		IATSUserRepository userRepository,
+		IUserClientRepository userClientRepository,
 		IAuthQueries authQueries,
 		ILogger<UserManagementService> logger)
 	{
 		_userRepository = userRepository;
+		_userClientRepository = userClientRepository;
 		_authQueries = authQueries;
 		_logger = logger;
 	}
@@ -26,7 +29,7 @@ public class UserManagementService : IUserManagementService
 	public Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
 		CancellationToken cancellationToken)
 	{
-		return _userRepository.GetUserClientAssignmentsAsync(cancellationToken);
+		return _userClientRepository.GetUserClientAssignmentsAsync(cancellationToken);
 	}
 
 	public async Task<UserClientDetailsDTO> AssignUserClientAsync(
@@ -34,7 +37,7 @@ public class UserManagementService : IUserManagementService
 		CancellationToken cancellationToken)
 	{
 		await GetAssignedAuthUserAsync(assignment.UserId, cancellationToken);
-		var result = await _userRepository.AssignUserClientAsync(assignment, cancellationToken);
+		var result = await _userClientRepository.AssignUserClientAsync(assignment, cancellationToken);
 		return result.Adapt<UserClientDetailsDTO>();
 	}
 
@@ -79,7 +82,7 @@ public class UserManagementService : IUserManagementService
 			throw new BadRequestException("All module assignments must use the same Auth user.");
 
 		var authUser = await GetAssignedAuthUserAsync(user.UserId, cancellationToken);
-		var clientAssignment = await _userRepository.GetUserClientAssignmentAsync(
+		var clientAssignment = await _userClientRepository.GetUserClientAssignmentAsync(
 			authUser.UserId,
 			cancellationToken);
 		var clientId = ResolveClientId(authUser, clientAssignment, user.ClientId);
@@ -120,7 +123,7 @@ public class UserManagementService : IUserManagementService
 			throw new BadRequestException("All module assignments must use the same Auth user.");
 
 		var authUser = await GetAssignedAuthUserAsync(user.UserId, cancellationToken);
-		var clientAssignment = await _userRepository.GetUserClientAssignmentAsync(
+		var clientAssignment = await _userClientRepository.GetUserClientAssignmentAsync(
 			authUser.UserId,
 			cancellationToken);
 		var clientId = ResolveClientId(authUser, clientAssignment, user.ClientId);

@@ -4,7 +4,7 @@ public class DisputeOrderService : IDisputeOrderService
 {
 	private readonly ILogger<DisputeOrderService> _logger;
 	private readonly IATSRepository _atsRepository;
-	private readonly IATSUserRepository _userRepository;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
@@ -15,7 +15,7 @@ public class DisputeOrderService : IDisputeOrderService
 		[FromKeyedServices("ats")] IEmailService emailService,
 		IConfiguration configuration,
 		IATSRepository atsRepository,
-		IATSUserRepository userRepository,
+		IUserClientRepository userClientRepository,
 		IHttpContextAccessor httpContextAccessor)
 	{
 		_logger = logger;
@@ -23,7 +23,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_configuration = configuration;
 		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
-		_userRepository = userRepository;
+		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
 	}
 
@@ -63,7 +63,7 @@ public class DisputeOrderService : IDisputeOrderService
 		if (order.EmailInvitationID == Guid.Empty)
 			throw new NotFoundException("Email invitation request not found.");
 
-		var assignment = (await _userRepository.GetUserClientAssignmentsAsync(
+		var assignment = (await _userClientRepository.GetUserClientAssignmentsAsync(
 			[authenticatedUserId],
 			cancellationToken)).SingleOrDefault();
 		if (string.IsNullOrWhiteSpace(assignment?.ClientName))

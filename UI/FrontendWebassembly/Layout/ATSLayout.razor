@@ -161,6 +161,7 @@ else
     {
         _isSettingsExpanded = !_isSettingsExpanded;
     }
+
     private const int MobileBreakpoint = 920;
     private string _pageTitle = "Dashboard";
     private bool _isReady;
@@ -174,6 +175,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         var isAuthenticated = await IAuthService.IsAuthenticated();
+
+        //getclientid
 
 		if (!isAuthenticated)
         {

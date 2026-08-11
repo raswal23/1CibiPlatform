@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using ATS.Data.Entities;
-using ATS.Data.Repository.Administration.Users;
+using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
 using BuildingBlocks.Exceptions;
@@ -316,8 +316,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 	private DisputeOrderService CreateService(Mock<IEmailService> emailService)
 	{
-		var userRepository = new Mock<IATSUserRepository>();
-		userRepository
+		var userClientRepository = new Mock<IUserClientRepository>();
+		userClientRepository
 			.Setup(repository => repository.GetUserClientAssignmentsAsync(
 				It.Is<IReadOnlyCollection<Guid>>(userIds =>
 					userIds.Count == 1 && userIds.Contains(AuthenticatedUserId)),
@@ -336,7 +336,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			emailService.Object,
 			_configuration,
 			_atsRepository,
-			userRepository.Object,
+			userClientRepository.Object,
 			_httpContextAccessor);
 	}
 

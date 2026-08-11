@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
-using ATS.Data.Repository.Administration.Users;
+using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
 using BuildingBlocks.Exceptions;
@@ -26,7 +26,7 @@ public class DisputeOrderServiceTests
 	private readonly Mock<ILogger<DisputeOrderService>> _logger = new();
 	private readonly Mock<IEmailService> _emailService = new();
 	private readonly Mock<IATSRepository> _repository = new();
-	private readonly Mock<IATSUserRepository> _userRepository = new();
+	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
@@ -49,7 +49,7 @@ public class DisputeOrderServiceTests
 			_emailService.Object,
 			configuration,
 			_repository.Object,
-			_userRepository.Object,
+			_userClientRepository.Object,
 			_httpContextAccessor);
 	}
 
@@ -219,7 +219,7 @@ public class DisputeOrderServiceTests
 				request.EmailInvitationId,
 				CancellationToken.None))
 			.ReturnsAsync(order);
-		_userRepository
+		_userClientRepository
 			.Setup(repository => repository.GetUserClientAssignmentsAsync(
 				It.IsAny<IReadOnlyCollection<Guid>>(),
 				CancellationToken.None))
@@ -342,7 +342,7 @@ public class DisputeOrderServiceTests
 				request.EmailInvitationId,
 				cancellationToken))
 			.ReturnsAsync(order);
-		_userRepository
+		_userClientRepository
 			.Setup(repository => repository.GetUserClientAssignmentsAsync(
 				It.Is<IReadOnlyCollection<Guid>>(userIds =>
 					userIds.Count == 1 && userIds.Contains(AuthenticatedUserId)),

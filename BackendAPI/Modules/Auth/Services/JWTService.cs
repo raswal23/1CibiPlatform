@@ -49,10 +49,7 @@ public class JWTService : IJWTService
 
 			// standard claims for interoperability
 			new Claim(ClaimTypes.NameIdentifier, loginDTO.Id.ToString()),
-			new Claim(ClaimTypes.Email, loginDTO.Email),
-			new Claim(ClaimTypes.Name, fullName),
-			new Claim(JwtRegisteredClaimNames.Sub, loginDTO.Id.ToString()),
-			new Claim(JwtRegisteredClaimNames.Email, loginDTO.Email)
+		
 		};
 	}
 }

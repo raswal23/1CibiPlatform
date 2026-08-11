@@ -9,6 +9,7 @@ global using ATS.Data.Repository.Administration.Modules;
 global using ATS.Data.Repository.Administration.PackageManagement;
 global using ATS.Data.Repository.Administration.Roles;
 global using ATS.Data.Repository.Administration.Users;
+global using ATS.Data.Repository.Administration.UserClient;
 global using ATS.Data.Cache;
 global using ATS.Data.Cache.Administration;
 global using ATS.DTO;

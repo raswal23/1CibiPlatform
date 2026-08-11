@@ -8,17 +8,9 @@ public sealed class AssignClientEndpoint : ICarterModule
 	{
 		app.MapPut("assignclient", async (
 			AssignClientRequest request,
-			HttpContext httpContext,
-			IUserManagementService userManagementService,
 			ISender sender,
 			CancellationToken cancellationToken) =>
 		{
-			if (!await ClientAssignmentAccess.CanManageAsync(
-				httpContext,
-				userManagementService,
-				cancellationToken))
-				return Results.Forbid();
-
 			var result = await sender.Send(
 				new AssignClientCommand(request.Assignment),
 				cancellationToken);
@@ -28,7 +20,6 @@ public sealed class AssignClientEndpoint : ICarterModule
 		.WithTags("ATS Client Assigning")
 		.Produces<ClientAssignmentDetailsDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
-		.Produces(StatusCodes.Status403Forbidden)
 		.WithSummary("Assign or replace an ATS user's client")
 		.WithDescription("Creates the user's first assignment or replaces the existing client. Re-selecting the current client is a no-op.")
 		.RequireAuthorization();
