@@ -38,13 +38,17 @@ public class ATSInitialData
 			Requestor = row.Requestor,
 			SelectPackage = row.SelectPackage,
 			RushNormal = row.RushNormal,
+			HashToken = Guid.NewGuid().ToString("N"),
+			HashTokenCreatedAt = createdAt,
+			HashTokenExpiration = createdAt.AddDays(7),
 			ApplicationFormStatus = Constants.ApplicationFormStatus.Done,
 			FormCompletedAt = createdAt,
 			EmailSentStatus = EmailStatus.Done,
 			EmailSentAt = createdAt,
 			OrderStatus = row.OrderStatus,
 			OrderCreatedAt = row.OrderCreatedAt,
-			OrderCompletedAt = row.OrderCompletedAt,
+			OrderCompletedAt = row.OrderCompletedAt,    
+
 			NeedsProjection = false,
 			ProjectionUpdatedAt = projectionUpdatedAt,
 			PersonalDetails = new PersonalDetails
