@@ -181,7 +181,7 @@
                                              Variant="Variant.Text"
                                              Dense="true"
                                              Class="au-module-menu">
-                                        @foreach (var module in Modules.Where(module => module.IsActive))
+                                        @foreach (var module in VisibleModules.Where(module => module.IsActive))
                                         {
                                             var isSelected = SelectedModuleIds.Contains(module.ModuleId);
                                             <MudMenuItem OnClick="@(() => ToggleModule(module.ModuleId))">

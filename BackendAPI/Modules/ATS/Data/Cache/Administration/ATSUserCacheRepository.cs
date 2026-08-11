@@ -5,6 +5,7 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 	private const string UserTag = "user";
 	private const string UserClientTag = "userclient";
 	private const string ModuleTag = "module";
+	private const string RoleTag = "role";
 	private readonly IATSUserRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -45,6 +46,12 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 
 	public Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken) =>
 		_repository.GetUserAsync(userId, cancellationToken);
+
+	public async Task<IReadOnlyList<int>> GetActiveUserRoleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
+		await _cache.GetOrCreateAsync<List<int>>(
+			$"user_active_roles_{userId}",
+			async token => (await _repository.GetActiveUserRoleIdsAsync(userId, token)).ToList(),
+			tags: [UserTag, RoleTag], cancellationToken: cancellationToken);
 
 	public async Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
 		await _cache.GetOrCreateAsync<List<int>>(

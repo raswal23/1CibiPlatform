@@ -155,6 +155,7 @@ else
 @code {
     private bool _isSettingsExpanded;
 	private const string UserNameStorageKey = "Name";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
 
     private void ToggleSettingsExpanded()
     {
@@ -192,6 +193,9 @@ else
 		var storedUserName = await LocalStorageService.GetItemAsync<string>(UserNameStorageKey);
 		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
 		_userInitials = GetUserInitials(_userDisplayName);
+
+		var atsRoleId = await UserManagementService.GetMyRoleIdAsync() ?? 0;
+		await LocalStorageService.SetItemAsync(ATSRoleIdStorageKey, atsRoleId);
 
 		_accessibleModuleIds = await AccessService.HasRoleAsync(RoleList.SuperAdminId)
 			? ModuleList.List.Keys.ToHashSet()

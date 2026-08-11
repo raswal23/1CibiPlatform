@@ -104,6 +104,26 @@ public class UserManagementService : IUserManagementService
 			: _userRepository.SearchUsersAsync(paginationRequest, clientId, cancellationToken);
 	}
 
+	public async Task<int?> GetCurrentUserRoleIdAsync(CancellationToken cancellationToken)
+	{
+		if (_currentUser.UserId is not Guid userId || userId == Guid.Empty)
+			throw new UnauthorizedAccessException("An authenticated user is required.");
+
+		var roleIds = await _userRepository.GetActiveUserRoleIdsAsync(userId, cancellationToken);
+		if (roleIds.Count == 1)
+			return roleIds[0];
+
+		if (roleIds.Count > 1)
+		{
+			_logger.LogWarning(
+				"ATS role lookup returned inconsistent roles for user {UserId}: {RoleIds}",
+				userId,
+				roleIds);
+		}
+
+		return null;
+	}
+
 	public Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(
 		Guid userId,
 		CancellationToken cancellationToken)

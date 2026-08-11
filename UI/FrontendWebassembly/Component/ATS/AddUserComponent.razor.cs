@@ -1,8 +1,18 @@
+using FrontendWebassembly.ShareData.ATS;
+
 namespace FrontendWebassembly.Component.ATS;
 
 public partial class AddUserComponent
 {
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
 	private MudForm? UserForm;
+	private bool _canViewAllModules;
+
+	[Inject]
+	private IAccessService AccessService { get; set; } = default!;
+
+	[Inject]
+	private LocalStorageService LocalStorageService { get; set; } = default!;
 
 	[CascadingParameter]
 	private IMudDialogInstance? AddUserDialog { get; set; }
@@ -29,8 +39,30 @@ public partial class AddUserComponent
 	private ATSUserLookupDTO? SelectedAuthUser { get; set; }
 	private string? AuthUserError { get; set; }
 	private string? ModuleError { get; set; }
-	private IEnumerable<ModuleDetailsDTO> SelectedModules => Modules
+	private IEnumerable<ModuleDetailsDTO> VisibleModules => Modules
+		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules));
+	private IEnumerable<ModuleDetailsDTO> SelectedModules => VisibleModules
 		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+
+	protected override async Task OnInitializedAsync()
+	{
+		var isPlatformSuperAdmin = await AccessService.HasRoleAsync(RoleList.SuperAdminId);
+		var atsRoleId = await GetStoredATSRoleIdAsync();
+		_canViewAllModules = isPlatformSuperAdmin || atsRoleId == 1;
+	}
+
+	private async Task<int> GetStoredATSRoleIdAsync()
+	{
+		try
+		{
+			return await LocalStorageService.GetItemAsync<int>(ATSRoleIdStorageKey);
+		}
+		catch (JsonException)
+		{
+			return 0;
+		}
+	}
+
 	private string UserInitials
 	{
 		get
@@ -113,7 +145,10 @@ public partial class AddUserComponent
 
 	private void OnSelectedModuleIdsChanged(IEnumerable<int> moduleIds)
 	{
-		SelectedModuleIds = moduleIds.Distinct().ToArray();
+		SelectedModuleIds = moduleIds
+			.Where(moduleId => ModuleList.IsVisibleForAdministration(moduleId, _canViewAllModules))
+			.Distinct()
+			.ToArray();
 		ModuleError = SelectedModuleIds.Count == 0 ? "At least one module is required" : null;
 	}
 

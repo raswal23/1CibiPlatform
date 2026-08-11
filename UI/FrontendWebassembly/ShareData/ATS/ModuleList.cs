@@ -2,6 +2,8 @@ namespace FrontendWebassembly.ShareData.ATS;
 
 public static class ModuleList
 {
+	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11];
+
 	public static Dictionary<int, (string path, string Name, string Icon)> List =>
 		new()
 		{
@@ -17,4 +19,7 @@ public static class ModuleList
 			{ 10, ("usermanagement", "User Management", Icons.Material.Filled.ManageAccounts) },
 			{ 11, ("clientassigning", "Client Assigning", Icons.Material.Filled.AssignmentInd) }
 		};
+
+	public static bool IsVisibleForAdministration(int moduleId, bool canViewAllModules) =>
+		canViewAllModules || !RestrictedAdministrationModuleIds.Contains(moduleId);
 }

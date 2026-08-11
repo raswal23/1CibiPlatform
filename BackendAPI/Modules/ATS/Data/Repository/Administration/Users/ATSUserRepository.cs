@@ -46,6 +46,14 @@ public sealed class ATSUserRepository : IATSUserRepository
 	public async Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken) =>
 		await _dbContext.UserDetails.AsNoTracking().Where(user => user.UserId == userId).OrderBy(user => user.ModuleId).ToListAsync(cancellationToken);
 
+	public async Task<IReadOnlyList<int>> GetActiveUserRoleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
+		await _dbContext.UserDetails.AsNoTracking()
+			.Where(user => user.UserId == userId && user.IsActive && user.Role.IsActive)
+			.Select(user => user.RoleId)
+			.Distinct()
+			.OrderBy(roleId => roleId)
+			.ToListAsync(cancellationToken);
+
 	public async Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
 		await _dbContext.UserDetails.AsNoTracking().Where(user => user.UserId == userId && user.IsActive && user.Module.IsActive)
 			.Select(user => user.ModuleId).Distinct().OrderBy(moduleId => moduleId).ToListAsync(cancellationToken);
