@@ -24,6 +24,9 @@ public interface IATSUserManagementService
 	Task<int?> GetMyRoleIdAsync(
 		CancellationToken cancellationToken = default);
 
+	Task<GetMyAtsAccessResponseDTO> GetMyAtsAccessAsync(
+		CancellationToken cancellationToken = default);
+
 	Task<bool> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default);
 
 	Task<IReadOnlyList<UserDetailsDTO>> EditUserAsync(EditATSUserDTO userDTO, CancellationToken cancellationToken = default);

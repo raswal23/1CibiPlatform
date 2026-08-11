@@ -31,20 +31,13 @@ public partial class NewOrderComponent
 	{
 		try
 		{
-			var userId = await LocalStorageService.GetItemAsync<Guid>("UserId");
-			if (userId == Guid.Empty)
+			var access = await ATSUserManagementService.GetMyAtsAccessAsync();
+			var clientId = access.RoleId == 1 ? null : access.ClientId;
+			if (access.RoleId != 1 && clientId is not > 0)
 			{
-				Snackbar.Add("Unable to identify the signed-in user.", Severity.Error);
+				Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
 				return;
 			}
-
-			var assignments = await ATSUserManagementService.GetUserClientAssignmentsAsync();
-			var clientId = assignments.FirstOrDefault(assignment => assignment.UserId == userId)?.ClientId;
-			//if (clientId is not > 0)
-			//{
-			//	Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
-			//	return;
-			//}
 
 			var packages = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
 
