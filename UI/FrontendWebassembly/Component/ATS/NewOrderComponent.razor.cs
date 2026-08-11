@@ -46,17 +46,10 @@ public partial class NewOrderComponent
 				return;
 			}
 
-			var clientsTask = ClientManagementService.GetAllClientsAsync();
-			var packagesTask = PackageManagementService.GetAllPackagesAsync();
-			await Task.WhenAll(clientsTask, packagesTask);
+			var packages = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
 
-			var assignedPackageIds = clientsTask.Result
-				.Where(client => client.ClientId == clientId && client.IsActive)
-				.Select(client => client.PackageId)
-				.ToHashSet();
-
-			availablePackages = packagesTask.Result
-				.Where(package => package.IsActive && assignedPackageIds.Contains(package.PackageId))
+			availablePackages = packages
+				.Where(package => package.IsActive)
 				.DistinctBy(package => package.PackageId)
 				.OrderBy(package => package.PackageName)
 				.ToArray();

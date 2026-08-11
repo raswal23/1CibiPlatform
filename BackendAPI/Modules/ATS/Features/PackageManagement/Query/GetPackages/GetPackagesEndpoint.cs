@@ -1,6 +1,6 @@
 namespace ATS.Features.PackageManagement.Query.GetPackages;
 
-public record GetPackagesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetPackagesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null);
 
 public record GetPackagesEndpointResponse(PaginatedResult<PackageDetailsDTO> Packages);
 
@@ -16,7 +16,8 @@ public class GetPackagesEndpoint : ICarterModule
 			var query = new GetPackagesQueryRequest(
 				request.PageNumber,
 				request.PageSize,
-				request.SearchTerm);
+				request.SearchTerm,
+				request.ClientId);
 
 			var result = await sender.Send(query, cancellationToken);
 

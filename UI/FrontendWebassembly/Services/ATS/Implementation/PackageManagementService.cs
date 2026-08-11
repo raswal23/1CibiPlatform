@@ -9,12 +9,16 @@ public class PackageManagementService : IPackageManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default)
+	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default, int? clientId = null)
 	{
 		var query = $"ats/getpackages?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
+		}
+		if (clientId is > 0)
+		{
+			query += $"&clientId={clientId.Value}";
 		}
 
 		var response = await _httpClient.GetAsync(query, cancellationToken);
@@ -29,7 +33,7 @@ public class PackageManagementService : IPackageManagementService
 		return result!.Packages!;
 	}
 
-	public async Task<IReadOnlyList<PackageDetailsDTO>> GetAllPackagesAsync(CancellationToken cancellationToken = default)
+	public async Task<IReadOnlyList<PackageDetailsDTO>> GetAllPackagesAsync(CancellationToken cancellationToken = default, int? clientId = null)
 	{
 		const int pageSize = 100;
 		var pageNumber = 1;
@@ -37,7 +41,7 @@ public class PackageManagementService : IPackageManagementService
 
 		while (true)
 		{
-			var page = await GetPackagesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var page = await GetPackagesAsync(pageNumber, pageSize, cancellationToken: cancellationToken, clientId: clientId);
 			var pageItems = page.Data.ToArray();
 			packages.AddRange(pageItems);
 
