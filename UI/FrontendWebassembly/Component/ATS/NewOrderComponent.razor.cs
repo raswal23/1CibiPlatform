@@ -40,11 +40,11 @@ public partial class NewOrderComponent
 
 			var assignments = await ATSUserManagementService.GetUserClientAssignmentsAsync();
 			var clientId = assignments.FirstOrDefault(assignment => assignment.UserId == userId)?.ClientId;
-			if (clientId is not > 0)
-			{
-				Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
-				return;
-			}
+			//if (clientId is not > 0)
+			//{
+			//	Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
+			//	return;
+			//}
 
 			var packages = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
 
