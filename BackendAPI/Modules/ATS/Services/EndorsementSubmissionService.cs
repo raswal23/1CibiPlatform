@@ -270,10 +270,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		_logger.LogInformation("Fetching withdrawn application form with pagination: {@Context}", logContext);
+		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+		{
+			return Task.FromResult(new PaginatedResult<EmailInvitationRequestListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				[]));
+		}
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ? 
-			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken);
+			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, scope, cancellationToken) :
+			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, scope, cancellationToken);
 	}
 
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken)

@@ -4,6 +4,8 @@ using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
+using ATS.Constants;
+using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -27,6 +29,7 @@ public class DisputeOrderServiceTests
 	private readonly Mock<IEmailService> _emailService = new();
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
+	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
@@ -43,6 +46,7 @@ public class DisputeOrderServiceTests
 		{
 			HttpContext = CreateHttpContext(new Claim(ClaimTypes.Email, RequestorEmail))
 		};
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.AllClients);
 
 		_service = new DisputeOrderService(
 			_logger.Object,
@@ -50,7 +54,8 @@ public class DisputeOrderServiceTests
 			configuration,
 			_repository.Object,
 			_userClientRepository.Object,
-			_httpContextAccessor);
+			_httpContextAccessor,
+			_currentUser.Object);
 	}
 
 	#region Happy Path
@@ -64,7 +69,7 @@ public class DisputeOrderServiceTests
 		var expected = CreatePaginatedResult();
 
 		_repository
-			.Setup(repository => repository.GetDisputeOrdersAsync(request, cancellationToken))
+			.Setup(repository => repository.GetDisputeOrdersAsync(request, AtsQueryScope.All, cancellationToken))
 			.ReturnsAsync(expected);
 
 		// Act
@@ -73,11 +78,12 @@ public class DisputeOrderServiceTests
 		// Assert
 		result.Should().BeSameAs(expected);
 		_repository.Verify(
-			repository => repository.GetDisputeOrdersAsync(request, cancellationToken),
+			repository => repository.GetDisputeOrdersAsync(request, AtsQueryScope.All, cancellationToken),
 			Times.Once);
 		_repository.Verify(
 			repository => repository.SearchDisputeOrdersAsync(
 				It.IsAny<PaginationRequest>(),
+				It.IsAny<AtsQueryScope>(),
 				It.IsAny<CancellationToken>()),
 			Times.Never);
 	}
@@ -91,7 +97,7 @@ public class DisputeOrderServiceTests
 		var expected = CreatePaginatedResult(pageIndex: 2, pageSize: 5);
 
 		_repository
-			.Setup(repository => repository.SearchDisputeOrdersAsync(request, cancellationToken))
+			.Setup(repository => repository.SearchDisputeOrdersAsync(request, AtsQueryScope.All, cancellationToken))
 			.ReturnsAsync(expected);
 
 		// Act
@@ -100,13 +106,78 @@ public class DisputeOrderServiceTests
 		// Assert
 		result.Should().BeSameAs(expected);
 		_repository.Verify(
-			repository => repository.SearchDisputeOrdersAsync(request, cancellationToken),
+			repository => repository.SearchDisputeOrdersAsync(request, AtsQueryScope.All, cancellationToken),
 			Times.Once);
 		_repository.Verify(
 			repository => repository.GetDisputeOrdersAsync(
 				It.IsAny<PaginationRequest>(),
+				It.IsAny<AtsQueryScope>(),
 				It.IsAny<CancellationToken>()),
 			Times.Never);
+	}
+
+	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldUseAllScope_ForPlatformSuperAdmin()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreatePaginatedResult();
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
+		_repository.Setup(repository => repository.GetDisputeOrdersAsync(
+			request, AtsQueryScope.All, CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldUseClientScope_ForAtsRoleTwo()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreatePaginatedResult();
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.ClientScoped);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns(42);
+		_repository.Setup(repository => repository.GetDisputeOrdersAsync(
+			request, AtsQueryScope.ForClient(42), CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldUseRequestorScope_ForOtherRoles()
+	{
+		var requestorId = Guid.CreateVersion7();
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreatePaginatedResult();
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
+		_currentUser.SetupGet(user => user.UserId).Returns(requestorId);
+		_repository.Setup(repository => repository.GetDisputeOrdersAsync(
+			request, AtsQueryScope.ForRequestor(requestorId), CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldReturnEmptyPage_WhenScopeCannotBeResolved()
+	{
+		var request = new PaginationRequest(PageIndex: 2, PageSize: 25);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
+		_currentUser.SetupGet(user => user.UserId).Returns((Guid?)null);
+
+		var result = await _service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		result.PageIndex.Should().Be(2);
+		result.PageSize.Should().Be(25);
+		result.Count.Should().Be(0);
+		result.Data.Should().BeEmpty();
+		_repository.Verify(repository => repository.GetDisputeOrdersAsync(
+			It.IsAny<PaginationRequest>(), It.IsAny<AtsQueryScope>(), It.IsAny<CancellationToken>()), Times.Never);
 	}
 
 	[Fact]

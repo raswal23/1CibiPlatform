@@ -3,6 +3,8 @@ using ATS.Data.Entities;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
+using ATS.Constants;
+using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -337,7 +339,15 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			_configuration,
 			_atsRepository,
 			userClientRepository.Object,
-			_httpContextAccessor);
+			_httpContextAccessor,
+			CreateAllClientsCurrentUser().Object);
+	}
+
+	private static Mock<ICurrentUser> CreateAllClientsCurrentUser()
+	{
+		var currentUser = new Mock<ICurrentUser>();
+		currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.AllClients);
+		return currentUser;
 	}
 
 	private static Mock<IEmailService> CreateSuccessfulEmailService()

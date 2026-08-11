@@ -3,8 +3,10 @@ using System.Text;
 using ATS.Data.DTO;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
+using ATS.Constants;
 using ATS.DTO;
 using ATS.Services;
+using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using FluentAssertions;
@@ -25,6 +27,7 @@ public class ReportServiceTests
 	private readonly Mock<ILogger<ReportService>> _logger = new();
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IObjectStorageService> _objectStorage = new();
+	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -35,12 +38,14 @@ public class ReportServiceTests
 				["ATS:ATSReportFileFolderName"] = ReportFolder
 			})
 			.Build();
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.AllClients);
 
 		_service = new ReportService(
 			_logger.Object,
 			_repository.Object,
 			configuration,
-			_objectStorage.Object);
+			_objectStorage.Object,
+			_currentUser.Object);
 	}
 
 	#region Happy Path
@@ -209,6 +214,7 @@ public class ReportServiceTests
 		_repository
 			.Setup(repository => repository.GetReportsAsync(
 				request,
+				AtsQueryScope.All,
 				"SubjectName",
 				false,
 				CancellationToken.None))
@@ -225,6 +231,7 @@ public class ReportServiceTests
 		result.Should().BeSameAs(expected);
 		_repository.Verify(repository => repository.SearchReportsAsync(
 			It.IsAny<PaginationRequest>(),
+			It.IsAny<AtsQueryScope>(),
 			It.IsAny<string?>(),
 			It.IsAny<bool>(),
 			It.IsAny<CancellationToken>()), Times.Never);
@@ -244,6 +251,7 @@ public class ReportServiceTests
 		_repository
 			.Setup(repository => repository.SearchReportsAsync(
 				request,
+				AtsQueryScope.All,
 				"OrderCompletedAt",
 				true,
 				CancellationToken.None))
@@ -260,6 +268,98 @@ public class ReportServiceTests
 		result.Should().BeSameAs(expected);
 		_repository.Verify(repository => repository.GetReportsAsync(
 			It.IsAny<PaginationRequest>(),
+			It.IsAny<AtsQueryScope>(),
+			It.IsAny<string?>(),
+			It.IsAny<bool>(),
+			It.IsAny<CancellationToken>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldUseAllScope_ForPlatformSuperAdmin()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreateReportListResult();
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
+		_repository
+			.Setup(repository => repository.GetReportsAsync(
+				request,
+				AtsQueryScope.All,
+				null,
+				false,
+				CancellationToken.None))
+			.ReturnsAsync(expected);
+
+		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldUseClientScope_ForAtsRoleTwo()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreateReportListResult();
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.ClientScoped);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns(42);
+		_repository
+			.Setup(repository => repository.GetReportsAsync(
+				request,
+				AtsQueryScope.ForClient(42),
+				null,
+				false,
+				CancellationToken.None))
+			.ReturnsAsync(expected);
+
+		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.ClientScoped)]
+	[InlineData(99)]
+	public async Task GetReportsAsync_ShouldFallBackToRequestorScope_WhenClientScopeIsUnavailable(int atsRoleId)
+	{
+		var requestorId = Guid.CreateVersion7();
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreateReportListResult();
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(atsRoleId);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns((int?)null);
+		_currentUser.SetupGet(user => user.UserId).Returns(requestorId);
+		_repository
+			.Setup(repository => repository.GetReportsAsync(
+				request,
+				AtsQueryScope.ForRequestor(requestorId),
+				null,
+				false,
+				CancellationToken.None))
+			.ReturnsAsync(expected);
+
+		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldReturnEmptyPage_WhenNoReportScopeCanBeResolved()
+	{
+		var request = new PaginationRequest(PageIndex: 2, PageSize: 25);
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
+		_currentUser.SetupGet(user => user.UserId).Returns((Guid?)null);
+
+		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+
+		result.PageIndex.Should().Be(2);
+		result.PageSize.Should().Be(25);
+		result.Count.Should().Be(0);
+		result.Data.Should().BeEmpty();
+		_repository.Verify(repository => repository.GetReportsAsync(
+			It.IsAny<PaginationRequest>(),
+			It.IsAny<AtsQueryScope>(),
 			It.IsAny<string?>(),
 			It.IsAny<bool>(),
 			It.IsAny<CancellationToken>()), Times.Never);

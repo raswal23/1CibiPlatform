@@ -8,6 +8,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
+	private readonly ICurrentUser _currentUser;
 	private readonly string _disputeOrderEmailRecipient;
 
 	public DisputeOrderService(
@@ -16,7 +17,8 @@ public class DisputeOrderService : IDisputeOrderService
 		IConfiguration configuration,
 		IATSRepository atsRepository,
 		IUserClientRepository userClientRepository,
-		IHttpContextAccessor httpContextAccessor)
+		IHttpContextAccessor httpContextAccessor,
+		ICurrentUser currentUser)
 	{
 		_logger = logger;
 		_emailService = emailService;
@@ -25,6 +27,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_atsRepository = atsRepository;
 		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
+		_currentUser = currentUser;
 	}
 
 	public Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -38,10 +41,20 @@ public class DisputeOrderService : IDisputeOrderService
 		};
 
 		_logger.LogInformation("Fetching dispute orders with pagination: {@Context}", logContext);
+		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+		{
+			return Task.FromResult(new PaginatedResult<DisputeOrderListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				[]));
+		}
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-				_atsRepository.GetDisputeOrdersAsync(paginationRequest, cancellationToken) :
-				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
+				_atsRepository.GetDisputeOrdersAsync(paginationRequest, scope, cancellationToken) :
+				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, scope, cancellationToken);
 	}
 
 	public async Task<bool> MarkAsDisputedAsync(
