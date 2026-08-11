@@ -1,0 +1,128 @@
+.dispute-warning,
+::deep .dispute-orders {
+    --navy-900: #0b1b3d;
+    --blue-600: #1d5fd1;
+    --blue-tint-2: #e3ecfb;
+    --border: #e4eaf6;
+    --border-strong: #c2d2f0;
+    --text-1: #16233f;
+    --text-2: #5b6b8c;
+    --text-3: #8a97b5;
+}
+
+.dispute-warning {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid #f0dca8;
+    border-left: 4px solid #b5790f;
+    border-radius: 12px;
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+.dispute-warning-title { margin: 0; color: #7a5209; font-size: 13.5px; font-weight: 700; }
+.dispute-warning-text { margin: 4px 0 0; color: #8a6212; font-size: 12.5px; line-height: 1.5; }
+
+.dispute-orders-scope { width: 100%; }
+::deep .dispute-orders { width: 100%; max-width: none; margin: 0; }
+::deep .dispute-orders .mud-table {
+    padding: 26px 28px 8px !important;
+    border: 1px solid var(--border);
+    border-radius: 16px !important;
+    background: #fff;
+    box-shadow: 0 12px 32px -12px rgba(11, 27, 61, .12);
+    overflow: hidden;
+}
+
+/* Let the shared Package Management card own the outer padding and chrome. */
+::deep .ats-management-card.dispute-orders .mud-table {
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+::deep .dispute-orders .mud-input-control { margin: 0; }
+::deep .dispute-orders .mud-input-outlined-border { border-width: 1.5px; border-color: var(--border-strong); border-radius: 10px; }
+::deep .dispute-orders .mud-input-slot { color: var(--text-1); font-size: 13.5px; }
+::deep .dispute-orders .mud-input-adornment-start { color: var(--text-3); }
+::deep .dispute-orders input::placeholder { color: var(--text-3); opacity: 1; }
+
+::deep .dispute-orders .mud-table-head .mud-table-cell {
+    padding: 10px 14px 12px;
+    border-bottom: 1.5px solid var(--border-strong);
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+::deep .dispute-orders .mud-table-body .mud-table-cell {
+    padding: 16px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-1);
+    font-size: 13.5px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+::deep .dispute-orders .mud-table-row:hover { background: #fafbff !important; }
+.dispute-subject { display: flex; align-items: center; gap: 12px; }
+.dispute-avatar {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2e7ce0, #132a54);
+    color: #fff;
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dispute-name { color: var(--text-1); font-weight: 600; }
+.dispute-chip {
+    display: inline-flex;
+    padding: 4px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    background: var(--blue-tint-2);
+    color: var(--blue-600);
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dispute-chip.muted { border-color: var(--border); background: #f3f5fa; color: var(--text-3); font-style: italic; }
+::deep .dispute-date { color: var(--text-2) !important; white-space: nowrap; }
+.dispute-action {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #f3cfb4;
+    border-radius: 9px;
+    background: #fcebe0;
+    color: #d3540e;
+    cursor: pointer;
+    transition: background .12s ease;
+}
+
+.dispute-action:hover { background: #f9dcc8; }
+.dispute-action svg { width: 15px; height: 15px; }
+::deep .dispute-orders .mud-table-pagination { margin-top: 12px; }

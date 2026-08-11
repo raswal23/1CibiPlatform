@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Auth.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +63,13 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			services.AddDbContext<ATSDBContext>(options =>
 				options.UseNpgsql(_dbContainer.GetConnectionString()));
 
+			services.RemoveAll<AuthApplicationDbContext>();
+			services.RemoveAll<DbContextOptions<AuthApplicationDbContext>>();
+			services.AddDbContext<AuthApplicationDbContext>(options =>
+				options.UseNpgsql(
+					_dbContainer.GetConnectionString(),
+					npgsqlOptions => npgsqlOptions.MigrationsAssembly("APIs")));
+
 			services.RemoveAll<IObjectStorageService>();
 			services.AddSingleton<IObjectStorageService, MockObjectStorageService>();
 
@@ -89,6 +97,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		await _dbContainer.StartAsync();
 
 		using var scope = Services.CreateScope();
+		var authDb = scope.ServiceProvider.GetRequiredService<AuthApplicationDbContext>();
+		await authDb.Database.MigrateAsync();
+
 		var db = scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		await db.Database.MigrateAsync();
 	}

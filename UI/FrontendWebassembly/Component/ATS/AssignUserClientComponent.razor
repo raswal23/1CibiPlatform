@@ -1,0 +1,138 @@
+<MudDialog Class="um-dialog auc-dialog ats-scroll-dialog" Style="padding: 0; width: min(560px, calc(100vw - 24px)); max-width: 560px;">
+    <DialogContent>
+        <div class="auc-shell ats-dialog-shell">
+            <header class="auc-header ats-dialog-header">
+                <div class="auc-header-row">
+                    <div class="auc-header-left">
+                        <div class="auc-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M4 20V6.5A1.5 1.5 0 0 1 5.5 5h5A1.5 1.5 0 0 1 12 6.5V20" />
+                                <path d="M12 11h6.5a1.5 1.5 0 0 1 1.5 1.5V20" />
+                                <path d="M7 9h1M7 12h1M7 15h1" stroke-linecap="round" />
+                                <path d="m9.5 16.5 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="auc-header-text">
+                            <h1>Assign client</h1>
+                            <p>Assign or reassign an ATS user to a client</p>
+                        </div>
+                    </div>
+                    <button type="button" class="auc-close" aria-label="Close assign client dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="auc-body ats-dialog-body">
+                <MudForm @ref="AssignmentForm">
+                    <section class="auc-section" aria-labelledby="assign-user-heading">
+                        <div class="auc-section-head">
+                            <span class="auc-section-number">1</span>
+                            <h2 id="assign-user-heading">User</h2>
+                            <span class="auc-section-helper">Who you're assigning</span>
+                        </div>
+
+                        <div class="auc-section-body">
+                            <div class="auc-field">
+                                <label for="auc-user">User <span class="auc-required">*</span></label>
+                                <div class="auc-input-wrap">
+                                    <MudAutocomplete T="ATSUserLookupDTO"
+                                                     InputId="auc-user"
+                                                     Value="SelectedAuthUser"
+                                                     ValueChanged="OnAuthUserChanged"
+                                                     SearchFunc="SearchAuthUsers"
+                                                     ToStringFunc="GetAuthUserText"
+                                                     Placeholder="Select a user"
+                                                     Required="true"
+                                                     RequiredError="User is required"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     ShowProgressIndicator="true"
+                                                     Error="@(!string.IsNullOrEmpty(AuthUserError))"
+                                                     ErrorText="@AuthUserError"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                     Class="auc-control" />
+                                </div>
+                            </div>
+
+                            <div class="auc-field">
+                                <label for="auc-user-email">User email</label>
+                                <div class="auc-input-wrap">
+                                    <MudTextField Value="@(SelectedAuthUser?.UserEmail ?? string.Empty)"
+                                                  InputId="auc-user-email"
+                                                  Placeholder="jane.cooper@company.com"
+                                                  InputType="InputType.Email"
+                                                  Disabled="true"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.MailOutline"
+                                                  Class="auc-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="auc-section" aria-labelledby="assign-client-heading">
+                        <div class="auc-section-head">
+                            <span class="auc-section-number">2</span>
+                            <h2 id="assign-client-heading">Client</h2>
+                            <span class="auc-section-helper">Where they'll be assigned</span>
+                        </div>
+
+                        <div class="auc-section-body">
+                            <div class="auc-field">
+                                <label for="auc-client">Client <span class="auc-required">*</span></label>
+                                <div class="auc-input-wrap auc-client-wrap">
+                                    <MudSelect T="int"
+                                               InputId="auc-client"
+                                               Value="Assignment.ClientId"
+                                               ValueChanged="OnClientChanged"
+                                               Placeholder="Select a client"
+                                               Required="true"
+                                               RequiredError="Client is required"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Error="@(!string.IsNullOrEmpty(ClientError))"
+                                               ErrorText="@ClientError"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.Apartment"
+                                               Class="auc-control">
+                                        @foreach (var client in Clients.Where(client => client.IsActive))
+                                        {
+                                            <MudSelectItem T="int" Value="@client.ClientId">@client.ClientName</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                            </div>
+
+                            <div class="auc-preview" aria-live="polite">
+                                <div class="auc-avatar">@PreviewInitial</div>
+                                <div class="auc-preview-copy">
+                                    <p class="auc-preview-title">@PreviewUserEmail</p>
+                                    <p>@PreviewClientName</p>
+                                </div>
+                                <svg class="auc-preview-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                </svg>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="auc-footer ats-dialog-footer">
+                <button type="button" class="auc-button auc-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="auc-button auc-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save assignment
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

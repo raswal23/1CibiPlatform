@@ -1,17 +1,18 @@
-﻿<MudPaper Elevation="6"
-          Class="p-10 text-center d-flex flex-column justify-center align-center"
-          Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:500px; max-width:90%;">
+<section class="ats-completed-card" aria-labelledby="ats-completed-title" role="status">
+    <div class="ats-completed-icon-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2.4"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M12 8v5M12 16.5h.01" />
+            <circle cx="12" cy="12" r="9" />
+        </svg>
+    </div>
 
-    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
-             Size="Size.Large"
-             Style="font-size: 80px; color: #d9534f; margin-bottom: 20px;" />
-
-    <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;">
-        Session Not Found
-    </MudText>
-
-    <MudText Typo="Typo.subtitle1" Style="max-width: 400px; color: #555; margin: 0px 10px 20px 10px;">
+    <h1 id="ats-completed-title">Session Not Found</h1>
+    <p class="ats-completed-description">
         This application form link has already been completed or is no longer valid.
-    </MudText>
-</MudPaper>
-
+    </p>
+</section>

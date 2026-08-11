@@ -6,6 +6,21 @@ public partial class SearchReportComponent
 	private DateRange? _dateRange { get; set; }
     private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
+	private bool _isStatusLegendExpanded = false;
+
+	private void ToggleStatusLegend() => _isStatusLegendExpanded = !_isStatusLegendExpanded;
+
+	private static string GetInitials(string? name)
+		=> string.Join(string.Empty, (name ?? string.Empty)
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+			.Take(2)
+			.Select(part => char.ToUpperInvariant(part[0])));
+
+	private static string GetOrderStatusClass(string? status) => OrderStatusDisplay.GetClass(status);
+	private static string GetOrderStatusText(string? status) => OrderStatusDisplay.GetText(status);
+
+	private static string GetHitStatusClass(string? status) => HitStatusDisplay.GetClass(status);
+	private static string GetHitStatusText(string? status) => HitStatusDisplay.GetText(status);
 
 	private string searchString
 	{
@@ -143,7 +158,9 @@ public partial class SearchReportComponent
 
 			await OpenResultDialog<ATSResultComponent>(
 				"",
-				parameters);
+				parameters,
+				MaxWidth.Medium,
+				fullWidth: false);
 		}
 		catch (Exception)
 		{
@@ -166,7 +183,7 @@ public partial class SearchReportComponent
 			CloseButton = false,
 			NoHeader = true,
 			MaxWidth = MaxWidth.Small,
-			FullWidth = true
+			FullWidth = false
 		};
 
 		dialog = await DialogService.ShowAsync<UploadReportComponent>(

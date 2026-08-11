@@ -10,16 +10,26 @@ public class PackageDetailsConfiguration : IEntityTypeConfiguration<PackageDetai
 
 		builder.Property(x => x.PackageId)
 			.IsRequired()
-			.ValueGeneratedNever();
+			.ValueGeneratedOnAdd();
 
 		builder.Property(x => x.PackageName)
 			.HasMaxLength(255)
 			.IsRequired();
 
+		builder.Property(x => x.PackageDescription)
+			.HasMaxLength(500)
+			.IsRequired();
+
 		builder.Property(x => x.IsActive)
 			.IsRequired();
 
+		builder.Property(x => x.FollowUpEmail)
+			.IsRequired();
+
 		builder.Property(x => x.CreatedAt)
+			.IsRequired();
+
+		builder.Property(x => x.UpdatedAt)
 			.IsRequired();
 
 		builder.HasIndex(x => x.PackageName)

@@ -37,16 +37,33 @@ public static class ATSServiceConfiguration
     #region Services
     public static IServiceCollection AddATSServices(this IServiceCollection services)
     {
+		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.Decorate<IATSRepository, ATSCacheRepository>();
+		services.AddScoped<IPackageRepository, PackageRepository>();
+		services.Decorate<IPackageRepository, PackageCacheRepository>();
+		services.AddScoped<IClientRepository, ClientRepository>();
+		services.Decorate<IClientRepository, ClientCacheRepository>();
+		services.AddScoped<IRoleRepository, RoleRepository>();
+		services.Decorate<IRoleRepository, RoleCacheRepository>();
+		services.AddScoped<IModuleRepository, ModuleRepository>();
+		services.Decorate<IModuleRepository, ModuleCacheRepository>();
+		services.AddScoped<IATSUserRepository, ATSUserRepository>();
+		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
 		services.AddScoped<IFilePdfService, FilePdfService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
+		services.AddScoped<IRoleManagementService, RoleManagementService>();
+		services.AddScoped<IModuleManagementService, ModuleManagementService>();
+		services.AddScoped<IUserManagementService, UserManagementService>();
+		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

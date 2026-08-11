@@ -395,13 +395,24 @@ namespace APIs.Migrations.ATS
 
             modelBuilder.Entity("ATS.Data.Entities.ClientDetails", b =>
                 {
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ClientId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ClientId"));
+
+                    b.Property<int>("PackageId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ClientDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ClientName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -409,10 +420,14 @@ namespace APIs.Migrations.ATS
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.HasKey("ClientId");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasIndex("ClientName")
-                        .IsUnique();
+                    b.HasKey("ClientId", "PackageId");
+
+                    b.HasIndex("ClientName");
+
+                    b.HasIndex("PackageId");
 
                     b.ToTable("ClientDetails", "ats");
                 });
@@ -692,6 +707,10 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime?>("ProjectionUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Requestor")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("RushNormal")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -744,10 +763,13 @@ namespace APIs.Migrations.ATS
                     b.ToTable("LicensesDetails", "ats");
                 });
 
-            modelBuilder.Entity("ATS.Data.Entities.PackageDetails", b =>
+            modelBuilder.Entity("ATS.Data.Entities.ModuleDetails", b =>
                 {
-                    b.Property<Guid>("PackageId")
-                        .HasColumnType("uuid");
+                    b.Property<int>("ModuleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ModuleId"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -755,10 +777,56 @@ namespace APIs.Migrations.ATS
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ModuleDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ModuleId");
+
+                    b.HasIndex("ModuleName")
+                        .IsUnique();
+
+                    b.ToTable("ModuleDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.PackageDetails", b =>
+                {
+                    b.Property<int>("PackageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FollowUpEmail")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PackageDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("PackageName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("PackageId");
 
@@ -1188,6 +1256,41 @@ namespace APIs.Migrations.ATS
                     b.ToTable("ReportDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.RoleDetails", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RoleDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("RoleDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.SignatureDetails", b =>
                 {
                     b.Property<Guid>("SignatureDetailsID")
@@ -1222,6 +1325,78 @@ namespace APIs.Migrations.ATS
                     b.ToTable("SignatureDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.UserClientDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("UserClientDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Site")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("UserId", "ModuleId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserEmail");
+
+                    b.ToTable("UserDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.AddressDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -1251,6 +1426,17 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
 
                     b.Navigation("EmailInvitationRequest");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ClientDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.PackageDetails", "Package")
+                        .WithMany()
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Package");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
@@ -1325,6 +1511,25 @@ namespace APIs.Migrations.ATS
                         .HasForeignKey("ATS.Data.Entities.SignatureDetails", "EmailInvitationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.ModuleDetails", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ATS.Data.Entities.RoleDetails", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.EmailInvitationRequest", b =>

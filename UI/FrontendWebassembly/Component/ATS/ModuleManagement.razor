@@ -1,0 +1,167 @@
+@page "/s&i/ats/modulemanagement"
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(9)]
+@inject IModuleManagementService ModuleManagementService
+@inject ISnackbar Snackbar
+@inherits CrudPageBase
+
+<PageTitle>ATS - Module Management</PageTitle>
+
+<div class="ats-management-page">
+<div class="ats-management-actions">
+    <button type="button" class="ats-management-button" @onclick="AddNewModule">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+        </svg>
+        Add module
+    </button>
+</div>
+
+<TableComponent TItem="ModuleDetailsDTO"
+                @ref="modulesTable"
+                Title="Modules"
+                ContainerClass="ats-management-card ats-module-card"
+                EnableSearch="true"
+                SearchLabel=""
+                SearchPlaceholder="Search modules"
+                ColumnCount="6"
+                RowsPerPage="10"
+                LoadServerData="LoadModuleData"
+                SearchString="@searchString"
+                SearchStringChanged="@((string val) => searchString = val)">
+
+    <HeaderTemplate>
+        <MudTh Class="ats-table-cell-center">Module Name</MudTh>
+        <MudTh Class="ats-table-cell-center">Module Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Status</MudTh>
+        <MudTh Class="ats-table-cell-center">Created Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Updated Date</MudTh>
+        <MudTh Class="ats-table-cell-center">Actions</MudTh>
+    </HeaderTemplate>
+
+    <RowTemplate Context="m">
+        <MudTd Class="ats-management-primary" DataLabel="Module Name">
+            <div class="ats-management-module-cell">
+                <span class="ats-management-module-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                </span>
+                    <span style="font-weight: 600;">@m.ModuleName</span>
+            </div>
+        </MudTd>
+
+        <MudTd Class="ats-management-description" DataLabel="Module Description">
+            @m.ModuleDescription
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Status">
+            <span class="ats-management-status @(!m.IsActive ? "is-disabled" : string.Empty)">
+                @(m.IsActive ? "Active" : "Disabled")
+            </span>
+        </MudTd>
+
+        <MudTd Class="ats-management-date" DataLabel="Created Date">
+            @m.CreatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-management-date" DataLabel="Updated Date">
+            @m.UpdatedAt.ToString("MMMM dd, yyyy")
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+            <button type="button"
+                    class="ats-management-edit ats-management-edit-button"
+                    aria-label="Edit @m.ModuleName"
+                    @onclick="@(() => EditModule(m))">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </button>
+        </MudTd>
+    </RowTemplate>
+
+    <NoRecordsTemplate>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.Apps" />
+            <strong>No modules</strong>
+            <span>Create a new module to get started.</span>
+        </div>
+    </NoRecordsTemplate>
+</TableComponent>
+</div>
+
+@code {
+    private string searchString = string.Empty;
+    private TableComponent<ModuleDetailsDTO>? modulesTable;
+
+    private async Task<TableData<ModuleDetailsDTO>> LoadModuleData(TableState state, CancellationToken cancellationToken)
+        => await LoadPagedDataAsync(state, (page, pageSize) =>
+            ModuleManagementService.GetModulesAsync(page, pageSize, searchString, cancellationToken));
+
+    private async Task AddNewModule()
+    {
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<AddModuleComponent>("Add Module", options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var moduleDTO = (AddATSModuleDTO)result.Data!;
+                await ModuleManagementService.AddModuleAsync(moduleDTO);
+                Snackbar.Add("Module added successfully", Severity.Success);
+                if (modulesTable?.TableRef != null)
+                    await modulesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task EditModule(ModuleDetailsDTO module)
+    {
+        var parameters = new DialogParameters<EditModuleComponent> { { x => x.Module, module } };
+        var options = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            BackdropClick = false
+        };
+
+        var dialog = await DialogService.ShowAsync<EditModuleComponent>("Edit Module", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            try
+            {
+                var editModuleDTO = (EditATSModuleDTO)result.Data!;
+                await ModuleManagementService.EditModuleAsync(editModuleDTO);
+                Snackbar.Add("Module updated successfully", Severity.Success);
+                if (modulesTable?.TableRef != null)
+                    await modulesTable.TableRef.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+}

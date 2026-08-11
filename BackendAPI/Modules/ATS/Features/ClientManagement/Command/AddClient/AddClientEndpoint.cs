@@ -1,6 +1,6 @@
 namespace ATS.Features.ClientManagement.Command.AddClient;
 
-public record AddClientRequest(AddClientDTO client);
+public record AddClientRequest(IReadOnlyCollection<AddClientDTO> clients);
 
 public record AddClientResponse(bool isAdded);
 
@@ -10,7 +10,7 @@ public class AddClientEndpoint : ICarterModule
 	{
 		app.MapPost("addclient", async (AddClientRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
-			var command = new AddClientCommand(request.client);
+			var command = new AddClientCommand(request.clients);
 			AddClientResult result = await sender.Send(command, cancellationToken);
 			var response = new AddClientResponse(result.isAdded);
 			return Results.Ok(response.isAdded);

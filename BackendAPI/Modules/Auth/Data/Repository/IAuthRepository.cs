@@ -20,6 +20,9 @@ public interface IAuthRepository
 	Task<AuthRole> GetRoleAsync(int roleId);
 	Task<Authusers> GetUserAsync(string email);
 	Task<AuthAttempts> GetLockedUserAsync(Guid userId);
+	Task<List<ATSUserLookupDTO>> GetATSAssignedUsersAsync(CancellationToken cancellationToken);
+	Task<PaginatedResult<ATSUserLookupDTO>> GetATSAssignedUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<ATSUserLookupDTO?> GetATSAssignedUserAsync(Guid userId, CancellationToken cancellationToken);
 
 	// Search methods
 	Task<PaginatedResult<UsersDTO>> SearchUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
@@ -30,6 +33,7 @@ public interface IAuthRepository
 	Task<PaginatedResult<RolesDTO>> SearchRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<PaginatedResult<AuthAttempts>> SearchLockedUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<AuthRefreshToken> SearchUserRefreshToken(Guid userId, string refreshToken);
+	Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash);
 
 	// Delete methods
 	Task<bool> DeleteLockedUserAsync(AuthAttempts authAttempts);

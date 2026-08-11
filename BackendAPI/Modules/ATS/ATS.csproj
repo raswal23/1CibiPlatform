@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Data\DataSeed\IntouchEmailInvitationInitialData.json" />
+  </ItemGroup>
+
+  <ItemGroup>
       <PackageReference Include="Carter" Version="10.0.0" />
       <PackageReference Include="CsvHelper" Version="33.1.0" />
 	  <PackageReference Include="Mapster" Version="10.0.7" />
@@ -33,10 +37,12 @@
 	  <PackageReference Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.2" />
 	  <PackageReference Include="Quartz.Serialization.Json" Version="3.18.2" />
 	  <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
+	  <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj" />
-  </ItemGroup>
+	  <ProjectReference Include="..\Auth\Auth.csproj" />
+	</ItemGroup>
 
 </Project>

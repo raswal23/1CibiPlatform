@@ -16,6 +16,9 @@ public class AddPackageCommandValidator : AbstractValidator<AddPackageCommand>
 			RuleFor(x => x.package.PackageName)
 				.NotEmpty().WithMessage("PackageName is required.")
 				.MaximumLength(255).WithMessage("PackageName cannot exceed 255 characters.");
+			RuleFor(x => x.package.PackageDescription)
+				.NotEmpty().WithMessage("PackageDescription is required.")
+				.MaximumLength(500).WithMessage("PackageDescription cannot exceed 500 characters.");
 			RuleFor(x => x.package.IsActive)
 				.NotNull().WithMessage("IsActive is required.");
 		});
@@ -33,7 +36,7 @@ public class AddPackageHandler : ICommandHandler<AddPackageCommand, AddPackageRe
 
 	public async Task<AddPackageResult> Handle(AddPackageCommand request, CancellationToken cancellationToken)
 	{
-		var addedPackage = await _packageManagementService.AddPackageAsync(request.package);
+		var addedPackage = await _packageManagementService.AddPackageAsync(request.package, cancellationToken);
 		return new AddPackageResult(addedPackage);
 	}
 }

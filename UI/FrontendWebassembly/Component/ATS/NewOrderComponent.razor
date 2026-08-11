@@ -1,6 +1,7 @@
 ﻿@page "/s&i/ats/neworder"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(2)]
 @inject IJSRuntime JS
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject ISnackbar Snackbar
@@ -8,103 +9,148 @@
 @inject EmailValidationService EmailValidationService
 @inject FileValidationService FileValidationService
 @inject MobileNumberValidationService MobileNumberValidationService
+@inject LocalStorageService LocalStorageService
+@inject IClientManagementService ClientManagementService
+@inject IPackageManagementService PackageManagementService
 @inherits CrudPageBase
 
 <PageTitle>ATS - New Order</PageTitle>
 
 <div class="ats-neworder-page">
     <div class="ats-segmented">
-        <button class="@GetSegmentClass(false)" type="button" @onclick="() => SetOrderMode(false)">Single candidate</button>
-        <button class="@GetSegmentClass(true)" type="button" @onclick="() => SetOrderMode(true)">Bulk upload</button>
+        <button class="@GetSegmentClass(false)" type="button" @onclick="() => SetOrderMode(false)">
+            <MudIcon Icon="@Icons.Material.Outlined.PersonOutline" Size="Size.Small" />
+            Single candidate
+        </button>
+        <button class="@GetSegmentClass(true)" type="button" @onclick="() => SetOrderMode(true)">
+            <MudIcon Icon="@Icons.Material.Outlined.FileUpload" Size="Size.Small" />
+            Bulk upload
+        </button>
     </div>
 
     @if (!isBulkMode)
     {
-        <MudPaper Class="pa-5 mb-5" Elevation="0">
-            <MudText Typo="Typo.h5" Class="mb-4" Style="font-weight:700; color:#0B1F3A;">Candidate details</MudText>
+        <MudPaper Class="ats-order-card" Elevation="0">
+            <MudText Typo="Typo.h5" Class="ats-page-title">Candidate details</MudText>
 
             <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
-                <MudGrid Spacing="3">
-                    <MudItem xs="12" md="4">
+                <section class="ats-form-section">
+                    <div class="ats-section-title"><span>1</span><h2>Personal information</h2></div>
+                    <div class="ats-personal-grid">
+                    <div class="ats-field">
+                        <label>Last name <b>*</b></label>
                         <MudTextField @bind-Value="subject.LastName"
-                                      Label="Last name"
+                                      Placeholder="Dela Cruz"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
                                       Required="true"
                                       RequiredError="Last Name is required" />
-                    </MudItem>
+                    </div>
 
-                    <MudItem xs="12" md="4">
+                    <div class="ats-field">
+                        <label>First name <b>*</b></label>
                         <MudTextField @bind-Value="subject.FirstName"
-                                      Label="First name"
+                                      Placeholder="Juan"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
                                       Required="true"
                                       RequiredError="First Name is required" />
-                    </MudItem>
+                    </div>
 
-                    <MudItem xs="12" md="4">
+                    <div class="ats-field">
+                        <label>Middle initial</label>
                         <MudTextField @bind-Value="subject.MiddleInitial"
-                                      Label="Middle Initial"
+                                      Placeholder="M."
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Class="name-filter soneplatform-rounded-input" />
-                    </MudItem>
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                    </div>
+                    </div>
+                </section>
 
-                    <MudItem xs="12" md="6">
+                <section class="ats-form-section">
+                    <div class="ats-section-title"><span>2</span><h2>Contact details</h2></div>
+                    <div class="ats-contact-grid">
+                    <div class="ats-field">
+                        <label>Email address <b>*</b></label>
                         <MudTextField @bind-Value="subject.EmailAddress"
-                                      Label="Email address"
+                                      Placeholder="juan.delacruz@email.com"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.MailOutline"
                                       Required="true"
                                       RequiredError="Email Address is required"
                                       Validation="@((string value) => EmailValidationService.ValidateEmail(value))" />
-                    </MudItem>
+                    </div>
 
-                    <MudItem xs="12" md="6">
+                    <div class="ats-field">
+                        <label>Mobile number <b>*</b></label>
                         <MudTextField @bind-Value="subject.MobileNumber"
-                                      Label="Mobile number"
+                                      Placeholder="+63 9XX XXX XXXX"
                                       Variant="Variant.Outlined"
                                       Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.PhoneIphone"
                                       Required="true"
                                       Mask="@(new PatternMask("00000000000"))"
                                       RequiredError="Mobile Number is required"
                                       Validation="@((string value) => MobileNumberValidationService.ValidateMobileNumber(value))" />
-                    </MudItem>
+                    </div>
+                    </div>
+                </section>
 
-                    <MudItem xs="12">
+                <section class="ats-form-section">
+                    <div class="ats-section-title"><span>3</span><h2>Package</h2></div>
+                    <div class="ats-field">
+                        <label>Select package <b>*</b></label>
                         <MudSelect @bind-Value="subject.SelectPackage"
-                                   Label="Select package"
+                                   Placeholder="Choose a screening package"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
-                                   Class="oneplatform-rounded-input"
+                                   Class="ats-input ats-select"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                   Disabled="@isLoadingPackages"
                                    Required="true"
                                    RequiredError="Package is required">
-                            <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
-                            <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
-                            <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
-                            <MudSelectItem Value="@("Package 1")">Package 1</MudSelectItem>
-                            <MudSelectItem Value="@("AirBNB")">AirBNB</MudSelectItem>
+                            @foreach (var package in availablePackages)
+                            {
+                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                            }
                         </MudSelect>
-                    </MudItem>
+                        @if (!isLoadingPackages && availablePackages.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
+                        }
+                    </div>
+                </section>
 
-                    <MudItem xs="12">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color:#1E2A3C; font-weight:600;">Processing speed</MudText>
+                <section class="ats-form-section ats-speed-section">
+                        <div class="ats-section-title"><span>4</span><h2>Processing speed</h2></div>
                         <div class="ats-speed-row">
                             <div class="@GetCandidateNormalCardClass()" @onclick="SelectCandidateNormal">
+                                <span class="ats-radio-dot"></span>
                                 <div class="ats-speed-top">
-                                    <span class="ats-speed-name">Normal</span>
+                                    <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" /></span><span class="ats-speed-name">Normal</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-standard">Standard</span>
                                 </div>
-                                <div class="ats-speed-sub">Results in 3-5 business days</div>
+                                <div class="ats-speed-sub">Results in 3–5 business days</div>
                             </div>
                             <div class="@GetCandidateRushCardClass()" @onclick="SelectCandidateRush">
+                                <span class="ats-radio-dot"></span>
                                 <div class="ats-speed-top">
-                                    <span class="ats-speed-name">Rush</span>
+                                    <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Bolt" Size="Size.Small" /></span><span class="ats-speed-name">Rush</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-fee">+ fee</span>
                                 </div>
                                 <div class="ats-speed-sub">Results in 24 hours</div>
@@ -114,12 +160,11 @@
                             <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
-                    </MudItem>
+                </section>
 
-                    <MudItem xs="12">
                         <div class="ats-actions-right">
                             @* <MudButton Variant="Variant.Outlined" Class="ats-ghost-btn">Save as draft</MudButton> *@
-                            <MudButton Class="theme-button theme-button-active" Style="width:140px;" OnClick="OnSubmitCandidate">
+                            <MudButton Class="ats-send-button" OnClick="OnSubmitCandidate" StartIcon="@Icons.Material.Outlined.Send">
                                 @if (isSavingCandidate)
                                 {
                                     <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -131,47 +176,56 @@
                                 }
                             </MudButton>
                         </div>
-                    </MudItem>
-                </MudGrid>
             </MudForm>
         </MudPaper>
     }
     else
     {
-        <MudPaper Class="pa-5 mb-5" Elevation="0">
-            <MudText Typo="Typo.h5" Class="mb-4" Style="font-weight:700; color:#0B1F3A;">Bulk invite</MudText>
+        <MudPaper Class="ats-order-card" Elevation="0">
+            <MudText Typo="Typo.h5" Class="ats-page-title">Bulk invite</MudText>
 
             <MudForm @ref="bulkForm" Disabled="@isUploadingBulk">
-                <MudGrid Spacing="3">
-                    <MudItem xs="12">
+                <section class="ats-form-section">
+                    <div class="ats-section-title"><span>1</span><h2>Package</h2></div>
+                    <div class="ats-field">
+                        <label>Select package <b>*</b></label>
                         <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
-                                   Label="Select package"
+                                   Placeholder="Choose a screening package"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
-                                   Class="oneplatform-rounded-input"
+                                   Class="ats-input ats-select"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                   Disabled="@isLoadingPackages"
                                    Required="true"
                                    RequiredError="Package is required">
-                            <MudSelectItem Value="@("Basic")">Basic</MudSelectItem>
-                            <MudSelectItem Value="@("Basic 2")">Basic 2</MudSelectItem>
-                            <MudSelectItem Value="@("Lite")">Lite</MudSelectItem>
-                            <MudSelectItem Value="@("Package 1")">Package 1</MudSelectItem>
-                            <MudSelectItem Value="@("AirBNB")">AirBNB</MudSelectItem>
+                            @foreach (var package in availablePackages)
+                            {
+                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                            }
                         </MudSelect>
-                    </MudItem>
+                        @if (!isLoadingPackages && availablePackages.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
+                        }
+                    </div>
+                </section>
 
-                    <MudItem xs="12">
-                        <MudText Typo="Typo.subtitle2" Class="mb-2" Style="color:#1E2A3C; font-weight:600;">Processing speed</MudText>
+                <section class="ats-form-section">
+                        <div class="ats-section-title"><span>2</span><h2>Processing speed</h2></div>
                         <div class="ats-speed-row">
                             <div class="@GetBulkNormalCardClass()" @onclick="SelectBulkNormal">
+                                <span class="ats-radio-dot"></span>
                                 <div class="ats-speed-top">
-                                    <span class="ats-speed-name">Normal</span>
+                                    <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" /></span><span class="ats-speed-name">Normal</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-standard">Standard</span>
                                 </div>
-                                <div class="ats-speed-sub">Results in 3-5 business days</div>
+                                <div class="ats-speed-sub">Results in 3–5 business days</div>
                             </div>
                             <div class="@GetBulkRushCardClass()" @onclick="SelectBulkRush">
+                                <span class="ats-radio-dot"></span>
                                 <div class="ats-speed-top">
-                                    <span class="ats-speed-name">Rush</span>
+                                    <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Bolt" Size="Size.Small" /></span><span class="ats-speed-name">Rush</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-fee">+ fee</span>
                                 </div>
                                 <div class="ats-speed-sub">Results in 24 hours</div>
@@ -181,9 +235,10 @@
                             <MudRadio Color="Color.Primary" Value="@("Normal")">Normal</MudRadio>
                             <MudRadio Color="Color.Primary" Value="@("Rush")">Rush</MudRadio>
                         </MudRadioGroup>
-                    </MudItem>
+                </section>
 
-                    <MudItem xs="12">
+                <section class="ats-form-section ats-file-section">
+                    <div class="ats-section-title"><span>3</span><h2>Candidate file</h2></div>
                         <MudFileUpload T="IBrowserFile"
                                        Validation="@((IBrowserFile file) => FileValidationService.ValidateFileSize(file))"
                                        @ref="@bulkFileUpload"
@@ -193,26 +248,22 @@
                                        Class="ats-bulk-upload-control">
                             <CustomContent>
                                 <div class="ats-upload-box" @onclick="async () => await context.OpenFilePickerAsync()">
-                                    <div class="ats-upload-icon">↑</div>
+                                    <div class="ats-upload-icon"><MudIcon Icon="@Icons.Material.Outlined.FileUpload" /></div>
                                     <div class="ats-upload-title">Upload a CSV file</div>
                                     <div class="ats-upload-sub">Drag and drop, or click to browse</div>
                                 </div>
                             </CustomContent>
                             <SelectedTemplate />
                         </MudFileUpload>
-                    </MudItem>
 
-                    <MudItem xs="12">
                         <div class="ats-template-link">
                             Don't have a file?
                             <MudLink OnClick="DownloadTemplate" Class="ml-1">Download template</MudLink>
                         </div>
-                    </MudItem>
 
                     @if (bulkUploadFileDetailsDTO.BulkFile is not null)
                     {
-                        <MudItem xs="12">
-                            <MudPaper Class="pa-3" Elevation="0" Style="border:1px solid #E3E9F1; border-radius:10px;">
+                            <MudPaper Class="pa-3 ats-selected-file" Elevation="0">
                                 <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                                     <MudText Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 88%;">
                                         @bulkUploadFileDetailsDTO.BulkFile!.Name (@($"{bulkUploadFileDetailsDTO.BulkFile!.Size / 1024d:N1} kB"))
@@ -223,13 +274,12 @@
                                                    OnClick="@(() => RemoveFileFromUploadsAsync(bulkUploadFileDetailsDTO.BulkFile!))" />
                                 </MudStack>
                             </MudPaper>
-                        </MudItem>
                     }
+                </section>
 
-                    <MudItem xs="12">
                         <div class="ats-actions-right">
-                            <MudButton Variant="Variant.Outlined" Class="ats-ghost-btn" OnClick="ResetBulkFormAsync">Cancel</MudButton>
-                            <MudButton Class="theme-button theme-button-active" Style="width:170px;" OnClick="OnSubmitBulk">
+                            <MudButton Variant="Variant.Outlined" Class="ats-cancel-button" OnClick="ResetBulkFormAsync">Cancel</MudButton>
+                            <MudButton Class="ats-send-button ats-upload-button" OnClick="OnSubmitBulk" StartIcon="@Icons.Material.Outlined.FileUpload">
                                 @if (isUploadingBulk)
                                 {
                                     <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -245,8 +295,6 @@
                                 }
                             </MudButton>
                         </div>
-                    </MudItem>
-                </MudGrid>
             </MudForm>
         </MudPaper>
     }

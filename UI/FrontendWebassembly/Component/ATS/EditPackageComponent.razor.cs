@@ -11,6 +11,7 @@ public partial class EditPackageComponent
 	public PackageDetailsDTO Package { get; set; } = new();
 
 	private EditPackageDTO EditPackage = new();
+	private int DescriptionLength => EditPackage.PackageDescription?.Length ?? 0;
 
 	protected override void OnParametersSet()
 	{
@@ -18,11 +19,15 @@ public partial class EditPackageComponent
 		{
 			PackageId = Package.PackageId,
 			PackageName = Package.PackageName,
-			IsActive = Package.IsActive
+			PackageDescription = Package.PackageDescription,
+			IsActive = Package.IsActive,
+			FollowUpEmail = Package.FollowUpEmail
 		};
 	}
 
 	void Cancel() => EditPackageDialog!.Cancel();
+
+	private void ToggleStatus() => EditPackage.IsActive = !EditPackage.IsActive;
 
 	async Task Submit()
 	{

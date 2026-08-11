@@ -6,6 +6,15 @@ public partial class DisputeOrderComponent
 	private string? _searchString;
 
 	private Guid? _loadingDisputeId;
+
+	private static string GetInitials(string? firstName, string? lastName)
+	{
+		var firstInitial = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
+		var lastInitial = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
+
+		return $"{firstInitial}{lastInitial}".ToUpperInvariant();
+	}
+
 	private string searchString
 	{
 		get => _searchString!;
@@ -50,16 +59,26 @@ public partial class DisputeOrderComponent
 	}
 
 
-	private async Task MarkAsDisputed(Guid emailInvitationId, DateTime? orderCreatedAt, string subjectName)
+	private async Task MarkAsDisputed(Guid emailInvitationId)
 	{
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId },
-			{ nameof(DisputeDialogOrderComponent.OrderCreatedAt), orderCreatedAt },
-			{ nameof(DisputeDialogOrderComponent.SubjectName), subjectName }
+			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId }
 		};
 
-		await OpenResultDialog<DisputeDialogOrderComponent>("", confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.Small,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
 
 		try
 		{

@@ -74,11 +74,17 @@ public static class FrontendServiceConfig
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
+		services.AddScoped<IApplicationFormStateService, ApplicationFormStateService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
+		services.AddScoped<IRoleManagementService, RoleManagementService>();
+		services.AddScoped<IModuleManagementService, ModuleManagementService>();
+		services.AddScoped<IATSUserManagementService, ATSUserManagementService>();
+		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 
 		services.AddMudServices(config =>
 		{

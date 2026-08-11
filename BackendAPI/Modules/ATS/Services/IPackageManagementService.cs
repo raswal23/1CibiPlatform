@@ -3,6 +3,6 @@
 public interface IPackageManagementService
 {
 	Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<bool> AddPackageAsync(AddPackageDTO packageDTO);
-	Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO);
+	Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken);
+	Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO, CancellationToken cancellationToken);
 }

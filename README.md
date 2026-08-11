@@ -1,5 +1,17 @@
 # 1CibiPlatform
 
+## Development guides
+
+- [End-to-end feature development guide](docs/feature-development-guide.md) — repository-specific API vertical slices, caching, tests, Blazor UI, and a reusable AI feature-brief template.
+
+### Starting a feature with Codex or Claude
+
+Copy this instruction at the beginning of every new feature discussion:
+
+> Read `docs/feature-development-guide.md` first and follow it. Implement this feature end to end. Use `BackendAPI/Modules/ATS/Features/UserManagement` as the API vertical-slice reference and `UI/FrontendWebassembly/Component/ATS` as the latest UI/theme reference. Preserve existing conventions and unrelated changes, include relevant backend and UI tests, and run the relevant tests plus the solution build. If information is missing, infer it from the closest existing ATS feature and state your assumptions. Ask before making destructive schema changes or inventing authorization requirements.
+
+After that instruction, describe the feature using the **Feature brief template** at the bottom of the [feature development guide](docs/feature-development-guide.md#feature-brief-template).
+
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-blue)](https://www.docker.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-WebAssembly-green)](https://blazor.net/)

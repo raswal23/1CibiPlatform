@@ -20,6 +20,7 @@ public class LoginService : ILoginService
 	private readonly string _isUserLoginTag = "is_user_login";
 	private readonly string _userAttemptTag = "user_attempt";
 	private readonly int _windowMinutesBeforeTokenExpiration = 3;
+	private readonly int _expiryRefreshTokeninMinutesKey = 30;
 
 	public LoginService(
 	IAuthRepository authRepository,
@@ -132,7 +133,7 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryinMinutesKey))
+			Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryRefreshTokeninMinutesKey))
 		};
 
 		_httpContextAccessor.HttpContext!.Response.Cookies.Append(_httpCookieOnlyKey!, jwtToken, cookieOptions);
@@ -285,7 +286,7 @@ public class LoginService : ILoginService
 
 		// save refresh token to database
 		// save if http cookie only for refresh token is already expired
-		await this._authRepository.SaveRefreshTokenAsync(userData.Id, hashRefreshToken, DateTime.UtcNow.AddMinutes(_expiryinMinutesKey));
+		await this._authRepository.SaveRefreshTokenAsync(userData.Id, hashRefreshToken, DateTime.UtcNow.AddMinutes(_expiryRefreshTokeninMinutesKey));
 
 		_logger.LogInformation("Login successful for user: {@Context}", successContext);
 
@@ -399,7 +400,7 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKey)
+			Expires = DateTime.UtcNow.AddMinutes(_expiryRefreshTokeninMinutesKey)
 		};
 
 
@@ -430,7 +431,7 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryinMinutesKey))
+			Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryRefreshTokeninMinutesKey))
 		};
 
 

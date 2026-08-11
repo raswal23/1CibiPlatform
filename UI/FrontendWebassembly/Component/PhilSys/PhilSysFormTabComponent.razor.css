@@ -1,0 +1,175 @@
+.philsys-lookup-tabs-wrap {
+    --philsys-navy-800: #132a54;
+    --philsys-blue-600: #1d5fd1;
+    --philsys-blue-500: #2e7ce0;
+    --philsys-blue-tint: #edf3fc;
+    --philsys-border-strong: #c2d2f0;
+    --philsys-text-1: #16233f;
+    --philsys-text-2: #5b6b8c;
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto 22px;
+    font-family: Inter, sans-serif;
+}
+
+.philsys-lookup-caption {
+    margin-bottom: 16px;
+    color: var(--philsys-text-2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.philsys-lookup-tabs {
+    display: grid;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.philsys-lookup-tab {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    padding: 14px 44px 14px 12px;
+    align-items: center;
+    gap: 12px;
+    border: 2px solid var(--philsys-border-strong);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: none;
+    color: inherit;
+    cursor: pointer;
+    font-family: Inter, sans-serif;
+    text-align: left;
+    transition: border-color .12s ease, background-color .12s ease, box-shadow .12s ease;
+}
+
+.philsys-lookup-tab:hover {
+    border-color: #4f93ea;
+}
+
+.philsys-lookup-tab.active {
+    border-color: var(--philsys-blue-500);
+    background: var(--philsys-blue-tint);
+    box-shadow: 0 4px 14px -6px rgba(29, 95, 209, .3);
+}
+
+.philsys-tab-button {
+    width: 100%;
+}
+
+.philsys-lookup-tab-icon {
+    display: flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--philsys-blue-500), var(--philsys-navy-800));
+    color: #fff;
+}
+
+.philsys-lookup-tab-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.philsys-lookup-tab-text {
+    min-width: 0;
+}
+
+.philsys-lookup-tab-title {
+    display: block;
+    color: var(--philsys-text-1);
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.philsys-lookup-tab-sub {
+    display: block;
+    margin-top: 3px;
+    color: var(--philsys-text-2);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.philsys-lookup-tab-radio {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--philsys-border-strong);
+    border-radius: 50%;
+    background: #fff;
+    color: #fff;
+}
+
+.philsys-lookup-tab-radio svg {
+    width: 11px;
+    height: 11px;
+    opacity: 0;
+    transition: opacity .12s ease;
+}
+
+.philsys-lookup-tab.active .philsys-lookup-tab-radio {
+    border-color: var(--philsys-blue-600);
+    background: var(--philsys-blue-600);
+}
+
+.philsys-lookup-tab.active .philsys-lookup-tab-radio svg {
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .philsys-lookup-tabs-wrap {
+        margin-bottom: 16px;
+    }
+
+    .philsys-lookup-caption {
+        margin-bottom: 12px;
+        font-size: 11px;
+    }
+
+    .philsys-lookup-tabs {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .philsys-lookup-tab {
+        padding: 13px 40px 13px 11px;
+    }
+
+    .philsys-lookup-tab-icon {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+}
+
+@media (max-width: 400px) {
+    .philsys-lookup-tab-title {
+        font-size: 13.5px;
+    }
+
+    .philsys-lookup-tab-sub {
+        font-size: 11px;
+    }
+
+    .philsys-lookup-tab-radio {
+        top: 12px;
+        right: 12px;
+        width: 18px;
+        height: 18px;
+    }
+}

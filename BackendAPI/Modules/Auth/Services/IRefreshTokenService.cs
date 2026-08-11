@@ -8,7 +8,7 @@ public interface IRefreshTokenService
 
 	Task<string> RevokeTokenAsync();
 
-	Task<LoginResponseWebDTO> GetNewAccessTokenAsync(Guid UserId);
+	Task<LoginResponseWebDTO> GetNewAccessTokenAsync();
 
 	string HashToken(string token);
 }

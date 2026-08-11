@@ -2,13 +2,13 @@ namespace ATS.Services;
 
 public class PackageManagementService : IPackageManagementService
 {
-	private readonly IATSRepository _atsRepository;
+	private readonly IPackageRepository _packageRepository;
 	private readonly ILogger<PackageManagementService> _logger;
 
-	public PackageManagementService(IATSRepository atsRepository,
+	public PackageManagementService(IPackageRepository packageRepository,
 					   ILogger<PackageManagementService> logger)
 	{
-		_atsRepository = atsRepository;
+		_packageRepository = packageRepository;
 		_logger = logger;
 	}
 
@@ -27,11 +27,11 @@ public class PackageManagementService : IPackageManagementService
 		_logger.LogInformation("Fetching packages with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_atsRepository.GetPackagesAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchPackagesAsync(paginationRequest, cancellationToken);
+			_packageRepository.GetPackagesAsync(paginationRequest, cancellationToken) :
+			_packageRepository.SearchPackagesAsync(paginationRequest, cancellationToken);
 	}
 
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
+	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -43,11 +43,11 @@ public class PackageManagementService : IPackageManagementService
 
 		_logger.LogInformation("Adding package: {@Context}", logContext);
 
-		var isAdded = await _atsRepository.AddPackageAsync(packageDTO);
+		var isAdded = await _packageRepository.AddPackageAsync(packageDTO, cancellationToken);
 		return isAdded;
 	}
 
-	public async Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO)
+	public async Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -57,17 +57,20 @@ public class PackageManagementService : IPackageManagementService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var existingPackage = await _atsRepository.GetPackageAsync(packageDTO.PackageId);
+		var existingPackage = await _packageRepository.GetPackageAsync(packageDTO.PackageId, cancellationToken);
 		if (existingPackage == null)
 		{
 			_logger.LogError("{PackageId} was not found during update operation: {@Context}", packageDTO.PackageId, logContext);
 			throw new NotFoundException($"Package with ID {packageDTO.PackageId} was not found.");
 		}
 
-		existingPackage.PackageName = packageDTO.PackageName!;
+		existingPackage.PackageName = packageDTO.PackageName.Trim();
+		existingPackage.PackageDescription = packageDTO.PackageDescription.Trim();
 		existingPackage.IsActive = packageDTO.IsActive;
+		existingPackage.FollowUpEmail = packageDTO.FollowUpEmail;
+		existingPackage.UpdatedAt = DateTime.UtcNow;
 
-		var package = await _atsRepository.EditPackageAsync(existingPackage);
+		var package = await _packageRepository.EditPackageAsync(existingPackage, cancellationToken);
 		return package.Adapt<PackageDetailsDTO>();
 	}
 }

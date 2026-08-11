@@ -1,7 +1,5 @@
 ﻿namespace Auth.Features.GetNewAccessToken;
 
-public record GetNewAccessTokenRequest(Guid userId);
-
 public record GetNewAccessTokenResponse(LoginResponseWebDTO LoginResponseWebDTO);
 
 
@@ -9,9 +7,9 @@ public class GetNewAccessTokenEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("getnewaccesstoken", async (GetNewAccessTokenRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("getnewaccesstoken", async (ISender sender, CancellationToken cancellationToken) =>
 		{
-			var command = new GetNewAccessTokenCommand(request.userId);
+			var command = new GetNewAccessTokenCommand();
 
 			GetNewAccessTokenResult result = await sender.Send(command, cancellationToken);
 

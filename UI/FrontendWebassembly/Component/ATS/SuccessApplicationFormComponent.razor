@@ -1,23 +1,20 @@
-﻿﻿<MudPaper Elevation="6"
-           Class="p-10 text-center d-flex flex-column justify-center align-center ats-success-application-container"
-           Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:500px; max-width:100%;">
- 
-    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
-             Size="Size.Large"
-             Style="font-size: 80px; color: green; margin-bottom: 20px;" />
+<section class="ats-success-card" aria-labelledby="ats-success-title" role="status">
+    <div class="ats-success-icon-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2.6"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M5 12l5 5L20 7" />
+        </svg>
+    </div>
 
-
-    <MudText Typo="Typo.h4" Style="font-weight: bold; margin-top: 10px;" Class="gradient-text">
-        Submission Complete
-    </MudText>
-
-    <MudText Typo="Typo.subtitle1" Style="max-width: 420px; color: #555;  margin: 15px 10px 5px 10px;">
-        Thank You!
-    </MudText>
-
-    <MudText Typo="Typo.subtitle1" Style="max-width: 420px; color: #555;  margin: 0px 10px 20px 10px;">
-        You will be receiving a notification as confirmation for completing the form. Please do not
-        hesitate to reach us or your designated HR/Recruiter should you have any questions.
-    </MudText>
-
-</MudPaper>
+    <h1 id="ats-success-title">
+        <span>Submission</span> <span>Complete</span>
+    </h1>
+    <p class="ats-success-thanks">Thank you!</p>
+    <p class="ats-success-description">
+        You will receive a notification confirming that your form has been completed. Please don't hesitate to reach out to us or your designated HR/Recruiter if you have any questions.
+    </p>
+</section>

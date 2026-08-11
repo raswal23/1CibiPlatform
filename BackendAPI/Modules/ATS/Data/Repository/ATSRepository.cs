@@ -1,4 +1,4 @@
-﻿namespace ATS.Data.Repository;
+namespace ATS.Data.Repository;
 
 public class ATSRepository : IATSRepository
 {
@@ -388,6 +388,224 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
+	public async Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
+	{
+		var now = DateTime.UtcNow;
+		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var yearEnd = yearStart.AddYears(1);
+
+		var requesterOptions = await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => x.Requestor != null && x.Requestor != string.Empty)
+			.Select(x => x.Requestor!)
+			.Distinct()
+			.OrderBy(x => x)
+			.ToListAsync(cancellationToken);
+
+		var invitations = _dbcontext.EmailInvitationRequests.AsNoTracking();
+		var allYtdHireRows = await invitations
+			.Where(x => x.OrderCreatedAt.HasValue
+				&& x.OrderCreatedAt >= yearStart
+				&& x.OrderCreatedAt < yearEnd
+				&& x.Requestor != null
+				&& x.Requestor.Trim() != string.Empty)
+			.Select(x => new
+			{
+				Requestor = x.Requestor!,
+				OrderCreatedAt = x.OrderCreatedAt!.Value
+			})
+			.ToListAsync(cancellationToken);
+		var ytdHireRows = string.IsNullOrWhiteSpace(requester)
+			? allYtdHireRows
+			: allYtdHireRows
+				.Where(x => x.Requestor == requester)
+				.ToList();
+
+		if (!string.IsNullOrWhiteSpace(requester))
+		{
+			invitations = invitations.Where(x => x.Requestor == requester);
+		}
+
+		var ytdPeriods = Enumerable.Range(0, 12)
+			.Select(monthOffset => yearStart.AddMonths(monthOffset))
+			.ToArray();
+
+		var ytdHireSeries = ytdHireRows
+			.GroupBy(x => x.Requestor)
+			.OrderByDescending(group => group.Count())
+			.ThenBy(group => group.Key)
+			.Select(group =>
+			{
+				var countLookup = group
+					.GroupBy(x => (x.OrderCreatedAt.Year, x.OrderCreatedAt.Month))
+					.ToDictionary(monthGroup => monthGroup.Key, monthGroup => monthGroup.Count());
+
+				return new DashboardVolumeSeriesDTO
+				{
+					Name = group.Key,
+					Points = ytdPeriods
+						.Select(periodStart => new DashboardVolumePointDTO
+						{
+							PeriodStart = periodStart,
+							Count = countLookup.GetValueOrDefault((periodStart.Year, periodStart.Month))
+						})
+						.ToArray()
+				};
+			})
+			.ToArray();
+
+		var sentInvitations = invitations.Where(x => x.EmailSentStatus == EmailStatus.Done);
+		var responseCounts = await sentInvitations
+			.GroupBy(_ => 1)
+			.Select(x => new
+			{
+				Total = x.Count(),
+				Completed = x.Count(invitation =>
+					invitation.ApplicationFormStatus == ApplicationFormStatus.Done
+					|| invitation.FormCompletedAt.HasValue),
+				Incomplete = x.Count(invitation =>
+					invitation.ApplicationFormStatus != ApplicationFormStatus.Done
+					&& !invitation.FormCompletedAt.HasValue
+					&& invitation.ApplicationFormStatus == ApplicationFormStatus.Withdrawn)
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+		var completedResponses = responseCounts?.Completed ?? 0;
+		var incompleteResponses = responseCounts?.Incomplete ?? 0;
+		var notStartedResponses = (responseCounts?.Total ?? 0) - completedResponses - incompleteResponses;
+
+		var reportRows = await invitations
+			.SelectMany(invitation => invitation.ReportDetails!
+				.Select(report => new DashboardReportRow
+				{
+					ReportStatus = report.ReportStatus,
+					HitStatus = report.HitStatus,
+					ReportUploadedAt = report.ReportUploadedAt,
+					RushNormal = invitation.RushNormal
+				}))
+			.ToListAsync(cancellationToken);
+
+		var serviceLevelRows = reportRows
+			.Where(IsServiceLevelReport)
+			.ToArray();
+		var latestTurnaroundDate = serviceLevelRows
+			.Select(report => (DateTime?)report.ReportUploadedAt)
+			.Max();
+		var turnaroundEndDate = latestTurnaroundDate?.Date ?? now.Date;
+		var turnaroundStart = turnaroundEndDate.AddDays(-6);
+
+		var turnaroundPeriods = Enumerable.Range(0, 7)
+			.Select(dayOffset => turnaroundStart.AddDays(dayOffset))
+			.ToArray();
+
+		var turnaroundTimeTrend = new (string Name, Func<DashboardReportRow, bool> Matches)[]
+			{
+				("Complete", report => report.ReportStatus == ReportStatus.CompleteFinalReport),
+				("Closed", report => report.ReportStatus == ReportStatus.ClosedFinalReport),
+				("Clear", report => string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)),
+				("Not Clear", report => string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase))
+			}
+			.Select(series => new TurnaroundTimeSeriesDTO
+			{
+				Name = series.Name,
+				Points = turnaroundPeriods
+					.Select(date => new TurnaroundTimePointDTO
+					{
+						Date = date,
+						Count = serviceLevelRows.Count(report =>
+							report.ReportUploadedAt.Date == date.Date
+							&& series.Matches(report))
+					})
+					.ToArray()
+			})
+			.ToArray();
+
+		var completeReports = reportRows.Count(report => report.ReportStatus == ReportStatus.CompleteFinalReport);
+		var closedReports = reportRows.Count(report => report.ReportStatus == ReportStatus.ClosedFinalReport);
+		var initialReports = reportRows.Count(report => report.ReportStatus == ReportStatus.InitialReport);
+		var supplementaryReports = reportRows.Count(report => report.ReportStatus == ReportStatus.SupplementaryReport);
+
+		var recentOrders = await invitations
+			.OrderByDescending(x => x.OrderCreatedAt)
+			.ThenByDescending(x => x.EmailInvitationID)
+			.Select(x => new DashboardRecentOrderDTO
+			{
+				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+				OrderStatus = x.OrderStatus,
+				HitStatus = x.ReportDetails!
+					.OrderByDescending(report => report.ReportUploadedAt)
+					.Select(report => report.HitStatus)
+					.FirstOrDefault(),
+				OrderCreatedAt = x.OrderCreatedAt,
+				OrderCompletedAt = x.OrderCompletedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new ATSDashboardDTO
+		{
+			Requesters = requesterOptions,
+			YtdHireSeries = ytdHireSeries,
+			CandidateResponseRate = new CandidateResponseRateDTO
+			{
+				Categories = CreateCategories(
+					("Completed", completedResponses),
+					("Incomplete", incompleteResponses),
+					("Not Started", notStartedResponses))
+			},
+			TurnaroundTimeTrend = turnaroundTimeTrend,
+			CompletionRate = new CompletionRateDTO
+			{
+				Categories = CreateCategories(
+					("Complete", completeReports),
+					("Closed", closedReports),
+					("Initial", initialReports),
+					("Supplementary", supplementaryReports))
+			},
+			RecentOrders = recentOrders
+		};
+	}
+
+	private static IReadOnlyList<DashboardCategoryDTO> CreateCategories(
+		params (string Name, int Count)[] categoryCounts)
+	{
+		var total = categoryCounts.Sum(category => category.Count);
+		return categoryCounts
+			.Select(category => new DashboardCategoryDTO
+			{
+				Name = category.Name,
+				Count = category.Count,
+				Percentage = CalculatePercentage(category.Count, total)
+			})
+			.ToArray();
+	}
+
+	private static double CalculatePercentage(int numerator, int denominator)
+	{
+		return denominator == 0
+			? 0
+			: Math.Round(numerator * 100d / denominator, 1);
+	}
+
+	private static bool IsServiceLevelReport(DashboardReportRow report)
+	{
+		var hasServiceLevel = string.Equals(report.RushNormal?.Trim(), "Normal", StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(report.RushNormal?.Trim(), "Rush", StringComparison.OrdinalIgnoreCase);
+
+		return hasServiceLevel
+			&& (report.ReportStatus == ReportStatus.CompleteFinalReport
+			|| report.ReportStatus == ReportStatus.ClosedFinalReport
+			|| string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase));
+	}
+
+	private sealed record DashboardReportRow
+	{
+		public string? ReportStatus { get; init; }
+		public string? HitStatus { get; init; }
+		public DateTime ReportUploadedAt { get; init; }
+		public string? RushNormal { get; init; }
+	}
+
    public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
@@ -410,9 +628,14 @@ public class ATSRepository : IATSRepository
 		if (string.IsNullOrWhiteSpace(sortColumn))
 		{
 			usersQuery = usersQuery
-						.OrderByDescending(x => x.OrderCompletedAt.HasValue)
-						.ThenByDescending(x => x.OrderCompletedAt)
-						.ThenBy(x => x.EmailInvitationID);
+				.OrderBy(x =>
+					x.OrderStatus == OrderStatus.Completed ? 0 :
+					x.OrderStatus == OrderStatus.InProgress ? 1 :
+					x.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
+					x.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
+					4)
+				.ThenByDescending(x => x.OrderCompletedAt)
+				.ThenBy(x => x.EmailInvitationID);
 		}
 		else
 		{
@@ -847,173 +1070,5 @@ public class ATSRepository : IATSRepository
 				cancellationToken);
 
 		return true;
-	}
-
-	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var packagesQuery = _dbcontext.PackageDetails
-			.AsNoTracking()
-			.OrderBy(p => p.PackageName);
-
-		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
-
-		var items = await packagesQuery
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(p => new PackageDetailsDTO
-			{
-				PackageId = p.PackageId,
-				PackageName = p.PackageName,
-				IsActive = p.IsActive,
-				CreatedAt = p.CreatedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<PackageDetailsDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
-	}
-
-	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var packagesQuery = _dbcontext.PackageDetails
-			.AsNoTracking()
-			.Where(p => EF.Functions.ILike(p.PackageName!, $"%{paginationRequest.SearchTerm}%"));
-
-		var totalRecords = await packagesQuery.CountAsync(cancellationToken);
-
-		var items = await packagesQuery
-			.OrderBy(p => p.PackageName)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(p => new PackageDetailsDTO
-			{
-				PackageId = p.PackageId,
-				PackageName = p.PackageName,
-				IsActive = p.IsActive,
-				CreatedAt = p.CreatedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<PackageDetailsDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
-	}
-
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
-	{
-		var packageDetails = new PackageDetails
-		{
-			PackageId = Guid.CreateVersion7(),
-			PackageName = packageDTO.PackageName,
-			IsActive = packageDTO.IsActive,
-			CreatedAt = DateTime.UtcNow
-		};
-
-		await _dbcontext.PackageDetails.AddAsync(packageDetails);
-		await _dbcontext.SaveChangesAsync();
-		return true;
-	}
-
-	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
-	{
-		return await _dbcontext.PackageDetails
-			.AsNoTracking()
-			.FirstOrDefaultAsync(p => p.PackageId == packageId);
-	}
-
-	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
-	{
-		_dbcontext.PackageDetails.Update(packageDetails);
-		await _dbcontext.SaveChangesAsync();
-		return packageDetails;
-	}
-
-	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var clientsQuery = _dbcontext.ClientDetails
-			.AsNoTracking()
-			.OrderBy(c => c.ClientName);
-
-		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
-
-		var items = await clientsQuery
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(c => new ClientDetailsDTO
-			{
-				ClientId = c.ClientId,
-				ClientName = c.ClientName,
-				IsActive = c.IsActive,
-				CreatedAt = c.CreatedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<ClientDetailsDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
-	}
-
-	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var clientsQuery = _dbcontext.ClientDetails
-			.AsNoTracking()
-			.Where(c => EF.Functions.ILike(c.ClientName!, $"%{paginationRequest.SearchTerm}%"));
-
-		var totalRecords = await clientsQuery.CountAsync(cancellationToken);
-
-		var items = await clientsQuery
-			.OrderBy(c => c.ClientName)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(c => new ClientDetailsDTO
-			{
-				ClientId = c.ClientId,
-				ClientName = c.ClientName,
-				IsActive = c.IsActive,
-				CreatedAt = c.CreatedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<ClientDetailsDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
-	}
-
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
-	{
-		var clientDetails = new ClientDetails
-		{
-			ClientId = Guid.CreateVersion7(),
-			ClientName = clientDTO.ClientName,
-			IsActive = clientDTO.IsActive,
-			CreatedAt = DateTime.UtcNow
-		};
-
-		await _dbcontext.ClientDetails.AddAsync(clientDetails);
-		await _dbcontext.SaveChangesAsync();
-		return true;
-	}
-
-	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
-	{
-		return await _dbcontext.ClientDetails
-			.AsNoTracking()
-			.FirstOrDefaultAsync(c => c.ClientId == clientId);
-	}
-
-	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
-	{
-		_dbcontext.ClientDetails.Update(clientDetails);
-		await _dbcontext.SaveChangesAsync();
-		return clientDetails;
 	}
 }

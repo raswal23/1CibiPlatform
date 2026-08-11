@@ -6,36 +6,70 @@ public partial class WithdrawnApplicationComponent
 	private string? _searchString;
 
 	private Guid? _loadingEmailInvitationId;
+
+	private static string GetInitials(string? firstName, string? lastName)
+	{
+		var firstInitial = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
+		var lastInitial = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
+
+		return $"{firstInitial}{lastInitial}".ToUpperInvariant();
+	}
+
 	private async Task ConfirmResendApplicationForm(Guid emailInvitationId)
 	{
+
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Do you want to resend the application form?" }
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Resend Application"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will resend the application form."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Resend"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking \"Resend\" will resend the application form via email."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.Refresh
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)(() => ResendApplicationForm(emailInvitationId))
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor),"#FCF1DD"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
+			}
+
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
-
-		var result = await dialog.Result;
-
-		if (result!.Canceled)
-			return;
-
-		try
+		var options = new DialogOptions
 		{
-			_loadingEmailInvitationId = emailInvitationId;
-			StateHasChanged();
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
 
-			await ResendApplicationForm(emailInvitationId);
-		}
-		finally
-		{
-			_loadingEmailInvitationId = null;
-			StateHasChanged();
-		}
-		
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+		await dialog.Result;
 	}
 
 	private async Task<TableData<EmailInvitationRequestListDTO>> LoadWithdrawnServerData(TableState state, CancellationToken cancellationToken)
@@ -57,21 +91,50 @@ public partial class WithdrawnApplicationComponent
 		set => UpdateSearch(ref _searchString!, value, lockedUsersTable!);
 	}
 
-	private async Task ResendApplicationForm(Guid emailInvitationId)
+	private async Task<bool> ResendApplicationForm(Guid emailInvitationId)
 	{
-		var success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
+		_loadingEmailInvitationId = emailInvitationId;
+		await InvokeAsync(StateHasChanged);
 
-		if (!success)
+		try
 		{
-			Snackbar.Add("Failed to resend application form.", Severity.Error);
-			return;
-		}
+			bool success;
 
-		if (lockedUsersTable?.TableRef != null)
-		{
-			await lockedUsersTable.TableRef.ReloadServerData();
+			try
+			{
+				success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
+			}
+			catch (Exception)
+			{
+				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				return false;
+			}
+
+			if (!success)
+			{
+				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				return false;
+			}
+
+			if (lockedUsersTable?.TableRef != null)
+			{
+				try
+				{
+					await lockedUsersTable.TableRef.ReloadServerData();
+				}
+				catch (Exception)
+				{
+					Snackbar.Add("Application form was resent, but the list could not be refreshed.", Severity.Warning);
+				}
+			}
 
 			Snackbar.Add("Application form resent successfully.", Severity.Success);
+			return true;
+		}
+		finally
+		{
+			_loadingEmailInvitationId = null;
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 }

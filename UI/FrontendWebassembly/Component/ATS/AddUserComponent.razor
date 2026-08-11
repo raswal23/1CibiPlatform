@@ -1,0 +1,236 @@
+<MudDialog Class="um-dialog au-dialog ats-scroll-dialog" Style="padding: 0; width: min(640px, calc(100vw - 24px)); max-width: 640px;">
+    <DialogContent>
+        <div class="au-shell ats-dialog-shell">
+            <header class="au-header ats-dialog-header">
+                <div class="au-header-row">
+                    <div class="au-header-left">
+                        <div class="au-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="9" cy="8" r="3.2" />
+                                <path d="M3.5 20c0-3.4 2.7-6 5.9-6h.2c1 0 1.9.24 2.7.66" />
+                                <path d="M17 14v6M14 17h6" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="au-header-text">
+                            <h1>Add user</h1>
+                            <p>Create a user and assign modules</p>
+                        </div>
+                    </div>
+                    <button type="button" class="au-close" aria-label="Close add user dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6L6 18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="au-progress" role="progressbar" aria-label="Add user progress" aria-valuemin="1" aria-valuemax="3" aria-valuenow="2">
+                    <span class="is-complete"></span>
+                    <span class="is-complete"></span>
+                    <span></span>
+                </div>
+            </header>
+
+            <main class="au-body ats-dialog-body">
+                <MudForm @ref="UserForm">
+                    <section class="au-section" aria-labelledby="user-identity-heading">
+                        <div class="au-section-head">
+                            <span class="au-section-number">1</span>
+                            <h2 id="user-identity-heading">User identity</h2>
+                            <span class="au-section-helper">Who this account belongs to</span>
+                        </div>
+
+                        <div class="au-section-body">
+                            <div class="au-avatar-row">
+                                <div class="au-avatar" aria-label="Selected user initials">@UserInitials</div>
+                                <span>Initials update when a user is selected</span>
+                            </div>
+
+                            <div class="au-field">
+                                <label for="au-user">Link existing user <span class="au-required">*</span></label>
+                                <div class="au-input-wrap">
+                                    <MudAutocomplete T="ATSUserLookupDTO"
+                                                     InputId="au-user"
+                                                     Value="SelectedAuthUser"
+                                                     ValueChanged="OnAuthUserChanged"
+                                                     SearchFunc="SearchAuthUsers"
+                                                     ToStringFunc="GetAuthUserText"
+                                                     Placeholder="Select a user"
+                                                     Required="true"
+                                                     RequiredError="User is required"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     ShowProgressIndicator="true"
+                                                     Error="@(!string.IsNullOrEmpty(AuthUserError))"
+                                                     ErrorText="@AuthUserError"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                     Class="au-control" />
+                                </div>
+                            </div>
+
+                            <div class="au-grid-two">
+                                <div class="au-field">
+                                    <label for="au-user-name">User name</label>
+                                    <div class="au-input-wrap">
+                                        <MudTextField @bind-Value="User.UserName"
+                                                      InputId="au-user-name"
+                                                      Placeholder="Jane Cooper"
+                                                      Disabled="true"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Adornment="Adornment.Start"
+                                                      AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                                      Class="au-control" />
+                                    </div>
+                                </div>
+                                <div class="au-field">
+                                    <label for="au-user-email">User email</label>
+                                    <div class="au-input-wrap">
+                                        <MudTextField @bind-Value="User.UserEmail"
+                                                      InputId="au-user-email"
+                                                      Placeholder="jane.cooper@company.com"
+                                                      InputType="InputType.Email"
+                                                      Disabled="true"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Adornment="Adornment.Start"
+                                                      AdornmentIcon="@Icons.Material.Outlined.MailOutline"
+                                                      Class="au-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="au-section" aria-labelledby="assignment-heading">
+                        <div class="au-section-head">
+                            <span class="au-section-number">2</span>
+                            <h2 id="assignment-heading">Assignment</h2>
+                            <span class="au-section-helper">Where they'll work</span>
+                        </div>
+
+                        <div class="au-section-body">
+                            <div class="au-grid-two">
+                                <div class="au-field">
+                                    <label for="au-site">Site <span class="au-required">*</span></label>
+                                    <div class="au-input-wrap">
+                                        <MudTextField @bind-Value="User.Site"
+                                                      InputId="au-site"
+                                                      Placeholder="Enter site name"
+                                                      Required="true"
+                                                      RequiredError="Site is required"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      MaxLength="100"
+                                                      Adornment="Adornment.Start"
+                                                      AdornmentIcon="@Icons.Material.Outlined.LocationOn"
+                                                      Class="au-control" />
+                                    </div>
+                                </div>
+                                <div class="au-field">
+                                    <label for="au-role">Role <span class="au-required">*</span></label>
+                                    <div class="au-input-wrap">
+                                        <MudSelect T="int"
+                                                   @bind-Value="User.RoleId"
+                                                   InputId="au-role"
+                                                   Placeholder="Select a role"
+                                                   Required="true"
+                                                   RequiredError="Role is required"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Adornment="Adornment.Start"
+                                                   AdornmentIcon="@Icons.Material.Outlined.Shield"
+                                                   Class="au-control">
+											<MudSelectItem T="int" Value="0" Disabled="true">Select a role</MudSelectItem>
+                                            @foreach (var role in Roles.Where(role => role.IsActive))
+                                            {
+                                                <MudSelectItem T="int" Value="@role.RoleId">@role.RoleName</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="au-section" aria-labelledby="access-heading">
+                        <div class="au-section-head">
+                            <span class="au-section-number">3</span>
+                            <h2 id="access-heading">Access</h2>
+                            <span class="au-section-helper">Modules and account state</span>
+                        </div>
+
+                        <div class="au-section-body">
+                            <div class="au-field">
+                                <label>Modules</label>
+                                <div class="au-chip-box @(ModuleError is not null ? "has-error" : string.Empty)">
+                                    @foreach (var module in SelectedModules)
+                                    {
+                                        <span class="au-chip">
+                                            @module.ModuleName
+                                            <button type="button" aria-label="Remove @module.ModuleName" @onclick="() => RemoveModule(module.ModuleId)">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                                                    <path d="M7 7l10 10M17 7L7 17" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    }
+
+                                    <MudMenu Label="Add module"
+                                             StartIcon="@Icons.Material.Filled.Add"
+                                             Variant="Variant.Text"
+                                             Dense="true"
+                                             Class="au-module-menu">
+                                        @foreach (var module in Modules.Where(module => module.IsActive))
+                                        {
+                                            var isSelected = SelectedModuleIds.Contains(module.ModuleId);
+                                            <MudMenuItem OnClick="@(() => ToggleModule(module.ModuleId))">
+                                                <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" Size="Size.Small" />
+                                                <span>@module.ModuleName</span>
+                                            </MudMenuItem>
+                                        }
+                                    </MudMenu>
+                                </div>
+                                @if (ModuleError is not null)
+                                {
+                                    <span class="au-error" role="alert">@ModuleError</span>
+                                }
+                            </div>
+
+                            <div class="au-field">
+                                <label>Status</label>
+                                <div class="au-status-row">
+                                    <div class="au-status-copy">
+                                        <p class="au-status-title">Account @(User.IsActive ? "active" : "inactive")</p>
+                                        <p>User can sign in and access assigned modules</p>
+                                    </div>
+                                    <div class="au-status-control">
+                                        <span class="au-status-badge @(User.IsActive ? string.Empty : "is-off")">@(User.IsActive ? "Active" : "Inactive")</span>
+                                        <button type="button"
+                                                class="au-toggle @(User.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@User.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle account status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="au-footer ats-dialog-footer">
+                <button type="button" class="au-button au-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="au-button au-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    Save user
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

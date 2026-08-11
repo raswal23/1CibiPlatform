@@ -1,4 +1,8 @@
 .home-shell {
+    --navy-900: #0b1b3d;
+    --navy-700: #1c3a70;
+    --blue-600: #1d5fd1;
+    --blue-400: #4f93ea;
     max-width: 1180px;
     margin: 0 auto;
     display: flex;
@@ -8,7 +12,7 @@
 }
 
 .home-hero {
-    background: linear-gradient(100deg, #0b1f3a, #2c7fb8);
+    background:linear-gradient(100deg,var(--navy-900) 0%, var(--navy-700) 35%, var(--blue-600) 75%, var(--blue-400) 100%);
     border-radius: 18px;
     color: #ffffff;
     padding: 1.75rem 2rem;

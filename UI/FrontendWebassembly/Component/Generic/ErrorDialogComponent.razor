@@ -1,27 +1,34 @@
-﻿@inject NavigationManager Navigation
+@inject NavigationManager Navigation
 
-<MudContainer Class="d-flex flex-column justify-center align-center transparent-paper" Style="height: 100vh; gap: 20px; border-radius: 12px;">
-    <MudPaper Class="pa-8" Elevation="3" Style="max-width: 600px; text-align: center; border-radius: 12px;">
-        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Large" Class="mb-4" />
-        <MudText Typo="Typo.h4" Color="Color.Error" Class="mb-2">
-            Oops! Something went wrong
-        </MudText>
-        <MudText Typo="Typo.body1" Class="mb-4">
-            We encountered an unexpected error. Please try refreshing the page.
-        </MudText>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Error Details">
-                <MudText Typo="Typo.body2" Style="font-family: monospace; white-space: pre-wrap; word-break: break-word;  text-align: center; font-weight: 950;">
-                    @Message
-                </MudText>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
-        <ButtonComponent OnClick="@(() => Navigation.NavigateTo(Navigation.Uri, true))"
-                            StartIcon="@Icons.Material.Filled.Refresh"
-                            Class="theme-button theme-button-active mt-4"
-                            Style="width: 200px; border-radius: 4px;">
-            Reload Page
-        </ButtonComponent>
+<div class="philsys-error-shell">
+    <MudPaper Class="philsys-error-card" Elevation="0">
+        <div class="philsys-error-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.5v5.5M12 16.2v.1" />
+            </svg>
+        </div>
+
+        <h1 class="philsys-error-title">Oops! Something went wrong</h1>
+        <p class="philsys-error-subtitle">We encountered an unexpected error. Please try refreshing the page.</p>
+
+        @if (!string.IsNullOrWhiteSpace(Message))
+        {
+            <details class="philsys-error-details">
+                <summary>Error details</summary>
+                <pre class="philsys-error-message">@Message</pre>
+            </details>
+        }
+
+        <div class="philsys-error-action">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       FullWidth="true"
+                       OnClick="@(() => Navigation.NavigateTo(Navigation.Uri, true))"
+                       StartIcon="@Icons.Material.Outlined.Refresh"
+                       Class="philsys-error-button">
+                Reload Page
+            </MudButton>
+        </div>
     </MudPaper>
-</MudContainer>
-
+</div>

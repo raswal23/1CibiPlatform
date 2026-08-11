@@ -1,103 +1,116 @@
-﻿@inject IDisputeOrderService DisputeOrderService
-@inject ISnackbar Snackbar
-
-<MudDialog Class="ats-dispute-dialog" Style="padding: 0;">
+<MudDialog Class="um-dialog dd-dialog ats-scroll-dialog" Style="padding: 0; width: min(500px, calc(100vw - 24px)); max-width: 500px;">
     <DialogContent>
-        <div class="ats-upload-report-shell-header">
-            <div>
-                <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Reason for Dispute</MudText>
-                <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Review the reason provided for disputing the screening result.</MudText>
-            </div>
-            <MudIconButton Icon="@Icons.Material.Filled.Close"
-                           Class="ats-upload-report-shell-close"
-                           OnClick="CloseDialog" />
-        </div>
-        <div class="ats-dispute-dialog-content">
-            <MudForm @ref="disputeForm">
-                <MudGrid Class="ats-dispute-dialog-grid" Spacing="1">
-             
-                <MudItem xs="12">
-                    <MudTextField FullWidth="true"
-                                  Adornment="Adornment.Start"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  @bind-Value="disputeRequest.Company"
-                                  Class="name-filter oneplatform-rounded-input ats-dispute-field"
-                                  Required="true"
-                                  RequiredError="Company is required"
-                                  Label="Company" />
-                </MudItem>
+        <div class="dd-shell ats-dialog-shell">
+            <header class="dd-header ats-dialog-header">
+                <div class="dd-header-row">
+                    <div class="dd-header-left">
+                        <div class="dd-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 9v4M12 17h.01" />
+                                <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
+                            </svg>
+                        </div>
 
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="ats-dispute-category-label">Dispute Category</MudText>
-                    <MudRadioGroup T="string"
-                                   @bind-Value="disputeRequest.DisputeReason"
-                                   Required="true"
-                                   RequiredError="Type of Ownership is required"
-                                   Class="ats-reference-pill-group ats-dispute-pill-group">
-                        <MudRadio T="string" Class="@($"ats-reference-pill {(disputeRequest.DisputeReason == "Billing" ? "selected" : string.Empty)}")" Value="@("Billing")">
-                            Billing
-                        </MudRadio>
-                        <MudRadio T="string" Class="@($"ats-reference-pill {(disputeRequest.DisputeReason == "Report" ? "selected" : string.Empty)}")" Value="@("Report")">
-                            Report
-                        </MudRadio>
-                        <MudRadio T="string" Class="@($"ats-reference-pill {(disputeRequest.DisputeReason == "Others" ? "selected" : string.Empty)}")" Value="@("Others")">
-                            Others
-                        </MudRadio>
-                    </MudRadioGroup>
-                </MudItem>
-
-                @if (disputeRequest.DisputeReason == "Others")
-                {
-                    <MudItem xs="12">
-                        <MudTextField FullWidth="true"
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Class="oneplatform-rounded-input ats-dispute-field"
-                                      @bind-Value="otherReason"
-                                      Required="true"
-                                      RequiredError="Please specify is required"
-                                      Label="Please specify" />
-                    </MudItem>
-                }
-
-                <MudItem xs="12">
-                    <MudDivider Class="my-2" />
-                </MudItem>
-
-                <MudItem xs="12">
-                    <MudGrid Class="ats-dispute-action-row" Spacing="1">
-                        <MudItem xs="6">
-                            <MudButton FullWidth="true"
-                                       Variant="Variant.Filled"
-                                       Class="ats-dispute-cancel-btn"
-                                       OnClick="Cancel">
-                                Cancel
-                            </MudButton>
-                        </MudItem>
-
-                        <MudItem xs="6">
-                            <MudButton FullWidth="true"
-                                       Variant="Variant.Filled"
-                                       Disabled="@isUploading"
-                                       Class="theme-button theme-button-active"
-                                       OnClick="SendDisputeAsync">
-                                @if (isMarkingAsDisputed)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                    <span> Sending...</span>
-                                }
-                                else
-                                {
-                                    <span>Send Dispute</span>
-                                }
-                            </MudButton>
-                        </MudItem>
-                    </MudGrid>
-                </MudItem>
-                            </MudGrid>
-                        </MudForm>
+                        <div class="dd-header-text">
+                            <h1>Reason for dispute</h1>
+                            <p>Tell us what's wrong with this result</p>
+                        </div>
                     </div>
-                </DialogContent>
-            </MudDialog>
+
+                    <button type="button" class="dd-close" aria-label="Close dispute dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="dd-body ats-dialog-body">
+                <MudForm @ref="disputeForm">
+                    <section class="dd-section" aria-labelledby="dd-category-heading">
+                        <div class="dd-section-head">
+                            <span class="dd-section-number">1</span>
+                            <h2 id="dd-category-heading">Dispute category</h2>
+                        </div>
+
+                        <div class="dd-section-body">
+                            <div class="dd-pills-wrap">
+                                <MudRadioGroup T="string"
+                                               @bind-Value="SelectedDisputeCategory"
+                                               Required="true"
+                                               RequiredError="Dispute category is required"
+                                               Class="dd-pills">
+                                    <MudRadio T="string"
+                                              Value="@("Billing")"
+                                              Class="@($"dd-pill {(SelectedDisputeCategory == "Billing" ? "is-selected" : string.Empty)}")">
+                                        Billing
+                                    </MudRadio>
+                                    <MudRadio T="string"
+                                              Value="@("Report")"
+                                              Class="@($"dd-pill {(SelectedDisputeCategory == "Report" ? "is-selected" : string.Empty)}")">
+                                        Report
+                                    </MudRadio>
+                                    <MudRadio T="string"
+                                              Value="@OtherDisputeCategory"
+                                              Class="@($"dd-pill {(IsOtherDisputeSelected ? "is-selected" : string.Empty)}")">
+                                        Others
+                                    </MudRadio>
+                                </MudRadioGroup>
+                            </div>
+
+                            @if (IsOtherDisputeSelected)
+                            {
+                                <div class="dd-field">
+                                    <label for="dd-other-reason">Please specify <span class="dd-required">*</span></label>
+                                    <div class="dd-input-wrap">
+                                        <MudTextField @bind-Value="otherReason"
+                                                      InputId="dd-other-reason"
+                                                      Placeholder="Briefly describe the reason for this dispute"
+                                                      FullWidth="true"
+                                                      Required="true"
+                                                      RequiredError="Please specify a reason"
+                                                      MaxLength="255"
+                                                      Variant="Variant.Outlined"
+                                                      Margin="Margin.Dense"
+                                                      Adornment="Adornment.Start"
+                                                      AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                      Class="dd-input" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                </MudForm>
+
+                <div class="dd-warning" role="note">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
+                        <path d="M12 9v4M12 17h.01" />
+                    </svg>
+                    <p>Review the reason provided for disputing the screening result before submitting.</p>
+                </div>
+            </main>
+
+            <footer class="dd-footer ats-dialog-footer">
+                <button type="button" class="dd-button dd-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button"
+                        class="dd-button dd-button-send"
+                        disabled="@isUploading"
+                        @onclick="SendDisputeAsync">
+                    @if (isMarkingAsDisputed)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dd-progress" />
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" />
+                        </svg>
+                        <span>Send dispute</span>
+                    }
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

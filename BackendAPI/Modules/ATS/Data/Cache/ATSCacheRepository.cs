@@ -1,4 +1,4 @@
-﻿namespace ATS.Data.Cache;
+namespace ATS.Data.Cache;
 
 public class ATSCacheRepository : IATSRepository
 {
@@ -8,8 +8,6 @@ public class ATSCacheRepository : IATSRepository
 	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
 	private readonly string DisputeOrderTag = "disputeorder";
 	private readonly string ReportTag = "report";
-	private readonly string ClientTag = "client";
-	private readonly string PackageTag = "package";
 
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
@@ -244,6 +242,11 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
 	}
 
+	public Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
+	{
+		return _atsRepository.GetDashboardAsync(requester, cancellationToken);
+	}
+
 	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
@@ -308,96 +311,5 @@ public class ATSCacheRepository : IATSRepository
 	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken)
 	{
 		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
-	}
-
-	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-
-		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
-			cacheKey,
-			paginationRequest,
-			async (req, token) => await _atsRepository.GetPackagesAsync(req, token),
-			null,
-			cancellationToken: cancellationToken);
-	}
-
-	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var cacheKey = $"package_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-
-		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
-			cacheKey,
-			paginationRequest,
-			async (req, token) => await _atsRepository.SearchPackagesAsync(req, token),
-			null,
-			cancellationToken: cancellationToken);
-	}
-
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO)
-	{
-		var result = await _atsRepository.AddPackageAsync(packageDTO);
-		if (result)
-			await _hybridCache.RemoveByTagAsync(PackageTag);
-		return result;
-	}
-
-	public async Task<PackageDetails?> GetPackageAsync(Guid packageId)
-	{
-		return await _atsRepository.GetPackageAsync(packageId);
-	}
-
-	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails)
-	{
-		var result = await _atsRepository.EditPackageAsync(packageDetails);
-		if (result is not null)
-			await _hybridCache.RemoveByTagAsync(PackageTag);
-		return result ?? new PackageDetails();
-	}
-
-	public async Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-
-		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
-			cacheKey,
-			paginationRequest,
-			async (req, token) => await _atsRepository.GetClientsAsync(req, token),
-			null,
-			cancellationToken: cancellationToken);
-	}
-
-	public async Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
-	{
-		var cacheKey = $"client_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-
-		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
-			cacheKey,
-			paginationRequest,
-			async (req, token) => await _atsRepository.SearchClientsAsync(req, token),
-			null,
-			cancellationToken: cancellationToken);
-	}
-
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO)
-	{
-		var result = await _atsRepository.AddClientAsync(clientDTO);
-		if (result)
-			await _hybridCache.RemoveByTagAsync(ClientTag);
-		return result;
-	}
-
-	public async Task<ClientDetails?> GetClientAsync(Guid clientId)
-	{
-		return await _atsRepository.GetClientAsync(clientId);
-	}
-
-	public async Task<ClientDetails> EditClientAsync(ClientDetails clientDetails)
-	{
-		var result = await _atsRepository.EditClientAsync(clientDetails);
-
-		if (result is not null)
-			await _hybridCache.RemoveByTagAsync(ClientTag);
-		return result ?? new ClientDetails();
 	}
 }

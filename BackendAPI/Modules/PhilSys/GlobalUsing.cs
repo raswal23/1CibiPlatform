@@ -15,6 +15,8 @@ global using System.Net.Http.Headers;
 global using System.Net.Http.Json;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.Logging;
+global using ATS.Data.Repository;
+global using PhilSys.Data.Cache;
 global using System.Text.Json.Serialization;
 global using PhilSys.Data.Context;
 global using Microsoft.EntityFrameworkCore;

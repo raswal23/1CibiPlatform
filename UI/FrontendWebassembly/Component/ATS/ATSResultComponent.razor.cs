@@ -5,6 +5,16 @@ public partial class ATSResultComponent
 	private MudForm? form;
 	private bool IsLoaded = true;
 
+	private string GetOrderStatusText() => OrderStatusDisplay.GetText(ReportResult?.OrderStatus);
+
+	private string GetResultText()
+		=> HitStatusDisplay.GetClass(ReportResult?.HitStatus) == "pending"
+			? "Not yet available"
+			: HitStatusDisplay.GetText(ReportResult?.HitStatus);
+
+	private string GetResultValueClass()
+		=> HitStatusDisplay.GetClass(ReportResult?.HitStatus) == "pending" ? "muted" : string.Empty;
+
 	[Parameter]
 	public Guid EmailInvitationId { get; set; }
 
