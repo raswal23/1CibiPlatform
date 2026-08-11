@@ -1,13 +1,29 @@
-using System.Text.Json;
-
 namespace ATS.Data.DataSeed;
 
 public class ATSInitialData
 {
+	private readonly ISecureToken _secureToken;
+	private readonly IHashService _hashService;
+	private readonly int _applicationFormExpiryInHours;
+
+	public ATSInitialData(
+		ISecureToken secureToken,
+		IHashService hashService,
+		IConfiguration configuration)
+	{
+		_secureToken = secureToken;
+		_hashService = hashService;
+		_applicationFormExpiryInHours = configuration
+			.GetSection("ATS")
+			.GetValue<int>("ATSApplicationFormExpiryInHours");
+	}
+
+	#region Email Invitation Request
 	private const string SeedResourceName =
 		"ATS.Data.DataSeed.IntouchEmailInvitationInitialData.json";
 
-	public IReadOnlyList<EmailInvitationRequest> GetEmailInvitationRequests()
+	public IReadOnlyList<EmailInvitationRequest> GetEmailInvitationRequests(
+		IReadOnlyDictionary<string, Guid> userIdsByEmail)
 	{
 		var assembly = typeof(ATSInitialData).Assembly;
 		using var stream = assembly.GetManifestResourceStream(SeedResourceName)
@@ -18,15 +34,43 @@ public class ATSInitialData
 			?? throw new InvalidOperationException(
 				$"Embedded ATS seed resource '{SeedResourceName}' is invalid.");
 
-		return rows.Select(CreateEmailInvitationRequest).ToArray();
+		// The imported requestor is a display name, so it is matched against the seeded
+		// user names to reach the auth id that GetATSUsers stores on the ATS user rows.
+		var requestorIdsByName = GetUserModules()
+			.Where(user => userIdsByEmail.ContainsKey(user.UserEmail))
+			.ToDictionary(
+				user => NormalizeRequestor(user.UserName),
+				user => userIdsByEmail[user.UserEmail]);
+
+		return rows
+			.Select(row => CreateEmailInvitationRequest(row, requestorIdsByName))
+			.ToArray();
 	}
 
-	private static EmailInvitationRequest CreateEmailInvitationRequest(
-		IntouchEmailInvitationSeedRow row)
+	// The imported names carry the spacing and casing of the source workbook, so they
+	// are compared on a normalized form instead of the raw value.
+	private static string NormalizeRequestor(string requestor) =>
+		string.Join(' ', requestor.Split(
+			(char[]?)null,
+			StringSplitOptions.RemoveEmptyEntries))
+			.ToUpperInvariant();
+
+	private EmailInvitationRequest CreateEmailInvitationRequest(
+		IntouchEmailInvitationSeedRow row,
+		IReadOnlyDictionary<string, Guid> requestorIdsByName)
 	{
 		var emailAddress = $"intouch.{row.TicketNo.ToLowerInvariant()}@seed.local";
 		var createdAt = row.OrderCreatedAt;
 		var projectionUpdatedAt = row.OrderCompletedAt ?? createdAt;
+
+		var hashToken = _hashService.Hash(_secureToken.GenerateSecureToken());
+
+		// An unmatched requestor keeps the imported name and leaves the id unset so the
+		// row stays identifiable instead of pointing at the wrong user.
+		var requestorId = requestorIdsByName
+			.TryGetValue(NormalizeRequestor(row.Requestor), out var matchedRequestorId)
+				? matchedRequestorId
+				: (Guid?)null;
 
 		return new EmailInvitationRequest
 		{
@@ -38,9 +82,11 @@ public class ATSInitialData
 			Requestor = row.Requestor,
 			SelectPackage = row.SelectPackage,
 			RushNormal = row.RushNormal,
-			HashToken = Guid.NewGuid().ToString("N"),
+			RequestorId = requestorId,
+			HashToken = hashToken,
 			HashTokenCreatedAt = createdAt,
-			HashTokenExpiration = createdAt.AddDays(7),
+			HashTokenExpiration = createdAt.AddHours(_applicationFormExpiryInHours),
+
 			ApplicationFormStatus = Constants.ApplicationFormStatus.Done,
 			FormCompletedAt = createdAt,
 			EmailSentStatus = EmailStatus.Done,
@@ -143,4 +189,119 @@ public class ATSInitialData
 		public DateTime ReportUploadedAt { get; set; }
 		public string Requestor { get; set; } = string.Empty;
 	}
+	#endregion
+
+	#region USERS with Modules
+	public static IEnumerable<string> GetATSUserEmails() =>
+		GetUserModules().Select(user => user.UserEmail);
+
+	public IEnumerable<UserDetails> GetATSUsers(IReadOnlyDictionary<string, Guid> userIdsByEmail)
+	{
+		var users = new List<UserDetails>();
+
+		var userModules = GetUserModules();
+
+		foreach (var user in userModules)
+		{
+			if (!userIdsByEmail.TryGetValue(user.UserEmail, out var userId))
+			{
+				continue;
+			}
+
+			foreach (var moduleId in user.ModuleId)
+			{
+				users.Add(new UserDetails
+				{
+					UserId = userId,
+					UserEmail = user.UserEmail,
+					UserName = user.UserName,
+					RoleId = user.RoleId,
+					Site = "All",
+					IsActive = true,
+					ModuleId = moduleId,
+					CreatedAt = DateTime.UtcNow,
+					UpdatedAt = DateTime.UtcNow
+				});
+			}
+		}
+
+		return users;
+	}
+
+	private static IEnumerable<ATSUserModuleSeedRow> GetUserModules() =>
+	[
+		new ATSUserModuleSeedRow(
+			"atsPlatformManager@cibi.com",
+			"ATS Platform Manager",
+			1,
+			Enumerable.Range(1, 10).ToArray()),
+		new ATSUserModuleSeedRow(
+			"atsAdmin@cibi.com",
+			"ATS Admin",
+			2,
+			Enumerable.Range(1, 10).ToArray()),
+		new ATSUserModuleSeedRow(
+			"atsUser@cibi.com",
+			"ATS User",
+			3,
+			Enumerable.Range(1, 3).ToArray()),
+		new ATSUserModuleSeedRow(
+			"atsUploader@cibi.com",
+			"ATS Uploader",
+			4,
+			[3])
+	];
+
+	private sealed record ATSUserModuleSeedRow(
+		string UserEmail,
+		string UserName,
+		int RoleId,
+		int[] ModuleId);
+	#endregion
+
+	#region Roles
+	public IEnumerable<RoleDetails> GetATSRoles()
+	{
+		return new List<RoleDetails>
+		{
+
+			new RoleDetails
+			{
+				RoleId = 1,
+				RoleName = "Platform Manager",
+				RoleDescription = "Platform manager role for ATS system.",
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			},
+			new RoleDetails
+			{
+				RoleId = 2,
+				RoleName = "Admin",
+				RoleDescription = "Administrator role for ATS system.",
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			},
+			new RoleDetails
+			{
+				RoleId = 3,
+				RoleName = "User",
+				RoleDescription = "Basic user role for ATS system.",
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			},
+			new RoleDetails
+			{
+				RoleId = 4,
+				RoleName = "Uploader",
+				RoleDescription = "Uploader role for ATS system.",
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			}
+		};
+	}
+	#endregion
 }

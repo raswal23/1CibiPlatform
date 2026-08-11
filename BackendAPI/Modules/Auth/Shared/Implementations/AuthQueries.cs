@@ -24,4 +24,9 @@ internal class AuthQueries : IAuthQueries
 		Guid userId,
 		CancellationToken cancellationToken) =>
 		_authRepository.GetATSAssignedUserAsync(userId, cancellationToken);
+
+	public Task<IReadOnlyDictionary<string, Guid>> GetUserIdsByEmailAsync(
+		IReadOnlyCollection<string> emails,
+		CancellationToken cancellationToken) =>
+		_authRepository.GetUserIdsByEmailAsync(emails, cancellationToken);
 }

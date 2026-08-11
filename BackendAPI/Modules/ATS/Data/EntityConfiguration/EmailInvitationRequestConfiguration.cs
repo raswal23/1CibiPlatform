@@ -32,8 +32,8 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 			   .IsRequired(true);
 
 		builder.Property(e => e.Requestor)
-			.HasMaxLength(255)
-			.IsRequired(false);
+			   .HasMaxLength(255)
+			   .IsRequired(false);
 
 		builder.Property(e => e.SelectPackage)
                .HasMaxLength(255)
@@ -46,6 +46,14 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.HashToken)
                .HasMaxLength(255)
 			   .IsRequired(true);
+
+		builder.Property(e => e.ClientId)
+			   .IsRequired(false);
+
+		// The endorsement and bulk flows create invitations without a requestor id, so
+		// it stays optional and is only populated when the requestor can be resolved.
+		builder.Property(e => e.RequestorId)
+			   .IsRequired(false);
 
 		builder.Property(e => e.HashTokenCreatedAt)
                .IsRequired(true);
@@ -65,21 +73,21 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 			   .HasMaxLength(255)
 			   .IsRequired(true);
 
-     builder.Property(e => e.OrderCreatedAt)
-			.IsRequired(false);
+		builder.Property(e => e.OrderCreatedAt)
+			   .IsRequired(false);
 
 		builder.Property(e => e.NeedsProjection)
-			.IsRequired(true)
-			.HasDefaultValue(true);
+			   .IsRequired(true)
+			   .HasDefaultValue(true);
 
 		builder.Property(e => e.ProjectionUpdatedAt)
-			.IsRequired(false);
+			   .IsRequired(false);
 
 		builder.Property(e => e.DisputeCategory)
-			.HasMaxLength(255)
-			.IsRequired(false);
+			   .HasMaxLength(255)
+			   .IsRequired(false);
 
 		builder.Property(e => e.DisputedAt)
-			.IsRequired(false);
+			   .IsRequired(false);
 	}
 }

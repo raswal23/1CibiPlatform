@@ -63,6 +63,7 @@ global using System.Security.Claims;
 global using StackExchange.Redis;
 global using System.Net;
 global using System.Net.Mail;
+global using System.Text.Json;
 global using Npgsql;
 global using Quartz;
 global using PdfSharp.Pdf;

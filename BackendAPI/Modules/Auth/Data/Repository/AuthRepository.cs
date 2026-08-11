@@ -144,6 +144,24 @@ public class AuthRepository : IAuthRepository
 			};
 	}
 
+	public async Task<IReadOnlyDictionary<string, Guid>> GetUserIdsByEmailAsync(
+		IReadOnlyCollection<string> emails,
+		CancellationToken cancellationToken)
+	{
+		if (emails.Count == 0)
+		{
+			return new Dictionary<string, Guid>();
+		}
+
+		var users = await _dbcontext.AuthUsers
+			.AsNoTracking()
+			.Where(user => emails.Contains(user.Email))
+			.Select(user => new { user.Email, user.Id })
+			.ToListAsync(cancellationToken);
+
+		return users.ToDictionary(user => user.Email, user => user.Id);
+	}
+
 	private IQueryable<Authusers> GetATSAssignedUsersQuery() =>
 		_dbcontext.AuthUsers
 			.AsNoTracking()

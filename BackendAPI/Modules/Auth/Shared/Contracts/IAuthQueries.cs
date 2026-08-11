@@ -12,4 +12,8 @@ public interface IAuthQueries
 	Task<ATSUserLookupDTO?> GetATSAssignedUserAsync(
 		Guid userId,
 		CancellationToken cancellationToken);
+
+	Task<IReadOnlyDictionary<string, Guid>> GetUserIdsByEmailAsync(
+		IReadOnlyCollection<string> emails,
+		CancellationToken cancellationToken);
 }

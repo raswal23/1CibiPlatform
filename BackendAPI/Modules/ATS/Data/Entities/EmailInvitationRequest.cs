@@ -12,6 +12,8 @@ public class EmailInvitationRequest
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
+	public int? ClientId { get; set; }
+	public Guid? RequestorId { get; set; }
 	public string? ApplicationFormStatus { get; set; }
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }

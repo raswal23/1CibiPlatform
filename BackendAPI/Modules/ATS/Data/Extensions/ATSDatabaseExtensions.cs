@@ -8,16 +8,18 @@ public static class ATSDatabaseExtensions
 
 		var context = scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		var initData = scope.ServiceProvider.GetRequiredService<ATSInitialData>();
+		var authQueries = scope.ServiceProvider.GetRequiredService<IAuthQueries>();
 
 		await context.Database.MigrateAsync();
-		await SeedAsync(context, initData);
+		await SeedAsync(context, initData, authQueries);
 
 		await InitializeQuartzAsync(context);
 	}
 
 	private static async Task SeedAsync(
 		ATSDBContext context,
-		ATSInitialData initData)
+		ATSInitialData initData,
+		IAuthQueries authQueries)
 	{
 		if (await context.EmailInvitationRequests
 			.AsNoTracking()
@@ -26,8 +28,19 @@ public static class ATSDatabaseExtensions
 			return;
 		}
 
+		// Auth owns the user identifiers, so the ATS rows are keyed by the auth ids
+		// resolved from the seeded emails instead of ids generated here.
+		var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
+			ATSInitialData.GetATSUserEmails().ToArray(),
+			CancellationToken.None);
+
 		await context.EmailInvitationRequests.AddRangeAsync(
-			initData.GetEmailInvitationRequests());
+			initData.GetEmailInvitationRequests(userIdsByEmail));
+		await context.RoleDetails.AddRangeAsync
+			(initData.GetATSRoles());
+		await context.UserDetails.AddRangeAsync(
+			initData.GetATSUsers(userIdsByEmail));
+
 		await context.SaveChangesAsync();
 	}
 
