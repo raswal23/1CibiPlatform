@@ -15,6 +15,8 @@
 		private readonly bool _isHttps;
 		private readonly int _cookieExpiryinDaysKey;
 		private readonly double _expiryinMinutesKeyInCookie;
+		private readonly string _refreshTokenExpirationKey;
+		private readonly int _httpCookieOnlyRefreshTokenInDays;
 
 		public RefreshTokenService(
 			IAuthRepository authRepository,
@@ -32,6 +34,7 @@
 			this._logger = logger;
 
 			_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
+			_httpCookieOnlyRefreshTokenInDays = _configuration.GetValue<int>("AuthWeb:HttpCookieOnlyRefreshTokenInDays", 60);
 			_expiryinMinutesKey = double.Parse(_configuration.GetSection("Jwt:ExpiryInMinutes").Value! ?? "");
 			_expiryinMinutesKeyInCookie = _expiryinMinutesKey + 30;
 			_refreshTokenKey = _configuration.GetSection("AuthWeb:AuthWebHttpCookieOnlyKey").Value! ?? "";
@@ -143,7 +146,7 @@
 
 			storedRefreshToken.TokenHash = newRefreshTokenHash;
 			storedRefreshToken.CreatedAt = DateTime.UtcNow;
-			storedRefreshToken.ExpiresAt = DateTime.UtcNow.AddMinutes(_expiryinMinutesKeyInCookie);
+			storedRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays);
 			storedRefreshToken.IsActive = true;
 
 			var isUpdated = await _authRepository.UpdateRefreshTokenAsync(storedRefreshToken);
@@ -207,7 +210,7 @@
 				HttpOnly = true,
 				Secure = _isHttps,
 				SameSite = SameSiteMode.Lax,
-				Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryinMinutesKeyInCookie))
+				Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays)
 			};
 
 
