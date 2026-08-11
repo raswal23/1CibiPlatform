@@ -1,5 +1,7 @@
 ﻿namespace Auth.Services;
 
+using System.Globalization;
+
 public class JWTService : IJWTService
 {
 	private readonly IConfiguration _configuration;
@@ -40,19 +42,30 @@ public class JWTService : IJWTService
 		var middle = string.IsNullOrWhiteSpace(loginDTO.MiddleName) ? string.Empty : loginDTO.MiddleName.Trim();
 		var fullName = string.Join(' ', new[] { loginDTO.FirstName, middle, loginDTO.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
 
-		return new List<Claim>
+		var claims = new List<Claim>
 		{
 			// custom claims used by the app/tests
-			new Claim("userId", loginDTO.Id.ToString()),
-			new Claim("email", loginDTO.Email),
-			new Claim("fullName", fullName),
+			new Claim(AuthClaimTypes.UserId, loginDTO.Id.ToString()),
+			new Claim(AuthClaimTypes.Email, loginDTO.Email),
+			new Claim(AuthClaimTypes.FullName, fullName),
 
 			// standard claims for interoperability
 			new Claim(ClaimTypes.NameIdentifier, loginDTO.Id.ToString()),
-			new Claim(ClaimTypes.Email, loginDTO.Email),
-			new Claim(ClaimTypes.Name, fullName),
-			new Claim(JwtRegisteredClaimNames.Sub, loginDTO.Id.ToString()),
-			new Claim(JwtRegisteredClaimNames.Email, loginDTO.Email)
 		};
+
+		claims.AddRange(loginDTO.roleId
+			.Where(roleId => roleId > 0)
+			.Distinct()
+			.Select(roleId => new Claim(
+				AuthClaimTypes.PlatformRoleId,
+				roleId.ToString(CultureInfo.InvariantCulture))));
+
+		if (loginDTO.AtsRoleId is > 0)
+			claims.Add(new Claim(AuthClaimTypes.AtsRoleId, loginDTO.AtsRoleId.Value.ToString(CultureInfo.InvariantCulture)));
+
+		if (loginDTO.AtsClientId is > 0)
+			claims.Add(new Claim(AuthClaimTypes.AtsClientId, loginDTO.AtsClientId.Value.ToString(CultureInfo.InvariantCulture)));
+
+		return claims;
 	}
 }

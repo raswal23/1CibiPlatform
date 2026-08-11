@@ -69,6 +69,17 @@ public class ATSUserManagementService : IATSUserManagementService
 			cancellationToken: cancellationToken))!;
 	}
 
+	public async Task<int?> GetMyRoleIdAsync(
+		CancellationToken cancellationToken = default)
+	{
+		var response = await _httpClient.GetAsync("ats/getmyroleid", cancellationToken);
+		await EnsureSuccessAsync(response, cancellationToken);
+
+		var result = await response.Content.ReadFromJsonAsync<GetMyRoleIdResponseDTO>(
+			cancellationToken: cancellationToken);
+		return result?.RoleId;
+	}
+
 	public async Task<bool> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default)
 	{
 		var users = userDTO.ModuleIds

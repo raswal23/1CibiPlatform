@@ -2,14 +2,14 @@ namespace ATS.Services;
 
 public sealed class ClientAssignmentService : IClientAssignmentService
 {
-	private readonly IATSUserRepository _userRepository;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly IAuthQueries _authQueries;
 
 	public ClientAssignmentService(
-		IATSUserRepository userRepository,
+		IUserClientRepository userClientRepository,
 		IAuthQueries authQueries)
 	{
-		_userRepository = userRepository;
+		_userClientRepository = userClientRepository;
 		_authQueries = authQueries;
 	}
 
@@ -21,7 +21,7 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 			paginationRequest,
 			cancellationToken);
 		var pageUsers = users.Data.ToArray();
-		var assignments = await _userRepository.GetUserClientAssignmentsAsync(
+		var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
 			pageUsers.Select(user => user.UserId).ToArray(),
 			cancellationToken);
 		var assignmentLookup = assignments.ToDictionary(assignment => assignment.UserId);
@@ -51,7 +51,7 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 	public Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken) =>
-		_userRepository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
+		_userClientRepository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
 
 	public async Task<ClientAssignmentDetailsDTO> AssignClientAsync(
 		AssignUserClientDTO assignment,
@@ -63,8 +63,8 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 			?? throw new BadRequestException(
 				"The selected user is not an active Auth user assigned to ATS.");
 
-		await _userRepository.AssignUserClientAsync(assignment, cancellationToken);
-		var persisted = (await _userRepository.GetUserClientAssignmentsAsync(
+		await _userClientRepository.AssignUserClientAsync(assignment, cancellationToken);
+		var persisted = (await _userClientRepository.GetUserClientAssignmentsAsync(
 			[assignment.UserId],
 			cancellationToken)).Single();
 

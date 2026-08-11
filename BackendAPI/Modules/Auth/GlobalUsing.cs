@@ -42,3 +42,4 @@ global using Auth.Data.Cache;
 global using BuildingBlocks.SharedServices.Implementations;
 global using Auth.Shared.Contracts;
 global using Auth.Shared.Implementations;
+global using Auth.Constants;

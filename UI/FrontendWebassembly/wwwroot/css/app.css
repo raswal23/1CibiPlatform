@@ -1588,6 +1588,14 @@ code {
     text-shadow: 0 1px 3px rgba(0,0,0,0.35);
 }
 
+button.ats-console-brand-text {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+}
+
 .ats-console-nav-text {
     white-space: nowrap;
 }

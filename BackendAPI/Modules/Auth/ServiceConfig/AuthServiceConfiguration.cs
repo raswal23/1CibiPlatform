@@ -26,6 +26,7 @@ public static class AuthServiceConfiguration
 	public static IServiceCollection AddAuthServices(this IServiceCollection services)
 	{
 		services.AddHttpContextAccessor();
+		services.AddScoped<ICurrentUser, CurrentUser>();
 		services.AddTransient<AuthInitialData>();
 		services.AddTransient<IPasswordHasherService, PasswordHasherService>();
 		services.AddScoped<IJWTService, JWTService>();

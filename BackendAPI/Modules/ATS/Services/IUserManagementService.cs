@@ -16,6 +16,8 @@ public interface IUserManagementService
 		PaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
+	Task<int?> GetCurrentUserRoleIdAsync(CancellationToken cancellationToken);
+
 	Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(
 		Guid userId,
 		CancellationToken cancellationToken);

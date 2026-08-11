@@ -5,6 +5,7 @@
 		private readonly IAuthRepository _authRepository;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private readonly IJWTService _jWTService;
+		private readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 		private readonly IConfiguration _configuration;
 		private readonly ILogger<RefreshTokenService> _logger;
 
@@ -19,12 +20,14 @@
 			IAuthRepository authRepository,
 			IHttpContextAccessor httpContextAccessor,
 			IJWTService jWTService,
+			IAtsAccessClaimsProvider atsAccessClaimsProvider,
 			IConfiguration configuration,
 			ILogger<RefreshTokenService> logger)
 		{
 			this._authRepository = authRepository;
 			this._httpContextAccessor = httpContextAccessor;
 			this._jWTService = jWTService;
+			this._atsAccessClaimsProvider = atsAccessClaimsProvider;
 			this._configuration = configuration;
 			this._logger = logger;
 
@@ -124,6 +127,12 @@
 			// Generate the replacement tokens only after the cookie has been
 			// authenticated and the user id has been derived from its DB record.
 			var loginDTO = userData.Adapt<LoginDTO>();
+			var atsClaims = await _atsAccessClaimsProvider.GetClaimsAsync(userId);
+			loginDTO = loginDTO with
+			{
+				AtsClientId = atsClaims?.AtsClientId,
+				AtsRoleId = atsClaims?.AtsRoleId
+			};
 			string jwtToken = this._jWTService.GetAccessToken(loginDTO);
 
 			var (newRefreshToken, newRefreshTokenHash) = this.GenerateRefreshToken();

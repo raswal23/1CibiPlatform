@@ -2,6 +2,7 @@
 using ATS.Data.Repository;
 using ATS.Services;
 using Auth.Data.Context;
+using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +34,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IClientManagementService _clientManagementService;
 	protected readonly IUserManagementService _userManagementService;
 	protected readonly IClientAssignmentService _clientAssignmentService;
+	protected readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 	protected readonly IApplicantSearchProjectionService _applicantSearchProjectionService;
 	protected readonly IReportService _reportService;
 	protected readonly IATSRepository _atsRepository;
@@ -61,6 +63,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_clientManagementService = _scope.ServiceProvider.GetRequiredService<IClientManagementService>();
 		_userManagementService = _scope.ServiceProvider.GetRequiredService<IUserManagementService>();
 		_clientAssignmentService = _scope.ServiceProvider.GetRequiredService<IClientAssignmentService>();
+		_atsAccessClaimsProvider = _scope.ServiceProvider.GetRequiredService<IAtsAccessClaimsProvider>();
 		_applicantSearchProjectionService = _scope.ServiceProvider.GetRequiredService<IApplicantSearchProjectionService>();
 		_reportService = _scope.ServiceProvider.GetRequiredService<IReportService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();

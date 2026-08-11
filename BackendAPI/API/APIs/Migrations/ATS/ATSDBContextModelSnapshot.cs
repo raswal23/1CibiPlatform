@@ -357,6 +357,9 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("FileID")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("timestamp with time zone");
 
@@ -635,6 +638,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("DisputeCategory")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -710,6 +716,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("Requestor")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("RequestorId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("RushNormal")
                         .IsRequired()

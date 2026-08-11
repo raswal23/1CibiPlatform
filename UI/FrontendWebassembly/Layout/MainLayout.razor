@@ -2,6 +2,8 @@
 @inject NavigationManager Navigation
 @inject IAuthService IAuthService
 @inject LocalStorageService LocalStorageService
+@inject NavigationManager NavigationManager
+
 @inject IJSRuntime JS
 
 <MudThemeProvider Theme="@_myTheme" @bind-IsDarkMode="@_isDarkMode" />
@@ -28,7 +30,13 @@
                                 <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
                             </svg>
                         </span>
-                        <span class="main-topbar-brand-name">One Platform</span>
+
+                        <button type="button"
+                                class="main-topbar-brand-name"
+                                aria-label="Go to home page"
+                                @onclick='() => NavigationManager.NavigateTo("/")'>
+                            One Platform
+                        </button>
                     </div>
 
                     <MudSpacer />

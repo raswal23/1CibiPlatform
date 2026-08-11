@@ -74,6 +74,11 @@ public class AuthCacheRepository : IAuthRepository
 			tags: [UsersTag, AppSubRolesTag],
 			cancellationToken: cancellationToken);
 
+	public Task<IReadOnlyDictionary<string, Guid>> GetUserIdsByEmailAsync(
+		IReadOnlyCollection<string> emails,
+		CancellationToken cancellationToken) =>
+		_authRepository.GetUserIdsByEmailAsync(emails, cancellationToken);
+
 	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"submenus_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";

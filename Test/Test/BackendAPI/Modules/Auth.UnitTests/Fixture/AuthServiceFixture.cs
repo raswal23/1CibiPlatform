@@ -1,6 +1,7 @@
 using Auth.Data.Repository;
 using Auth.Service;
 using Auth.Services;
+using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -21,6 +22,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 		public Mock<ISecureToken> MockSecureToken { get; private set; }
 		public Mock<IJWTService> MockJwtService { get; private set; }
 		public Mock<IRefreshTokenService> MockRefreshTokenService { get; private set; }
+		public Mock<IAtsAccessClaimsProvider> MockAtsAccessClaimsProvider { get; private set; }
 		public Mock<IHttpContextAccessor> MockHttpContextAccessor { get; private set; }
 		public Mock<HybridCache> MockHybridCache { get; private set; }
 		// Loggers
@@ -60,6 +62,10 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 			MockSecureToken = new Mock<ISecureToken>();
 			MockJwtService = new Mock<IJWTService>();
 			MockRefreshTokenService = new Mock<IRefreshTokenService>();
+			MockAtsAccessClaimsProvider = new Mock<IAtsAccessClaimsProvider>();
+			MockAtsAccessClaimsProvider
+				.Setup(x => x.GetClaimsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+				.ReturnsAsync((AtsAccessClaims?)null);
 			MockHttpContextAccessor = new Mock<IHttpContextAccessor>();
 			MockHybridCache = new Mock<HybridCache>();
 
@@ -110,6 +116,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				Configuration,
 				MockJwtService.Object,
 				MockRefreshTokenService.Object,
+				MockAtsAccessClaimsProvider.Object,
 				MockHttpContextAccessor.Object,
 				MockHybridCache!.Object,
 				MockLoginLogger.Object);
@@ -118,6 +125,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				MockAuthRepository.Object,
 				MockHttpContextAccessor.Object,
 				MockJwtService.Object,
+				MockAtsAccessClaimsProvider.Object,
 				Configuration,
 				MockRefreshLogger.Object);
 

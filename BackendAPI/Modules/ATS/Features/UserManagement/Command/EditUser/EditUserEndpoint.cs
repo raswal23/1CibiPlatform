@@ -19,6 +19,7 @@ public class EditUserEndpoint : ICarterModule
 		.WithTags("ATS User Management")
 		.Produces<IReadOnlyList<UserDetailsDTO>>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Edit ATS User")
 		.WithDescription("Edits an ATS user and synchronizes the selected module assignments.")

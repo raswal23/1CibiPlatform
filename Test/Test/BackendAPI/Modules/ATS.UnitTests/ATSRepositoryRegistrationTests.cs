@@ -4,6 +4,7 @@ using ATS.Data.Repository.Administration.Clients;
 using ATS.Data.Repository.Administration.Modules;
 using ATS.Data.Repository.Administration.PackageManagement;
 using ATS.Data.Repository.Administration.Roles;
+using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.Repository.Administration.Users;
 using ATS.ServiceConfig;
 using FluentAssertions;
@@ -35,6 +36,7 @@ public class ATSRepositoryRegistrationTests
 		AssertDecorator<IRoleRepository, RoleCacheRepository, RoleRepository>(scope.ServiceProvider);
 		AssertDecorator<IModuleRepository, ModuleCacheRepository, ModuleRepository>(scope.ServiceProvider);
 		AssertDecorator<IATSUserRepository, ATSUserCacheRepository, ATSUserRepository>(scope.ServiceProvider);
+		AssertDecorator<IUserClientRepository, UserClientCacheRepository, UserClientRepository>(scope.ServiceProvider);
 	}
 
 	private static void AssertDecorator<TService, TDecorator, TImplementation>(IServiceProvider provider)

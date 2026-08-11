@@ -4,10 +4,11 @@ public class DisputeOrderService : IDisputeOrderService
 {
 	private readonly ILogger<DisputeOrderService> _logger;
 	private readonly IATSRepository _atsRepository;
-	private readonly IATSUserRepository _userRepository;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
+	private readonly ICurrentUser _currentUser;
 	private readonly string _disputeOrderEmailRecipient;
 
 	public DisputeOrderService(
@@ -15,16 +16,18 @@ public class DisputeOrderService : IDisputeOrderService
 		[FromKeyedServices("ats")] IEmailService emailService,
 		IConfiguration configuration,
 		IATSRepository atsRepository,
-		IATSUserRepository userRepository,
-		IHttpContextAccessor httpContextAccessor)
+		IUserClientRepository userClientRepository,
+		IHttpContextAccessor httpContextAccessor,
+		ICurrentUser currentUser)
 	{
 		_logger = logger;
 		_emailService = emailService;
 		_configuration = configuration;
 		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
-		_userRepository = userRepository;
+		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
+		_currentUser = currentUser;
 	}
 
 	public Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -38,10 +41,20 @@ public class DisputeOrderService : IDisputeOrderService
 		};
 
 		_logger.LogInformation("Fetching dispute orders with pagination: {@Context}", logContext);
+		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+		{
+			return Task.FromResult(new PaginatedResult<DisputeOrderListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				[]));
+		}
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-				_atsRepository.GetDisputeOrdersAsync(paginationRequest, cancellationToken) :
-				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
+				_atsRepository.GetDisputeOrdersAsync(paginationRequest, scope, cancellationToken) :
+				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, scope, cancellationToken);
 	}
 
 	public async Task<bool> MarkAsDisputedAsync(
@@ -63,7 +76,7 @@ public class DisputeOrderService : IDisputeOrderService
 		if (order.EmailInvitationID == Guid.Empty)
 			throw new NotFoundException("Email invitation request not found.");
 
-		var assignment = (await _userRepository.GetUserClientAssignmentsAsync(
+		var assignment = (await _userClientRepository.GetUserClientAssignmentsAsync(
 			[authenticatedUserId],
 			cancellationToken)).SingleOrDefault();
 		if (string.IsNullOrWhiteSpace(assignment?.ClientName))

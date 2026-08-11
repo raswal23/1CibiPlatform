@@ -94,6 +94,7 @@ public class AuthService : IAuthService
 		if (successContent!.isAuthenticated == false)
 		{
 			_logger.LogInformation("User is not authenticated");
+			await this._localStorageService.ClearAsync();
 			return false;
 
 		}

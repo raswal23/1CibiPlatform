@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Auth.Data.Context;
+using Auth.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,7 +83,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 				var claims = new List<Claim>
 				{
-					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+					new Claim(AuthClaimTypes.AtsRoleId, "1")
 				};
 
 				fakeHttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));

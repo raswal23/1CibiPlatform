@@ -16,7 +16,7 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 		CancellationToken cancellationToken = default)
 	{
 		var response = await _httpClient.GetAsync(
-			BuildPagedUri("ats/getclientassignments", pageIndex, pageSize, searchTerm),
+			BuildPagedUri("/ats/getclientassignments", pageIndex, pageSize, searchTerm),
 			cancellationToken);
 		await EnsureSuccessAsync(response, cancellationToken);
 		return (await response.Content.ReadFromJsonAsync<GetClientAssignmentsResponseDTO>(

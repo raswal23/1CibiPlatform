@@ -51,6 +51,8 @@ public static class ATSServiceConfiguration
 		services.Decorate<IModuleRepository, ModuleCacheRepository>();
 		services.AddScoped<IATSUserRepository, ATSUserRepository>();
 		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
+		services.AddScoped<IUserClientRepository, UserClientRepository>();
+		services.Decorate<IUserClientRepository, UserClientCacheRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
@@ -69,6 +71,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
+		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
 		services.AddSignalR();
 
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();

@@ -7,6 +7,7 @@ public class LoginService : ILoginService
 	private readonly IConfiguration _configuration;
 	private readonly IJWTService _jWTService;
 	private readonly IRefreshTokenService _refreshTokenService;
+	private readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly HybridCache _hybridCache;
 	private readonly ILogger<LoginService> _logger;
@@ -28,6 +29,7 @@ public class LoginService : ILoginService
 	IConfiguration configuration,
 	IJWTService jWTService,
 	IRefreshTokenService refreshTokenService,
+	IAtsAccessClaimsProvider atsAccessClaimsProvider,
 	IHttpContextAccessor httpContextAccessor,
 	HybridCache hybridCache,
 	ILogger<LoginService> logger)
@@ -37,6 +39,7 @@ public class LoginService : ILoginService
 		this._configuration = configuration;
 		this._jWTService = jWTService;
 		this._refreshTokenService = refreshTokenService;
+		this._atsAccessClaimsProvider = atsAccessClaimsProvider;
 		this._httpContextAccessor = httpContextAccessor;
 		this._hybridCache = hybridCache;
 		this._logger = logger;
@@ -125,6 +128,7 @@ public class LoginService : ILoginService
 		}
 
 		// produce JWT token
+		userData = await AddAtsClaimsAsync(userData);
 		string jwtToken = this._jWTService.GetAccessToken(userData);
 
 		// set httpcookieonly
@@ -242,6 +246,7 @@ public class LoginService : ILoginService
 		}
 
 		// produce access token
+		userData = await AddAtsClaimsAsync(userData);
 		string jwtToken = this._jWTService.GetAccessToken(userData);
 		SetAccessTokenCookie(jwtToken);
 
@@ -519,6 +524,16 @@ public class LoginService : ILoginService
 		}
 
 		return true;
+	}
+
+	private async Task<LoginDTO> AddAtsClaimsAsync(LoginDTO userData)
+	{
+		var atsClaims = await _atsAccessClaimsProvider.GetClaimsAsync(userData.Id);
+		return userData with
+		{
+			AtsClientId = atsClaims?.AtsClientId,
+			AtsRoleId = atsClaims?.AtsRoleId
+		};
 	}
 }
 

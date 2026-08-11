@@ -1,9 +1,11 @@
 using ATS.DTO;
 using Auth.Data.Entities;
+using Auth.Constants;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
@@ -50,6 +52,141 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 		result[0].UserId.Should().Be(expectedUserId);
 		result[0].UserName.Should().Be("Alice Middle Reviewer");
 		result[0].UserEmail.Should().Be("alice.reviewer@example.com");
+	}
+
+	[Fact]
+	public async Task AtsAccessClaimsProvider_ShouldReadActiveRoleAndClientAssignment()
+	{
+		var userId = await AddAuthUserAsync("claims.user@example.com", "Claims", "User");
+		var clientId = await AddClientAsync("Claims Client");
+		var roleId = await AddRoleAsync("Claims Role");
+		var moduleId = await AddModuleAsync("Claims Module");
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = userId, ClientId = clientId },
+			CancellationToken.None);
+		await _userManagementService.AddUserAsync(
+			CreateAddRequest(userId, roleId, null, "Claims Site", true, moduleId),
+			CancellationToken.None);
+
+		var claims = await _atsAccessClaimsProvider.GetClaimsAsync(userId);
+
+		claims.Should().NotBeNull();
+		claims!.AtsRoleId.Should().Be(roleId);
+		claims.AtsClientId.Should().Be(clientId);
+	}
+
+	[Fact]
+	public async Task RoleTwo_ShouldOnlyReadUsersForClaimedClient()
+	{
+		var firstUserId = await AddAuthUserAsync("first.client@example.com", "First", "Client");
+		var secondUserId = await AddAuthUserAsync("second.client@example.com", "Second", "Client");
+		var firstClientId = await AddClientAsync("First Scoped Client");
+		var secondClientId = await AddClientAsync("Second Scoped Client");
+		var roleId = await AddRoleAsync("Scoped User Role");
+		var moduleId = await AddModuleAsync("Scoped User Module");
+
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = firstUserId, ClientId = firstClientId },
+			CancellationToken.None);
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = secondUserId, ClientId = secondClientId },
+			CancellationToken.None);
+		await _userManagementService.AddUserAsync(
+			CreateAddRequest(firstUserId, roleId, null, "First Site", true, moduleId),
+			CancellationToken.None);
+		await _userManagementService.AddUserAsync(
+			CreateAddRequest(secondUserId, roleId, null, "Second Site", true, moduleId),
+			CancellationToken.None);
+
+		await _userManagementService.GetUsersAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			CancellationToken.None);
+		SetAtsScope(2, firstClientId);
+
+		var candidates = await _userManagementService.GetAuthUsersAsync(CancellationToken.None);
+		var assignments = await _userManagementService.GetUserClientAssignmentsAsync(CancellationToken.None);
+		var users = await _userManagementService.GetUsersAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			CancellationToken.None);
+
+		candidates.Select(user => user.UserId).Should().Equal(firstUserId);
+		assignments.Select(item => item.UserId).Should().Equal(firstUserId);
+		users.Count.Should().Be(1);
+		users.Data.Should().OnlyContain(user => user.UserId == firstUserId && user.ClientId == firstClientId);
+	}
+
+	[Fact]
+	public async Task PlatformSuperAdmin_ShouldOverrideClientScopedAtsRole()
+	{
+		var firstUserId = await AddAuthUserAsync("platform.first@example.com", "Platform", "First");
+		var secondUserId = await AddAuthUserAsync("platform.second@example.com", "Platform", "Second");
+		var firstClientId = await AddClientAsync("Platform First Client");
+		var secondClientId = await AddClientAsync("Platform Second Client");
+		var roleId = await AddRoleAsync("Platform SuperAdmin User Role");
+		var moduleId = await AddModuleAsync("Platform SuperAdmin User Module");
+
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = firstUserId, ClientId = firstClientId },
+			CancellationToken.None);
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = secondUserId, ClientId = secondClientId },
+			CancellationToken.None);
+		await _userManagementService.AddUserAsync(
+			CreateAddRequest(firstUserId, roleId, null, "First Site", true, moduleId),
+			CancellationToken.None);
+
+		SetAtsScope(2, firstClientId, isPlatformSuperAdmin: true);
+
+		var candidates = await _userManagementService.GetAuthUsersAsync(CancellationToken.None);
+		var addResult = await _userManagementService.AddUserAsync(
+			CreateAddRequest(secondUserId, roleId, null, "Second Site", true, moduleId),
+			CancellationToken.None);
+		var users = await _userManagementService.GetUsersAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			CancellationToken.None);
+
+		candidates.Select(user => user.UserId).Should().BeEquivalentTo([firstUserId, secondUserId]);
+		addResult.Should().BeTrue();
+		users.Data.Select(user => user.UserId).Distinct().Should().BeEquivalentTo([firstUserId, secondUserId]);
+	}
+
+	[Fact]
+	public async Task UnsupportedAtsRole_ShouldReturnEmptyUserManagementReads()
+	{
+		await AddAuthUserAsync("unsupported.role@example.com", "Unsupported", "Role");
+		SetAtsScope(99, null);
+
+		var candidates = await _userManagementService.GetAuthUsersAsync(CancellationToken.None);
+		var assignments = await _userManagementService.GetUserClientAssignmentsAsync(CancellationToken.None);
+		var users = await _userManagementService.GetUsersAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			CancellationToken.None);
+
+		candidates.Should().BeEmpty();
+		assignments.Should().BeEmpty();
+		users.Count.Should().Be(0);
+		users.Data.Should().BeEmpty();
+	}
+
+	[Fact]
+	public async Task RoleTwo_ShouldRejectAddingUserFromAnotherClient()
+	{
+		var userId = await AddAuthUserAsync("cross.client@example.com", "Cross", "Client");
+		var currentClientId = await AddClientAsync("Current Client");
+		var otherClientId = await AddClientAsync("Other Client");
+		var roleId = await AddRoleAsync("Cross Client Role");
+		var moduleId = await AddModuleAsync("Cross Client Module");
+		await _userManagementService.AssignUserClientAsync(
+			new AssignUserClientDTO { UserId = userId, ClientId = otherClientId },
+			CancellationToken.None);
+		SetAtsScope(2, currentClientId);
+
+		Func<Task> act = () => _userManagementService.AddUserAsync(
+			CreateAddRequest(userId, roleId, null, "Other Site", true, moduleId),
+			CancellationToken.None);
+
+		await act.Should().ThrowAsync<ForbiddenException>();
+		(await _dbContext.UserDetails.AnyAsync(user => user.UserId == userId)).Should().BeFalse();
 	}
 
 	[Fact]
@@ -224,13 +361,14 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task AddUserAsync_ShouldAllowSuperAdminWithoutClientAssignment()
+	public async Task AddUserAsync_ShouldAllowPlatformSuperAdminToAddUserWithoutClientAssignment()
 	{
 		// Arrange
-		var userId = await AddAuthUserAsync("admin@cibi.com", "Super", "Admin");
+		var userId = await AddAuthUserAsync("unassigned.platform.target@example.com", "Platform", "Target");
 		var roleId = await AddRoleAsync("Super Admin Role");
 		var moduleId = await AddModuleAsync("Super Admin Module");
 		var request = CreateAddRequest(userId, roleId, null, "All", true, moduleId);
+		SetAtsScope(99, null, isPlatformSuperAdmin: true);
 
 		// Act
 		var result = await _userManagementService.AddUserAsync(request, CancellationToken.None);
@@ -531,6 +669,22 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 		await _hybridCache.RemoveByTagAsync("users");
 		await _hybridCache.RemoveByTagAsync("appsubroles");
 		return userId;
+	}
+
+	private void SetAtsScope(int roleId, int? clientId, bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, Guid.CreateVersion7().ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString())
+		};
+		if (clientId.HasValue)
+			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
+		if (isPlatformSuperAdmin)
+			claims.Add(new Claim(AuthClaimTypes.PlatformRoleId, PlatformRoleIds.SuperAdmin.ToString()));
+
+		_httpContextAccessor.HttpContext!.User =
+			new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
 	}
 
 	private async Task<(int ApplicationId, int RoleId)> GetAuthAccessMetadataAsync()

@@ -1,6 +1,7 @@
 ﻿using ATS.Data.Repository;
 using ATS.Hubs;
 using ATS.Services;
+using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -27,6 +28,7 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IHubClients<IATSClient>> MockClients { get; private set; }
 	public Mock<IATSClient> MockATSClient { get; private set; }
 	public Mock<IServiceScopeFactory> MockServiceScopeFactory { get; private set; }
+	public Mock<ICurrentUser> MockCurrentUser { get; private set; }
 
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
@@ -54,6 +56,7 @@ public class ATSServiceFixture : IDisposable
 		MockClients = new Mock<IHubClients<IATSClient>>();
 		MockATSClient = new Mock<IATSClient>();
 		MockServiceScopeFactory = new Mock<IServiceScopeFactory>();
+		MockCurrentUser = new Mock<ICurrentUser>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
 		EmailNotificationProcessoServiceLogger = new();
@@ -92,6 +95,7 @@ public class ATSServiceFixture : IDisposable
 			MockRedis.Object,
 			MockHubContext.Object,
 			MockBulkSubmissionProcessorServiceLogger.Object,
+			MockCurrentUser.Object,
 			Configuration);
 
 		EmailNotificationProcessorService = new EmailNotificationProcessorService(

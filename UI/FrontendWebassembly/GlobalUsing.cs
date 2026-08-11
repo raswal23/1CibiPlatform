@@ -23,6 +23,7 @@ global using FrontendWebassembly.DTO.SSO;
 global using FrontendWebassembly.Services.SSO.Implementations;
 global using FrontendWebassembly.Component.Special;
 global using FrontendWebassembly.Services.Auth.Shared;
+global using FrontendWebassembly.ShareData.Auth;
 global using FrontendWebassembly.DTO.CNX;
 global using FrontendWebassembly.Services.CNX.Interface;
 global using FrontendWebassembly.DTO.AIAgentChat;

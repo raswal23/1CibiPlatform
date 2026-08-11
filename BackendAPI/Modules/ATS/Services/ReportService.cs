@@ -6,18 +6,21 @@ public class ReportService : IReportService
 	private readonly IATSRepository _atsRepository;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
+	private readonly ICurrentUser _currentUser;
 	private readonly string _folderName;
 
 	public ReportService(
 		ILogger<ReportService> logger,
 		IATSRepository atsRepository,
 		IConfiguration configuration,
-		IObjectStorageService objectStorageService)
+		IObjectStorageService objectStorageService,
+		ICurrentUser currentUser)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
+		_currentUser = currentUser;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -134,12 +137,21 @@ public class ReportService : IReportService
 		};
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
+		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+		{
+			return Task.FromResult(new PaginatedResult<ReportListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				Array.Empty<ReportListDTO>()));
+		}
 
 		return !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
 			   || paginationRequest.StartDate.HasValue
 			   || paginationRequest.EndDate.HasValue
-			? _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
-			: _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
+			? _atsRepository.SearchReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken)
+			: _atsRepository.GetReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken);
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

@@ -154,13 +154,14 @@ else
 
 @code {
     private bool _isSettingsExpanded;
-    private const string RoleIdStorageKey = "RoleId";
-    private const string UserNameStorageKey = "Name";
+	private const string UserNameStorageKey = "Name";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
 
     private void ToggleSettingsExpanded()
     {
         _isSettingsExpanded = !_isSettingsExpanded;
     }
+
     private const int MobileBreakpoint = 920;
     private string _pageTitle = "Dashboard";
     private bool _isReady;
@@ -174,6 +175,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         var isAuthenticated = await IAuthService.IsAuthenticated();
+
+        //getclientid
 
 		if (!isAuthenticated)
         {
@@ -191,12 +194,10 @@ else
 		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
 		_userInitials = GetUserInitials(_userDisplayName);
 
-		var storedRoleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
-		var storedRoleIds = string.IsNullOrWhiteSpace(storedRoleIdsJson)
-			? []
-			: JsonSerializer.Deserialize<List<int>>(storedRoleIdsJson) ?? [];
+		var atsRoleId = await UserManagementService.GetMyRoleIdAsync() ?? 0;
+		await LocalStorageService.SetItemAsync(ATSRoleIdStorageKey, atsRoleId);
 
-		_accessibleModuleIds = storedRoleIds.Contains(1)
+		_accessibleModuleIds = await AccessService.HasRoleAsync(RoleList.SuperAdminId)
 			? ModuleList.List.Keys.ToHashSet()
 			: (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
 		if (!CanAccessRoute(NavigationManager.Uri))
