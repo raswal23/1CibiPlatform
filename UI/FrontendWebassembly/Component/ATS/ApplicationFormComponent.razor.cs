@@ -51,11 +51,10 @@ public partial class ApplicationFormComponent
 		set
 		{
 			selectedOwnershipType = value;
-			addressDetails.TypeOfOwnership = value;
 
-			if (!string.Equals(value, OtherOwnershipType, StringComparison.Ordinal))
+			if (string.Equals(selectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal))
 			{
-				OwnershipOtherText = null;
+				selectedOwnershipType = OwnershipOtherText;
 			}
 		}
 	}
@@ -311,7 +310,7 @@ public partial class ApplicationFormComponent
 			),
 
 			3 => !(
-				
+
 				(_diplomaError = educationalBackground.DiplomaFile == null
 								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
 								&& educationalBackground.HighestEducationalAttainment != "None"
@@ -416,7 +415,7 @@ public partial class ApplicationFormComponent
 
 	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
 	[Parameter] public EventCallback<string> IsWithDrawn { get; set; }
-	
+
 	private async Task OnChanged()
 	{
 		await HasChangesChanged.InvokeAsync(false);
@@ -673,7 +672,7 @@ public partial class ApplicationFormComponent
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
 			educationalBackground.HighestEducationalAttainment == "None" ||
-			educationalBackground.HighestEducationalAttainment  == "Elementary Graduate")
+			educationalBackground.HighestEducationalAttainment == "Elementary Graduate")
 		{
 			return true;
 		}
@@ -683,7 +682,7 @@ public partial class ApplicationFormComponent
 	private bool DisableEducationForBelowCollege()
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
-			educationalBackground.HighestEducationalAttainment == "None" || 
+			educationalBackground.HighestEducationalAttainment == "None" ||
 			educationalBackground.HighestEducationalAttainment == "Elementary Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Junior High School Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Senior High School Graduate")
@@ -740,7 +739,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.HighestEducationalAttainment = value;
 
 			ResetEducationalBackground(value);
-			
+
 		}
 	}
 	private async Task OnSaveAndNextAsync()
@@ -853,9 +852,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		addressDetails.TypeOfOwnership = IsOtherOwnershipSelected
-			? OwnershipOtherText?.Trim()
-			: SelectedOwnershipType;
+		addressDetails.TypeOfOwnership = SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{
