@@ -971,8 +971,9 @@
     min-width: 0;
 }
 
+.ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control.mud-input-control,
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-control {
-    margin-top: 0;
+    margin: 0;
 }
 
 .ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) .ats-step-five-control.mud-input-control,
