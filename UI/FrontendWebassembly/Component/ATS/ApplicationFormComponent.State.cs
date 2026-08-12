@@ -107,6 +107,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			{
 				Consent = consent,
 				DeclineConsent = declineConsent,
+				Signature = signatureDetails.Signature?.ToArray(),
 				SignerName = signatureDetails.SignerName,
 				SignatureDate = SignatureDate
 			}
@@ -230,9 +231,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			return;
 		}
 
-		// Uploaded files and the signature are intentionally not persisted.
-		// Start restored drafts at the first step so those required inputs can be reviewed again.
-		_activeStep = 0;
+		// Uploaded supporting documents are intentionally not persisted.
 		RestorePersonalDetails(state.PersonalDetails);
 		RestoreAddressDetails(state.AddressDetails);
 		RestoreEducationalBackground(state.EducationalBackground);
@@ -406,8 +405,10 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 	{
 		consent = state.Consent;
 		declineConsent = state.DeclineConsent;
+		signatureDetails.Signature = state.Signature?.ToArray();
 		signatureDetails.SignerName = state.SignerName;
 		SignatureDate = state.SignatureDate;
+		_signatureError = false;
 	}
 
 	private async Task ClearDraftAsync()

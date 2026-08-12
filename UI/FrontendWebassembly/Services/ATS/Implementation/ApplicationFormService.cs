@@ -1,5 +1,4 @@
-﻿
-namespace FrontendWebassembly.Services.ATS.Implementation;
+﻿namespace FrontendWebassembly.Services.ATS.Implementation;
 
 public class ApplicationFormService : IApplicationFormService
 {
@@ -10,7 +9,7 @@ public class ApplicationFormService : IApplicationFormService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails, 
+	public async Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails, 
 														AddressDetailsDTO AddressDetails, 
 														EducationalBackgroundDTO EducationalBackground, 
 														LicensesDetailsDTO LicensesDetails, 
@@ -207,10 +206,10 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
+			return new ApplicationFormResponse(false, errorContent!.Detail);
 		}
 
-		return successContentInfo;
+		return new ApplicationFormResponse(true, string.Empty); 
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)

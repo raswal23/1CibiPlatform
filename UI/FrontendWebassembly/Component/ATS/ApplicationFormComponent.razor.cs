@@ -51,11 +51,10 @@ public partial class ApplicationFormComponent
 		set
 		{
 			selectedOwnershipType = value;
-			addressDetails.TypeOfOwnership = value;
 
-			if (!string.Equals(value, OtherOwnershipType, StringComparison.Ordinal))
+			if (string.Equals(selectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal))
 			{
-				OwnershipOtherText = null;
+				selectedOwnershipType = OwnershipOtherText;
 			}
 		}
 	}
@@ -145,8 +144,6 @@ public partial class ApplicationFormComponent
 			}
 		}
 
-		if (ActiveStep <= 1)
-			_activeStep = ActiveStep;
 		showPhilSys = ShowsPhilSys;
 
 		if (!string.IsNullOrWhiteSpace(dobString))
@@ -159,6 +156,7 @@ public partial class ApplicationFormComponent
 		}
 
 		await RestoreDraftAsync();
+		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
 	}
 
@@ -312,7 +310,7 @@ public partial class ApplicationFormComponent
 			),
 
 			3 => !(
-				
+
 				(_diplomaError = educationalBackground.DiplomaFile == null
 								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
 								&& educationalBackground.HighestEducationalAttainment != "None"
@@ -417,7 +415,7 @@ public partial class ApplicationFormComponent
 
 	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
 	[Parameter] public EventCallback<string> IsWithDrawn { get; set; }
-	
+
 	private async Task OnChanged()
 	{
 		await HasChangesChanged.InvokeAsync(false);
@@ -674,7 +672,7 @@ public partial class ApplicationFormComponent
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
 			educationalBackground.HighestEducationalAttainment == "None" ||
-			educationalBackground.HighestEducationalAttainment  == "Elementary Graduate")
+			educationalBackground.HighestEducationalAttainment == "Elementary Graduate")
 		{
 			return true;
 		}
@@ -684,7 +682,7 @@ public partial class ApplicationFormComponent
 	private bool DisableEducationForBelowCollege()
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
-			educationalBackground.HighestEducationalAttainment == "None" || 
+			educationalBackground.HighestEducationalAttainment == "None" ||
 			educationalBackground.HighestEducationalAttainment == "Elementary Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Junior High School Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Senior High School Graduate")
@@ -741,7 +739,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.HighestEducationalAttainment = value;
 
 			ResetEducationalBackground(value);
-			
+
 		}
 	}
 	private async Task OnSaveAndNextAsync()
@@ -854,9 +852,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		addressDetails.TypeOfOwnership = IsOtherOwnershipSelected
-			? OwnershipOtherText?.Trim()
-			: SelectedOwnershipType;
+		addressDetails.TypeOfOwnership = SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{
@@ -899,13 +895,15 @@ public partial class ApplicationFormComponent
 		{
 			isSaving = true;
 			await InvokeAsync(StateHasChanged);
-			var isAdded = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
+			var response = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 
-			if (isAdded)
+			if (!response.isSuccess)
 			{
-				IsSuccess = true;
-				await RemoveItemsAsync();
+				Snackbar.Add($"{response.errorDetail}", Severity.Error);
+				return;
 			}
+			IsSuccess = response.isSuccess;
+			await RemoveItemsAsync();
 		}
 		finally
 		{

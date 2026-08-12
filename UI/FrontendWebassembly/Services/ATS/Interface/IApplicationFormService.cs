@@ -2,7 +2,7 @@
 
 public interface IApplicationFormService
 {
-	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
+	Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,

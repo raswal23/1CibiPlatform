@@ -148,6 +148,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						RushNormal = file.OrderType,
 						ClientId = _currentUser.AtsClientId,
 						RequestorId = _currentUser.UserId,
+						Requestor = _currentUser.FullName,
 						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
