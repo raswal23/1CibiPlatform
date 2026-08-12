@@ -111,6 +111,7 @@ public sealed class SignatureDetailsState
 {
 	public bool Consent { get; set; }
 	public bool DeclineConsent { get; set; }
+	public byte[]? Signature { get; set; }
 	public string? SignerName { get; set; }
 	public DateTime? SignatureDate { get; set; }
 }

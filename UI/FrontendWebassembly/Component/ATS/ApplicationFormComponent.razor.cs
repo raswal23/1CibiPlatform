@@ -145,8 +145,6 @@ public partial class ApplicationFormComponent
 			}
 		}
 
-		if (ActiveStep <= 1)
-			_activeStep = ActiveStep;
 		showPhilSys = ShowsPhilSys;
 
 		if (!string.IsNullOrWhiteSpace(dobString))
@@ -159,6 +157,7 @@ public partial class ApplicationFormComponent
 		}
 
 		await RestoreDraftAsync();
+		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
 	}
 
@@ -899,13 +898,15 @@ public partial class ApplicationFormComponent
 		{
 			isSaving = true;
 			await InvokeAsync(StateHasChanged);
-			var isAdded = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
+			var response = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 
-			if (isAdded)
+			if (!response.isSuccess)
 			{
-				IsSuccess = true;
-				await RemoveItemsAsync();
+				Snackbar.Add($"{response.errorDetail}", Severity.Error);
+				return;
 			}
+			IsSuccess = response.isSuccess;
+			await RemoveItemsAsync();
 		}
 		finally
 		{
