@@ -69,7 +69,7 @@ public class AuthInitialData
 		(SuperAdminEmail, "Settings", "User Management", "User"),
 		(SuperAdminEmail, "S&I", "ATS", "User"),
 
-	
+
 		("atsAdmin@cibi.com", "S&I", "ATS", "User"),
 		("atsPlatformManager@cibi.com", "S&I", "ATS", "User"),
 		("atsUser@cibi.com", "S&I", "ATS", "User"),
@@ -161,6 +161,12 @@ public class AuthInitialData
 					AppId = 6,
 					AppName = "S&I",
 					Description = "S&I"
+				},
+				new AuthApplication
+				{
+					AppId = 7,
+					AppName = "Administration",
+					Description = "Administration"
 				}
 			};
 	}
@@ -237,6 +243,12 @@ public class AuthInitialData
 					SubMenuId = 7,
 					SubMenuName = "ATS",
 					Description = "ATS"
+				},
+				new AuthSubMenu
+				{
+					SubMenuId = 8,
+					SubMenuName = "logs",
+					Description = "logs"
 				}
 			};
 	}

@@ -10,6 +10,7 @@ using Yarp.ReverseProxy.Configuration;
 using BuildingBlocks.SharedConstants;
 using AIAgent;
 using BackendAPI.Modules.ATS;
+using BackendAPI.Modules.PlatformLogging;
 
 namespace ApiGateways.YarpApiGateway.Extensions;
 
@@ -132,6 +133,7 @@ public static class GatewayServiceExtensions
 			typeof(SSOMarker).Assembly,
 			typeof(AIAgentMarker).Assembly,
 			typeof(ATSMarker).Assembly,
+			typeof(PlatformLoggingMarker).Assembly
 		};
 
 		builder.Services.Scan(scan =>
