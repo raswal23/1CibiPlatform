@@ -1,0 +1,71 @@
+@page "/administration/logs"
+@layout MainLayout
+@inherits SecurePageBase
+@attribute [RequirePermission(7, 8)]
+@using FrontendWebassembly.Services.Logging
+@inject IPlatformLogService LogService
+
+<PageTitle>Platform Logs</PageTitle>
+
+<main class="platform-logs">
+    <header>
+        <div><span class="eyebrow">Operations</span><h1>Platform logs</h1><p>Search structured events from every 1CibiPlatform module.</p></div>
+        <button class="refresh" @onclick="LoadFirstPageAsync" disabled="@isLoading">Refresh</button>
+    </header>
+
+    <section class="filters" aria-label="Log filters">
+        <label>Application<select @bind="application"><option value="">All</option>@foreach (var item in applications){<option value="@item">@item</option>}</select></label>
+        <label>Level<select @bind="level"><option value="">All</option>@foreach (var item in levels){<option value="@item">@item</option>}</select></label>
+        <label class="search">Message<input @bind="search" placeholder="Search message text" /></label>
+        <button @onclick="LoadFirstPageAsync" disabled="@isLoading">Apply filters</button>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="state error" role="alert">@error</div>
+    }
+    else if (isLoading && logs.Count == 0)
+    {
+        <div class="state">Loading logs…</div>
+    }
+    else if (logs.Count == 0)
+    {
+        <div class="state">No log events match these filters.</div>
+    }
+    else
+    {
+        <section class="table-wrap">
+            <table>
+                <thead><tr><th>Time</th><th>Level</th><th>Application</th><th>Source</th><th>Message</th></tr></thead>
+                <tbody>
+                @foreach (var log in logs)
+                {
+                    <tr tabindex="0" @onclick="() => selected = log">
+                        <td>@log.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td><span class="level @log.Level.ToLowerInvariant()">@log.Level</span></td>
+                        <td>@log.Application</td><td>@ShortSource(log.SourceContext)</td><td>@log.RenderedMessage</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </section>
+        @if (!string.IsNullOrWhiteSpace(nextCursor))
+        {
+            <button class="load-more" @onclick="LoadMoreAsync" disabled="@isLoading">@(isLoading ? "Loading…" : "Load more")</button>
+        }
+    }
+
+    @if (selected is not null)
+    {
+        <div class="detail-backdrop" @onclick="() => selected = null">
+            <aside class="detail" role="dialog" aria-modal="true" aria-label="Log details" @onclick:stopPropagation>
+                <button class="close" aria-label="Close" @onclick="() => selected = null">×</button>
+                <span class="level @selected.Level.ToLowerInvariant()">@selected.Level</span><h2>@selected.Application log</h2>
+                <dl><dt>Time</dt><dd>@selected.OccurredAt.ToString("O")</dd><dt>Environment</dt><dd>@selected.Environment</dd><dt>Source</dt><dd>@selected.SourceContext</dd><dt>Trace ID</dt><dd>@selected.TraceId</dd><dt>Request ID</dt><dd>@selected.RequestId</dd></dl>
+                <h3>Message</h3><pre>@selected.RenderedMessage</pre>
+                @if (!string.IsNullOrWhiteSpace(selected.Exception)){<h3>Exception</h3><pre>@selected.Exception</pre>}
+                <h3>Properties</h3><pre>@selected.Properties</pre>
+            </aside>
+        </div>
+    }
+</main>

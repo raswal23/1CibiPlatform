@@ -6,11 +6,11 @@ builder.Services.ConfigureEnvironment(builder);
 builder.Services.AddControllers();
 
 builder.Services
-	.AddLoggingConfiguration(builder.Configuration)
+	.AddLoggingConfiguration(builder.Configuration, builder.Environment)
 	.AddModuleMediaTR()
 	.AddModuleCarter()
 	.AddHybridCaches(builder.Configuration)
-	.AddModuleServices()
+	.AddModuleServices(builder.Configuration)
 	.AddJwtAuthentication(builder.Configuration, builder.Environment)
 	.AddModuleInfrastructure(builder.Configuration)
 	.AddAIAgentConfiguration(builder.Configuration)

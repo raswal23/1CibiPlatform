@@ -10,6 +10,7 @@ public static class DatabaseExtensions
 		PhilSysDatabaseExtensions.PhilSysIntializeDatabaseAsync(app).GetAwaiter().GetResult();
 		AIAgentDatabaseExtensions.AIAgentIntializeDatabaseAsync(app).GetAwaiter().GetResult();
 		ATSDatabaseExtensions.ATSIntializeDatabaseAsync(app).GetAwaiter().GetResult();
+		PlatformLoggingDatabaseExtensions.PlatformLoggingInitializeDatabaseAsync(app).GetAwaiter().GetResult();
 
 	}
 }
