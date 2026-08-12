@@ -12,9 +12,8 @@
     width: 100%;
     max-width: none;
     margin: 0;
-    border-radius: 0;
-    background: #fff;
     overflow: hidden;
+    background: #fff;
 }
 
 ::deep .ats-upload-report-dialog > .mud-dialog-content {
@@ -32,9 +31,11 @@
 .ats-upload-report-shell-header {
     position: relative;
     overflow: hidden;
-    border-radius: 20px 20px 0 0;
-    padding: 26px 30px 22px;
+    padding: 28px 32px 24px;
+    border: 0;
+    border-radius: 0;
     background: linear-gradient(120deg, var(--navy-900) 0%, #1c3a70 55%, var(--blue-600) 130%);
+    box-shadow: none;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -193,13 +194,6 @@
     .ats-upload-report-body,
     .ats-upload-report-actions { padding-left: 20px; padding-right: 20px; }
     .ats-upload-report-fields { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 520px) {
-    .ats-upload-report-shell-header {
-        border-radius: 20px; 
-        overflow: hidden;
-    }
 }
 
 @media (max-width: 390px) {
