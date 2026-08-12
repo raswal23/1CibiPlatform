@@ -9,6 +9,12 @@ public sealed class PlatformLogRetentionService(
 {
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
+		using var loggingScope = logger.BeginScope(
+			new Dictionary<string, object>
+			{
+				["Application"] = "PlatformLogging"
+			});
+
 		if (!options.Value.PostgreSqlEnabled || !options.Value.RetentionEnabled)
 		{
 			return;
@@ -16,6 +22,7 @@ public sealed class PlatformLogRetentionService(
 
 		var retentionInterval = TimeSpan.FromHours(
 			Math.Max(1, options.Value.RetentionIntervalHours));
+
 		using var timer = new PeriodicTimer(retentionInterval);
 
 		do

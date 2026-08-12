@@ -171,6 +171,8 @@ Apply this note to the current ATS Quartz entry points:
 
 Use the same boundary-scope approach for any future ATS hosted service, message consumer, scheduled task, or directly invoked operation that does not pass through MediatR.
 
+The PlatformLogging retention `BackgroundService` follows the same rule and explicitly creates `Application = "PlatformLogging"` at the beginning of `ExecuteAsync`. A plain `BackgroundService` is intentional for this simple interval-based cleanup. Move it to Quartz only if retention later requires cron expressions, clustered single-run coordination, misfire handling, or job administration.
+
 ## Phase 2: Define the PostgreSQL schema
 
 Create and update the log table only through PlatformLogging EF Core migrations in the API project. Do not let the sink or repository issue `CREATE TABLE` or `ALTER TABLE` statements.
