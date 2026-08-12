@@ -14,14 +14,26 @@ public class GetMyAccessHandler : IQueryHandler<GetMyAccessQuery, GetMyAccessRes
 	}
 
 	public Task<GetMyAccessResult> Handle(
-		GetMyAccessQuery request,
-		CancellationToken cancellationToken)
+	  GetMyAccessQuery request,
+	  CancellationToken cancellationToken)
 	{
-		if ((!_currentUser.IsAuthenticated && !_currentUser.IsPlatformSuperAdmin) || _currentUser.AtsRoleId is not > 0)
-			throw new ForbiddenException("The current user does not have valid ATS access.");
+		if (!_currentUser.IsAuthenticated)
+			throw new ForbiddenException(
+				"The current user does not have valid ATS access.");
 
-		return Task.FromResult(new GetMyAccessResult(
-			_currentUser.AtsRoleId!.Value,
-			_currentUser.AtsClientId));
+	  if (_currentUser.IsPlatformSuperAdmin)
+		{
+			return Task.FromResult(new GetMyAccessResult(
+				AtsRoleIds.AllClients,
+				null));
+		}
+
+		if (_currentUser.AtsRoleId is not > 0)
+			throw new ForbiddenException(
+				"The current user does not have valid ATS access.");
+
+	  return Task.FromResult(new GetMyAccessResult(
+		  _currentUser.AtsRoleId.Value,
+		  _currentUser.AtsClientId));
 	}
 }

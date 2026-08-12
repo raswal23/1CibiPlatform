@@ -101,6 +101,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
 		emailInvitationRequest.RequestorId = _currentUser.UserId;
 		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
+		emailInvitationRequest.Requestor = _currentUser.FullName;
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		try
