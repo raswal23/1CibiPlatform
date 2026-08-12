@@ -1527,8 +1527,26 @@ code {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(127, 196, 232, 0.65) transparent;
     transition: width .2s ease, padding .2s ease;
+}
+
+.ats-console-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ats-console-sidebar::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(127, 196, 232, 0.65);
+}
+
+.ats-console-sidebar::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .ats-console-logo {
@@ -1743,6 +1761,28 @@ button.ats-console-brand-text {
 .ats-console-content {
     padding: 30px 34px 60px;
     width: 100%;
+}
+
+.ats-console-content-enter {
+    animation: ats-content-enter 180ms ease-out both;
+}
+
+@keyframes ats-content-enter {
+    from {
+        opacity: 0;
+        transform: translateX(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-console-content-enter {
+        animation: none;
+    }
 }
 
 .ats-console-card {
