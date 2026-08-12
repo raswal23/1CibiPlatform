@@ -697,20 +697,20 @@
                                 <MudText Typo="Typo.subtitle1" Align="Align.Left">Type of ownership (current address)</MudText>
                                 <div class="ats-step-four-ownership-options">
                                     <MudRadioGroup T="string"
-                                                   @bind-Value="addressDetails.TypeOfOwnership"
+                                                   @bind-Value="SelectedOwnershipType"
                                                    Required="true"
                                                    RequiredError="Type of Ownership is required"
                                                    Class="ats-ownership-pills">
-                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Owned" ? "selected" : string.Empty)}")" Value="@("Owned")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(SelectedOwnershipType == "Owned" ? "selected" : string.Empty)}")" Value="@("Owned")">
                                             Owned
                                         </MudRadio>
-                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Rent" ? "selected" : string.Empty)}")" Value="@("Rent")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(SelectedOwnershipType == "Rent" ? "selected" : string.Empty)}")" Value="@("Rent")">
                                             Rent
                                         </MudRadio>
-                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Living with family / relatives" ? "selected" : string.Empty)}")" Value="@("Living with family / relatives")">
+                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(SelectedOwnershipType== "Living with family / relatives" ? "selected" : string.Empty)}")" Value="@("Living with family / relatives")">
                                             Living with family / relatives
                                         </MudRadio>
-                                        <MudRadio T="string" Class="@($"ats-ownership-pill {(addressDetails.TypeOfOwnership == "Others" ? "selected" : string.Empty)}")" Value="@("Others")">
+                                            <MudRadio T="string" Class="@($"ats-ownership-pill {(SelectedOwnershipType == "Others" ? "selected" : string.Empty)}")" Value="@("Others")">
                                             Others
                                         </MudRadio>
                                     </MudRadioGroup>
