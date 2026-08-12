@@ -114,15 +114,17 @@ public partial class ApplicationFormComponent
 
 	protected override async Task OnInitializedAsync()
 	{
+		await RestoreDraftAsync();
+
 		philSysId = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:digitalId") ?? string.Empty;
-		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? string.Empty;
-		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? string.Empty;
-		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? string.Empty;
-		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:suffix") ?? string.Empty;
+		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? personalDetails.FirstName;
+		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? personalDetails.MiddleName;
+		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? personalDetails.LastName;
+		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:suffix") ?? personalDetails.Suffix;
 		string? dobString = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:birthDate");
-		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:sex") ?? string.Empty;
-		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:emailAddress") ?? string.Empty;
-		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? string.Empty;
+		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:sex") ?? personalDetails.Sex;
+		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:emailAddress") ?? personalDetails.EmailAlternative;
+		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? personalDetails.MobileNumber;
 		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:profilePicture") ?? string.Empty;
 
 		if (!string.IsNullOrEmpty(FaceUrl))
@@ -150,12 +152,10 @@ public partial class ApplicationFormComponent
 		{
 			if (DateOnly.TryParseExact(dobString, "yyyy-MM-dd", out var dob))
 			{
-				personalDetails.DOB = dob;
 				DateOfBirth = dob.ToDateTime(TimeOnly.MinValue);
 			}
 		}
 
-		await RestoreDraftAsync();
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
 	}
