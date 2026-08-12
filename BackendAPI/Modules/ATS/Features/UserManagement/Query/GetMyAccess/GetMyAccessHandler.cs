@@ -24,7 +24,7 @@ public class GetMyAccessHandler : IQueryHandler<GetMyAccessQuery, GetMyAccessRes
 	  if (_currentUser.IsPlatformSuperAdmin || _currentUser.AtsRoleId == 1)
 		{
 			return Task.FromResult(new GetMyAccessResult(
-				AtsRoleIds.AllClients,
+				AtsRoleIds.PlatformManager,
 				null));
 		}
 

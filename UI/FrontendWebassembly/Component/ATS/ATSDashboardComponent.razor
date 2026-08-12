@@ -20,7 +20,7 @@
                    Variant="Variant.Outlined"
                    Margin="Margin.Dense"
                    Disabled="IsAnyDashboardSectionLoading">
-            <MudSelectItem T="string" Value="@AllRequesters">All</MudSelectItem>
+            <MudSelectItem T="string" Value="@AllRequesters">All Requesters</MudSelectItem>
             @foreach (var requester in _dashboard.Requesters)
             {
                 <MudSelectItem T="string" Value="@requester">@requester</MudSelectItem>
@@ -34,16 +34,16 @@
                   Class="ats-dashboard-chart-card ats-dashboard-chart-card-clickable"
                   role="button"
                   tabindex="0"
-                  aria-label="Open User YTD Hire chart in a larger view"
+                  aria-label="Open User YTD Invitations chart in a larger view"
                   @onclick="@(() => OpenChartDetailDialogAsync(ATSDashboardChartKeys.UserYtdHire))"
                   @onkeydown="@(eventArgs => OnChartCardKeyDown(eventArgs, ATSDashboardChartKeys.UserYtdHire))">
             <div class="ats-dashboard-chart-header">
                 <div class="ats-dashboard-chart-heading">
                     <MudText Typo="Typo.subtitle1" Class="ats-dashboard-chart-title">
-                        User YTD Hire
+                        User YTD Invitations
                     </MudText>
                     <MudText Typo="Typo.body2" Class="ats-dashboard-chart-hint">
-                        Monthly hires recorded this year
+                        Monthly invitations recorded this year
                     </MudText>
                 </div>
                 @*

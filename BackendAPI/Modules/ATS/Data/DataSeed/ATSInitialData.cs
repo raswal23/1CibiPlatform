@@ -82,6 +82,7 @@ public class ATSInitialData
 			Requestor = row.Requestor,
 			SelectPackage = row.SelectPackage,
 			RushNormal = row.RushNormal,
+			ClientId = row.ClientId,
 			RequestorId = requestorId,
 			HashToken = hashToken,
 			HashTokenCreatedAt = createdAt,
@@ -181,6 +182,7 @@ public class ATSInitialData
 		public string LastName { get; set; } = string.Empty;
 		public string SelectPackage { get; set; } = string.Empty;
 		public string RushNormal { get; set; } = string.Empty;
+		public int ClientId { get; set; }
 		public string OrderStatus { get; set; } = string.Empty;
 		public DateTime OrderCreatedAt { get; set; }
 		public DateTime? OrderCompletedAt { get; set; }

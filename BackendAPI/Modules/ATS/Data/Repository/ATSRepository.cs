@@ -392,21 +392,25 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
+	public async Task<ATSDashboardDTO> GetDashboardAsync(
+		string? requester,
+		AtsQueryScope scope,
+		CancellationToken cancellationToken)
 	{
 		var now = DateTime.UtcNow;
 		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		var yearEnd = yearStart.AddYears(1);
+		var invitations = ApplyQueryScope(
+			_dbcontext.EmailInvitationRequests.AsNoTracking(),
+			scope);
 
-		var requesterOptions = await _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var requesterOptions = await invitations
 			.Where(x => x.Requestor != null && x.Requestor != string.Empty)
 			.Select(x => x.Requestor!)
 			.Distinct()
 			.OrderBy(x => x)
 			.ToListAsync(cancellationToken);
 
-		var invitations = _dbcontext.EmailInvitationRequests.AsNoTracking();
 		var allYtdHireRows = await invitations
 			.Where(x => x.OrderCreatedAt.HasValue
 				&& x.OrderCreatedAt >= yearStart
@@ -779,6 +783,11 @@ public class ATSRepository : IATSRepository
 	{
 		AtsQueryScopeKind.All => query,
 		AtsQueryScopeKind.Client => query.Where(invitation => invitation.ClientId == scope.ClientId),
+		AtsQueryScopeKind.Clients => query.Where(invitation =>
+			invitation.ClientId.HasValue && scope.ClientIds.Contains(invitation.ClientId.Value)),
+		AtsQueryScopeKind.ClientRequestor => query.Where(invitation =>
+			invitation.ClientId == scope.ClientId
+			&& invitation.RequestorId == scope.RequestorId),
 		AtsQueryScopeKind.Requestor => query.Where(invitation => invitation.RequestorId == scope.RequestorId),
 		_ => query.Where(_ => false)
 	};

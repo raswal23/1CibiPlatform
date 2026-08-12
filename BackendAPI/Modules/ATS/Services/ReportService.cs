@@ -6,7 +6,7 @@ public class ReportService : IReportService
 	private readonly IATSRepository _atsRepository;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
-	private readonly ICurrentUser _currentUser;
+	private readonly AtsQueryScopeResolver _scopeResolver;
 	private readonly string _folderName;
 
 	public ReportService(
@@ -14,13 +14,13 @@ public class ReportService : IReportService
 		IATSRepository atsRepository,
 		IConfiguration configuration,
 		IObjectStorageService objectStorageService,
-		ICurrentUser currentUser)
+		AtsQueryScopeResolver scopeResolver)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_currentUser = currentUser;
+		_scopeResolver = scopeResolver;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -126,7 +126,7 @@ public class ReportService : IReportService
 		}
 	}
 
-   public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -137,21 +137,21 @@ public class ReportService : IReportService
 		};
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
-		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
 		if (scope.Kind == AtsQueryScopeKind.Denied)
 		{
-			return Task.FromResult(new PaginatedResult<ReportListDTO>(
+			return new PaginatedResult<ReportListDTO>(
 				paginationRequest.PageIndex,
 				paginationRequest.PageSize,
 				0,
-				Array.Empty<ReportListDTO>()));
+				Array.Empty<ReportListDTO>());
 		}
 
-		return !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
+		return await (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
 			   || paginationRequest.StartDate.HasValue
 			   || paginationRequest.EndDate.HasValue
 			? _atsRepository.SearchReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken)
-			: _atsRepository.GetReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken);
+			: _atsRepository.GetReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken));
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

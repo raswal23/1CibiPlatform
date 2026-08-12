@@ -37,6 +37,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 	protected readonly IApplicantSearchProjectionService _applicantSearchProjectionService;
 	protected readonly IReportService _reportService;
+	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly HybridCache _hybridCache;
 	protected readonly IConnectionMultiplexer _redis;
@@ -66,6 +67,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_atsAccessClaimsProvider = _scope.ServiceProvider.GetRequiredService<IAtsAccessClaimsProvider>();
 		_applicantSearchProjectionService = _scope.ServiceProvider.GetRequiredService<IApplicantSearchProjectionService>();
 		_reportService = _scope.ServiceProvider.GetRequiredService<IReportService>();
+		_dashboardService = _scope.ServiceProvider.GetRequiredService<IDashboardService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();
 	}
 

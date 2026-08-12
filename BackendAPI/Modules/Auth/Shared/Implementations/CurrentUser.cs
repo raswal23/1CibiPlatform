@@ -1,6 +1,3 @@
-using Auth.Constants;
-using System.Globalization;
-
 namespace Auth.Shared.Implementations;
 
 internal sealed class CurrentUser : ICurrentUser

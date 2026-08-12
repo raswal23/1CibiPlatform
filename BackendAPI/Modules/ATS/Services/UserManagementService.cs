@@ -268,8 +268,8 @@ public class UserManagementService : IUserManagementService
 
 		return _currentUser.AtsRoleId switch
 		{
-			AtsRoleIds.AllClients => new UserManagementScope(true, null),
-			AtsRoleIds.ClientScoped when _currentUser.AtsClientId is > 0 =>
+			AtsRoleIds.PlatformManager => new UserManagementScope(true, null),
+			AtsRoleIds.Admin when _currentUser.AtsClientId is > 0 =>
 				new UserManagementScope(false, _currentUser.AtsClientId),
 			_ => UserManagementScope.Denied
 		};
