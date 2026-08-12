@@ -33,7 +33,7 @@ public static class ServiceConfiguration
 		{
 			services.AddSingleton(sink);
 			services.AddSingleton<IHostedService>(sink);
-			loggerConfiguration.WriteTo.Sink(sink);
+			loggerConfiguration.WriteTo.Sink(sink, LogEventLevel.Warning);
 		}
 
 		Log.Logger = loggerConfiguration.CreateLogger();
