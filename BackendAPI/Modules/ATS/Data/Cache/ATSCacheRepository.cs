@@ -284,11 +284,13 @@ public class ATSCacheRepository : IATSRepository
 
 		return await _hybridCache.GetOrCreateAsync(
 			cacheKey,
-			async _ => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken),
+			async token => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, token),
 			options: new HybridCacheEntryOptions
 			{
 				Expiration = TimeSpan.FromMinutes(5)
-			});
+			},
+			tags: [ReportTag],
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
