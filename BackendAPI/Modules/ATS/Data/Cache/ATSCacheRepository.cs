@@ -183,8 +183,10 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.UpdateOrderStatusAsync(EmailInvitationRequestId, orderStatus, orderCompletedAt, cancellationToken);
 
 		if (result)
+		{
 			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
-		await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(ReportTag);
+		}
 
 		return result;
 	}
@@ -234,7 +236,11 @@ public class ATSCacheRepository : IATSRepository
 	{
 		var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
+		{
 			await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+		}
+
 		return result;
 	}
 
@@ -242,7 +248,10 @@ public class ATSCacheRepository : IATSRepository
 	{
 		var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
+		{
 			await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+		}
 		return result;
 	}
 
