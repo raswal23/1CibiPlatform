@@ -22,6 +22,7 @@ public class LoginService : ILoginService
 	private readonly string _userAttemptTag = "user_attempt";
 	private readonly int _windowMinutesBeforeTokenExpiration = 3;
 	private readonly int _expiryRefreshTokeninMinutesKey = 30;
+	private readonly int _httpCookieOnlyRefreshTokenInDays;
 
 	public LoginService(
 	IAuthRepository authRepository,
@@ -47,6 +48,7 @@ public class LoginService : ILoginService
 		_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
 		_expiryinMinutesKey = _configuration.GetValue<double>("Jwt:ExpiryInMinutes");
 		_httpCookieOnlyRefreshTokenKey = _configuration.GetValue<string>("AuthWeb:AuthWebHttpCookieOnlyKey") ?? "";
+		_httpCookieOnlyRefreshTokenInDays = _configuration.GetValue<int>("AuthWeb:AuthWebHttpCookieOnlyDays", 60);
 		_cookieExpiryinDaysKey = _configuration.GetValue<int>("AuthWeb:CookieExpiryInDayIsRememberMe");
 		_isHttps = _configuration.GetValue<bool>("AuthWeb:isHttps");
 		_accountLockDuration = _configuration.GetValue<int>("AuthWeb:AccountLockDurationInMinutes");
@@ -436,7 +438,7 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryRefreshTokeninMinutesKey))
+			Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_httpCookieOnlyRefreshTokenInDays))
 		};
 
 

@@ -8,49 +8,43 @@ public sealed class PackageRepository : IPackageRepository
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var query = _dbContext.PackageDetails.AsNoTracking().OrderBy(package => package.PackageName);
+		var query = BuildQuery(clientId);
 		var count = await query.CountAsync(cancellationToken);
-		var items = await query
-			.Join(_dbContext.ClientDetails, package => package.PackageId, clientPackage => clientPackage.PackageId, (package, clientPackage) => new { package, clientPackage })
-			.Where(joined => joined.clientPackage.ClientId == clientId)
+		var items = await query.OrderBy(package => package.PackageName)
 			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(package => new PackageDetailsDTO
 			{
-				PackageId = package.clientPackage.PackageId,
-				PackageName = package.package.PackageName,
-				PackageDescription = package.package.PackageDescription,
-				IsActive = package.package.IsActive,
-				FollowUpEmail = package.package.FollowUpEmail,
-				CreatedAt = package.package.CreatedAt,
-				UpdatedAt = package.package.UpdatedAt
+				PackageId = package.PackageId, PackageName = package.PackageName,
+				PackageDescription = package.PackageDescription, IsActive = package.IsActive,
+				FollowUpEmail = package.FollowUpEmail, CreatedAt = package.CreatedAt, UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<PackageDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}
 
 	public async Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var query = _dbContext.PackageDetails.AsNoTracking().Where(package =>
+		var query = BuildQuery(clientId).Where(package =>
 			EF.Functions.ILike(package.PackageName, $"%{request.SearchTerm}%") ||
 			EF.Functions.ILike(package.PackageDescription, $"%{request.SearchTerm}%"));
 		var count = await query.CountAsync(cancellationToken);
 		var items = await query.OrderBy(package => package.PackageName)
-			.Join(_dbContext.ClientDetails, 
-				package => package.PackageId, 
-				clientPackage => clientPackage.PackageId, 
-				(package, clientPackage) => new { package, clientPackage })
-			.Where(joined => joined.clientPackage.ClientId == clientId)
 			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(package => new PackageDetailsDTO
 			{
-				PackageId = package.clientPackage.PackageId,
-				PackageName = package.package.PackageName,
-				PackageDescription = package.package.PackageDescription,
-				IsActive = package.package.IsActive,
-				FollowUpEmail = package.package.FollowUpEmail,
-				CreatedAt = package.package.CreatedAt,
-				UpdatedAt = package.package.UpdatedAt
+				PackageId = package.PackageId, PackageName = package.PackageName,
+				PackageDescription = package.PackageDescription, IsActive = package.IsActive,
+				FollowUpEmail = package.FollowUpEmail, CreatedAt = package.CreatedAt, UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<PackageDetailsDTO>(request.PageIndex, request.PageSize, count, items);
+	}
+
+	private IQueryable<PackageDetails> BuildQuery(int? clientId)
+	{
+		var query = _dbContext.PackageDetails.AsNoTracking();
+		return clientId is > 0
+			? query.Where(package => _dbContext.ClientDetails.Any(client =>
+				client.ClientId == clientId.Value && client.PackageId == package.PackageId))
+			: query;
 	}
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO dto, CancellationToken cancellationToken)

@@ -364,6 +364,17 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/getmyroleid" }
 				}
 			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetMyAccess",
+				MatchPath: "/ats/get-my-access",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/get-my-access" }
+				}
+			),
 			
 
 			new RouteDefinitionDTO(

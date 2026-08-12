@@ -1,6 +1,6 @@
 namespace ATS.Features.PackageManagement.Query.GetPackages;
 
-public record GetPackagesQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+public record GetPackagesQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null)
 	: IQuery<GetPackagesQueryResult>;
 
 public record GetPackagesQueryResult(PaginatedResult<PackageDetailsDTO> Packages);
@@ -16,6 +16,10 @@ public class GetPackagesQueryRequestValidator : AbstractValidator<GetPackagesQue
 		RuleFor(x => x.PageSize)
 			.Must(pageSize => pageSize is null || (pageSize > 0 && pageSize <= 100))
 			.WithMessage("PageSize must be greater than 0 and less than or equal to 100.");
+
+		RuleFor(x => x.ClientId)
+			.Must(clientId => clientId is null || clientId > 0)
+			.WithMessage("ClientId must be greater than 0.");
 	}
 }
 
@@ -35,7 +39,7 @@ public class GetPackagesHandler : IQueryHandler<GetPackagesQueryRequest, GetPack
 			request.PageSize ?? 10,
 			request.SearchTerm);
 
-		var packages = await _packageManagementService.GetPackagesAsync(paginationRequest, cancellationToken);
+		var packages = await _packageManagementService.GetPackagesAsync(paginationRequest, cancellationToken, request.ClientId);
 
 		return new GetPackagesQueryResult(packages);
 	}

@@ -80,6 +80,16 @@ public class ATSUserManagementService : IATSUserManagementService
 		return result?.RoleId;
 	}
 
+	public async Task<GetMyAtsAccessResponseDTO> GetMyAtsAccessAsync(
+		CancellationToken cancellationToken = default)
+	{
+		var response = await _httpClient.GetAsync("ats/get-my-access", cancellationToken);
+		await EnsureSuccessAsync(response, cancellationToken);
+
+		return (await response.Content.ReadFromJsonAsync<GetMyAtsAccessResponseDTO>(
+			cancellationToken: cancellationToken))!;
+	}
+
 	public async Task<bool> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default)
 	{
 		var users = userDTO.ModuleIds

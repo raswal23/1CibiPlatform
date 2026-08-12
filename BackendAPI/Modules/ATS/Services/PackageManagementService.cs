@@ -3,21 +3,19 @@ namespace ATS.Services;
 public class PackageManagementService : IPackageManagementService
 {
 	private readonly IPackageRepository _packageRepository;
-	private readonly ICurrentUser _currentUser;
 	private readonly ILogger<PackageManagementService> _logger;
 
 	public PackageManagementService(IPackageRepository packageRepository,
-					   ICurrentUser currentUser,
 					   ILogger<PackageManagementService> logger)
 	{
 		_packageRepository = packageRepository;
-		_currentUser = currentUser;
 		_logger = logger;
 	}
 
 	public Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(
 		PaginationRequest paginationRequest,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		int? clientId = null)
 	{
 		var logContext = new
 		{
@@ -30,8 +28,8 @@ public class PackageManagementService : IPackageManagementService
 		_logger.LogInformation("Fetching packages with pagination: {@Context}", logContext);
 
 		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_packageRepository.GetPackagesAsync(paginationRequest, _currentUser.AtsClientId, cancellationToken) :
-			_packageRepository.SearchPackagesAsync(paginationRequest, _currentUser.AtsClientId, cancellationToken);
+			_packageRepository.GetPackagesAsync(paginationRequest, clientId, cancellationToken) :
+			_packageRepository.SearchPackagesAsync(paginationRequest, clientId, cancellationToken);
 	}
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)

@@ -3,6 +3,7 @@ namespace ATS.Data.Cache.Administration;
 public sealed class PackageCacheRepository : IPackageRepository
 {
 	private const string PackageTag = "package";
+	private const string ClientTag = "client";
 	private readonly IPackageRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -14,7 +15,7 @@ public sealed class PackageCacheRepository : IPackageRepository
 
 	public Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var key = $"package_v3_page_{request.PageIndex}_size_{request.PageSize}";
+		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			key, request, async (value, token) => await _repository.GetPackagesAsync(value, clientId, token), null,
 			tags: [PackageTag], cancellationToken: cancellationToken).AsTask();
@@ -22,7 +23,7 @@ public sealed class PackageCacheRepository : IPackageRepository
 
 	public Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
 	{
-		var key = $"package_v3_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
+		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			key, request, async (value, token) => await _repository.SearchPackagesAsync(value, clientId, token), null,
 			tags: [PackageTag], cancellationToken: cancellationToken).AsTask();
@@ -43,6 +44,7 @@ public sealed class PackageCacheRepository : IPackageRepository
 	{
 		var result = await _repository.EditPackageAsync(packageDetails, cancellationToken);
 		await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
+		await _cache.RemoveByTagAsync(ClientTag, cancellationToken);
 		return result;
 	}
 }
