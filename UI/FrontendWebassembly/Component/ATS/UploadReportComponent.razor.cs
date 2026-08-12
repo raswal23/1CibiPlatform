@@ -96,6 +96,7 @@ public partial class UploadReportComponent
 			};
 
 			await uploadReportForm.ResetAsync();
+			CloseDialog();
 		}
 		finally
 		{

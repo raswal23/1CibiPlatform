@@ -55,6 +55,16 @@
 
                 <div class="ats-result-doc-list mt-2">
                     <div class="ats-result-doc-row">
+                        <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult!.BiometricPhotoFileName) ? "missing" : "uploaded")">
+                                        <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
+                        </div>
+                        <div class="ats-result-doc-details">
+                            <MudText Class="ats-result-doc-title">Biometric Photo</MudText>
+                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "Not yet uploaded" : $"{ReportResult.BiometricPhotoFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                        </div>
+                    </div>
+
+                    <div class="ats-result-doc-row">
                         <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName) ? "missing" : "uploaded")">
                             <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
                         </div>
@@ -123,7 +133,7 @@
                             <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
                         </div>
                         <div class="ats-result-doc-details">
-                            <MudText Class="ats-result-doc-title">Report file</MudText>
+                            <MudText Class="ats-result-doc-title">@ReportResult.ReportStatus</MudText>
                             <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "Not yet uploaded" : $"{ReportResult.UploadedReportFileName} · uploaded {ReportResult.ReportUploadedAt}")</MudText>
                         </div>
                     </div>

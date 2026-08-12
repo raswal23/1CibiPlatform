@@ -849,7 +849,8 @@ public class ATSRepository : IATSRepository
 					rd.HitStatus,
 					rd.ReportFileName,
 					rd.ReportFileKey,
-					rd.ReportUploadedAt
+					rd.ReportUploadedAt,
+					rd.ReportStatus
 				})
 				.FirstOrDefault()
 				})
@@ -898,7 +899,8 @@ public class ATSRepository : IATSRepository
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
 			UploadedReportFileKey = result.LatestReport?.ReportFileKey,
 			FilledFormAt = result.FormCompletedAt?.ToString("MMMM dd, yyyy"),
-			ReportUploadedAt = result.LatestReport?.ReportUploadedAt.ToString("MMMM dd, yyyy")
+			ReportUploadedAt = result.LatestReport?.ReportUploadedAt.ToString("MMMM dd, yyyy"),
+			ReportStatus = result.LatestReport?.ReportStatus?.ToString() ?? "No Report"
 		};
 	}
 
