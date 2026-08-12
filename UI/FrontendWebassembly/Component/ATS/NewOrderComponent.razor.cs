@@ -258,7 +258,7 @@ public partial class NewOrderComponent
 		{
 			MaxWidth = MaxWidth.Large,
 			FullWidth = true,
-			CloseButton = true
+			NoHeader = true
 		};
 
 		isPreview = false;

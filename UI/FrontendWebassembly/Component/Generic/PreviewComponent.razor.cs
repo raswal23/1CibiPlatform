@@ -65,6 +65,13 @@ public partial class PreviewComponent
 		PreviewDialog.Cancel();
 	}
 
+	private static string GetCandidateInitials(IReadOnlyList<string> row)
+	{
+		var lastNameInitial = row.Count > 0 && !string.IsNullOrWhiteSpace(row[0]) ? row[0].Trim()[0] : default;
+		var firstNameInitial = row.Count > 1 && !string.IsNullOrWhiteSpace(row[1]) ? row[1].Trim()[0] : default;
+		return $"{lastNameInitial}{firstNameInitial}".ToUpperInvariant();
+	}
+
 	private List<int> InvalidRows =>
 	Rows
 		.Select((row, index) => new { row, index })

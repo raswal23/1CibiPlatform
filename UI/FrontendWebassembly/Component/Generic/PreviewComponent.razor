@@ -1,72 +1,99 @@
-﻿@inject IDialogService DialogService
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudDialog Style="padding: 8px; border-radius: 12px">
+<MudDialog Class="um-dialog preview-upload-dialog ats-scroll-dialog"
+           Style="padding: 0; width: min(1000px, calc(100vw - 24px)); max-width: 1000px;">
     <DialogContent>
+      <div class="preview-upload-shell ats-dialog-shell ats-management-page">
+        <header class="preview-upload-header ats-dialog-header">
+            <div class="preview-upload-header-row">
+                <div class="preview-upload-header-left">
+                    <span class="preview-upload-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M14 2H6.5A1.5 1.5 0 005 3.5v17A1.5 1.5 0 006.5 22h11a1.5 1.5 0 001.5-1.5V8l-5-6z" />
+                            <path d="M14 2v5.5A1.5 1.5 0 0015.5 9H21M8.5 13h7M8.5 16.5h4" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h2>Preview upload</h2>
+                        <p>Review the candidates before confirming the bulk upload</p>
+                    </div>
+                </div>
+                <button type="button" class="preview-upload-close" aria-label="Close preview" @onclick="Cancel">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+        </header>
 
-        <TableComponent TItem="List<string>"
-                        Items="Rows">
+        <main class="preview-upload-body ats-dialog-body">
+            <div class="preview-upload-table-panel">
+                <TableComponent TItem="List<string>"
+                                Items="Rows"
+                                ContainerClass="ats-management-card preview-upload-table"
+                                ResponsiveBreakpoint="Breakpoint.None"
+                                RowsPerPage="10">
+                    <HeaderTemplate>
+                        <MudTh>Row</MudTh>
+                        @foreach (var header in Headers)
+                        {
+                            <MudTh>@header</MudTh>
+                        }
+                    </HeaderTemplate>
 
-            <HeaderTemplate>
-                <MudTh>Cell Row</MudTh>
+                    <RowTemplate Context="row">
+                        <MudTd DataLabel="Row">
+                            <span class="preview-upload-row-index">@(Rows.IndexOf(row) + 2)</span>
+                        </MudTd>
+                        @for (int i = 0; i < row.Count; i++)
+                        {
+                            var cellColumn = row[i];
+                            <MudTd DataLabel="@Headers[i]"
+                                   Class="@(string.IsNullOrWhiteSpace(cellColumn) ? "preview-upload-invalid-cell" : null)">
+                                @if (i == 0 && !string.IsNullOrWhiteSpace(cellColumn))
+                                {
+                                    <span class="preview-upload-name-cell">
+                                        <span class="preview-upload-avatar">@GetCandidateInitials(row)</span>
+                                        <span class="preview-upload-name">@cellColumn</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="@(i >= 2 ? "preview-upload-muted" : null)">
+                                        @(string.IsNullOrWhiteSpace(cellColumn) ? "(Blank)" : cellColumn)
+                                    </span>
+                                }
+                            </MudTd>
+                        }
+                    </RowTemplate>
+                </TableComponent>
+            </div>
 
-                @foreach (var header in Headers)
-                {
-                    <MudTh>@header</MudTh>
-                }
-            </HeaderTemplate>
+            @if (InvalidRows.Any())
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="preview-upload-alert">
+                    Blank values found in row(s): @string.Join(", ", InvalidRows) - @Message
+                </MudAlert>
+            }
+        </main>
 
-            <RowTemplate Context="row">
-                <MudTd DataLabel="Cell Row">@(Rows.IndexOf(row) + 2)</MudTd>
-
-                @for (int i = 0; i < row.Count; i++)
-                {
-                    var cellColumn = row[i];
-
-                    <MudTd DataLabel="@Headers[i]"
-                           Style="@(string.IsNullOrWhiteSpace(cellColumn)
-                                                          ? "color:#c62828;font-weight:bold;"
-                                                          : "")">
-                @(string.IsNullOrWhiteSpace(cellColumn) ? "(Blank)" : cellColumn)
-                    </MudTd>
-                }
-
-            </RowTemplate>
-
-        </TableComponent>
-
-        <MudDivider Class="my-4" />
-
-        @if (InvalidRows.Any())
-        {
-            <MudAlert 
-                Severity="Severity.Error" 
-                Dense="true"
-                Class="mb-4">
-                    Blank values found in row(s):
-                    @string.Join(", ", InvalidRows) - 
-                    @Message
-            </MudAlert>
-        }
-
-        <MudStack Row
-                  Justify="Justify.FlexEnd"
-                  Spacing="2">
-
-            <MudButton OnClick="Cancel"
-                       Style="border-radius:12px; border: 2px solid gray;">
+        <footer class="preview-upload-footer ats-dialog-footer">
+            <button type="button"
+                    class="preview-upload-button preview-upload-cancel"
+                    @onclick="Cancel">
                 Cancel
-            </MudButton>
-
-
-            <MudButton OnClick="Confirm"
-                       Disabled=InvalidRows.Any()
-                       Class="theme-button theme-button-active"
-                       Style="border-radius:12px;">
-                Confirm Upload
-            </MudButton>
-
-        </MudStack>
+            </button>
+            <button type="button"
+                    class="preview-upload-button preview-upload-confirm"
+                    disabled="@InvalidRows.Any()"
+                    @onclick="Confirm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Confirm upload
+            </button>
+        </footer>
+      </div>
     </DialogContent>
 </MudDialog>
-
