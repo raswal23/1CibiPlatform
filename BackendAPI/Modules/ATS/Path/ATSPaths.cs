@@ -7,6 +7,17 @@ public class ATSPaths : IReverseProxyModule
 		return new[]
 		{
 			new RouteDefinitionDTO(
+				RouteId: "GetOrderStatusHistory",
+				MatchPath: "/ats/getorderstatushistory",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getorderstatushistory" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "AddApplicationFormDataEntryPoint",
 				MatchPath: "/ats/addapplicationformdata",
 				ClusterId: GatewayConstants.OnePlatformApi,
@@ -461,4 +472,3 @@ public class ATSPaths : IReverseProxyModule
 		return Enumerable.Empty<ClusterDefinitionDTO>();
 	}
 }
-

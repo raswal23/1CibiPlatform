@@ -6,21 +6,24 @@ public class ReportService : IReportService
 	private readonly IATSRepository _atsRepository;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
-	private readonly ICurrentUser _currentUser;
+	private readonly AtsQueryScopeResolver _scopeResolver;
 	private readonly string _folderName;
+	private readonly IOrderHistoryService _orderHistoryService;
 
 	public ReportService(
 		ILogger<ReportService> logger,
 		IATSRepository atsRepository,
 		IConfiguration configuration,
 		IObjectStorageService objectStorageService,
-		ICurrentUser currentUser)
+		AtsQueryScopeResolver scopeResolver,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
-		_currentUser = currentUser;
+		_scopeResolver = scopeResolver;
+		_orderHistoryService = orderHistoryService;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -36,7 +39,7 @@ public class ReportService : IReportService
 		};
 
 		string orderStatus = OrderStatus.InProgress;
-		DateTime? orderCompletedAt = null ;
+		DateTime? orderCompletedAt = null;
 
 		if (reportDetailsDTO.ReportFile is null)
 		{
@@ -91,7 +94,16 @@ public class ReportService : IReportService
 				existingReport.ReportFileName = reportDetailsDTO.ReportFile.FileName;
 				existingReport.ReportUploadedAt = DateTime.UtcNow;
 
-				return await _atsRepository.UpdateReportDetailsAsync(existingReport, cancellationToken);
+				var updated = await _atsRepository.UpdateReportDetailsAsync(existingReport, cancellationToken);
+
+				await _orderHistoryService.RecordAsync(
+					invitation.EmailInvitationID,
+					OrderHistoryEventType.ReportUploaded,
+					invitation.OrderStatus,
+					OrderStatus.Completed,
+					cancellationToken);
+
+				return updated;
 			}
 
 			var reportDetails = new ReportDetails
@@ -100,12 +112,22 @@ public class ReportService : IReportService
 				EmailInvitationRequestId = reportDetailsDTO.EmailInvitationRequestId,
 				HitStatus = reportDetailsDTO.HitStatus,
 				ReportStatus = reportDetailsDTO.ReportStatus,
-				ReportFileName= reportDetailsDTO.ReportFile.FileName,
+				ReportFileName = reportDetailsDTO.ReportFile.FileName,
 				ReportFileKey = fileKey,
 				ReportUploadedAt = DateTime.UtcNow
 			};
 
-			return await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+			var added = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
+
+			if (added && orderStatus == OrderStatus.Completed && invitation.OrderStatus != OrderStatus.Completed)
+				await _orderHistoryService.RecordAsync(
+					invitation.EmailInvitationID,
+					OrderHistoryEventType.ReportUploaded,
+					invitation.OrderStatus,
+					OrderStatus.Completed,
+					cancellationToken);
+
+			return added;
 		}
 		catch (Exception ex)
 		{
@@ -126,7 +148,7 @@ public class ReportService : IReportService
 		}
 	}
 
-   public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -137,21 +159,21 @@ public class ReportService : IReportService
 		};
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
-		var scope = AtsQueryScopeResolver.Resolve(_currentUser);
+		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
 		if (scope.Kind == AtsQueryScopeKind.Denied)
 		{
-			return Task.FromResult(new PaginatedResult<ReportListDTO>(
+			return new PaginatedResult<ReportListDTO>(
 				paginationRequest.PageIndex,
 				paginationRequest.PageSize,
 				0,
-				Array.Empty<ReportListDTO>()));
+				Array.Empty<ReportListDTO>());
 		}
 
-		return !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
+		return await (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
 			   || paginationRequest.StartDate.HasValue
 			   || paginationRequest.EndDate.HasValue
 			? _atsRepository.SearchReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken)
-			: _atsRepository.GetReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken);
+			: _atsRepository.GetReportsAsync(paginationRequest, scope, sortColumn, sortDescending, cancellationToken));
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
@@ -241,14 +263,14 @@ public class ReportService : IReportService
 
 		var zipStream = new MemoryStream();
 
-			try
+		try
+		{
+			var documents = await _atsRepository.GetDownloadDocumentsAsync(downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList, cancellationToken);
+
+			using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true);
+
+			foreach (var applicant in documents.GroupBy(x => x.EmailInvitationRequestId))
 			{
-				var documents = await _atsRepository.GetDownloadDocumentsAsync(downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList, cancellationToken);
-
-				using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true);
-
-				foreach (var applicant in documents.GroupBy(x => x.EmailInvitationRequestId))
-				{
 				var files = applicant
 						 .Where(x => !string.IsNullOrWhiteSpace(x.FileKey))
 						 .ToList();
@@ -256,10 +278,10 @@ public class ReportService : IReportService
 				if (files.Count == 0)
 					continue;
 
-				    using var output = new PdfDocument();
+				using var output = new PdfDocument();
 
-					foreach (var file in files)
-					{
+				foreach (var file in files)
+				{
 
 					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey, cancellationToken);
 
@@ -272,31 +294,31 @@ public class ReportService : IReportService
 					using var input = PdfReader.Open(memoryStream, PdfDocumentOpenMode.Import);
 
 					foreach (var page in input.Pages)
-						{
-							output.AddPage(page);
-						}
+					{
+						output.AddPage(page);
 					}
-
-					using var mergedPdf = new MemoryStream();
-
-					output.Save(mergedPdf);
-
-					mergedPdf.Position = 0;
-
-					var entry = archive.CreateEntry($"{applicant.First().SubjectName.Replace(" ", "_")}.pdf");
-
-					await using var entryStream = entry.Open();
-
-					mergedPdf.Position = 0;
-
-					await mergedPdf.CopyToAsync(entryStream, cancellationToken);
 				}
-			}	
-			catch (Exception ex)
-			{
-				_logger.LogError("Failed to download multiple order records {@Context}", logContext);
-				throw new InternalServerException($"{ex}");
+
+				using var mergedPdf = new MemoryStream();
+
+				output.Save(mergedPdf);
+
+				mergedPdf.Position = 0;
+
+				var entry = archive.CreateEntry($"{applicant.First().SubjectName.Replace(" ", "_")}.pdf");
+
+				await using var entryStream = entry.Open();
+
+				mergedPdf.Position = 0;
+
+				await mergedPdf.CopyToAsync(entryStream, cancellationToken);
 			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError("Failed to download multiple order records {@Context}", logContext);
+			throw new InternalServerException($"{ex}");
+		}
 
 		zipStream.Position = 0;
 		return zipStream;

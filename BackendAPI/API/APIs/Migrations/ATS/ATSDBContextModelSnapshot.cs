@@ -807,6 +807,46 @@ namespace APIs.Migrations.ATS
                     b.ToTable("ModuleDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.OrderStatusHistory", b =>
+                {
+                    b.Property<Guid>("OrderStatusHistoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChangedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EmailInvitationRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("OrderStatusHistoryId");
+
+                    b.HasIndex("EmailInvitationRequestId", "OccurredAt");
+
+                    b.ToTable("OrderStatusHistory", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.PackageDetails", b =>
                 {
                     b.Property<int>("PackageId")
@@ -1475,6 +1515,17 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.OrderStatusHistory", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", "EmailInvitationRequest")
+                        .WithMany("OrderStatusHistories")
+                        .HasForeignKey("EmailInvitationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmailInvitationRequest");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.PersonalDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -1554,6 +1605,8 @@ namespace APIs.Migrations.ATS
                     b.Navigation("EducationalBackground");
 
                     b.Navigation("LicensesDetails");
+
+                    b.Navigation("OrderStatusHistories");
 
                     b.Navigation("PersonalDetails");
 

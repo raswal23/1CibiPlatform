@@ -12,9 +12,8 @@
     width: 100%;
     max-width: none;
     margin: 0;
-    border-radius: 0;
-    background: #fff;
     overflow: hidden;
+    background: #fff;
 }
 
 ::deep .ats-upload-report-dialog > .mud-dialog-content {
@@ -29,15 +28,14 @@
     margin: 0;
 }
 
-/* Header copied from .dd-header in DisputeDialogOrderComponent.razor.css.
-   That component nests a .dd-header-row inside .dd-header; this markup has no
-   row wrapper, so the row's flex/z-index properties are merged onto the header
-   itself and applied to its direct children. */
 .ats-upload-report-shell-header {
     position: relative;
     overflow: hidden;
-    padding: 26px 30px 22px;
+    padding: 28px 32px 24px;
+    border: 0;
+    border-radius: 0;
     background: linear-gradient(120deg, var(--navy-900) 0%, #1c3a70 55%, var(--blue-600) 130%);
+    box-shadow: none;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -189,19 +187,13 @@
 ::deep .ats-upload-report-submit { height: 42px; padding: 0 22px; border-radius: 10px; font-size: 14px; font-weight: 700; }
 ::deep .ats-upload-report-cancel { border: 1.5px solid var(--border-strong); background: #fff; color: var(--text-2); }
 ::deep .ats-upload-report-submit { background: linear-gradient(120deg, #132a54, var(--blue-600)); color: #fff; box-shadow: 0 8px 20px -6px rgba(29,95,209,.55); }
+::deep .ats-upload-report-dialog.mud-paper { border-radius: 20px; box-shadow: none; }
 
 @media (max-width: 560px) {
     .ats-upload-report-shell-header,
     .ats-upload-report-body,
     .ats-upload-report-actions { padding-left: 20px; padding-right: 20px; }
     .ats-upload-report-fields { grid-template-columns: 1fr; }
-}
-
-/* Matches the .dd-header breakpoints in DisputeDialogOrderComponent.razor.css */
-@media (max-width: 520px) {
-    .ats-upload-report-shell-header {
-        padding: 22px 20px 20px;
-    }
 }
 
 @media (max-width: 390px) {

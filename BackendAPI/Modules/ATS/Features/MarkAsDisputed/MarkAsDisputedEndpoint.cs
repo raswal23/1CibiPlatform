@@ -10,16 +10,10 @@ public class MarkAsDisputedEndpoint : ICarterModule
 	{
 		app.MapPatch("markasdisputed", async (
 			MarkAsDisputedRequest request,
-			HttpContext httpContext,
 			ISender sender,
 			CancellationToken cancellationToken) =>
 		{
-			var userIdValue = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
-				?? httpContext.User.FindFirstValue("userId");
-			if (!Guid.TryParse(userIdValue, out var userId))
-				return Results.Unauthorized();
-
-			var command = new MarkAsDisputedCommand(request.disputeRequest, userId);
+			var command = new MarkAsDisputedCommand(request.disputeRequest);
 			var result = await sender.Send(command, cancellationToken);
 
 			if (!result.Success)
@@ -34,6 +28,7 @@ public class MarkAsDisputedEndpoint : ICarterModule
 		.WithTags("ATS")
 		.Produces<bool>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.Produces(StatusCodes.Status401Unauthorized)
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Mark As Disputed")

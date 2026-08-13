@@ -14,6 +14,7 @@ public class ApplicantSearchProjectionJob : IJob
 
 	public async Task Execute(IJobExecutionContext context)
 	{
+		using var loggingScope = _logger.BeginScope(new Dictionary<string, object> { ["Application"] = "ATS" });
 		try
 		{
 			using var scope = _scopeFactory.CreateScope();

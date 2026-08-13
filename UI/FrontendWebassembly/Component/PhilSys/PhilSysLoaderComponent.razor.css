@@ -6,68 +6,63 @@
 }
 
 .philsys-loader-overlay {
-    --philsys-navy-900: #0b1f3a;
-    --philsys-blue-500: #2c7fb8;
-    --philsys-sky-300: #7fc4e8;
-    --philsys-border: #e3e9f1;
-    --philsys-text-1: #1e2a3c;
-    --philsys-text-2: #6b7b92;
+    --philsys-navy-900: #0b1b3d;
+    --philsys-blue-600: #1d5fd1;
+    --philsys-blue-500: #2e7ce0;
+    --philsys-border: #e4eaf6;
+    --philsys-text-1: #16233f;
+    --philsys-text-2: #5b6b8c;
     position: fixed;
     inset: 0;
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
-    background: rgba(244, 247, 251, .96);
+    padding: 40px 20px;
+    background: #eef2f9;
     font-family: "Inter", sans-serif;
 }
 
 .philsys-loader-overlay ::deep .philsys-loader-paper {
     display: flex;
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 32px 36px 34px !important;
+    padding: 38px 34px 34px !important;
     border: 1px solid var(--philsys-border) !important;
-    border-radius: 16px !important;
+    border-radius: 20px !important;
     background: #fff !important;
-    box-shadow: 0 18px 45px -18px rgba(11, 31, 58, .28) !important;
+    box-shadow: 0 0 0 6px rgba(46, 124, 224, .10), 0 18px 40px -16px rgba(11, 27, 61, .25) !important;
     text-align: center;
     animation: philsys-loader-fade .35s ease-in-out;
 }
 
 .philsys-loader-brand {
     display: flex;
-    width: 46px;
-    height: 46px;
+    width: 56px;
+    height: 56px;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
-    padding: 8px;
-    border-radius: 12px;
-    background: var(--philsys-navy-900);
+    margin-bottom: 26px;
+    border-radius: 16px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--philsys-navy-900), var(--philsys-blue-600));
+    box-shadow: 0 10px 22px -8px rgba(29, 95, 209, .5);
 }
 
 .philsys-loader-brand svg {
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
 }
-
-.philsys-logo-sky { fill: var(--philsys-sky-300); }
-.philsys-logo-blue { fill: var(--philsys-blue-500); }
-.philsys-logo-navy { fill: #fff; }
-.philsys-logo-muted { opacity: .7; }
-.philsys-logo-soft { opacity: .75; }
 
 .philsys-loader-spinner {
     display: flex;
-    height: 64px;
+    height: 56px;
     align-items: center;
     justify-content: center;
-    margin-bottom: 18px;
+    margin-bottom: 26px;
 }
 
 .philsys-loader-spinner ::deep .loader-container {
@@ -77,12 +72,13 @@
 }
 
 .philsys-loader-spinner ::deep .loader {
-    width: 52px !important;
-    height: 52px !important;
+    width: 56px !important;
+    height: 56px !important;
     border-width: 5px !important;
-    border-top-color: var(--philsys-navy-900) !important;
+    border-color: #e3ecfb !important;
+    border-top-color: var(--philsys-blue-600) !important;
     border-right-color: var(--philsys-blue-500) !important;
-    border-bottom-color: var(--philsys-sky-300) !important;
+    animation-duration: .9s !important;
 }
 
 .philsys-loader-title {
@@ -95,11 +91,11 @@
 }
 
 .philsys-loader-text {
-    max-width: 310px;
+    max-width: 330px;
     margin: 8px 0 0;
     color: var(--philsys-text-2);
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 13.5px;
+    line-height: 1.6;
 }
 
 @keyframes philsys-loader-fade {
@@ -116,8 +112,7 @@
 
 @media (max-width: 640px) {
     .philsys-loader-overlay ::deep .philsys-loader-paper {
-        padding: 28px 22px 30px !important;
-        border-radius: 14px !important;
+        padding: 32px 22px 30px !important;
     }
 }
 

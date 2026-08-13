@@ -39,5 +39,6 @@ public class EmailInvitationRequest
 	public ICollection<DocumentDetails>? Documents { get; set; }
     public ICollection<ReportDetails>? ReportDetails { get; set; }
 	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
+	public ICollection<OrderStatusHistory>? OrderStatusHistories { get; set; }
    public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
 }

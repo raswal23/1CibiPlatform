@@ -416,6 +416,7 @@
 .report-name { color: var(--text-1); font-weight: 600; }
 .report-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 .report-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.report-status-button{padding:0;border:0;background:none;cursor:pointer}.report-status-button:hover .report-status{box-shadow:0 0 0 3px var(--blue-tint-2)}
 .report-status.completed { background: #e4f7ed; color: #1e9e64; }
 .report-status.progress { background: #fcf1dd; color: #b5790f; }
 .report-status.pending { background: #f8f9fc; color: #7d8aa8; border: 1px dashed var(--border-strong); }

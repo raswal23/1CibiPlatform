@@ -40,6 +40,9 @@ public static class ATSServiceConfiguration
 		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
+		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
+		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
 		services.Decorate<IATSRepository, ATSCacheRepository>();
 		services.AddScoped<IPackageRepository, PackageRepository>();
 		services.Decorate<IPackageRepository, PackageCacheRepository>();
@@ -53,6 +56,7 @@ public static class ATSServiceConfiguration
 		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
 		services.AddScoped<IUserClientRepository, UserClientRepository>();
 		services.Decorate<IUserClientRepository, UserClientCacheRepository>();
+		services.AddScoped<AtsQueryScopeResolver>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();

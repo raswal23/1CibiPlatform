@@ -1,17 +1,44 @@
 namespace ATS.Shared.Implementations;
 
-internal static class AtsQueryScopeResolver
+public sealed class AtsQueryScopeResolver
 {
-	public static AtsQueryScope Resolve(ICurrentUser currentUser)
+	private readonly ICurrentUser _currentUser;
+	private readonly IUserClientRepository _userClientRepository;
+
+	public AtsQueryScopeResolver(
+		ICurrentUser currentUser,
+		IUserClientRepository userClientRepository)
 	{
-		if (currentUser.IsPlatformSuperAdmin || currentUser.AtsRoleId == AtsRoleIds.AllClients)
+		_currentUser = currentUser;
+		_userClientRepository = userClientRepository;
+	}
+
+	public async Task<AtsQueryScope> ResolveAsync(CancellationToken cancellationToken)
+	{
+		if (!_currentUser.IsAuthenticated
+			|| _currentUser.UserId is not { } userId
+			|| userId == Guid.Empty)
+		{
+			return AtsQueryScope.Denied;
+		}
+
+		if (_currentUser.IsPlatformSuperAdmin)
 			return AtsQueryScope.All;
 
-		if (currentUser.AtsRoleId == AtsRoleIds.ClientScoped && currentUser.AtsClientId is > 0)
-			return AtsQueryScope.ForClient(currentUser.AtsClientId.Value);
+		if (_currentUser.AtsRoleId is AtsRoleIds.Admin or AtsRoleIds.PlatformManager)
+		{
+			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
+				[userId],
+				cancellationToken);
 
-		return currentUser.UserId is { } userId && userId != Guid.Empty
-			? AtsQueryScope.ForRequestor(userId)
+			return AtsQueryScope.ForClients(assignments.Select(assignment => assignment.ClientId));
+		}
+
+		if (_currentUser.AtsRoleId is AtsRoleIds.User or AtsRoleIds.Uploader)
+			return AtsQueryScope.ForRequestor(userId);
+
+		return _currentUser.AtsClientId is > 0
+			? AtsQueryScope.ForClientAndRequestor(_currentUser.AtsClientId.Value, userId)
 			: AtsQueryScope.Denied;
 	}
 }

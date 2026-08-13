@@ -2,11 +2,54 @@
 
 public partial class SearchReportComponent
 {
+	private const string RoleIdStorageKey = "RoleId";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
+
+	[Inject]
+	private LocalStorageService LocalStorageService { get; set; } = default!;
+
     private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
     private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
 	private bool _isStatusLegendExpanded = false;
+	private bool _canUploadReport;
+	private int ReportColumnCount => _canUploadReport ? 8 : 7;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var roleIds = await GetStoredRoleIdsAsync();
+		var atsRoleId = await GetStoredATSRoleIdAsync();
+
+		_canUploadReport = roleIds.Contains(1) || atsRoleId is 1 or 3;
+	}
+
+	private async Task<List<int>> GetStoredRoleIdsAsync()
+	{
+		try
+		{
+			var roleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
+			return string.IsNullOrWhiteSpace(roleIdsJson)
+				? []
+				: JsonSerializer.Deserialize<List<int>>(roleIdsJson) ?? [];
+		}
+		catch (JsonException)
+		{
+			return [];
+		}
+	}
+
+	private async Task<int> GetStoredATSRoleIdAsync()
+	{
+		try
+		{
+			return await LocalStorageService.GetItemAsync<int>(ATSRoleIdStorageKey);
+		}
+		catch (JsonException)
+		{
+			return 0;
+		}
+	}
 
 	private void ToggleStatusLegend() => _isStatusLegendExpanded = !_isStatusLegendExpanded;
 
@@ -192,6 +235,11 @@ public partial class SearchReportComponent
 			options);
 
 		await dialog.Result;
+	}
+	private async Task OpenStatusHistoryDialog(ReportListDTO report)
+	{
+		var parameters = new DialogParameters { { nameof(OrderStatusHistoryDialog.EmailInvitationRequestId), report.EmailInvitationRequestId }, { nameof(OrderStatusHistoryDialog.SubjectName), report.SubjectName } };
+		await OpenResultDialog<OrderStatusHistoryDialog>(string.Empty, parameters, MaxWidth.Small, noHeader: true);
 	}
 
 	private async Task ReloadTable()

@@ -3,7 +3,11 @@ using ATS.Data.Entities;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
+using ATS.Services.OrderHistory;
 using ATS.Constants;
+using ATS.Data.Repository.Administration.Clients;
+using ATS.Shared.Implementations;
+using Auth.Constants;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
@@ -151,6 +155,55 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldEnforceRoleBasedScopes()
+	{
+		var userId = Guid.CreateVersion7();
+		var uploaderId = Guid.CreateVersion7();
+		var adminId = Guid.CreateVersion7();
+		var managerId = Guid.CreateVersion7();
+		var superAdminId = Guid.CreateVersion7();
+		var userOrder = CreateOrder("User", "Candidate", "user@example.com", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+		userOrder.ClientId = 1;
+		userOrder.RequestorId = userId;
+		var uploaderOrder = CreateOrder("Uploader", "Candidate", "uploader@example.com", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+		uploaderOrder.ClientId = 2;
+		uploaderOrder.RequestorId = uploaderId;
+		var adminOrder = CreateOrder("Admin", "Candidate", "admin@example.com", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+		adminOrder.ClientId = 3;
+		adminOrder.RequestorId = Guid.CreateVersion7();
+		var managerOrder = CreateOrder("Manager", "Candidate", "manager@example.com", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+		managerOrder.ClientId = 4;
+		managerOrder.RequestorId = Guid.CreateVersion7();
+		var unauthorized = CreateOrder("Unauthorized", "Candidate", "unauthorized@example.com", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-1));
+		unauthorized.ClientId = 5;
+		unauthorized.RequestorId = Guid.CreateVersion7();
+		await AddOrdersAsync(userOrder, uploaderOrder, adminOrder, managerOrder, unauthorized);
+		await _dbContext.UserClientDetails.AddRangeAsync(
+			new UserClientDetails { UserId = adminId, ClientId = 3 },
+			new UserClientDetails { UserId = managerId, ClientId = 4 });
+		await _dbContext.SaveChangesAsync();
+		var service = CreateService(CreateSuccessfulEmailService());
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 20);
+
+		SetDisputeScope(userId, AtsRoleIds.User, clientId: 999);
+		var userResult = await service.GetDisputeOrdersAsync(request, CancellationToken.None);
+		SetDisputeScope(uploaderId, AtsRoleIds.Uploader, clientId: 999);
+		var uploaderResult = await service.GetDisputeOrdersAsync(request, CancellationToken.None);
+		SetDisputeScope(adminId, AtsRoleIds.Admin, clientId: 999);
+		var adminResult = await service.GetDisputeOrdersAsync(request, CancellationToken.None);
+		SetDisputeScope(managerId, AtsRoleIds.PlatformManager, clientId: 999);
+		var managerResult = await service.GetDisputeOrdersAsync(request, CancellationToken.None);
+		SetDisputeScope(superAdminId, AtsRoleIds.User, null, isPlatformSuperAdmin: true);
+		var allResult = await service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		userResult.Data.Should().ContainSingle(order => order.EmailInvitationID == userOrder.EmailInvitationID);
+		uploaderResult.Data.Should().ContainSingle(order => order.EmailInvitationID == uploaderOrder.EmailInvitationID);
+		adminResult.Data.Should().ContainSingle(order => order.EmailInvitationID == adminOrder.EmailInvitationID);
+		managerResult.Data.Should().ContainSingle(order => order.EmailInvitationID == managerOrder.EmailInvitationID);
+		allResult.Count.Should().Be(5);
+	}
+
+	[Fact]
 	public async Task MarkAsDisputedAsync_ShouldSendEmailPersistDisputeAndInvalidateCachedList()
 	{
 		// Arrange
@@ -160,6 +213,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			"ada@example.com",
 			DateTime.UtcNow.AddDays(-2),
 			DateTime.UtcNow.AddDays(-1));
+		order.ClientId = 7;
 		await AddOrdersAsync(order);
 
 		const string requestor = "requestor@example.com";
@@ -184,10 +238,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var startedAt = DateTime.UtcNow;
 
 		// Act
-		var result = await service.MarkAsDisputedAsync(
-			request,
-			AuthenticatedUserId,
-			CancellationToken.None);
+		var result = await service.MarkAsDisputedAsync(request, CancellationToken.None);
 
 		// Assert
 		result.Should().BeTrue();
@@ -209,7 +260,9 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			recipient,
 			CompanyName,
 			"Report",
-			order.OrderCreatedAt,
+			It.Is<DateTime?>(value => value.HasValue
+				&& order.OrderCreatedAt.HasValue
+				&& Math.Abs((value.Value - order.OrderCreatedAt.Value).TotalMilliseconds) < 1),
 			requestor,
 			"Ada Lovelace"), Times.Once);
 		emailService.Verify(serviceMock => serviceMock.SendATSEmailAsync(
@@ -232,6 +285,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			"email.failure@example.com",
 			DateTime.UtcNow.AddDays(-2),
 			DateTime.UtcNow.AddDays(-1));
+		order.ClientId = 7;
 		await AddOrdersAsync(order);
 
 		var emailService = new Mock<IEmailService>();
@@ -255,10 +309,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var request = CreateDisputeRequest(order);
 
 		// Act
-		Func<Task> act = () => service.MarkAsDisputedAsync(
-			request,
-			AuthenticatedUserId,
-			CancellationToken.None);
+		Func<Task> act = () => service.MarkAsDisputedAsync(request, CancellationToken.None);
 
 		// Assert
 		await act.Should()
@@ -274,7 +325,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldWrapRepositoryCancellationAndPreserveOrder()
+	public async Task MarkAsDisputedAsync_ShouldPropagateCancellationAndPreserveOrder()
 	{
 		// Arrange
 		var order = CreateOrder(
@@ -292,15 +343,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		cancellationSource.Cancel();
 
 		// Act
-		Func<Task> act = () => service.MarkAsDisputedAsync(
-			request,
-			AuthenticatedUserId,
-			cancellationSource.Token);
+		Func<Task> act = () => service.MarkAsDisputedAsync(request, cancellationSource.Token);
 
 		// Assert
 		await act.Should()
-			.ThrowAsync<InternalServerException>()
-			.WithMessage("Failed to mark order as disputed.");
+			.ThrowAsync<OperationCanceledException>();
 
 		_dbContext.ChangeTracker.Clear();
 		var persisted = await _dbContext.EmailInvitationRequests
@@ -310,14 +357,15 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		persisted.DisputedAt.Should().BeNull();
 		emailService.Verify(serviceMock => serviceMock.SendATSEmailAsync(
 			It.IsAny<string>(),
-			"CIBI | Dispute Order Notification",
-			"dispute-email-body"), Times.Once);
+			It.IsAny<string>(),
+			It.IsAny<string>()), Times.Never);
 	}
 
 	#endregion
 
 	private DisputeOrderService CreateService(Mock<IEmailService> emailService)
 	{
+		var orderHistoryService = new Mock<IOrderHistoryService>();
 		var userClientRepository = new Mock<IUserClientRepository>();
 		userClientRepository
 			.Setup(repository => repository.GetUserClientAssignmentsAsync(
@@ -333,20 +381,51 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 				}
 			]);
 
+		var clientRepository = new Mock<IClientRepository>();
+		clientRepository.Setup(repository => repository.GetClientAsync(
+			It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([
+			new ClientDetails { ClientName = CompanyName }
+		]);
+
 		return new DisputeOrderService(
 			NullLogger<DisputeOrderService>.Instance,
 			emailService.Object,
 			_configuration,
 			_atsRepository,
-			userClientRepository.Object,
+			clientRepository.Object,
 			_httpContextAccessor,
-			CreateAllClientsCurrentUser().Object);
+			new AtsQueryScopeResolver(
+				CreateAllClientsCurrentUser().Object,
+				userClientRepository.Object),
+			orderHistoryService.Object);
+	}
+
+	private void SetDisputeScope(
+		Guid userId,
+		int roleId,
+		int? clientId,
+		bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString())
+		};
+		if (clientId.HasValue)
+			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
+		if (isPlatformSuperAdmin)
+			claims.Add(new Claim(AuthClaimTypes.PlatformRoleId, PlatformRoleIds.SuperAdmin.ToString()));
+
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(
+			new ClaimsIdentity(claims, "TestAuth"));
 	}
 
 	private static Mock<ICurrentUser> CreateAllClientsCurrentUser()
 	{
 		var currentUser = new Mock<ICurrentUser>();
-		currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.AllClients);
+		currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
+		currentUser.SetupGet(user => user.UserId).Returns(AuthenticatedUserId);
+		currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
 		return currentUser;
 	}
 

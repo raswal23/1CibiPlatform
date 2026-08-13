@@ -1,0 +1,160 @@
+@inject IReportService ReportService
+
+<MudDialog Class="um-dialog ats-order-history-dialog"
+           Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        <div class="ats-history-header">
+            <div class="ats-history-header-content">
+                <div class="ats-history-header-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Outlined.History" />
+                </div>
+
+                <div class="ats-history-header-text">
+                    <h2>Order status history</h2>
+                    <p>@GetHeaderSubtitle()</p>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="ats-history-close"
+                    aria-label="Close status history"
+                    @onclick="Cancel">
+                <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+            </button>
+        </div>
+
+        @if (_loading)
+        {
+            <div class="ats-history-state">
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                Loading history...
+            </div>
+        }
+        else if (_failed)
+        {
+            <div class="ats-history-state">
+                History could not be loaded.
+                <MudButton OnClick="LoadAsync">Retry</MudButton>
+            </div>
+        }
+        else if (_history.Count == 0)
+        {
+            <div class="ats-history-empty-state">
+                <div class="ats-history-empty-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Outlined.HistoryToggleOff" />
+                </div>
+
+                <h3>No activity yet</h3>
+                <p>
+                    Status updates for this order will appear here as the request progresses.
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="ats-history-timeline">
+                @foreach (var item in _history)
+                {
+                    <div class="ats-history-item @GetTone(item.EventType)">
+                        <div class="ats-history-marker">
+                            <MudIcon Icon="@GetIcon(item.EventType)" Size="Size.Small" />
+                        </div>
+
+                        <div>
+                            <div class="ats-history-title">@GetTitle(item.EventType)</div>
+                            <div class="ats-history-description">@GetDescription(item.EventType)</div>
+                            <div class="ats-history-meta">
+                                @item.OccurredAt.ToLocalTime().ToString("MMMM dd, yyyy - h:mm tt") · @item.Source
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid EmailInvitationRequestId { get; set; }
+
+    [Parameter]
+    public string? SubjectName { get; set; }
+
+    private IReadOnlyList<OrderStatusHistoryDTO> _history = [];
+    private bool _loading = true;
+    private bool _failed;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _failed = false;
+
+        try
+        {
+            _history = await ReportService.GetOrderStatusHistoryAsync(
+                EmailInvitationRequestId);
+        }
+        catch
+        {
+            _failed = true;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetHeaderSubtitle() => string.IsNullOrWhiteSpace(SubjectName)
+        ? "Track this order's lifecycle"
+        : $"Activity for {SubjectName}";
+
+    private static string GetTitle(string eventType) => eventType switch
+    {
+        "OrderCreated" => "Order created",
+        "ApplicationFormSubmitted" => "Application form submitted",
+        "ApplicationFormWithdrawn" => "Application withdrawn",
+        "ApplicationFormResent" => "Application form resent",
+        "ReportUploaded" => "Report uploaded",
+        "ReportDisputed" => "Report disputed",
+        _ => eventType
+    };
+
+    private static string GetDescription(string eventType) => eventType switch
+    {
+        "OrderCreated" => "The order was created and the application invitation was sent.",
+        "ApplicationFormSubmitted" => "The subject successfully completed the application form.",
+        "ApplicationFormWithdrawn" => "The subject withdrew the application form.",
+        "ApplicationFormResent" => "A new application invitation was sent to the subject.",
+        "ReportUploaded" => "The final report was uploaded and the order was completed.",
+        "ReportDisputed" => "The completed report was disputed by the requestor.",
+        _ => "The order lifecycle was updated."
+    };
+
+    private static string GetTone(string eventType) => eventType switch
+    {
+        "ReportUploaded" => "success",
+        "ApplicationFormSubmitted" => "active",
+        "ReportDisputed" => "warning",
+        "ApplicationFormWithdrawn" => "danger",
+        _ => "neutral"
+    };
+
+    private static string GetIcon(string eventType) => eventType switch
+    {
+        "OrderCreated" => Icons.Material.Outlined.MailOutline,
+        "ApplicationFormSubmitted" => Icons.Material.Outlined.EditNote,
+        "ApplicationFormWithdrawn" => Icons.Material.Outlined.Cancel,
+        "ApplicationFormResent" => Icons.Material.Outlined.Replay,
+        "ReportUploaded" => Icons.Material.Outlined.Check,
+        "ReportDisputed" => Icons.Material.Outlined.WarningAmber,
+        _ => Icons.Material.Outlined.Circle
+    };
+}

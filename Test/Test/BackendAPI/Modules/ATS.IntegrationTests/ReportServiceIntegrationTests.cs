@@ -159,7 +159,12 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		grace.LastName = "Hopper";
 
 		var pending = CreateInvitation("Pending", orderStatus: "In Progress");
+		var requestorId = Guid.CreateVersion7();
+		ada.RequestorId = requestorId;
+		grace.RequestorId = requestorId;
+		pending.RequestorId = requestorId;
 		await AddInvitationsAsync(ada, grace, pending);
+		SetReportScope(AtsRoleIds.User, null, requestorId);
 
 		// Act
 		var unfiltered = await _reportService.GetReportsAsync(
@@ -216,13 +221,19 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		await AddInvitationsAsync(first, second, third, legacy);
 
 		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		SetReportScope(AtsRoleIds.AllClients, null, firstRequestorId);
+		SetReportScope(AtsRoleIds.PlatformManager, null, firstRequestorId, isPlatformSuperAdmin: true);
 		var allReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
 
-		SetReportScope(AtsRoleIds.ClientScoped, 101, firstRequestorId);
+		await _dbContext.UserClientDetails.AddAsync(new UserClientDetails
+		{
+			UserId = firstRequestorId,
+			ClientId = 101
+		});
+		await _dbContext.SaveChangesAsync();
+		SetReportScope(AtsRoleIds.Admin, 101, firstRequestorId);
 		var clientReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
 
-		SetReportScope(99, null, firstRequestorId);
+		SetReportScope(AtsRoleIds.User, null, firstRequestorId);
 		var requestorReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
 
 		allReports.Count.Should().Be(4);
@@ -233,6 +244,64 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			.Should().BeEquivalentTo([first.EmailInvitationID, second.EmailInvitationID]);
 		requestorReports.Count.Should().Be(1);
 		requestorReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == first.EmailInvitationID);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldEnforceSearchReportRoleScopes()
+	{
+		var userId = Guid.CreateVersion7();
+		var uploaderId = Guid.CreateVersion7();
+		var adminId = Guid.CreateVersion7();
+		var platformManagerId = Guid.CreateVersion7();
+		var superAdminId = Guid.CreateVersion7();
+		var userFirstClient = CreateInvitation("User First Client", "Completed", DateTime.UtcNow.AddHours(-6));
+		userFirstClient.ClientId = 1;
+		userFirstClient.RequestorId = userId;
+		var userSecondClient = CreateInvitation("User Second Client", "Completed", DateTime.UtcNow.AddHours(-5));
+		userSecondClient.ClientId = 2;
+		userSecondClient.RequestorId = userId;
+		var uploader = CreateInvitation("Uploader", "Completed", DateTime.UtcNow.AddHours(-4));
+		uploader.ClientId = 2;
+		uploader.RequestorId = uploaderId;
+		var adminClient = CreateInvitation("Admin Client", "Completed", DateTime.UtcNow.AddHours(-3));
+		adminClient.ClientId = 3;
+		adminClient.RequestorId = Guid.CreateVersion7();
+		var managerClient = CreateInvitation("Manager Client", "Completed", DateTime.UtcNow.AddHours(-2));
+		managerClient.ClientId = 4;
+		managerClient.RequestorId = Guid.CreateVersion7();
+		var unauthorized = CreateInvitation("Unauthorized", "Completed", DateTime.UtcNow.AddHours(-1));
+		unauthorized.ClientId = 5;
+		unauthorized.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(
+			userFirstClient,
+			userSecondClient,
+			uploader,
+			adminClient,
+			managerClient,
+			unauthorized);
+		await _dbContext.UserClientDetails.AddRangeAsync(
+			new UserClientDetails { UserId = adminId, ClientId = 3 },
+			new UserClientDetails { UserId = platformManagerId, ClientId = 4 });
+		await _dbContext.SaveChangesAsync();
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 20);
+
+		SetReportScope(AtsRoleIds.User, 999, userId);
+		var userReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		SetReportScope(AtsRoleIds.Uploader, 999, uploaderId);
+		var uploaderReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		SetReportScope(AtsRoleIds.Admin, 999, adminId);
+		var adminReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		SetReportScope(AtsRoleIds.PlatformManager, 999, platformManagerId);
+		var managerReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		SetReportScope(AtsRoleIds.User, null, superAdminId, isPlatformSuperAdmin: true);
+		var allReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+
+		userReports.Data.Select(report => report.EmailInvitationRequestId).Should().BeEquivalentTo(
+			[userFirstClient.EmailInvitationID, userSecondClient.EmailInvitationID]);
+		uploaderReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == uploader.EmailInvitationID);
+		adminReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == adminClient.EmailInvitationID);
+		managerReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == managerClient.EmailInvitationID);
+		allReports.Count.Should().Be(6);
 	}
 
 	[Fact]
@@ -502,13 +571,19 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	private string BuildReportFileKey(string fileName) =>
 		$"{_configuration["ATS:ATSReportFileFolderName"] ?? string.Empty}/{fileName}";
 
-	private void SetReportScope(int atsRoleId, int? clientId, Guid? userId)
+	private void SetReportScope(
+		int atsRoleId,
+		int? clientId,
+		Guid? userId,
+		bool isPlatformSuperAdmin = false)
 	{
 		var claims = new List<Claim> { new(AuthClaimTypes.AtsRoleId, atsRoleId.ToString()) };
 		if (clientId.HasValue)
 			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
 		if (userId.HasValue)
 			claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()));
+		if (isPlatformSuperAdmin)
+			claims.Add(new Claim(AuthClaimTypes.PlatformRoleId, PlatformRoleIds.SuperAdmin.ToString()));
 
 		_httpContextAccessor.HttpContext!.User =
 			new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));

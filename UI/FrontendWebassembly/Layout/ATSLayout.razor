@@ -48,7 +48,7 @@
                 }
 
                 @{ var settingsModules = ModuleList.List
-					.Where(item => item.Key >= 6 && CanAccessModule(item.Key))
+					.Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
                     .OrderBy(item => item.Key)
                     .ToArray(); }
 
@@ -139,7 +139,7 @@
                 </div>
             </div>
 
-            <div class="ats-console-content">
+            <div class="ats-console-content ats-console-content-enter" @key="_contentAnimationKey">
                 @Body
             </div>
         </div>
@@ -168,6 +168,7 @@ else
     private bool _isSidebarCollapsed;
     private bool _isMobileDrawerOpen;
     private bool _isMobileView;
+    private string _contentAnimationKey = string.Empty;
     private string _userDisplayName = "User";
     private string _userInitials = "U";
     private HashSet<int> _accessibleModuleIds = new();
@@ -207,6 +208,7 @@ else
 		}
 
         SetTitleFromUri();
+        _contentAnimationKey = NavigationManager.Uri;
         NavigationManager.LocationChanged += HandleLocationChanged;
         _isReady = true;
     }
@@ -231,6 +233,7 @@ else
 		}
 
         SetTitleFromUri();
+        _contentAnimationKey = e.Location;
 
         if (_isMobileView)
         {
@@ -258,14 +261,11 @@ else
 		var module = ModuleList.List.FirstOrDefault(item =>
 			string.Equals(item.Value.path, routeSegment, StringComparison.OrdinalIgnoreCase));
 		if (module.Key > 0)
-			return CanAccessModule(module.Key);
+			return _accessibleModuleIds.Contains(module.Key);
 
 		return string.Equals(routeSegment, "settings", StringComparison.OrdinalIgnoreCase) &&
 			_accessibleModuleIds.Overlaps([6, 7, 8]);
 	}
-
-	private bool CanAccessModule(int moduleId) =>
-		_accessibleModuleIds.Contains(moduleId == 11 ? 10 : moduleId);
 
     private async Task ToggleSidebar()
     {

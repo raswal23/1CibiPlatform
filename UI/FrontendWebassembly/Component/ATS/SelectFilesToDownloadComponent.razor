@@ -24,6 +24,17 @@
 
         <div class="ats-download-list ats-dialog-body">
             <div class="ats-download-item">
+                <MudCheckBox @bind-Value="BiometricPhotoSelected"
+                                 Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.BiometricPhotoFileName))"
+                                Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Biometric Photo</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
+
+            <div class="ats-download-item">
                 <MudCheckBox @bind-Value="ResumeSelected"
                              Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName))"
                              Class="ats-download-checkbox" />

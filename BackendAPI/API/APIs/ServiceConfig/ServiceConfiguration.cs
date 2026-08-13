@@ -9,21 +9,34 @@ public static class ServiceConfiguration
 	private static readonly Assembly _ssoAssembly = typeof(SSOMarker).Assembly;
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
 	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
+	private static readonly Assembly _platformLoggingAssembly = typeof(PlatformLoggingMarker).Assembly;
 
 
 	#region Logging Config
 
 	public static IServiceCollection AddLoggingConfiguration(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IHostEnvironment environment)
 	{
-		Log.Logger = new LoggerConfiguration()
+		var loggerConfiguration = new LoggerConfiguration()
 				   .MinimumLevel.Information()
 				   .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
 				   .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
 				   .Enrich.FromLogContext()
-				   .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter())
-				   .CreateLogger();
+				   .Enrich.WithProperty("Platform", "1CibiPlatform")
+				   .Enrich.WithProperty("Environment", environment.EnvironmentName)
+				   .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
+
+		var sink = configuration.CreatePlatformLogSink();
+		if (sink is not null)
+		{
+			services.AddSingleton(sink);
+			services.AddSingleton<IHostedService>(sink);
+			loggerConfiguration.WriteTo.Sink(sink, LogEventLevel.Warning);
+		}
+
+		Log.Logger = loggerConfiguration.CreateLogger();
 
 		services.AddLogging(builder =>
 		{
@@ -34,6 +47,7 @@ public static class ServiceConfiguration
 
 		return services;
 	}
+
 	#endregion
 
 	#region Environment Config
@@ -197,6 +211,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
 		services.AddATSInfrastructure(configuration);
+		services.AddPlatformLoggingInfrastructure(configuration);
 		return services;
 	}
 	#endregion
@@ -210,7 +225,8 @@ public static class ServiceConfiguration
 			 _philsysAssembly,
 			 _ssoAssembly,
 			 _aiAgentAssembly,
-			 _atsAssembly
+			 _atsAssembly,
+			 _platformLoggingAssembly
 		 ]));
 
 
@@ -230,13 +246,14 @@ public static class ServiceConfiguration
 		services.AddSSOMediaTR(_ssoAssembly);
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
 		services.AddATSMediaTR(_atsAssembly);
+		services.AddPlatformLoggingMediaTR(_platformLoggingAssembly);
 		return services;
 	}
 
 	#endregion
 
 	#region Services Config
-	public static IServiceCollection AddModuleServices(this IServiceCollection services)
+	public static IServiceCollection AddModuleServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		// Add Services
 		services.AddAuthServices();
@@ -245,6 +262,7 @@ public static class ServiceConfiguration
 		services.AddSSOServices();
 		services.AddAIAgentServices();
 		services.AddATSServices();
+		services.AddPlatformLoggingServices(configuration);
 		return services;
 	}
 	#endregion

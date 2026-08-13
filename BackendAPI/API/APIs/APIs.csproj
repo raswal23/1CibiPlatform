@@ -45,6 +45,7 @@
 		<ProjectReference Include="..\..\Modules\PhilSys\PhilSys.csproj" />
 		<ProjectReference Include="..\..\Modules\SSO\SSO.csproj" />
 		<ProjectReference Include="..\..\Modules\ATS\ATS.csproj" />
+		<ProjectReference Include="..\..\Modules\PlatformLogging\PlatformLogging.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
