@@ -4,9 +4,7 @@ public class DisputeOrderService : IDisputeOrderService
 {
 	private readonly ILogger<DisputeOrderService> _logger;
 	private readonly IATSRepository _atsRepository;
-	private readonly IClientRepository _clientRepository;
-	private readonly AtsQueryScopeResolver _scopeResolver;
-	private readonly ICurrentUser _currentUser;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
@@ -18,10 +16,8 @@ public class DisputeOrderService : IDisputeOrderService
 		[FromKeyedServices("ats")] IEmailService emailService,
 		IConfiguration configuration,
 		IATSRepository atsRepository,
-		IClientRepository clientRepository,
+		IUserClientRepository userClientRepository,
 		IHttpContextAccessor httpContextAccessor,
-		AtsQueryScopeResolver scopeResolver,
-		ICurrentUser currentUser,
 		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
@@ -29,14 +25,12 @@ public class DisputeOrderService : IDisputeOrderService
 		_configuration = configuration;
 		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
-		_clientRepository = clientRepository;
-		_scopeResolver = scopeResolver;
-		_currentUser = currentUser;
+		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
 		_orderHistoryService = orderHistoryService;
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -47,30 +41,17 @@ public class DisputeOrderService : IDisputeOrderService
 		};
 
 		_logger.LogInformation("Fetching dispute orders with pagination: {@Context}", logContext);
-		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
 
-		if (scope.Kind == AtsQueryScopeKind.Denied)
-		{
-			return new PaginatedResult<DisputeOrderListDTO>(
-				paginationRequest.PageIndex,
-				paginationRequest.PageSize,
-				0,
-				[]);
-		}
-
-		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-				_atsRepository.GetDisputeOrdersAsync(paginationRequest, scope, cancellationToken) :
-				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, scope, cancellationToken));
+		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
+				_atsRepository.GetDisputeOrdersAsync(paginationRequest, cancellationToken) :
+				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
 	}
 
 	public async Task<bool> MarkAsDisputedAsync(
 		DisputeOrderRequestDTO disputeRequest,
+		Guid authenticatedUserId,
 		CancellationToken cancellationToken)
 	{
-		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
-		if (scope.Kind == AtsQueryScopeKind.Denied)
-			throw new ForbiddenException("The current user does not have access to this dispute order.");
-
 		var logContext = new
 		{
 			Action = "MarkAsDisputed",
@@ -86,11 +67,11 @@ public class DisputeOrderService : IDisputeOrderService
 
 		if (order.EmailInvitationID == Guid.Empty)
 			throw new NotFoundException("Email invitation request not found.");
-		if (!IsAuthorized(order, scope))
-			throw new ForbiddenException("The current user does not have access to this dispute order.");
 
-		var clientName = await ResolveClientNameAsync(order, cancellationToken);
-		if (string.IsNullOrWhiteSpace(clientName) && !_currentUser.IsPlatformSuperAdmin && _currentUser.AtsRoleId != 1)
+		var assignment = (await _userClientRepository.GetUserClientAssignmentsAsync(
+			[authenticatedUserId],
+			cancellationToken)).SingleOrDefault();
+		if (string.IsNullOrWhiteSpace(assignment?.ClientName))
 			throw new BadRequestException("The authenticated user does not have a valid client assignment.");
 
 		var requestor = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value ??
@@ -105,7 +86,7 @@ public class DisputeOrderService : IDisputeOrderService
 		{
 			await SendDisputeOrderEmailAsync(
 				_disputeOrderEmailRecipient,
-				clientName,
+				assignment.ClientName,
 				disputeRequest.DisputeReason!,
 				order.OrderCreatedAt,
 				requestor!,
@@ -142,30 +123,6 @@ public class DisputeOrderService : IDisputeOrderService
 
 		return true;
 	}
-
-	private async Task<string?> ResolveClientNameAsync(
-		EmailInvitationRequest order,
-		CancellationToken cancellationToken)
-	{
-		if (order.ClientId is > 0)
-		{
-			return (await _clientRepository.GetClientAsync(order.ClientId.Value, cancellationToken) ?? [])
-				.Select(client => client.ClientName)
-				.FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
-		}
-
-		return null;
-	}
-
-	private static bool IsAuthorized(EmailInvitationRequest order, AtsQueryScope scope) => scope.Kind switch
-	{
-		AtsQueryScopeKind.All => true,
-		AtsQueryScopeKind.Client => order.ClientId == scope.ClientId,
-		AtsQueryScopeKind.Clients => order.ClientId.HasValue && scope.ClientIds.Contains(order.ClientId.Value),
-		AtsQueryScopeKind.ClientRequestor => order.ClientId == scope.ClientId && order.RequestorId == scope.RequestorId,
-		AtsQueryScopeKind.Requestor => order.RequestorId == scope.RequestorId,
-		_ => false
-	};
 
 	private async Task<bool> SendDisputeOrderEmailAsync(
 		string gmail,

@@ -1,8 +1,4 @@
-using System.Security.Claims;
-using ATS.Constants;
-using ATS.Data.Entities;
-using Auth.Constants;
-using BuildingBlocks.Exceptions;
+﻿using ATS.Data.Entities;
 using ATS.Features.ResendApplicationForm;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +8,9 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 {
-	private readonly Guid _currentUserId = Guid.CreateVersion7();
 	public ResendApplicationFormIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
-		SetDefaultUserScope();
 	}
 
 	#region Positive Path
@@ -44,7 +38,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -92,7 +85,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -136,7 +128,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -177,7 +168,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -235,7 +225,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -271,7 +260,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -307,62 +295,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		secondResendToken.Should().NotBe(firstResendToken);
 		afterSecondResend.OrderStatus.Should().Be("Pending Candidate Info");
 		afterSecondResend.EmailSentStatus.Should().Be("Done");
-	}
-
-	[Fact]
-	public async Task ResendApplicationForm_ShouldRejectInvitationOutsideAuthenticatedScope()
-	{
-		var invitation = new EmailInvitationRequest
-		{
-			EmailInvitationID = Guid.CreateVersion7(),
-			FirstName = "Unauthorized",
-			LastName = "Candidate",
-			EmailAddress = "unauthorized@example.com",
-			MobileNumber = "09171234567",
-			HashToken = "unauthorized-token",
-			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
-			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
-			SelectPackage = "Standard",
-			RushNormal = "Normal",
-			EmailSentStatus = "Done",
-			ApplicationFormStatus = "Withdrawn",
-			OrderStatus = "Application Withdrawn",
-			ClientId = 2,
-			RequestorId = Guid.CreateVersion7()
-		};
-		await _dbContext.EmailInvitationRequests.AddAsync(invitation);
-		await _dbContext.SaveChangesAsync();
-		SetUserScope(Guid.CreateVersion7(), AtsRoleIds.User, clientId: 1);
-
-		Func<Task> act = () => _endorsementSubmissionService.ResendApplicationFormAsync(
-			invitation.EmailInvitationID, CancellationToken.None);
-
-		await act.Should().ThrowAsync<ForbiddenException>();
-		_dbContext.ChangeTracker.Clear();
-		var unchanged = await _dbContext.EmailInvitationRequests.AsNoTracking()
-			.SingleAsync(item => item.EmailInvitationID == invitation.EmailInvitationID);
-		unchanged.HashToken.Should().Be("unauthorized-token");
-		unchanged.OrderStatus.Should().Be("Application Withdrawn");
-	}
-
-	private void SetDefaultUserScope()
-	{
-		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([
-			new Claim(ClaimTypes.NameIdentifier, _currentUserId.ToString()),
-			new Claim(AuthClaimTypes.AtsRoleId, AtsRoleIds.User.ToString())
-		], "TestAuth"));
-	}
-
-	private void SetUserScope(Guid userId, int roleId, int? clientId)
-	{
-		var claims = new List<Claim>
-		{
-			new(ClaimTypes.NameIdentifier, userId.ToString()),
-			new(AuthClaimTypes.AtsRoleId, roleId.ToString())
-		};
-		if (clientId.HasValue)
-			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
-		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
 	}
 
 	#endregion

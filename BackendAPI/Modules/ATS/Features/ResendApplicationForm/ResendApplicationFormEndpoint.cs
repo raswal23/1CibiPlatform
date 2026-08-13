@@ -25,7 +25,6 @@ public class ResendApplicationFormEndpoint : ICarterModule
 		.WithTags("ATS")
 		.Produces<bool>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status400BadRequest)
-		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Resend Application Form")
 		.WithDescription("Resends an application form to a candidate by generating a new hash token and resetting the ticket status to 'Pending Candidate Info'.")

@@ -24,22 +24,19 @@ public interface IATSRepository
 	Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId);
 	Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken);
 	Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken);
-	Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken);
-	Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken);
-    Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken);
-	Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken);
+	Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+    Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
     Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken);
     Task<ReportDetails?> GetReportDetailsByStatusAsync(Guid emailInvitationRequestId, string reportStatus, CancellationToken cancellationToken);
 	Task<bool> AddReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken);
 	Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken);
 	Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken);
 	Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken);
-	Task<ATSDashboardDTO> GetDashboardAsync(
-		string? requester,
-		AtsQueryScope scope,
-		CancellationToken cancellationToken);
-    Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken);
-	Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken);
+	Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken);
+    Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken);
+	Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken);
     Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken);
     Task<List<EmailInvitationRequest>> GetEmailInvitationRequestsNeedingProjectionAsync(CancellationToken cancellationToken);
 	Task<ApplicantSearchProjection?> GetApplicantSearchProjectionByIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken);

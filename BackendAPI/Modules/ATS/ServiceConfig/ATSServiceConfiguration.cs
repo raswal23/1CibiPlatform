@@ -56,7 +56,6 @@ public static class ATSServiceConfiguration
 		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
 		services.AddScoped<IUserClientRepository, UserClientRepository>();
 		services.Decorate<IUserClientRepository, UserClientCacheRepository>();
-		services.AddScoped<AtsQueryScopeResolver>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();

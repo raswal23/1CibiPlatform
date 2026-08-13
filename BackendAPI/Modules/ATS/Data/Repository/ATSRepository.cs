@@ -189,11 +189,10 @@ public class ATSRepository : IATSRepository
 				.SetProperty(x => x.OrderStatus, x => OrderStatus.ApplicationWithdrawn));
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var usersQuery = ApplyQueryScope(
-				_dbcontext.EmailInvitationRequests.AsNoTracking(),
-				scope)
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn);
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
@@ -219,11 +218,10 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
-		var usersQuery = ApplyQueryScope(
-							_dbcontext.EmailInvitationRequests.AsNoTracking(),
-							scope)
+		var usersQuery = _dbcontext.EmailInvitationRequests
+							.AsNoTracking()
 							.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn)
 							.Where(eir =>
 								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
@@ -255,13 +253,12 @@ public class ATSRepository : IATSRepository
         );
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
-		var usersQuery = ApplyQueryScope(
-				_dbcontext.EmailInvitationRequests.AsNoTracking(),
-				scope)
+		var usersQuery =  _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
@@ -290,13 +287,12 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
-		var usersQuery = ApplyQueryScope(
-				_dbcontext.EmailInvitationRequests.AsNoTracking(),
-				scope)
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Where(eir =>
 				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
@@ -392,25 +388,21 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<ATSDashboardDTO> GetDashboardAsync(
-		string? requester,
-		AtsQueryScope scope,
-		CancellationToken cancellationToken)
+	public async Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
 	{
 		var now = DateTime.UtcNow;
 		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		var yearEnd = yearStart.AddYears(1);
-		var invitations = ApplyQueryScope(
-			_dbcontext.EmailInvitationRequests.AsNoTracking(),
-			scope);
 
-		var requesterOptions = await invitations
+		var requesterOptions = await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Where(x => x.Requestor != null && x.Requestor != string.Empty)
 			.Select(x => x.Requestor!)
 			.Distinct()
 			.OrderBy(x => x)
 			.ToListAsync(cancellationToken);
 
+		var invitations = _dbcontext.EmailInvitationRequests.AsNoTracking();
 		var allYtdHireRows = await invitations
 			.Where(x => x.OrderCreatedAt.HasValue
 				&& x.OrderCreatedAt >= yearStart
@@ -614,11 +606,10 @@ public class ATSRepository : IATSRepository
 		public string? RushNormal { get; init; }
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-		var usersQuery = ApplyQueryScope(
-			_dbcontext.EmailInvitationRequests.AsNoTracking(),
-			scope)
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,
@@ -689,11 +680,10 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-		var usersQuery = ApplyQueryScope(
-			_dbcontext.EmailInvitationRequests.AsNoTracking(),
-			scope)
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,
@@ -776,21 +766,6 @@ public class ATSRepository : IATSRepository
 			totalRecords,
 			items);
 	}
-
-	private static IQueryable<EmailInvitationRequest> ApplyQueryScope(
-		IQueryable<EmailInvitationRequest> query,
-		AtsQueryScope scope) => scope.Kind switch
-	{
-		AtsQueryScopeKind.All => query,
-		AtsQueryScopeKind.Client => query.Where(invitation => invitation.ClientId == scope.ClientId),
-		AtsQueryScopeKind.Clients => query.Where(invitation =>
-			invitation.ClientId.HasValue && scope.ClientIds.Contains(invitation.ClientId.Value)),
-		AtsQueryScopeKind.ClientRequestor => query.Where(invitation =>
-			invitation.ClientId == scope.ClientId
-			&& invitation.RequestorId == scope.RequestorId),
-		AtsQueryScopeKind.Requestor => query.Where(invitation => invitation.RequestorId == scope.RequestorId),
-		_ => query.Where(_ => false)
-	};
 
 	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
 	{
