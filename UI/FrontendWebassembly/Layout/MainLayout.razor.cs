@@ -66,7 +66,14 @@ public partial class MainLayout
 
 			if (!isAuthenticated)
 			{
-				Navigation.NavigateTo("/login", true);
+				var isDarkMode = await LocalStorageService.GetItemAsync<bool?>("isDarkMode");
+				await LocalStorageService.ClearAsync();
+				if (isDarkMode.HasValue)
+				{
+					await LocalStorageService.SetItemAsync("isDarkMode", isDarkMode.Value);
+				}
+
+				Navigation.NavigateTo("/login");
 
 				return;
 			}
@@ -102,7 +109,7 @@ public partial class MainLayout
 			if (logout)
 			{
 				Console.WriteLine(logout ? "Logout successful." : "Logout failed.");
-				Navigation.NavigateTo("/login", true);
+				Navigation.NavigateTo("/login");
 
 				return;
 			}

@@ -81,7 +81,7 @@ jobs:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.event_name == 'push'  # Only run on merges, not PRs
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'  # Run on merges and manual triggers
     strategy:
       matrix:
         service: [apigateway, apis, frontendwebassembly]

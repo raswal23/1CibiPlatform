@@ -26,12 +26,12 @@ public partial class Register
 
 	protected override async Task OnInitializedAsync()
 	{
-		var isAuthenticated = await IAuthService.IsAuthenticated();
+		var userId = await LocalStorageService.GetItemAsync<Guid>("UserId");
 
-		if (isAuthenticated)
+		if (userId != Guid.Empty)
 		{
 
-			Navigation.NavigateTo("/", true);
+			Navigation.NavigateTo("/");
 			return;
 		}
 
@@ -105,7 +105,7 @@ public partial class Register
 			}
 			await LocalStorageService.SetItemAsync("tempUserId", result.id);
 			await LocalStorageService.SetItemAsync("tempUserEmail", result.email);
-			Navigation.NavigateTo("/verify-otp", true);
+			Navigation.NavigateTo("/verify-otp");
 		}
 		catch (Exception ex)
 		{
