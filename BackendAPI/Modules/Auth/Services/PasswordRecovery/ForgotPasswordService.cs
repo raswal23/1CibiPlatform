@@ -9,6 +9,7 @@ public class ForgotPasswordService : IForgotPasswordService
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
 	private readonly IPasswordHasherService _passwordHasherService;
+	private readonly IAuthSessionValidator _sessionValidator;
 	private readonly string _frontendBaseUrl;
 	private readonly int _passwordTokenExpiryMinutes;
 
@@ -19,7 +20,8 @@ public class ForgotPasswordService : IForgotPasswordService
 		IConfiguration configuration,
 		ISecureToken secureToken,
 		IHashService hashService,
-		IPasswordHasherService passwordHasherService)
+	IPasswordHasherService passwordHasherService,
+	IAuthSessionValidator sessionValidator)
 	{
 		this._authRepository = authRepository;
 		this._logger = logger;
@@ -28,6 +30,7 @@ public class ForgotPasswordService : IForgotPasswordService
 		this._secureToken = secureToken;
 		this._hashService = hashService;
 		this._passwordHasherService = passwordHasherService;
+		this._sessionValidator = sessionValidator;
 		this._frontendBaseUrl = _configuration.GetValue<string>("FrontEndMetadata:ForgotPasswordUrl") ?? "";
 		this._passwordTokenExpiryMinutes = _configuration.GetValue<int>("Email:PasswordTokenExpirationInMinutes");
 	}
@@ -50,8 +53,8 @@ public class ForgotPasswordService : IForgotPasswordService
 
 		if (user == null)
 		{
-			_logger.LogWarning("No user found with email: {@Context}", logContext);
-			throw new NotFoundException("Email not found.");
+			_logger.LogInformation("Password reset requested for an unknown email address.");
+			return true;
 		}
 
 		var secureToken = _secureToken.GenerateSecureToken();
@@ -64,7 +67,7 @@ public class ForgotPasswordService : IForgotPasswordService
 
 		var hashedToken = _hashService.Hash(secureToken);
 
-		var resetLink = $"{_frontendBaseUrl}/reset-password?token={System.Net.WebUtility.UrlEncode(hashedToken)}";
+		var resetLink = $"{_frontendBaseUrl}/reset-password?token={System.Net.WebUtility.UrlEncode(secureToken)}";
 
 		var name = $"{user.FirstName} {user.LastName}";
 
@@ -108,13 +111,13 @@ public class ForgotPasswordService : IForgotPasswordService
 		string tokenHash,
 		string newPassword)
 	{
-		var isTokenValid = await this.IsTokenValidInternal(tokenHash);
+		var hashedToken = _hashService.Hash(tokenHash);
+		var isTokenValid = await this.IsTokenValidInternal(hashedToken);
 
 		var logContext = new
 		{
 			Action = "ResetPassword",
 			Step = "StartResetting",
-			TokenContext = tokenHash,
 			Timestamp = DateTime.UtcNow
 		};
 
@@ -147,7 +150,7 @@ public class ForgotPasswordService : IForgotPasswordService
 		}
 
 
-		var token = await _authRepository.GetUserTokenAsync(tokenHash);
+		var token = await _authRepository.GetUserTokenAsync(hashedToken);
 
 		token.IsUsed = true;
 		token.UsedAt = DateTime.UtcNow;
@@ -160,6 +163,10 @@ public class ForgotPasswordService : IForgotPasswordService
 			_logger.LogError("Failed to update password reset token for user ID: {@Context}", logContext);
 			throw new Exception("Failed to update password reset token.");
 		}
+
+		var revokedSessionIds = await _authRepository.RevokeAllSessionsAsync(isTokenValid.userId, "PasswordReset");
+		foreach (var sessionId in revokedSessionIds)
+			await _sessionValidator.InvalidateAsync(sessionId);
 
 		_logger.LogInformation("Password updated successfully for user ID: {@Context}", logContext);
 
@@ -182,11 +189,10 @@ public class ForgotPasswordService : IForgotPasswordService
 		{
 			Action = "CheckingTokenIfValid",
 			Step = "StartChecking",
-			TokenContext = tokenHash,
 			Timestamp = DateTime.UtcNow
 		};
 
-		var token = await _authRepository.GetUserTokenAsync(tokenHash);
+		var token = await _authRepository.GetUserTokenAsync(_hashService.Hash(tokenHash));
 		if (token == null || token.IsUsed || token.ExpiresAt < DateTime.UtcNow)
 		{
 			_logger.LogWarning("Invalid or expired token: {@Context}", logContext);

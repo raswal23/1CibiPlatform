@@ -31,22 +31,37 @@ public partial class AuthRepository
 			return userData!;
 		}
 	
-	public async Task<bool> SaveRefreshTokenAsync(
+	public async Task<AuthRefreshToken> SaveRefreshTokenAsync(
 			Guid userId,
 			string hashToken,
 			DateTime expiryDate)
 		{
-			await _dbcontext.AuthRefreshToken.AddAsync(new AuthRefreshToken
+			var session = new AuthRefreshToken
 			{
 				UserId = userId,
 				TokenHash = hashToken,
 				ExpiresAt = expiryDate
-			});
+			};
+			await _dbcontext.AuthRefreshToken.AddAsync(session);
 	
 			await _dbcontext.SaveChangesAsync();
 	
-			return true;
+			return session;
 		}
+
+	public Task<AuthRefreshToken?> GetSessionAsync(int sessionId, CancellationToken cancellationToken = default) =>
+		_dbcontext.AuthRefreshToken.AsNoTracking().FirstOrDefaultAsync(session => session.Id == sessionId, cancellationToken);
+
+	public async Task<bool> RotateRefreshTokenAsync(int sessionId, string currentHash, string replacementHash, DateTime expiryDate, CancellationToken cancellationToken = default)
+	{
+		var updated = await _dbcontext.AuthRefreshToken
+			.Where(session => session.Id == sessionId && session.TokenHash == currentHash && session.IsActive && session.ExpiresAt > DateTime.UtcNow)
+			.ExecuteUpdateAsync(update => update
+				.SetProperty(session => session.TokenHash, replacementHash)
+				.SetProperty(session => session.CreatedAt, DateTime.UtcNow)
+				.SetProperty(session => session.ExpiresAt, expiryDate), cancellationToken);
+		return updated == 1;
+	}
 	
 	public async Task<bool> UpdateRevokeReasonAsync(
 			AuthRefreshToken authRefresh,
@@ -81,7 +96,7 @@ public partial class AuthRepository
 				.ToListAsync();
 		}
 	
-	public Task<AuthRefreshToken> SearchUserRefreshToken(
+	public Task<AuthRefreshToken?> SearchUserRefreshToken(
 			Guid userId,
 			string refreshToken)
 		{
@@ -94,12 +109,12 @@ public partial class AuthRepository
 			return userRefreshTokenData;
 		}
 	
-	public async Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash)
+	public Task<AuthRefreshToken?> FindActiveRefreshTokenByHashAsync(string tokenHash)
 		{
-			return (await _dbcontext.AuthRefreshToken
+			return _dbcontext.AuthRefreshToken
 				.FirstOrDefaultAsync(token =>
 					token.TokenHash == tokenHash &&
 					token.IsActive &&
-					token.ExpiresAt > DateTime.UtcNow))!;
+					token.ExpiresAt > DateTime.UtcNow);
 		}
 }

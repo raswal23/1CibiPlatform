@@ -11,6 +11,7 @@ public class LoginService : ILoginService
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly HybridCache _hybridCache;
 	private readonly ILogger<LoginService> _logger;
+	private readonly IAuthSessionValidator _sessionValidator;
 	private readonly string _httpCookieOnlyKey;
 	private readonly double _expiryinMinutesKey;
 	private readonly string _httpCookieOnlyRefreshTokenKey;
@@ -18,10 +19,7 @@ public class LoginService : ILoginService
 	private readonly bool _isHttps;
 	private readonly int _accountLockDuration;
 	private readonly int _maxFailedAttemptsBeforeLock;
-	private readonly string _isUserLoginTag = "is_user_login";
 	private readonly string _userAttemptTag = "user_attempt";
-	private readonly int _windowMinutesBeforeTokenExpiration = 3;
-	private readonly int _expiryRefreshTokeninMinutesKey = 30;
 	private readonly int _httpCookieOnlyRefreshTokenInDays;
 
 	public LoginService(
@@ -33,6 +31,7 @@ public class LoginService : ILoginService
 	IAtsAccessClaimsProvider atsAccessClaimsProvider,
 	IHttpContextAccessor httpContextAccessor,
 	HybridCache hybridCache,
+	IAuthSessionValidator sessionValidator,
 	ILogger<LoginService> logger)
 	{
 		this._authRepository = authRepository;
@@ -44,6 +43,7 @@ public class LoginService : ILoginService
 		this._httpContextAccessor = httpContextAccessor;
 		this._hybridCache = hybridCache;
 		this._logger = logger;
+		this._sessionValidator = sessionValidator;
 
 		_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
 		_expiryinMinutesKey = _configuration.GetValue<double>("Jwt:ExpiryInMinutes");
@@ -139,7 +139,8 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_expiryRefreshTokeninMinutesKey))
+			Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKey),
+			Path = "/"
 		};
 
 		_httpContextAccessor.HttpContext!.Response.Cookies.Append(_httpCookieOnlyKey!, jwtToken, cookieOptions);
@@ -166,152 +167,59 @@ public class LoginService : ILoginService
 
 	public async Task<LoginResponseWebDTO> LoginWebAsync(LoginWebCred cred)
 	{
-
-		var logContext = new
-		{
-			Action = "LoggingToWeb",
-			Step = "StartLogin",
-			Email = cred.Username,
-			IsRememberMe = cred.IsRememberMe,
-			Timestamp = DateTime.UtcNow
-		};
-
+		var logContext = new { Action = "LoggingToWeb", Email = cred.Username, cred.IsRememberMe, Timestamp = DateTime.UtcNow };
 		_logger.LogInformation("Login attempt for user: {@Context}", logContext);
 
-		// fetching user data from database
-		LoginDTO userData = await this._authRepository.GetUserDataAsync(cred);
+		var userData = await _authRepository.GetUserDataAsync(cred);
+		if (userData is null)
+			throw new NotFoundException("Invalid username or password.");
 
-		// checking if client credentials are valid
-		if (userData == null)
-		{
-			// invalid Refresh TOKEN
-			_logger.LogWarning("Login failed: Invalid username or password for user: {@Context}", logContext);
-			throw new NotFoundException("Invalid username or password");
-		}
-
-		// Check if account is already locked before attempting login
 		var currentAttempts = await GetAttempts(userData.Id.ToString());
-		var isAlreadyLocked = await ErrorThreeAttempts(userData.Id, userData.Email, currentAttempts, logContext);
+		if (await ErrorThreeAttempts(userData.Id, userData.Email, currentAttempts, logContext))
+			throw new UnauthorizedAccessException("Too many failed login attempts. Please try again later.");
 
-		if (isAlreadyLocked)
+		if (!_passwordHasherService.VerifyPassword(userData.PasswordHash, cred.Password))
 		{
-			_logger.LogWarning("Account is locked due to too many failed attempts: {@Context}", logContext);
-			throw new UnauthorizedAccessException($"Too many failed login attempts. Please try again later.");
-		}
-
-		// verifying password
-		bool isPasswordValid = this._passwordHasherService.VerifyPassword(userData.PasswordHash, cred.Password);
-
-		if (!isPasswordValid)
-		{
-			// Increment failed login attempts
 			currentAttempts++;
 			await SetAttempts(userData.Id.ToString(), currentAttempts);
-
-			var errorAttempts = await ErrorThreeAttempts(userData.Id, userData.Email, currentAttempts, logContext);
-
-			_logger.LogWarning("Login failed: Invalid password for user. Attempt {Attempt}/{Max} {@Context}", currentAttempts, _maxFailedAttemptsBeforeLock, logContext);
-
-			if (errorAttempts)
-			{
-				_logger.LogWarning("Account temporarily locked due to too many failed attempts: {@Context}", logContext);
-				throw new UnauthorizedAccessException($"Too many failed login attempts. Please try again later.");
-			}
-
+			if (await ErrorThreeAttempts(userData.Id, userData.Email, currentAttempts, logContext))
+				throw new UnauthorizedAccessException("Too many failed login attempts. Please try again later.");
 			throw new NotFoundException("Invalid username or password.");
 		}
 
-		// Password is valid - clear any existing failed attempts
 		if (currentAttempts > 0)
-		{
 			await RemoveAttempts(userData.Id.ToString());
-		}
-
-		// produce refresh token
-		var refreshTokenExist = this.GetRefreshTokenFromCookie();
-		var roleId = userData.roleId;
-		var appId = userData.AppId;
-		var subMenuId = userData.SubMenuId;
-		var IsApprove = userData.IsApproved;
-
-		if (IsApprove == false)
-		{
-			_logger.LogInformation("User approval status retrieved for user: {@Context}", logContext);
+		if (!userData.IsApproved)
 			throw new UnauthorizedAccessException("Your account has not been approved yet. Please contact an administrator for assistance.");
-		}
-		if (!appId.Any() ||
-			!subMenuId.Any() ||
-			!roleId.Any())
-		{
-			_logger.LogInformation("User application and role data retrieved for user: {@Context}", logContext);
+		if (!userData.AppId.Any() || !userData.SubMenuId.Any() || !userData.roleId.Any())
 			throw new UnauthorizedAccessException("Your account has no assigned application. Please contact an administrator for assistance.");
-		}
 
-		// produce access token
 		userData = await AddAtsClaimsAsync(userData);
-		string jwtToken = this._jWTService.GetAccessToken(userData);
+		var (refreshToken, hashRefreshToken) = _refreshTokenService.GenerateRefreshToken();
+		var refreshExpiry = GetRefreshTokenExpiry(cred.IsRememberMe);
+		var session = await _authRepository.SaveRefreshTokenAsync(userData.Id, hashRefreshToken, refreshExpiry);
+		var jwtToken = _jWTService.GetAccessToken(userData, session.Id);
 		SetAccessTokenCookie(jwtToken);
+		SetRefreshTokenCookie(refreshToken, refreshExpiry);
 
-		var name = !string.IsNullOrEmpty(userData.MiddleName) ?
-		$"{userData.FirstName} {userData.MiddleName} {userData.LastName}" :
-		$"{userData.FirstName} {userData.LastName}";
-
-		var successContext = new
-		{
-			Action = "LoggingToWeb",
-			Step = "StartLogin",
-			Email = cred.Username,
-			Userid = userData.Id,
-			IsRememberMe = cred.IsRememberMe,
-			Timestamp = DateTime.UtcNow
-		};
-
-
-		if (refreshTokenExist != null)
-		{
-			_logger.LogInformation("Login successful for user: {@Context}", successContext);
-
-			// reuse existing refresh token if not expired
-			return new LoginResponseWebDTO(
-				userData.Id.ToString()!,
-				jwtToken,
-				refreshTokenExist,
-				name,
-				"bearer",
-				ExpireInMinutes(),
-				appId,
-				subMenuId,
-				roleId,
-				DateTime.Now.ToString(),
-				DateTime.Now.AddMinutes(_expiryinMinutesKey).ToString()
-			);
-		}
-
-		// generate new refresh token
-		(string refreshToken, string hashRefreshToken) = this._refreshTokenService.GenerateRefreshToken();
-		SetRefreshTokenCookie(refreshToken, cred.IsRememberMe);
-
-		// save refresh token to database
-		// save if http cookie only for refresh token is already expired
-		await this._authRepository.SaveRefreshTokenAsync(userData.Id, hashRefreshToken, DateTime.UtcNow.AddMinutes(_expiryRefreshTokeninMinutesKey));
-
-		_logger.LogInformation("Login successful for user: {@Context}", successContext);
+		var name = string.IsNullOrEmpty(userData.MiddleName)
+			? $"{userData.FirstName} {userData.LastName}"
+			: $"{userData.FirstName} {userData.MiddleName} {userData.LastName}";
+		_logger.LogInformation("Login successful for user: {@Context}", logContext);
 
 		return new LoginResponseWebDTO(
-			userData.Id.ToString()!,
-			jwtToken,
-			refreshToken,
+			userData.Id.ToString(),
+			string.Empty,
+			string.Empty,
 			name,
 			"bearer",
 			ExpireInMinutes(),
-			appId,
-			subMenuId,
-			roleId,
-			DateTime.Now.ToString(),
-			DateTime.Now.AddMinutes(_expiryinMinutesKey).ToString()
-		);
+			userData.AppId,
+			userData.SubMenuId,
+			userData.roleId,
+			DateTime.UtcNow.ToString("O"),
+			DateTime.UtcNow.AddMinutes(_expiryinMinutesKey).ToString("O"));
 	}
-
 	protected virtual async Task<int> GetAttempts(string userid)
 	{
 		var cacheKey = $"{_userAttemptTag}_{userid}";
@@ -407,7 +315,8 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = DateTime.UtcNow.AddMinutes(_expiryRefreshTokeninMinutesKey)
+			Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKey),
+			Path = "/"
 		};
 
 
@@ -427,9 +336,7 @@ public class LoginService : ILoginService
 	}
 
 
-	protected virtual void SetRefreshTokenCookie(
-	string refreshToken,
-	bool isRememberMe)
+	protected virtual void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt)
 	{
 		// set httpcookieonly
 
@@ -438,12 +345,17 @@ public class LoginService : ILoginService
 			HttpOnly = true,
 			Secure = _isHttps,
 			SameSite = SameSiteMode.Lax,
-			Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddMinutes(Convert.ToInt32(_httpCookieOnlyRefreshTokenInDays))
+			Expires = expiresAt,
+			Path = "/"
 		};
 
 
 		_httpContextAccessor.HttpContext!.Response.Cookies.Append(_httpCookieOnlyRefreshTokenKey!, refreshToken, cookieRefreshTokenOptions);
 	}
+
+	private DateTime GetRefreshTokenExpiry(bool isRememberMe) => isRememberMe
+		? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey)
+		: DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays);
 
 	protected virtual bool RemoveAccessAndRefreshTokenCookie()
 	{
@@ -460,59 +372,28 @@ public class LoginService : ILoginService
 		return expireIn;
 	}
 
-	public async Task<bool> LogoutAsync(
-		Guid userId,
-		string revokeReason)
+	public async Task<bool> LogoutAsync()
 	{
-		var logContext = new
+		var rawRefreshToken = GetRefreshTokenFromCookie();
+		try
 		{
-			Action = "LogoutUser",
-			Step = "StartLogout",
-			UserId = userId,
-			RevokeReason = revokeReason,
-			Timestamp = DateTime.UtcNow
-		};
-
-		_logger.LogInformation("Logout attempt for user: {@Context}", logContext);
-
-		var logoutCachekey = $"{_isUserLoginTag}_{GetRefreshTokenFromCookie()}";
-
-		if (string.IsNullOrEmpty(GetRefreshTokenFromCookie()))
-		{
-			_logger.LogWarning("Logout failed: No refresh token found in cookies for user: {@Context}", logContext);
-			throw new BadRequestException("Logout failed.");
-		}
-
-		var userData = await this._authRepository.IsUserExistAsync(userId);
-
-		if (userData == null)
-		{
-			_logger.LogWarning("Logout failed: User not found for user: {@Context}", logContext);
-			throw new NotFoundException("User not found.");
-		}
-
-		foreach (var item in userData)
-		{
-			if (_refreshTokenService.ValidateHashToken(GetRefreshTokenFromCookie()!, item.TokenHash))
+			if (!string.IsNullOrWhiteSpace(rawRefreshToken))
 			{
-				var result = await _authRepository.UpdateRevokeReasonAsync(item, revokeReason);
-
-				if (result == false)
+				var session = await _authRepository.FindActiveRefreshTokenByHashAsync(_refreshTokenService.HashToken(rawRefreshToken));
+				if (session is not null)
 				{
-					_logger.LogInformation("Logout failed for user: {@Context}", logContext);
-					throw new BadRequestException("Logout failed.");
+					await _authRepository.UpdateRevokeReasonAsync(session, "UserLogout");
+					await _sessionValidator.InvalidateAsync(session.Id);
 				}
-
-				this.RemoveAccessAndRefreshTokenCookie();
-
-				_logger.LogInformation("Logout successful for user: {@Context}", logContext);
-
-				return result;
 			}
 		}
+		finally
+		{
+			RemoveAccessAndRefreshTokenCookie();
+		}
 
-		_logger.LogWarning("Logout failed: Refresh token not found for user: {@Context}", logContext);
-		throw new NotFoundException("User not found.");
+		_logger.LogInformation("Logout completed for the current browser session.");
+		return true;
 	}
 
 	public async Task<bool> IsAuthenticated()

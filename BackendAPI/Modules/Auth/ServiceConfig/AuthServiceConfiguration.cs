@@ -32,6 +32,7 @@ public static class AuthServiceConfiguration
 		services.AddScoped<IJWTService, JWTService>();
 		services.AddScoped<IAuthRepository, AuthRepository>();
 		services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+		services.AddScoped<IAuthSessionValidator, AuthSessionValidator>();
 		services.AddScoped<ILoginService, LoginService>();
 		services.AddKeyedScoped<IEmailService, EmailService>("auth");
 		services.AddScoped<IOtpService, OtpService>();

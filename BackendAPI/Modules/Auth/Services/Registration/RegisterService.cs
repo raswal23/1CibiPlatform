@@ -2,6 +2,7 @@ namespace Auth.Services;
 
 public class RegisterService : IRegisterService
 {
+	private const int MaxOtpAttempts = 5;
 	private readonly IEmailService _emailService;
 	private readonly IPasswordHasherService _passwordHasherService;
 	private readonly ILogger<RegisterService> _logger;
@@ -149,6 +150,12 @@ public class RegisterService : IRegisterService
 		}
 
 		var hashOtp = _hashService.Hash(otp);
+		if (existingOtpRecord.AttemptCount >= MaxOtpAttempts)
+		{
+			existingOtpRecord.IsUsed = true;
+			await _authRepository.UpdateVerificationCodeAsync(existingOtpRecord);
+			throw new UnauthorizedAccessException("Too many invalid OTP attempts. Please request a new code.");
+		}
 
 		var isOtpValid = _hashService.Verify(hashOtp, existingOtpRecord.OtpCodeHash);
 
@@ -156,6 +163,8 @@ public class RegisterService : IRegisterService
 		{
 			_logger.LogWarning("Invalid OTP provided for email: {@Context}", logContext);
 			existingOtpRecord.AttemptCount += 1;
+			if (existingOtpRecord.AttemptCount >= MaxOtpAttempts)
+				existingOtpRecord.IsUsed = true;
 			await _authRepository.UpdateVerificationCodeAsync(existingOtpRecord);
 			throw new Exception("Invalid OTP.");
 		}
@@ -274,6 +283,8 @@ public class RegisterService : IRegisterService
 
 
 		otpVerification.OtpCodeHash = _hashService.Hash(otp);
+		otpVerification.AttemptCount = 0;
+		otpVerification.IsUsed = false;
 
 		otpVerification.ExpiresAt = DateTime.UtcNow.AddMinutes(_otpExpiryMinutes);
 

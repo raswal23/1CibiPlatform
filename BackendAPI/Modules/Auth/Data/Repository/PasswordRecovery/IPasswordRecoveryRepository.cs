@@ -6,4 +6,5 @@ public interface IPasswordRecoveryRepository : IRegistrationRepository, IUserRep
 	Task<bool> SaveToResetPasswordToken(PasswordResetToken passwordResetToken);
 	Task<bool> UpdateAuthUserPassword(Authusers authusers);
 	Task<bool> UpdatePasswordResetTokenAsUsedAsync(PasswordResetToken passwordResetToken);
+	Task<List<int>> RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken = default);
 }

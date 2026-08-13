@@ -48,6 +48,8 @@ Important existing references:
 
 Auth follows the same business-area segregation used by the focused ATS repositories. Keep a feature's repository contract, EF implementation, cache behavior, and service pair in matching folders rather than adding unrelated code to one large file.
 
+For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
+
 ```text
 BackendAPI/Modules/Auth/
   Data/

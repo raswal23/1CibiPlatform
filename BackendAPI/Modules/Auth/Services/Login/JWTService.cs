@@ -11,7 +11,7 @@ public class JWTService : IJWTService
 		_configuration = configuration;
 	}
 
-	public string GetAccessToken(LoginDTO loginDTO)
+	public string GetAccessToken(LoginDTO loginDTO, int? sessionId = null)
 	{
 		var jwtSettings = _configuration.GetSection("Jwt");
 		var key = jwtSettings["Key"];
@@ -24,7 +24,7 @@ public class JWTService : IJWTService
 
 		var tokenDescriptor = new SecurityTokenDescriptor
 		{
-			Subject = new ClaimsIdentity(GetClaims(loginDTO)),
+			Subject = new ClaimsIdentity(GetClaims(loginDTO, sessionId)),
 			Expires = DateTime.UtcNow.AddMinutes(expiryInMinutes),
 			Issuer = issuer,
 			Audience = audience,
@@ -36,7 +36,7 @@ public class JWTService : IJWTService
 		return tokenHandler.WriteToken(token);
 	}
 
-	private IEnumerable<Claim> GetClaims(LoginDTO loginDTO)
+	private IEnumerable<Claim> GetClaims(LoginDTO loginDTO, int? sessionId)
 	{
 		// build a friendly full name and avoid null middle name
 		var middle = string.IsNullOrWhiteSpace(loginDTO.MiddleName) ? string.Empty : loginDTO.MiddleName.Trim();
@@ -52,6 +52,9 @@ public class JWTService : IJWTService
 			// standard claims for interoperability
 			new Claim(ClaimTypes.NameIdentifier, loginDTO.Id.ToString()),
 		};
+		claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+		if (sessionId is > 0)
+			claims.Add(new Claim(JwtRegisteredClaimNames.Sid, sessionId.Value.ToString(CultureInfo.InvariantCulture)));
 
 		claims.AddRange(loginDTO.roleId
 			.Where(roleId => roleId > 0)

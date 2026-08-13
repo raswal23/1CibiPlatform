@@ -8,14 +8,12 @@ namespace Auth.Services
 		private readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 		private readonly IConfiguration _configuration;
 		private readonly ILogger<RefreshTokenService> _logger;
+		private readonly IAuthSessionValidator _sessionValidator;
 
 		private readonly string _httpCookieOnlyKey;
 		private readonly double _expiryinMinutesKey;
 		private readonly string _refreshTokenKey;
 		private readonly bool _isHttps;
-		private readonly int _cookieExpiryinDaysKey;
-		private readonly double _expiryinMinutesKeyInCookie;
-		private readonly string _refreshTokenExpirationKey;
 		private readonly int _httpCookieOnlyRefreshTokenInDays;
 
 		public RefreshTokenService(
@@ -24,7 +22,8 @@ namespace Auth.Services
 			IJWTService jWTService,
 			IAtsAccessClaimsProvider atsAccessClaimsProvider,
 			IConfiguration configuration,
-			ILogger<RefreshTokenService> logger)
+			ILogger<RefreshTokenService> logger,
+			IAuthSessionValidator sessionValidator)
 		{
 			this._authRepository = authRepository;
 			this._httpContextAccessor = httpContextAccessor;
@@ -32,14 +31,13 @@ namespace Auth.Services
 			this._atsAccessClaimsProvider = atsAccessClaimsProvider;
 			this._configuration = configuration;
 			this._logger = logger;
+			this._sessionValidator = sessionValidator;
 
 			_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
 			_httpCookieOnlyRefreshTokenInDays = _configuration.GetValue<int>("AuthWeb:HttpCookieOnlyRefreshTokenInDays", 60);
 			_expiryinMinutesKey = double.Parse(_configuration.GetSection("Jwt:ExpiryInMinutes").Value! ?? "");
-			_expiryinMinutesKeyInCookie = _expiryinMinutesKey + 30;
 			_refreshTokenKey = _configuration.GetSection("AuthWeb:AuthWebHttpCookieOnlyKey").Value! ?? "";
 			_isHttps = bool.Parse(_configuration.GetSection("AuthWeb:isHttps").Value!);
-			_cookieExpiryinDaysKey = _configuration.GetValue<int>("AuthWeb:CookieExpiryInDayIsRememberMe");
 		}
 
 
@@ -136,35 +134,33 @@ namespace Auth.Services
 				AtsClientId = atsClaims?.AtsClientId,
 				AtsRoleId = atsClaims?.AtsRoleId
 			};
-			string jwtToken = this._jWTService.GetAccessToken(loginDTO);
-
 			var (newRefreshToken, newRefreshTokenHash) = this.GenerateRefreshToken();
 
 			var name = !string.IsNullOrEmpty(userData.MiddleName) ?
 				  $"{userData.FirstName} {userData.MiddleName} {userData.LastName}" :
 				  $"{userData.FirstName} {userData.LastName}";
 
-			storedRefreshToken.TokenHash = newRefreshTokenHash;
-			storedRefreshToken.CreatedAt = DateTime.UtcNow;
-			storedRefreshToken.ExpiresAt = DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays);
-			storedRefreshToken.IsActive = true;
-
-			var isUpdated = await _authRepository.UpdateRefreshTokenAsync(storedRefreshToken);
+			var refreshExpiry = DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays);
+			var isUpdated = await _authRepository.RotateRefreshTokenAsync(
+				storedRefreshToken.Id, refreshTokenHash, newRefreshTokenHash, refreshExpiry,
+				_httpContextAccessor.HttpContext?.RequestAborted ?? default);
 
 			if (!isUpdated)
 			{
 				_logger.LogError("Failed to update refresh token for user: {@Context}", logContext);
-				throw new Exception("Failed to update refresh token.");
+				throw new UnauthorizedAccessException("Refresh token was already used or is no longer active.");
 			}
+			await _sessionValidator.InvalidateAsync(storedRefreshToken.Id);
+			string jwtToken = this._jWTService.GetAccessToken(loginDTO, storedRefreshToken.Id);
 
 			SetAccessTokenCookie(jwtToken);
-			SetRefreshTokenCookie(newRefreshToken, false);
+			SetRefreshTokenCookie(newRefreshToken, refreshExpiry);
 
 			// reuse existing refresh token if not expired
 			return new LoginResponseWebDTO(
 				userData.Id.ToString()!,
-				jwtToken,
-				newRefreshToken!,
+				string.Empty,
+				string.Empty,
 				name,
 				"bearer",
 				ExpireInMinutes(),
@@ -190,8 +186,9 @@ namespace Auth.Services
 			{
 				HttpOnly = true,
 				Secure = _isHttps,
-				SameSite = SameSiteMode.None,
-				Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKeyInCookie)
+				SameSite = SameSiteMode.Lax,
+				Expires = DateTime.UtcNow.AddMinutes(_expiryinMinutesKey),
+				Path = "/"
 			};
 
 
@@ -199,9 +196,7 @@ namespace Auth.Services
 		}
 
 
-		protected virtual void SetRefreshTokenCookie(
-			  string refreshToken,
-			  bool isRememberMe)
+		protected virtual void SetRefreshTokenCookie(string refreshToken, DateTime expiresAt)
 		{
 			// set httpcookieonly
 
@@ -210,7 +205,8 @@ namespace Auth.Services
 				HttpOnly = true,
 				Secure = _isHttps,
 				SameSite = SameSiteMode.Lax,
-				Expires = isRememberMe ? DateTime.UtcNow.AddDays(_cookieExpiryinDaysKey) : DateTime.UtcNow.AddDays(_httpCookieOnlyRefreshTokenInDays)
+				Expires = expiresAt,
+				Path = "/"
 			};
 
 

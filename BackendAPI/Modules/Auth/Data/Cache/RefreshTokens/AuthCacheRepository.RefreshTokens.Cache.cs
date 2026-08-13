@@ -12,10 +12,16 @@ public partial class AuthCacheRepository
 			return await _authRepository.IsUserExistAsync(userId);
 		}
 	
-	public async Task<bool> SaveRefreshTokenAsync(Guid userId, string hashToken, DateTime expiryDate)
+	public async Task<AuthRefreshToken> SaveRefreshTokenAsync(Guid userId, string hashToken, DateTime expiryDate)
 		{
 			return await _authRepository.SaveRefreshTokenAsync(userId, hashToken, expiryDate);
 		}
+
+	public Task<AuthRefreshToken?> GetSessionAsync(int sessionId, CancellationToken cancellationToken = default) =>
+		_authRepository.GetSessionAsync(sessionId, cancellationToken);
+
+	public Task<bool> RotateRefreshTokenAsync(int sessionId, string currentHash, string replacementHash, DateTime expiryDate, CancellationToken cancellationToken = default) =>
+		_authRepository.RotateRefreshTokenAsync(sessionId, currentHash, replacementHash, expiryDate, cancellationToken);
 	
 	public async Task<bool> UpdateRevokeReasonAsync(AuthRefreshToken authRefreshToken, string reason)
 		{
@@ -27,12 +33,12 @@ public partial class AuthCacheRepository
 			return _authRepository.UpdateRefreshTokenAsync(authRefreshToken);
 		}
 	
-	public Task<AuthRefreshToken> SearchUserRefreshToken(Guid userId, string refreshToken)
+	public Task<AuthRefreshToken?> SearchUserRefreshToken(Guid userId, string refreshToken)
 		{
 			return _authRepository.SearchUserRefreshToken(userId, refreshToken);
 		}
 	
-	public Task<AuthRefreshToken> FindActiveRefreshTokenByHashAsync(string tokenHash)
+	public Task<AuthRefreshToken?> FindActiveRefreshTokenByHashAsync(string tokenHash)
 		{
 			return _authRepository.FindActiveRefreshTokenByHashAsync(tokenHash);
 		}

@@ -6,7 +6,7 @@ public interface ILoginService
 
 	Task<LoginResponseWebDTO> LoginWebAsync(LoginWebCred cred);
 
-	Task<bool> LogoutAsync(Guid userId, string revokeReason);
+	Task<bool> LogoutAsync();
 
 	Task<bool> IsAuthenticated();
 }

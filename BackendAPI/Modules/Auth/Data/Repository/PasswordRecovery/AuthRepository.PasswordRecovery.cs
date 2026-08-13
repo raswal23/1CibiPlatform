@@ -2,6 +2,20 @@ namespace Auth.Data.Repository;
 
 public partial class AuthRepository
 {
+	public async Task<List<int>> RevokeAllSessionsAsync(Guid userId, string reason, CancellationToken cancellationToken = default)
+	{
+		var sessions = await _dbcontext.AuthRefreshToken
+			.Where(session => session.UserId == userId && session.IsActive)
+			.ToListAsync(cancellationToken);
+		foreach (var session in sessions)
+		{
+			session.IsActive = false;
+			session.RevokedAt = DateTime.UtcNow;
+			session.RevokedReason = reason;
+		}
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return sessions.Select(session => session.Id).ToList();
+	}
 	public async Task<PasswordResetToken> GetUserTokenAsync(string tokenHash)
 		{
 			var passwordResetToken = await _dbcontext.PasswordResetToken
