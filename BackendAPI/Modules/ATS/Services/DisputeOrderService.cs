@@ -6,6 +6,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly IATSRepository _atsRepository;
 	private readonly IClientRepository _clientRepository;
 	private readonly AtsQueryScopeResolver _scopeResolver;
+	private readonly ICurrentUser _currentUser;
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
@@ -20,6 +21,7 @@ public class DisputeOrderService : IDisputeOrderService
 		IClientRepository clientRepository,
 		IHttpContextAccessor httpContextAccessor,
 		AtsQueryScopeResolver scopeResolver,
+		ICurrentUser currentUser,
 		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
@@ -29,6 +31,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_atsRepository = atsRepository;
 		_clientRepository = clientRepository;
 		_scopeResolver = scopeResolver;
+		_currentUser = currentUser;
 		_httpContextAccessor = httpContextAccessor;
 		_orderHistoryService = orderHistoryService;
 	}
@@ -79,13 +82,15 @@ public class DisputeOrderService : IDisputeOrderService
 		var order = await _atsRepository.GetEmailInvitationRequestByIdAsync(
 			disputeRequest.EmailInvitationId,
 			cancellationToken);
+
+
 		if (order.EmailInvitationID == Guid.Empty)
 			throw new NotFoundException("Email invitation request not found.");
 		if (!IsAuthorized(order, scope))
 			throw new ForbiddenException("The current user does not have access to this dispute order.");
 
 		var clientName = await ResolveClientNameAsync(order, cancellationToken);
-		if (string.IsNullOrWhiteSpace(clientName))
+		if (string.IsNullOrWhiteSpace(clientName) && !_currentUser.IsPlatformSuperAdmin && _currentUser.AtsRoleId != 1)
 			throw new BadRequestException("The authenticated user does not have a valid client assignment.");
 
 		var requestor = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email)?.Value ??
