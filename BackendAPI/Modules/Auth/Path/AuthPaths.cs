@@ -404,12 +404,12 @@ public class AuthPaths : IReverseProxyModule
 
 			new RouteDefinitionDTO(
 				RouteId: "CTVIApi",
-				MatchPath: "CTVIAPI",
+				MatchPath: "CTVIAPI/{productId}",
 				ClusterId: GatewayConstants.CTVIIntertalAPI,
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/webservice/product:33/.xml" }
+					{ "PathSet", "/webservice/product:{productId}/.xml" }
 				}
 			),
 

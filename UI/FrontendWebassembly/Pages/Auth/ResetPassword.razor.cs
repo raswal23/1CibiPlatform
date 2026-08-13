@@ -190,7 +190,7 @@ public partial class ResetPassword
 			if (redirectCountdown <= 0)
 			{
 				countdownTimer?.Dispose();
-				await InvokeAsync(() => Navigation.NavigateTo("/login", true));
+				await InvokeAsync(() => Navigation.NavigateTo("/login"));
 			}
 			else
 			{
