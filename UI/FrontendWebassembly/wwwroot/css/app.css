@@ -174,7 +174,33 @@ code {
 
 .main-topbar-brand {
     min-width: 0;
-    gap: 10px;
+    gap: 12px;
+    padding: 5px 12px 5px 6px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.main-topbar-brand:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(103, 164, 255, 0.14),
+                0 0 24px rgba(103, 164, 255, 0.48),
+                0 8px 20px rgba(5, 18, 48, 0.24);
+    transform: translateY(-1px);
+}
+
+.main-topbar-brand:active {
+    transform: translateY(0);
+}
+
+.main-topbar-brand:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.42);
+    outline-offset: 2px;
 }
 
 .main-topbar-brand-badge {
@@ -187,6 +213,12 @@ code {
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 9px;
     background: rgba(255, 255, 255, 0.16);
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.main-topbar-brand:hover .main-topbar-brand-badge {
+    background: rgba(255, 255, 255, 0.24);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.24);
 }
 
 .main-topbar-brand-badge svg {
