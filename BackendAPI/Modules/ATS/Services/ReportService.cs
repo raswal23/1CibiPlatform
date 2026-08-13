@@ -96,13 +96,12 @@ public class ReportService : IReportService
 
 				var updated = await _atsRepository.UpdateReportDetailsAsync(existingReport, cancellationToken);
 
-				if (updated && orderStatus == OrderStatus.Completed && invitation.OrderStatus != OrderStatus.Completed)
-					await _orderHistoryService.RecordAsync(
-						invitation.EmailInvitationID,
-						OrderHistoryEventType.ReportUploaded,
-						invitation.OrderStatus,
-						OrderStatus.Completed,
-						cancellationToken);
+				await _orderHistoryService.RecordAsync(
+					invitation.EmailInvitationID,
+					OrderHistoryEventType.ReportUploaded,
+					invitation.OrderStatus,
+					OrderStatus.Completed,
+					cancellationToken);
 
 				return updated;
 			}
