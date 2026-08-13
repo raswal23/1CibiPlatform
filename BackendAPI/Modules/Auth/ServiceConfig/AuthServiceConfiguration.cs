@@ -48,6 +48,17 @@ public static class AuthServiceConfiguration
 		services.AddScoped<IAuthQueries, AuthQueries>();
 
 		services.Decorate<IAuthRepository, AuthCacheRepository>();
+		services.AddScoped<IApplicationRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IAppSubRoleRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ILockoutRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ILoginRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IPasswordRecoveryRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRefreshTokenRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRegistrationRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ISubMenuRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IUserDirectoryRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IUserRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 
 		return services;
 	}
