@@ -17,19 +17,38 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			return;
 
 		_draftCleared = false;
-		_draftSaveCancellation?.Cancel();
-		_draftSaveCancellation?.Dispose();
-		_draftSaveCancellation = new CancellationTokenSource();
+		CancelPendingDraftSave();
+		var saveCancellation = new CancellationTokenSource();
+		_draftSaveCancellation = saveCancellation;
 
 		try
 		{
-			await Task.Delay(DraftSaveDelay, _draftSaveCancellation.Token);
+			await Task.Delay(DraftSaveDelay, saveCancellation.Token);
 			await SaveDraftAsync();
 		}
 		catch (OperationCanceledException)
 		{
 			// A newer form change restarted the debounce interval.
 		}
+		finally
+		{
+			if (ReferenceEquals(_draftSaveCancellation, saveCancellation))
+				_draftSaveCancellation = null;
+
+			saveCancellation.Dispose();
+		}
+	}
+
+	private void CancelPendingDraftSave()
+	{
+		var cancellation = _draftSaveCancellation;
+		_draftSaveCancellation = null;
+
+		if (cancellation is null)
+			return;
+
+		cancellation.Cancel();
+		cancellation.Dispose();
 	}
 
 	private async Task SaveDraftAsync()
@@ -414,14 +433,13 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 	private async Task ClearDraftAsync()
 	{
 		_draftCleared = true;
-		_draftSaveCancellation?.Cancel();
+		CancelPendingDraftSave();
 		await ApplicationFormStateService.ClearAsync(EmailId);
 	}
 
 	public async ValueTask DisposeAsync()
 	{
-		_draftSaveCancellation?.Cancel();
-		_draftSaveCancellation?.Dispose();
+		CancelPendingDraftSave();
 
 		if (_draftPersistenceEnabled && !_draftCleared && !IsSuccess)
 			await ApplicationFormStateService.SaveAsync(CreateDraftState());
