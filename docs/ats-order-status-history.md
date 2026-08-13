@@ -17,6 +17,7 @@ Dispute is an event without an `OrderStatus` transition because ATS currently st
 
 ## Architecture
 
+- Repositories must contain only database transaction and persistence logic. They must not contain business processes or business logic; that logic belongs in the service layer.
 - Entity and EF configuration live in the ATS module.
 - `IOrderHistoryFactory` creates history records consistently, including source, UTC timestamp, and the authenticated user when available.
 - Carter endpoint → MediatR query handler → order-history service → repository → `ATSDBContext`.
