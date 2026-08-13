@@ -62,10 +62,79 @@ public partial class ResetPassword
 	{
 		if (string.IsNullOrWhiteSpace(password))
 			return "Password is required";
-		if (password.Length < 8)
-			return "Password must be at least 8 characters";
-		// Add more password rules as needed
+		if (password.Length < 6)
+			return "Password must be at least 6 characters long";
+		if (password.Length > 100)
+			return "Password must not exceed 100 characters";
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[A-Z]"))
+			return "Password must contain at least one uppercase letter";
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[a-z]"))
+			return "Password must contain at least one lowercase letter";
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[0-9]"))
+			return "Password must contain at least one digit";
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, @"[\W_]"))
+			return "Password must contain at least one special character";
 		return null;
+	}
+
+	private int GetPasswordStrengthScore()
+	{
+		if (string.IsNullOrEmpty(newPassword))
+			return 0;
+
+		var score = 0;
+
+		if (newPassword.Length is >= 6 and <= 100)
+			score++;
+
+		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[A-Z]")
+			&& System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[a-z]"))
+			score++;
+
+		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[0-9]"))
+			score++;
+
+		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, @"[\W_]"))
+			score++;
+
+		return score;
+	}
+
+	private string GetPasswordStrengthContainerClass()
+	{
+		if (string.IsNullOrEmpty(newPassword))
+			return "reset-password-strength";
+
+		return GetPasswordStrengthScore() switch
+		{
+			4 => "reset-password-strength strong",
+			3 => "reset-password-strength good",
+			2 => "reset-password-strength fair",
+			_ => "reset-password-strength weak"
+		};
+	}
+
+	private string GetPasswordStrengthBarClass(int barNumber)
+	{
+		if (string.IsNullOrEmpty(newPassword))
+			return string.Empty;
+
+		var visibleScore = Math.Max(1, GetPasswordStrengthScore());
+		return barNumber <= visibleScore ? "active" : string.Empty;
+	}
+
+	private string GetPasswordStrengthLabel()
+	{
+		if (string.IsNullOrEmpty(newPassword))
+			return "Use 6+ characters with uppercase, lowercase, a number and a symbol";
+
+		return GetPasswordStrengthScore() switch
+		{
+			4 => "Strong password",
+			3 => "Good password",
+			2 => "Fair password",
+			_ => "Weak password"
+		};
 	}
 
 	private string ValidateConfirmPassword(string confirm)
