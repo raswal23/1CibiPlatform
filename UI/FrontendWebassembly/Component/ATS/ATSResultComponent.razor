@@ -20,7 +20,7 @@
             <MudText Typo="Typo.h5" Class="ats-result-hero-name">@ReportResult!.SubjectName</MudText>
             <MudText Typo="Typo.body2" Class="ats-result-hero-subtitle">@ReportResult!.SelectedPackage</MudText>
         </div>
-        <div class="ats-result-hero-status">@GetOrderStatusText()</div>
+        <div class="@($"ats-result-hero-status {GetOrderStatusClass()}")">@GetOrderStatusText()</div>
     </MudPaper>
 
     <div class="ats-result-body">
@@ -30,7 +30,9 @@
 
                 <div class="ats-result-summary-item">
                     <MudText Typo="Typo.caption" Class="ats-result-label">Status</MudText>
-                    <span class="ats-result-summary-status">@GetOrderStatusText()</span>
+                    <div class="ats-result-summary-status-row">
+                        <span class="@($"ats-result-summary-status {GetOrderStatusClass()}")">@GetOrderStatusText()</span>
+                    </div>
                 </div>
 
                 <div class="ats-result-summary-item">
@@ -60,7 +62,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Biometric Photo</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "Not yet uploaded" : $"{ReportResult.BiometricPhotoFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.BiometricPhotoFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.FilledFormAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.BiometricPhotoFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.FilledFormAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.BiometricPhotoFileName, ReportResult.FilledFormAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -70,7 +77,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Resume / CV</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ResumeFileName) ? "Not yet uploaded" : $"{ReportResult.ResumeFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.ResumeFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.ResumeFileName, ReportResult.FilledFormAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.ResumeFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.ResumeFileName, ReportResult.FilledFormAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.ResumeFileName, ReportResult.FilledFormAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -80,7 +92,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Government ID</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.IdUploadedFileName) ? "Not yet uploaded" : $"{ReportResult.IdUploadedFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.IdUploadedFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.IdUploadedFileName, ReportResult.FilledFormAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.IdUploadedFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.IdUploadedFileName, ReportResult.FilledFormAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.IdUploadedFileName, ReportResult.FilledFormAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -90,7 +107,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Certificate of employment</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.CoeFileName) ? "Not yet uploaded" : $"{ReportResult.CoeFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.CoeFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.CoeFileName, ReportResult.FilledFormAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.CoeFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.CoeFileName, ReportResult.FilledFormAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.CoeFileName, ReportResult.FilledFormAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -100,7 +122,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Diploma / TOR</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName) ? "Not yet uploaded" : $"{ReportResult.DiplomaFileName} · uploaded {ReportResult.UploadDiplomaAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.DiplomaFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.DiplomaFileName, ReportResult.UploadDiplomaAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.DiplomaFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.DiplomaFileName, ReportResult.UploadDiplomaAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.DiplomaFileName, ReportResult.UploadDiplomaAt)</MudText>
+                            </div>
                         </div>
                         @*                                  @if (string.IsNullOrWhiteSpace(ReportResult.DiplomaFileName))
                         {
@@ -114,7 +141,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Biometric photo</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "Not yet uploaded" : $"{ReportResult.BiometricPhotoFileName} · uploaded {ReportResult.UploadBiometricPhotoAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.BiometricPhotoFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.BiometricPhotoFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -124,7 +156,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">Consent form</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "Not yet uploaded" : $"{ReportResult.ConsentFormFileName} · uploaded {ReportResult.FilledFormAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.ConsentFormFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.ConsentFormFileName, ReportResult.FilledFormAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.ConsentFormFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.ConsentFormFileName, ReportResult.FilledFormAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.ConsentFormFileName, ReportResult.FilledFormAt)</MudText>
+                            </div>
                         </div>
                     </div>
 
@@ -134,7 +171,12 @@
                         </div>
                         <div class="ats-result-doc-details">
                             <MudText Class="ats-result-doc-title">@ReportResult.ReportStatus</MudText>
-                            <MudText Class="ats-result-doc-sub">@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "Not yet uploaded" : $"{ReportResult.UploadedReportFileName} · uploaded {ReportResult.ReportUploadedAt}")</MudText>
+                            <div class="@GetDocumentMetaClass(ReportResult.UploadedReportFileName)"
+                                 data-tooltip="@GetDocumentTooltip(ReportResult.UploadedReportFileName, ReportResult.ReportUploadedAt)"
+                                 tabindex="@GetDocumentTabIndex(ReportResult.UploadedReportFileName)"
+                                 aria-label="@GetDocumentTooltip(ReportResult.UploadedReportFileName, ReportResult.ReportUploadedAt)">
+                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.UploadedReportFileName, ReportResult.ReportUploadedAt)</MudText>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,25 @@ public partial class ATSResultComponent
 	private bool IsLoaded = true;
 
 	private string GetOrderStatusText() => OrderStatusDisplay.GetText(ReportResult?.OrderStatus);
+	private string GetOrderStatusClass() => OrderStatusDisplay.GetClass(ReportResult?.OrderStatus);
+
+	private static string GetDocumentMeta(string? fileName, string? uploadedAt)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? "Not yet uploaded"
+			: $"{fileName} · uploaded {uploadedAt}";
+
+	private static string GetDocumentMetaClass(string? fileName)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? "ats-result-doc-meta-wrap pending"
+			: "ats-result-doc-meta-wrap has-tooltip";
+
+	private static string? GetDocumentTooltip(string? fileName, string? uploadedAt)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? null
+			: GetDocumentMeta(fileName, uploadedAt);
+
+	private static int? GetDocumentTabIndex(string? fileName)
+		=> string.IsNullOrWhiteSpace(fileName) ? null : 0;
 
 	private string GetResultText()
 		=> HitStatusDisplay.GetClass(ReportResult?.HitStatus) == "pending"
