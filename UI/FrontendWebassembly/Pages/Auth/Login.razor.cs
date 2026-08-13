@@ -10,7 +10,16 @@ public partial class Login
 	private bool isRegisterLoading;
 	private bool _isLoading = true;
 	private bool isRegisterMode;
+	private bool isForgotPasswordMode;
 	private bool hasSwitchedMode;
+	private MudForm? forgotPasswordForm;
+	private bool forgotPasswordFormValid;
+	private bool isForgotPasswordLoading;
+	private bool isForgotPasswordUserValid = true;
+	private bool isForgotPasswordSuccess;
+	private string forgotPasswordEmail = string.Empty;
+	private string forgotPasswordErrorMessage = string.Empty;
+	private string forgotPasswordSuccessMessage = string.Empty;
 
 	private string loginEmail = string.Empty;
 	private string loginPassword = string.Empty;
@@ -42,6 +51,7 @@ public partial class Login
 	protected override async Task OnInitializedAsync()
 	{
 		isRegisterMode = IsRegisterRoute();
+		isForgotPasswordMode = IsForgotPasswordRoute();
 
 		var isAuthenticated = await IAuthService.IsAuthenticated();
 
@@ -57,11 +67,14 @@ public partial class Login
 	protected override void OnParametersSet()
 	{
 		var registerRoute = IsRegisterRoute();
+		var forgotPasswordRoute = IsForgotPasswordRoute();
+		var registerModeChanged = registerRoute != isRegisterMode;
 
-		if (registerRoute != isRegisterMode)
+		if (registerModeChanged || forgotPasswordRoute != isForgotPasswordMode)
 		{
 			isRegisterMode = registerRoute;
-			hasSwitchedMode = true;
+			isForgotPasswordMode = forgotPasswordRoute;
+			hasSwitchedMode = registerModeChanged;
 		}
 	}
 
@@ -71,10 +84,18 @@ public partial class Login
 			.TrimEnd('/')
 			.EndsWith("/register", StringComparison.OrdinalIgnoreCase);
 
+	private bool IsForgotPasswordRoute()
+		=> new Uri(Navigation.Uri)
+			.AbsolutePath
+			.TrimEnd('/')
+			.EndsWith("/forgot-password", StringComparison.OrdinalIgnoreCase);
+
 	private string GetAuthCardClass()
 	{
 		if (isRegisterMode)
 			return "auth-card active";
+		if (isForgotPasswordMode)
+			return "auth-card forgot";
 
 		return hasSwitchedMode ? "auth-card close" : "auth-card";
 	}
@@ -83,14 +104,25 @@ public partial class Login
 	{
 		hasSwitchedMode = true;
 		isRegisterMode = true;
+		isForgotPasswordMode = false;
 		Navigation.NavigateTo("/register", replace: true);
 	}
 
 	private void ShowLogin()
 	{
+		hasSwitchedMode = isRegisterMode;
+		isRegisterMode = false;
+		isForgotPasswordMode = false;
+		Navigation.NavigateTo("/login", replace: true);
+	}
+
+	private void ShowForgotPassword()
+	{
 		hasSwitchedMode = true;
 		isRegisterMode = false;
-		Navigation.NavigateTo("/login", replace: true);
+		isForgotPasswordMode = true;
+		forgotPasswordEmail = loginEmail;
+		Navigation.NavigateTo("/forgot-password", replace: true);
 	}
 
 	private void ToggleLoginPasswordVisibility()
@@ -217,6 +249,42 @@ public partial class Login
 			isRegisterLoading = false;
 			isRegisterUserValid = false;
 			registerErrorMessage = "An unexpected error occurred. Please try again.";
+			StateHasChanged();
+		}
+	}
+
+	private async Task HandleForgotPassword()
+	{
+		isForgotPasswordLoading = true;
+		isForgotPasswordUserValid = true;
+		isForgotPasswordSuccess = false;
+		forgotPasswordErrorMessage = string.Empty;
+		forgotPasswordSuccessMessage = string.Empty;
+
+		try
+		{
+			var user = await IAuthService.ForgotPasswordSendEmail(
+				new SendEmailForgotPasswordRequestDTO(forgotPasswordEmail));
+
+			if (!string.IsNullOrEmpty(user.errorMessage))
+			{
+				isForgotPasswordUserValid = false;
+				forgotPasswordErrorMessage = user.errorMessage;
+				return;
+			}
+
+			isForgotPasswordSuccess = true;
+			forgotPasswordSuccessMessage = "A reset link has been sent to your email.";
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex);
+			isForgotPasswordUserValid = false;
+			forgotPasswordErrorMessage = "An unexpected error occurred. Please try again.";
+		}
+		finally
+		{
+			isForgotPasswordLoading = false;
 			StateHasChanged();
 		}
 	}

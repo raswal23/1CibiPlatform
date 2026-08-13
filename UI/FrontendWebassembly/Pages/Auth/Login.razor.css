@@ -63,6 +63,31 @@
     background: #fff;
 }
 
+.auth-forgot-panel {
+    left: 0;
+    z-index: 2;
+    border-radius: 20px 0 0 20px;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transform: translateX(-18px) scale(.96);
+    transition: opacity .3s ease, transform .3s ease, visibility .3s ease;
+}
+
+.auth-card.forgot .auth-login-panel {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+.auth-card.forgot .auth-forgot-panel {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transform: translateX(0) scale(1);
+}
+
 .auth-register-panel {
     right: 0;
     z-index: 1;
@@ -375,6 +400,26 @@
     text-decoration: underline;
 }
 
+.auth-link-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.auth-forgot-content {
+    max-width: 410px;
+}
+
+.auth-forgot-subtitle {
+    line-height: 1.55;
+}
+
+.auth-forgot-field {
+    margin-bottom: 20px;
+}
+
 ::deep .auth-submit {
     width: 100%;
     height: 44px;
@@ -406,6 +451,19 @@
     background: linear-gradient(120deg, var(--navy-800), var(--blue-500)) !important;
     color: rgba(255, 255, 255, .72) !important;
     opacity: .62;
+}
+
+::deep .auth-submit .mud-button-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.auth-submit-icon {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
 }
 
 ::deep .auth-register-submit {
@@ -501,6 +559,7 @@
     }
 
     .auth-login-panel,
+    .auth-forgot-panel,
     .auth-register-panel {
         left: 0;
         right: auto;
@@ -522,10 +581,25 @@
         visibility: visible;
     }
 
+    .auth-card.forgot .auth-login-panel,
+    .auth-card.forgot .auth-register-panel {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    .auth-card.forgot .auth-forgot-panel {
+        opacity: 1;
+        pointer-events: auto;
+        visibility: visible;
+        transform: none;
+    }
+
     .auth-card.active .auth-register-panel .auth-content,
     .auth-card.active .auth-login-panel .auth-content,
     .auth-card.close .auth-register-panel .auth-content,
-    .auth-card.close .auth-login-panel .auth-content {
+    .auth-card.close .auth-login-panel .auth-content,
+    .auth-card.forgot .auth-forgot-panel .auth-content {
         animation: none;
     }
 }
@@ -559,7 +633,9 @@
     .auth-card.active .auth-register-panel .auth-content,
     .auth-card.active .auth-login-panel .auth-content,
     .auth-card.close .auth-register-panel .auth-content,
-    .auth-card.close .auth-login-panel .auth-content {
+    .auth-card.close .auth-login-panel .auth-content,
+    .auth-forgot-panel {
         animation-duration: .01ms;
+        transition-duration: .01ms;
     }
 }
