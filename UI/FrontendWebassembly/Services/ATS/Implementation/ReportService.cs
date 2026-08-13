@@ -130,4 +130,21 @@ public class ReportService : IReportService
 
 		return response;
 	}
+	public async Task<IReadOnlyList<OrderStatusHistoryDTO>> GetOrderStatusHistoryAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken = default)
+	{
+		var response = await _httpClient.GetAsync(
+			$"ats/getorderstatushistory?emailInvitationRequestId={emailInvitationRequestId}",
+			cancellationToken);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			throw new Exception("Failed to load order history.");
+		}
+
+		var result = await response.Content
+			.ReadFromJsonAsync<GetOrderStatusHistoryResponseDTO>(
+				cancellationToken: cancellationToken);
+
+		return result?.History ?? [];
+	}
 }

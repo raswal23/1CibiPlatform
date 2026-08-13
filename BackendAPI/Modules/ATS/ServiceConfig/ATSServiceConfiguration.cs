@@ -40,6 +40,9 @@ public static class ATSServiceConfiguration
 		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
+		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
+		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
 		services.Decorate<IATSRepository, ATSCacheRepository>();
 		services.AddScoped<IPackageRepository, PackageRepository>();
 		services.Decorate<IPackageRepository, PackageCacheRepository>();

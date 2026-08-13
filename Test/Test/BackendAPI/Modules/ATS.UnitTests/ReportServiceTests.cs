@@ -7,6 +7,7 @@ using ATS.Data.Repository.Administration.UserClient;
 using ATS.Constants;
 using ATS.DTO;
 using ATS.Services;
+using ATS.Services.OrderHistory;
 using ATS.Shared.Implementations;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
@@ -32,6 +33,7 @@ public class ReportServiceTests
 	private readonly Mock<IObjectStorageService> _objectStorage = new();
 	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
+	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -52,7 +54,10 @@ public class ReportServiceTests
 			_repository.Object,
 			configuration,
 			_objectStorage.Object,
-			new AtsQueryScopeResolver(_currentUser.Object, _userClientRepository.Object));
+			new AtsQueryScopeResolver(
+				_currentUser.Object,
+				_userClientRepository.Object),
+			_orderHistoryService.Object);
 	}
 
 	#region Happy Path

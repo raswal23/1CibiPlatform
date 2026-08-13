@@ -10,6 +10,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
 	private readonly string _disputeOrderEmailRecipient;
+	private readonly IOrderHistoryService _orderHistoryService;
 
 	public DisputeOrderService(
 		ILogger<DisputeOrderService> logger,
@@ -18,7 +19,8 @@ public class DisputeOrderService : IDisputeOrderService
 		IATSRepository atsRepository,
 		IClientRepository clientRepository,
 		IHttpContextAccessor httpContextAccessor,
-		AtsQueryScopeResolver scopeResolver)
+		AtsQueryScopeResolver scopeResolver,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_emailService = emailService;
@@ -28,6 +30,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_clientRepository = clientRepository;
 		_scopeResolver = scopeResolver;
 		_httpContextAccessor = httpContextAccessor;
+		_orderHistoryService = orderHistoryService;
 	}
 
 	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -116,6 +119,11 @@ public class DisputeOrderService : IDisputeOrderService
 		try
 		{
 			await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
+			await _orderHistoryService.RecordAsync(
+				order.EmailInvitationID,
+				OrderHistoryEventType.ReportDisputed,
+				order.OrderStatus,
+				order.OrderStatus ?? OrderStatus.Completed, cancellationToken);
 		}
 		catch (Exception ex)
 		{

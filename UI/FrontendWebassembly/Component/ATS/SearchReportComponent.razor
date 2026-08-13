@@ -88,8 +88,6 @@
                     <span class="search-report-legend-text">
                         The applicant has started or completed the application form, but the screening process is not yet complete.
                     </span>
-
-
                 </div>
             </div>
 
@@ -179,7 +177,7 @@
                 </button>
             </MudTd>
             <MudTd DataLabel="Subject Name"><div class="report-subject"><span class="report-avatar">@GetInitials(r.SubjectName)</span><span class="report-name">@r.SubjectName</span></div></MudTd>
-            <MudTd DataLabel="Status"><span class="report-status @GetOrderStatusClass(r.OrderStatus)">@GetOrderStatusText(r.OrderStatus)</span></MudTd>
+            <MudTd DataLabel="Status"><button type="button" class="report-status-button" @onclick="@(() => OpenStatusHistoryDialog(r))"><span class="report-status @GetOrderStatusClass(r.OrderStatus)">@GetOrderStatusText(r.OrderStatus)</span></button></MudTd>
             <MudTd Class="report-date" DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "—")</MudTd>
             <MudTd DataLabel="Selected Package"><span class="report-package">@r.SelectedPackage</span></MudTd>
             <MudTd DataLabel="Hit Status"><span class="report-hit @GetHitStatusClass(r.HitStatus)">@GetHitStatusText(r.HitStatus)</span></MudTd>

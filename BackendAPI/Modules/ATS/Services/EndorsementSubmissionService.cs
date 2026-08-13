@@ -13,6 +13,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ICurrentUser _currentUser;
 	private readonly AtsQueryScopeResolver _scopeResolver;
+	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
@@ -29,7 +30,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IHttpContextAccessor httpContextAccessor,
 		ICurrentUser currentUser,
 		IObjectStorageService objectStorageService,
-		AtsQueryScopeResolver scopeResolver)
+		AtsQueryScopeResolver scopeResolver,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -42,6 +44,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_objectStorageService = objectStorageService;
 		_currentUser = currentUser;
 		_scopeResolver = scopeResolver;
+		_orderHistoryService = orderHistoryService;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -96,7 +99,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		EmailInvitationRequest emailInvitationRequest = emailInvitationRequestDTO.Adapt<EmailInvitationRequest>();
 		emailInvitationRequest.EmailInvitationID = Guid.CreateVersion7();
-		emailInvitationRequest.HashToken =HashToken;
+		emailInvitationRequest.HashToken = HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
@@ -149,6 +152,12 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
 				emailInvitationRequest.EmailInvitationID);
+
+			await _orderHistoryService.RecordAsync(
+				emailInvitationRequest.EmailInvitationID,
+				OrderHistoryEventType.OrderCreated,
+				null,
+				OrderStatus.PendingCandidateInfo, ct);
 		}
 		catch (Exception ex)
 		{
@@ -351,6 +360,13 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				invitation.EmailAddress!,
 				fullName,
 				applicationFormLink);
+
+			await _orderHistoryService.RecordAsync(
+				emailInvitationId,
+				OrderHistoryEventType.ApplicationFormResent,
+				invitation.OrderStatus,
+				OrderStatus.PendingCandidateInfo,
+				cancellationToken);
 
 			_logger.LogInformation("Successfully resent application form for invitation: {@Context}", logContext);
 			return true;

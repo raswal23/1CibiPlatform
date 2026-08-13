@@ -3,6 +3,7 @@ using ATS.Data.Entities;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
+using ATS.Services.OrderHistory;
 using ATS.Constants;
 using ATS.Data.Repository.Administration.Clients;
 using ATS.Shared.Implementations;
@@ -364,6 +365,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 	private DisputeOrderService CreateService(Mock<IEmailService> emailService)
 	{
+		var orderHistoryService = new Mock<IOrderHistoryService>();
 		var userClientRepository = new Mock<IUserClientRepository>();
 		userClientRepository
 			.Setup(repository => repository.GetUserClientAssignmentsAsync(
@@ -394,7 +396,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			_httpContextAccessor,
 			new AtsQueryScopeResolver(
 				CreateAllClientsCurrentUser().Object,
-				userClientRepository.Object));
+				userClientRepository.Object),
+			orderHistoryService.Object);
 	}
 
 	private void SetDisputeScope(

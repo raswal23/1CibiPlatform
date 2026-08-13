@@ -7,4 +7,5 @@ public interface IReportService
     Task<ATSResultDetailsDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId);
 	Task<HttpResponseMessage> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken = default);
 	Task<HttpResponseMessage> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken = default);
+	Task<IReadOnlyList<OrderStatusHistoryDTO>> GetOrderStatusHistoryAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken = default);
 }

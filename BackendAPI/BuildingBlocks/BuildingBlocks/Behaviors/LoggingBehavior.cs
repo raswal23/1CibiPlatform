@@ -2,6 +2,7 @@
 using System.Security.Claims;
 
 namespace BuildingBlocks.Behaviors;
+
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
 	where TRequest : notnull, IRequest<TResponse>
 	where TResponse : notnull

@@ -236,6 +236,11 @@ public partial class SearchReportComponent
 
 		await dialog.Result;
 	}
+	private async Task OpenStatusHistoryDialog(ReportListDTO report)
+	{
+		var parameters = new DialogParameters { { nameof(OrderStatusHistoryDialog.EmailInvitationRequestId), report.EmailInvitationRequestId }, { nameof(OrderStatusHistoryDialog.SubjectName), report.SubjectName } };
+		await OpenResultDialog<OrderStatusHistoryDialog>(string.Empty, parameters, MaxWidth.Small, noHeader: true);
+	}
 
 	private async Task ReloadTable()
 	{

@@ -572,14 +572,16 @@ code {
     }
 
 .um-dialog.ats-upload-report-dialog,
-.um-dialog.ats-result-modal-dialog {
+.um-dialog.ats-result-modal-dialog,
+.um-dialog.ats-order-history-dialog {
     padding: 0 !important;
     border: 0 !important;
     outline: 0 !important;
 }
 
 .um-dialog.ats-upload-report-dialog > .mud-dialog-content,
-.um-dialog.ats-result-modal-dialog > .mud-dialog-content {
+.um-dialog.ats-result-modal-dialog > .mud-dialog-content,
+.um-dialog.ats-order-history-dialog > .mud-dialog-content {
     display: block;
     width: 100%;
     margin: 0 !important;
