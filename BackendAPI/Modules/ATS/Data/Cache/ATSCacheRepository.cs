@@ -140,27 +140,51 @@ public class ATSCacheRepository : IATSRepository
 		return result;
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_clients_{clientScope}_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(req, token),
+			async (req, token) => await _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(
+				req,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [WithdrawnApplicationTag],
 			cancellationToken);
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
+		var cacheKey = $"withdrawnapplication_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}_clients_{clientScope}_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<EmailInvitationRequestListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(req, token),
+			async (req, token) => await _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(
+				req,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [WithdrawnApplicationTag],
 			cancellationToken);
@@ -194,27 +218,51 @@ public class ATSCacheRepository : IATSRepository
 		return result;
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}_clients_{clientScope}_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.GetDisputeOrdersAsync(req, token),
+			async (req, token) => await _atsRepository.GetDisputeOrdersAsync(
+				req,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [DisputeOrderTag],
 			cancellationToken);
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
+		var cacheKey = $"disputeorder_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}_clients_{clientScope}_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<DisputeOrderListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.SearchDisputeOrdersAsync(req, token),
+			async (req, token) => await _atsRepository.SearchDisputeOrdersAsync(
+				req,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [DisputeOrderTag],
 			cancellationToken);
@@ -263,19 +311,41 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddArchiveReportAsync(archiveReport, cancellationToken);
 	}
 
-	public Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
+	public Task<IReadOnlyList<EmailInvitationRequest>> GetDashboardDataAsync(
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		return _atsRepository.GetDashboardAsync(requester, cancellationToken);
+		return _atsRepository.GetDashboardDataAsync(
+			authorizedClientIds,
+			requiredRequestorId,
+			cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(
+		PaginationRequest paginationRequest,
+		string? sortColumn,
+		bool sortDescending,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}";
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
+		var cacheKey = $"report_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_sort_{sortColumn}_desc_{sortDescending}_clients_{clientScope}_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-			async (req, token) => await _atsRepository.GetReportsAsync(req, sortColumn, sortDescending, token),
+			async (req, token) => await _atsRepository.GetReportsAsync(
+				req,
+				sortColumn,
+				sortDescending,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);
@@ -296,8 +366,18 @@ public class ATSCacheRepository : IATSRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(
+		PaginationRequest paginationRequest,
+		string? sortColumn,
+		bool sortDescending,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
+		var clientScope = authorizedClientIds is null
+			? "all"
+			: string.Join('-', authorizedClientIds.OrderBy(clientId => clientId));
+		var requestorScope = requiredRequestorId?.ToString("N") ?? "all";
 		var cacheKey =
 			$"report_page_{paginationRequest.PageIndex}" +
 			$"_size_{paginationRequest.PageSize}" +
@@ -305,12 +385,20 @@ public class ATSCacheRepository : IATSRepository
 			$"_start_{(paginationRequest.StartDate.HasValue ? paginationRequest.StartDate.Value.ToString("yyyyMMdd") : "none")}" +
 			$"_end_{(paginationRequest.EndDate.HasValue ? paginationRequest.EndDate.Value.ToString("yyyyMMdd") : "none")}" +
 			$"_sort_{sortColumn ?? "none"}" +
-			$"_desc_{sortDescending}";
+			$"_desc_{sortDescending}" +
+			$"_clients_{clientScope}" +
+			$"_requestor_{requestorScope}";
 
 		return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ReportListDTO>>(
 			cacheKey,
 			paginationRequest,
-		  async (req, token) => await _atsRepository.SearchReportsAsync(req, sortColumn, sortDescending, token),
+			async (req, token) => await _atsRepository.SearchReportsAsync(
+				req,
+				sortColumn,
+				sortDescending,
+				authorizedClientIds,
+				requiredRequestorId,
+				token),
 			null,
 			tags: [ReportTag],
 			cancellationToken);

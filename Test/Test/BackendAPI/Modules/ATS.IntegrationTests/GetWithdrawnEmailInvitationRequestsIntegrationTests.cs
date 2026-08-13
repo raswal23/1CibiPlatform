@@ -1,4 +1,7 @@
-﻿using ATS.Data.Entities;
+﻿using System.Security.Claims;
+using ATS.Constants;
+using ATS.Data.Entities;
+using Auth.Constants;
 using FluentAssertions;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
@@ -12,10 +15,85 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	}
 
 	#region Positive Path
+	[Theory]
+	[InlineData(AtsRoleIds.PlatformManager)]
+	[InlineData(AtsRoleIds.Admin)]
+	public async Task GetWithdrawnEmailInvitationRequests_ShouldIncludeAllRequestersForAssignedClients(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var assigned = CreateWithdrawnInvitation("Assigned", 3, Guid.CreateVersion7());
+		var sameClient = CreateWithdrawnInvitation("SameClient", 3, Guid.CreateVersion7());
+		var unassigned = CreateWithdrawnInvitation("Unassigned", 4, userId);
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(assigned, sameClient, unassigned);
+		await AddAssignmentAsync(userId, clientId: 3);
+		await _dbContext.SaveChangesAsync();
+		SetAuthenticatedUser(userId, roleId, clientId: 99);
+
+		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
+			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			CancellationToken.None);
+
+		result.Count.Should().Be(2);
+		result.Data.Select(invitation => invitation.EmailInvitationID)
+			.Should().BeEquivalentTo(new[]
+			{
+				assigned.EmailInvitationID,
+				sameClient.EmailInvitationID
+			});
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.User)]
+	[InlineData(AtsRoleIds.Uploader)]
+	public async Task GetWithdrawnEmailInvitationRequests_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var matching = CreateWithdrawnInvitation("Matching", 5, userId);
+		var wrongRequester = CreateWithdrawnInvitation("WrongRequester", 5, Guid.CreateVersion7());
+		var wrongClient = CreateWithdrawnInvitation("WrongClient", 6, userId);
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(matching, wrongRequester, wrongClient);
+		await _dbContext.SaveChangesAsync();
+		SetAuthenticatedUser(userId, roleId, clientId: 5);
+
+		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
+			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			CancellationToken.None);
+
+		result.Count.Should().Be(1);
+		result.Data.Should().ContainSingle()
+			.Which.EmailInvitationID.Should().Be(matching.EmailInvitationID);
+	}
+
+	[Fact]
+	public async Task GetWithdrawnEmailInvitationRequests_ShouldIncludeAllClientsAndRequesters_ForPlatformSuperAdmin()
+	{
+		var first = CreateWithdrawnInvitation("FirstClient", 1, Guid.CreateVersion7());
+		var second = CreateWithdrawnInvitation("SecondClient", 2, Guid.CreateVersion7());
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(first, second);
+		await _dbContext.SaveChangesAsync();
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			clientId: 99,
+			isPlatformSuperAdmin: true);
+
+		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
+			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			CancellationToken.None);
+
+		result.Count.Should().Be(2);
+		result.Data.Select(invitation => invitation.EmailInvitationID)
+			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
+	}
+
 	[Fact]
 	public async Task GetWithdrawnEmailInvitationRequests_ShouldReturnWithdrawnRecords()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawn1 = new EmailInvitationRequest
 		{
 			EmailInvitationID = Guid.CreateVersion7(),
@@ -31,7 +109,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -49,7 +129,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		var active = new EmailInvitationRequest
@@ -87,6 +169,8 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	public async Task GetWithdrawnEmailInvitationRequests_ShouldReturnPaginatedResults()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawnRecords = new List<EmailInvitationRequest>();
 		for (int i = 0; i < 15; i++)
 		{
@@ -105,7 +189,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 				RushNormal = "Normal",
 				EmailSentStatus = "Done",
 				ApplicationFormStatus = "Pending",
-				OrderStatus = "Application Withdrawn"
+				OrderStatus = "Application Withdrawn",
+				ClientId = 7,
+				RequestorId = userId
 			});
 		}
 
@@ -135,6 +221,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	public async Task GetWithdrawnEmailInvitationRequests_ShouldReturnEmptyWhenNoWithdrawnRecords()
 	{
 		// Arrange
+		SetAuthenticatedUser(Guid.CreateVersion7(), AtsRoleIds.User, clientId: 7);
 		var active = new EmailInvitationRequest
 		{
 			EmailInvitationID = Guid.CreateVersion7(),
@@ -170,6 +257,8 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	public async Task SearchWithdrawnEmailInvitationRequests_ShouldReturnMatchingRecords()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawn1 = new EmailInvitationRequest
 		{
 			EmailInvitationID = Guid.CreateVersion7(),
@@ -185,7 +274,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -203,7 +294,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2);
@@ -223,6 +316,8 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	public async Task SearchWithdrawnEmailInvitationRequests_ShouldSearchByLastName()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawn1 = new EmailInvitationRequest
 		{
 			EmailInvitationID = Guid.CreateVersion7(),
@@ -238,7 +333,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		var withdrawn2 = new EmailInvitationRequest
@@ -256,7 +353,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2);
@@ -275,6 +374,8 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	public async Task SearchWithdrawnEmailInvitationRequests_ShouldReturnEmptyWhenNoMatch()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawn = new EmailInvitationRequest
 		{
 			EmailInvitationID = Guid.CreateVersion7(),
@@ -290,7 +391,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			OrderStatus = "Application Withdrawn"
+			OrderStatus = "Application Withdrawn",
+			ClientId = 7,
+			RequestorId = userId
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(withdrawn);
@@ -306,4 +409,64 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 	}
 
 	#endregion
+
+	private async Task AddAssignmentAsync(Guid userId, int clientId)
+	{
+		var now = DateTime.UtcNow;
+		await _dbContext.UserClientDetails.AddAsync(new UserClientDetails
+		{
+			UserId = userId,
+			ClientId = clientId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+	}
+
+	private void SetAuthenticatedUser(
+		Guid userId,
+		int roleId,
+		int clientId,
+		bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString()),
+			new(AuthClaimTypes.AtsClientId, clientId.ToString())
+		};
+		if (isPlatformSuperAdmin)
+		{
+			claims.Add(new Claim(
+				AuthClaimTypes.PlatformRoleId,
+				PlatformRoleIds.SuperAdmin.ToString()));
+		}
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(
+			new ClaimsIdentity(claims, "TestAuth"));
+	}
+
+	private static EmailInvitationRequest CreateWithdrawnInvitation(
+		string prefix,
+		int clientId,
+		Guid requestorId)
+	{
+		var id = Guid.CreateVersion7();
+		return new EmailInvitationRequest
+		{
+			EmailInvitationID = id,
+			FirstName = prefix,
+			LastName = "Candidate",
+			EmailAddress = $"{id:N}@example.com",
+			MobileNumber = "09171234567",
+			HashToken = $"hash-{id:N}",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			EmailSentStatus = "Done",
+			ApplicationFormStatus = "Withdrawn",
+			OrderStatus = "Application Withdrawn",
+			ClientId = clientId,
+			RequestorId = requestorId
+		};
+	}
 }

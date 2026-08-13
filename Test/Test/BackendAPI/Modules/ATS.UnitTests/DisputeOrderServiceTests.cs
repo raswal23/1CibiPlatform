@@ -1,10 +1,12 @@
 ﻿using System.Security.Claims;
 using ATS.Data.Entities;
+using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
+using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -29,6 +31,7 @@ public class DisputeOrderServiceTests
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
+	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
@@ -53,7 +56,8 @@ public class DisputeOrderServiceTests
 			_repository.Object,
 			_userClientRepository.Object,
 			_httpContextAccessor,
-			_orderHistoryService.Object);
+			_orderHistoryService.Object,
+			_currentUser.Object);
 	}
 
 	#region Happy Path
@@ -62,12 +66,17 @@ public class DisputeOrderServiceTests
 	public async Task GetDisputeOrdersAsync_ShouldUseUnfilteredRepositoryQuery_WhenSearchTermIsEmpty()
 	{
 		// Arrange
+		var userId = SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
 		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
 		var cancellationToken = new CancellationTokenSource().Token;
 		var expected = CreatePaginatedResult();
 
 		_repository
-			.Setup(repository => repository.GetDisputeOrdersAsync(request, cancellationToken))
+			.Setup(repository => repository.GetDisputeOrdersAsync(
+				request,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
+				cancellationToken))
 			.ReturnsAsync(expected);
 
 		// Act
@@ -76,11 +85,17 @@ public class DisputeOrderServiceTests
 		// Assert
 		result.Should().BeSameAs(expected);
 		_repository.Verify(
-			repository => repository.GetDisputeOrdersAsync(request, cancellationToken),
+			repository => repository.GetDisputeOrdersAsync(
+				request,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
+				cancellationToken),
 			Times.Once);
 		_repository.Verify(
 			repository => repository.SearchDisputeOrdersAsync(
 				It.IsAny<PaginationRequest>(),
+				It.IsAny<IReadOnlyCollection<int>>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<CancellationToken>()),
 			Times.Never);
 	}
@@ -89,12 +104,24 @@ public class DisputeOrderServiceTests
 	public async Task GetDisputeOrdersAsync_ShouldUseSearchRepositoryQuery_WhenSearchTermIsProvided()
 	{
 		// Arrange
+		var userId = SetAuthenticatedUser(AtsRoleIds.Admin, clientId: 99);
+		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
+			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
+			It.IsAny<CancellationToken>())).ReturnsAsync(
+			[
+				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
+				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
+			]);
 		var request = new PaginationRequest(PageIndex: 2, PageSize: 5, SearchTerm: "ada");
 		var cancellationToken = new CancellationTokenSource().Token;
 		var expected = CreatePaginatedResult(pageIndex: 2, pageSize: 5);
 
 		_repository
-			.Setup(repository => repository.SearchDisputeOrdersAsync(request, cancellationToken))
+			.Setup(repository => repository.SearchDisputeOrdersAsync(
+				request,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
+				cancellationToken))
 			.ReturnsAsync(expected);
 
 		// Act
@@ -103,11 +130,17 @@ public class DisputeOrderServiceTests
 		// Assert
 		result.Should().BeSameAs(expected);
 		_repository.Verify(
-			repository => repository.SearchDisputeOrdersAsync(request, cancellationToken),
+			repository => repository.SearchDisputeOrdersAsync(
+				request,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
+				cancellationToken),
 			Times.Once);
 		_repository.Verify(
-			repository => repository.GetDisputeOrdersAsync(
+				repository => repository.GetDisputeOrdersAsync(
 				It.IsAny<PaginationRequest>(),
+				It.IsAny<IReadOnlyCollection<int>>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<CancellationToken>()),
 			Times.Never);
 	}
@@ -315,6 +348,38 @@ public class DisputeOrderServiceTests
 	}
 
 	#endregion
+
+	private Guid SetAuthenticatedUser(int roleId, int clientId)
+	{
+		var userId = Guid.CreateVersion7();
+		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
+		_currentUser.SetupGet(user => user.UserId).Returns(userId);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(roleId);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns(clientId);
+		return userId;
+	}
+
+	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreatePaginatedResult();
+		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		_repository.Setup(repository => repository.GetDisputeOrdersAsync(
+			request,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetDisputeOrdersAsync(request, CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
+			It.IsAny<IReadOnlyCollection<Guid>>(),
+			It.IsAny<CancellationToken>()), Times.Never);
+	}
 
 	private void SetupSuccessfulEmail()
 	{

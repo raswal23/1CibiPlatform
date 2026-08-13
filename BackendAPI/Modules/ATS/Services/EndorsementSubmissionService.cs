@@ -13,6 +13,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ICurrentUser _currentUser;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
@@ -29,7 +30,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IHttpContextAccessor httpContextAccessor,
 		ICurrentUser currentUser,
 		IObjectStorageService objectStorageService,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		IUserClientRepository userClientRepository)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -42,6 +44,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_objectStorageService = objectStorageService;
 		_currentUser = currentUser;
 		_orderHistoryService = orderHistoryService;
+		_userClientRepository = userClientRepository;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -269,7 +272,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return isSent;
 	}
 
-	public Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -280,11 +283,66 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		_logger.LogInformation("Fetching withdrawn application form with pagination: {@Context}", logContext);
+		if (!_currentUser.IsAuthenticated
+			|| _currentUser.UserId is not { } userId
+			|| userId == Guid.Empty)
+		{
+			return CreateEmptyWithdrawnResult(paginationRequest);
+		}
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken);
+		IReadOnlyCollection<int>? clientIds;
+		Guid? requiredRequestorId;
+		if (_currentUser.IsPlatformSuperAdmin)
+		{
+			clientIds = null;
+			requiredRequestorId = null;
+		}
+		else if (_currentUser.AtsRoleId is not { } roleId)
+		{
+			return CreateEmptyWithdrawnResult(paginationRequest);
+		}
+		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
+		{
+			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
+				[userId],
+				cancellationToken);
+			clientIds = assignments
+				.Select(assignment => assignment.ClientId)
+				.Distinct()
+				.ToArray();
+			requiredRequestorId = null;
+		}
+		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
+			&& _currentUser.AtsClientId is { } clientId)
+		{
+			clientIds = [clientId];
+			requiredRequestorId = userId;
+		}
+		else
+		{
+			return CreateEmptyWithdrawnResult(paginationRequest);
+		}
+
+		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm)
+			? _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(
+				paginationRequest,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken)
+			: _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(
+				paginationRequest,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken));
 	}
+
+	private static PaginatedResult<EmailInvitationRequestListDTO> CreateEmptyWithdrawnResult(
+		PaginationRequest paginationRequest) =>
+		new(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			0,
+			Array.Empty<EmailInvitationRequestListDTO>());
 
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{

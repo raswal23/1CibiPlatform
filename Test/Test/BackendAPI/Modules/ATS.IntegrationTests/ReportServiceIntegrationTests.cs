@@ -3,6 +3,8 @@ using System.Text;
 using ATS.Data.DTO;
 using ATS.Data.Entities;
 using ATS.DTO;
+using ATS.Constants;
+using Auth.Constants;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using FluentAssertions;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using System.Security.Claims;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
@@ -136,12 +139,17 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	public async Task GetReportsAsync_ShouldReturnLatestHitStatusAndApplySearchAndDateFilters()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		const int clientId = 7;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
 		var ada = CreateInvitation(
 			"Ada",
 			orderStatus: "Completed",
 			orderCompletedAt: new DateTime(2026, 8, 15, 12, 0, 0, DateTimeKind.Utc));
 		ada.FirstName = "Ada";
 		ada.LastName = "Lovelace";
+		ada.ClientId = clientId;
+		ada.RequestorId = userId;
 		ada.ReportDetails =
 		[
 			CreateReport(ada.EmailInvitationID, "Initial Report", "Clear", "ada-initial.pdf", new DateTime(2026, 8, 10, 8, 0, 0, DateTimeKind.Utc)),
@@ -154,8 +162,12 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			orderCompletedAt: new DateTime(2026, 8, 20, 12, 0, 0, DateTimeKind.Utc));
 		grace.FirstName = "Grace";
 		grace.LastName = "Hopper";
+		grace.ClientId = clientId;
+		grace.RequestorId = userId;
 
 		var pending = CreateInvitation("Pending", orderStatus: "In Progress");
+		pending.ClientId = clientId;
+		pending.RequestorId = userId;
 		await AddInvitationsAsync(ada, grace, pending);
 
 		// Act
@@ -192,6 +204,99 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			SelectedPackage = "Basic Screening",
 			HitStatus = "Not Clear"
 		});
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.PlatformManager)]
+	[InlineData(AtsRoleIds.Admin)]
+	public async Task GetReportsAsync_ShouldIncludeAllRequestersForAssignedClients(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var assignedRequesterId = Guid.CreateVersion7();
+		var assigned = CreateInvitation("Assigned", orderStatus: "Completed");
+		assigned.ClientId = 3;
+		assigned.RequestorId = assignedRequesterId;
+		var sameClient = CreateInvitation("Same Client", orderStatus: "Completed");
+		sameClient.ClientId = 3;
+		sameClient.RequestorId = Guid.CreateVersion7();
+		var unassigned = CreateInvitation("Unassigned", orderStatus: "Completed");
+		unassigned.ClientId = 4;
+		unassigned.RequestorId = userId;
+		await AddInvitationsAsync(assigned, sameClient, unassigned);
+		await AddAssignmentAsync(userId, clientId: 3);
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 99);
+
+		var result = await _reportService.GetReportsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			sortColumn: null,
+			sortDescending: false,
+			CancellationToken.None);
+
+		result.Count.Should().Be(2);
+		result.Data.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[]
+			{
+				assigned.EmailInvitationID,
+				sameClient.EmailInvitationID
+			});
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.User)]
+	[InlineData(AtsRoleIds.Uploader)]
+	public async Task GetReportsAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var matching = CreateInvitation("Matching", orderStatus: "Completed");
+		matching.ClientId = 5;
+		matching.RequestorId = userId;
+		var wrongRequester = CreateInvitation("Wrong Requester", orderStatus: "Completed");
+		wrongRequester.ClientId = 5;
+		wrongRequester.RequestorId = Guid.CreateVersion7();
+		var wrongClient = CreateInvitation("Wrong Client", orderStatus: "Completed");
+		wrongClient.ClientId = 6;
+		wrongClient.RequestorId = userId;
+		await AddInvitationsAsync(matching, wrongRequester, wrongClient);
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 5);
+
+		var result = await _reportService.GetReportsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			sortColumn: null,
+			sortDescending: false,
+			CancellationToken.None);
+
+		result.Count.Should().Be(1);
+		result.Data.Should().ContainSingle()
+			.Which.EmailInvitationRequestId.Should().Be(matching.EmailInvitationID);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldIncludeAllClientsAndRequesters_ForPlatformSuperAdmin()
+	{
+		var first = CreateInvitation("First Client", orderStatus: "Completed");
+		first.ClientId = 1;
+		first.RequestorId = Guid.CreateVersion7();
+		var second = CreateInvitation("Second Client", orderStatus: "Completed");
+		second.ClientId = 2;
+		second.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(first, second);
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
+
+		var result = await _reportService.GetReportsAsync(
+			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			sortColumn: null,
+			sortDescending: false,
+			CancellationToken.None);
+
+		result.Count.Should().Be(2);
+		result.Data.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
 	}
 
 	[Fact]
@@ -466,6 +571,43 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(invitations);
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
+	}
+
+	private async Task AddAssignmentAsync(Guid userId, int clientId)
+	{
+		var now = DateTime.UtcNow;
+		await _dbContext.UserClientDetails.AddAsync(new UserClientDetails
+		{
+			UserId = userId,
+			ClientId = clientId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+	}
+
+	private void SetAuthenticatedUser(
+		Guid userId,
+		int roleId,
+		int claimedClientId,
+		bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString()),
+			new(AuthClaimTypes.AtsClientId, claimedClientId.ToString())
+		};
+		if (isPlatformSuperAdmin)
+		{
+			claims.Add(new Claim(
+				AuthClaimTypes.PlatformRoleId,
+				PlatformRoleIds.SuperAdmin.ToString()));
+		}
+
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(
+			new ClaimsIdentity(claims, "TestAuth"));
 	}
 
 	private async Task<string> StoreAsync(string folder, string fileName, string content) =>

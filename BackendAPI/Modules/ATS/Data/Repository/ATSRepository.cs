@@ -189,10 +189,18 @@ public class ATSRepository : IATSRepository
 				.SetProperty(x => x.OrderStatus, x => OrderStatus.ApplicationWithdrawn));
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn);
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
@@ -218,10 +226,18 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 							.AsNoTracking()
+							.Where(eir => (authorizedClientIds == null
+									|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+								&& (!requiredRequestorId.HasValue
+									|| eir.RequestorId == requiredRequestorId.Value))
 							.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn)
 							.Where(eir =>
 								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
@@ -253,12 +269,20 @@ public class ATSRepository : IATSRepository
         );
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
 		var usersQuery =  _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
@@ -287,12 +311,20 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(
+		PaginationRequest paginationRequest,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Where(eir =>
 				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
@@ -388,228 +420,42 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<ATSDashboardDTO> GetDashboardAsync(string? requester, CancellationToken cancellationToken)
+	public async Task<IReadOnlyList<EmailInvitationRequest>> GetDashboardDataAsync(
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var now = DateTime.UtcNow;
-		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		var yearEnd = yearStart.AddYears(1);
-
-		var requesterOptions = await _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(x => x.Requestor != null && x.Requestor != string.Empty)
-			.Select(x => x.Requestor!)
-			.Distinct()
-			.OrderBy(x => x)
-			.ToListAsync(cancellationToken);
-
 		var invitations = _dbcontext.EmailInvitationRequests.AsNoTracking();
-		var allYtdHireRows = await invitations
-			.Where(x => x.OrderCreatedAt.HasValue
-				&& x.OrderCreatedAt >= yearStart
-				&& x.OrderCreatedAt < yearEnd
-				&& x.Requestor != null
-				&& x.Requestor.Trim() != string.Empty)
-			.Select(x => new
-			{
-				Requestor = x.Requestor!,
-				OrderCreatedAt = x.OrderCreatedAt!.Value
-			})
-			.ToListAsync(cancellationToken);
-		var ytdHireRows = string.IsNullOrWhiteSpace(requester)
-			? allYtdHireRows
-			: allYtdHireRows
-				.Where(x => x.Requestor == requester)
-				.ToList();
-
-		if (!string.IsNullOrWhiteSpace(requester))
+		if (authorizedClientIds is not null)
 		{
-			invitations = invitations.Where(x => x.Requestor == requester);
+			invitations = invitations.Where(invitation => invitation.ClientId.HasValue
+				&& authorizedClientIds.Contains(invitation.ClientId.Value));
+		}
+		if (requiredRequestorId.HasValue)
+		{
+			invitations = invitations.Where(invitation =>
+				invitation.RequestorId == requiredRequestorId.Value);
 		}
 
-		var ytdPeriods = Enumerable.Range(0, 12)
-			.Select(monthOffset => yearStart.AddMonths(monthOffset))
-			.ToArray();
-
-		var ytdHireSeries = ytdHireRows
-			.GroupBy(x => x.Requestor)
-			.OrderByDescending(group => group.Count())
-			.ThenBy(group => group.Key)
-			.Select(group =>
-			{
-				var countLookup = group
-					.GroupBy(x => (x.OrderCreatedAt.Year, x.OrderCreatedAt.Month))
-					.ToDictionary(monthGroup => monthGroup.Key, monthGroup => monthGroup.Count());
-
-				return new DashboardVolumeSeriesDTO
-				{
-					Name = group.Key,
-					Points = ytdPeriods
-						.Select(periodStart => new DashboardVolumePointDTO
-						{
-							PeriodStart = periodStart,
-							Count = countLookup.GetValueOrDefault((periodStart.Year, periodStart.Month))
-						})
-						.ToArray()
-				};
-			})
-			.ToArray();
-
-		var sentInvitations = invitations.Where(x => x.EmailSentStatus == EmailStatus.Done);
-		var responseCounts = await sentInvitations
-			.GroupBy(_ => 1)
-			.Select(x => new
-			{
-				Total = x.Count(),
-				Completed = x.Count(invitation =>
-					invitation.ApplicationFormStatus == ApplicationFormStatus.Done
-					|| invitation.FormCompletedAt.HasValue),
-				Incomplete = x.Count(invitation =>
-					invitation.ApplicationFormStatus != ApplicationFormStatus.Done
-					&& !invitation.FormCompletedAt.HasValue
-					&& invitation.ApplicationFormStatus == ApplicationFormStatus.Withdrawn)
-			})
-			.FirstOrDefaultAsync(cancellationToken);
-
-		var completedResponses = responseCounts?.Completed ?? 0;
-		var incompleteResponses = responseCounts?.Incomplete ?? 0;
-		var notStartedResponses = (responseCounts?.Total ?? 0) - completedResponses - incompleteResponses;
-
-		var reportRows = await invitations
-			.SelectMany(invitation => invitation.ReportDetails!
-				.Select(report => new DashboardReportRow
-				{
-					ReportStatus = report.ReportStatus,
-					HitStatus = report.HitStatus,
-					ReportUploadedAt = report.ReportUploadedAt,
-					RushNormal = invitation.RushNormal
-				}))
+		return await invitations
+			.Include(invitation => invitation.ReportDetails)
 			.ToListAsync(cancellationToken);
-
-		var serviceLevelRows = reportRows
-			.Where(IsServiceLevelReport)
-			.ToArray();
-		var latestTurnaroundDate = serviceLevelRows
-			.Select(report => (DateTime?)report.ReportUploadedAt)
-			.Max();
-		var turnaroundEndDate = latestTurnaroundDate?.Date ?? now.Date;
-		var turnaroundStart = turnaroundEndDate.AddDays(-6);
-
-		var turnaroundPeriods = Enumerable.Range(0, 7)
-			.Select(dayOffset => turnaroundStart.AddDays(dayOffset))
-			.ToArray();
-
-		var turnaroundTimeTrend = new (string Name, Func<DashboardReportRow, bool> Matches)[]
-			{
-				("Complete", report => report.ReportStatus == ReportStatus.CompleteFinalReport),
-				("Closed", report => report.ReportStatus == ReportStatus.ClosedFinalReport),
-				("Clear", report => string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)),
-				("Not Clear", report => string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase))
-			}
-			.Select(series => new TurnaroundTimeSeriesDTO
-			{
-				Name = series.Name,
-				Points = turnaroundPeriods
-					.Select(date => new TurnaroundTimePointDTO
-					{
-						Date = date,
-						Count = serviceLevelRows.Count(report =>
-							report.ReportUploadedAt.Date == date.Date
-							&& series.Matches(report))
-					})
-					.ToArray()
-			})
-			.ToArray();
-
-		var completeReports = reportRows.Count(report => report.ReportStatus == ReportStatus.CompleteFinalReport);
-		var closedReports = reportRows.Count(report => report.ReportStatus == ReportStatus.ClosedFinalReport);
-		var initialReports = reportRows.Count(report => report.ReportStatus == ReportStatus.InitialReport);
-		var supplementaryReports = reportRows.Count(report => report.ReportStatus == ReportStatus.SupplementaryReport);
-
-		var recentOrders = await invitations
-			.OrderByDescending(x => x.OrderCreatedAt)
-			.ThenByDescending(x => x.EmailInvitationID)
-			.Select(x => new DashboardRecentOrderDTO
-			{
-				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
-				OrderStatus = x.OrderStatus,
-				HitStatus = x.ReportDetails!
-					.OrderByDescending(report => report.ReportUploadedAt)
-					.Select(report => report.HitStatus)
-					.FirstOrDefault(),
-				OrderCreatedAt = x.OrderCreatedAt,
-				OrderCompletedAt = x.OrderCompletedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new ATSDashboardDTO
-		{
-			Requesters = requesterOptions,
-			YtdHireSeries = ytdHireSeries,
-			CandidateResponseRate = new CandidateResponseRateDTO
-			{
-				Categories = CreateCategories(
-					("Completed", completedResponses),
-					("Incomplete", incompleteResponses),
-					("Not Started", notStartedResponses))
-			},
-			TurnaroundTimeTrend = turnaroundTimeTrend,
-			CompletionRate = new CompletionRateDTO
-			{
-				Categories = CreateCategories(
-					("Complete", completeReports),
-					("Closed", closedReports),
-					("Initial", initialReports),
-					("Supplementary", supplementaryReports))
-			},
-			RecentOrders = recentOrders
-		};
 	}
 
-	private static IReadOnlyList<DashboardCategoryDTO> CreateCategories(
-		params (string Name, int Count)[] categoryCounts)
-	{
-		var total = categoryCounts.Sum(category => category.Count);
-		return categoryCounts
-			.Select(category => new DashboardCategoryDTO
-			{
-				Name = category.Name,
-				Count = category.Count,
-				Percentage = CalculatePercentage(category.Count, total)
-			})
-			.ToArray();
-	}
-
-	private static double CalculatePercentage(int numerator, int denominator)
-	{
-		return denominator == 0
-			? 0
-			: Math.Round(numerator * 100d / denominator, 1);
-	}
-
-	private static bool IsServiceLevelReport(DashboardReportRow report)
-	{
-		var hasServiceLevel = string.Equals(report.RushNormal?.Trim(), "Normal", StringComparison.OrdinalIgnoreCase)
-			|| string.Equals(report.RushNormal?.Trim(), "Rush", StringComparison.OrdinalIgnoreCase);
-
-		return hasServiceLevel
-			&& (report.ReportStatus == ReportStatus.CompleteFinalReport
-			|| report.ReportStatus == ReportStatus.ClosedFinalReport
-			|| string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)
-			|| string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase));
-	}
-
-	private sealed record DashboardReportRow
-	{
-		public string? ReportStatus { get; init; }
-		public string? HitStatus { get; init; }
-		public DateTime ReportUploadedAt { get; init; }
-		public string? RushNormal { get; init; }
-	}
-
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(
+		PaginationRequest paginationRequest,
+		string? sortColumn,
+		bool sortDescending,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,
@@ -680,10 +526,20 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(
+		PaginationRequest paginationRequest,
+		string? sortColumn,
+		bool sortDescending,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,

@@ -3,9 +3,12 @@ using System.Text;
 using ATS.Data.DTO;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
+using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
+using ATS.Constants;
+using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
 using FluentAssertions;
@@ -27,6 +30,8 @@ public class ReportServiceTests
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IObjectStorageService> _objectStorage = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
+	private readonly Mock<IUserClientRepository> _userClientRepository = new();
+	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -43,7 +48,9 @@ public class ReportServiceTests
 			_repository.Object,
 			configuration,
 			_objectStorage.Object,
-			_orderHistoryService.Object);
+			_orderHistoryService.Object,
+			_userClientRepository.Object,
+			_currentUser.Object);
 	}
 
 	#region Happy Path
@@ -207,6 +214,7 @@ public class ReportServiceTests
 	public async Task GetReportsAsync_ShouldUseUnfilteredQuery_WhenNoSearchOrDateFilterIsProvided()
 	{
 		// Arrange
+		var userId = SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
 		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
 		var expected = CreateReportListResult();
 		_repository
@@ -214,6 +222,8 @@ public class ReportServiceTests
 				request,
 				"SubjectName",
 				false,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
 				CancellationToken.None))
 			.ReturnsAsync(expected);
 
@@ -230,6 +240,8 @@ public class ReportServiceTests
 			It.IsAny<PaginationRequest>(),
 			It.IsAny<string?>(),
 			It.IsAny<bool>(),
+			It.IsAny<IReadOnlyCollection<int>>(),
+			It.IsAny<Guid?>(),
 			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
@@ -237,6 +249,14 @@ public class ReportServiceTests
 	public async Task GetReportsAsync_ShouldUseSearchQuery_WhenAnyFilterIsProvided()
 	{
 		// Arrange
+		var userId = SetAuthenticatedUser(AtsRoleIds.Admin, clientId: 99);
+		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
+			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
+			CancellationToken.None)).ReturnsAsync(
+			[
+				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
+				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
+			]);
 		var request = new PaginationRequest(
 			PageIndex: 1,
 			PageSize: 10,
@@ -249,6 +269,8 @@ public class ReportServiceTests
 				request,
 				"OrderCompletedAt",
 				true,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
 				CancellationToken.None))
 			.ReturnsAsync(expected);
 
@@ -265,6 +287,36 @@ public class ReportServiceTests
 			It.IsAny<PaginationRequest>(),
 			It.IsAny<string?>(),
 			It.IsAny<bool>(),
+			It.IsAny<IReadOnlyCollection<int>>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<CancellationToken>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task GetReportsAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
+	{
+		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var expected = CreateReportListResult();
+		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		_repository.Setup(repository => repository.GetReportsAsync(
+			request,
+			"SubjectName",
+			false,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetReportsAsync(
+			request,
+			"SubjectName",
+			false,
+			CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
+			It.IsAny<IReadOnlyCollection<Guid>>(),
 			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
@@ -549,6 +601,16 @@ public class ReportServiceTests
 	}
 
 	#endregion
+
+	private Guid SetAuthenticatedUser(int roleId, int clientId)
+	{
+		var userId = Guid.CreateVersion7();
+		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
+		_currentUser.SetupGet(user => user.UserId).Returns(userId);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(roleId);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns(clientId);
+		return userId;
+	}
 
 	private static ReportDetailsDTO CreateUploadRequest(
 		string reportStatus,

@@ -8,19 +8,25 @@ public class ReportService : IReportService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _folderName;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IUserClientRepository _userClientRepository;
+	private readonly ICurrentUser _currentUser;
 
 	public ReportService(
 		ILogger<ReportService> logger,
 		IATSRepository atsRepository,
 		IConfiguration configuration,
 		IObjectStorageService objectStorageService,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		IUserClientRepository userClientRepository,
+		ICurrentUser currentUser)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
 		_orderHistoryService = orderHistoryService;
+		_userClientRepository = userClientRepository;
+		_currentUser = currentUser;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -145,7 +151,7 @@ public class ReportService : IReportService
 		}
 	}
 
-	public Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -156,12 +162,75 @@ public class ReportService : IReportService
 		};
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
+		if (!_currentUser.IsAuthenticated
+			|| _currentUser.UserId is not { } userId
+			|| userId == Guid.Empty)
+		{
+			return new PaginatedResult<ReportListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				Array.Empty<ReportListDTO>());
+		}
 
-		return !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
+		IReadOnlyCollection<int>? clientIds;
+		Guid? requiredRequestorId;
+		if (_currentUser.IsPlatformSuperAdmin)
+		{
+			clientIds = null;
+			requiredRequestorId = null;
+		}
+		else if (_currentUser.AtsRoleId is not { } roleId)
+		{
+			return new PaginatedResult<ReportListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				Array.Empty<ReportListDTO>());
+		}
+		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
+		{
+			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
+				[userId],
+				cancellationToken);
+			clientIds = assignments
+				.Select(assignment => assignment.ClientId)
+				.Distinct()
+				.ToArray();
+			requiredRequestorId = null;
+		}
+		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
+			&& _currentUser.AtsClientId is { } clientId)
+		{
+			clientIds = [clientId];
+			requiredRequestorId = userId;
+		}
+		else
+		{
+			return new PaginatedResult<ReportListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				Array.Empty<ReportListDTO>());
+		}
+
+		return await (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
 			   || paginationRequest.StartDate.HasValue
 			   || paginationRequest.EndDate.HasValue
-			? _atsRepository.SearchReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken)
-			: _atsRepository.GetReportsAsync(paginationRequest, sortColumn, sortDescending, cancellationToken);
+			? _atsRepository.SearchReportsAsync(
+				paginationRequest,
+				sortColumn,
+				sortDescending,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken)
+			: _atsRepository.GetReportsAsync(
+				paginationRequest,
+				sortColumn,
+				sortDescending,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken));
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

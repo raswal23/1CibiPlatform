@@ -10,6 +10,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly IConfiguration _configuration;
 	private readonly string _disputeOrderEmailRecipient;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly ICurrentUser _currentUser;
 
 	public DisputeOrderService(
 		ILogger<DisputeOrderService> logger,
@@ -18,7 +19,8 @@ public class DisputeOrderService : IDisputeOrderService
 		IATSRepository atsRepository,
 		IUserClientRepository userClientRepository,
 		IHttpContextAccessor httpContextAccessor,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		ICurrentUser currentUser)
 	{
 		_logger = logger;
 		_emailService = emailService;
@@ -28,9 +30,10 @@ public class DisputeOrderService : IDisputeOrderService
 		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
 		_orderHistoryService = orderHistoryService;
+		_currentUser = currentUser;
 	}
 
-	public Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -41,11 +44,66 @@ public class DisputeOrderService : IDisputeOrderService
 		};
 
 		_logger.LogInformation("Fetching dispute orders with pagination: {@Context}", logContext);
+		if (!_currentUser.IsAuthenticated
+			|| _currentUser.UserId is not { } userId
+			|| userId == Guid.Empty)
+		{
+			return CreateEmptyResult(paginationRequest);
+		}
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-				_atsRepository.GetDisputeOrdersAsync(paginationRequest, cancellationToken) :
-				_atsRepository.SearchDisputeOrdersAsync(paginationRequest, cancellationToken);
+		IReadOnlyCollection<int>? clientIds;
+		Guid? requiredRequestorId;
+		if (_currentUser.IsPlatformSuperAdmin)
+		{
+			clientIds = null;
+			requiredRequestorId = null;
+		}
+		else if (_currentUser.AtsRoleId is not { } roleId)
+		{
+			return CreateEmptyResult(paginationRequest);
+		}
+		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
+		{
+			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
+				[userId],
+				cancellationToken);
+			clientIds = assignments
+				.Select(assignment => assignment.ClientId)
+				.Distinct()
+				.ToArray();
+			requiredRequestorId = null;
+		}
+		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
+			&& _currentUser.AtsClientId is { } clientId)
+		{
+			clientIds = [clientId];
+			requiredRequestorId = userId;
+		}
+		else
+		{
+			return CreateEmptyResult(paginationRequest);
+		}
+
+		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm)
+			? _atsRepository.GetDisputeOrdersAsync(
+				paginationRequest,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken)
+			: _atsRepository.SearchDisputeOrdersAsync(
+				paginationRequest,
+				clientIds,
+				requiredRequestorId,
+				cancellationToken));
 	}
+
+	private static PaginatedResult<DisputeOrderListDTO> CreateEmptyResult(
+		PaginationRequest paginationRequest) =>
+		new(
+			paginationRequest.PageIndex,
+			paginationRequest.PageSize,
+			0,
+			Array.Empty<DisputeOrderListDTO>());
 
 	public async Task<bool> MarkAsDisputedAsync(
 		DisputeOrderRequestDTO disputeRequest,

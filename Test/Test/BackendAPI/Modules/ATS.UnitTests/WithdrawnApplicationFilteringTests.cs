@@ -1,0 +1,131 @@
+using ATS.Constants;
+using ATS.Data.Repository;
+using ATS.Data.Repository.Administration.UserClient;
+using ATS.DTO;
+using ATS.Services;
+using ATS.Services.OrderHistory;
+using Auth.Shared.Contracts;
+using BuildingBlocks.Pagination;
+using BuildingBlocks.SharedServices.Interfaces;
+using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace Test.BackendAPI.Modules.ATS.UnitTests;
+
+public class WithdrawnApplicationFilteringTests
+{
+	private readonly Mock<IATSRepository> _repository = new();
+	private readonly Mock<IUserClientRepository> _userClientRepository = new();
+	private readonly Mock<ICurrentUser> _currentUser = new();
+	private readonly EndorsementSubmissionService _service;
+
+	public WithdrawnApplicationFilteringTests()
+	{
+		_service = new EndorsementSubmissionService(
+			Mock.Of<ILogger<EndorsementSubmissionService>>(),
+			_repository.Object,
+			new ConfigurationBuilder().Build(),
+			Mock.Of<IHashService>(),
+			Mock.Of<IEmailService>(),
+			Mock.Of<HybridCache>(),
+			Mock.Of<ISecureToken>(),
+			new HttpContextAccessor(),
+			_currentUser.Object,
+			Mock.Of<IObjectStorageService>(),
+			Mock.Of<IOrderHistoryService>(),
+			_userClientRepository.Object);
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.PlatformManager)]
+	[InlineData(AtsRoleIds.Admin)]
+	public async Task GetWithdrawnEmailInvitationRequestsAsync_ShouldUseAssignedClientsForManagerRoles(
+		int roleId)
+	{
+		var userId = SetAuthenticatedUser(roleId, clientId: 99);
+		var request = new PaginationRequest(1, 10, "withdrawn");
+		var expected = EmptyResult(request);
+		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
+			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
+			CancellationToken.None)).ReturnsAsync(
+			[
+				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
+				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
+			]);
+		_repository.Setup(repository => repository.SearchWithdrawnEmailInvitationRequestsAsync(
+			request,
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+			null,
+			CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
+			request,
+			CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Theory]
+	[InlineData(AtsRoleIds.User)]
+	[InlineData(AtsRoleIds.Uploader)]
+	public async Task GetWithdrawnEmailInvitationRequestsAsync_ShouldUseOwnClientAndRequestorForRestrictedRoles(
+		int roleId)
+	{
+		var userId = SetAuthenticatedUser(roleId, clientId: 7);
+		var request = new PaginationRequest(1, 10);
+		var expected = EmptyResult(request);
+		_repository.Setup(repository => repository.GetWithdrawnEmailInvitationRequestsAsync(
+			request,
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+			userId,
+			CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
+			request,
+			CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+	}
+
+	[Fact]
+	public async Task GetWithdrawnEmailInvitationRequestsAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
+	{
+		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
+		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		var request = new PaginationRequest(1, 10);
+		var expected = EmptyResult(request);
+		_repository.Setup(repository => repository.GetWithdrawnEmailInvitationRequestsAsync(
+			request,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(expected);
+
+		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
+			request,
+			CancellationToken.None);
+
+		result.Should().BeSameAs(expected);
+		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
+			It.IsAny<IReadOnlyCollection<Guid>>(),
+			It.IsAny<CancellationToken>()), Times.Never);
+	}
+
+	private Guid SetAuthenticatedUser(int roleId, int clientId)
+	{
+		var userId = Guid.CreateVersion7();
+		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
+		_currentUser.SetupGet(user => user.UserId).Returns(userId);
+		_currentUser.SetupGet(user => user.AtsRoleId).Returns(roleId);
+		_currentUser.SetupGet(user => user.AtsClientId).Returns(clientId);
+		return userId;
+	}
+
+	private static PaginatedResult<EmailInvitationRequestListDTO> EmptyResult(
+		PaginationRequest request) =>
+		new(request.PageIndex, request.PageSize, 0, Array.Empty<EmailInvitationRequestListDTO>());
+}
