@@ -12,16 +12,18 @@
 <TableComponent @ref="lockedUsersTable"
                 TItem="FrontendWebassembly.DTO.ATS.EmailInvitationRequestListDTO"
                 Title="Withdrawn applications"
+                EnableReload="true"
                 ContainerClass="ats-management-card withdrawn-applications"
                 EnableSearch="true"
                 SearchLabel=""
                 SearchPlaceholder="Search withdrawn applications"
                 LoadServerData="LoadWithdrawnServerData"
                 SearchString="@searchString"
-                ColumnCount="5"
+                ColumnCount="6"
                 SearchStringChanged="@((string val) => searchString = val)">
     <HeaderTemplate>
         <MudTh>Candidate</MudTh>
+        <MudTh>Requestor</MudTh>
         <MudTh>First Name</MudTh>
         <MudTh>Last Name</MudTh>
         <MudTh>Ticket Status</MudTh>
@@ -32,6 +34,7 @@
         @if(_loadingEmailInvitationId == item.EmailInvitationID)
         {
             <MudTd><MudSkeleton Height="20px" Width="90%" /></MudTd>
+            <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd><MudSkeleton Height="24px" Width="100px" /></MudTd>
@@ -47,6 +50,7 @@
                     <span class="withdrawn-email">@item.EmailAddress</span>
                 </div>
             </MudTd>
+            <MudTd DataLabel="Requestor">@item.Requestor</MudTd>
             <MudTd DataLabel="First Name" Class="withdrawn-name">@item.FirstName</MudTd>
             <MudTd DataLabel="Last Name" Class="withdrawn-name">@item.LastName</MudTd>
             <MudTd DataLabel="Ticket Status"><span class="withdrawn-status">Application withdrawn</span></MudTd>

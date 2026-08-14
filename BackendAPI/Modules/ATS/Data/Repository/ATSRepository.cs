@@ -208,6 +208,7 @@ public class ATSRepository : IATSRepository
 						EmailAddress = eir.EmailAddress,
 						FirstName = eir.FirstName,
 						LastName = eir.LastName,
+						Requestor = eir.Requestor,
 						OrderStatus = eir.OrderStatus,
 					})
 					.ToListAsync(cancellationToken);
@@ -228,8 +229,9 @@ public class ATSRepository : IATSRepository
 							.Where(eir =>
 								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 								EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-								EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
-								EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
+				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
@@ -243,6 +245,7 @@ public class ATSRepository : IATSRepository
                         EmailAddress = eir.EmailAddress,
                         FirstName = eir.FirstName,
                         LastName = eir.LastName,
+                        Requestor = eir.Requestor,
                         OrderStatus = eir.OrderStatus,
                     })
                     .ToListAsync(cancellationToken);
@@ -277,6 +280,7 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
+				Requestor = eir.Requestor,
 				DisputeCategory = eir.DisputeCategory,
 				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt
@@ -301,6 +305,7 @@ public class ATSRepository : IATSRepository
 				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
@@ -316,6 +321,7 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
+				Requestor = eir.Requestor,
 				DisputeCategory = eir.DisputeCategory,
 				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
@@ -624,6 +630,7 @@ public class ATSRepository : IATSRepository
 				eir.EmailInvitationID,
 				eir.FirstName,
 				eir.LastName,
+				eir.Requestor,
 				eir.OrderStatus,
 				eir.OrderCompletedAt,
 				eir.SelectPackage,
@@ -678,6 +685,7 @@ public class ATSRepository : IATSRepository
 				OrderStatus = x.OrderStatus,
 				OrderCompletedAt = x.OrderCompletedAt,
 				SelectedPackage = x.SelectPackage,
+				Requestor = x.Requestor,
 				HitStatus = x.HitStatus
 			})
 			.ToListAsync(cancellationToken);
@@ -699,6 +707,7 @@ public class ATSRepository : IATSRepository
 				eir.EmailInvitationID,
 				eir.FirstName,
 				eir.LastName,
+				eir.Requestor,
 				eir.OrderStatus,
 				eir.OrderCompletedAt,
 				eir.SelectPackage,
@@ -735,6 +744,7 @@ public class ATSRepository : IATSRepository
 
 			usersQuery = usersQuery.Where(x =>
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
+				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
 		}
@@ -766,6 +776,7 @@ public class ATSRepository : IATSRepository
 				OrderStatus = x.OrderStatus,
 				OrderCompletedAt = x.OrderCompletedAt,
 				SelectedPackage = x.SelectPackage,
+				Requestor = x.Requestor,
 				HitStatus = x.HitStatus
 			})
 			.ToListAsync(cancellationToken);

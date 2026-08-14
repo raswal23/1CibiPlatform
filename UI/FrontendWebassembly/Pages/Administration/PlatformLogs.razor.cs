@@ -5,7 +5,7 @@ namespace FrontendWebassembly.Pages.Administration;
 public partial class PlatformLogs
 {
 	private readonly List<PlatformLogDTO> logs = [];
-	private readonly string[] applications = ["ATS", "Auth", "PhilSys", "AIAgent", "CNX", "SSO", "Platform"];
+	private readonly string[] applications = ["ATS", "Auth", "PhilSys", "AIAgent", "SSO", "Platform"];
 	private readonly string[] levels = ["Verbose", "Debug", "Information", "Warning", "Error", "Fatal"];
 	private string? application;
 	private string? level;

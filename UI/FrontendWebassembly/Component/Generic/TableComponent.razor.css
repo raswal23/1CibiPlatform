@@ -82,6 +82,44 @@
     align-items: center;
 }
 
+.table-component-reload-button {
+    display: flex;
+    width: 2.375rem;
+    height: 2.375rem;
+    flex: 0 0 2.375rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1.5px solid #c2d2f0;
+    border-radius: 10px;
+    background: #edf3fc;
+    color: #1d5fd1;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.table-component-reload-button:hover:not(:disabled) {
+    border-color: #2e7ce0;
+    background: #e3ecfb;
+}
+
+.table-component-reload-button:disabled {
+    cursor: wait;
+}
+
+.table-component-reload-button svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.table-component-reload-button.is-reloading svg {
+    animation: table-component-spin .7s linear infinite;
+}
+
+@keyframes table-component-spin {
+    to { transform: rotate(360deg); }
+}
+
 .responsive-table-container ::deep .mud-table-container {
     width: 100%;
     max-width: 100%;

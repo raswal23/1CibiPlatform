@@ -82,7 +82,9 @@ public partial class Home
 
 		AvailableApps = ApplicationListDescriptionIcon.List
 			.OrderBy(entry => AppOrder.TryGetValue(entry.Key, out var order) ? order : 100)
-			.Where(entry => permissionMap.ContainsKey(entry.Key))
+			// CNX remains in the shared mapping for database permission compatibility,
+			// but its frontend UI is retired and must not appear on the home dashboard.
+			.Where(entry => entry.Key != 1 && permissionMap.ContainsKey(entry.Key))
 			.Select((entry, index) =>
 			{
 				var appId = entry.Key;

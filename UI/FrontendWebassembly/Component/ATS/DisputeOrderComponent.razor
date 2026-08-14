@@ -22,11 +22,12 @@
     <TableComponent TItem="DisputeOrderListDTO"
                     @ref="ordersTable"
                     Title="Dispute orders"
+                    EnableReload="true"
                     ContainerClass="ats-management-card dispute-orders"
                     EnableSearch="true"
                     SearchLabel=""
                     SearchPlaceholder="Search dispute orders"
-                    ColumnCount="5"
+                    ColumnCount="6"
                     RowsPerPage="10"
                     LoadServerData="LoadOrderData"
                     SearchString="@searchString"
@@ -34,6 +35,7 @@
 
         <HeaderTemplate>
             <MudTh>Subject Name</MudTh>
+            <MudTh>Requestor</MudTh>
             <MudTh>Status</MudTh>
             <MudTh>Order Date</MudTh>
             <MudTh>Date Completed</MudTh>
@@ -43,6 +45,10 @@
         <RowTemplate Context="o">
             @if(_loadingDisputeId == o.EmailInvitationID)
             {
+                <MudTd Class="ats-table-cell-center">
+                    <MudSkeleton Height="20px" Width="80%" />
+                </MudTd>
+
                 <MudTd Class="ats-table-cell-center">
                     <MudSkeleton Height="20px" Width="80%" />
                 </MudTd>
@@ -71,6 +77,8 @@
                         <span class="dispute-name">@($"{o.FirstName} {o.LastName}".Trim())</span>
                     </div>
                 </MudTd>
+
+                <MudTd DataLabel="Requestor">@o.Requestor</MudTd>
 
                 <MudTd DataLabel="Status">
                     @if (string.IsNullOrWhiteSpace(o.DisputeCategory))
