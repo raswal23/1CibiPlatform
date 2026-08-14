@@ -10,7 +10,9 @@ public partial class TableComponent<TItem>
 	[Parameter] public bool EnableSearch { get; set; }
 	[Parameter] public string? SearchLabel { get; set; } = "Search";
 	[Parameter] public string? SearchPlaceholder { get; set; }
-	[Parameter] public bool SearchImmediate { get; set; } = true;
+	// Apply the search when the user presses Enter or leaves the field,
+	// rather than reloading the server table on every keystroke.
+	[Parameter] public bool SearchImmediate { get; set; } = false;
 	[Parameter] public int SearchDebounceInterval { get; set; } = 300;
 	[Parameter] public string? AddButtonText { get; set; }
 	[Parameter] public RenderFragment? NoRecordsTemplate { get; set; }
