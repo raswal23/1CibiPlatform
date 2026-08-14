@@ -53,6 +53,10 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		if (!pendingFiles.Any())
 			return;
 
+		var pendingFileIds = pendingFiles.Select(file => file.FileID).ToList();
+
+		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFileIds, OrderStatus.InProgress);
+
 		var semaphore = new SemaphoreSlim(3);
 
 		var tasks = pendingFiles.Select(async file =>
@@ -170,7 +174,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 		List<EmailInvitationRequest>[] results = await Task.WhenAll(tasks);
 
-		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFiles);
+		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFileIds, OrderStatus.InProgress);
 
 		var listOfListOfSubjects = results.ToList();
 
