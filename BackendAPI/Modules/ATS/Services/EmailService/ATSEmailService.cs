@@ -204,6 +204,6 @@ public class ATSEmailService : IEmailService
 
 	public Task<bool> SendEmailAsync(string toEmail, string subject, string body, bool isHtml = true)
 	{
-		throw new NotImplementedException();
+		return SendATSEmailAsync(toEmail, subject, body);
 	}
 }

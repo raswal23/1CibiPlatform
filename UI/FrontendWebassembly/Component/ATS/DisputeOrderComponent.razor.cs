@@ -2,7 +2,7 @@
 
 public partial class DisputeOrderComponent
 {
-  private TableComponent<DisputeOrderListDTO>? ordersTable;
+	private TableComponent<DisputeOrderListDTO>? ordersTable;
 	private string? _searchString;
 
 	private Guid? _loadingDisputeId;
@@ -21,7 +21,7 @@ public partial class DisputeOrderComponent
 		set => UpdateSearch(ref _searchString!, value, ordersTable!);
 	}
 
-    private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
 		if (field != value)
 		{
@@ -85,7 +85,7 @@ public partial class DisputeOrderComponent
 			_loadingDisputeId = emailInvitationId;
 			StateHasChanged();
 
-			if(ordersTable?.TableRef != null)
+			if (ordersTable?.TableRef != null)
 				await ordersTable.TableRef.ReloadServerData();
 
 			Snackbar.Add("Dispute reason submitted successfully.", Severity.Success);

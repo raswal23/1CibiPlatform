@@ -7,5 +7,5 @@ public record DisputeOrderListDTO
 	public string? LastName { get; set; }
 	public string? DisputeCategory { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
-    public DateTime? OrderCompletedAt { get; set; }
+	public DateTime? OrderCompletedAt { get; set; }
 }
