@@ -14,7 +14,7 @@ public partial class SearchReportComponent
 	private List<ReportListDTO> currentPageData = new();
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
-	private int ReportColumnCount => _canUploadReport ? 8 : 7;
+	private int ReportColumnCount => _canUploadReport ? 9 : 8;
 
 	protected override async Task OnInitializedAsync()
 	{

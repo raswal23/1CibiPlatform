@@ -45,4 +45,21 @@
 	  <Folder Include="wwwroot\images\mfa\" />
 	</ItemGroup>
 
+	<!-- Keep Blazor partial classes and scoped styles nested under their Razor component
+	     in Visual Studio Solution Explorer. -->
+	<ItemGroup>
+		<None Update="**\*.razor.cs">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</None>
+		<Compile Update="**\*.razor.cs">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</Compile>
+		<None Update="**\*.razor.css">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</None>
+		<Content Update="**\*.razor.css">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</Content>
+	</ItemGroup>
+
 </Project>

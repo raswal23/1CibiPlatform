@@ -68,7 +68,6 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IUserManagementService, UserManagementService>();
-		services.AddScoped<ICandidateService, CandidateService>();
 		services.AddScoped<ISSOService, SSOService>();
 		services.AddScoped<IAIAgentChatService, AIChatService>();
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
