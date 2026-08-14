@@ -96,11 +96,11 @@ public partial class EmploymentVerification
             {
                 AtsSubjectId = SelectedRequest.AtsSubjectId,
                 CandidateName = SelectedRequest.Candidate,
-                PreviousEmployer = "ATEC",//SelectedRequest.Employer
+                PreviousEmployer = SelectedRequest.Employer,
                 Position = string.IsNullOrWhiteSpace(SelectedRequest.Position)
                     ? "Not provided"
                     : SelectedRequest.Position,
-                HrEmail = "contract.fullstackdev@cibi.com.ph", //SelectedRequest.HrEmail
+                HrEmail = SelectedRequest.HrEmail,
                 EmploymentStartDate = SelectedRequest.EmploymentStartDate
                     ?? DateTime.UtcNow.AddYears(-2),
                 EmploymentEndDate = SelectedRequest.EmploymentEndDate
