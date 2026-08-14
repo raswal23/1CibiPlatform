@@ -1,0 +1,335 @@
+@layout GenericLayout
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject IAuthService IAuthService
+@inject IAccessService AccessService
+@inject IATSUserManagementService UserManagementService
+@inject LocalStorageService LocalStorageService
+@inject IJSRuntime JS
+@implements IDisposable
+@using FrontendWebassembly.ShareData.ATS
+
+@if (_isReady)
+{
+    <CascadingValue TValue="IReadOnlySet<int>"
+                    Name="ATSAccessibleModuleIds"
+                    Value="_accessibleModuleIds"
+                    IsFixed="true">
+    <div class="@($"ats-console {(_isSidebarCollapsed ? "ats-console-collapsed" : string.Empty)} {(_isMobileDrawerOpen ? "ats-console-mobile-drawer-open" : string.Empty)}")">
+        @if (_isMobileDrawerOpen)
+        {
+            <button type="button" class="ats-console-mobile-overlay" aria-label="Close drawer" @onclick="CloseMobileDrawer"></button>
+        }
+
+        <aside class="ats-console-sidebar">
+            <div>
+                <div class="ats-console-logo">
+                    <div class="ats-console-logo-mark">
+                        <svg class="ats-logo-facets" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="50,5 10,35 50,50" fill="var(--ats-sky-300)"></polygon>
+                            <polygon points="50,5 90,35 50,50" fill="var(--ats-sky-300)" opacity="0.7"></polygon>
+                            <polygon points="10,35 10,70 50,50" fill="var(--ats-blue-500)" opacity="0.85"></polygon>
+                            <polygon points="90,35 90,70 50,50" fill="var(--ats-blue-500)"></polygon>
+                            <polygon points="10,70 50,95 50,50" fill="var(--ats-navy-900)" opacity="0.55"></polygon>
+                            <polygon points="90,70 50,95 50,50" fill="var(--ats-navy-900)" opacity="0.85"></polygon>
+                        </svg>
+                        <span class="ats-logo-text ats-console-brand-text">ATS</span>
+                    </div>
+                </div>
+
+                @foreach (var module in ModuleList.List
+                    .Where(item => item.Key <= 5 && _accessibleModuleIds.Contains(item.Key))
+                    .OrderBy(item => item.Key))
+                {
+                    <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
+                        <MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
+                        <span class="ats-console-nav-text">@module.Value.Name</span>
+                    </NavLink>
+                }
+
+                @{ var settingsModules = ModuleList.List
+					.Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
+                    .OrderBy(item => item.Key)
+                    .ToArray(); }
+
+                @if (settingsModules.Length > 0)
+                {
+                    <div class="ats-console-nav-label">Manage</div>
+
+                    <div class="ats-console-nav-group">
+                        <button type="button"
+                                class="@($"ats-console-nav-item ats-console-nav-item-toggle {(_isSettingsExpanded ? "ats-console-nav-item-expanded" : string.Empty)}")"
+                                aria-expanded="@_isSettingsExpanded"
+                                @onclick="ToggleSettingsExpanded">
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Class="ats-console-nav-ic" />
+                            <span class="ats-console-nav-text">Settings</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ExpandMore"
+                                     Class="@( "ats-console-nav-chevron " + (_isSettingsExpanded ? "expanded" : "") )" />
+                        </button>
+
+						<div class="@($"ats-console-nav-submenu-shell {(_isSettingsExpanded ? "is-expanded" : string.Empty)}")"
+							 aria-hidden="@(!_isSettingsExpanded)">
+							<div class="ats-console-nav-submenu">
+								@foreach (var module in settingsModules)
+								{
+									<NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-subitem" Match="NavLinkMatch.Prefix">
+										<MudIcon Icon="@module.Value.Icon" Class="ats-console-nav-ic" />
+										<span class="ats-console-nav-text">@module.Value.Name</span>
+									</NavLink>
+								}
+							</div>
+						</div>
+                    </div>
+                }
+            </div>
+
+            <div class="ats-console-sidebar-bottom">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Class="ats-console-back-btn"
+                           OnClick="GoBackToOnePlatform">
+                    Back to OnePlatform
+                </MudButton>
+            </div>
+        </aside>
+
+        <div class="ats-console-main">
+            <div class="ats-console-topbar">
+                <div class="ats-console-topbar-left">
+                    <button type="button"
+                            class="ats-console-icon-btn ats-console-menu-btn"
+                            aria-label="@(_isSidebarCollapsed ? "Expand drawer" : "Collapse drawer")"
+                            aria-expanded="@(!_isSidebarCollapsed)"
+                            title="@(_isSidebarCollapsed ? "Expand drawer" : "Collapse drawer")"
+                            @onclick="ToggleSidebar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
+                    </button>
+                    <div class="ats-console-title-block">
+                        <div class="ats-console-crumb">
+                            <span>Applicant Tracking System</span>
+                            <span class="ats-console-crumb-separator">/</span>
+                            <strong>@_pageTitle</strong>
+                        </div>
+                        <h1>@_pageTitle</h1>
+                    </div>
+                </div>
+                <div class="ats-console-topbar-right">
+                    <button type="button" class="ats-console-icon-btn" aria-label="Search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button type="button" class="ats-console-icon-btn" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.7 21a2 2 0 01-3.4 0" />
+                        </svg>
+                        <span class="ats-console-notification-dot" aria-hidden="true"></span>
+                    </button>
+                    <div class="ats-console-topbar-divider" aria-hidden="true"></div>
+                    <div class="ats-console-avatar"
+                         role="img"
+                         aria-label="@($"{_userDisplayName} profile initials")"
+                         title="@_userDisplayName">
+                        @_userInitials
+                    </div>
+                </div>
+            </div>
+
+            <div class="ats-console-content ats-console-content-enter" @key="_contentAnimationKey">
+                @Body
+            </div>
+        </div>
+    </div>
+    </CascadingValue>
+}
+else
+{
+    <LoaderComponent />
+}
+
+
+@code {
+    private bool _isSettingsExpanded;
+	private const string UserNameStorageKey = "Name";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
+
+    private void ToggleSettingsExpanded()
+    {
+        _isSettingsExpanded = !_isSettingsExpanded;
+    }
+
+    private const int MobileBreakpoint = 920;
+    private string _pageTitle = "Dashboard";
+    private bool _isReady;
+    private bool _isSidebarCollapsed;
+    private bool _isMobileDrawerOpen;
+    private bool _isMobileView;
+    private string _contentAnimationKey = string.Empty;
+    private string _userDisplayName = "User";
+    private string _userInitials = "U";
+    private HashSet<int> _accessibleModuleIds = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await IAuthService.IsAuthenticated();
+
+        //getclientid
+
+		if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+		if (!await AccessService.HasAccessAsync(6, 7))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
+
+		var storedUserName = await LocalStorageService.GetItemAsync<string>(UserNameStorageKey);
+		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
+		_userInitials = GetUserInitials(_userDisplayName);
+
+		var atsRoleId = await UserManagementService.GetMyRoleIdAsync() ?? 0;
+		await LocalStorageService.SetItemAsync(ATSRoleIdStorageKey, atsRoleId);
+
+		_accessibleModuleIds = await AccessService.HasRoleAsync(RoleList.SuperAdminId)
+			? ModuleList.List.Keys.ToHashSet()
+			: (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
+		if (!CanAccessRoute(NavigationManager.Uri))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
+
+        SetTitleFromUri();
+        _contentAnimationKey = NavigationManager.Uri;
+        NavigationManager.LocationChanged += HandleLocationChanged;
+        _isReady = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await UpdateViewportModeAsync();
+        StateHasChanged();
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+		if (!CanAccessRoute(e.Location))
+		{
+			NavigationManager.NavigateTo("/access-denied");
+			return;
+		}
+
+        SetTitleFromUri();
+        _contentAnimationKey = e.Location;
+
+        if (_isMobileView)
+        {
+            _isMobileDrawerOpen = false;
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+	private bool CanAccessRoute(string uri)
+	{
+		var relativePath = NavigationManager.ToBaseRelativePath(uri)
+			.Split('?', '#')[0]
+			.Trim('/');
+		const string atsRoot = "s&i/ats";
+
+		if (string.Equals(relativePath, atsRoot, StringComparison.OrdinalIgnoreCase))
+			return _accessibleModuleIds.Count > 0;
+
+		if (!relativePath.StartsWith($"{atsRoot}/", StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		var routeSegment = relativePath[(atsRoot.Length + 1)..]
+			.Split('/', StringSplitOptions.RemoveEmptyEntries)[0];
+		var module = ModuleList.List.FirstOrDefault(item =>
+			string.Equals(item.Value.path, routeSegment, StringComparison.OrdinalIgnoreCase));
+		if (module.Key > 0)
+			return _accessibleModuleIds.Contains(module.Key);
+
+		return string.Equals(routeSegment, "settings", StringComparison.OrdinalIgnoreCase) &&
+			_accessibleModuleIds.Overlaps([6, 7, 8]);
+	}
+
+    private async Task ToggleSidebar()
+    {
+        await UpdateViewportModeAsync();
+
+        if (_isMobileView)
+        {
+            _isSidebarCollapsed = false;
+            _isMobileDrawerOpen = !_isMobileDrawerOpen;
+            return;
+        }
+
+        _isMobileDrawerOpen = false;
+        _isSidebarCollapsed = !_isSidebarCollapsed;
+    }
+
+    private void CloseMobileDrawer()
+    {
+        _isMobileDrawerOpen = false;
+    }
+
+    private async Task UpdateViewportModeAsync()
+    {
+        _isMobileView = await JS.InvokeAsync<int>("getViewportWidth") <= MobileBreakpoint;
+
+        if (!_isMobileView)
+        {
+            _isMobileDrawerOpen = false;
+        }
+    }
+
+    private void SetTitleFromUri()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
+		var path = relative.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+		_pageTitle = ModuleList.List.Values
+			.FirstOrDefault(module => string.Equals(module.path, path, StringComparison.OrdinalIgnoreCase))
+			.Name ?? "Dashboard";
+    }
+
+	private static string GetUserInitials(string? fullName)
+	{
+		var nameParts = fullName?
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+			?? [];
+
+		if (nameParts.Length == 0)
+			return "U";
+
+		var firstInitial = char.ToUpperInvariant(nameParts[0][0]);
+		if (nameParts.Length == 1)
+			return firstInitial.ToString();
+
+		var lastInitial = char.ToUpperInvariant(nameParts[^1][0]);
+		return $"{firstInitial}{lastInitial}";
+	}
+
+    private void GoBackToOnePlatform()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

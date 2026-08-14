@@ -1,0 +1,270 @@
+.ats-users-page {
+    --users-navy-900: #0b1b3d;
+    --users-navy-800: #132a54;
+    --users-blue-600: #1d5fd1;
+    --users-blue-500: #2e7ce0;
+    --users-blue-tint: #edf3fc;
+    --users-blue-tint-2: #e3ecfb;
+    --users-border: #e4eaf6;
+    --users-border-strong: #c2d2f0;
+    --users-text-1: #16233f;
+    --users-text-2: #5b6b8c;
+    --users-text-3: #8a97b5;
+    --users-green: #1e9e64;
+    --users-green-tint: #e4f7ed;
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+    color: var(--users-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-users-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.ats-users-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.ats-users-button:active {
+    transform: scale(0.97);
+}
+
+.ats-users-button:focus-visible,
+.ats-users-edit:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, 0.25);
+    outline-offset: 2px;
+}
+
+.ats-users-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ats-users-button-outline {
+    border: 1.5px solid var(--users-border-strong);
+    background: #fff;
+    color: var(--users-blue-600);
+    text-transform: uppercase;
+}
+
+.ats-users-button-outline:hover {
+    background: var(--users-blue-tint);
+}
+
+.ats-users-button-primary {
+    background: linear-gradient(120deg, var(--users-navy-800), var(--users-blue-600));
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+}
+
+.ats-users-button-primary:hover {
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, 0.65);
+}
+
+.ats-users-table-scope ::deep table {
+    width: 100%;
+    min-width: 1120px;
+    border-collapse: collapse;
+}
+
+.ats-users-table-scope ::deep .ats-users-user-column {
+    min-width: 145px !important;
+}
+
+.ats-users-table-scope ::deep .ats-users-email-column {
+    min-width: 190px !important;
+}
+
+.ats-users-table-scope ::deep .ats-users-modules-column {
+    min-width: 280px !important;
+}
+
+.ats-users-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ats-users-avatar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--users-blue-500), var(--users-navy-800));
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ats-users-name {
+    color: var(--users-text-1);
+    font-weight: 600;
+}
+
+.ats-users-table-scope ::deep .ats-users-muted,
+.ats-users-table-scope ::deep .ats-users-muted a,
+.ats-users-table-scope ::deep .ats-users-date {
+    color: var(--users-text-2);
+}
+
+.ats-users-table-scope ::deep .ats-users-muted a {
+    text-decoration: none;
+}
+
+.ats-users-table-scope ::deep .ats-users-muted a:hover {
+    color: var(--users-blue-600);
+    text-decoration: underline;
+}
+
+.ats-users-table-scope ::deep .ats-users-date {
+    white-space: nowrap !important;
+}
+
+.ats-users-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 340px;
+}
+
+.ats-users-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border: 1px solid var(--users-border-strong);
+    border-radius: 20px;
+    background: var(--users-blue-tint-2);
+    color: var(--users-blue-600);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.ats-users-chip-more {
+    border-color: var(--users-navy-900);
+    background: var(--users-navy-900);
+    color: #fff;
+}
+
+.ats-users-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--users-green-tint);
+    color: var(--users-green);
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-users-status::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--users-green);
+    content: "";
+}
+
+.ats-users-status.is-disabled {
+    background: #eef0f5;
+    color: var(--users-text-2);
+}
+
+.ats-users-status.is-disabled::before {
+    background: var(--users-text-3);
+}
+
+.ats-users-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--users-border-strong);
+    border-radius: 8px;
+    background: var(--users-blue-tint);
+    color: var(--users-blue-600);
+    cursor: pointer;
+}
+
+.ats-users-edit:hover {
+    background: var(--users-blue-tint-2);
+}
+
+.ats-users-edit svg {
+    width: 14px;
+    height: 14px;
+}
+
+.ats-users-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 180px;
+    color: var(--users-text-3);
+    text-align: center;
+}
+
+.ats-users-empty ::deep .mud-icon-root {
+    margin-bottom: 6px;
+    color: var(--users-blue-500);
+    font-size: 34px;
+}
+
+.ats-users-empty strong {
+    color: var(--users-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+}
+
+.ats-users-empty span {
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    .ats-users-actions {
+		display: flex;
+    }
+
+    .ats-users-button {
+        justify-content: center;
+        padding: 0 12px;
+        font-size: 11.5px;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-users-page *,
+    .ats-users-page *::before,
+    .ats-users-page *::after {
+        transition-duration: 0.01ms !important;
+    }
+}

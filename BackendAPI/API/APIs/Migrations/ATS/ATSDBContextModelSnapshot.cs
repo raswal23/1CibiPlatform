@@ -93,10 +93,272 @@ namespace APIs.Migrations.ATS
                     b.ToTable("AddressDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.ApplicantSearchProjection", b =>
+                {
+                    b.Property<Guid>("EmailInvitationRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicationFormStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BachelorsDegree")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BachelorsSchoolName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CurrentAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CurrentCity")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CurrentCountry")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CurrentPostalCode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CurrentProvince")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateOnly?>("DOB")
+                        .HasColumnType("date");
+
+                    b.Property<string>("DoctorateDegree")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EmailAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EmailAlternative")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp1CompanyName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp1JobTitle")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp2CompanyName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp2JobTitle")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp3CompanyName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp3JobTitle")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("HighestEducationalAttainment")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateOnly?>("LicenseExpiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("LicenseName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("LicenseNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MaritalStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MastersDegree")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MastersSchoolName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MiddleInitial")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MobileNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Nationality")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("OrderCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OrderCreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PermanentAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PermanentCity")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PermanentCountry")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PermanentPostalCode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PermanentProvince")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PhDSchoolName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("PositionAppliedFor")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("ProjectionUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Ref1ContactNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Ref1FullName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Ref2ContactNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Ref2FullName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Ref3ContactNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Ref3FullName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RushNormal")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("SSS")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("SelectPackage")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Sex")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateOnly?>("SignatureDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("SignerName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TIN")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("EmailInvitationRequestId");
+
+                    b.HasIndex("EmailAddress");
+
+                    b.HasIndex("LastName");
+
+                    b.HasIndex("OrderStatus");
+
+                    b.ToTable("ApplicantSearchProjection", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ArchiveReport", b =>
+                {
+                    b.Property<Guid>("ArchiveReportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EmailInvitationRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReportFileKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReportFileName")
+                        .IsRequired()
+                        .HasMaxLength(525)
+                        .HasColumnType("character varying(525)");
+
+                    b.Property<string>("ReportStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ReportUploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ArchiveReportId");
+
+                    b.HasIndex("EmailInvitationRequestId");
+
+                    b.ToTable("ArchiveReport", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.BulkUploadFileDetails", b =>
                 {
                     b.Property<Guid>("FileID")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("timestamp with time zone");
@@ -132,6 +394,45 @@ namespace APIs.Migrations.ATS
                     b.HasKey("FileID");
 
                     b.ToTable("BulkUploadFileDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ClientDetails", b =>
+                {
+                    b.Property<int>("ClientId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ClientId"));
+
+                    b.Property<int>("PackageId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ClientDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ClientId", "PackageId");
+
+                    b.HasIndex("ClientName");
+
+                    b.HasIndex("PackageId");
+
+                    b.ToTable("ClientDetails", "ats");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
@@ -177,6 +478,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("BachelorsDiplomaFileName")
+                        .HasColumnType("text");
+
                     b.Property<DateOnly?>("BachelorsGraduationDate")
                         .HasColumnType("date");
 
@@ -199,6 +503,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("CollegeDiplomaFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("CollegeDiplomaFileName")
+                        .HasColumnType("text");
 
                     b.Property<DateOnly?>("CollegeGraduationDate")
                         .HasColumnType("date");
@@ -226,6 +533,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("DoctorateDiplomaFileName")
+                        .HasColumnType("text");
+
                     b.Property<DateOnly?>("DoctorateGraduationDate")
                         .HasColumnType("date");
 
@@ -243,6 +553,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("HighSchoolDiplomaFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("HighSchoolDiplomaFileName")
+                        .HasColumnType("text");
 
                     b.Property<DateOnly?>("HighSchoolGraduationDate")
                         .HasColumnType("date");
@@ -266,6 +579,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("MastersDiplomaFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("MastersDiplomaFileName")
+                        .HasColumnType("text");
 
                     b.Property<DateOnly?>("MastersGraduationDate")
                         .HasColumnType("date");
@@ -294,6 +610,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("SeniorHighSchoolDiplomaFileName")
+                        .HasColumnType("text");
+
                     b.Property<DateOnly?>("SeniorHighSchoolGraduationDate")
                         .HasColumnType("date");
 
@@ -313,6 +632,21 @@ namespace APIs.Migrations.ATS
                 {
                     b.Property<Guid>("EmailInvitationID")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicationFormStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DisputeCategory")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("DisputedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmailAddress")
                         .IsRequired()
@@ -346,9 +680,6 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsFormCompleted")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -362,6 +693,32 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("NeedsProjection")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("OrderCompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("OrderCreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("ProjectionUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Requestor")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("RequestorId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("RushNormal")
                         .IsRequired()
@@ -404,12 +761,128 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("LicenseUploadFileName")
+                        .HasColumnType("text");
+
                     b.HasKey("LicensesDetailsID");
 
                     b.HasIndex("EmailInvitationID")
                         .IsUnique();
 
                     b.ToTable("LicensesDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ModuleDetails", b =>
+                {
+                    b.Property<int>("ModuleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ModuleId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ModuleDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ModuleId");
+
+                    b.HasIndex("ModuleName")
+                        .IsUnique();
+
+                    b.ToTable("ModuleDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.OrderStatusHistory", b =>
+                {
+                    b.Property<Guid>("OrderStatusHistoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChangedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EmailInvitationRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("OrderStatusHistoryId");
+
+                    b.HasIndex("EmailInvitationRequestId", "OccurredAt");
+
+                    b.ToTable("OrderStatusHistory", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.PackageDetails", b =>
+                {
+                    b.Property<int>("PackageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FollowUpEmail")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PackageDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("PackageName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("PackageId");
+
+                    b.HasIndex("PackageName")
+                        .IsUnique();
+
+                    b.ToTable("PackageDetails", "ats");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.PersonalDetails", b =>
@@ -420,6 +893,16 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("AdditionalGovtIDFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("AdditionalGovtIDFileName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BiometricFileKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("BiometricFileName")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
@@ -462,11 +945,10 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Nationality")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                    b.Property<string>("NBIClearanceFileName")
+                        .HasColumnType("text");
 
-                    b.Property<string>("PhilSysImageKey")
+                    b.Property<string>("Nationality")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -476,6 +958,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("ResumeFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ResumeFileName")
+                        .HasColumnType("text");
 
                     b.Property<string>("SSS")
                         .HasMaxLength(255)
@@ -514,6 +999,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("COEUploadFileName")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -523,6 +1011,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("Emp1COEUploadFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp1COEUploadFileName")
+                        .HasColumnType("text");
 
                     b.Property<string>("Emp1CompanyAddress")
                         .HasMaxLength(255)
@@ -570,6 +1061,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Emp2COEUploadFileName")
+                        .HasColumnType("text");
+
                     b.Property<string>("Emp2CompanyAddress")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -615,6 +1109,9 @@ namespace APIs.Migrations.ATS
                     b.Property<string>("Emp3COEUploadFileKey")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Emp3COEUploadFileName")
+                        .HasColumnType("text");
 
                     b.Property<string>("Emp3CompanyAddress")
                         .HasMaxLength(255)
@@ -769,20 +1266,101 @@ namespace APIs.Migrations.ATS
                     b.ToTable("ReferenceDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.ReportDetails", b =>
+                {
+                    b.Property<Guid>("ReportFileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EmailInvitationRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HitStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ReportFileKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ReportFileName")
+                        .IsRequired()
+                        .HasMaxLength(525)
+                        .HasColumnType("character varying(525)");
+
+                    b.Property<string>("ReportStatus")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("ReportUploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReportFileId");
+
+                    b.HasIndex("EmailInvitationRequestId", "ReportStatus")
+                        .IsUnique();
+
+                    b.ToTable("ReportDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.RoleDetails", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RoleDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("RoleDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.SignatureDetails", b =>
                 {
                     b.Property<Guid>("SignatureDetailsID")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ConsentFormFileKey")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ConsentFormFileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("ConsentGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("EmailInvitationID")
                         .HasColumnType("uuid");
 
                     b.Property<DateOnly?>("SignatureDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("SignatureFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("SignerName")
                         .HasMaxLength(255)
@@ -796,6 +1374,78 @@ namespace APIs.Migrations.ATS
                     b.ToTable("SignatureDetails", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.UserClientDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("UserClientDetails", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Site")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("UserId", "ModuleId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserEmail");
+
+                    b.ToTable("UserDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.AddressDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -803,6 +1453,39 @@ namespace APIs.Migrations.ATS
                         .HasForeignKey("ATS.Data.Entities.AddressDetails", "EmailInvitationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ApplicantSearchProjection", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", "EmailInvitationRequest")
+                        .WithOne("ApplicantSearchProjection")
+                        .HasForeignKey("ATS.Data.Entities.ApplicantSearchProjection", "EmailInvitationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmailInvitationRequest");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ArchiveReport", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", "EmailInvitationRequest")
+                        .WithMany("ArchiveReports")
+                        .HasForeignKey("EmailInvitationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmailInvitationRequest");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.ClientDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.PackageDetails", "Package")
+                        .WithMany()
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Package");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
@@ -832,6 +1515,17 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.OrderStatusHistory", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", "EmailInvitationRequest")
+                        .WithMany("OrderStatusHistories")
+                        .HasForeignKey("EmailInvitationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmailInvitationRequest");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.PersonalDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -859,6 +1553,17 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.ReportDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", "EmailInvitationRequest")
+                        .WithMany("ReportDetails")
+                        .HasForeignKey("EmailInvitationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmailInvitationRequest");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.SignatureDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -868,9 +1573,32 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.UserDetails", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.ModuleDetails", "Module")
+                        .WithMany()
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ATS.Data.Entities.RoleDetails", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.EmailInvitationRequest", b =>
                 {
                     b.Navigation("AddressDetails");
+
+                    b.Navigation("ApplicantSearchProjection");
+
+                    b.Navigation("ArchiveReports");
 
                     b.Navigation("Documents");
 
@@ -878,11 +1606,15 @@ namespace APIs.Migrations.ATS
 
                     b.Navigation("LicensesDetails");
 
+                    b.Navigation("OrderStatusHistories");
+
                     b.Navigation("PersonalDetails");
 
                     b.Navigation("ProfessionalExperiences");
 
                     b.Navigation("ReferenceDetails");
+
+                    b.Navigation("ReportDetails");
 
                     b.Navigation("SignatureDetails");
                 });

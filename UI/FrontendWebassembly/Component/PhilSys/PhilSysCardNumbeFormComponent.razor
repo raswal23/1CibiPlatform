@@ -1,25 +1,39 @@
-﻿@inject NavigationManager Navigation
+@inject NavigationManager Navigation
 @inject IPhilSysService PhilSysService
 
-<MudForm @ref="pcnForm">
-    <MudGrid>
-        <MudItem xs="12">
-            <MudTextField @bind-Value="identityData!.pcn"
-                          Label="PhilSys Card Number (16-Digits)"
-                          Mask="@(new PatternMask("0000-0000-0000-0000"))"
-                          Required="true"
-                          FullWidth="true"
-                          Adornment="Adornment.Start"
-                          Variant="Variant.Outlined"
-                          Validation="ValidatePCN"
-                          Margin="Margin.Dense"
-                          Class="oneplatform-rounded-input" />
-        </MudItem>
-    </MudGrid>
+<div class="philsys-pcn-form-scope">
+    <MudForm @ref="pcnForm" Class="philsys-modern philsys-lookup-form">
+    <MudPaper Class="philsys-modern-card philsys-lookup-card" Elevation="0">
+        <h1 class="philsys-modern-title">PhilSys card number</h1>
+        <p class="philsys-modern-sub philsys-form-subtitle">Enter the 16-digit PhilSys Card Number (PCN) printed on the registrant's National ID.</p>
 
-    <ButtonComponent OnClick="SubmitPCN"
-                        Class="theme-button theme-button-active mt-4"
-                        Style="border-radius: 4px;">
-        Next
-    </ButtonComponent>
-</MudForm>
+        <div class="philsys-basic-fields">
+            <div class="philsys-field">
+                <label>PhilSys card number <span class="philsys-required">*</span></label>
+                <MudTextField @bind-Value="identityData!.pcn"
+                              Mask="@(new PatternMask("0000-0000-0000-0000"))"
+                              Placeholder="0000 0000 0000 0000"
+                              Required="true"
+                              FullWidth="true"
+                              Variant="Variant.Outlined"
+                              Validation="ValidatePCN"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.CreditCard"
+                              Class="philsys-basic-input philsys-pcn-input" />
+                <p class="philsys-field-hint">Digits only — no need to include the QR code data.</p>
+            </div>
+        </div>
+
+        <div class="philsys-modern-actions">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       OnClick="SubmitPCN"
+                       EndIcon="@Icons.Material.Outlined.ArrowForward"
+                       Class="philsys-next-button">
+                Next
+            </MudButton>
+        </div>
+    </MudPaper>
+    </MudForm>
+</div>

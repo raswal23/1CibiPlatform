@@ -2,82 +2,263 @@
 
 public partial class SearchReportComponent
 {
-	private TableComponent<ReportRow>? reportsTable;
+	private const string RoleIdStorageKey = "RoleId";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
+
+	[Inject]
+	private LocalStorageService LocalStorageService { get; set; } = default!;
+
+	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
-	private readonly List<ReportRow> _dummyReports = new()
-	{
-		new ReportRow(false, "Antonio Aguinaldo", "2025 - 00123456", "In Progress", "Pending", "October 25, 2025", "Basic"),
-		new ReportRow(false, "Antonio Aguinaldo", "2025 - 00129876", "Completed", "Clear", "October 21, 2025", "Basic 2"),
-		new ReportRow(false, "Antonio Aguinaldo", "2024 - 00124356", "Completed", "Not Clear", "October 20, 2024", "Lite"),
-		new ReportRow(false, "Antonio Aguinaldo", "2023 - 00198765", "Completed", "Clear", "October 18, 2019", "Package 1"),
-		new ReportRow(false, "Antonio Aguinaldo", "2019 - 00198765", "Completed", "Clear", "October 10, 2018", "AirBNB")
-	};
+	private string? _searchString;
+	private List<ReportListDTO> currentPageData = new();
+	private bool _isStatusLegendExpanded = false;
+	private bool _canUploadReport;
+	private int ReportColumnCount => _canUploadReport ? 9 : 8;
 
-	private class ReportRow
+	protected override async Task OnInitializedAsync()
 	{
-		public bool Selected { get; set; }
-		public string Subject { get; set; }
-		public string Ticket { get; set; }
-		public string Status { get; set; }
-		public string Result { get; set; }
-		public string DateCompleted { get; set; }
-		public string ReportType { get; set; }
+		var roleIds = await GetStoredRoleIdsAsync();
+		var atsRoleId = await GetStoredATSRoleIdAsync();
 
-		public ReportRow(bool selected, string subject, string ticket, string status, string result, string dateCompleted, string reportType)
+		_canUploadReport = roleIds.Contains(1) || atsRoleId is 1 or 3;
+	}
+
+	private async Task<List<int>> GetStoredRoleIdsAsync()
+	{
+		try
 		{
-			Selected = selected;
-			Subject = subject;
-			Ticket = ticket;
-			Status = status;
-			Result = result;
-			DateCompleted = dateCompleted;
-			ReportType = reportType;
+			var roleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
+			return string.IsNullOrWhiteSpace(roleIdsJson)
+				? []
+				: JsonSerializer.Deserialize<List<int>>(roleIdsJson) ?? [];
+		}
+		catch (JsonException)
+		{
+			return [];
 		}
 	}
 
-	private Task<TableData<ReportRow>> LoadReportData(TableState state, CancellationToken cancellationToken)
+	private async Task<int> GetStoredATSRoleIdAsync()
 	{
-		var filtered = _dummyReports.ToList();
-
-		return Task.FromResult(new TableData<ReportRow>
+		try
 		{
-			Items = filtered,
-			TotalItems = filtered.Count
-		});
+			return await LocalStorageService.GetItemAsync<int>(ATSRoleIdStorageKey);
+		}
+		catch (JsonException)
+		{
+			return 0;
+		}
+	}
+
+	private void ToggleStatusLegend() => _isStatusLegendExpanded = !_isStatusLegendExpanded;
+
+	private static string GetInitials(string? name)
+		=> string.Join(string.Empty, (name ?? string.Empty)
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+			.Take(2)
+			.Select(part => char.ToUpperInvariant(part[0])));
+
+	private static string GetOrderStatusClass(string? status) => OrderStatusDisplay.GetClass(status);
+	private static string GetOrderStatusText(string? status) => OrderStatusDisplay.GetText(status);
+
+	private static string GetHitStatusClass(string? status) => HitStatusDisplay.GetClass(status);
+	private static string GetHitStatusText(string? status) => HitStatusDisplay.GetText(status);
+
+	private string searchString
+	{
+		get => _searchString!;
+		set => UpdateSearch(ref _searchString!, value, reportsTable!);
+	}
+
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	{
+		if (field != value)
+		{
+			field = value;
+			table?.TableRef!.ReloadServerData();
+		}
+	}
+
+	private async Task<TableData<ReportListDTO>> LoadReportData(TableState state, CancellationToken cancellationToken)
+	{
+		try
+		{
+			var result = await ReportService.GetReportsAsync(
+				   state.Page + 1,
+				   state.PageSize,
+				   searchString,
+				   state.SortLabel,
+				   state.SortDirection == SortDirection.Descending,
+				   _dateRange?.Start,
+				   _dateRange?.End);
+			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+
+			return new TableData<ReportListDTO>
+			{
+				Items = currentPageData,
+				TotalItems = (int)result.Count
+			};
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load reports.", Severity.Error);
+			return new TableData<ReportListDTO>
+			{
+				Items = Array.Empty<ReportListDTO>(),
+				TotalItems = 0
+			};
+		}
+	}
+
+	private async Task OnDateRangeChanged(DateRange range)
+	{
+		_dateRange = range;
+
+		await ReloadTable();
 	}
 
 	private async Task DownloadSelected()
 	{
-		var selected = _dummyReports.Where(r => r.Selected).ToList();
-		if (!selected.Any())
+
+		if (!currentPageData.Any(r => r.Selected))
 		{
-			await JS.InvokeVoidAsync("console.warn", "No reports selected for download.");
+			Snackbar.Add("Please select at least one record to download.", Severity.Error);
 			return;
 		}
 
-		await JS.InvokeVoidAsync("console.log", $"Downloading {selected.Count} reports.", selected.Select(r => r.Ticket));
+		var selected = currentPageData.Where(r => r.Selected).ToList();
+
+		DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest = new DownloadMultipleOrderRecordsRequestDTO();
+
+		foreach (var report in currentPageData.Where(x => x.Selected))
+		{
+			downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList.Add(report.EmailInvitationRequestId);
+		}
+
+		var response = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			Snackbar.Add("Failed to download records.", Severity.Error);
+			return;
+		}
+
+		var fileBytes = await response.Content.ReadAsByteArrayAsync();
+
+		using (var ms = new MemoryStream(fileBytes))
+		using (var zip = new System.IO.Compression.ZipArchive(ms, System.IO.Compression.ZipArchiveMode.Read, leaveOpen: false))
+		{
+			if (!zip.Entries.Any())
+			{
+				Snackbar.Add("The downloaded ZIP contains no files.", Severity.Warning);
+				return;
+			}
+		}
+
+		var fileName =
+			response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+			?? $"FileRecords-{DateTime.Now:yyyyMMdd_HHmmss}.zip";
+
+		await JS.InvokeVoidAsync("downloadFile", fileName, "application/zip", fileBytes);
 	}
 
-	private async Task DownloadReport(ReportRow row)
-	{
-		await JS.InvokeVoidAsync("console.log", $"Downloading report {row.Ticket}");
-	}
-
-	private async Task OpenResultDialog<TComponent>(string title)
-	where TComponent : ComponentBase
+	private async Task OpenResultDialog<TComponent>(
+		string title,
+		DialogParameters? parameters = null,
+		MaxWidth maxWidth = MaxWidth.Medium,
+		bool fullWidth = true,
+		bool noHeader = true)
+		where TComponent : IComponent
 	{
 		var options = new DialogOptions
 		{
-			CloseButton = true,
-			MaxWidth = MaxWidth.Large,
-			FullWidth = true
+			CloseButton = !noHeader,
+			NoHeader = noHeader,
+			MaxWidth = maxWidth,
+			FullWidth = fullWidth
 		};
 
-		var dialog = await DialogService.ShowAsync<TComponent>(title, options);
-		var result = await dialog.Result;
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters ?? new DialogParameters(),
+			options);
+
+		await dialog.Result;
 	}
 
-	private async Task OpenResultTriggerDialog()
-		=> await OpenResultDialog<ATSResultComponent>("Subject Result");
+	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
+	{
+		try
+		{
+			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 
+			var parameters = new DialogParameters
+			{
+				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
+				{ nameof(ATSResultComponent.ReportResult), reportResult }
+			};
+
+			await OpenResultDialog<ATSResultComponent>(
+				"",
+				parameters,
+				MaxWidth.Medium,
+				fullWidth: false);
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+		}
+	}
+
+	private async Task OpenUploadReportDialog(Guid emailInvitationId)
+	{
+		IDialogReference? dialog = null;
+		var parameters = new DialogParameters
+		{
+			{ nameof(UploadReportComponent.EmailInvitationRequestId), emailInvitationId },
+			{ nameof(UploadReportComponent.OnUploadSucceededReload),
+				EventCallback.Factory.Create(this, ReloadTable) }
+		};
+
+		var options = new DialogOptions
+		{
+			CloseButton = false,
+			NoHeader = true,
+			MaxWidth = MaxWidth.Small,
+			FullWidth = false
+		};
+
+		dialog = await DialogService.ShowAsync<UploadReportComponent>(
+			string.Empty,
+			parameters,
+			options);
+
+		await dialog.Result;
+	}
+	private async Task OpenStatusHistoryDialog(ReportListDTO report)
+	{
+		var parameters = new DialogParameters { { nameof(OrderStatusHistoryDialog.EmailInvitationRequestId), report.EmailInvitationRequestId }, { nameof(OrderStatusHistoryDialog.SubjectName), report.SubjectName } };
+		await OpenResultDialog<OrderStatusHistoryDialog>(string.Empty, parameters, MaxWidth.Small, noHeader: true);
+	}
+
+	private async Task ReloadTable()
+	{
+		if (reportsTable?.TableRef is not null)
+		{
+			await reportsTable.TableRef.ReloadServerData();
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	private string GetRowClass(ReportListDTO r, int index)
+	{
+		return r.Selected ? "ats-selected-row" : "";
+	}
+
+	private void OnCheckboxChanged(ReportListDTO row, bool value)
+	{
+		row.Selected = value;
+		StateHasChanged();
+	}
 }

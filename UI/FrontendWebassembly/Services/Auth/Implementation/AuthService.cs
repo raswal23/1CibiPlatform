@@ -66,7 +66,7 @@ public class AuthService : IAuthService
 
 		_logger.LogInformation("User {Email} logged in successfully with UserId: {UserId}", cred.Email, successContent!.UserId);
 
-		return new AuthResponseDTO(successContent.UserId, successContent.AccessToken, string.Empty, string.Empty);
+		return new AuthResponseDTO(successContent.UserId, string.Empty, string.Empty, string.Empty);
 	}
 
 	protected virtual async Task SetLocalstorage(CredResponseDTO credResponseDTO)
@@ -94,6 +94,7 @@ public class AuthService : IAuthService
 		if (successContent!.isAuthenticated == false)
 		{
 			_logger.LogInformation("User is not authenticated");
+			await this._localStorageService.ClearAsync();
 			return false;
 
 		}
@@ -105,24 +106,7 @@ public class AuthService : IAuthService
 	{
 		_logger.LogDebug("Starting logout request...");
 
-		var userId = await _localStorageService.GetItemAsync<Guid>(_userIdKey);
-
-		if (userId == Guid.Empty)
-		{
-			_logger.LogWarning("UserId not found in local storage. Cannot proceed with logout.");
-			return false;
-		}
-
-		var payload = new
-		{
-			logoutDTO = new
-			{
-				UserId = userId,
-				RevokeReason = "User Logged out"
-			}
-		};
-
-		var response = await _httpClient.PostAsJsonAsync("/auth/logout", payload);
+		var response = await _httpClient.PostAsync("/auth/logout", null);
 
 		if (!response.IsSuccessStatusCode)
 		{

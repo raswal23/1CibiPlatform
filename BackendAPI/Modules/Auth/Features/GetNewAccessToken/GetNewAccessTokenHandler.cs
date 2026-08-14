@@ -1,17 +1,8 @@
 ﻿namespace Auth.Features.GetNewAccessToken;
 
-public record GetNewAccessTokenCommand(Guid userId) : ICommand<GetNewAccessTokenResult>;
+public record GetNewAccessTokenCommand() : ICommand<GetNewAccessTokenResult>;
 
 public record GetNewAccessTokenResult(LoginResponseWebDTO loginResponseWebDTO);
-
-public class GetNewAccessTokenCommandValidator : AbstractValidator<GetNewAccessTokenCommand>
-{
-	public GetNewAccessTokenCommandValidator()
-	{
-		RuleFor(x => x.userId)
-			.NotEmpty().WithMessage("User ID is required.");
-	}
-}
 
 public class GetNewAccessTokenHandler : ICommandHandler<GetNewAccessTokenCommand, GetNewAccessTokenResult>
 {
@@ -27,7 +18,7 @@ public class GetNewAccessTokenHandler : ICommandHandler<GetNewAccessTokenCommand
 		CancellationToken cancellationToken)
 	{
 		var newSetOfTokens = await this._refreshTokenService
-			.GetNewAccessTokenAsync(request.userId);
+			.GetNewAccessTokenAsync();
 
 		return new GetNewAccessTokenResult(newSetOfTokens);
 	}

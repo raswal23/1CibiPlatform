@@ -409,7 +409,7 @@ public class AuthPaths : IReverseProxyModule
 				Methods: new [] { GatewayConstants.HttpMethod.Post },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/webservice/product:{productId}/.xml" }
+					{ "PathPattern", "/webservice/product:{productId}/.xml" }
 				}
 			),
 

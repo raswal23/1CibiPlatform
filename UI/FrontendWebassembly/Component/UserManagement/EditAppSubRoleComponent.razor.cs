@@ -28,9 +28,9 @@ public partial class EditAppSubRoleComponent
 		Roles = (await UserManagementService.GetRolesAsync(1, int.MaxValue)).Data.ToList();
 
 		selectedUser = Users?.FirstOrDefault(u => u.email == AppSubRole.UserEmail);
-		selectedApp = Apps?.FirstOrDefault(a => a.applicationName == AppSubRole.AppName);
-		selectedMenu = SubMenus?.FirstOrDefault(s => s.subMenuName == AppSubRole.SubMenuName);
-		selectedRole = Roles?.FirstOrDefault(r => r.roleName == AppSubRole.RoleName);
+		selectedApp = Apps?.FirstOrDefault(a => a.applicationId == AppSubRole.AppId);
+		selectedMenu = SubMenus?.FirstOrDefault(s => s.subMenuId == AppSubRole.SubMenuId);
+		selectedRole = Roles?.FirstOrDefault(r => r.roleId == AppSubRole.RoleId);
 
 		IsLoaded = true;
 	}

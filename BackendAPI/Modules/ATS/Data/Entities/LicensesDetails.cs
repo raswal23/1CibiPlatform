@@ -8,5 +8,6 @@ public class LicensesDetails
 	public string? LicenseNumber { get; set; }
 	public DateOnly? LicenseExpiryDate { get; set; }
 	public string? LicenseUploadFileKey { get; set; }
+	public string? LicenseUploadFileName { get; set; }
 	public DateTime? CreatedDate { get; set; }
 }

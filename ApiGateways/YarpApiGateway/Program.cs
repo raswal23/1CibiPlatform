@@ -53,9 +53,9 @@ app.Use(async (context, next) =>
 	context.Response.Headers["Content-Security-Policy"] =
 		"default-src 'self'; " +
 		"script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://s.go-mpulse.net; " +
-		"style-src 'self' 'unsafe-inline'; " +
-		"img-src 'self' data: blob: https://ekycbucket.s3.ap-southeast-1.amazonaws.com; " +
-		"font-src 'self'; " +
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+		"img-src 'self' data: blob: https://ekycbucket.s3.ap-southeast-1.amazonaws.com https://face-liveness-ws.s3.ap-northeast-1.amazonaws.com; " +
+		"font-src 'self' https://fonts.gstatic.com; " +
 		"frame-src 'self' https://liveness.everify.gov.ph; " +   
 		"media-src 'self' https://liveness.everify.gov.ph; " +
 		"connect-src 'self' https: wss: https://s.go-mpulse.net; " +

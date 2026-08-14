@@ -70,7 +70,7 @@ public class ATSEmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
                     </style>
@@ -83,7 +83,7 @@ public class ATSEmailService : IEmailService
                         <div class='content'>
                             <p>Dear {name},</p>
 							<p>
-								Princess Espiritu, TaskUs has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
+								Princess Espiritu, talent acquisition TaskUs company has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up on the link provided: 
 								<a href='{applicationFormLink}'>Application Form</a> 
 							</p>
 							<p>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
@@ -102,6 +102,78 @@ public class ATSEmailService : IEmailService
 						</div>
 						<div class='footer'>
 							<p>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</p>
+						</div>
+					</div>
+				</body>
+				</html>";
+
+		return body;
+	}
+
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName)
+	{
+		string body = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .content {{ padding: 20px; background-color: #f9f9f9; }}
+						.wrapper {{ width: 100%; display: flex; justify-content: center; }}
+                        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+					    .table {{ width: 100%; }}
+                    </style>
+                </head>
+                <body>
+`					<div class=""wrapper"">
+						<div class=""container"">
+							<div class=""header"">
+								<h1>CIBI | Dispute Order Notification</h1>
+							</div>
+
+							<div class=""content"">
+								<p>Hello,</p>
+
+								<p>
+									A request for dispute has been raised for subject
+									<strong>{subjectName}</strong>.
+								</p>
+
+								<p>Supplemental details are provided below:</p>
+
+								<table class=""table"">
+									<tr>
+										<td>Requestor Email:</td>
+										<td>{requestor}</td>
+									</tr>
+									<tr>
+										<td>Company:</td>
+										<td><strong>{company}</strong></td>
+									</tr>
+									<tr>
+										<td>Order Date:</td>
+										<td><strong>{orderedAt}</strong></td>
+									</tr>
+									<tr>
+										<td>Reason for Dispute:</td>
+										<td><strong>{disputeReason}</strong></td>
+									</tr>
+								</table>
+
+								<p>
+									Please review the dispute request and proceed with the appropriate action.
+								</p>
+
+								<p>Thank you.</p>
+							</div>
+
+							<div class=""footer"">
+								<p>
+									This is an automated notification from the ATS. Please do not reply to this email.
+								</p>
+							</div>
 						</div>
 					</div>
 				</body>
@@ -132,6 +204,6 @@ public class ATSEmailService : IEmailService
 
 	public Task<bool> SendEmailAsync(string toEmail, string subject, string body, bool isHtml = true)
 	{
-		throw new NotImplementedException();
+		return SendATSEmailAsync(toEmail, subject, body);
 	}
 }

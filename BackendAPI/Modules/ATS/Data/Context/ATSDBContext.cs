@@ -16,6 +16,16 @@ public class ATSDBContext : DbContext
     public DbSet<DocumentDetails> DocumentDetails { get; set; }
 	public DbSet<SignatureDetails> SignatureDetails { get; set; }
 	public DbSet<BulkUploadFileDetails> BulkUploadFileDetails { get; set; }
+    public DbSet<ReportDetails> ReportDetails { get; set; }
+    public DbSet<ArchiveReport> ArchiveReports { get; set; }
+    public DbSet<ApplicantSearchProjection> ApplicantSearchProjections { get; set; }
+    public DbSet<PackageDetails> PackageDetails { get; set; }
+    public DbSet<ClientDetails> ClientDetails { get; set; }
+    public DbSet<RoleDetails> RoleDetails { get; set; }
+    public DbSet<ModuleDetails> ModuleDetails { get; set; }
+	public DbSet<UserDetails> UserDetails { get; set; }
+	public DbSet<UserClientDetails> UserClientDetails { get; set; }
+	public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

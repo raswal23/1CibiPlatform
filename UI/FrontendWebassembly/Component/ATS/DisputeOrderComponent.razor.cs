@@ -2,48 +2,98 @@
 
 public partial class DisputeOrderComponent
 {
-	private TableComponent<OrderRow>? ordersTable;
+	private TableComponent<DisputeOrderListDTO>? ordersTable;
+	private string? _searchString;
 
-	private readonly List<OrderRow> _dummyOrders = new()
-{
-	new OrderRow("2025 - 00123456", "Antonio Aguinaldo", "Completed", "Clear", "October 25, 2025", false),
-	new OrderRow("2025 - 00129876", "Teodoro Mabini", "Completed", "Clear", "October 21, 2025", false),
-	new OrderRow("2025 - 00124356", "Maria Quezon", "Completed", "Not Clear", "October 20, 2025", false),
-	new OrderRow("2025 - 00198765", "Leonardo Roxas", "Completed", "Not Clear", "October 18, 2025", false),
-	new OrderRow("2025 - 00198765", "Joseph Escoda", "Completed", "Not Clear", "October 18, 2025", false),
-	new OrderRow("2025 - 00198765", "Francis Macapagal", "Completed", "Clear", "October 10, 2025", false),
-	new OrderRow("2025 - 00198765", "Kris Aquino","Completed", "Not Clear", "October 9, 2025", false)
-};
+	private Guid? _loadingDisputeId;
 
-	private class OrderRow
+	private static string GetInitials(string? firstName, string? lastName)
 	{
-		public string TicketNumber { get; set; }
-		public string SubjectName { get; set; }
-		public string Status { get; set; }
-		public string Result { get; set; }
-		public string DateCompleted { get; set; }
-		public bool Dispute { get; set; }
+		var firstInitial = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
+		var lastInitial = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
 
-		public OrderRow(string ticketNumber, string subjectName, string status, string result, string dateCompleted, bool dispute)
+		return $"{firstInitial}{lastInitial}".ToUpperInvariant();
+	}
+
+	private string searchString
+	{
+		get => _searchString!;
+		set => UpdateSearch(ref _searchString!, value, ordersTable!);
+	}
+
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	{
+		if (field != value)
 		{
-			TicketNumber = ticketNumber;
-			SubjectName = subjectName;
-			Status = status;
-			Result = result;
-			DateCompleted = dateCompleted;
-			Dispute = dispute;
+			field = value;
+			table?.TableRef!.ReloadServerData();
 		}
 	}
 
-	private Task<TableData<OrderRow>> LoadOrderData(TableState state, CancellationToken cancellationToken)
-	{
-		// For now returns static results filtered by name query (simple contains)
-		var filtered = _dummyOrders.ToList();
+	private async Task<TableData<DisputeOrderListDTO>> LoadOrderData(TableState state, CancellationToken cancellationToken)
+	=> await LoadPagedDataAsync(state, (page, pageSize) =>
+				DisputeOrderService.GetDisputeOrdersAsync(page, pageSize, searchString));
 
-		return Task.FromResult(new TableData<OrderRow>
+	private async Task OpenResultDialog<TComponent>(
+		string title,
+		DialogParameters? parameters = null,
+		MaxWidth maxWidth = MaxWidth.Small,
+		bool fullWidth = true,
+		bool noHeader = true)
+		where TComponent : IComponent
+	{
+		var options = new DialogOptions
 		{
-			Items = filtered,
-			TotalItems = filtered.Count
-		});
+			CloseButton = !noHeader,
+			NoHeader = noHeader,
+			MaxWidth = maxWidth,
+			FullWidth = fullWidth
+		};
+
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters ?? new DialogParameters(),
+			options);
+
+		await dialog.Result;
+	}
+
+
+	private async Task MarkAsDisputed(Guid emailInvitationId)
+	{
+		var confirmParam = new DialogParameters
+		{
+			{ nameof(DisputeDialogOrderComponent.EmailInvitationId), emailInvitationId }
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.Small,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<DisputeDialogOrderComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
+		try
+		{
+			_loadingDisputeId = emailInvitationId;
+			StateHasChanged();
+
+			if (ordersTable?.TableRef != null)
+				await ordersTable.TableRef.ReloadServerData();
+
+			Snackbar.Add("Dispute reason submitted successfully.", Severity.Success);
+		}
+		finally
+		{
+			_loadingDisputeId = null;
+			StateHasChanged();
+		}
 	}
 }

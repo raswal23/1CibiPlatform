@@ -5,3 +5,6 @@ global using BuildingBlocks.CQRS;
 global using FluentValidation;
 global using BuildingBlocks.SharedServices.Interfaces;
 global using System.Security.Cryptography;
+global using Microsoft.Extensions.Configuration;
+global using System.Net;
+global using System.Net.Mail;

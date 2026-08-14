@@ -1,19 +1,55 @@
-﻿@inject IJSRuntime JS
+@inject IJSRuntime JS
 @implements IAsyncDisposable
 
- <MudPaper Class="p-10 text-center d-flex flex-column justify-center align-center"
-           Elevation="6"
-           Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:400px; max-width:90%;">
-    <MudText Typo="Typo.h5" Class="mb-4">
-        Liveness Check
-    </MudText>
-    <MudText Typo="Typo.subtitle1" Class="mb-4">
-        Click the button below to start the liveness verification process.
-    </MudText>
-    <ButtonComponent OnClick="@OnClick" Class="theme-button theme-button-active">
-        <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-2" />
-        Start Liveness
-    </ButtonComponent>
-</MudPaper>
+<div class="philsys-liveness-shell">
+    <MudPaper Class="philsys-liveness-card" Elevation="0">
+        <div class="philsys-liveness-badge">
+            <MudIcon Icon="@Icons.Material.Outlined.PhotoCamera" Size="Size.Medium" />
+        </div>
 
+        <h1 class="philsys-liveness-title">Liveness Check</h1>
+        <p class="philsys-liveness-subtitle">Click the button below to start the liveness verification process.</p>
 
+        <div class="philsys-liveness-tips">
+            <div class="philsys-liveness-tip">
+                <span class="philsys-liveness-tip-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12l5 5L20 7" />
+                    </svg>
+                </span>
+                <span>Find a well-lit, plain background</span>
+            </div>
+            <div class="philsys-liveness-tip">
+                <span class="philsys-liveness-tip-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12l5 5L20 7" />
+                    </svg>
+                </span>
+                <span>Remove glasses, hats, or masks</span>
+            </div>
+            <div class="philsys-liveness-tip">
+                <span class="philsys-liveness-tip-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12l5 5L20 7" />
+                    </svg>
+                </span>
+                <span>Keep your face centered in frame</span>
+            </div>
+        </div>
+
+        <div class="philsys-liveness-action">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       FullWidth="true"
+                       OnClick="@OnClick"
+                       StartIcon="@Icons.Material.Outlined.PhotoCamera"
+                       Class="philsys-liveness-button">
+                Start Liveness
+            </MudButton>
+        </div>
+
+        <p class="philsys-liveness-privacy">
+            Your camera feed is used only for this verification and is not stored.
+        </p>
+    </MudPaper>
+</div>

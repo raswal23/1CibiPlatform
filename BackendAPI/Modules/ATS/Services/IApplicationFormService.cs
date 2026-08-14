@@ -13,4 +13,6 @@ public interface IApplicationFormService
 
 	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken, 
 																				 CancellationToken ct = default);
+
+	Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default);
 }

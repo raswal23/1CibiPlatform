@@ -2,7 +2,7 @@
 
 public interface IApplicationFormService
 {
-	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
+	Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,
@@ -11,4 +11,6 @@ public interface IApplicationFormService
 											SignatureDetailsDTO SignatureDetails);
 
 	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken);
+
+	Task<bool> WithdrawApplicationForm(string HashToken);
 }

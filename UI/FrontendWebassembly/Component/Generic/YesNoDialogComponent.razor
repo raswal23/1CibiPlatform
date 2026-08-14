@@ -1,0 +1,45 @@
+<MudDialog Class="yes-no-dialog">
+    <DialogContent>
+        <div class="@($"yes-no-dialog-shell {ToneCssClass}")">
+            <div class="yes-no-dialog-icon-badge" aria-hidden="true">
+                <MudIcon Icon="@AvatarIcon" />
+            </div>
+
+            <h1 class="yes-no-dialog-title">@Title</h1>
+            <p class="yes-no-dialog-description">@Message</p>
+
+            @if (!string.IsNullOrWhiteSpace(InformationMessage))
+            {
+                <div class="yes-no-dialog-info-banner" style="@InfoBannerStyle">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Class="yes-no-dialog-info-icon" />
+                    <p class="yes-no-dialog-info-message">@RenderInformationMessage()</p>
+                </div>
+            }
+
+            <div class="yes-no-dialog-footer">
+                <MudButton ButtonType="ButtonType.Button"
+                           Variant="Variant.Filled"
+                           Class="yes-no-dialog-button yes-no-dialog-cancel"
+                           Disabled="@isConfirming"
+                           OnClick="Cancel">
+                    Cancel
+                </MudButton>
+
+                <MudButton ButtonType="ButtonType.Button"
+                           Variant="Variant.Filled"
+                           StartIcon="@(isConfirming ? null : ConfirmIcon)"
+                           Class="yes-no-dialog-button yes-no-dialog-confirm"
+                           Disabled="@isConfirming"
+                           OnClick="Confirm">
+                    @if (isConfirming)
+                    {
+                        <MudProgressCircular Size="Size.Small"
+                                             Indeterminate="true"
+                                             Class="yes-no-dialog-progress" />
+                    }
+                    <span>@ConfirmText</span>
+                </MudButton>
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>

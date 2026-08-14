@@ -45,17 +45,17 @@ public class PhilSysService : IPhilSysService
 		if (!response.IsSuccessStatusCode)
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-	
+
 			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
 		}
-		
+
 		var successContent = await response.Content.ReadFromJsonAsync<TransactionStatusResponseDTO>();
 
 		if (successContent!.ExpiresAt < DateTime.UtcNow)
 		{
 			successContent!.isExpired = true;
 		}
-		
+
 		return successContent!;
 
 	}

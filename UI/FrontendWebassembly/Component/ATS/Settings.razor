@@ -1,0 +1,86 @@
+@page "/s&i/ats/settings"
+@using FrontendWebassembly.Pages.ATS
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(6, 7, 8)]
+@inherits SecurePageBase
+
+<PageTitle>ATS - Settings</PageTitle>
+
+<div class="ats-segmented">
+    @if (AccessibleATSModuleIds.Contains(6))
+    {
+        <button class="@GetPackageSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Package"))'>Package</button>
+    }
+    @if (AccessibleATSModuleIds.Contains(7))
+    {
+        <button class="@GetClientSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Client"))'>Client</button>
+    }
+    @if (AccessibleATSModuleIds.Contains(8))
+    {
+        <button class="@GetRoleSegmentClass()" type="button" @onclick='@(() => SetOrderMode("Role"))'>Role</button>
+    }
+</div>
+    
+
+@if (ManagementType == "Package")
+{
+    <PackageManagement/>
+}
+else if (ManagementType == "Client")
+{
+    <ClientManagement/>
+}
+else if (ManagementType == "Role")
+{
+    <RoleManagement/>
+}
+
+@code {
+    private string? ManagementType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (!IsPageAuthorized)
+            return;
+
+        ManagementType = AccessibleATSModuleIds.Contains(6)
+            ? "Package"
+            : AccessibleATSModuleIds.Contains(7)
+                ? "Client"
+                : "Role";
+    }
+
+    private string GetPackageSegmentClass()
+    {
+        if (ManagementType == "Package")
+        {
+            return "ats-segment-btn active";
+        }
+        return "ats-segment-btn";
+    }
+
+    private string GetClientSegmentClass()
+    {
+        if (ManagementType == "Client")
+        {
+            return "ats-segment-btn active";
+        }
+        return "ats-segment-btn";
+    }
+
+    private string GetRoleSegmentClass()
+    {
+        if (ManagementType == "Role")
+        {
+            return "ats-segment-btn active";
+        }
+        return "ats-segment-btn";
+    }
+
+    private void SetOrderMode(string packagementType)
+    {
+        ManagementType = packagementType;
+    }
+}

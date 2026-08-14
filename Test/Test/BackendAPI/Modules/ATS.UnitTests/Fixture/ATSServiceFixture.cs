@@ -1,10 +1,12 @@
 ﻿using ATS.Data.Repository;
 using ATS.Hubs;
 using ATS.Services;
+using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using StackExchange.Redis;
@@ -25,6 +27,8 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IHubContext<ATSHub, IATSClient>> MockHubContext { get; private set; }
 	public Mock<IHubClients<IATSClient>> MockClients { get; private set; }
 	public Mock<IATSClient> MockATSClient { get; private set; }
+	public Mock<IServiceScopeFactory> MockServiceScopeFactory { get; private set; }
+	public Mock<ICurrentUser> MockCurrentUser { get; private set; }
 
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
@@ -51,6 +55,8 @@ public class ATSServiceFixture : IDisposable
 		MockHubContext = new Mock<IHubContext<ATSHub, IATSClient>>();
 		MockClients = new Mock<IHubClients<IATSClient>>();
 		MockATSClient = new Mock<IATSClient>();
+		MockServiceScopeFactory = new Mock<IServiceScopeFactory>();
+		MockCurrentUser = new Mock<ICurrentUser>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
 		EmailNotificationProcessoServiceLogger = new();
@@ -61,8 +67,7 @@ public class ATSServiceFixture : IDisposable
 			{
 				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
 				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" },
-				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" },
-				{ "CacheKeys:ATSBatchesError", "ats-batches-error" }
+				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" }
 			})
 			.Build();
 
@@ -78,8 +83,11 @@ public class ATSServiceFixture : IDisposable
 			.Setup(x => x.Group(It.IsAny<string>()))
 			.Returns(MockATSClient.Object);
 
+		SetupServiceScopeFactory();
+
 		BulkSubmissionProcessorService = new BulkSubmissionProcessorService(
 			MockRepository.Object,
+			MockServiceScopeFactory.Object,
 			MockObjectStorage.Object,
 			MockSecureToken.Object,
 			MockHashService.Object,
@@ -87,6 +95,7 @@ public class ATSServiceFixture : IDisposable
 			MockRedis.Object,
 			MockHubContext.Object,
 			MockBulkSubmissionProcessorServiceLogger.Object,
+			MockCurrentUser.Object,
 			Configuration);
 
 		EmailNotificationProcessorService = new EmailNotificationProcessorService(
@@ -102,5 +111,23 @@ public class ATSServiceFixture : IDisposable
 	public void Dispose()
 	{
 		// nothing to dispose currently
+	}
+
+	private void SetupServiceScopeFactory()
+	{
+		var mockServiceScope = new Mock<IServiceScope>();
+		var mockServiceProvider = new Mock<IServiceProvider>();
+
+		mockServiceProvider
+			.Setup(x => x.GetService(typeof(IATSRepository)))
+			.Returns(MockRepository.Object);
+
+		mockServiceScope
+			.Setup(x => x.ServiceProvider)
+			.Returns(mockServiceProvider.Object);
+
+		MockServiceScopeFactory
+			.Setup(x => x.CreateScope())
+			.Returns(mockServiceScope.Object);
 	}
 }

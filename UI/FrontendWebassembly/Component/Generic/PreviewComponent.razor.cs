@@ -10,29 +10,52 @@ public partial class PreviewComponent
 
 	[Parameter]
 	public List<List<string>> Rows { get; set; } = [];
-	
+
 	[Parameter]
 	public string Message { get; set; } = string.Empty;
 	private async Task Confirm()
 	{
 		if (InvalidRows.Any())
 		{
-			var confirmParam = new DialogParameters
-			{
-				{ nameof(ConfirmationDialogComponent.Message),
-				  "Do you want to upload the template information with blank details?" }
 
-			};
+			Snackbar.Add("Error. Bulk Submit Failed. Blank details found", Severity.Error);
 
-			var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-				"Confirmation",
-				confirmParam);
-
-			var result = await dialog.Result;
-
-			if (result!.Canceled)
-				return;
+			return;
 		}
+
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Bulk Submit Candidate"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will send an email invitation to your candidates."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Upload"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Upload' will  send email invitations."
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
 
 		PreviewDialog.Close(DialogResult.Ok(true));
 	}
@@ -40,6 +63,13 @@ public partial class PreviewComponent
 	private void Cancel()
 	{
 		PreviewDialog.Cancel();
+	}
+
+	private static string GetCandidateInitials(IReadOnlyList<string> row)
+	{
+		var lastNameInitial = row.Count > 0 && !string.IsNullOrWhiteSpace(row[0]) ? row[0].Trim()[0] : default;
+		var firstNameInitial = row.Count > 1 && !string.IsNullOrWhiteSpace(row[1]) ? row[1].Trim()[0] : default;
+		return $"{lastNameInitial}{firstNameInitial}".ToUpperInvariant();
 	}
 
 	private List<int> InvalidRows =>

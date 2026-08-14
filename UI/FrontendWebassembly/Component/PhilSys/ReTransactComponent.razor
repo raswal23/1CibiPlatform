@@ -1,44 +1,50 @@
-﻿@inject NavigationManager NavigationManager
+@inject NavigationManager NavigationManager
 
-<MudPaper Elevation="6"
-          Class="p-10 text-center d-flex flex-column justify-center align-center"
-          Style="border-radius:20px; padding: 15px; box-shadow:0px 10px 45px rgba(0,0,0,0.1); width:500px; max-width:90%;">
+<div class="philsys-retransact-shell">
+    <MudPaper Class="philsys-retransact-card" Elevation="0">
+        @if (IsCompleted)
+        {
+            <div class="philsys-retransact-badge-wrap">
+                <div class="philsys-retransact-badge is-warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7.5v5.5M12 16.2v.1" />
+                    </svg>
+                </div>
+            </div>
 
-    @if (IsCompleted)
-    {
-        <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
-                 Size="Size.Large"
-                 Style="font-size: 80px; color: #d9534f; margin-bottom: 20px;" />
+            <h1 class="philsys-retransact-title">Session Not Found</h1>
+            <p class="philsys-retransact-subtitle">
+                This liveness verification link has already been completed or is no longer valid.
+            </p>
+        }
+        else
+        {
+            <div class="philsys-retransact-badge-wrap">
+                <div class="philsys-retransact-badge is-expired">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7.2V12l3.2 2" />
+                    </svg>
+                </div>
+            </div>
 
-        
-        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;" Class="gradient-text">
-            Session Not Found
-        </MudText>
+            <h1 class="philsys-retransact-title">Session Expired</h1>
+            <p class="philsys-retransact-subtitle">
+                Your liveness verification session has expired. Please start a new session to continue your PhilSys verification process.
+            </p>
+        }
 
-        <MudText Typo="Typo.subtitle1" Style="max-width: 400px; color: #555; margin: 0px 10px 20px 10px;">
-            This liveness verification link has already been completed or is no longer valid.
-        </MudText>
-    }
-    else
-    {
-        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty"
-                 Size="Size.Large"
-                 Style="font-size: 80px; color: #d9534f; margin-bottom: 20px;" />
-
-        <MudText Typo="Typo.h4" Style="font-weight: bold; margin-bottom: 10px;">
-            Session Expired
-        </MudText>
-
-        <MudText Typo="Typo.subtitle1" Style="max-width: 420px; color: #555;  margin: 0px 10px 20px 10px;">
-            Your liveness verification session has expired.
-            Please start a new session to continue your PhilSys verification process.
-        </MudText>
-    }
-
-    <ButtonComponent StartIcon="@Icons.Material.Filled.Refresh"
-                     OnClick="StartNewSession"
-                     Disabled="@DisableButton()"
-                     Class="@(WebHookUrl == "/" ? "theme-button theme-button-active" : "theme-button theme-button-inactive")">
-        Start New Session
-    </ButtonComponent>
-</MudPaper>
+        <div class="philsys-retransact-action">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       FullWidth="true"
+                       OnClick="StartNewSession"
+                       Disabled="@DisableButton()"
+                       StartIcon="@Icons.Material.Outlined.Refresh"
+                       Class="philsys-retransact-button">
+                Start New Session
+            </MudButton>
+        </div>
+    </MudPaper>
+</div>

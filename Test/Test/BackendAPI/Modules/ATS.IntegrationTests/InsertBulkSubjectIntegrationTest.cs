@@ -12,7 +12,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
 	byte[] sampleFileContent = Convert.FromBase64String("SGVsbG8gV29ybGQ=");
-	string bulkFileName = $"{Guid.CreateVersion7()}-bulkfile.txt";
+	string bulkFileName = $"{Guid.CreateVersion7()}-bulkfile.csv";
 
 	public InsertBulkSubjectIntegrationTest(IntegrationTestWebAppFactory factory) : base(factory)
 	{
@@ -27,10 +27,11 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		return new FormFile(stream, 0, content.Length, "file", fileName)
 		{
 			Headers = new HeaderDictionary(),
-			ContentType = "text/plain"
+			ContentType = "text/csv"
 		};
 	}
 
+	#region Positive Path
 	[Fact]
 
 	public async Task InsertBulkSubject_ShouldReturnCreatedIdAndPersist()
@@ -58,6 +59,9 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		}
 	}
 
+	#endregion
+
+	#region Negative Path
 	[Fact]
 	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenFileNameIsEmpty()
 	{
@@ -82,6 +86,35 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenBulkFileIsNotCsv()
+	{
+		// Arrange
+		var invalidFileName = $"{Guid.CreateVersion7()}-bulkfile.xlsx";
+
+		var dto = new BulkUploadFileDetailsDTO
+		{
+			BulkFile = CreateFakeFormFile(sampleFileContent, invalidFileName),
+			FileName = invalidFileName,
+			Status = "Pending",
+			OrderType = "Rush",
+			PackageType = "Air BnB"
+		};
+
+		var command = new InsertBulkSubjectCommand(dto);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		var exception = await act.Should()
+			.ThrowAsync<ValidationException>();
+
+		exception.Which.Errors.Should().Contain(e =>
+			e.PropertyName.Contains("BulkFile") &&
+			e.ErrorMessage == "Only .csv files are allowed.");
+	}
+
+	[Fact]
 	public async Task InsertBulkSubject_ShouldReturnMultipleValidationErrors_WhenAllFieldsAreInvalid()
 	{
 		// Arrange
@@ -100,6 +133,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		var exception = await act.Should()
 			.ThrowAsync<ValidationException>();
 
-		exception.Which.Errors.Should().HaveCount(2);
+		exception.Which.Errors.Should().HaveCount(3);
 	}
+	#endregion
 }

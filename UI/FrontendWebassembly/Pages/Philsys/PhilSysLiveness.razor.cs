@@ -15,7 +15,7 @@ public partial class PhilSysLiveness
 	private string errorMessage = string.Empty;
 	private bool hasUnsavedChanges = true;
 	private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
-	public string? atsSession { get; set; } = null;
+	public string? atsSession { get; set; }
 	public string? applicationFormPath { get; set; }
 
 	protected override async Task OnInitializedAsync()
@@ -27,7 +27,7 @@ public partial class PhilSysLiveness
 		isTransacted = _status.IsTransacted;
 		isExpired = _status.isExpired;
 
-		if(string.IsNullOrEmpty(atsSession))
+		if (string.IsNullOrEmpty(atsSession))
 		{
 			hasUnsavedChanges = false;
 		}
@@ -79,12 +79,46 @@ public partial class PhilSysLiveness
 			return;
 		}
 
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"PhilSys Verification"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be informed that you will be directed to PhilSys for completing the National ID verification."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Proceed"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Proceed' will redirect you to the PhilSys verification page."
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
 		_dotNetRef = DotNetObjectReference.Create(this);
 		await JS.InvokeVoidAsync("startLivenessInterop", HashToken, _dotNetRef, livenessKey);
 	}
 
 	[JSInvokable]
-	public async Task OnLivenessCompleted(string sessionId)
+	public async Task OnLivenessCompleted(string sessionId, string photoUrl)
 	{
 		showLoader = true;
 		StateHasChanged();
@@ -101,17 +135,24 @@ public partial class PhilSysLiveness
 		hasUnsavedChanges = false;
 		if (!string.IsNullOrEmpty(atsSession))
 		{
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:firstName", information.data_subject!.first_name);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:middleName", information.data_subject!.middle_name);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:lastName", information.data_subject!.last_name);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:suffix", information.data_subject!.suffix);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:birthDate", information.data_subject!.birth_date);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:sex", information.data_subject!.gender);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:emailAddress", information.data_subject!.email);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:phoneNumber", information.data_subject!.mobile_number);
-			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", information.data_subject!.face_url);
+			if (information.data_subject is not null)
+			{
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:digitalId", information.data_subject!.digital_id ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:firstName", information.data_subject!.first_name ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:middleName", information.data_subject!.middle_name ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:lastName", information.data_subject!.last_name ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:suffix", information.data_subject!.suffix ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:birthDate", information.data_subject!.birth_date ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:sex", information.data_subject!.gender ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:emailAddress", information.data_subject!.email ?? string.Empty);
+				await LocalStorageService.SetItemAsync($"ats:applicationForm:phoneNumber", information.data_subject!.mobile_number ?? string.Empty);
+			}
 
-			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?philSysShow=true&stepActive=1", false);
+			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", photoUrl ?? string.Empty);
+
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=2", false);
+
+			return;
 		}
 
 		StateHasChanged();

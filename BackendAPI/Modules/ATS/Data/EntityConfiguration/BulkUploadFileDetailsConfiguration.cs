@@ -31,6 +31,8 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(50);
 
+		builder.Property(e => e.ClientId);
+
 		builder.Property(a => a.Status)
 			   .IsRequired()
 			   .HasMaxLength(50);

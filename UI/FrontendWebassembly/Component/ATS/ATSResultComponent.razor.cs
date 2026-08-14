@@ -3,46 +3,90 @@
 public partial class ATSResultComponent
 {
 	private MudForm? form;
-	private TicketDetails ticketDetails = new();
-	private Subject subject = new();
-	private FileDetails fileDetails = new();
 	private bool IsLoaded = true;
 
+	private string GetOrderStatusText() => OrderStatusDisplay.GetText(ReportResult?.OrderStatus);
+	private string GetOrderStatusClass() => OrderStatusDisplay.GetClass(ReportResult?.OrderStatus);
+
+	private static string GetDocumentMeta(string? fileName, string? uploadedAt)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? "Not yet uploaded"
+			: $"{fileName} · uploaded {uploadedAt}";
+
+	private static string GetDocumentMetaClass(string? fileName)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? "ats-result-doc-meta-wrap pending"
+			: "ats-result-doc-meta-wrap has-tooltip";
+
+	private static string? GetDocumentTooltip(string? fileName, string? uploadedAt)
+		=> string.IsNullOrWhiteSpace(fileName)
+			? null
+			: GetDocumentMeta(fileName, uploadedAt);
+
+	private static int? GetDocumentTabIndex(string? fileName)
+		=> string.IsNullOrWhiteSpace(fileName) ? null : 0;
+
+	private string GetResultText()
+		=> HitStatusDisplay.GetClass(ReportResult?.HitStatus) == "pending"
+			? "Not yet available"
+			: HitStatusDisplay.GetText(ReportResult?.HitStatus);
+
+	private string GetResultValueClass()
+		=> HitStatusDisplay.GetClass(ReportResult?.HitStatus) == "pending" ? "muted" : string.Empty;
+
 	[Parameter]
-	public AddRoleDTO Role { get; set; } = new AddRoleDTO();
+	public Guid EmailInvitationId { get; set; }
 
-	private class Subject
+	[Parameter]
+	public ATSResultDetailsDTO? ReportResult { get; set; }
+
+	[CascadingParameter]
+	private IMudDialogInstance MudDialog { get; set; } = default!;
+
+	private async Task OpenResultDialog<TComponent>(
+	string title,
+	DialogParameters? parameters = null)
+	where TComponent : IComponent
 	{
-		public string SubjectName { get; set; } = "Antonio Aguinaldo";
-		public string Score { get; set; } = "85%";
+		var options = new DialogOptions
+		{
+			CloseButton = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			NoHeader = true,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<TComponent>(
+			title,
+			parameters!,
+			options);
+
+		var result = await dialog.Result;
 	}
 
-	private class TicketDetails
+	private async Task SelecFilesToDownload()
 	{
-		public string TicketNumber { get; set; } = "2025 - 00123456";
-		public string Status { get; set; } = "Completed";
-		public string Result { get; set; } = "Clear";
-		public string ReportType { get; set; } = "Basic";
-		public string AptitudeTest { get; set; } = "Passed - 90%";
-		public string LiveInterview { get; set; } = "Completed";
-		public string Grammar { get; set; } = "Passed - 85%";
-		public string Comprehension { get; set; } = "Good";
-		public string Relativeness { get; set; } = "Good";
+		try
+		{
+			var parameters = new DialogParameters
+			{
+				{ nameof(SelectFilesToDownloadComponent.ReportResult), ReportResult },
+
+			};
+
+			await OpenResultDialog<SelectFilesToDownloadComponent>(
+				"",
+				parameters);
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+		}
 	}
 
-	private class FileDetails
+	private void CloseDialog()
 	{
-		public string Resume { get; set; } = "TonCV.pdf";
-		public string ID { get; set; } = "TonID.jpg";
-		public string COE { get; set; } = "TonCOE.pdf";
-		public string Diploma { get; set; } = "TonTOR.pd";
-		public string BiometricPhoto { get; set; } = "123-456.jpg";
-		public string ConsentForm { get; set; } = "Consent_Form.pdf";
-		public string FinalReport { get; set; } = "2025-00123456";
-		public string UploadedDate { get; set; } = "October 19, 2025";
+		MudDialog.Close();
 	}
 
-	private async Task ProcessBulkInvite()
-	{
-	}
 }

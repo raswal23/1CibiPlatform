@@ -1,0 +1,220 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<section class="ats-signature-modern @Class">
+    <div class="ats-signature-modern-header">
+        <div>
+            <MudText Typo="Typo.subtitle1" Class="ats-signature-modern-title">Create your signature</MudText>
+            <MudText Typo="Typo.caption" Class="ats-signature-modern-subtitle">Draw your signature or upload a PNG image.</MudText>
+        </div>
+    </div>
+
+    <div class="ats-signature-tabs" role="tablist" aria-label="Signature input method">
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTab == SignatureTab.Draw)"
+                class="@GetTabClass(SignatureTab.Draw)"
+                disabled="@Disabled"
+                @onclick="@(() => SelectTab(SignatureTab.Draw))">
+            <MudIcon Icon="@Icons.Material.Filled.Draw" Size="Size.Small" />
+            Draw signature
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="@(_activeTab == SignatureTab.Upload)"
+                class="@GetTabClass(SignatureTab.Upload)"
+                disabled="@Disabled"
+                @onclick="@(() => SelectTab(SignatureTab.Upload))">
+            <MudIcon Icon="@Icons.Material.Filled.UploadFile" Size="Size.Small" />
+            Upload signature
+        </button>
+    </div>
+
+    <div class="@GetPanelClass(SignatureTab.Draw)" role="tabpanel">
+        <div class="ats-signature-draw-surface">
+            <canvas @ref="_canvas" class="ats-signature-canvas" aria-label="Draw your signature"></canvas>
+            @if (Value is null or { Length: 0 })
+            {
+                <span class="ats-signature-draw-hint">Sign inside this area</span>
+            }
+        </div>
+        <div class="ats-signature-panel-footer">
+            <span>Use your mouse, trackpad, or finger to sign.</span>
+            <button type="button"
+                    class="ats-signature-clear-link"
+                    disabled="@Disabled"
+                    @onclick="ClearAsync">
+                Clear drawing
+            </button>
+        </div>
+    </div>
+
+    <div class="@GetPanelClass(SignatureTab.Upload)" role="tabpanel">
+        <label class="@(Disabled ? "ats-signature-upload-zone disabled" : "ats-signature-upload-zone")">
+            <InputFile OnChange="OnSignatureUploadAsync"
+                       accept=".png,image/png"
+                       disabled="@Disabled"
+                       class="ats-signature-upload-input" />
+
+            @if (!string.IsNullOrWhiteSpace(_previewUrl))
+            {
+                <img src="@_previewUrl" class="ats-signature-upload-preview" alt="Uploaded signature preview" />
+                <MudText Typo="Typo.body2" Class="ats-signature-upload-name">@_uploadedFileName</MudText>
+                <MudText Typo="Typo.caption">Choose another PNG to replace it.</MudText>
+            }
+            else
+            {
+                <span class="ats-signature-upload-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" />
+                </span>
+                <MudText Typo="Typo.body2" Class="ats-signature-upload-prompt">
+                    Drag and drop your signature or <span>browse from device</span>
+                </MudText>
+                <MudText Typo="Typo.caption">PNG only · maximum file size 25 MB</MudText>
+            }
+        </label>
+
+        @if (!string.IsNullOrWhiteSpace(_uploadError))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_uploadError</MudAlert>
+        }
+    </div>
+
+    <div class="ats-signature-privacy-note">
+        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" />
+        <span>Your signature is used only for this application and is submitted securely with the form.</span>
+    </div>
+</section>
+
+@code {
+    private const long MaximumUploadSize = 25L * 1024 * 1024;
+    private ElementReference _canvas;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<SafeSignaturePad>? _componentReference;
+    private bool _initialized;
+    private SignatureTab _activeTab = SignatureTab.Draw;
+    private string? _previewUrl;
+    private string? _uploadedFileName;
+    private string? _uploadError;
+
+    [Parameter] public byte[]? Value { get; set; }
+    [Parameter] public EventCallback<byte[]?> ValueChanged { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _module ??= await JSRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            "./js/generic/safeSignaturePad.js");
+
+        if (!_initialized)
+        {
+            _componentReference = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync(
+                "setup",
+                _canvas,
+                _componentReference,
+                Value is { Length: > 0 } ? Encoding.UTF8.GetString(Value) : null,
+                Disabled);
+            _initialized = true;
+        }
+        else
+        {
+            await _module.InvokeVoidAsync("setDisabled", _canvas, Disabled);
+        }
+    }
+
+    [JSInvokable]
+    public async Task SignatureChangedAsync(string dataUrl)
+    {
+        _previewUrl = null;
+        _uploadedFileName = null;
+        Value = Encoding.UTF8.GetBytes(dataUrl);
+        await ValueChanged.InvokeAsync(Value);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectTab(SignatureTab tab)
+    {
+        _activeTab = tab;
+        _uploadError = null;
+    }
+
+    private async Task OnSignatureUploadAsync(InputFileChangeEventArgs args)
+    {
+        _uploadError = null;
+        var file = args.File;
+
+        if (!string.Equals(Path.GetExtension(file.Name), ".png", StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(file.ContentType, "image/png", StringComparison.OrdinalIgnoreCase))
+        {
+            _uploadError = "Please select a valid PNG image.";
+            return;
+        }
+
+        if (file.Size > MaximumUploadSize)
+        {
+            _uploadError = "The signature image must not exceed 25 MB.";
+            return;
+        }
+
+        await using var stream = file.OpenReadStream(MaximumUploadSize);
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+
+        var dataUrl = $"data:image/png;base64,{Convert.ToBase64String(memoryStream.ToArray())}";
+        Value = Encoding.UTF8.GetBytes(dataUrl);
+        _previewUrl = dataUrl;
+        _uploadedFileName = file.Name;
+
+        if (_module is not null && _initialized)
+            await _module.InvokeVoidAsync("setImage", _canvas, dataUrl);
+
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task ClearAsync()
+    {
+        if (_module is not null && _initialized)
+            await _module.InvokeVoidAsync("clear", _canvas);
+
+        Value = null;
+        _previewUrl = null;
+        _uploadedFileName = null;
+        _uploadError = null;
+        await ValueChanged.InvokeAsync(null);
+    }
+
+    private string GetTabClass(SignatureTab tab) =>
+        _activeTab == tab ? "ats-signature-tab active" : "ats-signature-tab";
+
+    private string GetPanelClass(SignatureTab tab) =>
+        _activeTab == tab ? "ats-signature-panel active" : "ats-signature-panel";
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null && _initialized)
+                await _module.InvokeVoidAsync("destroy", _canvas);
+
+            if (_module is not null)
+                await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The browser page is already being torn down.
+        }
+        finally
+        {
+            _componentReference?.Dispose();
+        }
+    }
+
+    private enum SignatureTab
+    {
+        Draw,
+        Upload
+    }
+}

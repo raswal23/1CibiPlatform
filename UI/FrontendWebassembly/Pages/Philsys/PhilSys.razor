@@ -9,20 +9,18 @@
 <PageTitle>Identity Verification System</PageTitle>
 
 <MudGrid Justify="Justify.Center">
-    <MudItem xs="12" sm="12">
+    <MudItem xs="12" sm="12" Class="philsys-lookup-shell">
 
-        <PhilSysFormTabComponent ActiveTabChanged="ChangeActiveTab" ></PhilSysFormTabComponent>
+        <PhilSysFormTabComponent ActiveTabChanged="ChangeActiveTab" />
 
-        <MudPaper Elevation="1" Class="p-4 philsys-form-container" Style="border-radius: 4px; box-shadow: 0 0 10px rgba(42,119,174,0.8); max-width: 380px;">
-            @if (_activeIndex == 0)
-            {
-                <BasicInformationFormComponent />
-            }
-            else if (_activeIndex == 1)
-            {
-                <PhilSysCardNumbeFormComponent/>
-            }
-        </MudPaper>
+        @if (_activeIndex == 0)
+        {
+            <BasicInformationFormComponent />
+        }
+        else if (_activeIndex == 1)
+        {
+            <PhilSysCardNumbeFormComponent />
+        }
 
     </MudItem>
 </MudGrid>

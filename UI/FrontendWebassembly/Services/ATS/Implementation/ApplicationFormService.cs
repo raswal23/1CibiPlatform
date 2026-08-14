@@ -1,24 +1,23 @@
-﻿
-namespace FrontendWebassembly.Services.ATS.Implementation;
+﻿namespace FrontendWebassembly.Services.ATS.Implementation;
 
 public class ApplicationFormService : IApplicationFormService
 {
-    private readonly HttpClient _httpClient;
+	private readonly HttpClient _httpClient;
 
 	public ApplicationFormService(IHttpClientFactory httpClientFactory)
 	{
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails, 
-														AddressDetailsDTO AddressDetails, 
-														EducationalBackgroundDTO EducationalBackground, 
-														LicensesDetailsDTO LicensesDetails, 
-														ProfessionalExperiencesDTO ProfessionalExperiences, 
+	public async Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
+														AddressDetailsDTO AddressDetails,
+														EducationalBackgroundDTO EducationalBackground,
+														LicensesDetailsDTO LicensesDetails,
+														ProfessionalExperiencesDTO ProfessionalExperiences,
 														ReferenceDetailsDTO ReferenceDetails,
 														SignatureDetailsDTO SignatureDetails)
 	{
-     using var content = new MultipartFormDataContent();
+		using var content = new MultipartFormDataContent();
 
 		void AddString(string? value, string name)
 		{
@@ -34,7 +33,7 @@ public class ApplicationFormService : IApplicationFormService
 			{
 				var stream = new MemoryStream(file);
 				var fileContent = new StreamContent(stream);
-				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 				content.Add(fileContent, name, name);
 			}
 		}
@@ -48,7 +47,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.Suffix, "PersonalDetails.Suffix");
 		AddString(PersonalDetails.Sex, "PersonalDetails.Sex");
 		AddString(PersonalDetails.DOB?.ToString("MM-dd-yyyy"), "PersonalDetails.DOB");
-		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");	
+		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");
 		AddString(PersonalDetails.EmailAlternative, "PersonalDetails.EmailAlternative");
 		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile");
 		AddString(PersonalDetails.AdditionalGovtIDFileName, "PersonalDetails.AdditionalGovtIDFileName");
@@ -56,6 +55,8 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.NBIClearanceFileName, "PersonalDetails.NBIClearanceFileName");
 		AddFile(PersonalDetails.ResumeFile, "PersonalDetails.ResumeFile");
 		AddString(PersonalDetails.ResumeFileName, "PersonalDetails.ResumeFileName");
+		AddFile(PersonalDetails.BiometricFile, "PersonalDetails.BiometricFile");
+		AddString(PersonalDetails.BiometricFileName, "PersonalDetails.BiometricFileName");
 
 		// AddressDetails
 		AddString(AddressDetails.EmailInvitationID.ToString(), "AddressDetails.EmailInvitationID");
@@ -182,7 +183,18 @@ public class ApplicationFormService : IApplicationFormService
 
 		// Post
 		AddString(SignatureDetails.EmailInvitationID.ToString(), "SignatureDetails.EmailInvitationID");
-		AddFile(SignatureDetails.Signature, "SignatureDetails.Signature");
+		if (SignatureDetails.Signature is not null)
+		{
+			var dataUrl = Encoding.UTF8.GetString(SignatureDetails.Signature);
+
+			if (dataUrl.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+			{
+				var base64 = dataUrl[(dataUrl.IndexOf(',') + 1)..];
+				var imageBytes = Convert.FromBase64String(base64);
+
+				AddFile(imageBytes, "SignatureDetails.Signature");
+			}
+		}
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 
@@ -194,10 +206,10 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
+			return new ApplicationFormResponse(false, errorContent!.Detail);
 		}
 
-		return successContentInfo;
+		return new ApplicationFormResponse(true, string.Empty);
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)
@@ -219,5 +231,27 @@ public class ApplicationFormService : IApplicationFormService
 		}
 
 		return result;
+	}
+
+	public async Task<bool> WithdrawApplicationForm(string HashToken)
+	{
+		var payload = new { HashToken };
+
+		var response = await _httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform", payload);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+
+			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+		}
+
+		var successContent = await response.Content.ReadFromJsonAsync<bool>();
+		if (successContent == true)
+		{
+			return successContent;
+		}
+
+		return false;
 	}
 }

@@ -21,11 +21,12 @@ public class IsAuthenticatedEndpoint : ICarterModule
 			return Results.Ok(response);
 
 		})
-		  .WithName("IsAuthenticated")
-		  .WithTags("Authentication")
-		  .Produces<IsAuthenticatedResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("IsAuthenticated")
-		  .WithDescription("IsAuthenticated");
+		.WithName("IsAuthenticated")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("IsAuthenticated")
+		.WithDescription("IsAuthenticated")
+		.RequireAuthorization();
 	}
 }

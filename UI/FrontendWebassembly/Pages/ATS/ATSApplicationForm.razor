@@ -1,112 +1,131 @@
-﻿@layout GenericLayout
+@layout GenericLayout
 @inject LocalStorageService LocalStorageService
 @inject IApplicationFormService ATSService
 @inject IJSRuntime JSRuntime
 @page "/s&i/ats/applicationform/{HashToken}"
-
 
 <PageTitle>ATS - Application Form</PageTitle>
 
 <NavigationLock ConfirmExternalNavigation="true"
                 OnBeforeInternalNavigation="ConfirmNavigation" />
 
-<div class="oneplatform-generic-container">
-    @if (Status)
+<div class="@RootCssClass">
+    @if (string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase))
     {
         <CompletedComponent />
+    }
+    else if (string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase))
+    {
+        <WithdrawnComponent />
     }
     else if (IsExpired)
     {
         <ExpiredComponent />
     }
+    else if (IsInstructionsVisible)
+    {
+        <main class="ats-application-intro-page">
+            <article class="ats-application-intro-card" aria-labelledby="ats-application-intro-title">
+                <header class="ats-application-intro-header">
+                    <span class="ats-application-logo-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                            <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
+                        </svg>
+                    </span>
+                    <h1 id="ats-application-intro-title">WFS Talent Suite</h1>
+                </header>
+
+                <div class="ats-application-intro-body">
+                    <p class="ats-application-intro-lead">Thank you for acknowledging our email.</p>
+                    <p class="ats-application-intro-copy">
+                        We are CIBI Information, Inc., a third-party verification company engaged by a firm with whom you have either an ongoing job application or currently employed to conduct background checks. Please provide all required documents and information as outlined in the email you received.
+                    </p>
+
+                    <section class="ats-application-section" aria-labelledby="ats-document-title">
+                        <div class="ats-application-section-title">
+                            <span class="ats-application-section-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" />
+                                    <path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" />
+                                </svg>
+                            </span>
+                            <h2 id="ats-document-title">Prepare &amp; upload documents</h2>
+                        </div>
+                        <p class="ats-application-section-copy">
+                            Please ensure you have clear digital copies (PDF) of the following required documents ready for upload:
+                        </p>
+
+                        <ol class="ats-application-document-list">
+                            <li><span class="ats-application-document-index">1</span><span>All, or any in case of unavailability: Transcript of Records (TOR), Diploma, or Certificate of Graduation</span></li>
+                            <li><span class="ats-application-document-index">2</span><span>Birth certificate</span></li>
+                            <li><span class="ats-application-document-index">3</span><span>Two (2) valid government-issued IDs</span></li>
+                            <li><span class="ats-application-document-index">4</span><span>Certificate of Employment (COE) covering all previous employment within the past 5 years (if applicable)</span></li>
+                            <li><span class="ats-application-document-index">5</span><span>Upload CV in the TOR / Diploma / School Credentials portion of the form</span></li>
+                            <li class="is-optional"><span class="ats-application-document-index">6</span><span>Optional documents: NBI clearance, Police clearance, BR 2316, SSS E1 forms, or TIN verification slip</span></li>
+                        </ol>
+                    </section>
+
+                    <section class="ats-application-section" aria-labelledby="ats-reminder-title">
+                        <div class="ats-application-section-title">
+                            <span class="ats-application-section-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m9 12 2 2 4-4" />
+                                    <circle cx="12" cy="12" r="9" />
+                                </svg>
+                            </span>
+                            <h2 id="ats-reminder-title">Reminders in answering the form</h2>
+                        </div>
+
+                        <div class="ats-application-reminder-block">
+                            <h3>Application form</h3>
+                            <ul class="ats-application-reminder-list">
+                                <li>Provide all information requested and affix signatures where needed.</li>
+                                <li>Answer every field, even if it is non-mandatory. If you do not have an SSS or TIN number, kindly input random digits from 0 to 9 to proceed with the application.</li>
+                                <li>
+                                    Please download the corresponding Letter of Authorization (LOA) for your university through
+                                    <a href="https://drive.google.com/drive/folders/10XFr-wbKnItVi1ErutyaB5fm8ESvxWyN?usp=sharing"
+                                       target="_blank"
+                                       rel="noopener noreferrer">this link</a>.
+                                    If your university does not have a specific LOA in the folder, please use the
+                                    “Standard School LOA” file.
+                                </li>
+                                <li>Enter details for your references. You must provide three (3) references (not relatives). They should be colleagues, former superiors, or friends.</li>
+                                <li>Inform each reference in advance that you have shared their information and that they will be contacted by CIBI.</li>
+                                <li>Double-check your answers to ensure accuracy (dates, names, employer details, etc.).</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <aside class="ats-application-notice" aria-label="Important response deadline">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
+                            <path d="M12 9v4m0 4h.01" />
+                        </svg>
+                        <p>
+                            Your prompt response to this request within the next <strong>24 hours</strong> is critical to the success of your job application. Rest assured that all information you provide will be kept confidential in compliance with Philippine laws, including the Data Privacy Act, and will only be used for processing your application. For questions or concerns, reach out via our support chat, or call us at <a href="tel:+639230878757">+63 923 087 8757</a> (Sun) or <a href="tel:+639176320486">+63 917 632 0486</a> (Globe).
+                        </p>
+                    </aside>
+
+                    <footer class="ats-application-intro-footer">
+                        <button type="button" class="ats-application-proceed-button" @onclick="ShowApplicationForm">
+                            <span>Proceed</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
+                        </button>
+                    </footer>
+                </div>
+            </article>
+        </main>
+    }
     else
     {
-        @if (!_showApplicationForm)
-        {
-            // Instructions
-            <MudPaper  Elevation="1"
-                       Style="border-radius:4px; overflow:hidden; box-shadow:0px 10px 45px rgba(0,0,0,0.1); max-width:1200px; margin: 5px;">
-
-                <!-- Header bar -->
-                <div class="d-flex align-center justify-space-between"
-                style="background:#e9f4ff; padding:18px 24px;">
-
-                    <div class="d-flex align-center" style="gap:12px;">
-                        <MudImage Src="/images/generic/cibi-icon.png"
-                        Alt="logo"
-                        Style="width:36px; height:36px;" />
-
-                        <MudText Typo="Typo.h5"
-                        Class="mb-0 gradient-text"
-                        Style="font-weight:700;">
-                            WFS Talent Suite
-                        </MudText>
-                    </div>
-                </div>
-
-                <!-- Content area -->
-                <div class="pa-6" style="background:#fff;">
-                    <MudText Typo="Typo.subtitle2">Thank you for acknowledging our email.</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2 mb-4">
-                        We are CIBI Information, Inc., a third-party verification company engaged by a firm with whom you have either an ongoing job application or currently employed to conduct background checks. Please provide all required documents and information as outlined in the email you received.
-                    </MudText>
-
-                    <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Prepare &amp; Upload Documents</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-2">Please ensure you have clear digital copies (pdf) of the following REQUIRED DOCUMENTS ready for upload:</MudText>
-
-                    <ol class="ml-4" style="line-height:1.6;">
-                        <li>All or any in case of unavailability: Transcript of Records (TOR), Diploma or Certificate of Graduation</li>
-                        <li>Birth Certificate</li>
-                        <li>Two (2) valid government issued IDs</li>
-                        <li>Certificate of Employment (COE) covering all previous employment within the past 5 years (if applicable)</li>
-                        <li>Upload CV in TOR / Diploma / School Credentials portion of the form</li>
-                        <li>Optional documents: NBI clearance, Police clearance, BR 2316, SSS E1 forms, or TIN verification slip</li>
-                    </ol>
-
-                    <MudText Typo="Typo.subtitle1" Class="mb-1" Style="font-weight:bold;">Reminders in answering the form</MudText>
-
-                    <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Application Form</MudText>
-                    <ul style="line-height:1.6;">
-                        <li>Provide all information requested and affix signatures where needed.</li>
-                        <li>Answer every field-even if it is nonmandatory, In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-                        <li>Please download the corresponding Letter of Authorization (LOA) for your university through this <a href="https://drive.google.com/drive/folders/10XFr-wbKnItVi1ErutyaB5fm8ESvxWyN?usp=sharing"
-                            target="_blank"
-                            style="color: blue; text-decoration: underline;">
-                                link</a>. If your university does not have a specific LOA in the folder, please use the "Standard School LOA" file.</li>
-                        <li>Enter details for your references. You must provide three (3) references (not relatives). They should be colleagues, former superiors, or friends.</li>
-                        <li>Inform each reference in advance that you have shared their information and they will be contacted by CIBI.</li>
-                        <li> Doublecheck your answers to ensure accuracy (dates, names, employer details, etc.).</li>
-                    </ul>
-
-                   @*  <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 2 - Examination</MudText>
-                    <ul style="line-height:1.6;">
-                        <li>You will need to complete a timed-exam of an hour. There are three segments of 20 minutes each.</li>
-                    </ul>
-
-                    <MudText Typo="Typo.subtitle2" Class="mt-2" Style="font-weight:bold;">Part 3 - Initial Interview</MudText>
-                    <ul style="line-height:1.6;">
-                        <li>An initial interview will be conducted as part of your application process.</li>
-                    </ul> *@
-
-                    <div>
-                        Note that your prompt response to this request within the next 24 hours is critical to the success of your job application. Rest assured that all the information you provide will be kept
-                        confidential in compliance with all Philippine laws including the Data Privacy Act, and will only be used for the processing of your application. For any questions or concerns, please do not
-                        hesitate to reach out to us via our support chat box or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
-                    </div>
-
-                    <div class="d-flex justify-center mt-6">
-                    <MudButton Class="theme-button theme-button-active" Style="width: 100px; border-radius: 4px;" OnClick="@(() => _showApplicationForm = true)">
-                            Proceed
-                        </MudButton>
-                    </div>
-                </div>
-            </MudPaper>
-        }
-        else
-        {
-            <ApplicationFormComponent HasChangesChanged="SetDirtyState" EmailId="@EmailId" ActiveStep="@stepActive" ShowsPhilSys="@philSysShow" HashToken="@HashToken" />
-        }
+        <ApplicationFormComponent IsWithDrawn="SetWithdrawnStatus"
+                                  HasChangesChanged="SetDirtyState"
+                                  EmailId="@EmailId"
+                                  ActiveStep="@_stepActive"
+                                  ShowsPhilSys="@_showPhilsys"
+                                  HashToken="@HashToken" />
     }
 </div>
-
-

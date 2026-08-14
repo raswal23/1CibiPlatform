@@ -1,0 +1,80 @@
+.philsys-complete-overlay,
+.philsys-complete-overlay *,
+.philsys-complete-overlay *::before,
+.philsys-complete-overlay *::after {
+    box-sizing: border-box;
+}
+
+.philsys-complete-overlay {
+    --philsys-navy-900: #0b1b3d;
+    --philsys-border: #e4eaf6;
+    --philsys-text-2: #5b6b8c;
+    --philsys-green: #1e8e5a;
+    --philsys-green-tint: #e7f5ec;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    font-family: Inter, sans-serif;
+}
+
+.philsys-complete-overlay ::deep .philsys-complete-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 32px 30px !important;
+    border: 1px solid var(--philsys-border) !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: 0 12px 32px -12px rgba(11, 27, 61, .12) !important;
+    text-align: center;
+}
+
+.philsys-complete-badge {
+    display: flex;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 16px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: var(--philsys-green-tint);
+    color: var(--philsys-green);
+}
+
+.philsys-complete-badge svg {
+    width: 28px;
+    height: 28px;
+}
+
+.philsys-complete-title {
+    margin: 0 0 6px;
+    color: var(--philsys-navy-900);
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.philsys-complete-subtitle {
+    margin: 0 auto;
+    max-width: 38ch;
+    color: var(--philsys-text-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .philsys-complete-overlay ::deep .philsys-complete-card {
+        padding: 24px 20px !important;
+        border-radius: 14px !important;
+    }
+
+    .philsys-complete-title {
+        font-size: 18px;
+    }
+
+    .philsys-complete-badge {
+        width: 54px;
+        height: 54px;
+    }
+}

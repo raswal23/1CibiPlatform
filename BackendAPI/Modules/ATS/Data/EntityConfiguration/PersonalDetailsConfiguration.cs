@@ -63,7 +63,7 @@ public class PersonalDetailsConfiguration : IEntityTypeConfiguration<PersonalDet
         builder.Property(p => p.ResumeFileKey)
                .HasMaxLength(255);
 
-		builder.Property(p => p.PhilSysImageKey) 
+		builder.Property(p => p.BiometricFileKey) 
 			   .HasMaxLength(255);
 
         builder.Property(p => p.CreatedDate)

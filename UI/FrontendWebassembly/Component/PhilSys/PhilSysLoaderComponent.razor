@@ -1,13 +1,17 @@
-﻿@layout GenericLayout
+@layout GenericLayout
 
 <div class="philsys-loader-overlay">
-    <div class="philsys-loader-grid">
-        <MudPaper Class="philsys-loader-paper" Elevation="12">
-            <LoaderComponent />
-            <MudText Typo="Typo.subtitle1" Class="mt-4 philsys-loader-text" Align="Align.Center">
-                Processing Your Verification Result...
-            </MudText>
-        </MudPaper>
-    </div>
+    <MudPaper Class="philsys-loader-paper" Elevation="0" role="status" aria-live="polite" aria-busy="true">
+        <div class="philsys-loader-brand" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
+            </svg>
+        </div>
+        <div class="philsys-loader-spinner" aria-hidden="true">
+            <LoaderComponent Height="auto" />
+        </div>
+        <h1 class="philsys-loader-title">Verifying your identity</h1>
+        <p class="philsys-loader-text">Please wait while we securely process your PhilSys verification result.</p>
+    </MudPaper>
 </div>
-

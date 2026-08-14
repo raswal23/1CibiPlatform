@@ -2,6 +2,7 @@
 @page "/philsys/idv/liveness/{HashToken}"
 @inject IJSRuntime JS
 @inject IPhilSysService IPhilSysService
+@inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject LocalStorageService LocalStorageService
 @implements IAsyncDisposable
@@ -11,7 +12,7 @@
 <NavigationLock ConfirmExternalNavigation="true"
                 OnBeforeInternalNavigation="ConfirmNavigation" />
 
-<div class="oneplatform-generic-container">
+<div class="philsys-liveness-page">
 
     @if (isTransacted || isExpired)
     {

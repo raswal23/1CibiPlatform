@@ -22,4 +22,7 @@ public class FakeEmailSender : IEmailService
 
 	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
 		=> $"Hello {name}/{gmail}, please complete your application form using this link: {applicationFormLink}";
+
+	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName)
+		 => $"{requestor} submitted a dispute for {company} (Customer: {gmail}) with reason '{disputeReason}' for the order placed on {orderedAt:MMMM dd, yyyy} (Subject: {subjectName}).";
 }

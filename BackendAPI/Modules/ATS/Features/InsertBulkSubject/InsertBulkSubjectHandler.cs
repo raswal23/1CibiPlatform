@@ -11,10 +11,14 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			.NotEmpty()
 			.WithMessage("Bulk upload file name is required.");
 		RuleFor(x => x.bulkUploadFileDetailsDTO.BulkFile)
-			.NotEmpty()
-			.WithMessage("Bulk upload file is required.");
+			.NotNull()
+			.WithMessage("Bulk upload file is required.")
+			.Must(file => file != null &&
+			 string.Equals(System.IO.Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
+			.WithMessage("Only .csv files are allowed.");
 	}
 }
+
 public class InsertBulkSubjectHandler : ICommandHandler<InsertBulkSubjectCommand, InsertBulkSubjectResult>
 {
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;

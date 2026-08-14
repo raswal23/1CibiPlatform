@@ -19,11 +19,11 @@ public class ResendOTPEndpoint : ICarterModule
 
 			return Results.Ok(result);
 		})
-		  .WithName("manual-resend-otp")
-		  .WithTags("Authentication")
-		  .Produces<ResendOTPEndpointResponse>()
-		  .ProducesProblem(StatusCodes.Status400BadRequest)
-		  .WithSummary("manual-resend-otp")
-		  .WithDescription("manual-resend-otp");
+		.WithName("manual-resend-otp")
+		.WithTags("Authentication")
+		.Produces<bool>()
+		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.WithSummary("manual-resend-otp")
+		.WithDescription("manual-resend-otp");
 	}
 }

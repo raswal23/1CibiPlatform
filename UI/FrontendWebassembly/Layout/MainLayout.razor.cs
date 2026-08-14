@@ -2,37 +2,23 @@
 
 public partial class MainLayout
 {
-	private readonly Dictionary<int, int> AppOrder = new()
-	{
-		{ 5, 1 }, // Credit Bureau
-        { 6, 2 }, // S&I
-        { 2, 3 }, // PhilSys
-        { 1, 4 }, // CNX
-        { 4, 5 }, // AI
-        { 3, int.MaxValue } // Settings
-    };
-
-	private bool _drawerOpen = true;
 	private bool _isDarkMode = false;
 	private bool _isLoading = true;
 	private string name = "";
 
-	private const string _appIdKey = "AppId";
-	private const string _subMenuKey = "SubMenuId";
-	private const string _roleIdKey = "RoleId";
 	private const string _userNameKey = "Name";
-
-	private List<int> Apps = new List<int>();
-	private List<List<int>> SubMenus = new List<List<int>>();
-	private List<int> Roles = new List<int>();
-
-	private string GetContainerStyle()
+	private string UserInitials
 	{
-		var background = !_isDarkMode
-			? "white"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%)";
+		get
+		{
+			var initials = name
+				.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Take(2)
+				.Select(part => char.ToUpperInvariant(part[0]));
 
-		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
+			var value = string.Concat(initials);
+			return string.IsNullOrEmpty(value) ? "U" : value;
+		}
 	}
 
 	private MudTheme _myTheme = new MudTheme()
@@ -60,12 +46,10 @@ public partial class MainLayout
 		LayoutProperties = new LayoutProperties()
 		{
 			DefaultBorderRadius = "4px",
-			DrawerWidthLeft = "260px",
-			AppbarHeight = "69px"
+			AppbarHeight = "64px"
 		}
 	};
 
-	private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 	private async Task ToggleDarkMode()
 	{
 		_isDarkMode = !_isDarkMode;
@@ -74,39 +58,6 @@ public partial class MainLayout
 
 	}
 
-	private string GetAppBarStyle()
-	{
-		var gradient = _isDarkMode
-			? "linear-gradient(90deg, #68c0d6 0%, #2a77ae 50%, #102247 100%)"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%)";
-
-		// dynamically adjust margin-left if drawer is open
-
-
-		return $@"
-        width: auto !important;
-        background: {gradient} !important;
-		border-radius: 4px;
-        transition: margin-left 0.3s ease, margin-right 0.3s ease;
-    ";
-	}
-
-	private string GetNavLinkStyle(bool isActive)
-	{
-		if (isActive)
-			return _isDarkMode
-				? "background: white; color: black;"
-				: "background: linear-gradient(90deg, #102247 0%, #2a77ae 50%); color: white;";
-
-		return "";
-	}
-
-	private string GetMenuIconStyle()
-	{
-		return _isDarkMode
-			? "color: #102247;"
-			: "color: white;";
-	}
 	protected override async Task OnInitializedAsync()
 	{
 		try
@@ -127,15 +78,6 @@ public partial class MainLayout
 				return;
 			}
 
-			Apps = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_appIdKey));
-			Console.WriteLine($"Apps: {string.Join(", ", Apps)}");
-
-			SubMenus = JsonSerializer.Deserialize<List<List<int>>>(await LocalStorageService.GetItemAsync<string>(_subMenuKey));
-			Console.WriteLine($"SubMenus: {string.Join(", ", SubMenus.SelectMany(sm => sm))}");
-
-			Roles = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_roleIdKey));
-			Console.WriteLine($"Roles: {string.Join(", ", Roles)}");
-
 			name = await LocalStorageService.GetItemAsync<string>(_userNameKey) ?? string.Empty;
 
 			var stored = await LocalStorageService.GetItemAsync<bool?>("isDarkMode");
@@ -153,11 +95,6 @@ public partial class MainLayout
 			Console.WriteLine($"Authentication Error: {ex.Message}");
 			throw;
 		}
-	}
-
-	private string GetActiveNavClass()
-	{
-		return _isDarkMode ? "nav-active-light" : "nav-active-dark";
 	}
 
 	private async Task HandleLogout()
@@ -184,4 +121,5 @@ public partial class MainLayout
 			throw;
 		}
 	}
+
 }

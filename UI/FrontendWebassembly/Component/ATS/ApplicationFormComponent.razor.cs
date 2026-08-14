@@ -14,6 +14,7 @@ public partial class ApplicationFormComponent
 	private string? FaceUrl;
 	private bool IsSuccess = false;
 	private bool hasProfessionalLicense = false;
+	private string? philSysId;
 
 	// Stepper and general
 	private MudStepper? _stepper;
@@ -24,14 +25,42 @@ public partial class ApplicationFormComponent
 	// Personal Details
 	private bool consent { get; set; } = false;
 	private bool declineConsent = false;
+	private string? ConsentChoice
+	{
+		get => consent ? "yes" : declineConsent ? "no" : null;
+		set
+		{
+			consent = value == "yes";
+			declineConsent = value == "no";
+		}
+	}
 	private PersonalDetailsDTO personalDetails = new();
 	private bool NoMiddleName = false;
 	private DateTime? DateOfBirth;
 
 	// AddressDetails
+	private const string OtherOwnershipType = "Others";
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
 	private string? OwnershipOtherText = null;
+	private string? selectedOwnershipType;
+
+	private string? SelectedOwnershipType
+	{
+		get => selectedOwnershipType;
+		set
+		{
+			selectedOwnershipType = value;
+
+			if (string.Equals(selectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal))
+			{
+				selectedOwnershipType = OwnershipOtherText;
+			}
+		}
+	}
+
+	private bool IsOtherOwnershipSelected =>
+		string.Equals(SelectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal);
 
 	// Educational background
 	private EducationalBackgroundDTO educationalBackground = new();
@@ -53,8 +82,8 @@ public partial class ApplicationFormComponent
 	private DateTime? DatePermittedToContact3;
 	private DateTime? StartOfEmployment3;
 	private DateTime? EndOfEmployment3;
-	private bool AddEmployer2;
-	private bool AddEmployer3;
+	private bool AddEmployer2 = false;
+	private bool AddEmployer3 = false;
 
 	// Step 5 - references
 	private ReferenceDetailsDTO referenceDetails = new();
@@ -85,34 +114,84 @@ public partial class ApplicationFormComponent
 
 	protected override async Task OnInitializedAsync()
 	{
-		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? string.Empty;
-		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? string.Empty;
-		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? string.Empty;
-		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:suffix") ?? string.Empty;
+		await RestoreDraftAsync();
+
+		philSysId = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:digitalId") ?? string.Empty;
+		personalDetails.FirstName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:firstName") ?? personalDetails.FirstName;
+		personalDetails.MiddleName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:middleName") ?? personalDetails.MiddleName;
+		personalDetails.LastName = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:lastName") ?? personalDetails.LastName;
+		personalDetails.Suffix = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:suffix") ?? personalDetails.Suffix;
 		string? dobString = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:birthDate");
-		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:sex") ?? string.Empty;
-		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:emailAddress") ?? string.Empty;
-		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? string.Empty;
+		personalDetails.Sex = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:sex") ?? personalDetails.Sex;
+		personalDetails.EmailAlternative = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:emailAddress") ?? personalDetails.EmailAlternative;
+		personalDetails.MobileNumber = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:phoneNumber") ?? personalDetails.MobileNumber;
 		FaceUrl = await LocalStorageService.GetItemAsync<string?>($"ats:applicationForm:profilePicture") ?? string.Empty;
 
-		_activeStep = ActiveStep;
+		if (!string.IsNullOrEmpty(FaceUrl))
+		{
+			var uri = new Uri(FaceUrl);
+
+			personalDetails.BiometricFileName = Path.GetFileName(uri.AbsolutePath);
+
+			try
+			{
+				personalDetails.BiometricFile = await Http.GetByteArrayAsync(FaceUrl);
+			}
+			catch (HttpRequestException exception) when (exception.StatusCode == System.Net.HttpStatusCode.Forbidden)
+			{
+				await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
+				FaceUrl = string.Empty;
+				personalDetails.BiometricFileName = null;
+				personalDetails.BiometricFile = null;
+			}
+		}
+
 		showPhilSys = ShowsPhilSys;
 
 		if (!string.IsNullOrWhiteSpace(dobString))
 		{
-			if (DateTime.TryParse(dobString, out var dobDateTime))
+			if (DateOnly.TryParseExact(dobString, "yyyy-MM-dd", out var dob))
 			{
-				personalDetails.DOB = DateOnly.FromDateTime(dobDateTime);
+				DateOfBirth = dob.ToDateTime(TimeOnly.MinValue);
 			}
 		}
+
+		_activeStep = Math.Clamp(ActiveStep, 0, 5);
+		_draftPersistenceEnabled = true;
 	}
 
-	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
-
-	private async Task OnChanged()
+	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		await HasChangesChanged.InvokeAsync(false);
+		await JS.InvokeVoidAsync("general.attachNameFilter");
 	}
+
+	private bool CanAddEmployer2 =>
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyCity) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyProvince) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyCountry) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1CompanyPostalCode) &&
+		DatePermittedToContact1.HasValue &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1JobTitle) &&
+		StartOfEmployment1.HasValue &&
+		(professionalExperiences.Emp1CurrentlyEmployed || EndOfEmployment1.HasValue) &&
+		professionalExperiences.Emp1COEUploadFile is not null &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorContactNumber);
+
+	private bool CanAddEmployer3 =>
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyCity) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyProvince) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyCountry) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2CompanyPostalCode) &&
+		DatePermittedToContact2.HasValue &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2JobTitle) &&
+		StartOfEmployment2.HasValue &&
+		(professionalExperiences.Emp2CurrentlyEmployed || EndOfEmployment2.HasValue) &&
+		professionalExperiences.Emp2COEUploadFile is not null &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorContactNumber);
 
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
 	{
@@ -178,23 +257,67 @@ public partial class ApplicationFormComponent
 
 	}
 
+	private Task OnAddEmployer3Changed(bool value)
+	{
+		if (!value)
+		{
+			AddEmployer3 = false;
+			return Task.CompletedTask;
+		}
+
+		if (!CanAddEmployer3)
+		{
+			Snackbar.Add("Please complete Employer 2 before adding Employer 3.", Severity.Warning);
+			return Task.CompletedTask;
+		}
+
+		AddEmployer3 = true;
+		return Task.CompletedTask;
+	}
+
+	private Task OnAddEmployer2Changed(bool value)
+	{
+		if (!value)
+		{
+			RemoveEmployer2();
+			return Task.CompletedTask;
+		}
+
+		if (!CanAddEmployer2)
+		{
+			Snackbar.Add("Please complete Employer 1 before adding Employer 2.", Severity.Warning);
+			return Task.CompletedTask;
+		}
+
+		AddEmployer2 = true;
+		return Task.CompletedTask;
+	}
+
+	private void RemoveEmployer2()
+	{
+		AddEmployer3 = false;
+		AddEmployer2 = false;
+	}
+
 	private bool ValidateUploads()
 	{
 		return _activeStep switch
 		{
-			1 => !(
+			2 => !(
 				(_govtIdError = personalDetails.AdditionalGovtIDFile == null) |
 				(_resumeError = personalDetails.ResumeFile == null) |
 				(_nbiError = personalDetails.NBIClearanceFile == null)
 			),
 
-			2 => !(
+			3 => !(
+
 				(_diplomaError = educationalBackground.DiplomaFile == null
+								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
 								&& educationalBackground.HighestEducationalAttainment != "None"
 								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
 			),
 
-			3 => !(
+			4 => !(
 				(_licenseError = licensesDetails.LicenseUploadFile == null
 								&& hasProfessionalLicense) |
 				(_emp1Error = professionalExperiences.Emp1COEUploadFile == null) |
@@ -203,19 +326,86 @@ public partial class ApplicationFormComponent
 			),
 
 			_ => true
-		};
+		}; ;
 	}
 
 	private async Task SkipStep()
 	{
 		if (_stepper is not null)
+		{
 			await _stepper.SkipCurrentStepAsync();
+			await SaveDraftAsync();
+		}
 	}
 
-	private async Task ResetStepper()
+	private async Task OnPreviousStepAsync()
 	{
 		if (_stepper is not null)
-			await _stepper.ResetAsync();
+		{
+			await _stepper.PreviousStepAsync();
+			await SaveDraftAsync();
+		}
+	}
+
+	private async Task CancelTransaction()
+	{
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Withdraw Application"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will withdraw the application form."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Withdraw"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"By clicking 'Withdraw', the application form will be withdrawn and you will not be able to submit it."
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor),Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor),"#FFF8E1"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor),"theme-button-warning"
+			}
+
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		if (result!.Canceled)
+			return;
+
+		var IsSuccess = await ATSService.WithdrawApplicationForm(HashToken!);
+
+		if (!IsSuccess)
+			return;
+
+		await IsWithDrawn.InvokeAsync("Withdrawn");
+		await RemoveItemsAsync();
 	}
 
 	private async Task ProceedClicked()
@@ -223,11 +413,35 @@ public partial class ApplicationFormComponent
 		showPhilSys = true;
 	}
 
+	[Parameter] public EventCallback<bool> HasChangesChanged { get; set; }
+	[Parameter] public EventCallback<string> IsWithDrawn { get; set; }
+
+	private async Task OnChanged()
+	{
+		await HasChangesChanged.InvokeAsync(false);
+	}
+
+	private bool ValidateUploadFile(string fileName)
+	{
+		var result = FileValidationService.ValidateExtension(fileName, ".pdf");
+
+		if (!result.IsValid)
+		{
+			Snackbar.Add(result.ErrorMessage!, Severity.Error);
+			return false;
+		}
+
+		return true;
+	}
+
 	private async Task OnGovtIdUpload(InputFileChangeEventArgs e)
 	{
-
 		if (e.File != null)
 		{
+			var isValid = ValidateUploadFile(e.File.Name);
+			if (!isValid)
+				return;
+
 			using var ms = new MemoryStream();
 
 			await e.File
@@ -247,6 +461,10 @@ public partial class ApplicationFormComponent
 	{
 		if (e.File != null)
 		{
+			var isValid = ValidateUploadFile(e.File.Name);
+			if (!isValid)
+				return;
+
 			using var ms = new MemoryStream();
 
 			await e.File
@@ -263,6 +481,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCvUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -281,6 +503,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnDiplomaUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File is not null)
 		{
 			using var ms = new MemoryStream();
@@ -299,6 +525,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnProfessionalLicenseUpload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -311,12 +541,43 @@ public partial class ApplicationFormComponent
 			licensesDetails.LicenseUploadFileName = e.File.Name;
 		}
 
+		if (!hasProfessionalLicense)
+		{
+			ClearProfessionalLicenseDetails();
+			return;
+		}
+
 		_licenseError = false;
 		return;
 	}
 
+	private async Task SetProfessionalLicenseAsync(bool value)
+	{
+		hasProfessionalLicense = value;
+
+		if (!value)
+			ClearProfessionalLicenseDetails();
+
+		await SaveDraftAsync();
+	}
+
+	private void ClearProfessionalLicenseDetails()
+	{
+		licensesDetails.LicenseName = null;
+		licensesDetails.LicenseNumber = null;
+		licensesDetails.LicenseExpiryDate = null;
+		licensesDetails.LicenseUploadFile = null;
+		licensesDetails.LicenseUploadFileName = null;
+		LicenseExpiryDate = null;
+		_licenseError = false;
+	}
+
 	private async Task OnCoe1Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -335,6 +596,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCoe2Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -352,6 +617,10 @@ public partial class ApplicationFormComponent
 
 	private async Task OnCoe3Upload(InputFileChangeEventArgs e)
 	{
+		var isValid = ValidateUploadFile(e.File.Name);
+		if (!isValid)
+			return;
+
 		if (e.File != null)
 		{
 			using var ms = new MemoryStream();
@@ -403,7 +672,7 @@ public partial class ApplicationFormComponent
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
 			educationalBackground.HighestEducationalAttainment == "None" ||
-			educationalBackground.HighestEducationalAttainment  == "Elementary Graduate")
+			educationalBackground.HighestEducationalAttainment == "Elementary Graduate")
 		{
 			return true;
 		}
@@ -413,7 +682,7 @@ public partial class ApplicationFormComponent
 	private bool DisableEducationForBelowCollege()
 	{
 		if (string.IsNullOrEmpty(educationalBackground.HighestEducationalAttainment) ||
-			educationalBackground.HighestEducationalAttainment == "None" || 
+			educationalBackground.HighestEducationalAttainment == "None" ||
 			educationalBackground.HighestEducationalAttainment == "Elementary Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Junior High School Graduate" ||
 			educationalBackground.HighestEducationalAttainment == "Senior High School Graduate")
@@ -422,10 +691,72 @@ public partial class ApplicationFormComponent
 		}
 		return false;
 	}
+	private void ResetEducationalBackground(string? education)
+	{
+		switch (education)
+		{
+			case "None":
+			case "Elementary Graduate":
 
+				GraduationDate = null;
+				DegreeWithMajor = null;
+				AcademicInstitution = null;
+
+				educationalBackground.DiplomaFile = null;
+				educationalBackground.DiplomaFileName = null;
+
+				_diplomaError = false;
+				break;
+
+			case "Junior High School Graduate":
+			case "Senior High School Graduate":
+
+				DegreeWithMajor = null;
+				break;
+
+			case "College Graduate":
+
+				_diplomaError = false;
+				break;
+
+			case "Master's Graduate":
+			case "Doctorate Graduate":
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	private string? HighestEducationalAttainment
+	{
+		get => educationalBackground.HighestEducationalAttainment;
+		set
+		{
+			if (educationalBackground.HighestEducationalAttainment == value)
+				return;
+
+			educationalBackground.HighestEducationalAttainment = value;
+
+			ResetEducationalBackground(value);
+
+		}
+	}
 	private async Task OnSaveAndNextAsync()
 	{
 		await ApplicationForm!.ValidateAsync();
+
+		if (_activeStep == 0)
+		{
+			_signatureError = signatureDetails.Signature is null ||
+						  signatureDetails.Signature.Length == 0;
+
+			if (_signatureError)
+			{
+				await InvokeAsync(StateHasChanged);
+				return;
+			}
+		}
 
 		bool uploadsValid = ValidateUploads();
 
@@ -434,6 +765,8 @@ public partial class ApplicationFormComponent
 			if (_stepper is not null)
 				await _stepper.NextStepAsync();
 		}
+
+		await SaveDraftAsync();
 	}
 
 	private Task OnSignatureChanged(byte[]? value)
@@ -454,6 +787,12 @@ public partial class ApplicationFormComponent
 
 		if (!ApplicationForm.IsValid || _signatureError)
 		{
+			if (_signatureError)
+			{
+				_activeStep = 0;
+				await SaveDraftAsync();
+			}
+
 			await InvokeAsync(StateHasChanged);
 			return;
 		}
@@ -513,10 +852,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		if (!string.IsNullOrEmpty(OwnershipOtherText))
-		{
-			addressDetails.TypeOfOwnership = OwnershipOtherText;
-		}
+		addressDetails.TypeOfOwnership = SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{
@@ -559,22 +895,34 @@ public partial class ApplicationFormComponent
 		{
 			isSaving = true;
 			await InvokeAsync(StateHasChanged);
-			await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
-			IsSuccess = true;
+			var response = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
+
+			if (!response.isSuccess)
+			{
+				Snackbar.Add($"{response.errorDetail}", Severity.Error);
+				return;
+			}
+			IsSuccess = response.isSuccess;
+			await RemoveItemsAsync();
 		}
 		finally
 		{
-			await OnChanged();
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
 			isSaving = false;
 		}
+	}
+
+	private async Task RemoveItemsAsync()
+	{
+		await ClearDraftAsync();
+		await OnChanged();
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
+		await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
 	}
 }

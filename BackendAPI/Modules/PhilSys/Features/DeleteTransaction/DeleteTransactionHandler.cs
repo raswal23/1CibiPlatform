@@ -1,10 +1,19 @@
 ﻿namespace PhilSys.Features.DeleteTransaction;
 public record DeleteTransactionCommand(string HashToken) : ICommand<DeleteTransactionResult>;
 public record DeleteTransactionResult(bool IsDeleted);
+public class DeleteTransactionCommandValidator : AbstractValidator<DeleteTransactionCommand>
+{
+	public DeleteTransactionCommandValidator()
+	{
+		RuleFor(x => x.HashToken)
+			.NotEmpty().WithMessage("HashToken is required.");
+	}
+}
+
 public class DeleteTransactionHandler : ICommandHandler<DeleteTransactionCommand, DeleteTransactionResult>
 {
-	private readonly DeleteTransactionService _deleteTransactionService;
-	public DeleteTransactionHandler(DeleteTransactionService deleteTransactionService)
+	private readonly IDeleteTransactionService _deleteTransactionService;
+	public DeleteTransactionHandler(IDeleteTransactionService deleteTransactionService)
 	{
 		_deleteTransactionService = deleteTransactionService;
 	}

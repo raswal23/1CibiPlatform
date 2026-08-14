@@ -8,17 +8,43 @@ public abstract class SecurePageBase : ComponentBase
 {
 	[Inject] protected NavigationManager Nav { get; set; } = default!;
 	[Inject] protected IAccessService AccessService { get; set; } = default!;
+	[Inject] protected IATSUserManagementService ATSUserManagementService { get; set; } = default!;
+	[CascadingParameter(Name = "ATSAccessibleModuleIds")]
+	protected IReadOnlySet<int>? CascadingATSModuleIds { get; set; }
+
+	protected IReadOnlySet<int> AccessibleATSModuleIds { get; private set; } = new HashSet<int>();
+	protected bool IsPageAuthorized { get; private set; }
 
 	protected override async Task OnInitializedAsync()
 	{
-		var permissionAttr = GetType().GetCustomAttribute<RequirePermissionAttribute>();
-		if (permissionAttr is null)
-			return;
+		IsPageAuthorized = false;
+		AccessibleATSModuleIds = CascadingATSModuleIds ?? new HashSet<int>();
 
-		bool hasAccess = await AccessService.HasAccessAsync(permissionAttr.AppId, permissionAttr.SubMenuId);
-		if (!hasAccess)
+		var permissionAttr = GetType().GetCustomAttribute<RequirePermissionAttribute>();
+		if (permissionAttr is not null &&
+			!await AccessService.HasAccessAsync(permissionAttr.AppId, permissionAttr.SubMenuId))
 		{
 			Nav.NavigateTo("/access-denied");
+			return;
 		}
+
+		var moduleAttr = GetType().GetCustomAttribute<RequireATSModuleAttribute>();
+		if (moduleAttr is not null)
+		{
+			if (CascadingATSModuleIds is null)
+			{
+				AccessibleATSModuleIds = (await ATSUserManagementService.GetMyModuleIdsAsync())
+					.ToHashSet();
+			}
+
+			if (moduleAttr.ModuleIds.Count == 0 ||
+				!moduleAttr.ModuleIds.Any(AccessibleATSModuleIds.Contains))
+			{
+				Nav.NavigateTo("/access-denied");
+				return;
+			}
+		}
+
+		IsPageAuthorized = true;
 	}
 }

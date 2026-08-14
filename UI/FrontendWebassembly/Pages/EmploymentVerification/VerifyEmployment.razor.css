@@ -1,0 +1,112 @@
+.ev-confirm-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #fff2fa 0%, #f8e6f7 48%, #ffe2ed 100%);
+}
+
+.ev-confirm-card {
+    width: min(620px, 100%);
+    overflow: hidden;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 22px 60px rgba(125, 41, 113, .18);
+}
+
+.ev-confirm-header {
+    padding: 2.4rem 2.5rem 2.2rem;
+    color: #fff;
+    text-align: center;
+    background: linear-gradient(120deg, #8d2f91, #d945a0 54%, #ff8fb8);
+}
+
+.ev-confirm-brand {
+    font-size: .72rem;
+    letter-spacing: .14rem;
+    text-transform: uppercase;
+    opacity: .9;
+}
+
+.ev-confirm-icon {
+    width: 3.3rem;
+    height: 3.3rem;
+    margin: 1.5rem auto 1rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.55);
+    border-radius: 50%;
+    font-size: 1.5rem;
+}
+
+    .ev-confirm-icon svg {
+        width: 1.6rem;
+        height: 1.6rem;
+    }
+
+/* Expired links get a muted amber treatment so the page reads as a dead end
+   rather than an error the recipient caused. */
+.ev-confirm-header-expired {
+    background: linear-gradient(120deg, #8a6410, #c98a1d 54%, #f0b850);
+}
+
+.ev-confirm-header-used {
+    background: linear-gradient(120deg, #1f5d54, #2f8b78 54%, #6fc4ab);
+}
+
+.ev-confirm-body {
+    padding: 2rem 2.5rem 1.5rem;
+}
+
+.ev-confirm-lead {
+    margin: 0 0 1.25rem;
+    color: #4a3a48;
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.ev-confirm-callout {
+    display: grid;
+    gap: .4rem;
+    padding: 1.1rem 1.2rem;
+    border-radius: 14px;
+    background: #fff8fc;
+    border: 1px solid #f3d8e8;
+    line-height: 1.6;
+}
+
+    .ev-confirm-callout strong {
+        color: #321b35;
+        font-size: .95rem;
+    }
+
+    .ev-confirm-callout span {
+        color: #76566f;
+        font-size: .9rem;
+    }
+
+.ev-confirm-header h1 { margin: 0; font-size: 1.8rem; }
+.ev-confirm-header p { margin: .75rem 0 0; opacity: .9; }
+
+.ev-confirm-details { margin: 0; padding: 2rem 2.5rem 1rem; }
+.ev-confirm-details div { display: flex; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid #f0dce9; }
+.ev-confirm-details dt { color: #96728e; font-size: .85rem; }
+.ev-confirm-details dd { margin: 0; color: #321b35; font-weight: 700; text-align: right; }
+.ev-confirm-expiry { margin: 0; padding: 0 2.5rem 1.75rem; color: #a1849b; font-size: .78rem; text-align: center; }
+.ev-confirm-note, .ev-confirm-message { padding: 0 2.5rem 1.25rem; color: #76566f; line-height: 1.6; }
+.ev-confirm-actions { display: flex; gap: .75rem; padding: 0 2.5rem 2rem; }
+.ev-confirm-actions button { flex: 1; padding: .85rem 1rem; border: 0; border-radius: 999px; font-weight: 700; cursor: pointer; }
+.ev-confirm-approve { color: #fff; background: linear-gradient(120deg, #a52d91, #e3489f); }
+.ev-confirm-reject { color: #9b376f; background: #fff0f8; }
+.ev-confirm-success, .ev-confirm-error { margin: 2rem 2.5rem; padding: 1rem 1.1rem; display: grid; gap: .35rem; border-radius: 14px; line-height: 1.5; }
+.ev-confirm-success { color: #24643f; background: #ebfaf0; }
+.ev-confirm-error { color: #8c2e4c; background: #fff0f3; }
+.ev-confirm-footer { padding: 1rem 2.5rem; color: #a1849b; background: #fff8fc; font-size: .75rem; line-height: 1.5; text-align: center; }
+
+@media (max-width: 560px) {
+    .ev-confirm-header, .ev-confirm-details, .ev-confirm-body { padding-left: 1.35rem; padding-right: 1.35rem; }
+    .ev-confirm-actions { padding-left: 1.35rem; padding-right: 1.35rem; flex-direction: column; }
+    .ev-confirm-note { padding-left: 1.35rem; padding-right: 1.35rem; }
+    .ev-confirm-expiry { padding-left: 1.35rem; padding-right: 1.35rem; }
+    .ev-confirm-footer { padding-left: 1.35rem; padding-right: 1.35rem; }
+}

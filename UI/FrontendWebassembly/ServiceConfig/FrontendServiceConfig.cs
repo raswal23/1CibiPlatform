@@ -10,6 +10,14 @@ public static class FrontendServiceConfig
 
 		var isUat = string.Equals(env.Environment, "UAT", StringComparison.OrdinalIgnoreCase);
 
+		var isSandbox = string.Equals(env.Environment, "Sandbox", StringComparison.OrdinalIgnoreCase);
+
+		if (isSandbox)
+		{
+			apiBaseFromConfig ??= configuration["ApiBase"];
+			ssoBaseFromConfig ??= configuration["SsoApiBase"];
+		}
+
 		if (isUat)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
@@ -22,7 +30,7 @@ public static class FrontendServiceConfig
 			ssoBaseFromConfig ??= configuration["SsoApiBase"];
 		}
 
-		if (!env.IsProduction() && !isUat)
+		if (!env.IsProduction() && !isUat && !isSandbox)
 		{
 			apiBaseFromConfig ??= configuration["ApiBase"];
 			ssoBaseFromConfig ??= configuration["SsoApiBase"];
@@ -55,16 +63,29 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<LocalStorageService>();
 		services.AddScoped<EmailValidationService>();
+		services.AddScoped<FileValidationService>();
+		services.AddScoped<MobileNumberValidationService>();
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
 		services.AddScoped<IUserManagementService, UserManagementService>();
-		services.AddScoped<ICandidateService, CandidateService>();
 		services.AddScoped<ISSOService, SSOService>();
 		services.AddScoped<IAIAgentChatService, AIChatService>();
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
+		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService, FrontendWebassembly.Services.EmploymentVerification.Implementation.EmploymentVerificationService>();
+		services.AddScoped<IApplicationFormStateService, ApplicationFormStateService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
+		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
+		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IDashboardService, DashboardService>();
+		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IClientManagementService, ClientManagementService>();
+		services.AddScoped<IRoleManagementService, RoleManagementService>();
+		services.AddScoped<IModuleManagementService, ModuleManagementService>();
+		services.AddScoped<IATSUserManagementService, ATSUserManagementService>();
+		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
+		services.AddScoped<FrontendWebassembly.Services.Logging.IPlatformLogService, FrontendWebassembly.Services.Logging.PlatformLogService>();
 
 		services.AddMudServices(config =>
 		{
