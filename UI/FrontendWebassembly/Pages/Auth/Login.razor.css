@@ -112,6 +112,8 @@
 
 .auth-front {
     z-index: 3;
+    /* Keep the sign-up prompt from showing mirrored text on the back of the flip. */
+    backface-visibility: hidden;
     background: linear-gradient(150deg, var(--navy-900) 0%, var(--blue-600) 100%) no-repeat 0 0 / 200%;
 }
 
