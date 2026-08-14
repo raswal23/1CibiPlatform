@@ -99,6 +99,26 @@
                     </div>
                 }
 
+                @if (EnableReload)
+                {
+                    <button type="button"
+                            class="table-component-reload-button @(_isReloading ? "is-reloading" : null)"
+                            aria-label="@ReloadAriaLabel"
+                            title="@ReloadAriaLabel"
+                            disabled="@_isReloading"
+                            @onclick="ReloadDataAsync">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2.2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v4h-4" />
+                        </svg>
+                    </button>
+                }
+
                 @if (EnableSearch)
                 {
                     <div class="table-component-search">

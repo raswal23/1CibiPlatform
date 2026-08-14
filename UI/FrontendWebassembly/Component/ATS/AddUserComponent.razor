@@ -184,7 +184,8 @@
                                         @foreach (var module in VisibleModules.Where(module => module.IsActive))
                                         {
                                             var isSelected = SelectedModuleIds.Contains(module.ModuleId);
-                                            <MudMenuItem OnClick="@(() => ToggleModule(module.ModuleId))">
+                                            <MudMenuItem AutoClose="false"
+                                                         OnClick="@(() => ToggleModule(module.ModuleId))">
                                                 <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Outlined.CheckBoxOutlineBlank)" Size="Size.Small" />
                                                 <span>@module.ModuleName</span>
                                             </MudMenuItem>

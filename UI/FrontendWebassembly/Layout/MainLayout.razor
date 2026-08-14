@@ -26,7 +26,7 @@
                                  stroke-width="2"
                                  stroke-linecap="round"
                                  stroke-linejoin="round">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                                <path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0in  0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
                                 <path d="M3.3 6.9 12 12l8.7-5.1M12 22V12" />
                             </svg>
                         </span>
@@ -71,30 +71,7 @@
 
         </ChildContent>
         <ErrorContent Context="exception">
-            <MudContainer Class="d-flex flex-column justify-center align-center oneplatform-generic-container" Style="gap: 20px;">
-                <MudPaper Class="pa-8" Elevation="3" Style="max-width: 600px; text-align: center;">
-                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Large" Class="mb-4" />
-                    <MudText Typo="Typo.h4" Color="Color.Error" Class="mb-2">
-                        Oops! Something went wrong
-                    </MudText>
-                    <MudText Typo="Typo.body1" Class="mb-4">
-                        We encountered an unexpected error. Please try refreshing the page.
-                    </MudText>
-                    <MudExpansionPanels>
-                        <MudExpansionPanel Text="Error Details">
-                            <MudText Typo="Typo.body2" Style="font-family: monospace; white-space: pre-wrap; word-break: break-word;">
-                                @exception.Message
-                            </MudText>
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
-                    <ButtonComponent OnClick="@(() => Navigation.NavigateTo(Navigation.Uri, true))"
-                                     StartIcon="@Icons.Material.Filled.Refresh"
-                                     Class="theme-button theme-button-active mt-4"
-                                     Style="width: 200px; border-radius: 4px;">
-                        Reload Page
-                    </ButtonComponent>
-                </MudPaper>
-            </MudContainer>
+            <ErrorDialogComponent Message="@exception.Message" />
         </ErrorContent>
     </ErrorBoundary>
 

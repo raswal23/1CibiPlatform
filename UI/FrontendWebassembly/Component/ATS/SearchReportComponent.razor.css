@@ -261,10 +261,9 @@
 
 ::deep .search-report-results .table-component-toolbar {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 400px)) !important;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr) 2.375rem minmax(0, 400px) !important;
     align-items: end;
-    justify-content: space-between;
-    gap: 16px 20px;
+    gap: 16px 12px;
 }
 
 ::deep .search-report-results .table-component-toolbar > .mud-typography {
@@ -290,7 +289,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    grid-column: 2;
+    grid-column: 4;
     grid-row: 2;
     width: 400px !important;
     max-width: 100%;
@@ -298,6 +297,13 @@
     margin-left: 0 !important;
     justify-self: end;
     align-self: end;
+}
+
+::deep .search-report-results .table-component-reload-button {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: end;
+    margin-bottom: 9px;
 }
 
 ::deep .search-report-results .table-component-search .mud-input-control,
@@ -460,20 +466,26 @@
 
 @media (max-width: 900px) {
     ::deep .search-report-results .table-component-toolbar {
-        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-columns: 2.375rem minmax(0, 1fr) !important;
         align-items: stretch;
     }
 
     ::deep .search-report-results .table-component-toolbar > .mud-typography,
-    ::deep .search-report-results .table-component-toolbar-left,
-    ::deep .search-report-results .table-component-search {
-        grid-column: 1;
+    ::deep .search-report-results .table-component-toolbar-left {
+        grid-column: 1 / -1;
     }
 
     ::deep .search-report-results .table-component-toolbar > .mud-typography { grid-row: 1; }
     ::deep .search-report-results .table-component-toolbar-left { grid-row: 2; }
+    ::deep .search-report-results .table-component-reload-button {
+        grid-column: 1;
+        grid-row: 3;
+        align-self: center;
+        margin-bottom: 0;
+    }
     ::deep .search-report-results .table-component-search {
         grid-row: 3;
+        grid-column: 2;
         width: 100% !important;
         justify-self: stretch;
     }
