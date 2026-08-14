@@ -5,9 +5,6 @@ public class ATSCacheRepository : IATSRepository
 	private readonly IATSRepository _atsRepository;
 	private readonly HybridCache _hybridCache;
 
-	private readonly string WithdrawnApplicationTag = "withdrawnapplication";
-	private readonly string DisputeOrderTag = "disputeorder";
-	private readonly string ReportTag = "report";
 	public ATSCacheRepository(IATSRepository atsRepository, HybridCache hybridCache)
 	{
 		_atsRepository = atsRepository;
@@ -28,7 +25,7 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.AddEmailInvitationRequestAsync(emailInvitationRequest);
 
 		if (result)
-			await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report);
 
 		return result;
 	}
@@ -66,7 +63,7 @@ public class ATSCacheRepository : IATSRepository
 			cacheKey,
 			async id => await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, cancellationToken),
 			null,
-			tags: [WithdrawnApplicationTag]);
+			tags: [CacheTags.WithdrawnApplication]);
 	}
 
 	public async Task<bool> AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
@@ -84,7 +81,7 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
 
 		if (result)
-			await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report);
 
 		return result;
 	}
@@ -94,9 +91,9 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.UpdateBulkEmailInvitationRequestForSentEmailAsync(emailInvitationRequests);
 	}
 
-	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
+	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<Guid> bulkUploadFileDetailIds, string orderStatus)
 	{
-		return await _atsRepository.UpdateBulkFileDetailsStatusAsync(bulkUploadFileDetails);
+		return await _atsRepository.UpdateBulkFileDetailsStatusAsync(bulkUploadFileDetailIds, orderStatus);
 	}
 
 	public async Task<bool> UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(Guid emailInvitationId)
@@ -117,8 +114,8 @@ public class ATSCacheRepository : IATSRepository
 	{
 		var result = await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationRequestId);
 
-		await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
-		await _hybridCache.RemoveByTagAsync(ReportTag);
+		await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication);
+		await _hybridCache.RemoveByTagAsync(CacheTags.Report);
 
 		return result;
 	}
@@ -136,7 +133,7 @@ public class ATSCacheRepository : IATSRepository
 	public async Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken)
 	{
 		var result = await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken); 
-		await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
+		await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication);
 		return result;
 	}
 
@@ -161,7 +158,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [WithdrawnApplicationTag],
+			tags: [CacheTags.WithdrawnApplication],
 			cancellationToken);
 	}
 
@@ -186,7 +183,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [WithdrawnApplicationTag],
+			tags: [CacheTags.WithdrawnApplication],
 			cancellationToken);
 	}
 
@@ -200,7 +197,7 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);
 
 		if (result)
-			await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication);
 
 		return result;
 	}
@@ -211,8 +208,8 @@ public class ATSCacheRepository : IATSRepository
 
 		if (result)
 		{
-			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
-			await _hybridCache.RemoveByTagAsync(ReportTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder);
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report);
 		}
 
 		return result;
@@ -239,7 +236,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [DisputeOrderTag],
+			tags: [CacheTags.DisputeOrder],
 			cancellationToken);
 	}
 
@@ -264,7 +261,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [DisputeOrderTag],
+			tags: [CacheTags.DisputeOrder],
 			cancellationToken);
 	}
 
@@ -273,7 +270,7 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
 
 		if (result)
-			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder);
 
 		return result;
 	}
@@ -288,8 +285,8 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.AddReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
 		{
-			await _hybridCache.RemoveByTagAsync(ReportTag);
-			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder);
 		}
 
 		return result;
@@ -300,8 +297,8 @@ public class ATSCacheRepository : IATSRepository
 		var result = await _atsRepository.UpdateReportDetailsAsync(reportDetails, cancellationToken);
 		if (result)
 		{
-			await _hybridCache.RemoveByTagAsync(ReportTag);
-			await _hybridCache.RemoveByTagAsync(DisputeOrderTag);
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder);
 		}
 		return result;
 	}
@@ -347,7 +344,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [ReportTag],
+			tags: [CacheTags.Report],
 			cancellationToken);
 	}
 
@@ -362,7 +359,7 @@ public class ATSCacheRepository : IATSRepository
 			{
 				Expiration = TimeSpan.FromMinutes(5)
 			},
-			tags: [ReportTag],
+			tags: [CacheTags.Report],
 			cancellationToken: cancellationToken);
 	}
 
@@ -400,7 +397,7 @@ public class ATSCacheRepository : IATSRepository
 				requiredRequestorId,
 				token),
 			null,
-			tags: [ReportTag],
+			tags: [CacheTags.Report],
 			cancellationToken);
 	}
 

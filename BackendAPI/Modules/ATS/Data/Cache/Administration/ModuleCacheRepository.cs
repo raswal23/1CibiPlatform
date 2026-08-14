@@ -2,7 +2,6 @@ namespace ATS.Data.Cache.Administration;
 
 public sealed class ModuleCacheRepository : IModuleRepository
 {
-	private const string ModuleTag = "module";
 	private readonly IModuleRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -17,7 +16,7 @@ public sealed class ModuleCacheRepository : IModuleRepository
 		var key = $"module_page_{request.PageIndex}_size_{request.PageSize}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
 			key, request, async (value, token) => await _repository.GetModulesAsync(value, token), null,
-			tags: [ModuleTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Module], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest request, CancellationToken cancellationToken)
@@ -25,14 +24,14 @@ public sealed class ModuleCacheRepository : IModuleRepository
 		var key = $"module_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
 			key, request, async (value, token) => await _repository.SearchModulesAsync(value, token), null,
-			tags: [ModuleTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Module], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
 	{
 		var result = await _repository.AddModuleAsync(moduleDTO);
 		if (result)
-			await _cache.RemoveByTagAsync(ModuleTag);
+			await _cache.RemoveByTagAsync(CacheTags.Module);
 		return result;
 	}
 
@@ -41,7 +40,7 @@ public sealed class ModuleCacheRepository : IModuleRepository
 	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails)
 	{
 		var result = await _repository.EditModuleAsync(moduleDetails);
-		await _cache.RemoveByTagAsync(ModuleTag);
+		await _cache.RemoveByTagAsync(CacheTags.Module);
 		return result;
 	}
 }

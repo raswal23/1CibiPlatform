@@ -2,8 +2,6 @@ namespace ATS.Data.Cache.Administration;
 
 public sealed class ClientCacheRepository : IClientRepository
 {
-	private const string ClientTag = "client";
-	private const string PackageTag = "package";
 	private readonly IClientRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -18,7 +16,7 @@ public sealed class ClientCacheRepository : IClientRepository
 		var key = $"client_v2_page_{request.PageIndex}_size_{request.PageSize}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
 			key, request, async (value, token) => await _repository.GetClientsAsync(value, token), null,
-			tags: [ClientTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Client], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest request, CancellationToken cancellationToken)
@@ -26,13 +24,13 @@ public sealed class ClientCacheRepository : IClientRepository
 		var key = $"client_v2_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
 			key, request, async (value, token) => await _repository.SearchClientsAsync(value, token), null,
-			tags: [ClientTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Client], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var result = await _repository.AddClientAsync(clientDTOs, cancellationToken);
-		await _cache.RemoveByTagAsync(ClientTag, cancellationToken);
+		await _cache.RemoveByTagAsync(CacheTags.Client, cancellationToken);
 		return result;
 	}
 
@@ -42,8 +40,8 @@ public sealed class ClientCacheRepository : IClientRepository
 	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var result = await _repository.EditClientAsync(clientDTOs, cancellationToken);
-		await _cache.RemoveByTagAsync(ClientTag, cancellationToken);
-		await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
+		await _cache.RemoveByTagAsync(CacheTags.Client, cancellationToken);
+		await _cache.RemoveByTagAsync(CacheTags.Package, cancellationToken);
 		return result;
 	}
 }

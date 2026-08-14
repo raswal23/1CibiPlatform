@@ -2,8 +2,6 @@ namespace ATS.Data.Cache.Administration;
 
 public sealed class PackageCacheRepository : IPackageRepository
 {
-	private const string PackageTag = "package";
-	private const string ClientTag = "client";
 	private readonly IPackageRepository _repository;
 	private readonly HybridCache _cache;
 
@@ -18,7 +16,7 @@ public sealed class PackageCacheRepository : IPackageRepository
 		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			key, request, async (value, token) => await _repository.GetPackagesAsync(value, clientId, token), null,
-			tags: [PackageTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
@@ -26,14 +24,14 @@ public sealed class PackageCacheRepository : IPackageRepository
 		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
 		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
 			key, request, async (value, token) => await _repository.SearchPackagesAsync(value, clientId, token), null,
-			tags: [PackageTag], cancellationToken: cancellationToken).AsTask();
+			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
 	}
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)
 	{
 		var result = await _repository.AddPackageAsync(packageDTO, cancellationToken);
 		if (result)
-			await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
+			await _cache.RemoveByTagAsync(CacheTags.Package, cancellationToken);
 		return result;
 	}
 
@@ -43,8 +41,8 @@ public sealed class PackageCacheRepository : IPackageRepository
 	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken)
 	{
 		var result = await _repository.EditPackageAsync(packageDetails, cancellationToken);
-		await _cache.RemoveByTagAsync(PackageTag, cancellationToken);
-		await _cache.RemoveByTagAsync(ClientTag, cancellationToken);
+		await _cache.RemoveByTagAsync(CacheTags.Package, cancellationToken);
+		await _cache.RemoveByTagAsync(CacheTags.Client, cancellationToken);
 		return result;
 	}
 }
