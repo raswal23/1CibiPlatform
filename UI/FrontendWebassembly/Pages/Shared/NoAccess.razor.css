@@ -1,0 +1,116 @@
+.access-denied-page {
+    --navy-900: #0b1b3d;
+    --navy-800: #132a54;
+    --blue-500: #2e7ce0;
+    --border: #e4eaf6;
+    --text-secondary: #5b6b8c;
+    --red: #d64545;
+    --red-tint: #fbe9e9;
+    --red-border: #f1c7c7;
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2f9;
+    font-family: "Inter", sans-serif;
+}
+
+.access-denied-card {
+    width: 100%;
+    max-width: 460px;
+    padding: 38px 34px 34px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 0 0 6px rgba(46, 124, 224, 0.1),
+                0 18px 40px -16px rgba(11, 27, 61, 0.25);
+}
+
+.access-denied-icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--red);
+    background: var(--red-tint);
+    border: 1.5px solid var(--red-border);
+    border-radius: 50%;
+}
+
+.access-denied-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.access-denied-card h1 {
+    margin: 0 0 10px;
+    color: var(--navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.access-denied-description {
+    margin: 0 auto 26px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.access-denied-home {
+    min-height: 46px;
+    padding: 0 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #fff;
+    background: linear-gradient(120deg, var(--navy-800), var(--blue-500));
+    border-radius: 11px;
+    box-shadow: 0 10px 22px -8px rgba(29, 95, 209, 0.5);
+    font-size: 14.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.access-denied-home:hover,
+.access-denied-home:focus-visible {
+    color: #fff;
+    box-shadow: 0 12px 26px -8px rgba(29, 95, 209, 0.65);
+}
+
+.access-denied-home:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, 0.35);
+    outline-offset: 3px;
+}
+
+.access-denied-home:active {
+    transform: scale(0.97);
+}
+
+.access-denied-home svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 520px) {
+    .access-denied-page {
+        padding: 28px 18px;
+    }
+
+    .access-denied-card {
+        padding: 32px 24px 30px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .access-denied-home {
+        transition: none;
+    }
+}
