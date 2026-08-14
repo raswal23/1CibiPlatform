@@ -8,6 +8,9 @@ public partial class TableComponent<TItem>
 	[Parameter] public string? ContainerClass { get; set; }
 	[Parameter] public string? TableClass { get; set; }
 	[Parameter] public bool EnableSearch { get; set; }
+	[Parameter] public bool EnableReload { get; set; }
+	[Parameter] public string ReloadAriaLabel { get; set; } = "Reload table";
+	[Parameter] public EventCallback OnReloadClicked { get; set; }
 	[Parameter] public string? SearchLabel { get; set; } = "Search";
 	[Parameter] public string? SearchPlaceholder { get; set; }
 	// Apply the search when the user presses Enter or leaves the field,
@@ -38,6 +41,7 @@ public partial class TableComponent<TItem>
 	private readonly string _generatedTitleId = $"table-title-{Guid.NewGuid():N}";
 	private readonly bool UseLoadingContentBody = true;
 	private int _rowsPerPage;
+	private bool _isReloading;
 
 	private string ContainerCssClass => string.IsNullOrWhiteSpace(ContainerClass)
 		? "responsive-table-container"
@@ -51,7 +55,7 @@ public partial class TableComponent<TItem>
 		$"table-component-toolbar{(ToolBarLeft is not null ? " has-left-content" : string.Empty)}{(!string.IsNullOrWhiteSpace(Title) ? " has-title" : string.Empty)}";
 
 	private bool HasToolbarActions =>
-		ToolBarLeft is not null || EnableSearch || !string.IsNullOrWhiteSpace(AddButtonText);
+		ToolBarLeft is not null || EnableSearch || EnableReload || !string.IsNullOrWhiteSpace(AddButtonText);
 
 	private string ResolvedTitleId => string.IsNullOrWhiteSpace(TitleId) ? _generatedTitleId : TitleId;
 	private bool HasAccessibleName =>
@@ -78,5 +82,25 @@ public partial class TableComponent<TItem>
 
 		if (TableRef is not null && LoadServerData is not null)
 			await TableRef.ReloadServerData();
+	}
+
+	private async Task ReloadDataAsync()
+	{
+		if (_isReloading)
+			return;
+
+		_isReloading = true;
+
+		try
+		{
+			if (OnReloadClicked.HasDelegate)
+				await OnReloadClicked.InvokeAsync();
+			else
+				await ReloadServerData();
+		}
+		finally
+		{
+			_isReloading = false;
+		}
 	}
 }
