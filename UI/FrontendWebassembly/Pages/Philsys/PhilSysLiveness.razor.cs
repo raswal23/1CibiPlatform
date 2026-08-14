@@ -15,7 +15,7 @@ public partial class PhilSysLiveness
 	private string errorMessage = string.Empty;
 	private bool hasUnsavedChanges = true;
 	private DotNetObjectReference<PhilSysLiveness>? _dotNetRef;
-	public string? atsSession { get; set; } 
+	public string? atsSession { get; set; }
 	public string? applicationFormPath { get; set; }
 
 	protected override async Task OnInitializedAsync()
@@ -27,7 +27,7 @@ public partial class PhilSysLiveness
 		isTransacted = _status.IsTransacted;
 		isExpired = _status.isExpired;
 
-		if(string.IsNullOrEmpty(atsSession))
+		if (string.IsNullOrEmpty(atsSession))
 		{
 			hasUnsavedChanges = false;
 		}
@@ -106,7 +106,7 @@ public partial class PhilSysLiveness
 			FullWidth = true
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(null,confirmParam, options);
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(null, confirmParam, options);
 
 		var result = await dialog.Result;
 
@@ -135,7 +135,7 @@ public partial class PhilSysLiveness
 		hasUnsavedChanges = false;
 		if (!string.IsNullOrEmpty(atsSession))
 		{
-			if(information.data_subject is not null)
+			if (information.data_subject is not null)
 			{
 				await LocalStorageService.SetItemAsync($"ats:applicationForm:digitalId", information.data_subject!.digital_id ?? string.Empty);
 				await LocalStorageService.SetItemAsync($"ats:applicationForm:firstName", information.data_subject!.first_name ?? string.Empty);
@@ -149,7 +149,7 @@ public partial class PhilSysLiveness
 			}
 
 			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", photoUrl ?? string.Empty);
-			
+
 			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=2", false);
 
 			return;

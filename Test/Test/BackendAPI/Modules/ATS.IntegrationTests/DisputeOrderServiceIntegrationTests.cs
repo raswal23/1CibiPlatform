@@ -397,6 +397,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			new AtsQueryScopeResolver(
 				CreateAllClientsCurrentUser().Object,
 				userClientRepository.Object),
+			CreateAllClientsCurrentUser().Object,
 			orderHistoryService.Object);
 	}
 

@@ -1,4 +1,4 @@
-namespace Auth.Shared.Contracts;
+	namespace Auth.Shared.Contracts;
 
 public sealed record AtsAccessClaims(int AtsRoleId, int? AtsClientId);
 

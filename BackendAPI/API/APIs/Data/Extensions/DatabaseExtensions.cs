@@ -1,5 +1,4 @@
-﻿
-namespace APIs.Data.Extensions;
+﻿namespace APIs.Data.Extensions;
 
 public static class DatabaseExtensions
 {
@@ -10,6 +9,10 @@ public static class DatabaseExtensions
 		PhilSysDatabaseExtensions.PhilSysIntializeDatabaseAsync(app).GetAwaiter().GetResult();
 		AIAgentDatabaseExtensions.AIAgentIntializeDatabaseAsync(app).GetAwaiter().GetResult();
 		ATSDatabaseExtensions.ATSIntializeDatabaseAsync(app).GetAwaiter().GetResult();
+		EmploymentVerificationDatabaseExtensions
+			.EmploymentVerificationInitializeDatabaseAsync(app)
+			.GetAwaiter()
+			.GetResult();
 		PlatformLoggingDatabaseExtensions.PlatformLoggingInitializeDatabaseAsync(app).GetAwaiter().GetResult();
 
 	}

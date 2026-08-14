@@ -63,7 +63,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddScoped<LocalStorageService>();
 		services.AddScoped<EmailValidationService>();
-		services.AddScoped<FileValidationService>(); 
+		services.AddScoped<FileValidationService>();
 		services.AddScoped<MobileNumberValidationService>();
 		services.AddScoped<IAccessService, AccessService>();
 		services.AddScoped<IPhilSysService, PhilSysService>();
@@ -73,11 +73,12 @@ public static class FrontendServiceConfig
 		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
+		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService, FrontendWebassembly.Services.EmploymentVerification.Implementation.EmploymentVerificationService>();
 		services.AddScoped<IApplicationFormStateService, ApplicationFormStateService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
-        services.AddScoped<IReportService, ReportService>();
-        services.AddScoped<IDashboardService, DashboardService>();
+		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();

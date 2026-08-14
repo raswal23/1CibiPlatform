@@ -13,5 +13,6 @@ public static class SubMenuList
 		{ 6,  ("bulkprocessing", "Bulk Processing", Icons.Material.Filled.Dns) },
 		{ 7,  ("ats", "ATS", Icons.Material.Filled.TrackChanges) },
 		{ 8, ("logs", "Logs", Icons.Material.Filled.FileOpen) },
+		{ 9, ("verification", "Employment Verification", Icons.Material.Filled.VerifiedUser) },
 	  };
 }

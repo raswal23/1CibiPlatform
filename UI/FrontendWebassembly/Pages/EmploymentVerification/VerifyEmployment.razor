@@ -1,0 +1,157 @@
+@layout GenericLayout
+@page "/employmentverification/verify/{Token}"
+@page "/employmentverification/reject/{Token}"
+@using FrontendWebassembly.DTO.EmploymentVerification
+@inject FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService VerificationService
+
+<PageTitle>Employment Verification</PageTitle>
+
+<div class="ev-confirm-page">
+    <div class="ev-confirm-card">
+        @if (IsExpired)
+        {
+            <div class="ev-confirm-header ev-confirm-header-expired">
+                <span class="ev-confirm-brand">CIBI · Employment Verification</span>
+                <div class="ev-confirm-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                    </svg>
+                </div>
+                <h1>This link has expired</h1>
+                <p>For everyone's security, verification links are valid for a limited time only.</p>
+            </div>
+
+            <div class="ev-confirm-body">
+                <p class="ev-confirm-lead">
+                    We could not open this request because the link is no longer active.
+                    Nothing has been recorded against it.
+                </p>
+
+                <div class="ev-confirm-callout" role="status">
+                    <strong>What happens next</strong>
+                    <span>
+                        Please contact the CIBI team that sent this request and ask them to
+                        issue a new verification email. The new link will work right away.
+                    </span>
+                </div>
+            </div>
+        }
+        else if (IsAlreadyUsed)
+        {
+            <div class="ev-confirm-header ev-confirm-header-used">
+                <span class="ev-confirm-brand">CIBI · Employment Verification</span>
+                <div class="ev-confirm-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                </div>
+                <h1>Already answered</h1>
+                <p>This request has been responded to and cannot be answered twice.</p>
+            </div>
+
+            <div class="ev-confirm-body">
+                <p class="ev-confirm-lead">
+                    Your earlier response was kept. There is nothing further to do.
+                </p>
+
+                <div class="ev-confirm-callout" role="status">
+                    <strong>Need to change your response?</strong>
+                    <span>
+                        Contact the CIBI team that sent this request and they can help you
+                        correct the record.
+                    </span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="ev-confirm-header">
+                <span class="ev-confirm-brand">CIBI · Employment Verification</span>
+                <div class="ev-confirm-icon" aria-hidden="true">✓</div>
+                <h1>Confirm employment information</h1>
+                <p>Please review the details and confirm whether they are accurate.</p>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="ev-confirm-message" role="status" aria-live="polite">
+                    Loading secure verification request…
+                </div>
+            }
+            else if (HasGenericError)
+            {
+                <div class="ev-confirm-error" role="alert">
+                    <strong>We could not process this request.</strong>
+                    <span>@_errorMessage</span>
+                </div>
+            }
+            else if (_completed)
+            {
+                <div class="ev-confirm-success" role="status" aria-live="polite">
+                    <strong>@ResultTitle</strong>
+                    <span>@ResultMessage</span>
+                </div>
+            }
+            else if (_request is not null)
+            {
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <div class="ev-confirm-error" role="alert">
+                        <strong>We could not record your response.</strong>
+                        <span>@_errorMessage</span>
+                    </div>
+                }
+
+                <dl class="ev-confirm-details">
+                    <div>
+                        <dt>Applicant</dt>
+                        <dd>@_request.CandidateName</dd>
+                    </div>
+                    <div>
+                        <dt>Previous employer</dt>
+                        <dd>@_request.PreviousEmployer</dd>
+                    </div>
+                    <div>
+                        <dt>Position</dt>
+                        <dd>@_request.Position</dd>
+                    </div>
+                    <div>
+                        <dt>Employment period</dt>
+                        <dd>@EmploymentPeriod</dd>
+                    </div>
+                </dl>
+
+                <p class="ev-confirm-note">
+                    By confirming, you acknowledge that the employment information above is
+                    accurate to the best of your knowledge.
+                </p>
+
+                <div class="ev-confirm-actions">
+                    <button class="ev-confirm-reject"
+                            type="button"
+                            @onclick="RejectAsync"
+                            disabled="@_isSubmitting">
+                        This is not accurate
+                    </button>
+                    <button class="ev-confirm-approve"
+                            type="button"
+                            @onclick="VerifyAsync"
+                            disabled="@_isSubmitting">
+                        @(_isSubmitting ? "Saving…" : "Confirm employment")
+                    </button>
+                </div>
+
+                <p class="ev-confirm-expiry">
+                    This link expires on @_request.TokenExpiresAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt").
+                </p>
+            }
+        }
+
+        <div class="ev-confirm-footer">
+            This secure link can only be used once and expires after the configured validity period.
+        </div>
+    </div>
+</div>

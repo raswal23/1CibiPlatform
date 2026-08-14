@@ -1,4 +1,5 @@
 ﻿namespace FrontendWebassembly.DTO.Auth;
+
 public record ApplicationsDTO
 {
 	public int applicationId { get; set; }

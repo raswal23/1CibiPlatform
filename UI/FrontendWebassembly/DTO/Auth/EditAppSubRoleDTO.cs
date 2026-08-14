@@ -1,4 +1,5 @@
 ﻿namespace FrontendWebassembly.DTO.Auth;
+
 public record EditAppSubRoleDTO
 {
 	public int AppSubRoleId { get; set; }

@@ -1,0 +1,152 @@
+
+@page "/employmentverification/verification"
+@layout GenericLayout
+@inherits SecurePageBase
+@attribute [RequirePermission(8, 9)]
+@using FrontendWebassembly.DTO.EmploymentVerification
+@inject FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService VerificationService
+@inject ISnackbar Snackbar
+
+<PageTitle>Employment Verification</PageTitle>
+
+<div class="ev-page">
+    @if (_isLoading)
+    {
+        <div class="ev-card ev-loading">Loading employment verification requests…</div>
+    }
+    <div class="ev-hero">
+        <div>
+            <div class="ev-eyebrow">Mock workflow · ATS connected</div>
+            <h2>Employment verification</h2>
+            <p>Request confirmation from a previous employer and track every response in one place.</p>
+        </div>
+    </div>
+
+    <div class="ev-stats">
+        <div>
+            <span>Pending</span>
+            <strong>@Requests.Count(request => request.Status == "Pending")</strong>
+        </div>
+        <div>
+            <span>Sent</span>
+            <strong>@Requests.Count(request => request.Status == "Sent")</strong>
+        </div>
+        <div>
+            <span>Verified</span>
+            <strong>@Requests.Count(request => request.Status == "Verified")</strong>
+        </div>
+        <div>
+            <span>Response rate</span>
+            <strong>67%</strong>
+        </div>
+    </div>
+
+    <section class="ev-card">
+        <div class="ev-card-header">
+            <div>
+                <h3>Verification requests</h3>
+                <p>Requests loaded from the Employment Verification API</p>
+            </div>
+            <span class="ev-count">@Requests.Count requests</span>
+        </div>
+        <div class="ev-table-wrap">
+            <table class="ev-table">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Previous employer</th>
+                        <th>HR email</th>
+                        <th>Requested</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in Requests)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@request.Candidate</strong>
+                                <small>@request.Position</small>
+                            </td>
+                            <td>@request.Employer</td>
+                            <td>@request.HrEmail</td>
+                            <td>@request.RequestedOn.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <span class="ev-status @request.Status.ToLowerInvariant()">
+                                    @request.Status
+                                </span>
+                            </td>
+                            <td>
+                                <button class="ev-link" type="button" @onclick="() => ViewRequest(request)">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    @if (SelectedRequest is not null)
+    {
+        <div class="ev-drawer-backdrop" @onclick="CloseRequest">
+            <aside class="ev-drawer"
+                   @onclick:stopPropagation="true"
+                   role="dialog"
+                   aria-label="Verification request details">
+                <div class="ev-card-header">
+                    <div>
+                        <span class="ev-eyebrow">Request details</span>
+                        <h3>@SelectedRequest.Candidate</h3>
+                        <p>Employment verification request</p>
+                    </div>
+                    <button class="ev-close"
+                            type="button"
+                            @onclick="CloseRequest"
+                            aria-label="Close details">
+                        ×
+                    </button>
+                </div>
+                <div class="ev-detail-grid">
+                    <div>
+                        <label>Employer</label>
+                        <strong>@SelectedRequest.Employer</strong>
+                    </div>
+                    <div>
+                        <label>Position</label>
+                        <strong>@SelectedRequest.Position</strong>
+                    </div>
+                    <div>
+                        <label>Employment period</label>
+                        <strong>@SelectedRequest.EmploymentPeriod</strong>
+                    </div>
+                    <div>
+                        <label>HR recipient</label>
+                        <strong>@SelectedRequest.HrEmail</strong>
+                    </div>
+                </div>
+                <div class="ev-drawer-section">
+                    <span class="ev-email-label">EMAIL PREVIEW</span>
+                    <h4>Employment verification request for @SelectedRequest.Candidate</h4>
+                    <p>
+                        Good day, please confirm whether the employment details above are accurate
+                        by selecting a response below.
+                    </p>
+                </div>
+                <div class="ev-actions">
+                    <button class="ev-secondary" type="button" @onclick="CloseRequest">Close</button>
+                    <button class="ev-verify"
+                            type="button"
+                            @onclick="SendSelectedRequestAsync"
+                            disabled="@(_isSubmitting || SelectedRequest.Status is "Sent" or "Verified")">
+                        @GetSendButtonText(SelectedRequest.Status)
+                    </button>
+                    <span class="ev-status @SelectedRequest.Status.ToLowerInvariant()">@SelectedRequest.Status</span>
+                </div>
+            </aside>
+        </div>
+    }
+
+</div>

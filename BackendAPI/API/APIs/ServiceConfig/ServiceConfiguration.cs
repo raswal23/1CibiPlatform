@@ -10,6 +10,7 @@ public static class ServiceConfiguration
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
 	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
 	private static readonly Assembly _platformLoggingAssembly = typeof(PlatformLoggingMarker).Assembly;
+	private static readonly Assembly _employmentVerificationAssembly = typeof(EmploymentVerificationMarker).Assembly;
 
 
 	#region Logging Config
@@ -228,6 +229,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
 		services.AddATSInfrastructure(configuration);
+		services.AddEmploymentVerificationInfrastructure(configuration);
 		services.AddPlatformLoggingInfrastructure(configuration);
 		return services;
 	}
@@ -244,6 +246,7 @@ public static class ServiceConfiguration
 			 _aiAgentAssembly,
 			 _atsAssembly,
 			 _platformLoggingAssembly
+			 ,_employmentVerificationAssembly
 		 ]));
 
 
@@ -264,6 +267,7 @@ public static class ServiceConfiguration
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
 		services.AddATSMediaTR(_atsAssembly);
 		services.AddPlatformLoggingMediaTR(_platformLoggingAssembly);
+		services.AddEmploymentVerificationMediaTR(_employmentVerificationAssembly);
 		return services;
 	}
 
@@ -278,7 +282,8 @@ public static class ServiceConfiguration
 		services.AddPhilSysServices();
 		services.AddSSOServices();
 		services.AddAIAgentServices();
-		services.AddATSServices();
+			services.AddATSServices();
+			services.AddEmploymentVerificationServices();
 		services.AddPlatformLoggingServices(configuration);
 		return services;
 	}

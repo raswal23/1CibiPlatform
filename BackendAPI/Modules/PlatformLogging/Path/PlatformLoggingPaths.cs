@@ -23,7 +23,7 @@ public sealed class PlatformLoggingPaths : IReverseProxyModule
 				Methods: new[] { GatewayConstants.HttpMethod.Get },
 				Transforms: new Dictionary<string, string>
 				{
-					{ "PathSet", "/platform-logging/logs/{id}" }
+					{ "PathPattern", "/platform-logging/logs/{id}" }
 				})
 		};
 	}

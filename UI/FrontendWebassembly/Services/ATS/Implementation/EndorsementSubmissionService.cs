@@ -101,29 +101,29 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	{
 		using var content = new MultipartFormDataContent();
 
-				void AddString(string? value, string name)
-				{
-					if (!string.IsNullOrWhiteSpace(value))
-					{
-						content.Add(new StringContent(value), name);
-					}
-				}
+		void AddString(string? value, string name)
+		{
+			if (!string.IsNullOrWhiteSpace(value))
+			{
+				content.Add(new StringContent(value), name);
+			}
+		}
 
-				void AddFile(IBrowserFile? file, string name)
-				{
-					if (file != null)
-					{
-						var fileStream = file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
-						var fileContent = new StreamContent(fileStream);
-						fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-						content.Add(fileContent, name, file.Name);
-					}
-				}
+		void AddFile(IBrowserFile? file, string name)
+		{
+			if (file != null)
+			{
+				var fileStream = file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
+				var fileContent = new StreamContent(fileStream);
+				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+				content.Add(fileContent, name, file.Name);
+			}
+		}
 
-				AddString(bulkUploadFileDetails.PackageType, "bulkUploadFileDetailsDTO.PackageType");
-				AddString(bulkUploadFileDetails.OrderType, "bulkUploadFileDetailsDTO.OrderType");
-				AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
-				AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
+		AddString(bulkUploadFileDetails.PackageType, "bulkUploadFileDetailsDTO.PackageType");
+		AddString(bulkUploadFileDetails.OrderType, "bulkUploadFileDetailsDTO.OrderType");
+		AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
+		AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
 
 		var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
 
