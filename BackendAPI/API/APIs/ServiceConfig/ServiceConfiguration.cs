@@ -153,6 +153,23 @@ public static class ServiceConfiguration
 						context.Token = token;
 					}
 					return Task.CompletedTask;
+				},
+				OnTokenValidated = async context =>
+				{
+					var sessionClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
+					if (string.IsNullOrWhiteSpace(sessionClaim))
+						return; // API/SSO tokens without a browser refresh session keep their existing behavior.
+
+					var userClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+					if (!int.TryParse(sessionClaim, out var sessionId) || !Guid.TryParse(userClaim, out var userId))
+					{
+						context.Fail("Invalid authentication session.");
+						return;
+					}
+
+					var validator = context.HttpContext.RequestServices.GetRequiredService<IAuthSessionValidator>();
+					if (!await validator.IsActiveAsync(sessionId, userId, context.HttpContext.RequestAborted))
+						context.Fail("Authentication session is no longer active.");
 				}
 			};
 		})

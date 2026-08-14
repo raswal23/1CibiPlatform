@@ -44,6 +44,45 @@ Important existing references:
 - Unit and integration tests: `Test/Test/BackendAPI/Modules/ATS.*Tests/`
 - ATS integration-test infrastructure: `Test/Test/BackendAPI/Infrastructure/ATS.Infrastracture/`
 
+### Auth business-logic organization
+
+Auth follows the same business-area segregation used by the focused ATS repositories. Keep a feature's repository contract, EF implementation, cache behavior, and service pair in matching folders rather than adding unrelated code to one large file.
+
+For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
+
+```text
+BackendAPI/Modules/Auth/
+  Data/
+    Repository/
+      AuthRepository.cs                 shared partial class and DbContext
+      Login/                            login persistence
+      Registration/                     registration and OTP persistence
+      PasswordRecovery/                 reset-token and password persistence
+      RefreshTokens/                    refresh-token persistence
+      Lockout/                          failed-attempt and locked-user persistence
+      UserManagement/                   Auth user administration
+      UserDirectory/                    ATS-facing Auth user lookups
+      Applications/ AppSubRoles/ Roles/ SubMenus/
+    Cache/
+      AuthCacheRepository.cs            shared partial decorator and cache fields
+      <matching business area>/         cached reads and invalidation
+  Services/
+    Login/ Registration/ PasswordRecovery/ RefreshTokens/
+    Lockout/ UserManagement/
+    Applications/ AppSubRoles/ Roles/ SubMenus/ Caching/
+```
+
+`AuthRepository` and `AuthCacheRepository` are partial types. Each business folder owns a focused repository contract plus the corresponding partial implementation files. `IAuthRepository` remains only as the aggregate compatibility/decorator contract, while business services depend on focused contracts such as `ILoginRepository`, `IRegistrationRepository`, and `IUserRepository`. For example, a login repository operation belongs under `Data/Repository/Login`, its decorator method under `Data/Cache/Login`, and `ILoginService`/`LoginService` under `Services/Login`. Registration and OTP work belongs under `Registration`; password reset work belongs under `PasswordRecovery`; token renewal belongs under `RefreshTokens`.
+
+When adding an Auth feature:
+
+1. Put the Carter/MediatR slice under `Features/<BusinessArea>` using the existing Auth feature convention.
+2. Add repository methods only to the matching focused contract, such as `ILoginRepository`, `IRegistrationRepository`, or `IApplicationRepository`; do not grow the aggregate `IAuthRepository` directly.
+3. Add EF code to `AuthRepository.<BusinessArea>.cs` and cache/decorator behavior to the matching `Data/Cache/<BusinessArea>` file.
+4. Add or extend the service interface and implementation inside `Services/<BusinessArea>`.
+5. Keep namespaces stable (`Auth.Data.Repository`, `Auth.Data.Cache`, `Auth.Services`, or the existing `Auth.Service`) unless a deliberate namespace migration is part of the change. Folder segregation alone must not change DI resolution or public behavior.
+6. Run the Auth unit/integration tests and build the solution after moving or adding code.
+
 ## Step-by-step procedure
 
 ### 1. Define the slice before coding
@@ -86,8 +125,8 @@ Only add the pieces the use case needs:
 1. Add request/response DTOs under the module's `DTO` folder (and matching UI DTOs later).
 2. Add or update the entity under `Data/Entities`.
 3. Add the `DbSet` and entity configuration in `ATSDBContext` when required.
-4. Add repository methods to `IATSRepository`.
-5. Implement them in `ATSRepository`; pass `CancellationToken` through async calls.
+4. Add repository methods to the module's focused repository contract. For Auth, use the matching business-area interface; for legacy ATS slices still using the aggregate repository, use `IATSRepository`.
+5. Implement them in the matching focused/partial repository implementation; pass `CancellationToken` through async calls.
 6. Keep query projection/filtering/paging in the data layer rather than loading entire tables.
 7. Use `IUnitOfWork` or the established transaction pattern for multi-write operations.
 8. Generate an EF migration only when the database model changed; place ATS migrations with the existing ATS migrations in the API project.
@@ -123,7 +162,7 @@ Add cache tests or integration coverage when key construction/invalidation is me
 
 ### 5. Add the application service
 
-1. Add the operation to an existing focused service interface in `Services`, or create a focused interface and implementation if it represents a new responsibility.
+1. Add the operation to an existing focused service interface in `Services/<BusinessArea>`, or create a focused interface and implementation if it represents a new responsibility. In Auth, keep login, registration, password recovery, refresh tokens, lockout, and administration services in their matching folders.
 2. Put business rules, orchestration, and transaction decisions in the service.
 3. Let the repository handle persistence/query mechanics.
 4. Return typed results/DTOs and throw the established domain/not-found/validation exceptions so the global exception handler produces consistent errors.
@@ -226,6 +265,8 @@ Run the smallest relevant tests first, then the full build:
 
 ```powershell
 dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~ATS"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.UnitTests"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.IntegrationTests"
 dotnet build 1CibiPlatform.sln
 ```
 

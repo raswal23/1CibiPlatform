@@ -37,3 +37,5 @@ global using Microsoft.EntityFrameworkCore.Design;
 global using BackendAPI.Modules.PlatformLogging;
 global using PlatformLogging.ServiceConfig;
 global using PlatformLogging.Data.Extensions;
+global using Auth.Services;
+global using System.IdentityModel.Tokens.Jwt;

@@ -9,6 +9,8 @@
     --text-1: #16233f;
     --text-2: #5b6b8c;
     --text-3: #8a97b5;
+    --green: #1e9e64;
+    --green-tint: #e4f7ed;
     max-width: 1120px;
     margin: 0 auto;
     color: var(--text-1);
@@ -288,7 +290,111 @@
 .ats-upload-sub { margin-top: 5px; color: var(--text-3); font-size: 12.5px; }
 .ats-template-link { margin: 14px 0 6px; color: var(--text-2); font-size: 12.5px; text-align: center; }
 ::deep .ats-template-link a { color: var(--blue-600); font-weight: 700; }
-::deep .ats-selected-file { margin-top: 14px; border: 1px solid var(--border); border-radius: 10px; }
+
+.ats-selected-file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 14px -8px rgba(11, 27, 61, .12);
+}
+
+.ats-selected-file-icon {
+    display: flex;
+    width: 38px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #c9eeda;
+    border-radius: 10px;
+    background: var(--green-tint);
+    color: var(--green);
+}
+
+.ats-selected-file-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.ats-selected-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ats-selected-file-name {
+    overflow: hidden;
+    color: var(--text-1);
+    font-size: 13.5px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-selected-file-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    color: var(--text-3);
+    font-size: 11.5px;
+}
+
+.ats-selected-file-ready {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--green);
+    font-weight: 600;
+}
+
+.ats-selected-file-ready svg {
+    width: 11px;
+    height: 11px;
+}
+
+.ats-selected-file-separator {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--border-strong);
+}
+
+.ats-selected-file-remove {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.ats-selected-file-remove:hover {
+    border-color: #f1c7c7;
+    background: #fbe9e9;
+    color: #d64545;
+}
+
+.ats-selected-file-remove:focus-visible {
+    outline: 2px solid var(--blue-600);
+    outline-offset: 2px;
+}
+
+.ats-selected-file-remove svg {
+    width: 15px;
+    height: 15px;
+}
 
 ::deep .ats-cancel-button {
     height: 46px;

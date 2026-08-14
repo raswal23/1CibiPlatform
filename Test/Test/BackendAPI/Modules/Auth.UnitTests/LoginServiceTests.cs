@@ -63,7 +63,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);
 		_fixture.MockPasswordHasherService.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
+		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>(), null)).Returns("token");
 		_fixture.MockAtsAccessClaimsProvider
 			.Setup(x => x.GetClaimsAsync(userId, It.IsAny<CancellationToken>()))
 			.ReturnsAsync(new AtsAccessClaims(2, 42));
@@ -77,7 +77,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 		resp.userId.Should().NotBeNull();
 		resp.name.Should().Be("John Doe");
 		_fixture.MockJwtService.Verify(x => x.GetAccessToken(It.Is<LoginDTO>(user =>
-			user.AtsRoleId == 2 && user.AtsClientId == 42)));
+			user.AtsRoleId == 2 && user.AtsClientId == 42), null));
 	}
 
 	[Fact]
@@ -222,7 +222,7 @@ public class LoginServiceTests : IClassFixture<AuthServiceFixture>
 
 		_fixture.MockAuthRepository.Setup(x => x.GetUserDataAsync(It.IsAny<LoginWebCred>())).ReturnsAsync(loginDto);
 		_fixture.MockPasswordHasherService.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>())).Returns("token");
+		_fixture.MockJwtService.Setup(x => x.GetAccessToken(It.IsAny<LoginDTO>(), null)).Returns("token");
 		_fixture.MockAuthRepository.Setup(x => x.GetLockedUserAsync(userId)).ReturnsAsync(expiredLockedUser);
 		_fixture.MockAuthRepository.Setup(x => x.DeleteLockedUserAsync(expiredLockedUser)).ReturnsAsync(true);
 

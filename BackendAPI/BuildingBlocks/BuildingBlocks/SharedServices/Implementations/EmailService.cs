@@ -87,7 +87,7 @@ public class EmailService : IEmailService
                     <style>
                          body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .otp-box {{ 
                             background-color: #fff; 
@@ -140,11 +140,11 @@ public class EmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .button {{ 
 							  display: block;
-							  background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+							  background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);
 							  color: white !important;
 							  padding: 12px 30px;
 							  text-decoration: none;
@@ -193,11 +193,11 @@ public class EmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .button {{ 
 							  display: block;
-							  background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+							  background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);
 							  color: white !important;
 							  padding: 12px 30px;
 							  text-decoration: none;
@@ -246,11 +246,11 @@ public class EmailService : IEmailService
                     <style>
                         body {{ font-family: Arial, sans-serif; border: 1px solid gray; border-radius: 4px; }}
                         .container {{ max-width: 600px; margin: 0 auto; padding: 20px;}}
-                        .header {{ background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
+                        .header {{ background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%); color: white; padding: 20px; text-align: center; border-radius: 4px;}}
                         .content {{ padding: 20px; background-color: #f9f9f9; }}
                         .button {{ 
 							  display: block;
-							  background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+							  background: linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);
 							  color: white !important;
 							  padding: 12px 30px;
 							  text-decoration: none;
