@@ -236,6 +236,166 @@
     color: #fff;
 }
 
+/* ---------------------------------------------------------------------------
+   Toolbar: search + refresh. Sits between the view switcher and the card so it
+   reads as acting on whichever table is showing.
+--------------------------------------------------------------------------- */
+.ev-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.ev-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 460px;
+    border: 1px solid #f2d9e7;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 8px 22px -18px #9b4776;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ev-search:focus-within {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px rgba(217, 79, 155, .14);
+}
+
+.ev-search-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-left: 14px;
+    color: #c98cb0;
+    transition: color .2s ease;
+}
+
+.ev-search:focus-within .ev-search-icon,
+.ev-search.has-value .ev-search-icon {
+    color: var(--pink-dark);
+}
+
+.ev-search-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.ev-search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+}
+
+.ev-search-input:focus {
+    outline: none;
+}
+
+.ev-search-input::placeholder {
+    color: #b995ab;
+}
+
+/* The native clear affordance would sit beside the custom one */
+.ev-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.ev-search-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-right: 10px;
+    border: 0;
+    border-radius: 50%;
+    background: #fdeef6;
+    color: var(--pink-dark);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+.ev-search-clear:hover {
+    background: #f9d9e9;
+}
+
+.ev-search-clear:focus-visible {
+    outline: 3px solid rgba(217, 79, 155, .35);
+    outline-offset: 2px;
+}
+
+.ev-reload {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 17px;
+    border: 1px solid #e4a8c7;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--pink-dark);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.ev-reload:hover:not(:disabled) {
+    background: #fff5fa;
+    box-shadow: 0 8px 18px -12px rgba(125, 36, 93, .8);
+}
+
+.ev-reload:active:not(:disabled) {
+    transform: scale(.97);
+}
+
+.ev-reload:disabled {
+    opacity: .65;
+    cursor: default;
+}
+
+.ev-reload:focus-visible {
+    outline: 3px solid rgba(217, 79, 155, .35);
+    outline-offset: 2px;
+}
+
+.ev-reload-icon {
+    display: inline-flex;
+    width: 15px;
+    height: 15px;
+}
+
+.ev-reload-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* One turn per press on hover, continuous while the fetch is in flight */
+.ev-reload:hover:not(:disabled) .ev-reload-icon {
+    animation: ev-spin .6s ease;
+}
+
+.ev-reload.is-reloading .ev-reload-icon {
+    animation: ev-spin .9s linear infinite;
+}
+
+@keyframes ev-spin {
+    to { transform: rotate(360deg); }
+}
+
 /* Loading and empty states live inside the card, replacing the table so it
    cannot flash an empty body while the request is in flight. */
 .ev-loading,
@@ -267,6 +427,10 @@
     line-height: 1.6;
 }
 
+.ev-empty .ev-secondary {
+    margin-top: 12px;
+}
+
 .ev-status.rejected {
     background: #ffeef0;
     color: #b3243c;
@@ -286,6 +450,32 @@
     .ev-segment-btn {
         flex: 1;
         justify-content: center;
+    }
+
+    .ev-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .ev-search {
+        max-width: none;
+        flex-basis: 100%;
+    }
+
+    .ev-reload {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* The spinner is the only cue that a refresh is running, so keep a slower turn
+   rather than removing it entirely. */
+@media (prefers-reduced-motion: reduce) {
+    .ev-reload:hover:not(:disabled) .ev-reload-icon {
+        animation: none;
+    }
+
+    .ev-reload.is-reloading .ev-reload-icon {
+        animation: ev-spin 2.4s linear infinite;
     }
 }
 
