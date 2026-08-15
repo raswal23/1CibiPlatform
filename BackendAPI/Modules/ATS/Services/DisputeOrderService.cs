@@ -11,6 +11,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly string _disputeOrderEmailRecipient;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly ICurrentUser _currentUser;
+	private readonly IUnitOfWork _unitOfWork;
 
 	public DisputeOrderService(
 		ILogger<DisputeOrderService> logger,
@@ -20,7 +21,8 @@ public class DisputeOrderService : IDisputeOrderService
 		IUserClientRepository userClientRepository,
 		IHttpContextAccessor httpContextAccessor,
 		IOrderHistoryService orderHistoryService,
-		ICurrentUser currentUser)
+		ICurrentUser currentUser,
+		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
 		_emailService = emailService;
@@ -31,6 +33,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_httpContextAccessor = httpContextAccessor;
 		_orderHistoryService = orderHistoryService;
 		_currentUser = currentUser;
+		_unitOfWork = unitOfWork;
 	}
 
 	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -160,6 +163,8 @@ public class DisputeOrderService : IDisputeOrderService
 			throw new InternalServerException("Failed to send dispute order notification email.");
 		}
 
+		await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
 		try
 		{
 			await _atsRepository.MarkAsDisputedAsync(disputeRequest, cancellationToken);
@@ -168,9 +173,15 @@ public class DisputeOrderService : IDisputeOrderService
 				OrderHistoryEventType.ReportDisputed,
 				order.OrderStatus,
 				order.OrderStatus ?? OrderStatus.Completed, cancellationToken);
+
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+			await _unitOfWork.CommitAsync(cancellationToken);
 		}
 		catch (Exception ex)
 		{
+			await _unitOfWork.RollbackAsync(cancellationToken);
+
 			_logger.LogError(
 				ex,
 				"Failed to mark order as disputed. {@Context}",

@@ -81,9 +81,7 @@ public class ApplicationFormService : IApplicationFormService
 
 			await AddSignatureDetailsDataAsync(signatureDetails!, ct);
 
-			await _unitOfWork.CommitAsync(ct);
-
-			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+			await _unitOfWork.SaveChangesAsync(ct);
 
 			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
 
@@ -92,6 +90,10 @@ public class ApplicationFormService : IApplicationFormService
 				OrderHistoryEventType.ApplicationFormSubmitted,
 				OrderStatus.PendingCandidateInfo,
 				OrderStatus.InProgress, ct);
+
+			await _unitOfWork.CommitAsync(ct);
+
+			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
 
 			return true;
 		}
@@ -404,13 +406,30 @@ public class ApplicationFormService : IApplicationFormService
 		var invitation = invitationInfo.EmailId == Guid.Empty
 			? new EmailInvitationRequest()
 			: await _atsRepository.GetEmailInvitationRequestByIdAsync(invitationInfo.EmailId, ct);
-		var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
 
-		if (isUpdated == 0)
+		await _unitOfWork.BeginTransactionAsync(ct);
+
+		try
 		{
-			throw new NotFoundException("No record found for the provided hash token.");
+			var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
+
+			if (isUpdated == 0)
+			{
+				throw new NotFoundException("No record found for the provided hash token.");
+			}
+
+			await _orderHistoryService.RecordAsync(invitation.EmailInvitationID, OrderHistoryEventType.ApplicationFormWithdrawn, invitation.OrderStatus, OrderStatus.ApplicationWithdrawn, ct);
+
+			await _unitOfWork.SaveChangesAsync(ct);
+
+			await _unitOfWork.CommitAsync(ct);
+
+			return true;
 		}
-		await _orderHistoryService.RecordAsync(invitation.EmailInvitationID, OrderHistoryEventType.ApplicationFormWithdrawn, invitation.OrderStatus, OrderStatus.ApplicationWithdrawn, ct);
-		return true;
+		catch
+		{
+			await _unitOfWork.RollbackAsync(ct);
+			throw;
+		}
 	}
 }

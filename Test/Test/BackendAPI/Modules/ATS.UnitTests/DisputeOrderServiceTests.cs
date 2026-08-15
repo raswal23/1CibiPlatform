@@ -3,6 +3,7 @@ using ATS.Data.Entities;
 using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
+using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
@@ -32,6 +33,7 @@ public class DisputeOrderServiceTests
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly Mock<ICurrentUser> _currentUser = new();
+	private readonly Mock<IUnitOfWork> _unitOfWork = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
@@ -57,7 +59,8 @@ public class DisputeOrderServiceTests
 			_userClientRepository.Object,
 			_httpContextAccessor,
 			_orderHistoryService.Object,
-			_currentUser.Object);
+			_currentUser.Object,
+			_unitOfWork.Object);
 	}
 
 	#region Happy Path

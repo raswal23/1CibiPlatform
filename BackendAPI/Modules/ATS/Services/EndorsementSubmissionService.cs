@@ -14,6 +14,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly ICurrentUser _currentUser;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IUserClientRepository _userClientRepository;
+	private readonly IUnitOfWork _unitOfWork;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
@@ -31,7 +32,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		ICurrentUser currentUser,
 		IObjectStorageService objectStorageService,
 		IOrderHistoryService orderHistoryService,
-		IUserClientRepository userClientRepository)
+		IUserClientRepository userClientRepository,
+		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -45,6 +47,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_currentUser = currentUser;
 		_orderHistoryService = orderHistoryService;
 		_userClientRepository = userClientRepository;
+		_unitOfWork = unitOfWork;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -148,6 +151,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException("Failed to send application form email.");
 		}
 
+		await _unitOfWork.BeginTransactionAsync(ct);
+
 		try
 		{
 			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
@@ -158,9 +163,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				OrderHistoryEventType.OrderCreated,
 				null,
 				OrderStatus.PendingCandidateInfo, ct);
+
+			await _unitOfWork.SaveChangesAsync(ct);
+
+			await _unitOfWork.CommitAsync(ct);
 		}
 		catch (Exception ex)
 		{
+			await _unitOfWork.RollbackAsync(ct);
+
 			_logger.LogError(
 				ex,
 				"Email was sent successfully, but failed to update its status. {@Context}",
@@ -379,6 +390,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
+		await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
 		try
 		{
 			await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, newExpiration, cancellationToken);
@@ -406,11 +419,17 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				OrderStatus.PendingCandidateInfo,
 				cancellationToken);
 
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+			await _unitOfWork.CommitAsync(cancellationToken);
+
 			_logger.LogInformation("Successfully resent application form for invitation: {@Context}", logContext);
 			return true;
 		}
 		catch (Exception ex)
 		{
+			await _unitOfWork.RollbackAsync(cancellationToken);
+
 			_logger.LogError("Failed to resend application form: {@Context}, {Exception}", logContext, ex);
 			throw new InternalServerException($"Failed to resend application form. {ex.InnerException?.Message ?? ex.Message}");
 		}

@@ -10,6 +10,7 @@ public class ReportService : IReportService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IUserClientRepository _userClientRepository;
 	private readonly ICurrentUser _currentUser;
+	private readonly IUnitOfWork _unitOfWork;
 
 	public ReportService(
 		ILogger<ReportService> logger,
@@ -18,7 +19,8 @@ public class ReportService : IReportService
 		IObjectStorageService objectStorageService,
 		IOrderHistoryService orderHistoryService,
 		IUserClientRepository userClientRepository,
-		ICurrentUser currentUser)
+		ICurrentUser currentUser,
+		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -27,6 +29,7 @@ public class ReportService : IReportService
 		_orderHistoryService = orderHistoryService;
 		_userClientRepository = userClientRepository;
 		_currentUser = currentUser;
+		_unitOfWork = unitOfWork;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -72,6 +75,8 @@ public class ReportService : IReportService
 				orderCompletedAt = DateTime.UtcNow;
 			}
 
+			await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
 			await _atsRepository.UpdateOrderStatusAsync(
 					reportDetailsDTO.EmailInvitationRequestId,
 					orderStatus,
@@ -106,6 +111,10 @@ public class ReportService : IReportService
 					OrderStatus.Completed,
 					cancellationToken);
 
+				await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+				await _unitOfWork.CommitAsync(cancellationToken);
+
 				return updated;
 			}
 
@@ -130,10 +139,16 @@ public class ReportService : IReportService
 					OrderStatus.Completed,
 					cancellationToken);
 
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+			await _unitOfWork.CommitAsync(cancellationToken);
+
 			return added;
 		}
 		catch (Exception ex)
 		{
+			await _unitOfWork.RollbackAsync(cancellationToken);
+
 			_logger.LogError(ex, "Failed to upload report {@Context}", logContext);
 			if (!string.IsNullOrWhiteSpace(fileKey))
 			{

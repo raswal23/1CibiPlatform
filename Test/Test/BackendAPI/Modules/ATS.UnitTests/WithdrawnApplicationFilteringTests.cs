@@ -1,6 +1,7 @@
 using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
+using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
@@ -37,7 +38,8 @@ public class WithdrawnApplicationFilteringTests
 			_currentUser.Object,
 			Mock.Of<IObjectStorageService>(),
 			Mock.Of<IOrderHistoryService>(),
-			_userClientRepository.Object);
+			_userClientRepository.Object,
+			Mock.Of<IUnitOfWork>());
 	}
 
 	[Theory]

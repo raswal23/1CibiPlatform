@@ -4,6 +4,7 @@ using ATS.Data.DTO;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
+using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
@@ -32,6 +33,7 @@ public class ReportServiceTests
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<ICurrentUser> _currentUser = new();
+	private readonly Mock<IUnitOfWork> _unitOfWork = new();
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -50,7 +52,8 @@ public class ReportServiceTests
 			_objectStorage.Object,
 			_orderHistoryService.Object,
 			_userClientRepository.Object,
-			_currentUser.Object);
+			_currentUser.Object,
+			_unitOfWork.Object);
 	}
 
 	#region Happy Path

@@ -53,6 +53,7 @@ public class ApplicantSearchProjectionService : IApplicantSearchProjectionServic
 				invitation.ProjectionUpdatedAt = DateTime.UtcNow;
 			}
 
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
 			await _unitOfWork.CommitAsync(cancellationToken);
 			_logger.LogInformation("Processed {Count} applicant projection records successfully: {@Context}", pending.Count, logContext);
 		}

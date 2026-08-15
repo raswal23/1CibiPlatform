@@ -2,6 +2,7 @@
 using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Data.Repository.Administration.UserClient;
+using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services;
 using ATS.Services.OrderHistory;
@@ -520,7 +521,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			userClientRepository.Object,
 			_httpContextAccessor,
 			orderHistoryService.Object,
-			currentUser.Object);
+			currentUser.Object,
+			new UnitOfWork(_dbContext));
 	}
 
 	private static Mock<IEmailService> CreateSuccessfulEmailService()
