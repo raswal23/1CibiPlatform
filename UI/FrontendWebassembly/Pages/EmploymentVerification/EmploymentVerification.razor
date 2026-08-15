@@ -10,13 +10,28 @@
 <PageTitle>Employment Verification</PageTitle>
 
 <div class="ev-page">
-    @if (_isLoading)
-    {
-        <div class="ev-card ev-loading">Loading employment verification requests…</div>
-    }
+    <div class="ev-bookmark-rail">
+        <button type="button"
+                class="ev-bookmark"
+                @onclick="GoToOnePlatform"
+                title="Back to OnePlatform"
+                aria-label="Back to OnePlatform">
+            <span class="ev-bookmark-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 5l-7 7 7 7" />
+                </svg>
+            </span>
+            <span class="ev-bookmark-copy">
+                <small>Back to</small>
+                <strong>OnePlatform</strong>
+            </span>
+        </button>
+    </div>
+
     <div class="ev-hero">
         <div>
-            <div class="ev-eyebrow">Mock workflow · ATS connected</div>
+            <div class="ev-eyebrow">ATS connected</div>
             <h2>Employment verification</h2>
             <p>Request confirmation from a previous employer and track every response in one place.</p>
         </div>
@@ -24,74 +39,180 @@
 
     <div class="ev-stats">
         <div>
-            <span>Pending</span>
-            <strong>@Requests.Count(request => request.Status == "Pending")</strong>
-        </div>
-        <div>
-            <span>Sent</span>
-            <strong>@Requests.Count(request => request.Status == "Sent")</strong>
+            <span>Awaiting response</span>
+            <strong>@CountByStatus("Sent")</strong>
         </div>
         <div>
             <span>Verified</span>
-            <strong>@Requests.Count(request => request.Status == "Verified")</strong>
+            <strong>@CountByStatus("Verified")</strong>
+        </div>
+        <div>
+            <span>Rejected</span>
+            <strong>@CountByStatus("Rejected")</strong>
         </div>
         <div>
             <span>Response rate</span>
-            <strong>67%</strong>
+            <strong>@ResponseRate</strong>
         </div>
     </div>
 
+    <div class="ev-segmented" role="group" aria-label="Employment verification views">
+        <button type="button"
+                class="@GetSegmentClass(NeedsRequestView)"
+                aria-pressed="@IsNeedsRequestView"
+                @onclick="() => SetView(NeedsRequestView)">
+            Needs request
+            <span class="ev-segment-count">@Candidates.Count</span>
+        </button>
+        <button type="button"
+                class="@GetSegmentClass(TrackingView)"
+                aria-pressed="@(!IsNeedsRequestView)"
+                @onclick="() => SetView(TrackingView)">
+            Tracking
+            <span class="ev-segment-count">@SentRequests.Count</span>
+        </button>
+    </div>
+
     <section class="ev-card">
-        <div class="ev-card-header">
-            <div>
-                <h3>Verification requests</h3>
-                <p>Requests loaded from the Employment Verification API</p>
+        @if (IsNeedsRequestView)
+        {
+            <div class="ev-card-header">
+                <div>
+                    <h3>Candidates needing verification</h3>
+                    <p>In-progress ATS records without an open verification request</p>
+                </div>
+                <span class="ev-count">@Candidates.Count candidates</span>
             </div>
-            <span class="ev-count">@Requests.Count requests</span>
-        </div>
-        <div class="ev-table-wrap">
-            <table class="ev-table">
-                <thead>
-                    <tr>
-                        <th>Candidate</th>
-                        <th>Previous employer</th>
-                        <th>HR email</th>
-                        <th>Requested</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var request in Requests)
-                    {
-                        <tr>
-                            <td>
-                                <strong>@request.Candidate</strong>
-                                <small>@request.Position</small>
-                            </td>
-                            <td>@request.Employer</td>
-                            <td>@request.HrEmail</td>
-                            <td>@request.RequestedOn.ToString("MMM dd, yyyy")</td>
-                            <td>
-                                <span class="ev-status @request.Status.ToLowerInvariant()">
-                                    @request.Status
-                                </span>
-                            </td>
-                            <td>
-                                <button class="ev-link" type="button" @onclick="() => ViewRequest(request)">
-                                    View
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+
+            @if (_isLoading)
+            {
+                <div class="ev-loading" role="status" aria-live="polite">
+                    Loading candidates from ATS…
+                </div>
+            }
+            else if (Candidates.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>Nothing to request</strong>
+                    <span>
+                        Every in-progress ATS candidate already has a verification
+                        request awaiting a response or confirmed.
+                    </span>
+                </div>
+            }
+            else
+            {
+                <div class="ev-table-wrap">
+                    <table class="ev-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Previous employer</th>
+                                <th>Employment period</th>
+                                <th>HR email</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var candidate in Candidates)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@candidate.CandidateName</strong>
+                                        <small>@(string.IsNullOrWhiteSpace(candidate.Position)
+                                            ? "Not provided"
+                                            : candidate.Position)</small>
+                                    </td>
+                                    <td>@candidate.Employer</td>
+                                    <td>@GetEmploymentPeriod(candidate.StartDate, candidate.EndDate)</td>
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(candidate.HrEmail)
+                                            ? "Not provided"
+                                            : candidate.HrEmail)
+                                    </td>
+                                    <td>
+                                        <button class="ev-link"
+                                                type="button"
+                                                @onclick="() => ViewCandidate(candidate)">
+                                            Review
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="ev-card-header">
+                <div>
+                    <h3>Verification requests</h3>
+                    <p>Requests raised from this module and their responses</p>
+                </div>
+                <span class="ev-count">@SentRequests.Count requests</span>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="ev-loading" role="status" aria-live="polite">
+                    Loading employment verification requests…
+                </div>
+            }
+            else if (SentRequests.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No requests yet</strong>
+                    <span>
+                        Send a verification email from the Needs request view and it
+                        will appear here.
+                    </span>
+                </div>
+            }
+            else
+            {
+                <div class="ev-table-wrap">
+                    <table class="ev-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Previous employer</th>
+                                <th>HR email</th>
+                                <th>Requested</th>
+                                <th>Responded</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in SentRequests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@request.CandidateName</strong>
+                                        <small>@request.Position</small>
+                                    </td>
+                                    <td>@request.PreviousEmployer</td>
+                                    <td>@request.HrEmail</td>
+                                    <td>@request.RequestedAt.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                    <td>@GetRespondedOn(request)</td>
+                                    <td>
+                                        <span class="ev-status @GetDisplayStatus(request).ToLowerInvariant()">
+                                            @GetDisplayStatus(request)
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
     </section>
 
-    @if (SelectedRequest is not null)
+    @if (SelectedCandidate is not null)
     {
-        <div class="ev-drawer-backdrop" @onclick="CloseRequest">
+        <div class="ev-drawer-backdrop" @onclick="CloseCandidate">
             <aside class="ev-drawer"
                    @onclick:stopPropagation="true"
                    role="dialog"
@@ -99,12 +220,12 @@
                 <div class="ev-card-header">
                     <div>
                         <span class="ev-eyebrow">Request details</span>
-                        <h3>@SelectedRequest.Candidate</h3>
+                        <h3>@SelectedCandidate.CandidateName</h3>
                         <p>Employment verification request</p>
                     </div>
                     <button class="ev-close"
                             type="button"
-                            @onclick="CloseRequest"
+                            @onclick="CloseCandidate"
                             aria-label="Close details">
                         ×
                     </button>
@@ -112,38 +233,41 @@
                 <div class="ev-detail-grid">
                     <div>
                         <label>Employer</label>
-                        <strong>@SelectedRequest.Employer</strong>
+                        <strong>@SelectedCandidate.Employer</strong>
                     </div>
                     <div>
                         <label>Position</label>
-                        <strong>@SelectedRequest.Position</strong>
+                        <strong>@(string.IsNullOrWhiteSpace(SelectedCandidate.Position)
+                            ? "Not provided"
+                            : SelectedCandidate.Position)</strong>
                     </div>
                     <div>
                         <label>Employment period</label>
-                        <strong>@SelectedRequest.EmploymentPeriod</strong>
+                        <strong>@GetEmploymentPeriod(SelectedCandidate.StartDate, SelectedCandidate.EndDate)</strong>
                     </div>
                     <div>
                         <label>HR recipient</label>
-                        <strong>@SelectedRequest.HrEmail</strong>
+                        <strong>@(string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail)
+                            ? "Not provided"
+                            : SelectedCandidate.HrEmail)</strong>
                     </div>
                 </div>
                 <div class="ev-drawer-section">
                     <span class="ev-email-label">EMAIL PREVIEW</span>
-                    <h4>Employment verification request for @SelectedRequest.Candidate</h4>
+                    <h4>Employment verification request for @SelectedCandidate.CandidateName</h4>
                     <p>
                         Good day, please confirm whether the employment details above are accurate
                         by selecting a response below.
                     </p>
                 </div>
                 <div class="ev-actions">
-                    <button class="ev-secondary" type="button" @onclick="CloseRequest">Close</button>
+                    <button class="ev-secondary" type="button" @onclick="CloseCandidate">Close</button>
                     <button class="ev-verify"
                             type="button"
                             @onclick="SendSelectedRequestAsync"
-                            disabled="@(_isSubmitting || SelectedRequest.Status is "Sent" or "Verified")">
-                        @GetSendButtonText(SelectedRequest.Status)
+                            disabled="@(_isSubmitting || string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail))">
+                        @GetSendButtonText()
                     </button>
-                    <span class="ev-status @SelectedRequest.Status.ToLowerInvariant()">@SelectedRequest.Status</span>
                 </div>
             </aside>
         </div>

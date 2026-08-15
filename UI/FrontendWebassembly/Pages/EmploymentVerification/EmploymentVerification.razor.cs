@@ -5,159 +5,205 @@ namespace FrontendWebassembly.Pages.EmploymentVerification;
 
 public partial class EmploymentVerification
 {
-    private readonly List<VerificationRequest> Requests = [];
-    private VerificationRequest? SelectedRequest;
-    private bool _isLoading = true;
-    private bool _isSubmitting;
+	/// <summary>Candidates from ATS that still need a verification email.</summary>
+	private readonly List<ATSInProgressEmploymentRecordDTO> Candidates = [];
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadRequestsAsync();
-    }
+	/// <summary>Requests already raised from this module, with their outcome.</summary>
+	private readonly List<SentVerificationRequestDTO> SentRequests = [];
 
-    private async Task LoadRequestsAsync()
-    {
-        _isLoading = true;
+	private const string NeedsRequestView = "needs";
+	private const string TrackingView = "tracking";
 
-        try
-        {
-            var requestResult = await VerificationService.GetRequestsAsync();
-            var atsResult = await VerificationService.GetInProgressATSRecordsAsync();
+	private string _activeView = NeedsRequestView;
+	private ATSInProgressEmploymentRecordDTO? SelectedCandidate;
+	private bool _isLoading = true;
+	private bool _isSubmitting;
 
-            if (!string.IsNullOrWhiteSpace(requestResult.ErrorMessage))
-            {
-                Requests.Clear();
-                Snackbar.Add(requestResult.ErrorMessage, Severity.Error);
-                return;
-            }
+	private bool IsNeedsRequestView => _activeView == NeedsRequestView;
 
-            if (!string.IsNullOrWhiteSpace(atsResult.ErrorMessage))
-            {
-                Requests.Clear();
-                Snackbar.Add(atsResult.ErrorMessage, Severity.Error);
-                return;
-            }
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
 
-            var existingRequests = requestResult.Data ?? [];
-            var atsRecords = atsResult.Data ?? [];
+		if (!IsPageAuthorized)
+		{
+			return;
+		}
 
-            Requests.Clear();
-            Requests.AddRange(atsRecords.Select(record =>
-            {
-                var existing = existingRequests
-                    .Where(request => request.SubjectId == record.SubjectId)
-                    .OrderByDescending(request => request.RequestedAt)
-                    .FirstOrDefault();
+		await LoadAsync();
+	}
 
-                var startDate = record.StartDate?.ToDateTime(TimeOnly.MinValue);
-                var endDate = record.EndDate?.ToDateTime(TimeOnly.MinValue);
+	private async Task LoadAsync()
+	{
+		_isLoading = true;
 
-                return new VerificationRequest(
-                    record.CandidateName,
-                    record.Position ?? "Not provided",
-                    record.Employer,
-                    record.HrEmail ?? existing?.HrEmail ?? "",
-                    record.SubjectId,
-                    startDate,
-                    endDate,
-                    $"{startDate:MMM yyyy} – {endDate:MMM yyyy}",
-                    existing?.RequestedAt ?? DateTime.UtcNow,
-                    existing?.Status ?? "Pending");
-            }));
-        }
-        catch (Exception exception)
-        {
-            Requests.Clear();
-            Snackbar.Add(
-                $"Employment Verification API error: {exception.Message}",
-                Severity.Error);
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
+		try
+		{
+			var candidateResult = await VerificationService.GetInProgressATSRecordsAsync();
+			var sentResult = await VerificationService.GetSentRequestsAsync();
 
-    private async Task SendSelectedRequestAsync()
-    {
-        if (SelectedRequest is null || string.IsNullOrWhiteSpace(SelectedRequest.HrEmail))
-        {
-            Snackbar.Add(
-                "The selected record does not have an HR email.",
-                Severity.Warning);
-            return;
-        }
+			Candidates.Clear();
+			SentRequests.Clear();
 
-        _isSubmitting = true;
+			if (!string.IsNullOrWhiteSpace(candidateResult.ErrorMessage))
+			{
+				Snackbar.Add(candidateResult.ErrorMessage, Severity.Error);
+			}
+			else
+			{
+				Candidates.AddRange(candidateResult.Data ?? []);
+			}
 
-        try
-        {
-            var request = new CreateEmploymentVerificationRequestDTO
-            {
-                AtsSubjectId = SelectedRequest.AtsSubjectId,
-                CandidateName = SelectedRequest.Candidate,
-                PreviousEmployer = SelectedRequest.Employer,
-                Position = string.IsNullOrWhiteSpace(SelectedRequest.Position)
-                    ? "Not provided"
-                    : SelectedRequest.Position,
-                HrEmail = SelectedRequest.HrEmail,
-                EmploymentStartDate = SelectedRequest.EmploymentStartDate
-                    ?? DateTime.UtcNow.AddYears(-2),
-                EmploymentEndDate = SelectedRequest.EmploymentEndDate
-                    ?? DateTime.UtcNow.AddMonths(-6)
-            };
-            var result = await VerificationService.CreateAndSendAsync(request);
+			if (!string.IsNullOrWhiteSpace(sentResult.ErrorMessage))
+			{
+				Snackbar.Add(sentResult.ErrorMessage, Severity.Error);
+			}
+			else
+			{
+				SentRequests.AddRange(sentResult.Data ?? []);
+			}
+		}
+		catch (Exception exception)
+		{
+			Candidates.Clear();
+			SentRequests.Clear();
+			Snackbar.Add(
+				$"Employment Verification API error: {exception.Message}",
+				Severity.Error);
+		}
+		finally
+		{
+			_isLoading = false;
+		}
+	}
 
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-            {
-                Snackbar.Add(result.ErrorMessage, Severity.Error);
-                return;
-            }
+	private void SetView(string view)
+	{
+		_activeView = view;
+		SelectedCandidate = null;
+	}
 
-            Snackbar.Add(result.Detail, Severity.Success);
-            CloseRequest();
-            await LoadRequestsAsync();
-        }
-        finally
-        {
-            _isSubmitting = false;
-        }
-    }
+	private string GetSegmentClass(string view) =>
+		_activeView == view
+			? "ev-segment-btn active"
+			: "ev-segment-btn";
 
-    private void ViewRequest(VerificationRequest request) =>
-        SelectedRequest = request;
+	private async Task SendSelectedRequestAsync()
+	{
+		if (SelectedCandidate is null || string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail))
+		{
+			Snackbar.Add(
+				"The selected record does not have an HR email.",
+				Severity.Warning);
+			return;
+		}
 
-    private void CloseRequest() =>
-        SelectedRequest = null;
+		_isSubmitting = true;
 
-    private string GetSendButtonText(string status) =>
-        _isSubmitting
-            ? "Sending…"
-            : status is "Sent" or "Verified"
-                ? "Email already sent"
-                : "Send verification email";
+		try
+		{
+			var request = new CreateEmploymentVerificationRequestDTO
+			{
+				AtsSubjectId = SelectedCandidate.SubjectId,
+				CandidateName = SelectedCandidate.CandidateName,
+				PreviousEmployer = SelectedCandidate.Employer,
+				Position = string.IsNullOrWhiteSpace(SelectedCandidate.Position)
+					? "Not provided"
+					: SelectedCandidate.Position,
+				HrEmail = SelectedCandidate.HrEmail,
+				EmploymentStartDate = ToDateTime(SelectedCandidate.StartDate)
+					?? DateTime.UtcNow.AddYears(-2),
+				EmploymentEndDate = ToDateTime(SelectedCandidate.EndDate)
+					?? DateTime.UtcNow.AddMonths(-6)
+			};
+			var result = await VerificationService.CreateAndSendAsync(request);
 
-    private sealed class VerificationRequest(
-        string candidate,
-        string position,
-        string employer,
-        string hrEmail,
-        Guid? atsSubjectId,
-        DateTime? employmentStartDate,
-        DateTime? employmentEndDate,
-        string employmentPeriod,
-        DateTime requestedOn,
-        string status)
-    {
-        public string Candidate { get; } = candidate;
-        public string Position { get; } = position;
-        public string Employer { get; } = employer;
-        public string HrEmail { get; } = hrEmail;
-        public Guid? AtsSubjectId { get; } = atsSubjectId;
-        public DateTime? EmploymentStartDate { get; } = employmentStartDate;
-        public DateTime? EmploymentEndDate { get; } = employmentEndDate;
-        public string EmploymentPeriod { get; } = employmentPeriod;
-        public DateTime RequestedOn { get; } = requestedOn;
-        public string Status { get; set; } = status;
-    }
+			if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+			{
+				Snackbar.Add(result.ErrorMessage, Severity.Error);
+				return;
+			}
+
+			Snackbar.Add(result.Detail, Severity.Success);
+			CloseCandidate();
+
+			// The candidate now has an open request, so it leaves the needs-request
+			// list and appears under tracking.
+			await LoadAsync();
+		}
+		finally
+		{
+			_isSubmitting = false;
+		}
+	}
+
+	private void GoToOnePlatform() =>
+		Nav.NavigateTo("/");
+
+	private void ViewCandidate(ATSInProgressEmploymentRecordDTO candidate) =>
+		SelectedCandidate = candidate;
+
+	private void CloseCandidate() =>
+		SelectedCandidate = null;
+
+	private string GetSendButtonText() =>
+		_isSubmitting
+			? "Sending…"
+			: "Send verification email";
+
+	private static string GetEmploymentPeriod(DateOnly? startDate, DateOnly? endDate)
+	{
+		if (startDate is null && endDate is null)
+		{
+			return "Not provided";
+		}
+
+		var start = startDate?.ToString("MMM yyyy") ?? "Unknown";
+		var end = endDate?.ToString("MMM yyyy") ?? "Present";
+
+		return $"{start} – {end}";
+	}
+
+	private static DateTime? ToDateTime(DateOnly? value) =>
+		value?.ToDateTime(TimeOnly.MinValue);
+
+	/// <summary>
+	/// Share of sent requests that came back confirmed. Reported as an em dash
+	/// until something has actually been sent, rather than as 0%.
+	/// </summary>
+	private string ResponseRate
+	{
+		get
+		{
+			var answered = SentRequests.Count(request =>
+				request.Status is "Verified" or "Rejected");
+
+			if (SentRequests.Count == 0)
+			{
+				return "—";
+			}
+
+			return $"{answered * 100 / SentRequests.Count}%";
+		}
+	}
+
+	private int CountByStatus(string status) =>
+		SentRequests.Count(request => request.Status == status);
+
+	private static string GetRespondedOn(SentVerificationRequestDTO request)
+	{
+		var respondedAt = request.VerifiedAt ?? request.RejectedAt;
+
+		return respondedAt?.ToLocalTime().ToString("MMM dd, yyyy") ?? "—";
+	}
+
+	/// <summary>
+	/// A sent request whose link has lapsed is shown as expired: the backend
+	/// releases the candidate for a new request at that point, but the row itself
+	/// keeps its stored status.
+	/// </summary>
+	private static string GetDisplayStatus(SentVerificationRequestDTO request) =>
+		request.Status == "Sent" && request.TokenExpiresAt < DateTime.UtcNow
+			? "Expired"
+			: request.Status;
 }

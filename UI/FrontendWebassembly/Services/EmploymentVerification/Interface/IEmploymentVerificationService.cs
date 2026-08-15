@@ -4,9 +4,18 @@ namespace FrontendWebassembly.Services.EmploymentVerification.Interface;
 
 public interface IEmploymentVerificationService
 {
-    Task<EmploymentVerificationResponseDTO<IReadOnlyList<EmploymentVerificationRequestDTO>>> GetRequestsAsync(
+    /// <summary>
+    /// Loads every verification request raised from this module for the tracking
+    /// view, with its current status and response timestamps.
+    /// </summary>
+    Task<EmploymentVerificationResponseDTO<IReadOnlyList<SentVerificationRequestDTO>>> GetSentRequestsAsync(
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Loads the in-progress ATS candidates that still need a verification email.
+    /// Candidates already awaiting a response, or already verified, are filtered
+    /// out server side.
+    /// </summary>
     Task<EmploymentVerificationResponseDTO<IReadOnlyList<ATSInProgressEmploymentRecordDTO>>> GetInProgressATSRecordsAsync(
         CancellationToken cancellationToken = default);
 

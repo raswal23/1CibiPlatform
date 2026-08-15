@@ -28,8 +28,14 @@ public sealed record VerificationLinkResultDTO<T>(
     string ErrorMessage,
     VerificationLinkFailure Failure);
 
-public sealed class EmploymentVerificationRequestDTO
+/// <summary>
+/// Transport model for the tracking view, returned by
+/// <c>GET /employmentverification/getsentrequests</c>. Mirrors the API's
+/// <c>SentVerificationRequestDTO</c>, which excludes the verification token hash.
+/// </summary>
+public sealed class SentVerificationRequestDTO
 {
+    public Guid RequestId { get; set; }
     public Guid? SubjectId { get; set; }
     public string CandidateName { get; set; } = "";
     public string PreviousEmployer { get; set; } = "";
@@ -42,6 +48,8 @@ public sealed class EmploymentVerificationRequestDTO
     public DateTime RequestedAt { get; set; }
     public DateTime? SentAt { get; set; }
     public DateTime? VerifiedAt { get; set; }
+    public DateTime? RejectedAt { get; set; }
+    public DateTime TokenExpiresAt { get; set; }
 }
 
 /// <summary>
