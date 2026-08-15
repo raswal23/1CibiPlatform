@@ -33,6 +33,10 @@ public class ModuleManagementService : IModuleManagementService
 
 	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
 	{
+		var moduleName = moduleDTO.ModuleName!.Trim();
+		if (await _moduleRepository.ModuleNameExistsAsync(moduleName))
+			throw new BadRequestException($"Module '{moduleName}' already exists.");
+
 		var logContext = new
 		{
 			Action = "AddModule",

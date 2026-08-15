@@ -37,6 +37,8 @@ public sealed class ModuleCacheRepository : IModuleRepository
 
 	public Task<ModuleDetails?> GetModuleAsync(int moduleId) => _repository.GetModuleAsync(moduleId);
 
+	public Task<bool> ModuleNameExistsAsync(string moduleName) => _repository.ModuleNameExistsAsync(moduleName);
+
 	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails)
 	{
 		var result = await _repository.EditModuleAsync(moduleDetails);

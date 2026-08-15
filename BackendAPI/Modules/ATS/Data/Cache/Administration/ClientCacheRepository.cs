@@ -37,6 +37,12 @@ public sealed class ClientCacheRepository : IClientRepository
 	public Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken) =>
 		_repository.GetClientAsync(clientId, cancellationToken);
 
+	public Task<bool> ClientNameExistsAsync(string clientName, int? excludeClientId, CancellationToken cancellationToken) =>
+		_repository.ClientNameExistsAsync(clientName, excludeClientId, cancellationToken);
+
+	public Task<int> CountActivePackagesAsync(IReadOnlyCollection<int> packageIds, CancellationToken cancellationToken) =>
+		_repository.CountActivePackagesAsync(packageIds, cancellationToken);
+
 	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var result = await _repository.EditClientAsync(clientDTOs, cancellationToken);

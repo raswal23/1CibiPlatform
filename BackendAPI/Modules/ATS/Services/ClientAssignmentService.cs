@@ -63,6 +63,9 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 			?? throw new BadRequestException(
 				"The selected user is not an active Auth user assigned to ATS.");
 
+		if (!await _userClientRepository.ClientIsActiveAsync(assignment.ClientId, cancellationToken))
+			throw new BadRequestException("The selected client does not exist or is inactive.");
+
 		await _userClientRepository.AssignUserClientAsync(assignment, cancellationToken);
 		var persisted = (await _userClientRepository.GetUserClientAssignmentsAsync(
 			[assignment.UserId],

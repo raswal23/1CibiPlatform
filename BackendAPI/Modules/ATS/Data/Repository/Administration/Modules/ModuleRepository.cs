@@ -12,14 +12,6 @@ public sealed class ModuleRepository : IModuleRepository
 	public async Task<bool> AddModuleAsync(AddModuleDTO dto)
 	{
 		var moduleName = dto.ModuleName!.Trim();
-		var normalizedModuleName = moduleName.ToUpperInvariant();
-		var moduleExists = await _dbContext.ModuleDetails
-			.AsNoTracking()
-			.AnyAsync(module => module.ModuleName.Trim().ToUpper() == normalizedModuleName);
-
-		if (moduleExists)
-			throw new BadRequestException($"Module '{moduleName}' already exists.");
-
 		var now = DateTime.UtcNow;
 		await _dbContext.ModuleDetails.AddAsync(new ModuleDetails
 		{
@@ -32,6 +24,13 @@ public sealed class ModuleRepository : IModuleRepository
 
 	public Task<ModuleDetails?> GetModuleAsync(int moduleId) =>
 		_dbContext.ModuleDetails.AsNoTracking().FirstOrDefaultAsync(module => module.ModuleId == moduleId);
+
+	public Task<bool> ModuleNameExistsAsync(string moduleName)
+	{
+		var normalizedModuleName = moduleName.Trim().ToUpperInvariant();
+		return _dbContext.ModuleDetails.AsNoTracking()
+			.AnyAsync(module => module.ModuleName.Trim().ToUpper() == normalizedModuleName);
+	}
 
 	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails module)
 	{

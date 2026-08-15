@@ -95,13 +95,12 @@ public sealed class UserClientRepository : IUserClientRepository
 	public Task<UserClientDetails?> GetUserClientAssignmentAsync(Guid userId, CancellationToken cancellationToken) =>
 		_dbContext.UserClientDetails.AsNoTracking().FirstOrDefaultAsync(assignment => assignment.UserId == userId, cancellationToken);
 
+	public Task<bool> ClientIsActiveAsync(int clientId, CancellationToken cancellationToken) =>
+		_dbContext.ClientDetails.AsNoTracking()
+			.AnyAsync(client => client.ClientId == clientId && client.IsActive, cancellationToken);
+
 	public async Task<UserClientDetails> AssignUserClientAsync(AssignUserClientDTO assignment, CancellationToken cancellationToken)
 	{
-		var clientExists = await _dbContext.ClientDetails.AsNoTracking()
-			.AnyAsync(client => client.ClientId == assignment.ClientId && client.IsActive, cancellationToken);
-		if (!clientExists)
-			throw new BadRequestException("The selected client does not exist or is inactive.");
-
 		var now = DateTime.UtcNow;
 		var userClient = await _dbContext.UserClientDetails.FirstOrDefaultAsync(item => item.UserId == assignment.UserId, cancellationToken);
 		if (userClient?.ClientId == assignment.ClientId)

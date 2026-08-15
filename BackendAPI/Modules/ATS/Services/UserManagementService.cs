@@ -70,6 +70,9 @@ public class UserManagementService : IUserManagementService
 		}
 
 		await GetAssignedAuthUserAsync(assignment.UserId, cancellationToken);
+		if (!await _userClientRepository.ClientIsActiveAsync(assignment.ClientId, cancellationToken))
+			throw new BadRequestException("The selected client does not exist or is inactive.");
+
 		var result = await _userClientRepository.AssignUserClientAsync(assignment, cancellationToken);
 		return result.Adapt<UserClientDetailsDTO>();
 	}
@@ -155,6 +158,19 @@ public class UserManagementService : IUserManagementService
 			user.ClientId,
 			_currentUser.IsPlatformSuperAdmin);
 		EnsureClientAccess(scope, clientId);
+
+		var email = authUser.UserEmail.Trim();
+		if (await _userRepository.UserExistsAsync(authUser.UserId, email, cancellationToken))
+			throw new BadRequestException("The selected Auth user already exists in ATS User Management.");
+		if (clientId.HasValue && !await _userClientRepository.ClientIsActiveAsync(clientId.Value, cancellationToken))
+			throw new BadRequestException("The selected client does not exist or is inactive.");
+		if (!await _userRepository.RoleIsActiveAsync(user.RoleId, cancellationToken))
+			throw new BadRequestException("The selected role does not exist or is inactive.");
+
+		var moduleIds = userDTOs.Select(item => item.ModuleId).Distinct().ToArray();
+		if (await _userRepository.CountActiveModulesAsync(moduleIds, cancellationToken) != moduleIds.Length)
+			throw new BadRequestException("One or more selected modules do not exist or are inactive.");
+
 		var users = userDTOs.Select(item => new AddUserDTO
 		{
 			UserId = authUser.UserId,
@@ -192,12 +208,11 @@ public class UserManagementService : IUserManagementService
 		if (userDTOs.Any(item => item.UserId != user.UserId))
 			throw new BadRequestException("All module assignments must use the same Auth user.");
 
-		if (!scope.CanAccessAll)
-		{
-			var existingUsers = await _userRepository.GetUserAsync(user.UserId, cancellationToken);
-			if (existingUsers.Count == 0 || existingUsers.Any(item => item.ClientId != scope.ClientId))
-				throw new ForbiddenException("The selected user is outside the current ATS scope.");
-		}
+		var existingUsers = await _userRepository.GetUserAsync(user.UserId, cancellationToken);
+		if (!scope.CanAccessAll && (existingUsers.Count == 0 || existingUsers.Any(item => item.ClientId != scope.ClientId)))
+			throw new ForbiddenException("The selected user is outside the current ATS scope.");
+		if (existingUsers.Count == 0)
+			throw new NotFoundException($"User with ID {user.UserId} was not found.");
 
 		var authUser = await GetAssignedAuthUserAsync(user.UserId, cancellationToken);
 		var clientAssignment = await _userClientRepository.GetUserClientAssignmentAsync(
@@ -208,6 +223,20 @@ public class UserManagementService : IUserManagementService
 			user.ClientId,
 			_currentUser.IsPlatformSuperAdmin);
 		EnsureClientAccess(scope, clientId);
+
+		var email = authUser.UserEmail.Trim();
+		if (await _userRepository.UserEmailExistsAsync(authUser.UserId, email, cancellationToken))
+			throw new BadRequestException($"User with email '{email}' already exists.");
+		if (existingUsers[0].ClientId != clientId && clientId.HasValue && !await _userClientRepository.ClientIsActiveAsync(clientId.Value, cancellationToken))
+			throw new BadRequestException("The selected client does not exist or is inactive.");
+		if (existingUsers[0].RoleId != user.RoleId && !await _userRepository.RoleIsActiveAsync(user.RoleId, cancellationToken))
+			throw new BadRequestException("The selected role does not exist or is inactive.");
+
+		var newModuleIds = userDTOs.Select(item => item.ModuleId).Distinct()
+			.Except(existingUsers.Select(item => item.ModuleId)).ToArray();
+		if (newModuleIds.Length > 0 && await _userRepository.CountActiveModulesAsync(newModuleIds, cancellationToken) != newModuleIds.Length)
+			throw new BadRequestException("One or more newly selected modules do not exist or are inactive.");
+
 		var users = userDTOs.Select(item => new EditUserDTO
 		{
 			UserId = authUser.UserId,

@@ -89,8 +89,9 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		});
 
 		// Batch is fully cleaned up: no queue entries, no payload
-		(await dbRedis.SortedSetLengthAsync("devtest-ats-batches:pending")).Should().Be(0);
-		(await dbRedis.SortedSetLengthAsync("devtest-ats-batches:processing")).Should().Be(0);
+		// (membership checks, not counts — other test classes share these keys in parallel)
+		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batchId)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:processing", batchId)).Should().BeNull();
 		(await dbRedis.KeyExistsAsync(batchId)).Should().BeFalse();
 	}
 
@@ -146,7 +147,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		batch1Processed.Should().NotBeEmpty();
 		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
 
-		(await dbRedis.SortedSetLengthAsync("devtest-ats-batches:pending")).Should().Be(1);
+		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batch1Id)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batch2Id)).Should().NotBeNull();
 	}
 
 	[Fact]

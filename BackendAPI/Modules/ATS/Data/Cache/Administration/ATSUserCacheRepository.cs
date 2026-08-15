@@ -43,6 +43,18 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 	public Task<IReadOnlyList<UserDetails>> GetUserAsync(Guid userId, CancellationToken cancellationToken) =>
 		_repository.GetUserAsync(userId, cancellationToken);
 
+	public Task<bool> UserExistsAsync(Guid userId, string email, CancellationToken cancellationToken) =>
+		_repository.UserExistsAsync(userId, email, cancellationToken);
+
+	public Task<bool> UserEmailExistsAsync(Guid userId, string email, CancellationToken cancellationToken) =>
+		_repository.UserEmailExistsAsync(userId, email, cancellationToken);
+
+	public Task<bool> RoleIsActiveAsync(int roleId, CancellationToken cancellationToken) =>
+		_repository.RoleIsActiveAsync(roleId, cancellationToken);
+
+	public Task<int> CountActiveModulesAsync(IReadOnlyCollection<int> moduleIds, CancellationToken cancellationToken) =>
+		_repository.CountActiveModulesAsync(moduleIds, cancellationToken);
+
 	public async Task<IReadOnlyList<int>> GetActiveUserRoleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
 		await _cache.GetOrCreateAsync<List<int>>(
 			$"user_active_roles_{userId}",

@@ -38,6 +38,9 @@ public sealed class UserClientCacheRepository : IUserClientRepository
 		CancellationToken cancellationToken) =>
 		_repository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
 
+	public Task<bool> ClientIsActiveAsync(int clientId, CancellationToken cancellationToken) =>
+		_repository.ClientIsActiveAsync(clientId, cancellationToken);
+
 	public Task<UserClientDetails?> GetUserClientAssignmentAsync(Guid userId, CancellationToken cancellationToken) =>
 		_cache.GetOrCreateAsync<UserClientDetails?>(
 			$"user_client_assignment_{userId}",
