@@ -9,7 +9,7 @@ public class RoleManagementService : IRoleManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(
+	public async Task<ServiceResponse<PaginatedResult<RoleDetailsDTO>>> GetRolesAsync(
 		int? pageNumber = 1,
 		int? pageSize = 10,
 		string? searchTerm = null,
@@ -21,19 +21,32 @@ public class RoleManagementService : IRoleManagementService
 			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
 		}
 
-		var response = await _httpClient.GetAsync(query, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.GetAsync(query, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<GetRolesResponseDTO>(cancellationToken: cancellationToken);
-		return result!.Roles!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetRolesResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result?.Roles is null)
+			{
+				return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Success(result.Roles);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<RoleDetailsDTO>> GetAllRolesAsync(CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<IReadOnlyList<RoleDetailsDTO>>> GetAllRolesAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
 		var pageNumber = 1;
@@ -41,45 +54,73 @@ public class RoleManagementService : IRoleManagementService
 
 		while (true)
 		{
-			var page = await GetRolesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetRolesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+
+			if (!pageResponse.IsSuccess || pageResponse.Data is null)
+			{
+				return ServiceResponse<IReadOnlyList<RoleDetailsDTO>>.Failure(pageResponse.ErrorDetail);
+			}
+
+			var page = pageResponse.Data;
 			var pageItems = page.Data.ToArray();
 			roles.AddRange(pageItems);
 
 			if (roles.Count >= page.Count || pageItems.Length == 0)
-				return roles;
+				return ServiceResponse<IReadOnlyList<RoleDetailsDTO>>.Success(roles);
 
 			pageNumber++;
 		}
 	}
 
-	public async Task<bool> AddRoleAsync(AddATSRoleDTO roleDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<bool>> AddRoleAsync(AddATSRoleDTO roleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { role = roleDTO };
 
-		var response = await _httpClient.PostAsJsonAsync("ats/addrole", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PostAsJsonAsync("ats/addrole", request, cancellationToken);
 
-		return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<RoleDetailsDTO> EditRoleAsync(EditATSRoleDTO roleDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<RoleDetailsDTO>> EditRoleAsync(EditATSRoleDTO roleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { editRole = roleDTO };
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/editrole", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PatchAsJsonAsync("ats/editrole", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<RoleDetailsDTO>(cancellationToken: cancellationToken);
-		return result!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<RoleDetailsDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<RoleDetailsDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<RoleDetailsDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<RoleDetailsDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<RoleDetailsDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

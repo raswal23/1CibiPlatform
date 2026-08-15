@@ -9,41 +9,95 @@ public class ATSUserManagementService : IATSUserManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<IReadOnlyList<ATSUserLookupDTO>> GetAuthUsersAsync(
+	public async Task<ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>> GetAuthUsersAsync(
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.GetAsync("ats/getauthusers", cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync("ats/getauthusers", cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<List<ATSUserLookupDTO>>(
-			cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<List<ATSUserLookupDTO>>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+	public async Task<ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>> GetUserClientAssignmentsAsync(
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.GetAsync("ats/getuserclientassignments", cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync("ats/getuserclientassignments", cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<List<UserClientDetailsDTO>>(
-			cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<List<UserClientDetailsDTO>>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<UserClientDetailsDTO> AssignUserClientAsync(
+	public async Task<ServiceResponse<UserClientDetailsDTO>> AssignUserClientAsync(
 		AssignATSUserClientDTO assignmentDTO,
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.PostAsJsonAsync(
-			"ats/assignuserclient",
-			new { assignment = assignmentDTO },
-			cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.PostAsJsonAsync(
+				"ats/assignuserclient",
+				new { assignment = assignmentDTO },
+				cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<UserClientDetailsDTO>(
-			cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<UserClientDetailsDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<UserClientDetailsDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<UserClientDetailsDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<UserClientDetailsDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<UserClientDetailsDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<GetUsersResponseDTO> GetUsersAsync(
+	public async Task<ServiceResponse<GetUsersResponseDTO>> GetUsersAsync(
 		int pageIndex,
 		int pageSize,
 		string? searchTerm = null,
@@ -53,44 +107,110 @@ public class ATSUserManagementService : IATSUserManagementService
 		if (!string.IsNullOrWhiteSpace(searchTerm))
 			query += $"&search={Uri.EscapeDataString(searchTerm)}";
 
-		var response = await _httpClient.GetAsync(query, cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync(query, cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<GetUsersResponseDTO>(cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<GetUsersResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetUsersResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<GetUsersResponseDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<GetUsersResponseDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<GetUsersResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<int>> GetMyModuleIdsAsync(
+	public async Task<ServiceResponse<IReadOnlyList<int>>> GetMyModuleIdsAsync(
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.GetAsync("ats/getmymodules", cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync("ats/getmymodules", cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<List<int>>(
-			cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<IReadOnlyList<int>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<List<int>>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<IReadOnlyList<int>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<IReadOnlyList<int>>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<IReadOnlyList<int>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<int?> GetMyRoleIdAsync(
+	public async Task<ServiceResponse<int?>> GetMyRoleIdAsync(
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.GetAsync("ats/getmyroleid", cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync("ats/getmyroleid", cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<GetMyRoleIdResponseDTO>(
-			cancellationToken: cancellationToken);
-		return result?.RoleId;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<int?>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetMyRoleIdResponseDTO>(cancellationToken: cancellationToken);
+			return ServiceResponse<int?>.Success(result?.RoleId);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<int?>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<GetMyAtsAccessResponseDTO> GetMyAtsAccessAsync(
+	public async Task<ServiceResponse<GetMyAtsAccessResponseDTO>> GetMyAtsAccessAsync(
 		CancellationToken cancellationToken = default)
 	{
-		var response = await _httpClient.GetAsync("ats/get-my-access", cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.GetAsync("ats/get-my-access", cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<GetMyAtsAccessResponseDTO>(
-			cancellationToken: cancellationToken))!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<GetMyAtsAccessResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetMyAtsAccessResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<GetMyAtsAccessResponseDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<GetMyAtsAccessResponseDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<GetMyAtsAccessResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<bool> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<bool>> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default)
 	{
 		var users = userDTO.ModuleIds
 			.Distinct()
@@ -107,13 +227,26 @@ public class ATSUserManagementService : IATSUserManagementService
 			})
 			.ToArray();
 
-		var response = await _httpClient.PostAsJsonAsync("ats/adduser", new { users }, cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.PostAsJsonAsync("ats/adduser", new { users }, cancellationToken);
 
-		return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<UserDetailsDTO>> EditUserAsync(EditATSUserDTO userDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<IReadOnlyList<UserDetailsDTO>>> EditUserAsync(EditATSUserDTO userDTO, CancellationToken cancellationToken = default)
 	{
 		var editUsers = userDTO.ModuleIds
 			.Distinct()
@@ -130,18 +263,28 @@ public class ATSUserManagementService : IATSUserManagementService
 			})
 			.ToArray();
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/edituser", new { editUsers }, cancellationToken);
-		await EnsureSuccessAsync(response, cancellationToken);
+		try
+		{
+			var response = await _httpClient.PatchAsJsonAsync("ats/edituser", new { editUsers }, cancellationToken);
 
-		return (await response.Content.ReadFromJsonAsync<List<UserDetailsDTO>>(cancellationToken: cancellationToken))!;
-	}
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<IReadOnlyList<UserDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
 
-	private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-	{
-		if (response.IsSuccessStatusCode)
-			return;
+			var result = await response.Content.ReadFromJsonAsync<List<UserDetailsDTO>>(cancellationToken: cancellationToken);
 
-		var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-		throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+			if (result is null)
+			{
+				return ServiceResponse<IReadOnlyList<UserDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<IReadOnlyList<UserDetailsDTO>>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<IReadOnlyList<UserDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

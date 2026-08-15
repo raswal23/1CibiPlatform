@@ -32,6 +32,7 @@ global using FrontendWebassembly.Services.ATS.Interface;
 global using FrontendWebassembly.Services.ATS.Implementation;
 global using FrontendWebassembly.Services.Shared.Implementation;
 global using FrontendWebassembly.Services.Shared.Interfaces;
+global using FrontendWebassembly.Services.Shared.Extensions;
 global using Microsoft.AspNetCore.Components.Forms;
 global using Microsoft.AspNetCore.Components;
 global using FrontendWebassembly.Component.UserManagement;

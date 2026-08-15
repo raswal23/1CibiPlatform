@@ -9,7 +9,7 @@ public class ModuleManagementService : IModuleManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(
+	public async Task<ServiceResponse<PaginatedResult<ModuleDetailsDTO>>> GetModulesAsync(
 		int? pageNumber = 1,
 		int? pageSize = 10,
 		string? searchTerm = null,
@@ -21,19 +21,32 @@ public class ModuleManagementService : IModuleManagementService
 			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
 		}
 
-		var response = await _httpClient.GetAsync(query, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.GetAsync(query, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<GetModulesResponseDTO>(cancellationToken: cancellationToken);
-		return result!.Modules!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetModulesResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result?.Modules is null)
+			{
+				return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Success(result.Modules);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<ModuleDetailsDTO>> GetAllModulesAsync(CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<IReadOnlyList<ModuleDetailsDTO>>> GetAllModulesAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
 		var pageNumber = 1;
@@ -41,45 +54,73 @@ public class ModuleManagementService : IModuleManagementService
 
 		while (true)
 		{
-			var page = await GetModulesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetModulesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+
+			if (!pageResponse.IsSuccess || pageResponse.Data is null)
+			{
+				return ServiceResponse<IReadOnlyList<ModuleDetailsDTO>>.Failure(pageResponse.ErrorDetail);
+			}
+
+			var page = pageResponse.Data;
 			var pageItems = page.Data.ToArray();
 			modules.AddRange(pageItems);
 
 			if (modules.Count >= page.Count || pageItems.Length == 0)
-				return modules;
+				return ServiceResponse<IReadOnlyList<ModuleDetailsDTO>>.Success(modules);
 
 			pageNumber++;
 		}
 	}
 
-	public async Task<bool> AddModuleAsync(AddATSModuleDTO moduleDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<bool>> AddModuleAsync(AddATSModuleDTO moduleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { module = moduleDTO };
 
-		var response = await _httpClient.PostAsJsonAsync("ats/addmodule", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception(errorContent?.Detail ?? "Unable to add the module.");
-		}
+			var response = await _httpClient.PostAsJsonAsync("ats/addmodule", request, cancellationToken);
 
-		return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<ModuleDetailsDTO> EditModuleAsync(EditATSModuleDTO moduleDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<ModuleDetailsDTO>> EditModuleAsync(EditATSModuleDTO moduleDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { editModule = moduleDTO };
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/editmodule", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PatchAsJsonAsync("ats/editmodule", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<ModuleDetailsDTO>(cancellationToken: cancellationToken);
-		return result!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<ModuleDetailsDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<ModuleDetailsDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<ModuleDetailsDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<ModuleDetailsDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<ModuleDetailsDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

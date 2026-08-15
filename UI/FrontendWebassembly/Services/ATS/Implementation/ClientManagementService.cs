@@ -9,7 +9,7 @@ public class ClientManagementService : IClientManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<GetClientsResponseDTO> GetClientsAsync(int pageIndex = 1, int pageSize = 10, string? searchTerm = null, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<GetClientsResponseDTO>> GetClientsAsync(int pageIndex = 1, int pageSize = 10, string? searchTerm = null, CancellationToken cancellationToken = default)
 	{
 		var query = $"ats/getclients?pageIndex={pageIndex}&pageSize={pageSize}";
 		if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -17,19 +17,32 @@ public class ClientManagementService : IClientManagementService
 			query += $"&search={Uri.EscapeDataString(searchTerm)}";
 		}
 
-		var response = await _httpClient.GetAsync(query, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.GetAsync(query, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<GetClientsResponseDTO>(cancellationToken: cancellationToken);
-		return result!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<GetClientsResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetClientsResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<GetClientsResponseDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<GetClientsResponseDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<GetClientsResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<bool> AddClientAsync(AddClientDTO clientDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<bool>> AddClientAsync(AddClientDTO clientDTO, CancellationToken cancellationToken = default)
 	{
 		var clients = clientDTO.PackageIds
 			.Distinct()
@@ -43,19 +56,26 @@ public class ClientManagementService : IClientManagementService
 			.ToArray();
 		var request = new { clients };
 
-		var response = await _httpClient.PostAsJsonAsync("ats/addclient", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PostAsJsonAsync("ats/addclient", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
-		return result;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<ClientDetailsDTO>> EditClientAsync(EditClientDTO clientDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<IReadOnlyList<ClientDetailsDTO>>> EditClientAsync(EditClientDTO clientDTO, CancellationToken cancellationToken = default)
 	{
 		var editClients = clientDTO.PackageIds
 			.Distinct()
@@ -70,19 +90,32 @@ public class ClientManagementService : IClientManagementService
 			.ToArray();
 		var request = new { editClients };
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/editclient", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PatchAsJsonAsync("ats/editclient", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<List<ClientDetailsDTO>>(cancellationToken: cancellationToken);
-		return result!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<List<ClientDetailsDTO>>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<ClientDetailsDTO>> GetAllClientsAsync(CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<IReadOnlyList<ClientDetailsDTO>>> GetAllClientsAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
 		var pageIndex = 1;
@@ -90,11 +123,18 @@ public class ClientManagementService : IClientManagementService
 
 		while (true)
 		{
-			var page = await GetClientsAsync(pageIndex, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetClientsAsync(pageIndex, pageSize, cancellationToken: cancellationToken);
+
+			if (!pageResponse.IsSuccess || pageResponse.Data is null)
+			{
+				return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Failure(pageResponse.ErrorDetail);
+			}
+
+			var page = pageResponse.Data;
 			clients.AddRange(page.Items);
 
 			if (clients.Select(client => client.ClientId).Distinct().LongCount() >= page.TotalRecords || page.Items.Count == 0)
-				return clients;
+				return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Success(clients);
 
 			pageIndex++;
 		}

@@ -4,7 +4,6 @@
 @attribute [RequireATSModule(7)]
 @inject IClientManagementService ClientManagementService
 @inject IPackageManagementService PackageManagementService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Client Management</PageTitle>
@@ -115,8 +114,9 @@
     private TableComponent<ClientManagementViewModel>? clientsTable;
     private IReadOnlyList<PackageDetailsDTO> packages = Array.Empty<PackageDetailsDTO>();
     private Dictionary<int, PackageDetailsDTO> packageLookup = new();
-    private Task<IReadOnlyList<PackageDetailsDTO>>? packagesLoadTask;
+    private Task<ServiceResponse<IReadOnlyList<PackageDetailsDTO>>>? packagesLoadTask;
     private bool packagesLoaded;
+    private string? packagesError;
 
     private async Task<TableData<ClientManagementViewModel>> LoadClientData(TableState state, CancellationToken cancellationToken)
     => await LoadPagedDataAsync(state, async (page, pageSize) =>
@@ -125,7 +125,15 @@
         var clientsTask = ClientManagementService.GetClientsAsync(page, pageSize, searchString, cancellationToken);
         await Task.WhenAll(packagesTask, clientsTask);
 
-        var result = await clientsTask;
+        var clientsResponse = await clientsTask;
+
+        if (!clientsResponse.IsSuccess || clientsResponse.Data is null)
+            return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Failure(clientsResponse.ErrorDetail);
+
+        if (!await packagesTask)
+            return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Failure(packagesError ?? "Failed to load packages.");
+
+        var result = clientsResponse.Data;
         var groupedClients = result.Items
             .GroupBy(client => client.ClientId)
             .Select(group =>
@@ -151,29 +159,40 @@
             .OrderBy(client => client.ClientName)
             .ToArray();
 
-        return new PaginatedResult<ClientManagementViewModel>(
-            result.PageIndex,
-            result.PageSize,
-            result.TotalRecords,
-            groupedClients);
+        return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Success(
+            new PaginatedResult<ClientManagementViewModel>(
+                result.PageIndex,
+                result.PageSize,
+                result.TotalRecords,
+                groupedClients));
     });
 
-    private async Task EnsurePackagesLoadedAsync(CancellationToken cancellationToken)
+    private async Task<bool> EnsurePackagesLoadedAsync(CancellationToken cancellationToken)
     {
         if (packagesLoaded)
-            return;
+            return true;
 
         packagesLoadTask ??= PackageManagementService.GetAllPackagesAsync(cancellationToken);
 
         try
         {
-            packages = await packagesLoadTask.WaitAsync(cancellationToken);
+            var response = await packagesLoadTask.WaitAsync(cancellationToken);
+
+            if (!response.IsSuccess || response.Data is null)
+            {
+                packagesError = response.ErrorDetail;
+                packagesLoadTask = null;
+                return false;
+            }
+
+            packages = response.Data;
             packageLookup = packages.ToDictionary(package => package.PackageId);
             packagesLoaded = true;
+            return true;
         }
-        catch
+        catch (OperationCanceledException)
         {
-            if (packagesLoadTask.IsCanceled || packagesLoadTask.IsFaulted)
+            if (packagesLoadTask is { IsCanceled: true } or { IsFaulted: true })
                 packagesLoadTask = null;
             throw;
         }
@@ -181,13 +200,9 @@
 
     private async Task AddNewClient()
     {
-        try
+        if (!await EnsurePackagesLoadedAsync(CancellationToken.None))
         {
-            await EnsurePackagesLoadedAsync(CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(packagesError ?? "Failed to load packages.", Severity.Error);
             return;
         }
 
@@ -208,18 +223,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var clientDTO = (AddClientDTO)result.Data!;
+            var addResponse = await ClientManagementService.AddClientAsync(clientDTO!);
+
+            if (!addResponse.IsSuccess)
             {
-                var clientDTO = (AddClientDTO)result.Data!;
-                await ClientManagementService.AddClientAsync(clientDTO!);
-                Snackbar.Add("Client added successfully", Severity.Success);
-                if (clientsTable?.TableRef != null)
-                    await clientsTable.TableRef.ReloadServerData();
+                Snackbar.Add(addResponse.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Client added successfully", Severity.Success);
+            if (clientsTable?.TableRef != null)
+                await clientsTable.TableRef.ReloadServerData();
         }
     }
 
@@ -243,18 +258,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var editClientDTO = (EditClientDTO)result.Data!;
+            var editResponse = await ClientManagementService.EditClientAsync(editClientDTO!);
+
+            if (!editResponse.IsSuccess)
             {
-                var editClientDTO = (EditClientDTO)result.Data!;
-                await ClientManagementService.EditClientAsync(editClientDTO!);
-                Snackbar.Add("Client updated successfully", Severity.Success);
-                if (clientsTable?.TableRef != null)
-                    await clientsTable.TableRef.ReloadServerData();
+                Snackbar.Add(editResponse.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Client updated successfully", Severity.Success);
+            if (clientsTable?.TableRef != null)
+                await clientsTable.TableRef.ReloadServerData();
         }
     }
 }

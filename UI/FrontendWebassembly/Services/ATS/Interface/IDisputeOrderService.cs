@@ -4,6 +4,6 @@ namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IDisputeOrderService
 {
-	Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
-    Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest);
+	Task<ServiceResponse<PaginatedResult<DisputeOrderListDTO>>> GetDisputeOrdersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+    Task<ServiceResponse<bool>> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest);
 }

@@ -3,7 +3,6 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(8)]
 @inject IRoleManagementService RoleManagementService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Role Management</PageTitle>
@@ -117,18 +116,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var roleDTO = (AddATSRoleDTO)result.Data!;
+            var response = await RoleManagementService.AddRoleAsync(roleDTO);
+
+            if (!response.IsSuccess)
             {
-                var roleDTO = (AddATSRoleDTO)result.Data!;
-                await RoleManagementService.AddRoleAsync(roleDTO);
-                Snackbar.Add("Role added successfully", Severity.Success);
-                if (rolesTable?.TableRef != null)
-                    await rolesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Role added successfully", Severity.Success);
+            if (rolesTable?.TableRef != null)
+                await rolesTable.TableRef.ReloadServerData();
         }
     }
 
@@ -148,18 +147,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var editRoleDTO = (EditATSRoleDTO)result.Data!;
+            var response = await RoleManagementService.EditRoleAsync(editRoleDTO);
+
+            if (!response.IsSuccess)
             {
-                var editRoleDTO = (EditATSRoleDTO)result.Data!;
-                await RoleManagementService.EditRoleAsync(editRoleDTO);
-                Snackbar.Add("Role updated successfully", Severity.Success);
-                if (rolesTable?.TableRef != null)
-                    await rolesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Role updated successfully", Severity.Success);
+            if (rolesTable?.TableRef != null)
+                await rolesTable.TableRef.ReloadServerData();
         }
     }
 }

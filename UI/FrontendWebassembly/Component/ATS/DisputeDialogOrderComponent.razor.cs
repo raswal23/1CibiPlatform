@@ -122,16 +122,20 @@ public partial class DisputeDialogOrderComponent
 			isMarkingAsDisputed = true;
 			await InvokeAsync(StateHasChanged);
 
-			submissionSucceeded = await DisputeOrderService.MarkAsDisputedAsync(requestToSend);
+			var response = await DisputeOrderService.MarkAsDisputedAsync(requestToSend);
+
+			if (!response.IsSuccess)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			submissionSucceeded = response.Data;
 
 			if (!submissionSucceeded)
 			{
 				Snackbar.Add("Failed to mark order as disputed.", Severity.Error);
 			}
-		}
-		catch (Exception ex)
-		{
-			Snackbar.Add(ex.Message, Severity.Error);
 		}
 		finally
 		{

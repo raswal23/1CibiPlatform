@@ -10,16 +10,22 @@ public partial class ClientAssigning
 		CancellationToken cancellationToken) =>
 		await LoadPagedDataAsync(state, async (page, pageSize) =>
 		{
-			var result = await ClientAssignmentService.GetAssignmentsAsync(
+			var response = await ClientAssignmentService.GetAssignmentsAsync(
 				page,
 				pageSize,
 				searchString,
 				cancellationToken);
-			return new PaginatedResult<ClientAssignmentDetailsDTO>(
-				result.PageIndex,
-				result.PageSize,
-				result.TotalRecords,
-				result.Items);
+
+			if (!response.IsSuccess || response.Data is null)
+				return ServiceResponse<PaginatedResult<ClientAssignmentDetailsDTO>>.Failure(response.ErrorDetail);
+
+			var result = response.Data;
+			return ServiceResponse<PaginatedResult<ClientAssignmentDetailsDTO>>.Success(
+				new PaginatedResult<ClientAssignmentDetailsDTO>(
+					result.PageIndex,
+					result.PageSize,
+					result.TotalRecords,
+					result.Items));
 		});
 
 	private async Task EditAssignment(ClientAssignmentDetailsDTO assignment)

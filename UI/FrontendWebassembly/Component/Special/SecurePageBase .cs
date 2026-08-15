@@ -33,8 +33,13 @@ public abstract class SecurePageBase : ComponentBase
 		{
 			if (CascadingATSModuleIds is null)
 			{
-				AccessibleATSModuleIds = (await ATSUserManagementService.GetMyModuleIdsAsync())
-					.ToHashSet();
+				var moduleIdsResponse = await ATSUserManagementService.GetMyModuleIdsAsync();
+
+				// Fail closed: an unavailable module list means no module access, which
+				// falls through to the access-denied redirect below.
+				AccessibleATSModuleIds = moduleIdsResponse.IsSuccess && moduleIdsResponse.Data is not null
+					? moduleIdsResponse.Data.ToHashSet()
+					: new HashSet<int>();
 			}
 
 			if (moduleAttr.ModuleIds.Count == 0 ||

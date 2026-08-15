@@ -102,8 +102,15 @@ public partial class SelectFilesToDownloadComponent
 
 		DownloadRequest.SubjectName = ReportResult!.SubjectName;
 
-		var response = await ReportService.DownloadDocumentsAsync(DownloadRequest);
+		var downloadResponse = await ReportService.DownloadDocumentsAsync(DownloadRequest);
 
+		if (!downloadResponse.IsSuccess || downloadResponse.Data is null)
+		{
+			Snackbar.Add(downloadResponse.ErrorDetail, Severity.Error);
+			return;
+		}
+
+		var response = downloadResponse.Data;
 		var fileBytes = await response.Content.ReadAsByteArrayAsync();
 
 		var fileName =

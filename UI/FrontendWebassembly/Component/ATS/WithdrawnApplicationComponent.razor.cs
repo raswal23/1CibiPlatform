@@ -98,19 +98,15 @@ public partial class WithdrawnApplicationComponent
 
 		try
 		{
-			bool success;
+			var resendResponse = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
 
-			try
+			if (!resendResponse.IsSuccess)
 			{
-				success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
-			}
-			catch (Exception)
-			{
-				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				Snackbar.Add(resendResponse.ErrorDetail, Severity.Error);
 				return false;
 			}
 
-			if (!success)
+			if (!resendResponse.Data)
 			{
 				Snackbar.Add("Failed to resend application form.", Severity.Error);
 				return false;

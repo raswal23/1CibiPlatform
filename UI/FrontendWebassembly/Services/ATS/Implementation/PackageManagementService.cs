@@ -9,7 +9,7 @@ public class PackageManagementService : IPackageManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default, int? clientId = null)
+	public async Task<ServiceResponse<PaginatedResult<PackageDetailsDTO>>> GetPackagesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default, int? clientId = null)
 	{
 		var query = $"ats/getpackages?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
@@ -21,19 +21,32 @@ public class PackageManagementService : IPackageManagementService
 			query += $"&clientId={clientId.Value}";
 		}
 
-		var response = await _httpClient.GetAsync(query, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.GetAsync(query, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<GetPackagesResponseDTO>(cancellationToken: cancellationToken);
-		return result!.Packages!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PaginatedResult<PackageDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetPackagesResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result?.Packages is null)
+			{
+				return ServiceResponse<PaginatedResult<PackageDetailsDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PaginatedResult<PackageDetailsDTO>>.Success(result.Packages);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<PaginatedResult<PackageDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<IReadOnlyList<PackageDetailsDTO>> GetAllPackagesAsync(CancellationToken cancellationToken = default, int? clientId = null)
+	public async Task<ServiceResponse<IReadOnlyList<PackageDetailsDTO>>> GetAllPackagesAsync(CancellationToken cancellationToken = default, int? clientId = null)
 	{
 		const int pageSize = 100;
 		var pageNumber = 1;
@@ -41,46 +54,73 @@ public class PackageManagementService : IPackageManagementService
 
 		while (true)
 		{
-			var page = await GetPackagesAsync(pageNumber, pageSize, cancellationToken: cancellationToken, clientId: clientId);
+			var pageResponse = await GetPackagesAsync(pageNumber, pageSize, cancellationToken: cancellationToken, clientId: clientId);
+
+			if (!pageResponse.IsSuccess || pageResponse.Data is null)
+			{
+				return ServiceResponse<IReadOnlyList<PackageDetailsDTO>>.Failure(pageResponse.ErrorDetail);
+			}
+
+			var page = pageResponse.Data;
 			var pageItems = page.Data.ToArray();
 			packages.AddRange(pageItems);
 
 			if (packages.Count >= page.Count || pageItems.Length == 0)
-				return packages;
+				return ServiceResponse<IReadOnlyList<PackageDetailsDTO>>.Success(packages);
 
 			pageNumber++;
 		}
 	}
 
-	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<bool>> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { package = packageDTO };
 
-		var response = await _httpClient.PostAsJsonAsync("ats/addpackage", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PostAsJsonAsync("ats/addpackage", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
-		return result;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<PackageDetailsDTO>> EditPackageAsync(EditPackageDTO packageDTO, CancellationToken cancellationToken = default)
 	{
 		var request = new { editPackage = packageDTO };
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/editpackage", request, cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken: cancellationToken);
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.PatchAsJsonAsync("ats/editpackage", request, cancellationToken);
 
-		var result = await response.Content.ReadFromJsonAsync<PackageDetailsDTO>(cancellationToken: cancellationToken);
-		return result!;
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PackageDetailsDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<PackageDetailsDTO>(cancellationToken: cancellationToken);
+
+			if (result is null)
+			{
+				return ServiceResponse<PackageDetailsDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PackageDetailsDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<PackageDetailsDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

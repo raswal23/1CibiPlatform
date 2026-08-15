@@ -264,14 +264,18 @@ public partial class ATSDashboardComponent
 				? null
 				: _selectedRequester;
 
-			_dashboard = await DashboardService.GetDashboardAsync(requester);
+			var response = await DashboardService.GetDashboardAsync(requester);
+
+			if (!response.IsSuccess)
+			{
+				_dashboard = new ATSDashboardDTO();
+				ApplyDashboardData();
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			_dashboard = response.Data!;
 			ApplyDashboardData();
-		}
-		catch (Exception)
-		{
-			_dashboard = new ATSDashboardDTO();
-			ApplyDashboardData();
-			Snackbar.Add("Failed to load ATS dashboard data.", Severity.Error);
 		}
 		finally
 		{

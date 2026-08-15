@@ -9,7 +9,7 @@ public class DashboardService : IDashboardService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ATSDashboardDTO> GetDashboardAsync(string? requester = null)
+	public async Task<ServiceResponse<ATSDashboardDTO>> GetDashboardAsync(string? requester = null)
 	{
 		var query = "ats/getdashboard";
 		if (!string.IsNullOrWhiteSpace(requester))
@@ -17,15 +17,22 @@ public class DashboardService : IDashboardService
 			query += $"?requester={Uri.EscapeDataString(requester)}";
 		}
 
-		var response = await _httpClient.GetAsync(query);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
-		}
+			var response = await _httpClient.GetAsync(query);
 
-		var result = await response.Content.ReadFromJsonAsync<GetATSDashboardResponseDTO>();
-		return result?.Dashboard ?? new ATSDashboardDTO();
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<ATSDashboardDTO>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetATSDashboardResponseDTO>();
+			return ServiceResponse<ATSDashboardDTO>.Success(result?.Dashboard ?? new ATSDashboardDTO());
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<ATSDashboardDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

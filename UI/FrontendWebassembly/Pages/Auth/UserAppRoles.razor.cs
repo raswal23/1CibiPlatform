@@ -131,8 +131,12 @@ public partial class UserAppRoles
 					return;
 				}
 
-				await UserManagementService.SendNotificationAsync(notificationDto);
+				var notificationResponse = await UserManagementService.SendNotificationAsync(notificationDto);
 
+				if (!notificationResponse.IsSuccess)
+				{
+					Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
+				}
 			});
 	}
 
@@ -141,7 +145,13 @@ public partial class UserAppRoles
 		await OpenEditDialogAsync<EditUserApprovalComponent, UnApprovedUsersDTO>("User Approval", "User", unapproveduser, async result =>
 		{
 			await EditUser(result);
-			await UserManagementService.SendApprovalNotificationAsync(result.email!);
+
+			var notificationResponse = await UserManagementService.SendApprovalNotificationAsync(result.email!);
+
+			if (!notificationResponse.IsSuccess)
+			{
+				Snackbar.Add("Saved, but the approval notification could not be sent.", Severity.Warning);
+			}
 		});
 	}
 	private async Task OpenEditApplicationDialog(ApplicationsDTO app)
@@ -242,12 +252,20 @@ public partial class UserAppRoles
 
 	private async Task<bool> AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
 	{
-		var isSuccess = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
-		if (!isSuccess)
+		var response = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+
+		if (!response.IsSuccess)
+		{
+			Snackbar.Add(response.ErrorDetail, Severity.Error);
+			return false;
+		}
+
+		if (!response.Data)
 		{
 			return false;
 		}
-		await ExecuteAndReloadAsync(() => Task.CompletedTask, appSubRolesTable);
+
+		await appSubRolesTable.TableRef.ReloadServerData();
 		return true;
 	}
 

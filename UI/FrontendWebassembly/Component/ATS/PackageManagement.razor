@@ -3,7 +3,6 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(6)]
 @inject IPackageManagementService PackageManagementService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Package Management</PageTitle>
@@ -136,18 +135,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var packageDTO = (AddPackageDTO)result.Data!;
+            var response = await PackageManagementService.AddPackageAsync(packageDTO!);
+
+            if (!response.IsSuccess)
             {
-                var packageDTO = (AddPackageDTO)result.Data!;
-                await PackageManagementService.AddPackageAsync(packageDTO!);
-                Snackbar.Add("Package added successfully", Severity.Success);
-                if (packagesTable?.TableRef != null)
-                    await packagesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Package added successfully", Severity.Success);
+            if (packagesTable?.TableRef != null)
+                await packagesTable.TableRef.ReloadServerData();
         }
     }
 
@@ -166,18 +165,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var editPackageDTO = (EditPackageDTO)result.Data!;
+            var response = await PackageManagementService.EditPackageAsync(editPackageDTO);
+
+            if (!response.IsSuccess)
             {
-                var editPackageDTO = (EditPackageDTO)result.Data!;
-                await PackageManagementService.EditPackageAsync(editPackageDTO);
-                Snackbar.Add("Package updated successfully", Severity.Success);
-                if (packagesTable?.TableRef != null)
-                    await packagesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Package updated successfully", Severity.Success);
+            if (packagesTable?.TableRef != null)
+                await packagesTable.TableRef.ReloadServerData();
         }
     }
 }

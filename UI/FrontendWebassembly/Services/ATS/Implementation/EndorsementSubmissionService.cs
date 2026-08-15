@@ -63,41 +63,58 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		await _hubConnection.StartAsync();
 	}
 
-	public async Task<string?> DownloadBulkTemplateAsync()
+	public async Task<ServiceResponse<string>> DownloadBulkTemplateAsync()
 	{
-		var response = await _httpClient.GetAsync("ats/downloadbulktemplate");
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.GetAsync("ats/downloadbulktemplate");
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<string>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<string>();
+
+			if (string.IsNullOrWhiteSpace(result))
+			{
+				return ServiceResponse<string>.Failure("The server did not return a template download link.");
+			}
+
+			return ServiceResponse<string>.Success(result);
 		}
-
-		var result = await response.Content.ReadFromJsonAsync<string>();
-
-		return result;
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<string>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
+	public async Task<ServiceResponse<bool>> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO)
 	{
 		var request = new { emailInvitationRequestDTO };
 
-		var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.PostAsJsonAsync("ats/insertemailinvitationrequest", request);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(successContentInfo);
 		}
-
-		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
-
-		return successContentInfo;
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetails)
+	public async Task<ServiceResponse<bool>> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetails)
 	{
 		using var content = new MultipartFormDataContent();
 
@@ -125,56 +142,78 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
 				AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
 
-		var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.PostAsync("ats/insertbulksubject", content);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(successContentInfo);
 		}
-
-		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
-
-		return successContentInfo;
-
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+	public async Task<ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>> GetWithdrawnEmailInvitationRequestsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
 	{
 		var query = $"ats/getwithdrawnapplicationforms?pageNumber={PageNumber}&pageSize={PageSize}";
 		if (!string.IsNullOrEmpty(SearchTerm))
 			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
 
-		var response = await _httpClient.GetAsync(query);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.GetAsync(query);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetWithdrawnEmailInvitationRequestsResponseDTO>();
+
+			if (result?.Requests is null)
+			{
+				return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Success(result.Requests);
 		}
-
-		var result = await response.Content.ReadFromJsonAsync<GetWithdrawnEmailInvitationRequestsResponseDTO>();
-
-		return result!.Requests!;
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId)
+	public async Task<ServiceResponse<bool>> ResendApplicationFormAsync(Guid emailInvitationId)
 	{
 		var request = new { emailInvitationId };
 
-		var response = await _httpClient.PatchAsJsonAsync("ats/resendapplicationform", request);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.PatchAsJsonAsync("ats/resendapplicationform", request);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var successContent = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(successContent);
 		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-
-		return successContent;
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

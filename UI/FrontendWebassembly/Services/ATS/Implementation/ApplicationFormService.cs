@@ -9,7 +9,7 @@ public class ApplicationFormService : IApplicationFormService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails, 
+	public async Task<ServiceResponse<bool>> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
 														AddressDetailsDTO AddressDetails, 
 														EducationalBackgroundDTO EducationalBackground, 
 														LicensesDetailsDTO LicensesDetails, 
@@ -198,60 +198,79 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");
 		AddString(SignatureDetails.SignatureDate.ToString("MM-dd-yyyy"), "SignatureDetails.SignatureDate");
 
-		var response = await _httpClient.PostAsync("ats/addapplicationformdata", content);
-
-		var successContentInfo = await response.Content.ReadFromJsonAsync<bool>();
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.PostAsync("ats/addapplicationformdata", content);
 
-			return new ApplicationFormResponse(false, errorContent!.Detail);
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var isAdded = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(isAdded);
 		}
-
-		return new ApplicationFormResponse(true, string.Empty); 
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 
-	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)
+	public async Task<ServiceResponse<EmailIdAndApplicationFormPathDTO>> GetEmailIdAndApplicationFormPathAsync(string HashToken)
 	{
-		var response = await _httpClient.GetAsync($"ats/getemailidandapplicationformpath?hashToken={HashToken}");
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.GetAsync($"ats/getemailidandapplicationformpath?hashToken={HashToken}");
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<EmailIdAndApplicationFormPathDTO>();
+
+			if (result is null)
+			{
+				return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Failure("The server returned an empty response.");
+			}
+
+			if (result.ExpiresAt < DateTime.UtcNow)
+			{
+				result.IsExpired = true;
+			}
+
+			return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Success(result);
 		}
-
-		var result = await response.Content.ReadFromJsonAsync<EmailIdAndApplicationFormPathDTO>();
-
-		if (result!.ExpiresAt < DateTime.UtcNow)
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			result!.IsExpired = true;
+			return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Failure($"Unable to reach the server. {ex.Message}");
 		}
-
-		return result;
 	}
 
-	public async Task<bool> WithdrawApplicationForm(string HashToken)
+	public async Task<ServiceResponse<bool>> WithdrawApplicationForm(string HashToken)
 	{
 		var payload = new { HashToken };
 
-		var response = await _httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform", payload);
-
-		if (!response.IsSuccessStatusCode)
+		try
 		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var response = await _httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform", payload);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var successContent = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(successContent);
 		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		if (successContent == true)
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return successContent;
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
 		}
-
-		return false;
 	}
 }

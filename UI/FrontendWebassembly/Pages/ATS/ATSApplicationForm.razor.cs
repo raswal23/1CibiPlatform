@@ -5,6 +5,7 @@ public partial class ATSApplicationForm
 	private bool _showApplicationForm = false;
 	private bool _showPhilsys = false;
 	private int _stepActive = 0;
+	private string? _initError;
 	private string? Status;
 	private bool IsExpired = false;
 	private bool hasUnsavedChanges = true;
@@ -32,9 +33,17 @@ public partial class ATSApplicationForm
 	protected override async Task OnInitializedAsync()
 	{
 		var response = await ATSService.GetEmailIdAndApplicationFormPathAsync(HashToken!);
-		Status = response.Status;
-		IsExpired = response!.IsExpired;
-		EmailId = response.EmailId;
+
+		if (!response.IsSuccess)
+		{
+			_initError = response.ErrorDetail;
+			return;
+		}
+
+		var details = response.Data!;
+		Status = details.Status;
+		IsExpired = details.IsExpired;
+		EmailId = details.EmailId;
 
 		_showApplicationForm = showAppForm?.ToLowerInvariant() switch
 		{
@@ -54,7 +63,7 @@ public partial class ATSApplicationForm
 			? stepActive
 			: 1;
 
-		if (response.IsExpired)
+		if (details.IsExpired)
 		{
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
 			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");

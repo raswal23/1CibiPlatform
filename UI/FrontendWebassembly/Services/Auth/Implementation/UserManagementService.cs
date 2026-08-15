@@ -1,4 +1,4 @@
-﻿namespace FrontendWebassembly.Services.Auth.Implementation;
+namespace FrontendWebassembly.Services.Auth.Implementation;
 
 public class UserManagementService : IUserManagementService
 {
@@ -11,347 +11,94 @@ public class UserManagementService : IUserManagementService
 		_logger = logger;
 	}
 
-	public async Task<PaginatedResult<UsersDTO>> GetUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
-	{
-		var query = $"auth/getusers?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
+	public Task<ServiceResponse<PaginatedResult<UsersDTO>>> GetUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+		=> GetPagedAsync<UsersResponseDTO, UsersDTO>(
+			BuildPagedQuery("auth/getusers", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.users,
+			ct);
 
-		var response = await _httpClient.GetAsync(query, ct);
+	public Task<ServiceResponse<PaginatedResult<UnApprovedUsersDTO>>> GetUnApprovedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+		=> GetPagedAsync<UnApprovedUsersResponseDTO, UnApprovedUsersDTO>(
+			BuildPagedQuery("auth/getunapprovedusers", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.users,
+			ct);
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+	public Task<ServiceResponse<PaginatedResult<ApplicationsDTO>>> GetApplicationsAsync(int? PageNumber = 1, int? PageSize = int.MaxValue, string? SearchTerm = null, CancellationToken ct = default)
+		=> GetPagedAsync<ApplicationsResponseDTO, ApplicationsDTO>(
+			BuildPagedQuery("auth/getapplications", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.applications,
+			ct);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<UsersResponseDTO>();
-
-		return result!.users!;
-	}
-
-	public async Task<PaginatedResult<UnApprovedUsersDTO>> GetUnApprovedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
-	{
-		var query = $"auth/getunapprovedusers?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
-
-		var response = await _httpClient.GetAsync(query, ct);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<UnApprovedUsersResponseDTO>();
-
-		return result!.users!;
-	}
-
-	public async Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(int? PageNumber = 1, int? PageSize = int.MaxValue, string? SearchTerm = null, CancellationToken ct = default)
-	{
-		var query = $"auth/getapplications?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
-
-		var response = await _httpClient.GetAsync(query, ct);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<ApplicationsResponseDTO>();
-
-		return result!.applications!;
-	}
-
-	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(
-		int? PageNumber = 1,
-		int? PageSize = 10,
-		string?
-		SearchTerm = null,
-		CancellationToken ct = default)
-	{
-		var query = $"auth/getsubmenus?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
-
-		var response = await _httpClient.GetAsync(query, ct);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<SubMenusResponseDTO>();
-
-		return result!.submenus!;
-	}
-
-	public async Task<PaginatedResult<LockedUsersDTO>> GetLockedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
-	{
-		var query = $"auth/getlockedusers?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
-
-		var response = await _httpClient.GetAsync(query, ct);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<LockedUsersResponseDTO>();
-
-		return result!.lockedusers!;
-	}
-
-	public async Task<PaginatedResult<RolesDTO>> GetRolesAsync(
+	public Task<ServiceResponse<PaginatedResult<SubMenusDTO>>> GetSubMenusAsync(
 		int? PageNumber = 1,
 		int? PageSize = 10,
 		string? SearchTerm = null,
 		CancellationToken ct = default)
-	{
-		var query = $"auth/getroles?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
+		=> GetPagedAsync<SubMenusResponseDTO, SubMenusDTO>(
+			BuildPagedQuery("auth/getsubmenus", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.submenus,
+			ct);
 
-		var response = await _httpClient.GetAsync(query, ct);
+	public Task<ServiceResponse<PaginatedResult<LockedUsersDTO>>> GetLockedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+		=> GetPagedAsync<LockedUsersResponseDTO, LockedUsersDTO>(
+			BuildPagedQuery("auth/getlockedusers", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.lockedusers,
+			ct);
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var result = await response.Content.ReadFromJsonAsync<RolesResponseDTO>();
-
-		return result!.roles!;
-	}
-
-	public async Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(
+	public Task<ServiceResponse<PaginatedResult<RolesDTO>>> GetRolesAsync(
 		int? PageNumber = 1,
 		int? PageSize = 10,
 		string? SearchTerm = null,
 		CancellationToken ct = default)
-	{
-		var query = $"auth/getappsubroles?pageNumber={PageNumber}&pageSize={PageSize}";
-		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
+		=> GetPagedAsync<RolesResponseDTO, RolesDTO>(
+			BuildPagedQuery("auth/getroles", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.roles,
+			ct);
 
-		var response = await _httpClient.GetAsync(query, ct);
+	public Task<ServiceResponse<PaginatedResult<AppSubRolesDTO>>> GetAppSubRolesAsync(
+		int? PageNumber = 1,
+		int? PageSize = 10,
+		string? SearchTerm = null,
+		CancellationToken ct = default)
+		=> GetPagedAsync<AppSubRolesResponseDTO, AppSubRolesDTO>(
+			BuildPagedQuery("auth/getappsubroles", PageNumber, PageSize, SearchTerm),
+			envelope => envelope.appsubroles,
+			ct);
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+	public Task<ServiceResponse<bool>> DeleteApplicationAsync(int AppId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deleteapplication/{AppId}"));
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
+	public Task<ServiceResponse<bool>> DeleteSubMenuAsync(int SubMenuId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deletesubmenu/{SubMenuId}"));
 
-		var result = await response.Content.ReadFromJsonAsync<AppSubRolesResponseDTO>();
+	public Task<ServiceResponse<bool>> DeleteRoleAsync(int RoleId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deleterole/{RoleId}"));
 
-		return result!.appsubroles!;
-	}
+	public Task<ServiceResponse<bool>> DeleteUserAppSubRoleAsync(int AppSubRoleId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deleteappsubrole/{AppSubRoleId}"));
 
-	public async Task<bool> DeleteApplicationAsync(int AppId)
-	{
-		var response = await _httpClient.DeleteAsync($"auth/deleteapplication/{AppId}");
+	public Task<ServiceResponse<bool>> DeleteLockedUserAsync(Guid lockedUserId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deletelockeduser/{lockedUserId}"));
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+	public Task<ServiceResponse<bool>> AddApplicationAsync(AddApplicationDTO application)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync($"auth/addapplication", new { application }));
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
+	public Task<ServiceResponse<bool>> AddSubMenuAsync(AddSubMenuDTO subMenu)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync($"auth/addsubmenu", new { subMenu }));
 
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent!;
-	}
+	public Task<ServiceResponse<bool>> AddRoleAsync(AddRoleDTO role)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync($"auth/addrole", new { role }));
 
-	public async Task<bool> DeleteSubMenuAsync(int SubMenuId)
-	{
-		var response = await _httpClient.DeleteAsync($"auth/deletesubmenu/{SubMenuId}");
+	public Task<ServiceResponse<bool>> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync($"auth/addappsubrole", new { appSubRole }));
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+	public Task<ServiceResponse<bool>> SendNotificationAsync(AssignmentNotificationDTO accountNotificationDTO)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync("account/notification", new { accountNotificationDTO }));
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
+	public Task<ServiceResponse<bool>> SendApprovalNotificationAsync(string Gmail)
+		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync("account/approvalnotification", new { Gmail }));
 
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent!;
-	}
-
-	public async Task<bool> DeleteRoleAsync(int RoleId)
-	{
-		var response = await _httpClient.DeleteAsync($"auth/deleterole/{RoleId}");
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent!;
-	}
-
-	public async Task<bool> DeleteUserAppSubRoleAsync(int AppSubRoleId)
-	{
-		var response = await _httpClient.DeleteAsync($"auth/deleteappsubrole/{AppSubRoleId}");
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent!;
-	}
-
-	public async Task<bool> DeleteLockedUserAsync(Guid lockedUserId)
-	{
-		var response = await _httpClient.DeleteAsync($"auth/deletelockeduser/{lockedUserId}");
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent!;
-	}
-
-	public async Task<bool> AddApplicationAsync(AddApplicationDTO application)
-	{
-		var payload = new
-		{
-			application
-		};
-
-		var response = await _httpClient.PostAsJsonAsync($"auth/addapplication", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<bool> AddSubMenuAsync(AddSubMenuDTO subMenu)
-	{
-		var payload = new
-		{
-			subMenu
-		};
-
-		var response = await _httpClient.PostAsJsonAsync($"auth/addsubmenu", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<bool> AddRoleAsync(AddRoleDTO role)
-	{
-		var payload = new
-		{
-			role
-		};
-
-		var response = await _httpClient.PostAsJsonAsync($"auth/addrole", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
-	{
-		var payload = new
-		{
-			appSubRole
-		};
-
-		var response = await _httpClient.PostAsJsonAsync($"auth/addappsubrole", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<bool> SendNotificationAsync(AssignmentNotificationDTO accountNotificationDTO)
-	{
-		var payload = new { accountNotificationDTO };
-		var response = await _httpClient.PostAsJsonAsync("account/notification", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<bool> SendApprovalNotificationAsync(string Gmail)
-	{
-		var payload = new { Gmail };
-		var response = await _httpClient.PostAsJsonAsync("account/approvalnotification", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<bool>();
-		return successContent;
-	}
-
-	public async Task<EditApplicationDTO> EditApplicationAsync(ApplicationsDTO editApplicationDTO)
+	public Task<ServiceResponse<EditApplicationDTO>> EditApplicationAsync(ApplicationsDTO editApplicationDTO)
 	{
 		var editApplication = new EditApplicationDTO
 		{
@@ -361,29 +108,10 @@ public class UserManagementService : IUserManagementService
 			IsActive = editApplicationDTO.IsActive
 		};
 
-		var payload = new
-		{
-			editApplication
-		};
-
-		var response = await _httpClient.PatchAsJsonAsync($"auth/editapplication", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<EditApplicationDTO>();
-		if (successContent != null)
-		{
-			return successContent;
-		}
-		return null!;
+		return PatchForAsync<EditApplicationDTO>("auth/editapplication", new { editApplication });
 	}
 
-	public async Task<EditSubMenuDTO> EditSubMenuAsync(SubMenusDTO editSubMenuDTO)
+	public Task<ServiceResponse<EditSubMenuDTO>> EditSubMenuAsync(SubMenusDTO editSubMenuDTO)
 	{
 		var editSubMenu = new EditSubMenuDTO
 		{
@@ -393,29 +121,10 @@ public class UserManagementService : IUserManagementService
 			IsActive = editSubMenuDTO.IsActive
 		};
 
-		var payload = new
-		{
-			editSubMenu
-		};
-
-		var response = await _httpClient.PatchAsJsonAsync($"auth/editsubmenu", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<EditSubMenuDTO>();
-		if (successContent != null)
-		{
-			return successContent;
-		}
-		return null!;
+		return PatchForAsync<EditSubMenuDTO>("auth/editsubmenu", new { editSubMenu });
 	}
 
-	public async Task<EditRoleDTO> EditRoleAsync(RolesDTO editRoleDTO)
+	public Task<ServiceResponse<EditRoleDTO>> EditRoleAsync(RolesDTO editRoleDTO)
 	{
 		var editRole = new EditRoleDTO
 		{
@@ -424,29 +133,10 @@ public class UserManagementService : IUserManagementService
 			Description = editRoleDTO.Description
 		};
 
-		var payload = new
-		{
-			editRole
-		};
-
-		var response = await _httpClient.PatchAsJsonAsync($"auth/editrole", payload);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<EditRoleDTO>();
-		if (successContent != null)
-		{
-			return successContent;
-		}
-		return null!;
+		return PatchForAsync<EditRoleDTO>("auth/editrole", new { editRole });
 	}
 
-	public async Task<EditAppSubRoleDTO> EditAppSubRoleAsync(AppSubRolesDTO editAppSubRoleDTO)
+	public Task<ServiceResponse<EditAppSubRoleDTO>> EditAppSubRoleAsync(AppSubRolesDTO editAppSubRoleDTO)
 	{
 		var editAppSubRole = new EditAppSubRoleDTO
 		{
@@ -457,29 +147,10 @@ public class UserManagementService : IUserManagementService
 			RoleId = editAppSubRoleDTO.RoleId,
 		};
 
-		var payload = new
-		{
-			editAppSubRole
-		};
+		return PatchForAsync<EditAppSubRoleDTO>("auth/editappsubrole", new { editAppSubRole });
+	}
 
-		var response = await _httpClient.PatchAsJsonAsync($"auth/editappsubrole", payload);
-
-        if (!response.IsSuccessStatusCode)
-        {
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
-		}
-
-        var successContent = await response.Content.ReadFromJsonAsync<EditAppSubRoleDTO>();
-        if (successContent != null)
-        {
-            return successContent;
-        }
-        return null!;
-    }
-
-	public async Task<EditUserDTO> EditUserAsync(UnApprovedUsersDTO editUserDTO)
+	public Task<ServiceResponse<EditUserDTO>> EditUserAsync(UnApprovedUsersDTO editUserDTO)
 	{
 		var editUser = new EditUserDTO
 		{
@@ -487,26 +158,96 @@ public class UserManagementService : IUserManagementService
 			IsApproved = editUserDTO.isApproved
 		};
 
-		var payload = new
+		return PatchForAsync<EditUserDTO>("auth/edituser", new { editUser });
+	}
+
+	private static string BuildPagedQuery(string route, int? pageNumber, int? pageSize, string? searchTerm)
+	{
+		var query = $"{route}?pageNumber={pageNumber}&pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(searchTerm))
+			query += $"&SearchTerm={Uri.EscapeDataString(searchTerm)}";
+
+		return query;
+	}
+
+	private async Task<ServiceResponse<PaginatedResult<TItem>>> GetPagedAsync<TEnvelope, TItem>(
+		string query,
+		Func<TEnvelope, PaginatedResult<TItem>?> project,
+		CancellationToken ct)
+		where TItem : class
+	{
+		try
 		{
-			editUser
-		};
+			var response = await _httpClient.GetAsync(query, ct);
 
-		var response = await _httpClient.PatchAsJsonAsync($"auth/edituser", payload);
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<PaginatedResult<TItem>>.Failure(await response.ReadErrorDetailAsync(ct));
+			}
 
-		if (!response.IsSuccessStatusCode)
-		{
-			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+			var envelope = await response.Content.ReadFromJsonAsync<TEnvelope>(cancellationToken: ct);
+			var result = envelope is null ? null : project(envelope);
 
-			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
+			if (result is null)
+			{
+				return ServiceResponse<PaginatedResult<TItem>>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<PaginatedResult<TItem>>.Success(result);
 		}
-
-		var successContent = await response.Content.ReadFromJsonAsync<EditUserDTO>();
-
-		if (successContent != null)
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return successContent;
+			return ServiceResponse<PaginatedResult<TItem>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
-		return null!;
+	}
+
+	private async Task<ServiceResponse<bool>> SendForBoolAsync(Func<Task<HttpResponseMessage>> send)
+	{
+		try
+		{
+			var response = await send();
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<bool>();
+			return ServiceResponse<bool>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
+
+	private async Task<ServiceResponse<T>> PatchForAsync<T>(string route, object payload)
+		where T : class
+	{
+		try
+		{
+			var response = await _httpClient.PatchAsJsonAsync(route, payload);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<T>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<T>();
+
+			if (result is null)
+			{
+				return ServiceResponse<T>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<T>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<T>.Failure($"Unable to reach the server. {ex.Message}");
+		}
 	}
 }

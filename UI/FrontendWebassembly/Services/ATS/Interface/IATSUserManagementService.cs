@@ -2,32 +2,32 @@ namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IATSUserManagementService
 {
-	Task<IReadOnlyList<ATSUserLookupDTO>> GetAuthUsersAsync(
+	Task<ServiceResponse<IReadOnlyList<ATSUserLookupDTO>>> GetAuthUsersAsync(
 		CancellationToken cancellationToken = default);
 
-	Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(
+	Task<ServiceResponse<IReadOnlyList<UserClientDetailsDTO>>> GetUserClientAssignmentsAsync(
 		CancellationToken cancellationToken = default);
 
-	Task<UserClientDetailsDTO> AssignUserClientAsync(
+	Task<ServiceResponse<UserClientDetailsDTO>> AssignUserClientAsync(
 		AssignATSUserClientDTO assignmentDTO,
 		CancellationToken cancellationToken = default);
 
-	Task<GetUsersResponseDTO> GetUsersAsync(
+	Task<ServiceResponse<GetUsersResponseDTO>> GetUsersAsync(
 		int pageIndex,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);
 
-	Task<IReadOnlyList<int>> GetMyModuleIdsAsync(
+	Task<ServiceResponse<IReadOnlyList<int>>> GetMyModuleIdsAsync(
 		CancellationToken cancellationToken = default);
 
-	Task<int?> GetMyRoleIdAsync(
+	Task<ServiceResponse<int?>> GetMyRoleIdAsync(
 		CancellationToken cancellationToken = default);
 
-	Task<GetMyAtsAccessResponseDTO> GetMyAtsAccessAsync(
+	Task<ServiceResponse<GetMyAtsAccessResponseDTO>> GetMyAtsAccessAsync(
 		CancellationToken cancellationToken = default);
 
-	Task<bool> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<bool>> AddUserAsync(AddATSUserDTO userDTO, CancellationToken cancellationToken = default);
 
-	Task<IReadOnlyList<UserDetailsDTO>> EditUserAsync(EditATSUserDTO userDTO, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<IReadOnlyList<UserDetailsDTO>>> EditUserAsync(EditATSUserDTO userDTO, CancellationToken cancellationToken = default);
 }

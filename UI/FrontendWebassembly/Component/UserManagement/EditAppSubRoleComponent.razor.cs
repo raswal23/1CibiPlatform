@@ -22,10 +22,23 @@ public partial class EditAppSubRoleComponent
 
 	protected override async Task OnInitializedAsync()
 	{
-		Users = (await UserManagementService.GetUsersAsync(1, int.MaxValue)).Data.ToList();
-		Apps = (await UserManagementService.GetApplicationsAsync(1, int.MaxValue)).Data.ToList();
-		SubMenus = (await UserManagementService.GetSubMenusAsync(1, int.MaxValue)).Data.ToList();
-		Roles = (await UserManagementService.GetRolesAsync(1, int.MaxValue)).Data.ToList();
+		var usersResponse = await UserManagementService.GetUsersAsync(1, int.MaxValue);
+		var appsResponse = await UserManagementService.GetApplicationsAsync(1, int.MaxValue);
+		var subMenusResponse = await UserManagementService.GetSubMenusAsync(1, int.MaxValue);
+		var rolesResponse = await UserManagementService.GetRolesAsync(1, int.MaxValue);
+
+		var firstFailure = new[] { usersResponse.ErrorDetail, appsResponse.ErrorDetail, subMenusResponse.ErrorDetail, rolesResponse.ErrorDetail }
+			.FirstOrDefault(error => !string.IsNullOrEmpty(error));
+
+		if (firstFailure is not null)
+		{
+			Snackbar.Add(firstFailure, Severity.Error);
+		}
+
+		Users = usersResponse.Data?.Data.ToList() ?? new();
+		Apps = appsResponse.Data?.Data.ToList() ?? new();
+		SubMenus = subMenusResponse.Data?.Data.ToList() ?? new();
+		Roles = rolesResponse.Data?.Data.ToList() ?? new();
 
 		selectedUser = Users?.FirstOrDefault(u => u.email == AppSubRole.UserEmail);
 		selectedApp = Apps?.FirstOrDefault(a => a.applicationId == AppSubRole.AppId);

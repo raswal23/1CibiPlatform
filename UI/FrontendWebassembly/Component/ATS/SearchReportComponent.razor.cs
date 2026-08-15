@@ -82,33 +82,33 @@ public partial class SearchReportComponent
 
 	private async Task<TableData<ReportListDTO>> LoadReportData(TableState state, CancellationToken cancellationToken)
 	{
-		try
-		{
-         var result = await ReportService.GetReportsAsync(
-				state.Page + 1,
-				state.PageSize,
-				searchString,
-				state.SortLabel,
-				state.SortDirection == SortDirection.Descending,
-				_dateRange?.Start,
-				_dateRange?.End);
-			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+		var response = await ReportService.GetReportsAsync(
+			state.Page + 1,
+			state.PageSize,
+			searchString,
+			state.SortLabel,
+			state.SortDirection == SortDirection.Descending,
+			_dateRange?.Start,
+			_dateRange?.End);
 
-			return new TableData<ReportListDTO>
-			{
-				Items = currentPageData,
-               TotalItems = (int)result.Count
-			};
-		}
-		catch (Exception)
+		if (!response.IsSuccess || response.Data is null)
 		{
-			Snackbar.Add("Failed to load reports.", Severity.Error);
+			Snackbar.Add(response.ErrorDetail, Severity.Error);
 			return new TableData<ReportListDTO>
 			{
 				Items = Array.Empty<ReportListDTO>(),
 				TotalItems = 0
 			};
 		}
+
+		var result = response.Data;
+		currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+
+		return new TableData<ReportListDTO>
+		{
+			Items = currentPageData,
+			TotalItems = (int)result.Count
+		};
 	}
 
     private async Task OnDateRangeChanged(DateRange range)
@@ -136,14 +136,15 @@ public partial class SearchReportComponent
 			downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList.Add(report.EmailInvitationRequestId);
 		}
 
-		var response = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
+		var downloadResponse = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
 
-		if (!response.IsSuccessStatusCode)
+		if (!downloadResponse.IsSuccess || downloadResponse.Data is null)
 		{
-			Snackbar.Add("Failed to download records.", Severity.Error);
+			Snackbar.Add(downloadResponse.ErrorDetail, Severity.Error);
 			return;
 		}
 
+		var response = downloadResponse.Data;
 		var fileBytes = await response.Content.ReadAsByteArrayAsync();
 
 		using (var ms = new MemoryStream(fileBytes))
@@ -189,26 +190,25 @@ public partial class SearchReportComponent
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
 	{
-       try
-		{
-			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
+		var resultResponse = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 
-			var parameters = new DialogParameters
-			{
-				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
-				{ nameof(ATSResultComponent.ReportResult), reportResult }
-			};
-
-			await OpenResultDialog<ATSResultComponent>(
-				"",
-				parameters,
-				MaxWidth.Medium,
-				fullWidth: false);
-		}
-		catch (Exception)
+		if (!resultResponse.IsSuccess)
 		{
-			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+			Snackbar.Add(resultResponse.ErrorDetail, Severity.Error);
+			return;
 		}
+
+		var parameters = new DialogParameters
+		{
+			{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
+			{ nameof(ATSResultComponent.ReportResult), resultResponse.Data }
+		};
+
+		await OpenResultDialog<ATSResultComponent>(
+			"",
+			parameters,
+			MaxWidth.Medium,
+			fullWidth: false);
 	}
 
 	private async Task OpenUploadReportDialog(Guid emailInvitationId)
