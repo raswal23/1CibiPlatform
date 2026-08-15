@@ -27,6 +27,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IObjectStorageService _objectStorageService;
 	protected readonly IEndorsementSubmissionService _endorsementSubmissionService;
 	protected readonly IEmailNotificationProcessorService _emailNotificationProcessorService;
+	protected readonly IEmailNotificationRecoveryService _emailNotificationRecoveryService;
 	protected readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
 	protected readonly IPackageManagementService _packageManagementService;
 	protected readonly IRoleManagementService _roleManagementService;
@@ -57,6 +58,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
 		_endorsementSubmissionService = _scope.ServiceProvider.GetRequiredService<IEndorsementSubmissionService>();
 		_emailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationProcessorService>();
+		_emailNotificationRecoveryService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationRecoveryService>();
 		_bulkSubmissionProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkSubmissionProcessorService>();
 		_packageManagementService = _scope.ServiceProvider.GetRequiredService<IPackageManagementService>();
 		_roleManagementService = _scope.ServiceProvider.GetRequiredService<IRoleManagementService>();

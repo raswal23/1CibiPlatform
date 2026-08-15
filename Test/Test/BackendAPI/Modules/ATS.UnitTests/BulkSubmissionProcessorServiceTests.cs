@@ -70,11 +70,14 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		_fixture.MockRepository.Setup(x => x.AddBulkEmailInvitationRequestAsync(It.IsAny<List<EmailInvitationRequest>>()))
 			.ReturnsAsync(true);
 
-		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()))
+		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()))
 			.ReturnsAsync(true);
 
-		_fixture.MockRedisDatabase.Setup(x => x.ListRightPushAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<StackExchange.Redis.RedisValue>()))
-			.ReturnsAsync(1L);
+		_fixture.MockRedisDatabase.Setup(x => x.StringSetAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<StackExchange.Redis.RedisValue>(), It.IsAny<TimeSpan?>(), It.IsAny<StackExchange.Redis.When>(), It.IsAny<StackExchange.Redis.CommandFlags>()))
+			.ReturnsAsync(true);
+
+		_fixture.MockRedisDatabase.Setup(x => x.SortedSetAddAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<StackExchange.Redis.RedisValue>(), It.IsAny<double>(), It.IsAny<StackExchange.Redis.SortedSetWhen>(), It.IsAny<StackExchange.Redis.CommandFlags>()))
+			.ReturnsAsync(true);
 
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
@@ -87,8 +90,8 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 			Times.Once);
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
-			Times.Once);
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
+			Times.AtLeastOnce);
 
 		_fixture.MockHubContext.Verify(
 			x => x.Clients,

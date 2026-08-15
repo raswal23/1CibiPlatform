@@ -73,6 +73,7 @@ public static class ATSServiceConfiguration
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
+		services.AddScoped<IEmailNotificationRecoveryService, EmailNotificationRecoveryService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
 		services.AddSignalR();
@@ -80,6 +81,7 @@ public static class ATSServiceConfiguration
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
 		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
+		services.ConfigureOptions<EmailNotificationRecoveryJobSetup>();
 
 		return services;
     }

@@ -2,12 +2,20 @@
 
 public class EmailNotificationProcessorService : IEmailNotificationProcessorService
 {
+	// Atomically claims the oldest pending batch: ZPOPMIN from pending, ZADD into
+	// processing with the claim timestamp as score. Atomic because Quartz runs
+	// clustered, so two nodes may poll at the same time.
+	private const string ClaimBatchScript = @"
+		local popped = redis.call('ZPOPMIN', KEYS[1])
+		if #popped == 0 then return nil end
+		redis.call('ZADD', KEYS[2], ARGV[1], popped[1])
+		return popped[1]";
+
 	private readonly ILogger<EmailNotificationProcessorService> _logger;
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
 	private readonly IATSRepository _repository;
 	private readonly IConfiguration _configuration;
 	private readonly IConnectionMultiplexer _redis;
-	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
 	private readonly string _batchesPending;
 	private readonly string _batchesProcessing;
@@ -17,14 +25,12 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		IEndorsementSubmissionService endorsementSubmissionService,
 		IATSRepository repository,
 		IConfiguration configuration,
-		IConnectionMultiplexer redis,
-		HybridCache hybridCache)
+		IConnectionMultiplexer redis)
 	{
 		_logger = logger;
 		_endorsementSubmissionService = endorsementSubmissionService;
 		_repository = repository;
 		_redis = redis;
-		_hybridCache = hybridCache;
 		_configuration = configuration;
 		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
 		_batchesProcessing = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesProcessing") ?? string.Empty;
@@ -33,17 +39,18 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 	public async Task ProcessForPendingStatusAsync(CancellationToken cancellationToken)
 	{
-		string? cacheKey = string.Empty;
+		string? cacheKey;
 
 		var dbRedis = _redis.GetDatabase();
 
 		try
 		{
-			cacheKey = await dbRedis.ListMoveAsync(
-						_batchesPending,
-						_batchesProcessing,
-						ListSide.Left,
-						ListSide.Right);
+			var claimed = await dbRedis.ScriptEvaluateAsync(
+				ClaimBatchScript,
+				[(RedisKey)_batchesPending, (RedisKey)_batchesProcessing],
+				[(RedisValue)DateTimeOffset.UtcNow.ToUnixTimeSeconds()]);
+
+			cacheKey = claimed.IsNull ? null : (string?)(RedisValue)claimed;
 
 			if (string.IsNullOrEmpty(cacheKey))
 			{
@@ -58,12 +65,21 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			return;
 		}
 
-		var cached = await _hybridCache.GetOrCreateAsync(
-			cacheKey!,
-			async entry =>
-			{
-				return new List<List<EmailInvitationRequest>>();
-			});
+		var payload = await dbRedis.StringGetAsync(cacheKey);
+
+		if (payload.IsNullOrEmpty)
+		{
+			_logger.LogWarning(
+				"Batch payload missing or expired for {BatchId}; dropping batch.",
+				cacheKey);
+
+			await dbRedis.SortedSetRemoveAsync(_batchesProcessing, cacheKey);
+
+			return;
+		}
+
+		var cached = JsonSerializer.Deserialize<List<List<EmailInvitationRequest>>>((string)payload!)
+			?? new List<List<EmailInvitationRequest>>();
 
 		var allRequests = cached.SelectMany(x => x).ToList();
 
@@ -102,9 +118,9 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			await _repository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(errorList);
 		}
 
-		await _hybridCache.RemoveAsync(cacheKey!);
+		await dbRedis.KeyDeleteAsync(cacheKey);
 
-		await dbRedis.ListRemoveAsync(
+		await dbRedis.SortedSetRemoveAsync(
 			_batchesProcessing,
 			cacheKey);
 	}

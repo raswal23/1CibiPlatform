@@ -7,7 +7,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
-	private readonly HybridCache _hybridCache;
 	private readonly IConnectionMultiplexer _redis;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
@@ -22,7 +21,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IObjectStorageService objectStorageService,
 		ISecureToken secureToken,
 		IHashService hashService,
-		HybridCache hybridCache,
 		IConnectionMultiplexer redis,
 		IHubContext<ATSHub, IATSClient> hubContext,
 		ILogger<BulkSubmissionProcessorService> logger,
@@ -34,7 +32,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_objectStorageService = objectStorageService;
 		_secureToken = secureToken;
 		_hashService = hashService;
-		_hybridCache = hybridCache;
 		_redis = redis;
 		_hubContext = hubContext;
 		_logger = logger;
@@ -180,14 +177,16 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 		var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
-		await _hybridCache.SetAsync(
+		// Payload must outlive the recovery job's stale threshold (1 day) so a
+		// requeued batch can still be reprocessed; hence Redis string, not HybridCache.
+		await dbRedis.StringSetAsync(
 				batchId,
-				listOfListOfSubjects,
-				new HybridCacheEntryOptions
-				{
-					Expiration = TimeSpan.FromMinutes(30)
-				});
+				JsonSerializer.Serialize(listOfListOfSubjects),
+				TimeSpan.FromDays(2));
 
-		await dbRedis.ListRightPushAsync(_batchesPending, batchId);
+		await dbRedis.SortedSetAddAsync(
+				_batchesPending,
+				batchId,
+				DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 	}
 }

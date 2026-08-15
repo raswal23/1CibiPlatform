@@ -27,6 +27,7 @@ global using ATS.Services.EmailService;
 global using ATS.BackgroundJobs.BulkSubmission;
 global using ATS.BackgroundJobs.EmailNotification;
 global using ATS.BackgroundJobs.ApplicantSearchProjection;
+global using ATS.BackgroundJobs.EmailNotificationRecovery;
 
 global using BuildingBlocks.Exceptions;
 global using BuildingBlocks.CQRS;
