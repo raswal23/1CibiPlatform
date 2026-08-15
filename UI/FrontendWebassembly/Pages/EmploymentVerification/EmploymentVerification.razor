@@ -73,6 +73,53 @@
         </button>
     </div>
 
+    <div class="ev-toolbar">
+        <div class="@(HasActiveSearch ? "ev-search has-value" : "ev-search")">
+            <span class="ev-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.3-4.3" />
+                </svg>
+            </span>
+            <input type="search"
+                   class="ev-search-input"
+                   placeholder="@(IsNeedsRequestView
+                       ? "Search candidate, employer, position or HR email…"
+                       : "Search candidate, employer, HR email or status…")"
+                   aria-label="@(IsNeedsRequestView
+                       ? "Search candidates needing verification"
+                       : "Search verification requests")"
+                   value="@ActiveSearch"
+                   @oninput="OnSearchChanged" />
+            @if (HasActiveSearch)
+            {
+                <button type="button"
+                        class="ev-search-clear"
+                        @onclick="ClearSearch"
+                        aria-label="Clear search">
+                    ×
+                </button>
+            }
+        </div>
+
+        <button type="button"
+                class="@(_isReloading ? "ev-reload is-reloading" : "ev-reload")"
+                @onclick="ReloadAsync"
+                disabled="@(_isReloading || _isLoading)"
+                title="Refresh both lists"
+                aria-label="Refresh both lists">
+            <span class="ev-reload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                    <path d="M21 3v6h-6" />
+                </svg>
+            </span>
+            <span class="ev-reload-text">@(_isReloading ? "Refreshing…" : "Refresh")</span>
+        </button>
+    </div>
+
     <section class="ev-card">
         @if (IsNeedsRequestView)
         {
@@ -81,7 +128,16 @@
                     <h3>Candidates needing verification</h3>
                     <p>In-progress ATS records without an open verification request</p>
                 </div>
-                <span class="ev-count">@Candidates.Count candidates</span>
+                <span class="ev-count">
+                    @if (HasActiveSearch)
+                    {
+                        @($"{FilteredCandidates.Count} of {Candidates.Count}")
+                    }
+                    else
+                    {
+                        @($"{Candidates.Count} candidates")
+                    }
+                </span>
             </div>
 
             @if (_isLoading)
@@ -100,6 +156,16 @@
                     </span>
                 </div>
             }
+            else if (FilteredCandidates.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No matching candidates</strong>
+                    <span>Nothing matches “@ActiveSearch”. Try a different name, employer or email.</span>
+                    <button type="button" class="ev-secondary" @onclick="ClearSearch">
+                        Clear search
+                    </button>
+                </div>
+            }
             else
             {
                 <div class="ev-table-wrap">
@@ -114,7 +180,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var candidate in Candidates)
+                            @foreach (var candidate in FilteredCandidates)
                             {
                                 <tr>
                                     <td>
@@ -151,7 +217,16 @@
                     <h3>Verification requests</h3>
                     <p>Requests raised from this module and their responses</p>
                 </div>
-                <span class="ev-count">@SentRequests.Count requests</span>
+                <span class="ev-count">
+                    @if (HasActiveSearch)
+                    {
+                        @($"{FilteredSentRequests.Count} of {SentRequests.Count}")
+                    }
+                    else
+                    {
+                        @($"{SentRequests.Count} requests")
+                    }
+                </span>
             </div>
 
             @if (_isLoading)
@@ -170,6 +245,16 @@
                     </span>
                 </div>
             }
+            else if (FilteredSentRequests.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No matching requests</strong>
+                    <span>Nothing matches “@ActiveSearch”. Try a different name, email or status.</span>
+                    <button type="button" class="ev-secondary" @onclick="ClearSearch">
+                        Clear search
+                    </button>
+                </div>
+            }
             else
             {
                 <div class="ev-table-wrap">
@@ -185,7 +270,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var request in SentRequests)
+                            @foreach (var request in FilteredSentRequests)
                             {
                                 <tr>
                                     <td>
@@ -212,11 +297,17 @@
 
     @if (SelectedCandidate is not null)
     {
-        <div class="ev-drawer-backdrop" @onclick="CloseCandidate">
+        @* Backdrop clicks deliberately do not close the drawer: an accidental
+           click outside should not discard a request the user is reviewing.
+           Use the × button, the Close button, or Escape. *@
+        <div class="ev-drawer-backdrop">
             <aside class="ev-drawer"
-                   @onclick:stopPropagation="true"
                    role="dialog"
-                   aria-label="Verification request details">
+                   aria-modal="true"
+                   aria-label="Verification request details"
+                   tabindex="-1"
+                   @ref="_drawerElement"
+                   @onkeydown="HandleDrawerKeyDown">
                 <div class="ev-card-header">
                     <div>
                         <span class="ev-eyebrow">Request details</span>

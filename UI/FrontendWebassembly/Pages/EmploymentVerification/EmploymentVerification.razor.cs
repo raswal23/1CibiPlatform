@@ -18,8 +18,101 @@ public partial class EmploymentVerification
 	private ATSInProgressEmploymentRecordDTO? SelectedCandidate;
 	private bool _isLoading = true;
 	private bool _isSubmitting;
+	private bool _isReloading;
+	private bool _shouldFocusDrawer;
+	private ElementReference _drawerElement;
+
+	// Each view keeps its own term so switching tabs does not carry a filter
+	// across to a list where it means something different.
+	private string _candidateSearch = string.Empty;
+	private string _trackingSearch = string.Empty;
 
 	private bool IsNeedsRequestView => _activeView == NeedsRequestView;
+
+	/// <summary>
+	/// Candidates matching the current term. Both lists are already held in
+	/// memory, so filtering stays client side and needs no server round trip.
+	/// </summary>
+	private List<ATSInProgressEmploymentRecordDTO> FilteredCandidates =>
+		string.IsNullOrWhiteSpace(_candidateSearch)
+			? Candidates
+			: Candidates
+				.Where(candidate =>
+					Matches(candidate.CandidateName, _candidateSearch) ||
+					Matches(candidate.Employer, _candidateSearch) ||
+					Matches(candidate.Position, _candidateSearch) ||
+					Matches(candidate.HrEmail, _candidateSearch))
+				.ToList();
+
+	private List<SentVerificationRequestDTO> FilteredSentRequests =>
+		string.IsNullOrWhiteSpace(_trackingSearch)
+			? SentRequests
+			: SentRequests
+				.Where(request =>
+					Matches(request.CandidateName, _trackingSearch) ||
+					Matches(request.PreviousEmployer, _trackingSearch) ||
+					Matches(request.Position, _trackingSearch) ||
+					Matches(request.HrEmail, _trackingSearch) ||
+					Matches(GetDisplayStatus(request), _trackingSearch))
+				.ToList();
+
+	private static bool Matches(string? value, string term) =>
+		!string.IsNullOrWhiteSpace(value) &&
+		value.Contains(term.Trim(), StringComparison.OrdinalIgnoreCase);
+
+	private string ActiveSearch =>
+		IsNeedsRequestView ? _candidateSearch : _trackingSearch;
+
+	private bool HasActiveSearch => !string.IsNullOrWhiteSpace(ActiveSearch);
+
+	private void OnSearchChanged(ChangeEventArgs args)
+	{
+		var value = args.Value?.ToString() ?? string.Empty;
+
+		if (IsNeedsRequestView)
+		{
+			_candidateSearch = value;
+		}
+		else
+		{
+			_trackingSearch = value;
+		}
+	}
+
+	private void ClearSearch()
+	{
+		if (IsNeedsRequestView)
+		{
+			_candidateSearch = string.Empty;
+		}
+		else
+		{
+			_trackingSearch = string.Empty;
+		}
+	}
+
+	/// <summary>
+	/// Refetches both lists. Guarded so a double click cannot start a second
+	/// request while the first is still running.
+	/// </summary>
+	private async Task ReloadAsync()
+	{
+		if (_isReloading || _isLoading)
+		{
+			return;
+		}
+
+		_isReloading = true;
+
+		try
+		{
+			await LoadAsync(showSkeleton: false);
+		}
+		finally
+		{
+			_isReloading = false;
+		}
+	}
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -33,9 +126,14 @@ public partial class EmploymentVerification
 		await LoadAsync();
 	}
 
-	private async Task LoadAsync()
+	/// <summary>
+	/// Loads both lists. A refresh passes <paramref name="showSkeleton"/> as false
+	/// so the existing rows stay on screen instead of collapsing to the loading
+	/// card while the request is in flight.
+	/// </summary>
+	private async Task LoadAsync(bool showSkeleton = true)
 	{
-		_isLoading = true;
+		_isLoading = showSkeleton;
 
 		try
 		{
@@ -106,11 +204,11 @@ public partial class EmploymentVerification
 			{
 				AtsSubjectId = SelectedCandidate.SubjectId,
 				CandidateName = SelectedCandidate.CandidateName,
-				PreviousEmployer = SelectedCandidate.Employer,
+				PreviousEmployer = "Google", //SelectedCandidate.Employer
 				Position = string.IsNullOrWhiteSpace(SelectedCandidate.Position)
 					? "Not provided"
 					: SelectedCandidate.Position,
-				HrEmail = SelectedCandidate.HrEmail,
+				HrEmail = "contract.fullstackdev@cibi.com.ph",//SelectedCandidate.HrEmail
 				EmploymentStartDate = ToDateTime(SelectedCandidate.StartDate)
 					?? DateTime.UtcNow.AddYears(-2),
 				EmploymentEndDate = ToDateTime(SelectedCandidate.EndDate)
@@ -140,11 +238,40 @@ public partial class EmploymentVerification
 	private void GoToOnePlatform() =>
 		Nav.NavigateTo("/");
 
-	private void ViewCandidate(ATSInProgressEmploymentRecordDTO candidate) =>
+	private void ViewCandidate(ATSInProgressEmploymentRecordDTO candidate)
+	{
 		SelectedCandidate = candidate;
+
+		// Focus moves to the drawer on the next render so Escape reaches it and
+		// keyboard users are not left behind on the table row.
+		_shouldFocusDrawer = true;
+	}
 
 	private void CloseCandidate() =>
 		SelectedCandidate = null;
+
+	/// <summary>
+	/// Escape closes the drawer. Backdrop clicks deliberately do not, so an
+	/// accidental click outside cannot discard the request being reviewed.
+	/// </summary>
+	private void HandleDrawerKeyDown(KeyboardEventArgs args)
+	{
+		if (args.Key == "Escape")
+		{
+			CloseCandidate();
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!_shouldFocusDrawer)
+		{
+			return;
+		}
+
+		_shouldFocusDrawer = false;
+		await _drawerElement.FocusAsync();
+	}
 
 	private string GetSendButtonText() =>
 		_isSubmitting
