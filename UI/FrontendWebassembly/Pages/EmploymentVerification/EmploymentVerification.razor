@@ -10,6 +10,25 @@
 <PageTitle>Employment Verification</PageTitle>
 
 <div class="ev-page">
+    <div class="ev-bookmark-rail">
+        <button type="button"
+                class="ev-bookmark"
+                @onclick="GoToOnePlatform"
+                title="Back to OnePlatform"
+                aria-label="Back to OnePlatform">
+            <span class="ev-bookmark-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 5l-7 7 7 7" />
+                </svg>
+            </span>
+            <span class="ev-bookmark-copy">
+                <small>Back to</small>
+                <strong>OnePlatform</strong>
+            </span>
+        </button>
+    </div>
+
     @if (_isLoading)
     {
         <div class="ev-card ev-loading">Loading employment verification requests…</div>

@@ -124,6 +124,9 @@ public partial class EmploymentVerification
         }
     }
 
+    private void GoToOnePlatform() =>
+        Nav.NavigateTo("/");
+
     private void ViewRequest(VerificationRequest request) =>
         SelectedRequest = request;
 
