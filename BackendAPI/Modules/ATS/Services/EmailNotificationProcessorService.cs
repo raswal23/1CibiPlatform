@@ -88,7 +88,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		foreach (var request in allRequests)
 		{
-			if (await TrySendEmailAsync(request))
+			if (await TrySendEmailWithRetryAsync(request))
 			{
 				successList.Add(request);
 			}
@@ -96,11 +96,6 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			{
 				errorList.Add(request);
 			}
-		}
-
-		if (errorList.Any())
-		{
-			await RetryFailedEmailsAsync(successList, errorList);
 		}
 
 		_logger.LogInformation(
@@ -126,30 +121,19 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	}
 
 
-	private async Task RetryFailedEmailsAsync(
-		List<EmailInvitationRequest> successList,
-		List<EmailInvitationRequest> errorList)
+	private async Task<bool> TrySendEmailWithRetryAsync(EmailInvitationRequest request)
 	{
-		const int maxRetries = 3;
+		const int maxAttempts = 3;
 
-		for (int retry = 1; retry <= maxRetries && errorList.Any(); retry++)
+		for (int attempt = 1; attempt <= maxAttempts; attempt++)
 		{
-			var failedItems = errorList.ToList();
-
-			errorList.Clear();
-
-			foreach (var request in failedItems)
+			if (await TrySendEmailAsync(request, attempt == 1 ? null : attempt))
 			{
-				if (await TrySendEmailAsync(request))
-				{
-					successList.Add(request);
-				}
-				else
-				{
-					errorList.Add(request);
-				}
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 	private async Task<bool> TrySendEmailAsync(
