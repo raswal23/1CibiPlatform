@@ -11,37 +11,61 @@ else
 {
     <div class="home-shell">
         <section class="home-hero">
-            <div>
+            <div class="home-hero-text">
+                <div class="home-hero-eyebrow">Dashboard</div>
                 <h1 class="home-hero-title">Welcome back, @DisplayName</h1>
                 <p class="home-hero-subtitle">Pick up where you left off, or jump into any application below.</p>
             </div>
-            <span class="home-date-pill">@CurrentDateText</span>
+            <div class="home-hero-right">
+                <div class="home-date-pill">
+                    <span class="home-live-dot" aria-hidden="true"></span>
+                    @CurrentDateText
+                </div>
+                <div class="home-status-strip" aria-label="Platform status">
+                    <span class="home-status-item">All systems active</span>
+                    <span class="home-status-item">@FilteredApps.Count apps online</span>
+                </div>
+            </div>
         </section>
 
-        <section>
+        <section class="home-apps-section" aria-labelledby="home-apps-heading">
             <div class="home-section-title">
-                <h2>Your applications</h2>
-                <span class="home-section-count">@($"{AvailableApps.Count} available")</span>
+                <h2 id="home-apps-heading">Your applications</h2>
+                <span class="home-section-count">@($"{FilteredApps.Count} active")</span>
             </div>
 
             <div class="home-app-grid">
-                @foreach (var app in AvailableApps)
+                @foreach (var app in FilteredApps)
                 {
-                    <article class="home-app-card">
-                        <div class="home-app-icon" style="background: @app.AccentGradient;">
-                            <MudIcon Icon="@app.Icon" Size="Size.Medium" />
+                    <a class="home-app-card"
+                       href="@app.OpenRoute"
+                       aria-label="@($"Open {app.Name}")">
+                        <div class="home-app-card-top">
+                            <div class="home-app-icon" style="background: @app.AccentGradient;">
+                                <MudIcon Icon="@app.Icon" Size="Size.Medium" />
+                            </div>
+                            <span class="home-app-status">Active</span>
                         </div>
 
                         <h3 class="home-app-title">@app.Name</h3>
                         <p class="home-app-subtitle">@app.Subtitle</p>
 
-                        <div class="home-app-open-row">
-                            <span class="home-badge">Active</span>
-                            <a class="home-open-link" href="@app.OpenRoute">Open →</a>
+                        <div class="home-open-link">
+                            Open
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
                         </div>
-                    </article>
+                    </a>
                 }
             </div>
+
+            @if (FilteredApps.Count == 0)
+            {
+                <div class="home-search-empty" role="status">
+                    No applications match &quot;@ApplicationSearchQuery.Trim()&quot;.
+                </div>
+            }
         </section>
 
         <section class="home-bottom-grid">
@@ -51,10 +75,13 @@ else
                 @* TODO: Replace this placeholder with a real shell-level activity/audit log data source and API once backend support is implemented. *@
                 <div class="home-empty-state">
                     <div class="home-empty-icon-wrap">
-                        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Class="home-empty-icon" />
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
+                            <path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
                     </div>
                     <div class="home-empty-title">Recent activity coming soon</div>
-                    <div class="home-empty-subtitle">Actions across your apps — orders, lookups, and updates — will show up here.</div>
+                    <div class="home-empty-subtitle">Actions across your apps &mdash; orders, lookups, and updates &mdash; will show up here.</div>
                 </div>
             </article>
 
@@ -69,9 +96,12 @@ else
                     @foreach (var item in Announcements)
                     {
                         <div class="home-announcement-item">
-                            <div class="home-announcement-tag">@item.Tag</div>
-                            <div class="home-announcement-title">@item.Title</div>
-                            <div class="home-announcement-detail">@item.Detail</div>
+                            <span class="@($"home-announcement-accent {item.Tag.ToLowerInvariant()}")" aria-hidden="true"></span>
+                            <div class="home-announcement-body">
+                                <div class="home-announcement-tag">@item.Tag</div>
+                                <div class="home-announcement-title">@item.Title</div>
+                                <div class="home-announcement-detail">@item.Detail</div>
+                            </div>
                         </div>
                     }
                 </div>

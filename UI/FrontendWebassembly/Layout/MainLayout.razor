@@ -5,6 +5,7 @@
 @inject NavigationManager NavigationManager
 
 @inject IJSRuntime JS
+@implements IDisposable
 
 <MudThemeProvider Theme="@_myTheme" @bind-IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
@@ -42,6 +43,23 @@
                     <MudSpacer />
 
                     <div class="main-topbar-actions">
+                        @if (IsHomeRoute)
+                        {
+                            <div class="main-topbar-search-box">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <circle cx="11" cy="11" r="7" />
+                                    <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+                                </svg>
+                                <input type="search"
+                                       placeholder="Search applications..."
+                                       aria-label="Search applications"
+                                       autocomplete="off"
+                                       @bind="_applicationSearchQuery"
+                                       @bind:event="oninput"
+                                       @onkeydown="HandleApplicationSearchKeyDown" />
+                            </div>
+                        }
+
                         <div class="main-topbar-greeting">
                             <span class="main-topbar-greeting-text">Hi, <strong>@name</strong></span>
                             <span class="main-topbar-avatar" aria-hidden="true">@UserInitials</span>
@@ -64,7 +82,9 @@
                 <!-- Main content -->
                 <MudMainContent>
                     <MudPaper Class="pa-5 ma-5" Elevation="2" Style="border-radius:4px;">
-                        @Body
+                        <CascadingValue Name="ApplicationSearchQuery" Value="_applicationSearchQuery">
+                            @Body
+                        </CascadingValue>
                     </MudPaper>
                 </MudMainContent>
             </MudLayout>
