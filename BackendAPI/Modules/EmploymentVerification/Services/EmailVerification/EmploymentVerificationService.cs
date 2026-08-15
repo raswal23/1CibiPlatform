@@ -23,14 +23,53 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		_hashService = hashService;
 		_configuration = configuration;
 		_applicationformBaseUrl = _configuration.GetSection("EmailVerification").GetValue<string>("EmploymentVerificationUrl") ?? string.Empty;
-	    _tokenExpiryHours = _configuration.GetSection("EmailVerification").GetValue<int>("TokenExpiryInHours", 72);
+		_tokenExpiryHours = _configuration.GetSection("EmailVerification").GetValue<int>("TokenExpiryInHours", 72);
 	}
 
 	public async Task<IReadOnlyList<EmploymentVerificationRequest>> ListAsync(CancellationToken cancellationToken) =>
 		await _repository.ListAsync(cancellationToken);
 
-	public Task<IReadOnlyList<ATSInProgressEmploymentRecord>> GetAvailableATSRecordsAsync(CancellationToken cancellationToken) =>
-		_atsProvider.GetInProgressEmploymentAsync(cancellationToken);
+	/// <summary>
+	/// Lists the in-progress ATS candidates that still need a verification email.
+	/// A candidate is withheld while a request is awaiting a response or has been
+	/// confirmed; rejected and lapsed requests release the candidate so a fresh
+	/// request can be sent.
+	/// </summary>
+	public async Task<IReadOnlyList<ATSInProgressEmploymentRecord>> GetAvailableATSRecordsAsync(
+		CancellationToken cancellationToken)
+	{
+		var atsRecords = await _atsProvider.GetInProgressEmploymentAsync(cancellationToken);
+
+		if (atsRecords.Count == 0)
+		{
+			return atsRecords;
+		}
+
+		var blockedSubjectIds = await _repository.ListBlockedAtsSubjectIdsAsync(
+			DateTime.UtcNow,
+			cancellationToken);
+
+		if (blockedSubjectIds.Count == 0)
+		{
+			return atsRecords;
+		}
+
+		var blocked = blockedSubjectIds.ToHashSet();
+
+		return atsRecords
+			.Where(record => !blocked.Contains(record.SubjectId))
+			.ToList();
+	}
+
+	public async Task<IReadOnlyList<SentVerificationRequestDTO>> ListSentRequestsAsync(
+		CancellationToken cancellationToken)
+	{
+		var requests = await _repository.ListAsync(cancellationToken);
+
+		return requests
+			.Select(SentVerificationRequestDTO.FromEntity)
+			.ToList();
+	}
 
 	public async Task<EmploymentVerificationRequest> CreateAndSendAsync(
 		CreateEmploymentVerificationRequest request,
@@ -65,7 +104,6 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		};
 
 		await _repository.AddAsync(entity, cancellationToken);
-		await _repository.SaveChangesAsync(cancellationToken);
 
 		var verificationLink = $"{_applicationformBaseUrl}/{hashToken}";
 		var body = $"""
@@ -106,9 +144,12 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 			throw new InvalidOperationException("The verification email could not be sent.");
 		}
 
+		var sentAt = DateTime.UtcNow;
+		await _repository.MarkSentAsync(entity.Id, sentAt, cancellationToken);
+
 		entity.Status = VerificationRequestStatus.Sent;
-		entity.SentAt = DateTime.UtcNow;
-		await _repository.SaveChangesAsync(cancellationToken);
+		entity.SentAt = sentAt;
+
 		return entity;
 	}
 
@@ -147,21 +188,26 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		}
 
 		var respondedAt = DateTime.UtcNow;
+		var status = reject
+			? VerificationRequestStatus.Rejected
+			: VerificationRequestStatus.Verified;
 
-		if (reject)
+		// The update only matches a row that is still awaiting a response, so two
+		// simultaneous clicks cannot both be recorded. Losing that race is the
+		// same outcome as the status check above: already answered.
+		if (!await _repository.MarkRespondedAsync(
+				entity.Id,
+				status,
+				respondedAt,
+				cancellationToken))
 		{
-			entity.Status = VerificationRequestStatus.Rejected;
-			entity.RejectedAt = respondedAt;
-			entity.VerifiedAt = null;
-		}
-		else
-		{
-			entity.Status = VerificationRequestStatus.Verified;
-			entity.VerifiedAt = respondedAt;
-			entity.RejectedAt = null;
+			return EmploymentVerificationCompletionResult.AlreadyCompleted(
+				EmploymentVerificationPreviewDTO.FromEntity(entity));
 		}
 
-		await _repository.SaveChangesAsync(cancellationToken);
+		entity.Status = status;
+		entity.VerifiedAt = reject ? null : respondedAt;
+		entity.RejectedAt = reject ? respondedAt : null;
 
 		return EmploymentVerificationCompletionResult.Completed(
 			EmploymentVerificationPreviewDTO.FromEntity(entity));

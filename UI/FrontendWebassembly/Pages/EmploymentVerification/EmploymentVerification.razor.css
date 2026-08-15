@@ -176,6 +176,119 @@
     }
 }
 
+/* ---------------------------------------------------------------------------
+   Segmented view switcher. Mirrors the ATS `ats-segmented` pattern
+   (Component/ATS/Settings.razor) in the Employment Verification palette.
+--------------------------------------------------------------------------- */
+.ev-segmented {
+    display: inline-flex;
+    gap: 4px;
+    margin: 20px 0 14px;
+    padding: 4px;
+    border: 1px solid #f2d9e7;
+    border-radius: 999px;
+    background: #fff5fa;
+}
+
+.ev-segment-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #95667f;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.ev-segment-btn:hover {
+    color: var(--pink-dark);
+}
+
+.ev-segment-btn.active {
+    background: #fff;
+    color: var(--pink-dark);
+    box-shadow: 0 2px 6px rgba(125, 36, 93, .12);
+}
+
+.ev-segment-btn:focus-visible {
+    outline: 3px solid rgba(217, 79, 155, .35);
+    outline-offset: 2px;
+}
+
+.ev-segment-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fff0f7;
+    color: var(--pink-dark);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ev-segment-btn.active .ev-segment-count {
+    background: linear-gradient(120deg, #a52a70, #e14f9b);
+    color: #fff;
+}
+
+/* Loading and empty states live inside the card, replacing the table so it
+   cannot flash an empty body while the request is in flight. */
+.ev-loading,
+.ev-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 180px;
+    padding: 28px 22px;
+    text-align: center;
+}
+
+.ev-loading {
+    color: #95667f;
+    font-size: 13px;
+}
+
+.ev-empty strong {
+    font-size: 15px;
+    color: var(--ink);
+}
+
+.ev-empty span {
+    max-width: 380px;
+    color: #95667f;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.ev-status.rejected {
+    background: #ffeef0;
+    color: #b3243c;
+}
+
+.ev-status.expired {
+    background: #f1f0f3;
+    color: #6b6472;
+}
+
+@media (max-width: 800px) {
+    .ev-segmented {
+        display: flex;
+        width: 100%;
+    }
+
+    .ev-segment-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
 .ev-input {
     width: 100%;
     margin: 0.45rem 0 1rem;

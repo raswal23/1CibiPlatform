@@ -5,20 +5,20 @@ namespace EmploymentVerification.Path;
 /// </summary>
 public sealed class EmploymentVerificationPaths : IReverseProxyModule
 {
-    public IEnumerable<RouteDefinitionDTO> GetRoutes() =>
-    [
-        new RouteDefinitionDTO(
-            RouteId: "GetEmploymentVerificationPreview",
-            MatchPath: "/employmentverification/preview/{token}",
-            ClusterId: GatewayConstants.OnePlatformApi,
-            Methods: [GatewayConstants.HttpMethod.Get],
+	public IEnumerable<RouteDefinitionDTO> GetRoutes() =>
+	[
+		new RouteDefinitionDTO(
+			RouteId: "GetEmploymentVerificationPreview",
+			MatchPath: "/employmentverification/preview/{token}",
+			ClusterId: GatewayConstants.OnePlatformApi,
+			Methods: [GatewayConstants.HttpMethod.Get],
             // PathPattern (not PathSet) substitutes the {token} route value.
             // PathSet forwards the literal text "{token}" to the backend.
             Transforms: new Dictionary<string, string>
-            {
-                ["PathPattern"] = "/api/employment-verification/preview/{token}"
-            }),
-        new RouteDefinitionDTO(
+			{
+				["PathPattern"] = "/api/employment-verification/preview/{token}"
+			}),
+		new RouteDefinitionDTO(
 			RouteId: "GetEmploymentVerificationATSInProgress",
 			MatchPath: "/employmentverification/getatsinprogress",
 			ClusterId: GatewayConstants.OnePlatformApi,
@@ -35,6 +35,15 @@ public sealed class EmploymentVerificationPaths : IReverseProxyModule
 			Transforms: new Dictionary<string, string>
 			{
 				["PathSet"] = "/api/employment-verification/requests"
+			}),
+		new RouteDefinitionDTO(
+			RouteId: "GetEmploymentVerificationSentRequests",
+			MatchPath: "/employmentverification/getsentrequests",
+			ClusterId: GatewayConstants.OnePlatformApi,
+			Methods: [GatewayConstants.HttpMethod.Get],
+			Transforms: new Dictionary<string, string>
+			{
+				["PathSet"] = "/api/employment-verification/requests/sent"
 			}),
 		new RouteDefinitionDTO(
 			RouteId: "CreateEmploymentVerificationRequest",

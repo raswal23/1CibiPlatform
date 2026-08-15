@@ -17,13 +17,13 @@ public sealed class EmploymentVerificationService(
             PropertyNameCaseInsensitive = true
         };
 
-    public async Task<EmploymentVerificationResponseDTO<IReadOnlyList<EmploymentVerificationRequestDTO>>> GetRequestsAsync(
+    public async Task<EmploymentVerificationResponseDTO<IReadOnlyList<SentVerificationRequestDTO>>> GetSentRequestsAsync(
         CancellationToken cancellationToken = default)
     {
         try
         {
             var response = await _httpClient.GetAsync(
-				"employmentverification/getatsinprogress",
+				"employmentverification/getsentrequests",
                 cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -39,7 +39,7 @@ public sealed class EmploymentVerificationService(
             }
 
             var requests = await response.Content.ReadFromJsonAsync<
-                List<EmploymentVerificationRequestDTO>>(
+                List<SentVerificationRequestDTO>>(
                     cancellationToken: cancellationToken) ?? [];
 
             return new(requests, "", "");
