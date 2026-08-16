@@ -133,7 +133,7 @@
                 </div>
             </div>
 
-            <div class="ats-console-content ats-console-content-enter" @key="_contentAnimationKey">
+            <div class="ats-console-content">
                 @Body
             </div>
         </div>
@@ -162,7 +162,6 @@ else
     private bool _isSidebarCollapsed;
     private bool _isMobileDrawerOpen;
     private bool _isMobileView;
-    private string _contentAnimationKey = string.Empty;
     private string _userDisplayName = "User";
     private string _userInitials = "U";
     private HashSet<int> _accessibleModuleIds = new();
@@ -202,7 +201,6 @@ else
 		}
 
         SetTitleFromUri();
-        _contentAnimationKey = NavigationManager.Uri;
         NavigationManager.LocationChanged += HandleLocationChanged;
         _isReady = true;
     }
@@ -227,7 +225,6 @@ else
 		}
 
         SetTitleFromUri();
-        _contentAnimationKey = e.Location;
 
         if (_isMobileView)
         {
