@@ -14,8 +14,11 @@ public sealed class RoleRepository : IRoleRepository
 		var now = DateTime.UtcNow;
 		await _dbContext.RoleDetails.AddAsync(new RoleDetails
 		{
-			RoleName = dto.RoleName!, RoleDescription = dto.RoleDescription!, IsActive = dto.IsActive,
-			CreatedAt = now, UpdatedAt = now
+			RoleName = dto.RoleName!,
+			RoleDescription = dto.RoleDescription!,
+			IsActive = dto.IsActive,
+			CreatedAt = now,
+			UpdatedAt = now
 		});
 		await _dbContext.SaveChangesAsync();
 		return true;
@@ -40,8 +43,12 @@ public sealed class RoleRepository : IRoleRepository
 		var items = await query.OrderBy(role => role.RoleName).Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(role => new RoleDetailsDTO
 			{
-				RoleId = role.RoleId, RoleName = role.RoleName, RoleDescription = role.RoleDescription,
-				IsActive = role.IsActive, CreatedAt = role.CreatedAt, UpdatedAt = role.UpdatedAt
+				RoleId = role.RoleId,
+				RoleName = role.RoleName,
+				RoleDescription = role.RoleDescription,
+				IsActive = role.IsActive,
+				CreatedAt = role.CreatedAt,
+				UpdatedAt = role.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<RoleDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}

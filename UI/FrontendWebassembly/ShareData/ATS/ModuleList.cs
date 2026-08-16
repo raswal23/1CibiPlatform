@@ -17,8 +17,13 @@ public static class ModuleList
 			{ 8, ("rolemanagement", "Role Management", Icons.Material.Filled.Group) },
 			{ 9, ("modulemanagement", "Module Management", Icons.Material.Filled.Apps) },
 			{ 10, ("usermanagement", "User Management", Icons.Material.Filled.ManageAccounts) },
-			{ 11, ("clientassigning", "Client Assigning", Icons.Material.Filled.AssignmentInd) }
+			{ 11, ("clientassigning", "Client Assigning", Icons.Material.Filled.AssignmentInd) },
+			{ 12, ("aiassistant", "AI Assistant", Icons.Material.Filled.SmartToy) }
 		};
+
+	// Modules that belong in the primary sidebar navigation rather than under Manage.
+	public static bool IsPrimaryNavigationModule(int moduleId) =>
+		moduleId <= 5 || moduleId == 12;
 
 	public static bool IsVisibleForAdministration(int moduleId, bool canViewAllModules) =>
 		canViewAllModules || !RestrictedAdministrationModuleIds.Contains(moduleId);

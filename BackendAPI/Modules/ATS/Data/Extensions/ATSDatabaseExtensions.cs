@@ -33,14 +33,14 @@ public static class ATSDatabaseExtensions
 				initData.GetEmailInvitationRequests(userIdsByEmail));
 		}
 
-		
-		if(!await context.RoleDetails.AnyAsync())
+
+		if (!await context.RoleDetails.AnyAsync())
 		{
 			await context.RoleDetails.AddRangeAsync
 			(initData.GetATSRoles());
 		}
-		
-		if(!await context.UserDetails.AnyAsync())
+
+		if (!await context.UserDetails.AnyAsync())
 		{
 			var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
 				ATSInitialData.GetATSUserEmails().ToArray(),

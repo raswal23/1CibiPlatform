@@ -9,7 +9,7 @@ public static class ConsentFormTextConstants
 	public const string ConsentIntro = "I hereby give authorization and consent for CIBI Information Inc. (\"CIBI\"), acting on behalf of the company, to access and disclose information about me as stated below which may be in any national, provincial, regional or city files, including those maintained by both public and private organizations, and all public records, for the purpose of validating my identity, checking on the truthfulness of the declarations made and the authenticity of documents submitted to the Company.";
 	public static readonly string[] ConsentItems =
 	[
-		
+
 		"Consumer credit history inquiry with a government ID verification which will include information about me including any previous bankruptcies, civil legal proceedings, collection actions, negative banking items and other information reported by my creditors, and I hereby authorize any public or private institution to provide and release to CIBI information related to my credit record.",
 		"Details regarding any academic training, verification of any diplomas or degrees received; and verification of any professional accreditations, and I hereby authorize any public or private educational institution to provide and release to CIBI information related to my educational/training record.",
 		"Details regarding my employment history, including employment data verifications from any employer/position I have previously held, and I hereby authorize former employer to provide and release to CIBI information related to my employment record.",

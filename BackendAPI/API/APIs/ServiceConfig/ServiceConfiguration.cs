@@ -283,6 +283,7 @@ public static class ServiceConfiguration
 		services.AddSSOServices();
 		services.AddAIAgentServices();
 			services.AddATSServices();
+			services.AddATSAssistantConfiguration(configuration);
 			services.AddEmploymentVerificationServices();
 		services.AddPlatformLoggingServices(configuration);
 		return services;

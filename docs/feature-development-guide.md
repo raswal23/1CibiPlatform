@@ -50,6 +50,10 @@ Auth follows the same business-area segregation used by the focused ATS reposito
 
 For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
 
+### AI features
+
+ATS AI features use Semantic Kernel plugins: a plain class whose methods carry `[KernelFunction]` and `[Description]`, registered on a cloned kernel with `AddFromObject` and invoked through `FunctionChoiceBehavior.Auto()`. This is intentionally different from the older `AIAgent` module, which discovers `*.skill.yaml` manifests through a reflection registry and requires the user to pick a skill. Prefer the ATS pattern for new work, and read `docs/ats-ai-assistant.md` before adding a function, changing the system prompt, or letting a model reach a write path.
+
 ```text
 BackendAPI/Modules/Auth/
   Data/

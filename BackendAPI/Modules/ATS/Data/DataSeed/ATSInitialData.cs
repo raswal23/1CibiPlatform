@@ -94,7 +94,7 @@ public class ATSInitialData
 			EmailSentAt = createdAt,
 			OrderStatus = row.OrderStatus,
 			OrderCreatedAt = row.OrderCreatedAt,
-			OrderCompletedAt = row.OrderCompletedAt,    
+			OrderCompletedAt = row.OrderCompletedAt,
 
 			NeedsProjection = false,
 			ProjectionUpdatedAt = projectionUpdatedAt,
@@ -236,17 +236,17 @@ public class ATSInitialData
 			"atsPlatformManager@cibi.com",
 			"ATS Platform Manager",
 			1,
-			Enumerable.Range(1, 10).ToArray()),
+			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
 		new ATSUserModuleSeedRow(
 			"atsAdmin@cibi.com",
 			"ATS Admin",
 			2,
-			Enumerable.Range(1, 10).ToArray()),
+			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
 			"ATS User",
 			3,
-			Enumerable.Range(1, 3).ToArray()),
+			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant]),
 		new ATSUserModuleSeedRow(
 			"atsUploader@cibi.com",
 			"ATS Uploader",

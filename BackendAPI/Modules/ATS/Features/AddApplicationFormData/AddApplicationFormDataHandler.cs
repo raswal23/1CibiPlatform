@@ -1,10 +1,10 @@
 ﻿namespace ATS.Features.AddApplicationFormData;
 
 public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
-											AddressDetailsDTO AddressDetails, 
-											EducationalBackgroundDTO EducationalBackground, 
-											LicensesDetailsDTO LicensesDetails, 
-											ProfessionalExperiencesDTO ProfessionalExperiences, 
+											AddressDetailsDTO AddressDetails,
+											EducationalBackgroundDTO EducationalBackground,
+											LicensesDetailsDTO LicensesDetails,
+											ProfessionalExperiencesDTO ProfessionalExperiences,
 											ReferenceDetailsDTO ReferenceDetails,
 											SignatureDetailsDTO SignatureDetails) : ICommand<AddApplicationFormDataResult>;
 public record AddApplicationFormDataResult(bool IsAdded);
@@ -225,7 +225,7 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				x.EducationalBackground.HighestEducationalAttainment == "Elementary Graduate",
 				() =>
 				{
-					
+
 				});
 		});
 
@@ -314,7 +314,7 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 			RuleFor(x => x.ProfessionalExperiences.Emp1COEUploadFile)
 				.NotNull()
 				.WithMessage("COE/ID #1 is required.");
-		
+
 			//employer 2
 			When(x =>
 				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp2CompanyName) ||
@@ -324,87 +324,87 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				x.ProfessionalExperiences.Emp2COEUploadFile != null,
 				() =>
 				{
-				RuleFor(x => x.ProfessionalExperiences.Emp2CompanyName)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyName)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCity)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCity)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2CompanyProvince)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyProvince)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCountry)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCountry)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2CompanyPostalCode)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyPostalCode)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2DatePermittedToContact)
-					.NotNull();
+					RuleFor(x => x.ProfessionalExperiences.Emp2DatePermittedToContact)
+						.NotNull();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2JobTitle)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2JobTitle)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2StartDate)
-					.NotNull();
+					RuleFor(x => x.ProfessionalExperiences.Emp2StartDate)
+						.NotNull();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2EndDate)
-					.NotNull();
+					RuleFor(x => x.ProfessionalExperiences.Emp2EndDate)
+						.NotNull();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorName)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorName)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorContactNumber)
-					.NotEmpty();
+					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorContactNumber)
+						.NotEmpty();
 
-				RuleFor(x => x.ProfessionalExperiences.Emp2COEUploadFile)
-					.NotNull();
+					RuleFor(x => x.ProfessionalExperiences.Emp2COEUploadFile)
+						.NotNull();
 				});
 
-		//employer 3
-		When(x =>
-			!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3CompanyName) ||
-			!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3CompanyCity) ||
-			!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3JobTitle) ||
-			x.ProfessionalExperiences.Emp3StartDate.HasValue ||
-			x.ProfessionalExperiences.Emp3COEUploadFile != null,
-		() =>
-		{
-			RuleFor(x => x.ProfessionalExperiences.Emp3CompanyName)
-				.NotEmpty();
+			//employer 3
+			When(x =>
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3CompanyName) ||
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3CompanyCity) ||
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp3JobTitle) ||
+				x.ProfessionalExperiences.Emp3StartDate.HasValue ||
+				x.ProfessionalExperiences.Emp3COEUploadFile != null,
+			() =>
+			{
+				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyName)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCity)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCity)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3CompanyProvince)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyProvince)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCountry)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCountry)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3CompanyPostalCode)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyPostalCode)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3DatePermittedToContact)
-				.NotNull();
+				RuleFor(x => x.ProfessionalExperiences.Emp3DatePermittedToContact)
+					.NotNull();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3JobTitle)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3JobTitle)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3StartDate)
-				.NotNull();
+				RuleFor(x => x.ProfessionalExperiences.Emp3StartDate)
+					.NotNull();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3EndDate)
-				.NotNull();
+				RuleFor(x => x.ProfessionalExperiences.Emp3EndDate)
+					.NotNull();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorName)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorName)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorContactNumber)
-				.NotEmpty();
+				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorContactNumber)
+					.NotEmpty();
 
-			RuleFor(x => x.ProfessionalExperiences.Emp3COEUploadFile)
-				.NotNull();
+				RuleFor(x => x.ProfessionalExperiences.Emp3COEUploadFile)
+					.NotNull();
 
 			});
 		});
@@ -551,10 +551,10 @@ public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormD
 	}
 	public async Task<AddApplicationFormDataResult> Handle(AddApplicationFormDataCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _applicationFormService.AddApplicationFormDataAsync(request.PersonalDetails, 
-																			   request.AddressDetails, 
-																   request.EducationalBackground, 
-																   request.LicensesDetails, 
+		var result = await _applicationFormService.AddApplicationFormDataAsync(request.PersonalDetails,
+																			   request.AddressDetails,
+																   request.EducationalBackground,
+																   request.LicensesDetails,
 																   request.ProfessionalExperiences,
 																   request.ReferenceDetails,
 																   request.SignatureDetails,

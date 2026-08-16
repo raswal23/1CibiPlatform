@@ -38,7 +38,7 @@
                 </div>
 
                 @foreach (var module in ModuleList.List
-                    .Where(item => item.Key <= 5 && _accessibleModuleIds.Contains(item.Key))
+                    .Where(item => ModuleList.IsPrimaryNavigationModule(item.Key) && _accessibleModuleIds.Contains(item.Key))
                     .OrderBy(item => item.Key))
                 {
                     <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
@@ -48,7 +48,7 @@
                 }
 
                 @{ var settingsModules = ModuleList.List
-					.Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
+					.Where(item => !ModuleList.IsPrimaryNavigationModule(item.Key) && _accessibleModuleIds.Contains(item.Key))
                     .OrderBy(item => item.Key)
                     .ToArray(); }
 
