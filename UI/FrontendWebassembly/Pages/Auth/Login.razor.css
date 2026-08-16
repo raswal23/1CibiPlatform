@@ -256,6 +256,7 @@
 }
 
 .auth-input-wrap {
+    --auth-input-background: #fff;
     position: relative;
     min-width: 0;
 }
@@ -288,7 +289,7 @@
     height: 42px;
     min-height: 42px;
     border-radius: 9px;
-    background: #fff;
+    background: var(--auth-input-background);
     color: var(--text-1);
     font-family: Inter, sans-serif;
     font-size: .86em;
@@ -329,10 +330,15 @@
     opacity: 1;
 }
 
+.auth-input-wrap ::deep .mud-input.mud-input-outlined:has(input:-webkit-autofill) {
+    --auth-input-background: #e8f0fe;
+}
+
 .auth-input-wrap ::deep .mud-input-adornment-end {
     height: 42px;
     margin: 0 8px 0 0;
     align-items: center;
+    background: var(--auth-input-background) !important;
     color: var(--text-3);
 }
 
@@ -340,6 +346,7 @@
     width: 28px;
     height: 28px;
     padding: 5px;
+    background: var(--auth-input-background) !important;
 }
 
 .auth-input-wrap ::deep .mud-input-adornment-end .mud-icon-root {

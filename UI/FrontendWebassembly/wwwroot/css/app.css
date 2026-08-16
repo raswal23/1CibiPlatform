@@ -118,6 +118,139 @@ body,
     }
 }
 
+.startup-loader-container {
+    height: 100vh;
+}
+
+.cibi-loader-container {
+    width: 100%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cibi-loader-container > .loader {
+    width: auto !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center;
+    position: relative !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    animation: none !important;
+    box-sizing: content-box !important;
+}
+
+.cibi-loader-container > .loader svg {
+    width: 64px;
+    height: 64px;
+    margin: 0 5px;
+}
+
+.cibi-loader-container > .loader > svg.absolute {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+}
+
+.cibi-loader-container .inline-block {
+    display: inline-block;
+}
+
+.cibi-loader-container .w-2 {
+    width: 0.5em;
+}
+
+.cibi-loader-container .dash {
+    animation: cibiDashArray 2s ease-in-out infinite,
+               cibiDashOffset 2s linear infinite;
+}
+
+.cibi-loader-container .spin {
+    animation: cibiSpinDashArray 2s ease-in-out infinite,
+               cibiSpin 8s ease-in-out infinite,
+               cibiDashOffset 2s linear infinite;
+    transform-origin: center;
+}
+
+.cibi-loader-container .gradient-b {
+    stroke: url(#b);
+}
+
+.cibi-loader-container .gradient-c {
+    stroke: url(#c);
+}
+
+.cibi-loader-container .gradient-d {
+    stroke: url(#d);
+}
+
+@keyframes cibiDashArray {
+    0% {
+        stroke-dasharray: 0 1 359 0;
+    }
+
+    50% {
+        stroke-dasharray: 0 359 1 0;
+    }
+
+    100% {
+        stroke-dasharray: 359 1 0 0;
+    }
+}
+
+@keyframes cibiSpinDashArray {
+    0% {
+        stroke-dasharray: 270 90;
+    }
+
+    50% {
+        stroke-dasharray: 0 360;
+    }
+
+    100% {
+        stroke-dasharray: 270 90;
+    }
+}
+
+@keyframes cibiDashOffset {
+    0% {
+        stroke-dashoffset: 365;
+    }
+
+    100% {
+        stroke-dashoffset: 5;
+    }
+}
+
+@keyframes cibiSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    12.5%,
+    25% {
+        transform: rotate(270deg);
+    }
+
+    37.5%,
+    50% {
+        transform: rotate(540deg);
+    }
+
+    62.5%,
+    75% {
+        transform: rotate(810deg);
+    }
+
+    87.5%,
+    100% {
+        transform: rotate(1080deg);
+    }
+}
+
 code {
     color: #c02d76;
 }
