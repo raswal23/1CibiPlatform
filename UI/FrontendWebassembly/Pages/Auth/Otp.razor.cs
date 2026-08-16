@@ -100,6 +100,14 @@ public partial class Otp
 
 	private async Task HandleOtpKeyDownAsync(int index, KeyboardEventArgs args)
 	{
+		if (args.Key == "Enter")
+		{
+			if (IsOtpComplete && !isLoading && !isDone)
+				await HandleVerifyOtp();
+
+			return;
+		}
+
 		if (args.Key == "Backspace"
 			&& string.IsNullOrEmpty(otpDigits[index])
 			&& index > 0)

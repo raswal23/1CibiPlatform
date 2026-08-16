@@ -118,6 +118,100 @@ body,
     }
 }
 
+.startup-loader-container {
+    height: 100vh;
+}
+
+.cibi-loader-container {
+    width: 100%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cibi-loader-container > .cibi-brand-loader {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.cibi-brand-loader > svg {
+    width: 64px;
+    height: 64px;
+    margin: 0 5px;
+}
+
+.cibi-brand-loader > svg:nth-child(3) {
+    margin-right: 7px;
+}
+
+.cibi-brand-loader > svg:nth-child(4) {
+    margin-left: 7px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-definitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-i {
+    width: 19px;
+    height: 64px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-b {
+    width: 49px;
+    height: 64px;
+}
+
+.cibi-loader-spacer {
+    width: 0.5em;
+}
+
+.cibi-loader-dash {
+    animation: cibiDashArray 2s ease-in-out infinite,
+               cibiDashOffset 2s linear infinite;
+}
+
+.cibi-loader-gradient-b {
+    stroke: url(#cibi-loader-b);
+}
+
+.cibi-loader-gradient-c {
+    stroke: url(#cibi-loader-c);
+}
+
+.cibi-loader-gradient-d {
+    stroke: url(#cibi-loader-d);
+}
+
+@keyframes cibiDashArray {
+    0% {
+        stroke-dasharray: 0 1 359 0;
+    }
+
+    50% {
+        stroke-dasharray: 0 359 1 0;
+    }
+
+    100% {
+        stroke-dasharray: 359 1 0 0;
+    }
+}
+
+@keyframes cibiDashOffset {
+    0% {
+        stroke-dashoffset: 365;
+    }
+
+    100% {
+        stroke-dashoffset: 5;
+    }
+}
+
 code {
     color: #c02d76;
 }
