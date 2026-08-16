@@ -135,7 +135,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken); 
+		var result = await _atsRepository.WithdrawnApplicationForm(hashToken, cancellationToken);
 		await _hybridCache.RemoveByTagAsync(WithdrawnApplicationTag);
 		return result;
 	}

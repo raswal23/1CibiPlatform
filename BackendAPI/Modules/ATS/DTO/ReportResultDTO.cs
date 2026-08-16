@@ -24,5 +24,5 @@ public record ReportResultDTO
 	public string? UploadedReportFileKey { get; set; }
 	public string? FilledFormAt { get; set; }
 	public string? ReportUploadedAt { get; set; }
-	public  string? ReportStatus { get; set; }
+	public string? ReportStatus { get; set; }
 }

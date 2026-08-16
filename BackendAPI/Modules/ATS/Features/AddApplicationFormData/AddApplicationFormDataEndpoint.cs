@@ -1,10 +1,10 @@
 ﻿namespace ATS.Features.AddApplicationFormData;
 
-public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails, 
-											AddressDetailsDTO AddressDetails, 
-											EducationalBackgroundDTO EducationalBackground, 
-											LicensesDetailsDTO LicensesDetails, 
-											ProfessionalExperiencesDTO ProfessionalExperiences, 
+public record AddApplicationFormDataRequest(PersonalDetailsDTO PersonalDetails,
+											AddressDetailsDTO AddressDetails,
+											EducationalBackgroundDTO EducationalBackground,
+											LicensesDetailsDTO LicensesDetails,
+											ProfessionalExperiencesDTO ProfessionalExperiences,
 											ReferenceDetailsDTO ReferenceDetails,
 											SignatureDetailsDTO SignatureDetails);
 public record AddApplicationFormDataResponse(bool IsAdded);
@@ -15,11 +15,11 @@ public class AddApplicationFormDataEndpoint : ICarterModule
 	{
 		app.MapPost("addapplicationformdata", async ([FromForm] AddApplicationFormDataRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
-			var command = new AddApplicationFormDataCommand(request.PersonalDetails, 
-															request.AddressDetails, 
-															request.EducationalBackground, 
-															request.LicensesDetails, 
-															request.ProfessionalExperiences, 
+			var command = new AddApplicationFormDataCommand(request.PersonalDetails,
+															request.AddressDetails,
+															request.EducationalBackground,
+															request.LicensesDetails,
+															request.ProfessionalExperiences,
 															request.ReferenceDetails,
 															request.SignatureDetails);
 			AddApplicationFormDataResult result = await sender.Send(command, cancellationToken);

@@ -42,11 +42,11 @@ public class GetReportsHandler : IQueryHandler<GetReportsQueryRequest, GetReport
 			request.StartDate,
 			request.EndDate);
 
-       var reports = await _reportService.GetReportsAsync(
-			paginationRequest,
-			request.SortColumn,
-			request.SortDescending,
-			cancellationToken);
+		var reports = await _reportService.GetReportsAsync(
+			 paginationRequest,
+			 request.SortColumn,
+			 request.SortDescending,
+			 cancellationToken);
 
 		return new GetReportsQueryResult(reports);
 	}

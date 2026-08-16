@@ -85,6 +85,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();
 		services.AddScoped<IATSUserManagementService, ATSUserManagementService>();
 		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
+		services.AddScoped<IAtsAssistantService, AtsAssistantService>();
 		services.AddScoped<FrontendWebassembly.Services.Logging.IPlatformLogService, FrontendWebassembly.Services.Logging.PlatformLogService>();
 
 		services.AddMudServices(config =>

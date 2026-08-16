@@ -14,9 +14,13 @@ public sealed class PackageRepository : IPackageRepository
 			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(package => new PackageDetailsDTO
 			{
-				PackageId = package.PackageId, PackageName = package.PackageName,
-				PackageDescription = package.PackageDescription, IsActive = package.IsActive,
-				FollowUpEmail = package.FollowUpEmail, CreatedAt = package.CreatedAt, UpdatedAt = package.UpdatedAt
+				PackageId = package.PackageId,
+				PackageName = package.PackageName,
+				PackageDescription = package.PackageDescription,
+				IsActive = package.IsActive,
+				FollowUpEmail = package.FollowUpEmail,
+				CreatedAt = package.CreatedAt,
+				UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<PackageDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}
@@ -31,9 +35,13 @@ public sealed class PackageRepository : IPackageRepository
 			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(package => new PackageDetailsDTO
 			{
-				PackageId = package.PackageId, PackageName = package.PackageName,
-				PackageDescription = package.PackageDescription, IsActive = package.IsActive,
-				FollowUpEmail = package.FollowUpEmail, CreatedAt = package.CreatedAt, UpdatedAt = package.UpdatedAt
+				PackageId = package.PackageId,
+				PackageName = package.PackageName,
+				PackageDescription = package.PackageDescription,
+				IsActive = package.IsActive,
+				FollowUpEmail = package.FollowUpEmail,
+				CreatedAt = package.CreatedAt,
+				UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<PackageDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}
