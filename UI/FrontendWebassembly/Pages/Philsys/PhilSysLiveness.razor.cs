@@ -82,20 +82,24 @@ public partial class PhilSysLiveness
 		var confirmParam = new DialogParameters
 		{
 			{
-				nameof(YesNoDialogComponent.Title),
+				nameof(ConfirmationDialogComponent.Title),
 				"PhilSys Verification"
 			},
 			{
-				nameof(YesNoDialogComponent.Message),
+				nameof(ConfirmationDialogComponent.Message),
 				"Please be informed that you will be directed to PhilSys for completing the National ID verification."
 			},
 			{
-				nameof(YesNoDialogComponent.ConfirmText),
+				nameof(ConfirmationDialogComponent.ConfirmText),
 				"Proceed"
 			},
 			{
-				nameof(YesNoDialogComponent.InformationMessage),
+				nameof(ConfirmationDialogComponent.InformationMessage),
 				"Clicking 'Proceed' will redirect you to the PhilSys verification page."
+			},
+			{
+				nameof(ConfirmationDialogComponent.Footnote),
+				"Your camera feed is used only for this verification step."
 			}
 		};
 
@@ -103,7 +107,8 @@ public partial class PhilSysLiveness
 		{
 			NoHeader = true,
 			MaxWidth = MaxWidth.ExtraSmall,
-			FullWidth = true
+			FullWidth = true,
+			BackdropClick = false
 		};
 
 		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(null, confirmParam, options);

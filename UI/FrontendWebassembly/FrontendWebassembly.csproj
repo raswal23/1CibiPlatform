@@ -7,7 +7,18 @@
 		<UserSecretsId>333c826c-3e2b-4fe2-9771-4d0039307c63</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileContext>..\..</DockerfileContext>
+		<!-- Replace #[.{fingerprint}] placeholders in wwwroot/index.html with
+		     content-hashed file names at build/publish so deploys bust browser caches. -->
+		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 	</PropertyGroup>
+
+	<!-- Fingerprint app JS referenced from index.html via placeholder markers.
+	     CSS is deliberately excluded: the .NET 10 HTML placeholder pass resolves
+	     stylesheet links to the un-fingerprinted name (dotnet/aspnetcore#64170),
+	     so fingerprinting CSS file names on disk would 404. -->
+	<ItemGroup>
+		<StaticWebAssetFingerprintPattern Include="JS" Pattern="*.js" Expression="#[.{fingerprint}]!" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ExcelDataReader" Version="3.8.0" />

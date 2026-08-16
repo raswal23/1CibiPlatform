@@ -156,6 +156,10 @@ public partial class ApplicationFormComponent
 			}
 		}
 
+		EndOfEmployment1 = DateTime.UnixEpoch;
+		EndOfEmployment2 = DateTime.UnixEpoch;
+		EndOfEmployment3 = DateTime.UnixEpoch;
+
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
 	}
