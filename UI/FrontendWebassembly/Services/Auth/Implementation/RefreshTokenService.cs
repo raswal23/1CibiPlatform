@@ -58,7 +58,7 @@ public class RefreshTokenService : IRefreshTokenService
 		await this.SetLocalstorage(successContent!);
 
 
-		return new AuthResponseDTO(successContent!.UserId, successContent.AccessToken, string.Empty, string.Empty);
+		return new AuthResponseDTO(successContent!.UserId, string.Empty, string.Empty, string.Empty);
 	}
 
 	protected virtual async Task SetLocalstorage(CredResponseDTO credResponseDTO)
@@ -75,24 +75,7 @@ public class RefreshTokenService : IRefreshTokenService
 	{
 		_logger.LogDebug("Starting logout request...");
 
-		var userId = await _localStorageService.GetItemAsync<Guid>(_userIdKey);
-
-		if (userId == Guid.Empty)
-		{
-			_logger.LogWarning("UserId not found in local storage. Cannot proceed with logout.");
-			return false;
-		}
-
-		var payload = new
-		{
-			logoutDTO = new
-			{
-				UserId = userId,
-				RevokeReason = "User Logged out"
-			}
-		};
-
-		var response = await _httpClient.PostAsJsonAsync("/auth/logout", payload);
+		var response = await _httpClient.PostAsync("/auth/logout", null);
 
 		if (!response.IsSuccessStatusCode)
 		{

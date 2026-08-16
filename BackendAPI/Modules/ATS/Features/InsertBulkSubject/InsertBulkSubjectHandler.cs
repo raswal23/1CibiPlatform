@@ -27,7 +27,7 @@ public class InsertBulkSubjectHandler : ICommandHandler<InsertBulkSubjectCommand
 		_endorsementSubmissionService = endorsementSubmissionService;
 	}
 	public async Task<InsertBulkSubjectResult> Handle(
-		InsertBulkSubjectCommand request, 
+		InsertBulkSubjectCommand request,
 		CancellationToken cancellationToken)
 	{
 		var isAdded = await _endorsementSubmissionService.InsertBulkSubjectAsync(request.bulkUploadFileDetailsDTO, cancellationToken);

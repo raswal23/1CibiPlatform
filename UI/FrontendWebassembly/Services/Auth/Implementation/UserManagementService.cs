@@ -464,20 +464,20 @@ public class UserManagementService : IUserManagementService
 
 		var response = await _httpClient.PatchAsJsonAsync($"auth/editappsubrole", payload);
 
-        if (!response.IsSuccessStatusCode)
-        {
+		if (!response.IsSuccessStatusCode)
+		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
 			throw new Exception($"Error: {errorContent?.Title}\n" + $"TraceId: {errorContent?.TraceId}");
 		}
 
-        var successContent = await response.Content.ReadFromJsonAsync<EditAppSubRoleDTO>();
-        if (successContent != null)
-        {
-            return successContent;
-        }
-        return null!;
-    }
+		var successContent = await response.Content.ReadFromJsonAsync<EditAppSubRoleDTO>();
+		if (successContent != null)
+		{
+			return successContent;
+		}
+		return null!;
+	}
 
 	public async Task<EditUserDTO> EditUserAsync(UnApprovedUsersDTO editUserDTO)
 	{

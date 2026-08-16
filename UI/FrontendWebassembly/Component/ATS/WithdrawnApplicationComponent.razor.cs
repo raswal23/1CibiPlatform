@@ -76,7 +76,7 @@ public partial class WithdrawnApplicationComponent
 	=> await LoadPagedDataAsync(state, (page, pageSize) =>
 		EndorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(page, pageSize, searchString));
 
-		private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
 		if (field != value)
 		{

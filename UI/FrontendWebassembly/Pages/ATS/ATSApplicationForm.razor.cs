@@ -40,7 +40,7 @@ public partial class ATSApplicationForm
 		{
 			"true" => true,
 			"false" => false,
-			_ => false 
+			_ => false
 		};
 
 		_showPhilsys = philSysShow?.ToLowerInvariant() switch

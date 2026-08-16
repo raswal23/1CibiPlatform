@@ -21,7 +21,7 @@ public class GetMyAccessHandler : IQueryHandler<GetMyAccessQuery, GetMyAccessRes
 			throw new ForbiddenException(
 				"The current user does not have valid ATS access.");
 
-	  if (_currentUser.IsPlatformSuperAdmin || _currentUser.AtsRoleId == 1)
+		if (_currentUser.IsPlatformSuperAdmin || _currentUser.AtsRoleId == 1)
 		{
 			return Task.FromResult(new GetMyAccessResult(
 				AtsRoleIds.PlatformManager,
@@ -32,8 +32,8 @@ public class GetMyAccessHandler : IQueryHandler<GetMyAccessQuery, GetMyAccessRes
 			throw new ForbiddenException(
 				"The current user does not have valid ATS access.");
 
-	  return Task.FromResult(new GetMyAccessResult(
-		  _currentUser.AtsRoleId.Value,
-		  _currentUser.AtsClientId));
+		return Task.FromResult(new GetMyAccessResult(
+			_currentUser.AtsRoleId.Value,
+			_currentUser.AtsClientId));
 	}
 }

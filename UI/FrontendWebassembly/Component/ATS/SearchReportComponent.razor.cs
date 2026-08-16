@@ -8,9 +8,9 @@ public partial class SearchReportComponent
 	[Inject]
 	private LocalStorageService LocalStorageService { get; set; } = default!;
 
-    private TableComponent<ReportListDTO>? reportsTable;
+	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
-    private string? _searchString;
+	private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
@@ -67,13 +67,13 @@ public partial class SearchReportComponent
 
 	private string searchString
 	{
-      get => _searchString!;
+		get => _searchString!;
 		set => UpdateSearch(ref _searchString!, value, reportsTable!);
 	}
 
-    private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
-      if (field != value)
+		if (field != value)
 		{
 			field = value;
 			table?.TableRef!.ReloadServerData();
@@ -84,20 +84,20 @@ public partial class SearchReportComponent
 	{
 		try
 		{
-         var result = await ReportService.GetReportsAsync(
-				state.Page + 1,
-				state.PageSize,
-				searchString,
-				state.SortLabel,
-				state.SortDirection == SortDirection.Descending,
-				_dateRange?.Start,
-				_dateRange?.End);
+			var result = await ReportService.GetReportsAsync(
+				   state.Page + 1,
+				   state.PageSize,
+				   searchString,
+				   state.SortLabel,
+				   state.SortDirection == SortDirection.Descending,
+				   _dateRange?.Start,
+				   _dateRange?.End);
 			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
 
 			return new TableData<ReportListDTO>
 			{
 				Items = currentPageData,
-               TotalItems = (int)result.Count
+				TotalItems = (int)result.Count
 			};
 		}
 		catch (Exception)
@@ -111,14 +111,14 @@ public partial class SearchReportComponent
 		}
 	}
 
-    private async Task OnDateRangeChanged(DateRange range)
-    {
-        _dateRange = range;
+	private async Task OnDateRangeChanged(DateRange range)
+	{
+		_dateRange = range;
 
-        await ReloadTable();
-    }
+		await ReloadTable();
+	}
 
-    private async Task DownloadSelected()
+	private async Task DownloadSelected()
 	{
 
 		if (!currentPageData.Any(r => r.Selected))
@@ -189,7 +189,7 @@ public partial class SearchReportComponent
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
 	{
-       try
+		try
 		{
 			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 

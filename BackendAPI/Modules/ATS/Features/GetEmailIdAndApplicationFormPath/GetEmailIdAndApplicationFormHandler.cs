@@ -13,14 +13,14 @@ public class GetEmailIdAndApplicationFormHandler : IQueryHandler<GetEmailIdAndAp
 		_applicationFormService = applicationFormService;
 	}
 
-public class GetEmailIdAndApplicationFormHandlerRequestValidator : AbstractValidator<GetEmailIdAndApplicationFormHandlerRequest>
-{
-	public GetEmailIdAndApplicationFormHandlerRequestValidator()
+	public class GetEmailIdAndApplicationFormHandlerRequestValidator : AbstractValidator<GetEmailIdAndApplicationFormHandlerRequest>
 	{
-		RuleFor(x => x.HashToken)
-			.NotEmpty().WithMessage("HashToken is required.");
+		public GetEmailIdAndApplicationFormHandlerRequestValidator()
+		{
+			RuleFor(x => x.HashToken)
+				.NotEmpty().WithMessage("HashToken is required.");
+		}
 	}
-}
 	public async Task<GetEmailIdAndApplicationFormResult> Handle(GetEmailIdAndApplicationFormHandlerRequest request, CancellationToken cancellationToken)
 	{
 		var emailIdAndApplicationFormPath = await _applicationFormService.GetEmailIdAndApplicationFormPathAsync(request.HashToken, cancellationToken);

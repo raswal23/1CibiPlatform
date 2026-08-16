@@ -1,4 +1,5 @@
 ﻿namespace FrontendWebassembly.DTO.Auth;
+
 public record EditUserDTO
 {
 	public string? Email { get; set; }

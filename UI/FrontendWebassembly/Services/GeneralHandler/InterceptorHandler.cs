@@ -1,7 +1,6 @@
 ﻿namespace FrontendWebassembly.Services.GeneralHandler;
 
 using System.Net;
-using System.Net.Http.Headers;
 
 public class InterceptorHandler : DelegatingHandler
 {
@@ -32,10 +31,8 @@ public class InterceptorHandler : DelegatingHandler
 				return response;
 			}
 
-			// Clone the original request and attach the new access token
+			// Clone and retry; the refreshed access token is already in the HttpOnly cookie.
 			var clonedRequest = await CloneAsync(request);
-
-			clonedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshResponse.token);
 
 			return await base.SendAsync(clonedRequest, cancellationToken);
 		}

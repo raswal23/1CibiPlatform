@@ -10,6 +10,7 @@ public static class ServiceConfiguration
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
 	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
 	private static readonly Assembly _platformLoggingAssembly = typeof(PlatformLoggingMarker).Assembly;
+	private static readonly Assembly _employmentVerificationAssembly = typeof(EmploymentVerificationMarker).Assembly;
 
 
 	#region Logging Config
@@ -153,6 +154,23 @@ public static class ServiceConfiguration
 						context.Token = token;
 					}
 					return Task.CompletedTask;
+				},
+				OnTokenValidated = async context =>
+				{
+					var sessionClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
+					if (string.IsNullOrWhiteSpace(sessionClaim))
+						return; // API/SSO tokens without a browser refresh session keep their existing behavior.
+
+					var userClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+					if (!int.TryParse(sessionClaim, out var sessionId) || !Guid.TryParse(userClaim, out var userId))
+					{
+						context.Fail("Invalid authentication session.");
+						return;
+					}
+
+					var validator = context.HttpContext.RequestServices.GetRequiredService<IAuthSessionValidator>();
+					if (!await validator.IsActiveAsync(sessionId, userId, context.HttpContext.RequestAborted))
+						context.Fail("Authentication session is no longer active.");
 				}
 			};
 		})
@@ -211,6 +229,7 @@ public static class ServiceConfiguration
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
 		services.AddATSInfrastructure(configuration);
+		services.AddEmploymentVerificationInfrastructure(configuration);
 		services.AddPlatformLoggingInfrastructure(configuration);
 		return services;
 	}
@@ -227,6 +246,7 @@ public static class ServiceConfiguration
 			 _aiAgentAssembly,
 			 _atsAssembly,
 			 _platformLoggingAssembly
+			 ,_employmentVerificationAssembly
 		 ]));
 
 
@@ -247,6 +267,7 @@ public static class ServiceConfiguration
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
 		services.AddATSMediaTR(_atsAssembly);
 		services.AddPlatformLoggingMediaTR(_platformLoggingAssembly);
+		services.AddEmploymentVerificationMediaTR(_employmentVerificationAssembly);
 		return services;
 	}
 
@@ -261,7 +282,9 @@ public static class ServiceConfiguration
 		services.AddPhilSysServices();
 		services.AddSSOServices();
 		services.AddAIAgentServices();
-		services.AddATSServices();
+			services.AddATSServices();
+			services.AddATSAssistantConfiguration(configuration);
+			services.AddEmploymentVerificationServices();
 		services.AddPlatformLoggingServices(configuration);
 		return services;
 	}

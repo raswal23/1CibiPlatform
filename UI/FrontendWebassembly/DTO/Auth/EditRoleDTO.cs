@@ -1,4 +1,5 @@
 ﻿namespace FrontendWebassembly.DTO.Auth;
+
 public record EditRoleDTO
 {
 	public int RoleId { get; set; }

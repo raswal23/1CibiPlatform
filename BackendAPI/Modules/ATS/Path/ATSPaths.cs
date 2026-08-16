@@ -192,7 +192,7 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/downloadmultipleorderrecords" }
 				}
 			),
-			
+
 			new RouteDefinitionDTO(
 				RouteId: "ResendApplicationForm",
 				MatchPath: "/ats/resendapplicationform",
@@ -386,7 +386,7 @@ public class ATSPaths : IReverseProxyModule
 					{ "PathSet", "/get-my-access" }
 				}
 			),
-			
+
 
 			new RouteDefinitionDTO(
 				RouteId: "GetATSUserClientAssignments",
@@ -462,6 +462,39 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/edituser" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AskAtsAssistant",
+				MatchPath: "/ats/askassistant",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/askatsassistant" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "ConfirmOrderDraft",
+				MatchPath: "/ats/confirmorderdraft",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/confirmorderdraft" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "SearchOrdersBySubject",
+				MatchPath: "/ats/searchordersbysubject",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/searchordersbysubject" }
 				}
 			),
 

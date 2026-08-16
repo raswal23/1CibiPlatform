@@ -66,6 +66,7 @@ public class DisputeOrderServiceTests
 			new AtsQueryScopeResolver(
 				_currentUser.Object,
 				_userClientRepository.Object),
+			_currentUser.Object,
 			_orderHistoryService.Object);
 	}
 
