@@ -24,8 +24,6 @@ public partial class Home
 		{ 3, 5 }
 	};
 
-	private static readonly HashSet<int> HomeApplicationIds = [2, 3, 4, 6, 7];
-
 	private readonly List<string> AccentGradients =
 	[
 		"linear-gradient(135deg, #3b7bf6, #1f4fc4)",
@@ -94,7 +92,7 @@ public partial class Home
 			.OrderBy(entry => AppOrder.TryGetValue(entry.Key, out var order) ? order : 100)
 			// Keep the dashboard focused on the five applications represented in the
 			// unified-console design. Other IDs remain available on their own routes.
-			.Where(entry => HomeApplicationIds.Contains(entry.Key) && permissionMap.ContainsKey(entry.Key))
+			.Where(entry => permissionMap.ContainsKey(entry.Key))
 			.Select((entry, index) =>
 			{
 				var appId = entry.Key;
@@ -108,12 +106,8 @@ public partial class Home
 					_ when string.IsNullOrWhiteSpace(icon) => Icons.Material.Filled.Apps,
 					_ => icon
 				};
-				var displayName = appId == 4 ? "Employment Verification" : name;
+				var displayName = name;
 				var subtitle = GetAppSubtitle(appId);
-				if (appId == 6)
-				{
-					subtitle = "Screening & investigation console \u2014 manage candidate orders, reports, and disputes.";
-				}
 
 				return new HomeAppCard(appId, path, displayName, subtitle, resolvedIcon, openRoute, accent);
 			})
@@ -147,11 +141,12 @@ public partial class Home
 
 	private static string GetAppSubtitle(int appId) => appId switch
 	{
+		8 => "Employment verification",
+		7 => "Application logs",
 		6 => "Screening & investigation console — manage candidate orders, reports, and disputes.",
-		2 => "Look up and verify registrants using PSA national ID data.",
-		7 => "Oversee agency accounts, billing, and org-level configuration.",
-		3 => "Manage users, roles, permissions, and platform-wide preferences.",
 		4 => "Confirm work history and credentials for candidate records.",
+		3 => "Manage users, roles, permissions, and platform-wide preferences.",
+		2 => "Look up and verify registrants using PSA national ID data.",
 		_ => "Open this application to continue your work."
 	};
 

@@ -3190,6 +3190,28 @@ button.ats-console-brand-text {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
 }
 
+/* MudDialog is rendered outside a Razor component's scoped DOM. Keep only
+   the confirmation dialog host bridge global; its inner design stays scoped. */
+.mud-dialog.confirmation-dialog {
+    width: 100%;
+    max-width: 420px;
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 20px !important;
+    background: #fff;
+    box-shadow:
+        0 30px 60px -20px rgba(7, 18, 48, 0.3),
+        0 10px 24px -8px rgba(7, 18, 48, 0.18) !important;
+    font-family: "Inter", sans-serif;
+}
+
+.mud-dialog.confirmation-dialog .confirmation-dialog-content {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
 }
