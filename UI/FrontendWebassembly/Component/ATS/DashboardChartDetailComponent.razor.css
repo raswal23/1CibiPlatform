@@ -21,40 +21,71 @@
     --ats-detail-stack-sm: 10px;
     --ats-detail-stack-md: 16px;
     --ats-detail-stack-lg: 24px;
+    --ats-detail-navy-900: #0b1b3d;
+    --ats-detail-navy-700: #1c3a70;
+    --ats-detail-blue-600: #1d5fd1;
     /* Rounds the shell itself inside the shared clipped dialog container. */
     border-radius: 18px;
     background: #f6f9fd;
 }
 
-/* Sticky so the chart title and requester stay readable while the body scrolls. */
+/*
+ * The header mirrors AddPackageComponent: navy gradient, dotted texture,
+ * translucent icon badge and a compact outlined close action. It remains
+ * sticky so the chart title and requester stay readable while the body scrolls.
+ */
 ::deep .ats-chart-detail-header {
     position: sticky;
     top: 0;
     z-index: 3;
     display: grid;
-    padding: 20px var(--ats-detail-gutter);
+    padding: 28px 32px 24px;
+    overflow: hidden;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--ats-detail-stack-md);
-    background: linear-gradient(135deg, #ffffff 0%, #f2f7ff 100%);
-    border-bottom: 1px solid var(--ats-border, #e3e9f1);
+    background: linear-gradient(
+        120deg,
+        var(--ats-detail-navy-900) 0%,
+        var(--ats-detail-navy-700) 55%,
+        var(--ats-detail-blue-600) 130%);
     border-radius: 18px 18px 0 0;
+}
+
+::deep .ats-chart-detail-header::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+::deep .ats-chart-detail-header > * {
+    position: relative;
+    z-index: 1;
 }
 
 ::deep .ats-chart-detail-badge {
     display: flex;
     width: 46px;
     height: 46px;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #e8f1ff 0%, #dbe9fb 100%);
-    border: 1px solid #d3e2f7;
-    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
 }
 
 ::deep .ats-chart-detail-badge-icon {
-    color: #2c7fb8;
-    font-size: 24px;
+    color: #fff;
+    font-size: 22px;
 }
 
 ::deep .ats-chart-detail-heading {
@@ -65,7 +96,7 @@
 }
 
 ::deep .ats-chart-detail-eyebrow {
-    color: #8593ab;
+    color: #9fb7e8;
     font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.11em;
@@ -74,16 +105,20 @@
 }
 
 ::deep .ats-chart-detail-title {
-    color: #0b1f3a;
-    font-size: 21px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    margin: 0;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
     line-height: 1.25;
 }
 
 ::deep .ats-chart-detail-subtitle {
-    color: var(--ats-text-sub, #6b7b92);
-    font-size: 13px;
+    margin-top: 2px;
+    color: #c6d5f5;
+    font-size: 13.5px;
+    font-weight: 400;
     line-height: 1.4;
 }
 
@@ -95,42 +130,71 @@
 
 ::deep .ats-chart-detail-chip {
     display: inline-flex;
-    max-width: 260px;
-    padding: 7px 14px;
+    width: 260px;
+    max-width: 30vw;
+    padding: 8px 16px;
     flex-direction: column;
-    gap: 1px;
-    background: #fff;
-    border: 1px solid var(--ats-border, #e3e9f1);
-    border-radius: 999px;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
     line-height: 1.2;
+    text-align: center;
 }
 
 ::deep .ats-chart-detail-chip-label {
-    color: #8593ab;
+    display: block;
+    width: 100%;
+    color: #aebfe3;
     font-size: 9.5px;
     font-weight: 600;
     letter-spacing: 0.1em;
+    text-align: center;
     text-transform: uppercase;
 }
 
 ::deep .ats-chart-detail-chip-value {
-    color: #0b1f3a;
+    display: block;
+    width: 100%;
+    color: #fff;
     font-size: 13px;
     font-weight: 600;
     overflow: hidden;
+    text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 ::deep .ats-chart-detail-close {
-    color: #55637d;
-    background: #fff;
-    border: 1px solid var(--ats-border, #e3e9f1);
+    display: flex;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
 }
 
-::deep .ats-chart-detail-close:hover {
-    color: #0b1f3a;
-    background: #eef3fb;
+::deep .ats-chart-detail-close:hover,
+::deep .ats-chart-detail-close:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+::deep .ats-chart-detail-close:focus-visible {
+    outline: 3px solid rgba(143, 201, 255, 0.6);
+    outline-offset: 2px;
+}
+
+::deep .ats-chart-detail-close svg {
+    width: 15px;
+    height: 15px;
 }
 
 ::deep .ats-chart-detail-body {
@@ -619,24 +683,19 @@
         --ats-detail-stack-lg: 18px;
     }
 
-    /* The badge is dropped, so the heading and actions take the two tracks. */
     ::deep .ats-chart-detail-header {
-        padding: 16px var(--ats-detail-gutter);
-        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 22px 20px 20px;
         gap: 12px;
     }
 
-    ::deep .ats-chart-detail-badge {
-        display: none;
-    }
-
     ::deep .ats-chart-detail-chip {
-        max-width: 150px;
-        padding: 6px 12px;
+        width: 180px;
+        max-width: 28vw;
+        padding: 7px 13px;
     }
 
     ::deep .ats-chart-detail-title {
-        font-size: 18px;
+        font-size: 20px;
     }
 
     ::deep .ats-chart-detail-card {
@@ -654,6 +713,12 @@
     }
 }
 
+@media (max-width: 599.98px) {
+    ::deep .ats-chart-detail-chip {
+        display: none;
+    }
+}
+
 /*
  * Below the donut's 360px box, scale it down. MudBlazor writes width/height
  * straight onto the <svg> and .mud-chart carries min-width/min-height:
@@ -661,10 +726,6 @@
  * nothing. The viewBox makes the svg scale uniformly.
  */
 @media (max-width: 479.98px) {
-    ::deep .ats-chart-detail-chip {
-        display: none;
-    }
-
     ::deep .ats-detail-donut-body {
         gap: var(--ats-detail-stack-md);
     }
