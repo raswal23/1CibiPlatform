@@ -5,17 +5,24 @@
     <title>CIBI OnePlatform</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CIBI OnePlatform</title>
     <base href="/" />
+    <link rel="preload" id="webassembly" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@500;600;700;800&amp;family=Poppins:wght@500;600;700&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="css/ats-management.css" />
-    <link href="FrontendWebassembly.styles.css?v=home-v2" rel="stylesheet" />
+    <!-- CSS keeps stable names: .NET 10 HTML placeholders don't support
+         stylesheets yet (dotnet/aspnetcore#64170). nginx serves *.css with
+         Cache-Control: no-cache so browsers revalidate after each deploy.
+         ?v=2 is a ONE-TIME bump to evict copies cached under the old nginx
+         config (1-month/1-year max-age, no revalidation). Do not bump again;
+         ETag revalidation handles freshness from here on. -->
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css?v=2" />
+    <link rel="stylesheet" href="css/app.css?v=2" />
+    <link href="_content/MudBlazor/MudBlazor.min.css?v=2" rel="stylesheet" />
+    <link rel="stylesheet" href="css/ats-management.css?v=2" />
+    <link href="FrontendWebassembly.styles.css?v=2" rel="stylesheet" />
     <link rel="icon" href="/images/generic/cibi-icon.png" type="image/png" />
+    <script type="importmap"></script>
 
     <script>
         (function () {
@@ -117,21 +124,27 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <!-- Add (or verify) these before the closing </body> -->
-    <script src="js/generic/xlsx.full.min.js"></script>
-    <script src="js/generic/downloadExcelFile.js"></script>
-    <script src="js/generic/navigationLock.js"></script>
-    <script src="js/philsys/downloadResponse.js"></script>
-    <script src="js/philsys/everify-liveness-sdk.min.js"></script>
-    <script src="js/philsys/livenessInterop.js"></script>
-    <script src="js/ats/downloadFile.js"></script>
+    <!-- The fingerprint markers below are replaced at build/publish with a
+         content hash (OverrideHtmlAssetPlaceholders + StaticWebAssetFingerprintPattern
+         in the csproj), so every deploy gets fresh URLs and browsers can cache forever.
+         Do not write the literal marker in comments: the placeholder scanner matches
+         it and silently skips the next real one. -->
+    <script src="js/generic/xlsx.full.min#[.{fingerprint}].js"></script>
+    <script src="js/generic/downloadExcelFile#[.{fingerprint}].js"></script>
+    <script src="js/generic/navigationLock#[.{fingerprint}].js"></script>
+    <script src="js/philsys/downloadResponse#[.{fingerprint}].js"></script>
+    <script src="js/philsys/everify-liveness-sdk.min#[.{fingerprint}].js"></script>
+    <script src="js/philsys/livenessInterop#[.{fingerprint}].js"></script>
+    <script src="js/ats/downloadFile#[.{fingerprint}].js"></script>
     <!-- Loader only. html2canvas/jsPDF are injected on first use, not shipped up front. -->
-    <script src="js/ats/chartExport.js"></script>
-    <script src="js/ats/atsAssistant.js"></script>
-    <script src="js/generic/fileInputInterop.js"></script>
-    <script src="js/generic/nameFilter.js"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="js/ats/chartExport#[.{fingerprint}].js"></script>
+    <script src="js/ats/atsAssistant#[.{fingerprint}].js"></script>
+    <script src="js/generic/fileInputInterop#[.{fingerprint}].js"></script>
+    <script src="js/generic/nameFilter#[.{fingerprint}].js"></script>
+    <!-- Not fingerprinted (package asset, stable name). ?v=2 = same one-time
+         eviction of the old 1-year immutable cache as the CSS links above. -->
+    <script src="_content/MudBlazor/MudBlazor.min.js?v=2"></script>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 
 </html>
