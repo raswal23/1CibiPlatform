@@ -144,12 +144,37 @@ public partial class AIAssistantComponent
 		if (message.Draft is null || _isConfirming)
 			return;
 
-		var confirmed = await ConfirmActionAsync(
-			"Create this order?",
-			$"An email invitation will be sent to {message.Draft.EmailAddress}.",
-			"Confirm");
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Submit Candidate"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will send an email invitation to your candidate."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Proceed"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Proceed' will send an email invitation. Would you like to proceed?"
+			}
+		};
 
-		if (!confirmed)
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+		var result = await dialog.Result;
+
+		if (result?.Canceled != false)
 			return;
 
 		try

@@ -182,6 +182,17 @@ public partial class ResetPassword
 		StateHasChanged();
 	}
 
+	private async Task HandleResetPasswordEnter()
+	{
+		if (form is null || isButtonLoading || isDisable)
+			return;
+
+		await form.ValidateAsync();
+
+		if (form.IsValid)
+			await HandleResetPassword();
+	}
+
 	private void StartCountdown()
 	{
 		countdownTimer = new System.Threading.Timer(async _ =>
