@@ -883,7 +883,7 @@ code {
 }
 
 .custom-stepper .mud-step-label-icon.mud-default, .custom-stepper .mud-step-completed .mud-step-label-icon, .custom-stepper .mud-step.active .mud-step-label-icon {
-    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
+    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) border-box !important;
     color: white !important;
 }
 
@@ -2325,7 +2325,7 @@ button.ats-console-brand-text {
 
         .ats-appform-stepper .mud-step.active .mud-step-label-icon,
         .ats-appform-stepper .mud-step-label-icon.mud-default {
-            background: linear-gradient(135deg, #102247 0%, #2A77AE 55%, #68C0D6 100%) !important;
+            background: linear-gradient(135deg, #102247 0%, #2A77AE 55%, #68C0D6 100%) border-box !important;
             border-color: transparent !important;
             color: #fff !important;
         }
@@ -4080,6 +4080,9 @@ button.ats-console-brand-text {
     flex: 0 0 auto;
     flex-basis: auto;
     flex-shrink: 0;
+    /* mud-ripple sets overflow:hidden, which clips the enlarged active icon
+       (34px in a 32px row). Steps here aren't clickable, so no ripple needs containing. */
+    overflow: visible;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step-label {
@@ -4101,21 +4104,21 @@ button.ats-console-brand-text {
     font-family: "Poppins", sans-serif;
     font-size: 13px !important;
     font-weight: 700;
-    transition: transform 0.12s ease;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
+    /* Keep the same 32px geometry as the other icons — enlarging via scale() or
+       an oversized box gets clipped/blurred at fractional browser-zoom levels.
+       The halo ring supplies the "active" emphasis instead. */
     border-color: transparent !important;
-    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) border-box !important;
     color: #FFFFFF !important;
-    transform: scale(1.08);
 }
 
 .ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
 .ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed {
     border-color: transparent !important;
-    background: linear-gradient(135deg, #34C77E, #0E7A4C) !important;
+    background: linear-gradient(135deg, #34C77E, #0E7A4C) border-box !important;
     color: #FFFFFF !important;
     font-size: 13px !important;
 }
