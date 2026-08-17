@@ -43,21 +43,7 @@ public partial class ApplicationFormComponent
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
 	private string? OwnershipOtherText = null;
-	private string? selectedOwnershipType;
-
-	private string? SelectedOwnershipType
-	{
-		get => selectedOwnershipType;
-		set
-		{
-			selectedOwnershipType = value;
-
-			if (string.Equals(selectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal))
-			{
-				selectedOwnershipType = OwnershipOtherText;
-			}
-		}
-	}
+	private string? SelectedOwnershipType;
 
 	private bool IsOtherOwnershipSelected =>
 		string.Equals(SelectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal);
@@ -856,7 +842,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		addressDetails.TypeOfOwnership = SelectedOwnershipType;
+		addressDetails.TypeOfOwnership = IsOtherOwnershipSelected ? OwnershipOtherText : SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{

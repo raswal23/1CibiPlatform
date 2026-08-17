@@ -677,6 +677,7 @@
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill {
+    position: relative;
     display: inline-flex;
     min-height: 34px;
     margin: 0 !important;
@@ -707,6 +708,28 @@
     font-weight: 600;
     line-height: 1;
     text-align: center;
+}
+
+/* The MudRadio click handler lives on the inner label; stretch it over the whole pill.
+   MudBlazor's own .mud-input-control-input-container is position:relative and would
+   capture the ::after overlay, so it must be static for the overlay to reach the pill. */
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill .mud-input-control-input-container {
+    position: static;
+    width: 100%;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill .mud-radio {
+    position: static;
+    width: 100%;
+    justify-content: center;
+}
+
+.ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill .mud-radio::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    border-radius: 20px;
+    cursor: pointer;
 }
 
 .ats-step-four-scope.ats-step-four-scope ::deep .ats-ownership-pill:hover {
@@ -1531,6 +1554,7 @@
 }
 
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill {
+    position: relative;
     display: inline-flex;
     min-height: 34px;
     margin: 0 !important;
@@ -1561,6 +1585,28 @@
     font-weight: 600;
     line-height: 1;
     text-align: center;
+}
+
+/* The MudRadio click handler lives on the inner label; stretch it over the whole pill.
+   MudBlazor's own .mud-input-control-input-container is position:relative and would
+   capture the ::after overlay, so it must be static for the overlay to reach the pill. */
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill .mud-input-control-input-container {
+    position: static;
+    width: 100%;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill .mud-radio {
+    position: static;
+    width: 100%;
+    justify-content: center;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill .mud-radio::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    border-radius: 20px;
+    cursor: pointer;
 }
 
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill:hover {

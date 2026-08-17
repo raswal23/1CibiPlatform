@@ -2503,6 +2503,7 @@ button.ats-console-brand-text {
 }
 
 .ats-step-one .ats-step-one-choice-card {
+    position: relative;
     margin: 0 !important;
     width: 100%;
     border: 1px solid #C9D9EC;
@@ -2515,6 +2516,22 @@ button.ats-console-brand-text {
     box-sizing: border-box;
     transition: all .18s ease;
 }
+
+    /* The MudRadio click handler lives on the inner label; stretch it over the whole card.
+       MudBlazor's own .mud-input-control-input-container is position:relative and would
+       capture the ::after overlay, so it must be static for the overlay to reach the card. */
+    .ats-step-one .ats-step-one-choice-card .mud-input-control-input-container {
+        position: static;
+        width: 100%;
+    }
+
+    .ats-step-one .ats-step-one-choice-card .mud-radio::after {
+        position: absolute;
+        content: "";
+        inset: 0;
+        border-radius: 14px;
+        cursor: pointer;
+    }
 
     .ats-step-one .ats-step-one-choice-card.selected,
     .ats-step-one .ats-step-one-choice-card.mud-checked,

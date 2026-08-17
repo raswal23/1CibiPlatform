@@ -19,7 +19,10 @@
             <MudLayout>
                 <!-- AppBar -->
                 <MudAppBar Elevation="0" Class="main-topbar">
-                    <div class="main-topbar-brand">
+                    <button type="button"
+                            class="main-topbar-brand"
+                            aria-label="Go to home page"
+                            @onclick='() => NavigationManager.NavigateTo("/")'>
                         <span class="main-topbar-brand-badge" aria-hidden="true">
                             <svg viewBox="0 0 24 24"
                                  fill="none"
@@ -32,13 +35,8 @@
                             </svg>
                         </span>
 
-                        <button type="button"
-                                class="main-topbar-brand-name"
-                                aria-label="Go to home page"
-                                @onclick='() => NavigationManager.NavigateTo("/")'>
-                            One Platform
-                        </button>
-                    </div>
+                        <span class="main-topbar-brand-name">One Platform</span>
+                    </button>
 
                     <MudSpacer />
 
