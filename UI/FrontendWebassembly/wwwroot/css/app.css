@@ -118,6 +118,100 @@ body,
     }
 }
 
+.startup-loader-container {
+    height: 100vh;
+}
+
+.cibi-loader-container {
+    width: 100%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cibi-loader-container > .cibi-brand-loader {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.cibi-brand-loader > svg {
+    width: 64px;
+    height: 64px;
+    margin: 0 5px;
+}
+
+.cibi-brand-loader > svg:nth-child(3) {
+    margin-right: 7px;
+}
+
+.cibi-brand-loader > svg:nth-child(4) {
+    margin-left: 7px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-definitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-i {
+    width: 19px;
+    height: 64px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-b {
+    width: 49px;
+    height: 64px;
+}
+
+.cibi-loader-spacer {
+    width: 0.5em;
+}
+
+.cibi-loader-dash {
+    animation: cibiDashArray 2s ease-in-out infinite,
+               cibiDashOffset 2s linear infinite;
+}
+
+.cibi-loader-gradient-b {
+    stroke: url(#cibi-loader-b);
+}
+
+.cibi-loader-gradient-c {
+    stroke: url(#cibi-loader-c);
+}
+
+.cibi-loader-gradient-d {
+    stroke: url(#cibi-loader-d);
+}
+
+@keyframes cibiDashArray {
+    0% {
+        stroke-dasharray: 0 1 359 0;
+    }
+
+    50% {
+        stroke-dasharray: 0 359 1 0;
+    }
+
+    100% {
+        stroke-dasharray: 359 1 0 0;
+    }
+}
+
+@keyframes cibiDashOffset {
+    0% {
+        stroke-dashoffset: 365;
+    }
+
+    100% {
+        stroke-dashoffset: 5;
+    }
+}
+
 code {
     color: #c02d76;
 }
@@ -789,7 +883,7 @@ code {
 }
 
 .custom-stepper .mud-step-label-icon.mud-default, .custom-stepper .mud-step-completed .mud-step-label-icon, .custom-stepper .mud-step.active .mud-step-label-icon {
-    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) !important;
+    background: linear-gradient( 90deg, #102247 0%, #2a77ae 50%, #68c0d6 100% ) border-box !important;
     color: white !important;
 }
 
@@ -1797,28 +1891,6 @@ button.ats-console-brand-text {
     width: 100%;
 }
 
-.ats-console-content-enter {
-    animation: ats-content-enter 180ms ease-out both;
-}
-
-@keyframes ats-content-enter {
-    from {
-        opacity: 0;
-        transform: translateX(14px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ats-console-content-enter {
-        animation: none;
-    }
-}
-
 .ats-console-card {
     background: var(--ats-card);
     border: 1px solid var(--ats-border);
@@ -2253,7 +2325,7 @@ button.ats-console-brand-text {
 
         .ats-appform-stepper .mud-step.active .mud-step-label-icon,
         .ats-appform-stepper .mud-step-label-icon.mud-default {
-            background: linear-gradient(135deg, #102247 0%, #2A77AE 55%, #68C0D6 100%) !important;
+            background: linear-gradient(135deg, #102247 0%, #2A77AE 55%, #68C0D6 100%) border-box !important;
             border-color: transparent !important;
             color: #fff !important;
         }
@@ -2431,6 +2503,7 @@ button.ats-console-brand-text {
 }
 
 .ats-step-one .ats-step-one-choice-card {
+    position: relative;
     margin: 0 !important;
     width: 100%;
     border: 1px solid #C9D9EC;
@@ -2443,6 +2516,22 @@ button.ats-console-brand-text {
     box-sizing: border-box;
     transition: all .18s ease;
 }
+
+    /* The MudRadio click handler lives on the inner label; stretch it over the whole card.
+       MudBlazor's own .mud-input-control-input-container is position:relative and would
+       capture the ::after overlay, so it must be static for the overlay to reach the card. */
+    .ats-step-one .ats-step-one-choice-card .mud-input-control-input-container {
+        position: static;
+        width: 100%;
+    }
+
+    .ats-step-one .ats-step-one-choice-card .mud-radio::after {
+        position: absolute;
+        content: "";
+        inset: 0;
+        border-radius: 14px;
+        cursor: pointer;
+    }
 
     .ats-step-one .ats-step-one-choice-card.selected,
     .ats-step-one .ats-step-one-choice-card.mud-checked,
@@ -3116,6 +3205,28 @@ button.ats-console-brand-text {
 .philsys-shadow-box {
     border-radius: 20px;    
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
+}
+
+/* MudDialog is rendered outside a Razor component's scoped DOM. Keep only
+   the confirmation dialog host bridge global; its inner design stays scoped. */
+.mud-dialog.confirmation-dialog {
+    width: 100%;
+    max-width: 420px;
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 20px !important;
+    background: #fff;
+    box-shadow:
+        0 30px 60px -20px rgba(7, 18, 48, 0.3),
+        0 10px 24px -8px rgba(7, 18, 48, 0.18) !important;
+    font-family: "Inter", sans-serif;
+}
+
+.mud-dialog.confirmation-dialog .confirmation-dialog-content {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
 }
 
 .ats-appform-modern .ats-modern-card {
@@ -3969,6 +4080,9 @@ button.ats-console-brand-text {
     flex: 0 0 auto;
     flex-basis: auto;
     flex-shrink: 0;
+    /* mud-ripple sets overflow:hidden, which clips the enlarged active icon
+       (34px in a 32px row). Steps here aren't clickable, so no ripple needs containing. */
+    overflow: visible;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step-label {
@@ -3990,21 +4104,21 @@ button.ats-console-brand-text {
     font-family: "Poppins", sans-serif;
     font-size: 13px !important;
     font-weight: 700;
-    transition: transform 0.12s ease;
 }
 
 .ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
+    /* Keep the same 32px geometry as the other icons — enlarging via scale() or
+       an oversized box gets clipped/blurred at fractional browser-zoom levels.
+       The halo ring supplies the "active" emphasis instead. */
     border-color: transparent !important;
-    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) !important;
-    box-shadow: none !important;
+    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) border-box !important;
     color: #FFFFFF !important;
-    transform: scale(1.08);
 }
 
 .ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
 .ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed {
     border-color: transparent !important;
-    background: linear-gradient(135deg, #34C77E, #0E7A4C) !important;
+    background: linear-gradient(135deg, #34C77E, #0E7A4C) border-box !important;
     color: #FFFFFF !important;
     font-size: 13px !important;
 }

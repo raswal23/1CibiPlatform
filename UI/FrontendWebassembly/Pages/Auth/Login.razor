@@ -38,7 +38,9 @@
                         </MudAlert>
                     }
 
-                    <MudForm @ref="loginForm" @bind-IsValid="@loginFormValid">
+                    <MudForm @ref="loginForm"
+                             @bind-IsValid="@loginFormValid"
+                             OnEnterPressed="HandleLoginEnter">
                         <div class="auth-field">
                             <label>Email <span>*</span></label>
                             <div class="auth-input-wrap">
@@ -164,7 +166,9 @@
                         </MudAlert>
                     }
 
-                    <MudForm @ref="forgotPasswordForm" @bind-IsValid="@forgotPasswordFormValid">
+                    <MudForm @ref="forgotPasswordForm"
+                             @bind-IsValid="@forgotPasswordFormValid"
+                             OnEnterPressed="HandleForgotPasswordEnter">
                         <div class="auth-field auth-forgot-field">
                             <label>Email <span>*</span></label>
                             <div class="auth-input-wrap">
@@ -489,5 +493,5 @@
 }
 else
 {
-    <LoaderComponent />
+    <CibiLoaderComponent />
 }

@@ -23,7 +23,7 @@ public class EmailInvitationRequest
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }
-    public bool NeedsProjection { get; set; } = true;
+	public bool NeedsProjection { get; set; } = true;
 	public DateTime? ProjectionUpdatedAt { get; set; }
 	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
@@ -37,8 +37,8 @@ public class EmailInvitationRequest
 	public ReferenceDetails? ReferenceDetails { get; set; }
 	public SignatureDetails? SignatureDetails { get; set; }
 	public ICollection<DocumentDetails>? Documents { get; set; }
-    public ICollection<ReportDetails>? ReportDetails { get; set; }
+	public ICollection<ReportDetails>? ReportDetails { get; set; }
 	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
 	public ICollection<OrderStatusHistory>? OrderStatusHistories { get; set; }
-   public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
+	public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
 }

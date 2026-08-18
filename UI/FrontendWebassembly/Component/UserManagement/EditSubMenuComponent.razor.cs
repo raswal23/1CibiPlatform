@@ -2,14 +2,14 @@
 
 namespace FrontendWebassembly.Component.UserManagement;
 
-public partial  class EditSubMenuComponent
+public partial class EditSubMenuComponent
 {
 	private MudForm? EditSubMenuForm;
 
-	[CascadingParameter] 
+	[CascadingParameter]
 	IMudDialogInstance? EditSubMenuDialog { get; set; }
 
-	[Parameter] 
+	[Parameter]
 	public SubMenusDTO SubMenu { get; set; } = new SubMenusDTO();
 
 	private Task<IEnumerable<string>> SearchSubMenus(string value, CancellationToken cancellationToken)

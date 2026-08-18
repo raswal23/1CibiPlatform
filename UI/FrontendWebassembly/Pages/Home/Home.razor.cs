@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Components;
 public partial class Home
 {
 	[Inject] private LocalStorageService LocalStorageService { get; set; } = default!;
+	[CascadingParameter(Name = "ApplicationSearchQuery")]
+	private string ApplicationSearchQuery { get; set; } = string.Empty;
 
 	private const string UserNameKey = "Name";
 	private const string AppIdKey = "AppId";
@@ -15,21 +17,20 @@ public partial class Home
 
 	private readonly Dictionary<int, int> AppOrder = new()
 	{
-		{ 5, 1 },
-		{ 6, 2 },
-		{ 2, 3 },
-		{ 1, 4 },
-		{ 4, 5 },
-		{ 3, int.MaxValue }
+		{ 6, 1 },
+		{ 2, 2 },
+		{ 7, 3 },
+		{ 4, 4 },
+		{ 3, 5 }
 	};
 
 	private readonly List<string> AccentGradients =
 	[
-		"linear-gradient(135deg, #0b1f3a, #2c7fb8)",
-		"linear-gradient(135deg, #1b6fa8, #7fc4e8)",
-		"linear-gradient(135deg, #2c7fb8, #5fa8d3)",
-		"linear-gradient(135deg, #4a5a70, #8494a8)",
-		"linear-gradient(135deg, #15345f, #3a8bc9)",
+		"linear-gradient(135deg, #3b7bf6, #1f4fc4)",
+		"linear-gradient(135deg, #14b8a6, #0d7d70)",
+		"linear-gradient(135deg, #6366f1, #3d34c9)",
+		"linear-gradient(135deg, #10b981, #04795a)",
+		"linear-gradient(135deg, #64748b, #3a4657)",
 		"linear-gradient(135deg, #36506c, #6f8ba7)"
 	];
 
@@ -41,6 +42,13 @@ public partial class Home
 	private List<List<int>> UserSubMenus = new();
 
 	private List<HomeAppCard> AvailableApps = new();
+	private IReadOnlyList<HomeAppCard> FilteredApps => string.IsNullOrWhiteSpace(ApplicationSearchQuery)
+		? AvailableApps
+		: AvailableApps
+			.Where(app =>
+				app.Name.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase) ||
+				app.Subtitle.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase))
+			.ToList();
 
 	private readonly List<AnnouncementItem> Announcements =
 	[
@@ -82,19 +90,25 @@ public partial class Home
 
 		AvailableApps = ApplicationListDescriptionIcon.List
 			.OrderBy(entry => AppOrder.TryGetValue(entry.Key, out var order) ? order : 100)
-			// CNX remains in the shared mapping for database permission compatibility,
-			// but its frontend UI is retired and must not appear on the home dashboard.
-			.Where(entry => entry.Key != 1 && permissionMap.ContainsKey(entry.Key))
+			// Keep the dashboard focused on the five applications represented in the
+			// unified-console design. Other IDs remain available on their own routes.
+			.Where(entry => permissionMap.ContainsKey(entry.Key))
 			.Select((entry, index) =>
 			{
 				var appId = entry.Key;
-				var (path, name, icon) = entry.Value;
+				var (path, name, icon, subtitle) = entry.Value;
 				var openRoute = BuildOpenRoute(path, permissionMap[appId]);
 				var accent = AccentGradients[index % AccentGradients.Count];
-				var resolvedIcon = string.IsNullOrWhiteSpace(icon) ? Icons.Material.Filled.Apps : icon;
-				var subtitle = GetAppSubtitle(appId);
+				var resolvedIcon = appId switch
+				{
+					2 => Icons.Material.Filled.Badge,
+					4 => Icons.Material.Filled.VerifiedUser,
+					_ when string.IsNullOrWhiteSpace(icon) => Icons.Material.Filled.Apps,
+					_ => icon
+				};
+				var displayName = name;
 
-				return new HomeAppCard(appId, path, name, subtitle, resolvedIcon, openRoute, accent);
+				return new HomeAppCard(appId, path, displayName, subtitle, resolvedIcon, openRoute, accent);
 			})
 			.ToList();
 	}
@@ -123,17 +137,6 @@ public partial class Home
 
 		return $"/{normalizedPath}/{subPath.ToLowerInvariant()}";
 	}
-
-	private static string GetAppSubtitle(int appId) => appId switch
-	{
-		6 => "Screening & investigation console — manage candidate orders, reports, and disputes.",
-		2 => "Look up and verify registrants using PSA national ID data.",
-		1 => "Connect and manage outbound communications and call workflows.",
-		3 => "Manage users, roles, permissions, and platform-wide preferences.",
-		4 => "Use AI-assisted chat workflows for policy and document tasks.",
-		5 => "Access credit bureau tools, reports, and account-level checks.",
-		_ => "Open this application to continue your work."
-	};
 
 	private sealed record HomeAppCard(int AppId, string Path, string Name, string Subtitle, string Icon, string OpenRoute, string AccentGradient);
 	private sealed record AnnouncementItem(string Tag, string Title, string Detail);

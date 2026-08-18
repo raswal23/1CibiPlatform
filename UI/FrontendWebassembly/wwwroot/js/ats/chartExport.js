@@ -23,17 +23,35 @@ window.atsChartExport = (() => {
 
     let librariesPromise = null;
 
+    // The publish pipeline renames JS assets to content-fingerprinted file names
+    // and records the mapping in index.html's import map. Import maps only apply
+    // to module imports, not injected <script src>, so resolve manually here.
+    const resolveAssetSrc = src => {
+        const importMap = document.querySelector('script[type="importmap"]');
+        if (!importMap) {
+            return src;
+        }
+
+        try {
+            const imports = JSON.parse(importMap.textContent).imports || {};
+            return imports[`./${src}`] || src;
+        } catch {
+            return src;
+        }
+    };
+
     const loadScript = src => new Promise((resolve, reject) => {
-        const existing = document.querySelector(`script[src="${src}"]`);
+        const resolvedSrc = resolveAssetSrc(src);
+        const existing = document.querySelector(`script[src="${resolvedSrc}"]`);
         if (existing) {
             resolve();
             return;
         }
 
         const script = document.createElement("script");
-        script.src = src;
+        script.src = resolvedSrc;
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Failed to load ${src}`));
+        script.onerror = () => reject(new Error(`Failed to load ${resolvedSrc}`));
         document.head.appendChild(script);
     });
 

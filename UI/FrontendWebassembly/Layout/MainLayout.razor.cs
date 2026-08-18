@@ -5,6 +5,20 @@ public partial class MainLayout
 	private bool _isDarkMode = false;
 	private bool _isLoading = true;
 	private string name = "";
+	private string _applicationSearchQuery = string.Empty;
+
+	private bool IsHomeRoute
+	{
+		get
+		{
+			var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+				.Split('?', '#')[0]
+				.Trim('/');
+
+			return string.IsNullOrEmpty(path) ||
+				string.Equals(path, "dashboard", StringComparison.OrdinalIgnoreCase);
+		}
+	}
 
 	private const string _userNameKey = "Name";
 	private string UserInitials
@@ -86,6 +100,7 @@ public partial class MainLayout
 
 			await JS.InvokeVoidAsync("setStartupTheme", _isDarkMode);
 
+			NavigationManager.LocationChanged += HandleLocationChanged;
 			_isLoading = false;
 		}
 		catch (Exception ex)
@@ -94,6 +109,24 @@ public partial class MainLayout
 			Console.WriteLine($"Is loading: {_isLoading}");
 			Console.WriteLine($"Authentication Error: {ex.Message}");
 			throw;
+		}
+	}
+
+	private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+	{
+		if (!IsHomeRoute)
+		{
+			_applicationSearchQuery = string.Empty;
+		}
+
+		InvokeAsync(StateHasChanged);
+	}
+
+	private void HandleApplicationSearchKeyDown(KeyboardEventArgs args)
+	{
+		if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+		{
+			_applicationSearchQuery = string.Empty;
 		}
 	}
 
@@ -120,6 +153,11 @@ public partial class MainLayout
 			Console.WriteLine($"Authentication Error: {ex.Message}");
 			throw;
 		}
+	}
+
+	public void Dispose()
+	{
+		NavigationManager.LocationChanged -= HandleLocationChanged;
 	}
 
 }

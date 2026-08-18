@@ -16,7 +16,7 @@ public class GetReportsEndpoint : ICarterModule
 			var query = new GetReportsQueryRequest(
 				request.PageNumber,
 				request.PageSize,
-                request.SearchTerm,
+				request.SearchTerm,
 				request.SortColumn,
 				request.SortDescending,
 				request.StartDate,

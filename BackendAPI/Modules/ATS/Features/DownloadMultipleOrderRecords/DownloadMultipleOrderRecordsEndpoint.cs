@@ -8,7 +8,7 @@ public class DownloadMultipleOrderRecordsEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("downloadmultipleorderrecords", async(DownloadMultipleOrderRecordsRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("downloadmultipleorderrecords", async (DownloadMultipleOrderRecordsRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new DownloadMultipleOrderRecordsHandlerRequest(request.downloadMultipleOrderRecordsRequest);
 			DownloadMultipleOrderRecordsResult result = await sender.Send(command, cancellationToken);

@@ -38,7 +38,7 @@
                 </div>
 
                 @foreach (var module in ModuleList.List
-                    .Where(item => item.Key <= 5 && _accessibleModuleIds.Contains(item.Key))
+                    .Where(item => ModuleList.IsPrimaryNavigationModule(item.Key) && _accessibleModuleIds.Contains(item.Key))
                     .OrderBy(item => item.Key))
                 {
                     <NavLink href="@($"/s&i/ats/{module.Value.path}")" class="ats-console-nav-item" Match="NavLinkMatch.Prefix">
@@ -48,7 +48,7 @@
                 }
 
                 @{ var settingsModules = ModuleList.List
-					.Where(item => item.Key >= 6 && _accessibleModuleIds.Contains(item.Key))
+					.Where(item => !ModuleList.IsPrimaryNavigationModule(item.Key) && _accessibleModuleIds.Contains(item.Key))
                     .OrderBy(item => item.Key)
                     .ToArray(); }
 
@@ -116,12 +116,6 @@
                     </div>
                 </div>
                 <div class="ats-console-topbar-right">
-                    <button type="button" class="ats-console-icon-btn" aria-label="Search">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <circle cx="11" cy="11" r="7" />
-                            <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
-                        </svg>
-                    </button>
                     <button type="button" class="ats-console-icon-btn" aria-label="Notifications">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -139,7 +133,7 @@
                 </div>
             </div>
 
-            <div class="ats-console-content ats-console-content-enter" @key="_contentAnimationKey">
+            <div class="ats-console-content">
                 @Body
             </div>
         </div>
@@ -148,7 +142,7 @@
 }
 else
 {
-    <LoaderComponent />
+    <CibiLoaderComponent />
 }
 
 
@@ -168,7 +162,6 @@ else
     private bool _isSidebarCollapsed;
     private bool _isMobileDrawerOpen;
     private bool _isMobileView;
-    private string _contentAnimationKey = string.Empty;
     private string _userDisplayName = "User";
     private string _userInitials = "U";
     private HashSet<int> _accessibleModuleIds = new();
@@ -219,7 +212,6 @@ else
 		}
 
         SetTitleFromUri();
-        _contentAnimationKey = NavigationManager.Uri;
         NavigationManager.LocationChanged += HandleLocationChanged;
         _isReady = true;
     }
@@ -244,7 +236,6 @@ else
 		}
 
         SetTitleFromUri();
-        _contentAnimationKey = e.Location;
 
         if (_isMobileView)
         {

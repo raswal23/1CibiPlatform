@@ -3,7 +3,7 @@
 public record EmailInvitationRequestCommand(EmailInvitationRequestDTO emailInvitationRequestDTO) : ICommand<EmailInvitationRequestResult>;
 
 public record EmailInvitationRequestResult(bool isAdded);
-	
+
 public class EmailInvitationRequestCommandValidator : AbstractValidator<EmailInvitationRequestCommand>
 {
 	public EmailInvitationRequestCommandValidator()

@@ -43,21 +43,7 @@ public partial class ApplicationFormComponent
 	private AddressDetailsDTO addressDetails = new();
 	private bool SameAsPermanent;
 	private string? OwnershipOtherText = null;
-	private string? selectedOwnershipType;
-
-	private string? SelectedOwnershipType
-	{
-		get => selectedOwnershipType;
-		set
-		{
-			selectedOwnershipType = value;
-
-			if (string.Equals(selectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal))
-			{
-				selectedOwnershipType = OwnershipOtherText;
-			}
-		}
-	}
+	private string? SelectedOwnershipType;
 
 	private bool IsOtherOwnershipSelected =>
 		string.Equals(SelectedOwnershipType, OtherOwnershipType, StringComparison.Ordinal);
@@ -155,6 +141,10 @@ public partial class ApplicationFormComponent
 				DateOfBirth = dob.ToDateTime(TimeOnly.MinValue);
 			}
 		}
+
+		EndOfEmployment1 = DateTime.UnixEpoch;
+		EndOfEmployment2 = DateTime.UnixEpoch;
+		EndOfEmployment3 = DateTime.UnixEpoch;
 
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
@@ -858,7 +848,7 @@ public partial class ApplicationFormComponent
 			educationalBackground.PhDSchoolName = AcademicInstitution;
 		}
 
-		addressDetails.TypeOfOwnership = SelectedOwnershipType;
+		addressDetails.TypeOfOwnership = IsOtherOwnershipSelected ? OwnershipOtherText : SelectedOwnershipType;
 
 		if (hasProfessionalLicense && LicenseExpiryDate.HasValue)
 		{

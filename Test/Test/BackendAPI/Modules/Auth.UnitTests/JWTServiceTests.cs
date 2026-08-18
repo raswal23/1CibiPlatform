@@ -100,4 +100,18 @@ public class JWTServiceTests
 			.Select(claim => claim.Value)
 			.Should().Equal("1", "2");
 	}
+
+	[Fact]
+	public void GetAccessToken_ShouldIncludeUniqueJtiAndProvidedSessionId()
+	{
+		var service = new JWTService(BuildConfiguration());
+		var dto = new LoginDTO(Guid.CreateVersion7(), "hash", "user@example.com", "First", "Last", null, true, [], [], []);
+
+		var firstToken = new JwtSecurityTokenHandler().ReadJwtToken(service.GetAccessToken(dto, 42));
+		var secondToken = new JwtSecurityTokenHandler().ReadJwtToken(service.GetAccessToken(dto, 42));
+
+		firstToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Sid).Value.Should().Be("42");
+		firstToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Jti).Value
+			.Should().NotBe(secondToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Jti).Value);
+	}
 }

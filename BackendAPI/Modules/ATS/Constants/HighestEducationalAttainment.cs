@@ -6,5 +6,5 @@ internal static class HighestEducationalAttainment
 	internal const string SeniorHighSchoolGraduate = "Senior High School Graduate";
 	internal const string CollegeGraduate = "College Graduate";
 	internal const string MastersGraduate = "Master's Graduate";
-	internal const string DoctorateGraduate = "Doctorate Graduate";																																															
+	internal const string DoctorateGraduate = "Doctorate Graduate";
 }

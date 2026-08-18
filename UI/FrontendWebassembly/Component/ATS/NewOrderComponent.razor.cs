@@ -138,7 +138,7 @@ public partial class NewOrderComponent
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-	{	
+	{
 
 		var result = FileValidationService.ValidateExtension(e.File.Name, ".csv");
 
@@ -166,7 +166,7 @@ public partial class NewOrderComponent
 
 		if (string.IsNullOrWhiteSpace(subject.RushNormal))
 		{
-			Snackbar.Add("Processing speed is required",Severity.Error);
+			Snackbar.Add("Processing speed is required", Severity.Error);
 			return;
 		}
 
@@ -235,7 +235,7 @@ public partial class NewOrderComponent
 			isSavingCandidate = false;
 		}
 	}
-	
+
 	private async Task OnSubmitBulk()
 	{
 		await bulkForm!.ValidateAsync();
@@ -257,7 +257,7 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
-		var hasData = previewData.Rows.Any(row => 
+		var hasData = previewData.Rows.Any(row =>
 					row.Any(cell => !string.IsNullOrWhiteSpace(cell)));
 
 		if (!hasData)

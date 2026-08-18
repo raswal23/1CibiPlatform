@@ -210,6 +210,17 @@ public partial class Login
 		}
 	}
 
+	private async Task HandleLoginEnter()
+	{
+		if (loginForm is null || isLoginLoading)
+			return;
+
+		await loginForm.ValidateAsync();
+
+		if (loginForm.IsValid)
+			await HandleLogin();
+	}
+
 	private async Task HandleRegister()
 	{
 		await registerForm!.ValidateAsync();
@@ -287,5 +298,16 @@ public partial class Login
 			isForgotPasswordLoading = false;
 			StateHasChanged();
 		}
+	}
+
+	private async Task HandleForgotPasswordEnter()
+	{
+		if (forgotPasswordForm is null || isForgotPasswordLoading)
+			return;
+
+		await forgotPasswordForm.ValidateAsync();
+
+		if (forgotPasswordForm.IsValid)
+			await HandleForgotPassword();
 	}
 }

@@ -44,6 +44,49 @@ Important existing references:
 - Unit and integration tests: `Test/Test/BackendAPI/Modules/ATS.*Tests/`
 - ATS integration-test infrastructure: `Test/Test/BackendAPI/Infrastructure/ATS.Infrastracture/`
 
+### Auth business-logic organization
+
+Auth follows the same business-area segregation used by the focused ATS repositories. Keep a feature's repository contract, EF implementation, cache behavior, and service pair in matching folders rather than adding unrelated code to one large file.
+
+For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
+
+### AI features
+
+ATS AI features use Semantic Kernel plugins: a plain class whose methods carry `[KernelFunction]` and `[Description]`, registered on a cloned kernel with `AddFromObject` and invoked through `FunctionChoiceBehavior.Auto()`. This is intentionally different from the older `AIAgent` module, which discovers `*.skill.yaml` manifests through a reflection registry and requires the user to pick a skill. Prefer the ATS pattern for new work, and read `docs/ats-ai-assistant.md` before adding a function, changing the system prompt, or letting a model reach a write path.
+
+```text
+BackendAPI/Modules/Auth/
+  Data/
+    Repository/
+      AuthRepository.cs                 shared partial class and DbContext
+      Login/                            login persistence
+      Registration/                     registration and OTP persistence
+      PasswordRecovery/                 reset-token and password persistence
+      RefreshTokens/                    refresh-token persistence
+      Lockout/                          failed-attempt and locked-user persistence
+      UserManagement/                   Auth user administration
+      UserDirectory/                    ATS-facing Auth user lookups
+      Applications/ AppSubRoles/ Roles/ SubMenus/
+    Cache/
+      AuthCacheRepository.cs            shared partial decorator and cache fields
+      <matching business area>/         cached reads and invalidation
+  Services/
+    Login/ Registration/ PasswordRecovery/ RefreshTokens/
+    Lockout/ UserManagement/
+    Applications/ AppSubRoles/ Roles/ SubMenus/ Caching/
+```
+
+`AuthRepository` and `AuthCacheRepository` are partial types. Each business folder owns a focused repository contract plus the corresponding partial implementation files. `IAuthRepository` remains only as the aggregate compatibility/decorator contract, while business services depend on focused contracts such as `ILoginRepository`, `IRegistrationRepository`, and `IUserRepository`. For example, a login repository operation belongs under `Data/Repository/Login`, its decorator method under `Data/Cache/Login`, and `ILoginService`/`LoginService` under `Services/Login`. Registration and OTP work belongs under `Registration`; password reset work belongs under `PasswordRecovery`; token renewal belongs under `RefreshTokens`.
+
+When adding an Auth feature:
+
+1. Put the Carter/MediatR slice under `Features/<BusinessArea>` using the existing Auth feature convention.
+2. Add repository methods only to the matching focused contract, such as `ILoginRepository`, `IRegistrationRepository`, or `IApplicationRepository`; do not grow the aggregate `IAuthRepository` directly.
+3. Add EF code to `AuthRepository.<BusinessArea>.cs` and cache/decorator behavior to the matching `Data/Cache/<BusinessArea>` file.
+4. Add or extend the service interface and implementation inside `Services/<BusinessArea>`.
+5. Keep namespaces stable (`Auth.Data.Repository`, `Auth.Data.Cache`, `Auth.Services`, or the existing `Auth.Service`) unless a deliberate namespace migration is part of the change. Folder segregation alone must not change DI resolution or public behavior.
+6. Run the Auth unit/integration tests and build the solution after moving or adding code.
+
 ## Step-by-step procedure
 
 ### 1. Define the slice before coding
@@ -77,7 +120,64 @@ BackendAPI/Modules/ATS/Features/<Area>/
     <FeatureName>Handler.cs
 ```
 
+Every operation must keep its Carter endpoint and MediatR handler together in the same operation folder. Do not place one shared endpoint file beside multiple handlers. For example:
+
+```text
+BackendAPI/Modules/<Module>/Features/<Area>/
+  Command/<OperationName>/
+    <OperationName>Endpoint.cs
+    <OperationName>Handler.cs
+  Query/<OperationName>/
+    <OperationName>Endpoint.cs
+    <OperationName>Handler.cs
+```
+
+If an area has several commands or queries, each command/query gets its own folder and its own `*Endpoint.cs` plus `*Handler.cs`. Validators and operation-specific request/response records should live in that same folder unless the neighboring module has an established shared-contract convention. A single aggregate endpoint file containing unrelated operations is not compliant with the vertical-slice convention.
+
 Use a command for state changes and a query for reads. Follow the local naming style: `<Feature>Command`/`<Feature>Query`, `<Feature>Result`, validator, handler, request, response, and endpoint.
+
+### Readability and API error handling
+
+All new feature code must be formatted for vertical readability. Do not compress namespaces, constructors, methods, object initializers, endpoint mappings, DTOs, or Razor markup into one line. Use one declaration/member per line and multiline parameter lists/object initializers when they exceed a short line.
+
+Before considering a feature complete, review every new module file—not only the files touched last—and manually break up long endpoint lambdas, handler declarations, fluent entity configurations, DI registrations, DTO properties, and Razor markup. `dotnet format` is required, but it does not automatically wrap every long valid C# statement, so a manual readability pass is also mandatory. Code that builds but is horizontally compressed is not complete.
+
+Recommended verification:
+
+```powershell
+dotnet format BackendAPI/Modules/<Module>/<Module>.csproj whitespace --no-restore
+dotnet build BackendAPI/API/APIs/APIs.csproj --no-restore
+```
+
+### Module global usings
+
+Backend module-wide imports belong in the module's `GlobalUsing.cs`. Before finishing a feature, review every source file under the module, move repeated or module-wide namespace imports to `GlobalUsing.cs`, and remove the corresponding file-level `using` directives. This includes the module's data, services, shared contracts, MediatR, Carter, EF Core, caching, validation, and common system namespaces.
+
+Keep a file-level `using` only when the import is genuinely isolated to that file or when avoiding a namespace/type ambiguity. Do not scatter the same imports across endpoints, handlers, repositories, and services. After centralizing imports, format and build the module/API to detect missing or ambiguous namespaces.
+
+UI API services must follow the Auth service error-handling pattern: check `IsSuccessStatusCode`, read `ApiErrorResponse.Detail` and trace information when available, log the detail, and surface it to the page/snackbar. If the response is not valid JSON, preserve and display the raw response body instead of replacing it with a generic error.
+
+### Repository, service, and cache responsibilities
+
+Keep persistence behind a repository interface under `Data/Repository`. The repository implementation should contain database access only (queries, inserts, and saving changes); business rules, validation, token generation, email orchestration, and status transitions belong in the application service. When read caching is needed, add a decorator under `Data/Cache` and register it with Scrutor:
+
+Keep each business process in its own service folder. The interface and implementation for that process stay together:
+
+```text
+Services/
+  <BusinessProcess>/
+    I<Process>Service.cs
+    <Process>Service.cs
+```
+
+For Employment Verification, email request creation and email verification belong under `Services/EmailVerification/`. Feature handlers and endpoints must still remain in their own vertical-slice operation folders.
+
+```csharp
+services.AddScoped<IFeatureRepository, FeatureRepository>();
+services.Decorate<IFeatureRepository, FeatureCacheRepository>();
+```
+
+The cache decorator wraps repository reads with `HybridCache` and invalidates the relevant tag after mutations. Do not put business logic in the cache or repository layers. Follow ATS's `ATSRepository`/`ATSCacheRepository` pattern; explicitly document when a feature does not need caching.
 
 ### 3. Add or update contracts and persistence
 
@@ -86,8 +186,8 @@ Only add the pieces the use case needs:
 1. Add request/response DTOs under the module's `DTO` folder (and matching UI DTOs later).
 2. Add or update the entity under `Data/Entities`.
 3. Add the `DbSet` and entity configuration in `ATSDBContext` when required.
-4. Add repository methods to `IATSRepository`.
-5. Implement them in `ATSRepository`; pass `CancellationToken` through async calls.
+4. Add repository methods to the module's focused repository contract. For Auth, use the matching business-area interface; for legacy ATS slices still using the aggregate repository, use `IATSRepository`.
+5. Implement them in the matching focused/partial repository implementation; pass `CancellationToken` through async calls.
 6. Keep query projection/filtering/paging in the data layer rather than loading entire tables.
 7. Use `IUnitOfWork` or the established transaction pattern for multi-write operations.
 8. Generate an EF migration only when the database model changed; place ATS migrations with the existing ATS migrations in the API project.
@@ -123,7 +223,7 @@ Add cache tests or integration coverage when key construction/invalidation is me
 
 ### 5. Add the application service
 
-1. Add the operation to an existing focused service interface in `Services`, or create a focused interface and implementation if it represents a new responsibility.
+1. Add the operation to an existing focused service interface in `Services/<BusinessArea>`, or create a focused interface and implementation if it represents a new responsibility. In Auth, keep login, registration, password recovery, refresh tokens, lockout, and administration services in their matching folders.
 2. Put business rules, orchestration, and transaction decisions in the service.
 3. Let the repository handle persistence/query mechanics.
 4. Return typed results/DTOs and throw the established domain/not-found/validation exceptions so the global exception handler produces consistent errors.
@@ -156,6 +256,32 @@ In `<FeatureName>Endpoint.cs`:
 Carter modules are assembly-discovered. For a brand-new module, wire its marker assembly into API configuration; for a new slice inside ATS, no individual Carter registration is normally needed.
 
 Confirm the public route through the gateway. For example, the ATS Carter endpoint may map `getusers` while the UI calls `ats/getusers`; keep gateway route transforms consistent rather than silently changing one side.
+
+### 7a. Register every route in the YARP gateway
+
+The gateway is part of the endpoint contract. For each new Carter route, add a named route entry to all environment configuration files:
+
+- `ApiGateways/YarpApiGateway/appsettings.Development.json`
+- `ApiGateways/YarpApiGateway/appsettings.UAT.json`
+- `ApiGateways/YarpApiGateway/appsettings.Production.json`
+
+Match the HTTP method and route template exactly (including route parameters), set the correct cluster, and use `PathSet` to forward the request to the backend Carter path. Keep GET and POST operations as separate entries when they share a path. Follow the existing ATS naming style (`/ats/getusers`), for example `/employmentverification/getrequests` forwarding to backend `api/employment-verification/requests`.
+
+This repository's YARP gateway discovers typed route modules through `IReverseProxyModule`. Therefore, also add a `Path/<Module>Paths.cs` implementation, reference the module project from `YarpApiGateway.csproj`, and include its marker assembly in `GatewayServiceExtensions` assembly scanning. The typed path module is the runtime source of truth; keep the appsettings entries synchronized for deployments that load configuration directly.
+
+#### Gateway naming convention (ATS-compatible)
+
+Use the module name as one lowercase path segment and name operations with the same verb-first style used by ATS. Do not introduce a kebab-case public prefix for these gateway routes. Employment Verification is therefore exposed as:
+
+```text
+GET  /employmentverification/getatsinprogress
+GET  /employmentverification/getrequests
+POST /employmentverification/createrequest
+POST /employmentverification/verify/{token}
+POST /employmentverification/reject/{token}
+```
+
+The `PathSet` transform may target a different internal Carter route (for example, `/api/employment-verification/requests`); only the public `MatchPath` needs to follow the ATS-compatible convention. The UI `API` client must call the public gateway path, never the internal `PathSet` value.
 
 ### 8. Add backend tests
 
@@ -226,6 +352,8 @@ Run the smallest relevant tests first, then the full build:
 
 ```powershell
 dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~ATS"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.UnitTests"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.IntegrationTests"
 dotnet build 1CibiPlatform.sln
 ```
 
@@ -241,6 +369,57 @@ Also manually verify:
 8. responsive UI and keyboard use;
 9. API response and UI DTO compatibility;
 10. no unrelated files or user changes were overwritten.
+
+### 12a. Register a new unified-platform application and submenu
+
+When a feature is a standalone platform application (rather than a submenu owned by ATS/Auth), register it in the frontend permission catalogs as part of the same vertical slice:
+
+1. Add the application to `UI/FrontendWebassembly/ShareData/Auth/ApplicationList.cs` using the next application ID. Keep the path, display name, and MudBlazor icon stable.
+2. Add the feature submenu to `UI/FrontendWebassembly/ShareData/Auth/SubMenuList.cs` using the next submenu ID. The submenu path is the route segment used by the home application card.
+3. Make the root/entry page use `[RequirePermission(applicationId, subMenuId)]`; this is the UI guard used by `SecurePageBase`.
+4. Add matching backend application/submenu seed data and permission assignments. The numeric IDs must match the frontend catalogs (for example, Employment Verification uses application `8` and submenu `9`).
+5. Build the home-card route from the registered application/submenu and verify that a user without the pair is redirected to `/access-denied`.
+6. Do not register standalone features in `ATS/ModuleList.cs` or `Auth/SubMenuList.cs` unless the feature is actually owned by that application.
+
+The registration is part of feature completion, not a follow-up UI-only task: API seed data, UI catalogs, route attributes, and access tests must agree on the same IDs.
+
+### Module service configuration must mirror ATS
+
+Every standalone backend module must keep its registration in `ServiceConfig/<Module>ServiceConfiguration.cs` and expose the same registration layers used by ATS:
+
+```csharp
+public static IServiceCollection Add<Module>MediaTR(
+    this IServiceCollection services,
+    Assembly assembly)
+{
+    services.AddMediatR(config =>
+    {
+        config.RegisterServicesFromAssembly(assembly);
+        config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        config.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    });
+
+    services.AddValidatorsFromAssembly(assembly);
+    services.AddExceptionHandler<CustomExceptionHandler>();
+
+    return services;
+}
+```
+
+The module service-registration method must also register repositories, apply Scrutor decorators, and register application services. The API composition root must call the module's `MediaTR`, infrastructure, and services methods. Do not reduce a module's MediatR setup to handler discovery only.
+
+Every command that accepts user/API input must declare an `AbstractValidator<TCommand>` immediately after the command record in the same handler file, following ATS. Validate required nested request objects, required database columns, maximum lengths, email formats, identifiers, and cross-field rules before the handler calls the service. The validator rules must agree with EF Core nullability and length constraints so invalid input returns a `400 ValidationException` instead of reaching PostgreSQL as a `DbUpdateException`.
+
+### Database migration and initialization flow
+
+Database creation/migration belongs in the module's `Data/Extensions` folder, not in a hosted seed service. Add an extension such as `EmploymentVerificationDatabaseExtensions.EmploymentVerificationInitializeDatabaseAsync(WebApplication)` that creates a scope, resolves the module `DbContext`, and calls `Database.MigrateAsync()`:
+
+```text
+BackendAPI/Modules/<Module>/Data/Extensions/
+  <Module>DatabaseExtensions.cs
+```
+
+Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtensions.cs` alongside ATS, Auth, PhilSys, and the other module initializers. Keep migrations in the API migration assembly configured by the module context (for example, `BackendAPI/API/APIs/Migrations/EmploymentVerification/`) and do not add an `IHostedService` solely to create tables or seed mock feature records. If real reference data is required, initialize it explicitly in the module extension following the ATS initializer flow.
 
 ## Definition of done checklist
 
@@ -258,6 +437,7 @@ Also manually verify:
 - [ ] UI covers loading, empty, validation, success, failure, and responsive states.
 - [ ] Relevant tests and the solution build pass.
 - [ ] API/UI contracts and gateway route were verified end to end.
+- [ ] Every endpoint has matching Development, UAT, and Production YARP gateway entries.
 
 ## Feature brief template
 

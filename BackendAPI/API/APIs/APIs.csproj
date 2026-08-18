@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -24,6 +24,7 @@
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.8" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -46,6 +47,7 @@
 		<ProjectReference Include="..\..\Modules\SSO\SSO.csproj" />
 		<ProjectReference Include="..\..\Modules\ATS\ATS.csproj" />
 		<ProjectReference Include="..\..\Modules\PlatformLogging\PlatformLogging.csproj" />
+		<ProjectReference Include="..\..\Modules\EmploymentVerification\EmploymentVerification.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -72,3 +74,4 @@
 	</ItemGroup>
 
 </Project>
+

@@ -12,16 +12,22 @@
     --text-2: #5b6b8c;
     --text-3: #8a97b5;
     display: flex;
-    min-width: 100vw;
-    min-height: 100vh;
+    /* Keep the auth surface inside the viewport.  `min-width: 100vw` makes
+       the element wider than the layout viewport when a vertical scrollbar
+       is present, which is what caused the horizontal scrollbar on laptops. */
+    width: 100%;
+    min-width: 0;
+    height: 100dvh;
+    min-height: 100dvh;
     align-items: center;
     justify-content: center;
-    padding: 30px 16px;
+    padding: clamp(8px, 3vh, 30px) clamp(8px, 2vw, 16px);
     background: linear-gradient(135deg, var(--navy-900) 0%, var(--blue-600) 100%);
     box-sizing: border-box;
     color: var(--text-1);
     font-family: Inter, sans-serif;
     perspective: 1500px;
+    overflow: hidden;
 }
 
 .auth-page *,
@@ -32,9 +38,11 @@
 
 .auth-card {
     position: relative;
-    width: 100%;
     max-width: 820px;
-    min-height: 680px;
+    width: min(100%, 820px);
+    height: min(680px, calc(100dvh - 16px));
+    min-height: 0;
+    overflow: hidden;
     border-radius: 20px;
     box-shadow: 0 24px 60px -16px rgba(0, 0, 0, .35), 0 10px 24px -10px rgba(0, 0, 0, .15);
     transform-style: preserve-3d;
@@ -256,6 +264,7 @@
 }
 
 .auth-input-wrap {
+    --auth-input-background: #fff;
     position: relative;
     min-width: 0;
 }
@@ -288,7 +297,7 @@
     height: 42px;
     min-height: 42px;
     border-radius: 9px;
-    background: #fff;
+    background: var(--auth-input-background);
     color: var(--text-1);
     font-family: Inter, sans-serif;
     font-size: .86em;
@@ -329,10 +338,15 @@
     opacity: 1;
 }
 
+.auth-input-wrap ::deep .mud-input.mud-input-outlined:has(input:-webkit-autofill) {
+    --auth-input-background: #e8f0fe;
+}
+
 .auth-input-wrap ::deep .mud-input-adornment-end {
     height: 42px;
     margin: 0 8px 0 0;
     align-items: center;
+    background: var(--auth-input-background) !important;
     color: var(--text-3);
 }
 
@@ -340,6 +354,7 @@
     width: 28px;
     height: 28px;
     padding: 5px;
+    background: var(--auth-input-background) !important;
 }
 
 .auth-input-wrap ::deep .mud-input-adornment-end .mud-icon-root {
@@ -525,7 +540,8 @@
 
 @media (max-width: 760px) {
     .auth-card {
-        min-height: 720px;
+        height: min(720px, calc(100dvh - 16px));
+        min-height: 0;
     }
 
     .auth-panel {
@@ -545,7 +561,8 @@
 
     .auth-card {
         max-width: 430px;
-        min-height: 720px;
+        height: min(720px, calc(100dvh - 16px));
+        min-height: 0;
         overflow: hidden;
         background: #fff;
     }
@@ -613,7 +630,8 @@
 
     .auth-card,
     .auth-panel {
-        min-height: 100vh;
+        min-height: 0;
+        height: 100%;
         border-radius: 0;
     }
 
@@ -624,6 +642,39 @@
     .auth-field-row {
         grid-template-columns: minmax(0, 1fr);
         gap: 0;
+    }
+}
+
+/* Short laptop/tablet viewports need a little less chrome so the complete
+   form remains visible without growing the document and introducing a page
+   scrollbar. */
+@media (max-height: 700px) and (min-width: 621px) {
+    .auth-content {
+        padding-top: 1.25em;
+        padding-bottom: 1.25em;
+    }
+
+    .auth-icon-badge {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 10px;
+    }
+
+    .auth-icon-badge svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .auth-subtitle {
+        margin-bottom: 14px;
+    }
+
+    .auth-field {
+        margin-bottom: 8px;
+    }
+
+    .auth-footer-line {
+        margin-top: 10px;
     }
 }
 

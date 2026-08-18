@@ -16,18 +16,251 @@
     --ats-stack-sm: 10px;
     --ats-stack-md: 16px;
     --ats-stack-lg: 20px;
+    --ats-filter-navy-950: #071230;
+    --ats-filter-navy-800: #0f2a5c;
+    --ats-filter-blue-600: #2f6fed;
+    --ats-filter-card: #fff;
+    --ats-filter-border: #e2e6f0;
+    --ats-filter-border-soft: #eef1f7;
+    --ats-filter-text-900: #101828;
+    --ats-filter-text-600: #4b5468;
+    --ats-filter-text-400: #8992a6;
+    --ats-filter-gradient: linear-gradient(
+        100deg,
+        var(--ats-filter-navy-950) 0%,
+        var(--ats-filter-navy-800) 45%,
+        var(--ats-filter-blue-600) 100%);
 }
 
 ::deep .ats-dashboard-filter-card {
     margin-bottom: var(--ats-dashboard-gap);
-    padding: var(--ats-stack-lg) var(--ats-card-padding);
-    border: 1px solid var(--ats-border, #e3e9f1);
-    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    border: 1px solid var(--ats-filter-border-soft);
+    border-radius: 12px !important;
+    background: var(--ats-filter-card);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 1px rgba(16, 24, 40, 0.03) !important;
 }
 
-/* Replaces MudGrid, whose negative margins cancelled the filter card padding. */
+::deep .ats-dashboard-filter-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
 ::deep .ats-dashboard-filter-field {
-    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+::deep .ats-dashboard-filter-field > label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ats-filter-text-400);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .ats-dashboard-filter-field > label svg {
+    width: 11px;
+    height: 11px;
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-select-wrap {
+    position: relative;
+}
+
+::deep .ats-dashboard-select-wrap select {
+    width: 230px;
+    min-width: 230px;
+    height: 40px;
+    padding: 0 36px 0 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1.5px solid var(--ats-filter-border);
+    border-radius: 10px;
+    background: var(--ats-filter-card);
+    color: var(--ats-filter-text-900);
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+::deep .ats-dashboard-select-wrap select:hover:not(:disabled) {
+    border-color: #c7cee0;
+}
+
+::deep .ats-dashboard-select-wrap select:focus-visible {
+    border-color: var(--ats-filter-blue-600);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.14);
+}
+
+::deep .ats-dashboard-select-wrap select:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+::deep .ats-dashboard-select-chevron {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    width: 14px;
+    height: 14px;
+    color: var(--ats-filter-text-400);
+    transform: translateY(-50%);
+    transition: color 0.15s ease;
+    pointer-events: none;
+}
+
+::deep .ats-dashboard-select-wrap select:focus-visible + .ats-dashboard-select-chevron {
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-filter-divider {
+    width: 1px;
+    height: 34px;
+    margin-bottom: 3px;
+    background: var(--ats-filter-border-soft);
+}
+
+::deep .ats-dashboard-active-summary {
+    display: flex;
+    min-width: 0;
+    height: 40px;
+    align-items: center;
+    color: var(--ats-filter-text-600);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+::deep .ats-dashboard-active-chip {
+    display: inline-flex;
+    max-width: 260px;
+    padding: 5px 10px 5px 8px;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(47, 111, 237, 0.18);
+    border-radius: 999px;
+    background: rgba(47, 111, 237, 0.08);
+    color: var(--ats-filter-blue-600);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+::deep .ats-dashboard-active-chip svg {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 auto;
+}
+
+::deep .ats-dashboard-active-chip > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-dashboard-filter-actions {
+    display: flex;
+    margin-left: auto;
+    align-items: center;
+    gap: 10px;
+}
+
+::deep .ats-dashboard-sync-status {
+    display: flex;
+    padding: 8px 4px;
+    align-items: center;
+    gap: 7px;
+    color: var(--ats-filter-text-400);
+    font-size: 12px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+
+::deep .ats-dashboard-sync-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #16a34a;
+}
+
+::deep .ats-dashboard-sync-status.is-loading {
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-sync-status.is-loading .ats-dashboard-sync-dot {
+    background: var(--ats-filter-blue-600);
+    animation: ats-dashboard-filter-pulse 0.8s ease-in-out infinite;
+}
+
+::deep .ats-dashboard-reset {
+    display: flex;
+    min-height: 40px;
+    padding: 10px 16px;
+    align-items: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--ats-filter-gradient);
+    box-shadow: 0 6px 14px -4px rgba(15, 42, 92, 0.35);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+::deep .ats-dashboard-reset:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+::deep .ats-dashboard-reset:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+::deep .ats-dashboard-reset:focus-visible {
+    outline: 3px solid rgba(47, 111, 237, 0.24);
+    outline-offset: 2px;
+}
+
+::deep .ats-dashboard-reset:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+::deep .ats-dashboard-reset svg {
+    width: 13px;
+    height: 13px;
+}
+
+@keyframes ats-dashboard-filter-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.6);
+    }
 }
 
 ::deep .ats-dashboard-grid {
@@ -457,8 +690,17 @@
 ::deep .ats-line-chart-shell {
     box-sizing: border-box;
     width: 100%;
-    padding: var(--ats-stack-sm) var(--ats-stack-sm) var(--ats-stack-md);
+    padding: var(--ats-stack-sm) 0 var(--ats-stack-md);
     overflow: visible;
+}
+
+/* Keep every MudChart wrapper on the same full-width bounds. The component's
+ * MatchBoundsToSize setting then sizes its viewBox to this space, avoiding the
+ * default aspect-ratio letterboxing that previously narrowed the plotted line. */
+::deep .ats-line-chart-shell .mud-chart,
+::deep .ats-line-chart-shell .mud-chart > svg {
+    width: 100% !important;
+    min-width: 0;
 }
 
 ::deep .mud-chart-serie-axis,
@@ -490,6 +732,18 @@
     }
 }
 
+@media (max-width: 767.98px) {
+    ::deep .ats-dashboard-filter-group {
+        width: 100%;
+    }
+
+    ::deep .ats-dashboard-filter-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+}
+
 /* Tighten the spacing scale on small screens; the proportions stay the same. */
 @media (max-width: 599.98px) {
     .ats-dashboard {
@@ -497,6 +751,40 @@
         --ats-card-padding: 18px;
         --ats-chart-inset: 2px;
         --ats-stack-lg: 16px;
+    }
+
+    ::deep .ats-dashboard-filter-card {
+        padding: 14px;
+    }
+
+    ::deep .ats-dashboard-filter-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    ::deep .ats-dashboard-filter-field,
+    ::deep .ats-dashboard-select-wrap,
+    ::deep .ats-dashboard-select-wrap select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    ::deep .ats-dashboard-filter-divider {
+        display: none;
+    }
+
+    ::deep .ats-dashboard-active-summary {
+        height: auto;
+        min-height: 30px;
+    }
+
+    ::deep .ats-dashboard-active-chip {
+        max-width: 100%;
+    }
+
+    ::deep .ats-dashboard-filter-actions {
+        justify-content: space-between;
     }
 
     ::deep .ats-donut-body {
@@ -507,6 +795,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    ::deep .ats-dashboard-sync-status.is-loading .ats-dashboard-sync-dot {
+        animation: none;
+    }
+
     ::deep .ats-dashboard-chart-card,
     ::deep .ats-dashboard-chart-card-clickable:hover,
     ::deep .ats-dashboard-chart-card-clickable:active {

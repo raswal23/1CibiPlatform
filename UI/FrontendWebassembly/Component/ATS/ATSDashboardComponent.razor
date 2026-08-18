@@ -11,21 +11,89 @@
 <PageTitle>ATS - Dashboard</PageTitle>
 
 <div class="ats-dashboard">
-<MudPaper Elevation="0" Class="ats-dashboard-filter-card">
-    <div class="ats-dashboard-filter-field">
-        <MudSelect T="string"
-                   Label="Requester"
-                   Value="_selectedRequester"
-                   ValueChanged="OnRequesterChanged"
-                   Variant="Variant.Outlined"
-                   Margin="Margin.Dense"
-                   Disabled="IsAnyDashboardSectionLoading">
-            <MudSelectItem T="string" Value="@AllRequesters">All Requesters</MudSelectItem>
-            @foreach (var requester in _dashboard.Requesters)
+<MudPaper Elevation="0"
+          Class="ats-dashboard-filter-card"
+          aria-busy="@IsAnyDashboardSectionLoading.ToString().ToLowerInvariant()">
+    <div class="ats-dashboard-filter-group">
+        <div class="ats-dashboard-filter-field">
+            <label for="ats-dashboard-requester">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 5h18M6 12h12M10 19h4"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round" />
+                </svg>
+                Requester
+            </label>
+
+            <div class="ats-dashboard-select-wrap">
+                <select id="ats-dashboard-requester"
+                        value="@_selectedRequester"
+                        disabled="@IsAnyDashboardSectionLoading"
+                        @onchange="OnRequesterSelectChanged">
+                    <option value="@AllRequesters">All Requesters</option>
+                    @foreach (var requester in _dashboard.Requesters)
+                    {
+                        <option value="@requester">@requester</option>
+                    }
+                </select>
+                <svg class="ats-dashboard-select-chevron"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     aria-hidden="true">
+                    <path d="M6 9l6 6 6-6"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round" />
+                </svg>
+            </div>
+        </div>
+
+        <span class="ats-dashboard-filter-divider" aria-hidden="true"></span>
+
+        <div class="ats-dashboard-active-summary" aria-live="polite">
+            @if (_selectedRequester != AllRequesters)
             {
-                <MudSelectItem T="string" Value="@requester">@requester</MudSelectItem>
+                <span class="ats-dashboard-active-chip">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M3 5h18M6 12h12M10 19h4"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round" />
+                    </svg>
+                    <span>@_selectedRequester</span>
+                </span>
             }
-        </MudSelect>
+        </div>
+    </div>
+
+    <div class="ats-dashboard-filter-actions">
+        <span class="ats-dashboard-sync-status @(IsAnyDashboardSectionLoading ? "is-loading" : string.Empty)"
+              role="status"
+              aria-live="polite">
+            <span class="ats-dashboard-sync-dot" aria-hidden="true"></span>
+            @(IsAnyDashboardSectionLoading ? "Updating…" : "Up to date")
+        </span>
+
+        <button type="button"
+                class="ats-dashboard-reset"
+                disabled="@IsAnyDashboardSectionLoading"
+                @onclick="ResetRequesterAsync">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 4v6h6M20 20v-6h-6"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round" />
+                <path d="M20 10a8 8 0 0 0-14.9-3M4 14a8 8 0 0 0 14.9 3"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round" />
+            </svg>
+            Reset
+        </button>
     </div>
 </MudPaper>
 
@@ -323,6 +391,7 @@
                               ChartSeries="@_turnaroundTimeSeries"
                               ChartLabels="@_turnaroundTimeLabels"
                               ChartOptions="@_lineChartOptions"
+                              MatchBoundsToSize="true"
                               Width="100%"
                               Height="227px" />
                 </div>

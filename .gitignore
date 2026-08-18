@@ -17,6 +17,11 @@
 mono_crash.*
 
 # Build results
+[.]tmp-api/
+[.]tmp-out/
+[.]tmp-ui/
+[.]tmp-test-bin/
+[.]tmp-test-obj/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

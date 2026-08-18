@@ -25,6 +25,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 		public Mock<IAtsAccessClaimsProvider> MockAtsAccessClaimsProvider { get; private set; }
 		public Mock<IHttpContextAccessor> MockHttpContextAccessor { get; private set; }
 		public Mock<HybridCache> MockHybridCache { get; private set; }
+		public Mock<IAuthSessionValidator> MockAuthSessionValidator { get; private set; }
 		// Loggers
 		public Mock<ILogger<RegisterService>> MockRegisterLogger { get; private set; }
 		public Mock<ILogger<LoginService>> MockLoginLogger { get; private set; }
@@ -68,6 +69,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				.ReturnsAsync((AtsAccessClaims?)null);
 			MockHttpContextAccessor = new Mock<IHttpContextAccessor>();
 			MockHybridCache = new Mock<HybridCache>();
+			MockAuthSessionValidator = new Mock<IAuthSessionValidator>();
 
 			MockRegisterLogger = new Mock<ILogger<RegisterService>>();
 			MockLoginLogger = new Mock<ILogger<LoginService>>();
@@ -119,6 +121,7 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				MockAtsAccessClaimsProvider.Object,
 				MockHttpContextAccessor.Object,
 				MockHybridCache!.Object,
+				MockAuthSessionValidator.Object,
 				MockLoginLogger.Object);
 
 			RefreshTokenService = new RefreshTokenService(
@@ -127,7 +130,8 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				MockJwtService.Object,
 				MockAtsAccessClaimsProvider.Object,
 				Configuration,
-				MockRefreshLogger.Object);
+				MockRefreshLogger.Object,
+				MockAuthSessionValidator.Object);
 
 			ForgotPasswordService = new ForgotPasswordService(
 				MockAuthRepository.Object,
@@ -136,7 +140,8 @@ namespace Test.BackendAPI.Modules.Auth.UnitTests.Fixture
 				Configuration,
 				MockSecureToken.Object,
 				MockHashService.Object,
-				MockPasswordHasherService.Object);
+				MockPasswordHasherService.Object,
+				MockAuthSessionValidator.Object);
 
 			UserManagementService = new UserService(
 				MockAuthRepository.Object,

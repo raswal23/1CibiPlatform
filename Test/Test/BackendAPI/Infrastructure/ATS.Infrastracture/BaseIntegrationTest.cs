@@ -1,6 +1,7 @@
 ﻿using ATS.Data.Context;
 using ATS.Data.Repository;
 using ATS.Services;
+using ATS.Services.AIAssistant;
 using Auth.Data.Context;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -38,6 +39,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IAtsAccessClaimsProvider _atsAccessClaimsProvider;
 	protected readonly IApplicantSearchProjectionService _applicantSearchProjectionService;
 	protected readonly IReportService _reportService;
+	protected readonly IAtsAssistantService _atsAssistantService;
 	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly HybridCache _hybridCache;
@@ -69,6 +71,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_atsAccessClaimsProvider = _scope.ServiceProvider.GetRequiredService<IAtsAccessClaimsProvider>();
 		_applicantSearchProjectionService = _scope.ServiceProvider.GetRequiredService<IApplicantSearchProjectionService>();
 		_reportService = _scope.ServiceProvider.GetRequiredService<IReportService>();
+		_atsAssistantService = _scope.ServiceProvider.GetRequiredService<IAtsAssistantService>();
 		_dashboardService = _scope.ServiceProvider.GetRequiredService<IDashboardService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();
 	}

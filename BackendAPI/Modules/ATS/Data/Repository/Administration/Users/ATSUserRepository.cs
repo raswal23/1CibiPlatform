@@ -22,9 +22,16 @@ public sealed class ATSUserRepository : IATSUserRepository
 
 		await _dbContext.UserDetails.AddRangeAsync(moduleIds.Select(moduleId => new UserDetails
 		{
-			UserId = user.UserId, UserName = user.UserName.Trim(), UserEmail = email, IsActive = user.IsActive,
-			ClientId = user.ClientId, Site = user.Site.Trim(), RoleId = user.RoleId, ModuleId = moduleId,
-			CreatedAt = now, UpdatedAt = now
+			UserId = user.UserId,
+			UserName = user.UserName.Trim(),
+			UserEmail = email,
+			IsActive = user.IsActive,
+			ClientId = user.ClientId,
+			Site = user.Site.Trim(),
+			RoleId = user.RoleId,
+			ModuleId = moduleId,
+			CreatedAt = now,
+			UpdatedAt = now
 		}), cancellationToken);
 		await _dbContext.SaveChangesAsync(cancellationToken);
 		return true;
@@ -81,8 +88,16 @@ public sealed class ATSUserRepository : IATSUserRepository
 		}
 		var added = newModuleIds.Select(moduleId => new UserDetails
 		{
-			UserId = userId, UserName = name, UserEmail = email, IsActive = user.IsActive, ClientId = user.ClientId,
-			Site = site, RoleId = user.RoleId, ModuleId = moduleId, CreatedAt = createdAt, UpdatedAt = now
+			UserId = userId,
+			UserName = name,
+			UserEmail = email,
+			IsActive = user.IsActive,
+			ClientId = user.ClientId,
+			Site = site,
+			RoleId = user.RoleId,
+			ModuleId = moduleId,
+			CreatedAt = createdAt,
+			UpdatedAt = now
 		}).ToArray();
 		await _dbContext.UserDetails.AddRangeAsync(added, cancellationToken);
 		await _dbContext.SaveChangesAsync(cancellationToken);
@@ -101,7 +116,9 @@ public sealed class ATSUserRepository : IATSUserRepository
 		}
 		var logical = query.GroupBy(user => user.UserId).Select(group => new
 		{
-			UserId = group.Key, UserName = group.Min(user => user.UserName), UserEmail = group.Min(user => user.UserEmail)
+			UserId = group.Key,
+			UserName = group.Min(user => user.UserName),
+			UserEmail = group.Min(user => user.UserEmail)
 		});
 		var count = await logical.LongCountAsync(cancellationToken);
 		var ids = await logical.OrderBy(user => user.UserName).ThenBy(user => user.UserEmail).ThenBy(user => user.UserId)
@@ -109,9 +126,16 @@ public sealed class ATSUserRepository : IATSUserRepository
 		var items = await query.Where(user => ids.Contains(user.UserId)).OrderBy(user => user.UserName).ThenBy(user => user.UserEmail)
 			.ThenBy(user => user.UserId).ThenBy(user => user.ModuleId).Select(user => new UserDetailsDTO
 			{
-				UserId = user.UserId, UserName = user.UserName, UserEmail = user.UserEmail, IsActive = user.IsActive,
-				ClientId = user.ClientId, Site = user.Site, RoleId = user.RoleId, ModuleId = user.ModuleId,
-				CreatedAt = user.CreatedAt, UpdatedAt = user.UpdatedAt
+				UserId = user.UserId,
+				UserName = user.UserName,
+				UserEmail = user.UserEmail,
+				IsActive = user.IsActive,
+				ClientId = user.ClientId,
+				Site = user.Site,
+				RoleId = user.RoleId,
+				ModuleId = user.ModuleId,
+				CreatedAt = user.CreatedAt,
+				UpdatedAt = user.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<UserDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}

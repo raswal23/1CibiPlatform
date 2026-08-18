@@ -15,8 +15,11 @@ public sealed class ModuleRepository : IModuleRepository
 		var now = DateTime.UtcNow;
 		await _dbContext.ModuleDetails.AddAsync(new ModuleDetails
 		{
-			ModuleName = moduleName, ModuleDescription = dto.ModuleDescription!.Trim(), IsActive = dto.IsActive,
-			CreatedAt = now, UpdatedAt = now
+			ModuleName = moduleName,
+			ModuleDescription = dto.ModuleDescription!.Trim(),
+			IsActive = dto.IsActive,
+			CreatedAt = now,
+			UpdatedAt = now
 		});
 		await _dbContext.SaveChangesAsync();
 		return true;
@@ -48,8 +51,12 @@ public sealed class ModuleRepository : IModuleRepository
 		var items = await query.OrderBy(module => module.ModuleName).Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
 			.Select(module => new ModuleDetailsDTO
 			{
-				ModuleId = module.ModuleId, ModuleName = module.ModuleName, ModuleDescription = module.ModuleDescription,
-				IsActive = module.IsActive, CreatedAt = module.CreatedAt, UpdatedAt = module.UpdatedAt
+				ModuleId = module.ModuleId,
+				ModuleName = module.ModuleName,
+				ModuleDescription = module.ModuleDescription,
+				IsActive = module.IsActive,
+				CreatedAt = module.CreatedAt,
+				UpdatedAt = module.UpdatedAt
 			}).ToListAsync(cancellationToken);
 		return new PaginatedResult<ModuleDetailsDTO>(request.PageIndex, request.PageSize, count, items);
 	}

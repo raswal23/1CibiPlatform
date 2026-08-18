@@ -1,0 +1,367 @@
+
+@page "/employmentverification/verification"
+@layout GenericLayout
+@inherits SecurePageBase
+@attribute [RequirePermission(8, 9)]
+@using FrontendWebassembly.DTO.EmploymentVerification
+@inject FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService VerificationService
+@inject ISnackbar Snackbar
+
+<PageTitle>Employment Verification</PageTitle>
+
+<div class="ev-page">
+    <div class="ev-bookmark-rail">
+        <button type="button"
+                class="ev-bookmark"
+                @onclick="GoToOnePlatform"
+                title="Back to OnePlatform"
+                aria-label="Back to OnePlatform">
+            <span class="ev-bookmark-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 5l-7 7 7 7" />
+                </svg>
+            </span>
+            <span class="ev-bookmark-copy">
+                <small>Back to</small>
+                <strong>OnePlatform</strong>
+            </span>
+        </button>
+    </div>
+
+    <div class="ev-hero">
+        <div>
+            <div class="ev-eyebrow">ATS connected</div>
+            <h2>Employment verification</h2>
+            <p>Request confirmation from a previous employer and track every response in one place.</p>
+        </div>
+    </div>
+
+    <div class="ev-stats">
+        <div>
+            <span>Awaiting response</span>
+            <strong>@CountByStatus("Sent")</strong>
+        </div>
+        <div>
+            <span>Verified</span>
+            <strong>@CountByStatus("Verified")</strong>
+        </div>
+        <div>
+            <span>Rejected</span>
+            <strong>@CountByStatus("Rejected")</strong>
+        </div>
+        <div>
+            <span>Response rate</span>
+            <strong>@ResponseRate</strong>
+        </div>
+    </div>
+
+    <div class="ev-segmented" role="group" aria-label="Employment verification views">
+        <button type="button"
+                class="@GetSegmentClass(NeedsRequestView)"
+                aria-pressed="@IsNeedsRequestView"
+                @onclick="() => SetView(NeedsRequestView)">
+            Needs request
+            <span class="ev-segment-count">@Candidates.Count</span>
+        </button>
+        <button type="button"
+                class="@GetSegmentClass(TrackingView)"
+                aria-pressed="@(!IsNeedsRequestView)"
+                @onclick="() => SetView(TrackingView)">
+            Tracking
+            <span class="ev-segment-count">@SentRequests.Count</span>
+        </button>
+    </div>
+
+    <div class="ev-toolbar">
+        <div class="@(HasActiveSearch ? "ev-search has-value" : "ev-search")">
+            <span class="ev-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M21 21l-4.3-4.3" />
+                </svg>
+            </span>
+            <input type="search"
+                   class="ev-search-input"
+                   placeholder="@(IsNeedsRequestView
+                       ? "Search candidate, employer, position or HR email…"
+                       : "Search candidate, employer, HR email or status…")"
+                   aria-label="@(IsNeedsRequestView
+                       ? "Search candidates needing verification"
+                       : "Search verification requests")"
+                   value="@ActiveSearch"
+                   @oninput="OnSearchChanged" />
+            @if (HasActiveSearch)
+            {
+                <button type="button"
+                        class="ev-search-clear"
+                        @onclick="ClearSearch"
+                        aria-label="Clear search">
+                    ×
+                </button>
+            }
+        </div>
+
+        <button type="button"
+                class="@(_isReloading ? "ev-reload is-reloading" : "ev-reload")"
+                @onclick="ReloadAsync"
+                disabled="@(_isReloading || _isLoading)"
+                title="Refresh both lists"
+                aria-label="Refresh both lists">
+            <span class="ev-reload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                    <path d="M21 3v6h-6" />
+                </svg>
+            </span>
+            <span class="ev-reload-text">@(_isReloading ? "Refreshing…" : "Refresh")</span>
+        </button>
+    </div>
+
+    <section class="ev-card">
+        @if (IsNeedsRequestView)
+        {
+            <div class="ev-card-header">
+                <div>
+                    <h3>Candidates needing verification</h3>
+                    <p>In-progress ATS records without an open verification request</p>
+                </div>
+                <span class="ev-count">
+                    @if (HasActiveSearch)
+                    {
+                        @($"{FilteredCandidates.Count} of {Candidates.Count}")
+                    }
+                    else
+                    {
+                        @($"{Candidates.Count} candidates")
+                    }
+                </span>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="ev-loading" role="status" aria-live="polite">
+                    Loading candidates from ATS…
+                </div>
+            }
+            else if (Candidates.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>Nothing to request</strong>
+                    <span>
+                        Every in-progress ATS candidate already has a verification
+                        request awaiting a response or confirmed.
+                    </span>
+                </div>
+            }
+            else if (FilteredCandidates.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No matching candidates</strong>
+                    <span>Nothing matches “@ActiveSearch”. Try a different name, employer or email.</span>
+                    <button type="button" class="ev-secondary" @onclick="ClearSearch">
+                        Clear search
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="ev-table-wrap">
+                    <table class="ev-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Previous employer</th>
+                                <th>Employment period</th>
+                                <th>HR email</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var candidate in FilteredCandidates)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@candidate.CandidateName</strong>
+                                        <small>@(string.IsNullOrWhiteSpace(candidate.Position)
+                                            ? "Not provided"
+                                            : candidate.Position)</small>
+                                    </td>
+                                    <td>@candidate.Employer</td>
+                                    <td>@GetEmploymentPeriod(candidate.StartDate, candidate.EndDate)</td>
+                                    <td>
+                                        @(string.IsNullOrWhiteSpace(candidate.HrEmail)
+                                            ? "Not provided"
+                                            : candidate.HrEmail)
+                                    </td>
+                                    <td>
+                                        <button class="ev-link"
+                                                type="button"
+                                                @onclick="() => ViewCandidate(candidate)">
+                                            Review
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="ev-card-header">
+                <div>
+                    <h3>Verification requests</h3>
+                    <p>Requests raised from this module and their responses</p>
+                </div>
+                <span class="ev-count">
+                    @if (HasActiveSearch)
+                    {
+                        @($"{FilteredSentRequests.Count} of {SentRequests.Count}")
+                    }
+                    else
+                    {
+                        @($"{SentRequests.Count} requests")
+                    }
+                </span>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="ev-loading" role="status" aria-live="polite">
+                    Loading employment verification requests…
+                </div>
+            }
+            else if (SentRequests.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No requests yet</strong>
+                    <span>
+                        Send a verification email from the Needs request view and it
+                        will appear here.
+                    </span>
+                </div>
+            }
+            else if (FilteredSentRequests.Count == 0)
+            {
+                <div class="ev-empty" role="status">
+                    <strong>No matching requests</strong>
+                    <span>Nothing matches “@ActiveSearch”. Try a different name, email or status.</span>
+                    <button type="button" class="ev-secondary" @onclick="ClearSearch">
+                        Clear search
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="ev-table-wrap">
+                    <table class="ev-table">
+                        <thead>
+                            <tr>
+                                <th>Candidate</th>
+                                <th>Previous employer</th>
+                                <th>HR email</th>
+                                <th>Requested</th>
+                                <th>Responded</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in FilteredSentRequests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@request.CandidateName</strong>
+                                        <small>@request.Position</small>
+                                    </td>
+                                    <td>@request.PreviousEmployer</td>
+                                    <td>@request.HrEmail</td>
+                                    <td>@request.RequestedAt.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                    <td>@GetRespondedOn(request)</td>
+                                    <td>
+                                        <span class="ev-status @GetDisplayStatus(request).ToLowerInvariant()">
+                                            @GetDisplayStatus(request)
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+
+    @if (SelectedCandidate is not null)
+    {
+        @* Backdrop clicks deliberately do not close the drawer: an accidental
+           click outside should not discard a request the user is reviewing.
+           Use the × button, the Close button, or Escape. *@
+        <div class="ev-drawer-backdrop">
+            <aside class="ev-drawer"
+                   role="dialog"
+                   aria-modal="true"
+                   aria-label="Verification request details"
+                   tabindex="-1"
+                   @ref="_drawerElement"
+                   @onkeydown="HandleDrawerKeyDown">
+                <div class="ev-card-header">
+                    <div>
+                        <span class="ev-eyebrow">Request details</span>
+                        <h3>@SelectedCandidate.CandidateName</h3>
+                        <p>Employment verification request</p>
+                    </div>
+                    <button class="ev-close"
+                            type="button"
+                            @onclick="CloseCandidate"
+                            aria-label="Close details">
+                        ×
+                    </button>
+                </div>
+                <div class="ev-detail-grid">
+                    <div>
+                        <label>Employer</label>
+                        <strong>@SelectedCandidate.Employer</strong>
+                    </div>
+                    <div>
+                        <label>Position</label>
+                        <strong>@(string.IsNullOrWhiteSpace(SelectedCandidate.Position)
+                            ? "Not provided"
+                            : SelectedCandidate.Position)</strong>
+                    </div>
+                    <div>
+                        <label>Employment period</label>
+                        <strong>@GetEmploymentPeriod(SelectedCandidate.StartDate, SelectedCandidate.EndDate)</strong>
+                    </div>
+                    <div>
+                        <label>HR recipient</label>
+                        <strong>@(string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail)
+                            ? "Not provided"
+                            : SelectedCandidate.HrEmail)</strong>
+                    </div>
+                </div>
+                <div class="ev-drawer-section">
+                    <span class="ev-email-label">EMAIL PREVIEW</span>
+                    <h4>Employment verification request for @SelectedCandidate.CandidateName</h4>
+                    <p>
+                        Good day, please confirm whether the employment details above are accurate
+                        by selecting a response below.
+                    </p>
+                </div>
+                <div class="ev-actions">
+                    <button class="ev-secondary" type="button" @onclick="CloseCandidate">Close</button>
+                    <button class="ev-verify"
+                            type="button"
+                            @onclick="SendSelectedRequestAsync"
+                            disabled="@(_isSubmitting || string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail))">
+                        @GetSendButtonText()
+                    </button>
+                </div>
+            </aside>
+        </div>
+    }
+
+</div>

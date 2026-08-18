@@ -10,10 +10,12 @@ public sealed class UserClientRepository : IUserClientRepository
 		await _dbContext.UserClientDetails.AsNoTracking().OrderBy(assignment => assignment.UserId)
 			.Select(assignment => new UserClientDetailsDTO
 			{
-				UserId = assignment.UserId, ClientId = assignment.ClientId,
+				UserId = assignment.UserId,
+				ClientId = assignment.ClientId,
 				ClientName = _dbContext.ClientDetails.Where(client => client.ClientId == assignment.ClientId)
 					.Select(client => client.ClientName).FirstOrDefault(),
-				CreatedAt = assignment.CreatedAt, UpdatedAt = assignment.UpdatedAt
+				CreatedAt = assignment.CreatedAt,
+				UpdatedAt = assignment.UpdatedAt
 			}).ToListAsync(cancellationToken);
 
 	public async Task<IReadOnlyList<UserClientDetailsDTO>> GetUserClientAssignmentsAsync(

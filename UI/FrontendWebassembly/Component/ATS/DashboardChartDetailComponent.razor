@@ -18,10 +18,19 @@
                         <span class="ats-chart-detail-chip-label">Requester</span>
                         <strong class="ats-chart-detail-chip-value">@RequesterDisplayName</strong>
                     </span>
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   Class="ats-chart-detail-close"
-                                   aria-label="Close chart detail"
-                                   OnClick="CloseDialog" />
+                    <button type="button"
+                            class="ats-chart-detail-close"
+                            aria-label="Close chart detail"
+                            @onclick="CloseDialog">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2.2"
+                             stroke-linecap="round"
+                             aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
                 </div>
             </header>
 

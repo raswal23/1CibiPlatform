@@ -144,6 +144,16 @@ public partial class ATSDashboardComponent
 		await LoadDashboardAsync();
 	}
 
+	private async Task OnRequesterSelectChanged(ChangeEventArgs eventArgs)
+	{
+		var requester = eventArgs.Value?.ToString();
+		await OnRequesterChanged(string.IsNullOrWhiteSpace(requester)
+			? AllRequesters
+			: requester);
+	}
+
+	private Task ResetRequesterAsync() => OnRequesterChanged(AllRequesters);
+
 	private async Task OpenChartDetailDialogAsync(string chartKey)
 	{
 		var parameters = new DialogParameters<DashboardChartDetailComponent>
