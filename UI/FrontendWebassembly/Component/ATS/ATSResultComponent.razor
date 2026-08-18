@@ -136,21 +136,6 @@
                     </div>
 
                     <div class="ats-result-doc-row">
-                        <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "uploaded")">
-                            <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
-                        </div>
-                        <div class="ats-result-doc-details">
-                            <MudText Class="ats-result-doc-title">Biometric photo</MudText>
-                            <div class="@GetDocumentMetaClass(ReportResult.BiometricPhotoFileName)"
-                                 data-tooltip="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)"
-                                 tabindex="@GetDocumentTabIndex(ReportResult.BiometricPhotoFileName)"
-                                 aria-label="@GetDocumentTooltip(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)">
-                                <MudText Class="ats-result-doc-sub">@GetDocumentMeta(ReportResult.BiometricPhotoFileName, ReportResult.UploadBiometricPhotoAt)</MudText>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ats-result-doc-row">
                         <div class="ats-result-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? "missing" : "uploaded")">
                             <MudIcon Icon="@(string.IsNullOrWhiteSpace(ReportResult.ConsentFormFileName) ? Icons.Material.Filled.Remove : Icons.Material.Filled.Check)" Size="Size.Small" />
                         </div>

@@ -83,7 +83,7 @@ public partial class ApplicationFormComponent
 
 	//Final
 	private SignatureDetailsDTO signatureDetails = new();
-	private DateTime? SignatureDate = DateTime.UtcNow;
+	private DateTime? SignatureDate;
 	private bool _signatureError;
 
 	//Validations
@@ -145,6 +145,7 @@ public partial class ApplicationFormComponent
 		EndOfEmployment1 = DateTime.UnixEpoch;
 		EndOfEmployment2 = DateTime.UnixEpoch;
 		EndOfEmployment3 = DateTime.UnixEpoch;
+		SignatureDate = DateTime.UtcNow;
 
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;

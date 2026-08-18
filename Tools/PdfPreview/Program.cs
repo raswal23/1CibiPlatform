@@ -1,4 +1,4 @@
-﻿// Sample inputs
+// Sample inputs
 using ATS.Services.FilePDFService;
 
 var applicantName = "John Doe";

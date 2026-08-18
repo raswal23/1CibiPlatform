@@ -37,6 +37,7 @@ public class ATSCacheRepository : IATSRepository
 
 	public async Task<bool> AddPersonalDetailsAsync(PersonalDetails personalDetails)
 	{
+		await _hybridCache.RemoveByTagAsync(CacheTags.Report);
 		return await _atsRepository.AddPersonalDetailsAsync(personalDetails);
 	}
 
