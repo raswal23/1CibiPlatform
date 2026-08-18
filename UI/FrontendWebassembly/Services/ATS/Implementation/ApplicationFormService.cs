@@ -2,7 +2,7 @@
 
 public class ApplicationFormService : IApplicationFormService
 {
-    private readonly HttpClient _httpClient;
+	private readonly HttpClient _httpClient;
 
 	public ApplicationFormService(IHttpClientFactory httpClientFactory)
 	{
@@ -17,7 +17,7 @@ public class ApplicationFormService : IApplicationFormService
 														ReferenceDetailsDTO ReferenceDetails,
 														SignatureDetailsDTO SignatureDetails)
 	{
-     using var content = new MultipartFormDataContent();
+		using var content = new MultipartFormDataContent();
 
 		void AddString(string? value, string name)
 		{
@@ -47,7 +47,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.Suffix, "PersonalDetails.Suffix");
 		AddString(PersonalDetails.Sex, "PersonalDetails.Sex");
 		AddString(PersonalDetails.DOB?.ToString("MM-dd-yyyy"), "PersonalDetails.DOB");
-		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");	
+		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");
 		AddString(PersonalDetails.EmailAlternative, "PersonalDetails.EmailAlternative");
 		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile");
 		AddString(PersonalDetails.AdditionalGovtIDFileName, "PersonalDetails.AdditionalGovtIDFileName");

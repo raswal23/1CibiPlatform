@@ -1,5 +1,3 @@
-using FrontendWebassembly.Component.ATS;
-
 namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IDisputeOrderService

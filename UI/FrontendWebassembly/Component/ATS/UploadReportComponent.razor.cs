@@ -52,7 +52,7 @@ public partial class UploadReportComponent
 		MudDialog.Close();
 	}
 
-   private async Task SubmitUploadReport()
+	private async Task SubmitUploadReport()
 	{
 		await uploadReportForm!.ValidateAsync();
 

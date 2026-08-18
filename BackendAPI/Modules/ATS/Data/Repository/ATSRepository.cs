@@ -174,7 +174,7 @@ public class ATSRepository : IATSRepository
 	{
 		return await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.AnyAsync(eir => eir.HashToken == hashToken && 
+			.AnyAsync(eir => eir.HashToken == hashToken &&
 					  eir.HashTokenExpiration > DateTime.UtcNow,
 					  cancellationToken);
 	}
@@ -247,27 +247,27 @@ public class ATSRepository : IATSRepository
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
-        var users = await usersQuery
-                    .OrderBy(eir => eir.EmailInvitationID)
-                    .Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-                    .Take(paginationRequest.PageSize)
-                    .Select(eir => new EmailInvitationRequestListDTO
-                    {
-                        EmailInvitationID = eir.EmailInvitationID,
-                        EmailAddress = eir.EmailAddress,
-                        FirstName = eir.FirstName,
-                        LastName = eir.LastName,
-                        Requestor = eir.Requestor,
-                        OrderStatus = eir.OrderStatus,
-                    })
-                    .ToListAsync(cancellationToken);
+		var users = await usersQuery
+					.OrderBy(eir => eir.EmailInvitationID)
+					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+					.Take(paginationRequest.PageSize)
+					.Select(eir => new EmailInvitationRequestListDTO
+					{
+						EmailInvitationID = eir.EmailInvitationID,
+						EmailAddress = eir.EmailAddress,
+						FirstName = eir.FirstName,
+						LastName = eir.LastName,
+						Requestor = eir.Requestor,
+						OrderStatus = eir.OrderStatus,
+					})
+					.ToListAsync(cancellationToken);
 
-        return new PaginatedResult<EmailInvitationRequestListDTO>(
-          paginationRequest.PageIndex,
-          paginationRequest.PageSize,
-          totalRecords,
-          users
-        );
+		return new PaginatedResult<EmailInvitationRequestListDTO>(
+		  paginationRequest.PageIndex,
+		  paginationRequest.PageSize,
+		  totalRecords,
+		  users
+		);
 	}
 
 	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(
@@ -290,7 +290,7 @@ public class ATSRepository : IATSRepository
 
 		var items = await usersQuery
 			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
-	        .ThenByDescending(eir => eir.OrderCreatedAt)
+			.ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
@@ -308,7 +308,7 @@ public class ATSRepository : IATSRepository
 
 		return new PaginatedResult<DisputeOrderListDTO>(
 			paginationRequest.PageIndex,
-		    paginationRequest.PageSize,
+			paginationRequest.PageSize,
 			totalRecords,
 			items);
 	}
@@ -408,7 +408,7 @@ public class ATSRepository : IATSRepository
 		var affectedRows = await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == EmailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.OrderStatus, 
+				.SetProperty(x => x.OrderStatus,
 							 x => x.OrderStatus == OrderStatus.Completed ? x.OrderStatus : orderStatus)
 				.SetProperty(x => x.OrderCompletedAt, orderCompletedAt),
 				cancellationToken);
@@ -678,7 +678,7 @@ public class ATSRepository : IATSRepository
 					eir.ProfessionalExperiences!.COEUploadFileKey
 				},
 				Signature = new
-				{ 
+				{
 					eir.SignatureDetails!.ConsentFormFileName,
 					eir.SignatureDetails!.ConsentFormFileKey
 				},
@@ -702,7 +702,7 @@ public class ATSRepository : IATSRepository
 					rd.ReportStatus
 				})
 				.FirstOrDefault()
-				})
+			})
 			.FirstOrDefaultAsync(cancellationToken);
 
 		string? diplomaFileName = result!.Educational?.DoctorateDiplomaFileName

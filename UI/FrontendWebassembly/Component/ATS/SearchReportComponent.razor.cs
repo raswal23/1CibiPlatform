@@ -8,9 +8,9 @@ public partial class SearchReportComponent
 	[Inject]
 	private LocalStorageService LocalStorageService { get; set; } = default!;
 
-    private TableComponent<ReportListDTO>? reportsTable;
+	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
-    private string? _searchString;
+	private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
@@ -67,13 +67,13 @@ public partial class SearchReportComponent
 
 	private string searchString
 	{
-      get => _searchString!;
+		get => _searchString!;
 		set => UpdateSearch(ref _searchString!, value, reportsTable!);
 	}
 
-    private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
-      if (field != value)
+		if (field != value)
 		{
 			field = value;
 			table?.TableRef!.ReloadServerData();
@@ -111,14 +111,14 @@ public partial class SearchReportComponent
 		};
 	}
 
-    private async Task OnDateRangeChanged(DateRange range)
-    {
-        _dateRange = range;
+	private async Task OnDateRangeChanged(DateRange range)
+	{
+		_dateRange = range;
 
-        await ReloadTable();
-    }
+		await ReloadTable();
+	}
 
-    private async Task DownloadSelected()
+	private async Task DownloadSelected()
 	{
 
 		if (!currentPageData.Any(r => r.Selected))
