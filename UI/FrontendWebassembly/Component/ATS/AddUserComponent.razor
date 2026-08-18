@@ -142,7 +142,7 @@
                                                    AdornmentIcon="@Icons.Material.Outlined.Shield"
                                                    Class="au-control">
 											<MudSelectItem T="int" Value="0" Disabled="true">Select a role</MudSelectItem>
-                                            @foreach (var role in Roles.Where(role => role.IsActive))
+                                            @foreach (var role in AssignableRoles)
                                             {
                                                 <MudSelectItem T="int" Value="@role.RoleId">@role.RoleName</MudSelectItem>
                                             }

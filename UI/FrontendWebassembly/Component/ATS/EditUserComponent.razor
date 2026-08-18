@@ -170,7 +170,7 @@
                                                    Adornment="Adornment.Start"
                                                    AdornmentIcon="@Icons.Material.Outlined.Shield"
                                                    Class="eu-control">
-                                            @foreach (var role in Roles)
+                                            @foreach (var role in AssignableRoles)
                                             {
                                                 var isAssigned = role.RoleId == EditUser.RoleId;
                                                 <MudSelectItem T="int" Value="@role.RoleId" Disabled="@(!role.IsActive && !isAssigned)">
