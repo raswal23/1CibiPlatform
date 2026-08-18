@@ -44,8 +44,19 @@ public partial class AddUserComponent
 		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules));
 	private IEnumerable<ModuleDetailsDTO> SelectedModules => VisibleModules
 		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
-	private IEnumerable<RoleDetailsDTO> AssignableRoles => Roles
-		.Where(role => role.IsActive && AtsRoleList.IsAssignable(role.RoleId, _canAssignAllRoles));
+	private IEnumerable<RoleDetailsDTO> AssignableRoles
+	{
+		get
+		{
+			var activeRoles = Roles.Where(role => role.IsActive);
+			if (_canAssignAllRoles)
+				return activeRoles;
+
+			return activeRoles.Where(role =>
+				role.RoleId != AtsRoleList.PlatformManagerId &&
+				role.RoleId != AtsRoleList.ServiceDeliveryId);
+		}
+	}
 
 	protected override async Task OnInitializedAsync()
 	{

@@ -39,10 +39,19 @@ public partial class EditUserComponent
 	private string? ModuleError { get; set; }
 	private IEnumerable<ModuleDetailsDTO> SelectedModules => Modules
 		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
-	private IEnumerable<RoleDetailsDTO> AssignableRoles => Roles
-		.Where(role =>
-			AtsRoleList.IsAssignable(role.RoleId, _canAssignAllRoles) ||
-			role.RoleId == EditUser.RoleId);
+	private IEnumerable<RoleDetailsDTO> AssignableRoles
+	{
+		get
+		{
+			if (_canAssignAllRoles)
+				return Roles;
+
+			return Roles.Where(role =>
+				(role.RoleId != AtsRoleList.PlatformManagerId &&
+				 role.RoleId != AtsRoleList.ServiceDeliveryId) ||
+				role.RoleId == EditUser.RoleId);
+		}
+	}
 	private string DisplayUserName => SelectedAuthUser?.UserName ?? User.UserName;
 	private string DisplayUserEmail => SelectedAuthUser?.UserEmail ?? User.UserEmail;
 	private string UserInitials
