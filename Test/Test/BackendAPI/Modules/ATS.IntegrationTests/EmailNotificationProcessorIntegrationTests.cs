@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using ATS.Data.Entities;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,11 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		: base(factory)
 	{
 	}
+
+	// The factory generates unique queue keys per test run so parallel test
+	// classes (and stray data on the shared Redis) cannot interfere
+	private string PendingKey => _configuration["CacheKeys:ATSBatchesPending"]!;
+	private string ProcessingKey => _configuration["CacheKeys:ATSBatchesProcessing"]!;
 
 	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(int count)
 	{
@@ -55,7 +60,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			TimeSpan.FromDays(2));
 
 		await dbRedis.SortedSetAddAsync(
-			"devtest-ats-batches:pending",
+			PendingKey,
 			batchId,
 			score ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 	}
@@ -69,8 +74,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.KeyDeleteAsync(PendingKey);
+		await dbRedis.KeyDeleteAsync(ProcessingKey);
 		await SeedBatchAsync(dbRedis, batchId, emailInvitations);
 
 		// Act
@@ -89,9 +94,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		});
 
 		// Batch is fully cleaned up: no queue entries, no payload
-		// (membership checks, not counts — other test classes share these keys in parallel)
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batchId)).Should().BeNull();
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:processing", batchId)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().BeNull();
 		(await dbRedis.KeyExistsAsync(batchId)).Should().BeFalse();
 	}
 
@@ -100,8 +104,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 		// Arrange
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.KeyDeleteAsync(PendingKey);
+		await dbRedis.KeyDeleteAsync(ProcessingKey);
 
 		var initialCount = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
@@ -129,8 +133,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var batch2Id = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow.AddSeconds(1):yyyyMMdd}";
 
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.KeyDeleteAsync(PendingKey);
+		await dbRedis.KeyDeleteAsync(ProcessingKey);
 		// batch1 gets an explicitly older score so ZPOPMIN deterministically claims it first
 		await SeedBatchAsync(dbRedis, batch1Id, batch1Invitations, DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeSeconds());
 		await SeedBatchAsync(dbRedis, batch2Id, batch2Invitations);
@@ -138,7 +142,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
-		// Assert — one invocation claims exactly one batch (the oldest); the other stays pending
+		// Assert - one invocation claims exactly one batch (the oldest); the other stays pending
 		var batch1Processed = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(e => batch1Invitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
@@ -147,8 +151,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		batch1Processed.Should().NotBeEmpty();
 		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
 
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batch1Id)).Should().BeNull();
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batch2Id)).Should().NotBeNull();
+		(await dbRedis.SortedSetScoreAsync(PendingKey, batch1Id)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync(PendingKey, batch2Id)).Should().NotBeNull();
 	}
 
 	[Fact]
@@ -158,12 +162,12 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.KeyDeleteAsync(PendingKey);
+		await dbRedis.KeyDeleteAsync(ProcessingKey);
 
 		// Simulate a batch claimed 25 hours ago and never finished
 		await dbRedis.SortedSetAddAsync(
-			"devtest-ats-batches:processing",
+			ProcessingKey,
 			batchId,
 			DateTimeOffset.UtcNow.AddHours(-25).ToUnixTimeSeconds());
 
@@ -171,8 +175,8 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		await _emailNotificationRecoveryService.RequeueStaleBatchesAsync(CancellationToken.None);
 
 		// Assert
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batchId)).Should().NotBeNull();
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:processing", batchId)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().NotBeNull();
+		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().BeNull();
 	}
 
 	[Fact]
@@ -182,11 +186,11 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
 
 		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:pending");
-		await dbRedis.KeyDeleteAsync("devtest-ats-batches:processing");
+		await dbRedis.KeyDeleteAsync(PendingKey);
+		await dbRedis.KeyDeleteAsync(ProcessingKey);
 
 		await dbRedis.SortedSetAddAsync(
-			"devtest-ats-batches:processing",
+			ProcessingKey,
 			batchId,
 			DateTimeOffset.UtcNow.ToUnixTimeSeconds());
 
@@ -194,9 +198,10 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		await _emailNotificationRecoveryService.RequeueStaleBatchesAsync(CancellationToken.None);
 
 		// Assert
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:processing", batchId)).Should().NotBeNull();
-		(await dbRedis.SortedSetScoreAsync("devtest-ats-batches:pending", batchId)).Should().BeNull();
+		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().NotBeNull();
+		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().BeNull();
 	}
 	#endregion
 
 }
+

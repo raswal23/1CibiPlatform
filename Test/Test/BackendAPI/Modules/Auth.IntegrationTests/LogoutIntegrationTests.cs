@@ -34,9 +34,11 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task Logout_ShouldThrowBadRequest_WhenNoRefreshCookie()
+	public async Task Logout_ShouldSucceed_WhenNoRefreshCookie()
 	{
-		// Arrange: seed user but do not set cookie and do not add refresh token
+		// Arrange: seed user but do not set cookie and do not add refresh token.
+		// Logout is cookie-derived and idempotent: it succeeds even when the
+		// token is missing (see docs/authentication-session-security.md).
 		var user = new Authusers
 		{
 			Id = Guid.CreateVersion7(),
@@ -56,16 +58,18 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 		var command = new LogoutCommand(new LogoutDTO(user.Id, "reason"));
 
 		// Act
-		Func<Task> act = async () => { await _sender.Send(command); };
+		var result = await _sender.Send(command);
 
 		// Assert
-		await act.Should().ThrowAsync<BadRequestException>().WithMessage("Logout failed.");
+		result.Should().NotBeNull();
+		result.IsLoggedOut.Should().BeTrue();
 	}
 
 	[Fact]
-	public async Task Logout_ShouldThrowNotFound_WhenUserHasNoRefreshRecord()
+	public async Task Logout_ShouldSucceed_WhenUserHasNoRefreshRecord()
 	{
-		// Arrange
+		// Arrange: cookie present but no matching refresh-token row.
+		// Repeating logout with an unknown or already-revoked token still succeeds.
 		var userId = Guid.CreateVersion7();
 		var user = new Authusers
 		{
@@ -79,7 +83,6 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 		_dbContext.AuthUsers.Add(user);
 		await _dbContext.SaveChangesAsync();
 
-		//
 		var refreshToken = "some-token-no-record";
 		var cookieKey = _configuration["AuthWeb:AuthWebHttpCookieOnlyKey"] ?? "refreshKey";
 		var ctx = _httpContextAccessor.HttpContext!;
@@ -88,10 +91,11 @@ public class LogoutIntegrationTests : BaseIntegrationTest
 		var command = new LogoutCommand(new LogoutDTO(userId, "reason"));
 
 		// Act
-		Func<Task> act = async () => { await _sender.Send(command); };
+		var result = await _sender.Send(command);
 
 		// Assert
-		await act.Should().ThrowAsync<NotFoundException>().WithMessage("User not found.");
+		result.Should().NotBeNull();
+		result.IsLoggedOut.Should().BeTrue();
 	}
 
 	private async Task<Authusers> SeedUserDataWithRefreshToken()

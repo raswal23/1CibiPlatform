@@ -40,16 +40,14 @@ public class PhilSysService : IPhilSysService
 
 		if (!response.IsSuccessStatusCode)
 		{
-			if (!response.IsSuccessStatusCode)
-			{
-				_logger.LogError(
-					"PhilSys auth failed. StatusCode: {StatusCode}, Response: {Response}",
-					response.StatusCode,
-					responseBody);
+			_logger.LogError(
+				"PhilSys auth failed. StatusCode: {StatusCode}, Response: {Response}",
+				response.StatusCode,
+				responseBody);
 
-				throw new Exception(
-					$"PhilSys token request failed. Status: {response.StatusCode}");
-			}
+			throw new InternalServerException(
+				"PhilSys token request failed.",
+				$"Status: {response.StatusCode}");
 		}
 
 		_logger.LogInformation("Successful Request for Token: {@Context}", logContext);
