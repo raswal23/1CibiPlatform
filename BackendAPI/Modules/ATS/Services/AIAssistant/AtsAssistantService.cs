@@ -1,3 +1,5 @@
+using ATS.Services.Settings.PackageManagement;
+
 namespace ATS.Services.AIAssistant;
 
 public class AtsAssistantService : IAtsAssistantService

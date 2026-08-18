@@ -6,7 +6,6 @@ using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
-using ATS.Services;
 using ATS.Services.OrderHistory;
 using ATS.Constants;
 using Auth.Shared.Contracts;
@@ -19,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using ATS.Services.Report;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
