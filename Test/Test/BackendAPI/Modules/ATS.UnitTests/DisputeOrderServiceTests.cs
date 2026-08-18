@@ -5,7 +5,7 @@ using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
-using ATS.Services;
+using ATS.Services.DisputeOrder;
 using ATS.Services.OrderHistory;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;

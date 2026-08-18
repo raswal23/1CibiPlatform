@@ -1,0 +1,18 @@
+﻿namespace ATS.Services.ApplicationForm;
+
+public interface IApplicationFormService
+{
+	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
+										   AddressDetailsDTO addressDetails,
+										   EducationalBackgroundDTO educationalBackground,
+										   LicensesDetailsDTO licensesDetails,
+										   ProfessionalExperiencesDTO professionalExperiences,
+										   ReferenceDetailsDTO referenceDetails,
+										   SignatureDetailsDTO signatureDetails,
+										   CancellationToken ct = default);
+
+	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
+																				 CancellationToken ct = default);
+
+	Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default);
+}
