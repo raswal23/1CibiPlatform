@@ -1813,13 +1813,11 @@
     }
 }
 
-/* Keep every trailing field icon close to the right edge without changing leading icons. */
 .ats-application-card.ats-application-card ::deep .oneplatform-rounded-input .mud-input-adornment-end {
     margin-right: 0 !important;
     margin-inline-end: 0 !important;
 }
 
-/* MudRadioGroup nests the choices in a row container; keep the Step 2 choices slightly separated. */
 .ats-application-card.ats-application-card ::deep .ats-step-one-choice-group .mud-radio-group {
     display: flex;
     width: 100%;

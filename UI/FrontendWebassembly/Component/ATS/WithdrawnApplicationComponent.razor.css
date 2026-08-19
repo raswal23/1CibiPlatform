@@ -24,7 +24,6 @@
     overflow: hidden;
 }
 
-/* Let the shared Package Management card own the outer padding and chrome. */
 ::deep .ats-management-card.withdrawn-applications .mud-table {
     padding: 0 !important;
     border: 0 !important;
