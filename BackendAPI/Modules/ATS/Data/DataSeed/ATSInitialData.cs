@@ -236,17 +236,17 @@ public class ATSInitialData
 			"atsPlatformManager@cibi.com",
 			"ATS Platform Manager",
 			1,
-			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 12)]),
 		new ATSUserModuleSeedRow(
 			"atsAdmin@cibi.com",
 			"ATS Admin",
 			2,
-			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 12)]),
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
 			"ATS User",
 			3,
-			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 3)]),
 		new ATSUserModuleSeedRow(
 			"atsUploader@cibi.com",
 			"ATS Uploader",
@@ -263,8 +263,8 @@ public class ATSInitialData
 
 	#region Roles
 	public IEnumerable<RoleDetails> GetATSRoles()
-	   {
-		   return new List<RoleDetails>
+	{
+		return new List<RoleDetails>
 		   {
 
 			   new RoleDetails
@@ -304,11 +304,11 @@ public class ATSInitialData
 				   UpdatedAt = DateTime.UtcNow
 			   }
 		   };
-	   }
+	}
 
-	   public IEnumerable<ModuleDetails> GetATSModules() =>
-	   [
-		   new()
+	public IEnumerable<ModuleDetails> GetATSModules() =>
+	[
+		new()
 		   {
 			   ModuleId = AtsModuleIds.Dashboard,
 			   ModuleName = "Dashboard",
@@ -416,6 +416,6 @@ public class ATSInitialData
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow
 		   }
-	   ];
+	];
 	#endregion
 }
