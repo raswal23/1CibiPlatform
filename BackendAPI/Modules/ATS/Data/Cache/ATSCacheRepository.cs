@@ -79,6 +79,16 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.GetBulkUploadFileDetailsAsync();
 	}
 
+	public async Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
+	{
+		return await _atsRepository.ReleaseBulkFileClaimsAsync(bulkUploadFileDetails);
+	}
+
+	public async Task<int> ReleaseStaleBulkFileClaimsAsync(TimeSpan staleAfter)
+	{
+		return await _atsRepository.ReleaseStaleBulkFileClaimsAsync(staleAfter);
+	}
+
 	public async Task<List<EmailInvitationRequest>> GetPendingEmailInvitationRequestsAsync()
 	{
 		return await _atsRepository.GetPendingEmailInvitationRequestsAsync();

@@ -186,12 +186,39 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
-		// Assert: the failure is contained and the file stays Pending for the next tick.
+		// Assert: the failure is contained and the claim is released back to Pending.
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
 			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
 			Times.Never);
+
+		_fixture.MockRepository.Verify(
+			x => x.ReleaseBulkFileClaimsAsync(
+				It.Is<List<BulkUploadFileDetails>>(list => list.Count == 1 && list[0].FileID == fileId)),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task ProcessAsync_ShouldReleaseStaleClaims_BeforeClaimingWork()
+	{
+		// Arrange
+		var service = _fixture.BulkSubmissionProcessorService;
+
+		_fixture.MockRepository
+			.Setup(x => x.ReleaseStaleBulkFileClaimsAsync(It.IsAny<TimeSpan>()))
+			.ReturnsAsync(2);
+
+		_fixture.MockRepository.Setup(x => x.GetBulkUploadFileDetailsAsync())
+			.ReturnsAsync(new List<BulkUploadFileDetails>());
+
+		// Act
+		await service.ProcessAsync(CancellationToken.None);
+
+		// Assert: files stranded in Processing by a crashed worker are recovered.
+		_fixture.MockRepository.Verify(
+			x => x.ReleaseStaleBulkFileClaimsAsync(It.Is<TimeSpan>(t => t > TimeSpan.Zero)),
+			Times.Once);
 	}
 
 	[Fact]

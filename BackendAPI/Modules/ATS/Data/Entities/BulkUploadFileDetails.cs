@@ -10,5 +10,6 @@ public class BulkUploadFileDetails
 	public string? PackageType { get; set; }
 	public string? OrderType { get; set; }
 	public string? Status { get; set; }
+	public DateTime? ClaimedAt { get; set; }
 	public DateTime DateCreated { get; set; }
 }

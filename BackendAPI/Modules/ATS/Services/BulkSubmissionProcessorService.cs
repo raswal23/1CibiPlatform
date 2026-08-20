@@ -13,6 +13,10 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IConfiguration _configuration;
 	private readonly int _applicationFormExpiryInHours;
 
+	// Comfortably longer than a full parse pass so a live worker is never robbed of
+	// files it is still processing.
+	private static readonly TimeSpan StaleClaimTimeout = TimeSpan.FromMinutes(30);
+
 	public BulkSubmissionProcessorService(
 		IATSRepository repository,
 		IServiceScopeFactory serviceScopeFactory,
@@ -38,6 +42,19 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 	public async Task ProcessAsync(CancellationToken cancellationToken)
 	{
+		// A crash mid-parse leaves files claimed as Processing with no live worker, so
+		// release anything stale before claiming the next batch.
+		var released = await _repository.ReleaseStaleBulkFileClaimsAsync(StaleClaimTimeout);
+
+		if (released > 0)
+		{
+			_logger.LogWarning(
+				"Released {ReleasedCount} stale bulk file claim(s) back to Pending.",
+				released);
+		}
+
+		// The claim atomically moves a batch of Pending files to Processing, so a
+		// concurrent worker cannot parse the same CSV.
 		var pendingFiles = await _repository.GetBulkUploadFileDetailsAsync();
 
 		if (!pendingFiles.Any())
@@ -171,9 +188,14 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		var results = await Task.WhenAll(tasks);
 
 		// Only files that actually inserted their invitation rows are marked Done; the
-		// rest stay Pending and are picked up again on the next tick.
+		// rest are released back to Pending and picked up again on the next tick.
 		var processedFiles = results
 			.Where(r => r.succeeded)
+			.Select(r => r.file)
+			.ToList();
+
+		var failedFiles = results
+			.Where(r => !r.succeeded)
 			.Select(r => r.file)
 			.ToList();
 
@@ -182,6 +204,12 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			// The invitation rows are already persisted with EmailSentStatus = Pending,
 			// so the email notification job picks them up straight from PostgreSQL.
 			await _repository.UpdateBulkFileDetailsStatusAsync(processedFiles);
+		}
+
+		if (failedFiles.Count > 0)
+		{
+			// Release the claim now instead of leaving these files to the sweeper.
+			await _repository.ReleaseBulkFileClaimsAsync(failedFiles);
 		}
 	}
 }
