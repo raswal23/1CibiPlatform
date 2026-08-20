@@ -1486,7 +1486,7 @@
 .ats-console-sidebar {
     width: 232px;
     flex-shrink: 0;
-    background: var(--ats-navy-900);
+    background: linear-gradient(100deg, #071230 0%, #0f2a5c 45%, #2f6fed 100%);
     padding: 22px 14px;
     color: #fff;
     display: flex;
