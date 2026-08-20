@@ -224,8 +224,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
 		bulkUploadFileDetails.Status = BulkFileStatus.Pending;
 		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
+		// Captured here, not in the parsing job: that job runs on a Quartz thread with no
+		// HttpContext, so ICurrentUser would resolve to null for every row it creates.
 		bulkUploadFileDetails.ClientId = _currentUser.AtsClientId;
 		bulkUploadFileDetails.UploadedByUserId = _currentUser.UserId;
+		bulkUploadFileDetails.Requestor = _currentUser.FullName;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
 
 		try

@@ -9,7 +9,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IHashService _hashService;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
-	private readonly ICurrentUser _currentUser;
 	private readonly IConfiguration _configuration;
 	private readonly int _applicationFormExpiryInHours;
 
@@ -25,7 +24,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IHashService hashService,
 		IHubContext<ATSHub, IATSClient> hubContext,
 		ILogger<BulkSubmissionProcessorService> logger,
-		ICurrentUser currentUser,
 		IConfiguration configuration)
 	{
 		_repository = repository;
@@ -35,7 +33,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_hashService = hashService;
 		_hubContext = hubContext;
 		_logger = logger;
-		_currentUser = currentUser;
 		_configuration = configuration;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
@@ -154,9 +151,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,
-						ClientId = _currentUser.AtsClientId,
-						RequestorId = _currentUser.UserId,
-						Requestor = _currentUser.FullName,
+						ClientId = file.ClientId,
+						RequestorId = file.UploadedByUserId,
+						Requestor = file.Requestor,
 						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
