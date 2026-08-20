@@ -314,16 +314,6 @@ public static class ServiceConfiguration
 			};
 		});
 
-		// Resolved lazily so an unreachable Redis degrades the ATS background jobs
-		// instead of crashing startup, and AbortOnConnectFail lets the multiplexer
-		// keep retrying in the background rather than throwing on connect.
-		services.AddSingleton<IConnectionMultiplexer>(_ =>
-		{
-			var redisOptions = ConfigurationOptions.Parse(redisConnection!);
-			redisOptions.AbortOnConnectFail = false;
-			return ConnectionMultiplexer.Connect(redisOptions);
-		});
-
 		return services;
 	}
 	#endregion

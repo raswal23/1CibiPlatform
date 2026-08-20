@@ -144,7 +144,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 	}
 
@@ -190,7 +190,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 
 		_fixture.MockRepository.Verify(
@@ -256,7 +256,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 	}
 	#endregion

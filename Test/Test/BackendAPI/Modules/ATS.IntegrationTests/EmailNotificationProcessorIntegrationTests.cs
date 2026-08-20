@@ -1,8 +1,6 @@
-﻿using System.Text.Json;
 using ATS.Data.Entities;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
@@ -15,12 +13,10 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 	}
 
-	// The factory generates unique queue keys per test run so parallel test
-	// classes (and stray data on the shared Redis) cannot interfere
-	private string PendingKey => _configuration["CacheKeys:ATSBatchesPending"]!;
-	private string ProcessingKey => _configuration["CacheKeys:ATSBatchesProcessing"]!;
-
-	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(int count)
+	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(
+		int count,
+		string emailSentStatus = "Pending",
+		DateTime? emailClaimedAt = null)
 	{
 		var invitations = new List<EmailInvitationRequest>();
 
@@ -39,9 +35,11 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 				HashTokenExpiration = DateTime.UtcNow.AddHours(24),
 				SelectPackage = "Standard",
 				RushNormal = "Normal",
-				EmailSentStatus = "Pending",
+				EmailSentStatus = emailSentStatus,
+				EmailClaimedAt = emailClaimedAt,
 				ApplicationFormStatus = "Pending",
-				OrderStatus = "Pending Candidate Info"
+				OrderStatus = "Pending Candidate Info",
+				OrderCreatedAt = DateTime.UtcNow.AddMinutes(i)
 			};
 
 			invitations.Add(invitation);
@@ -52,69 +50,52 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		return invitations;
 	}
 
-	private async Task SeedBatchAsync(IDatabase dbRedis, string batchId, List<EmailInvitationRequest> invitations, long? score = null)
+	private async Task<List<EmailInvitationRequest>> ReloadAsync(List<EmailInvitationRequest> seeded)
 	{
-		await dbRedis.StringSetAsync(
-			batchId,
-			JsonSerializer.Serialize(new List<List<EmailInvitationRequest>> { invitations }),
-			TimeSpan.FromDays(2));
+		var ids = seeded.Select(x => x.EmailInvitationID).ToList();
 
-		await dbRedis.SortedSetAddAsync(
-			PendingKey,
-			batchId,
-			score ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		return await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => ids.Contains(e.EmailInvitationID))
+			.ToListAsync();
 	}
 
 	#region Positive Path
 	[Fact]
-	public async Task ProcessForPendingStatusAsync_WithValidBatch_ShouldProcessEmailInvitations()
+	public async Task ProcessForPendingStatusAsync_WithPendingInvitations_ShouldProcessThem()
 	{
 		// Arrange
 		var emailInvitations = await SeedEmailInvitationRequestsAsync(3);
-		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync(PendingKey);
-		await dbRedis.KeyDeleteAsync(ProcessingKey);
-		await SeedBatchAsync(dbRedis, batchId, emailInvitations);
 
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
-		// Assert
-		var processedInvitations = await _dbContext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(e => emailInvitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
-			.ToListAsync();
+		// Assert - the claim moved every row out of Pending and the send pass settled it
+		var processed = await ReloadAsync(emailInvitations);
 
-		processedInvitations.Should().NotBeEmpty();
-		processedInvitations.Should().AllSatisfy(e =>
+		processed.Should().HaveCount(3);
+		processed.Should().AllSatisfy(e =>
 		{
 			e.EmailSentStatus.Should().NotBe("Pending");
+			e.EmailSentStatus.Should().NotBe("Processing");
 		});
-
-		// Batch is fully cleaned up: no queue entries, no payload
-		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().BeNull();
-		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().BeNull();
-		(await dbRedis.KeyExistsAsync(batchId)).Should().BeFalse();
 	}
 
 	[Fact]
-	public async Task ProcessForPendingStatusAsync_WithNoPendingBatch_ShouldDoNothing()
+	public async Task ProcessForPendingStatusAsync_WithNoPendingInvitations_ShouldDoNothing()
 	{
-		// Arrange
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync(PendingKey);
-		await dbRedis.KeyDeleteAsync(ProcessingKey);
-
+		// Arrange - nothing seeded; the table is truncated per test
 		var initialCount = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.CountAsync();
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		Func<Task> act = async () =>
+			await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert
+		await act.Should().NotThrowAsync();
+
 		var finalCount = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.CountAsync();
@@ -123,85 +104,46 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task ProcessForPendingStatusAsync_WithMultipleBatches_ShouldProcessSequentially()
+	public async Task ProcessForPendingStatusAsync_WithStaleClaim_ShouldReleaseAndProcessIt()
 	{
-		// Arrange
-		var batch1Invitations = await SeedEmailInvitationRequestsAsync(2);
-		var batch2Invitations = await SeedEmailInvitationRequestsAsync(3);
-
-		var batch1Id = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-		var batch2Id = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow.AddSeconds(1):yyyyMMdd}";
-
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync(PendingKey);
-		await dbRedis.KeyDeleteAsync(ProcessingKey);
-		// batch1 gets an explicitly older score so ZPOPMIN deterministically claims it first
-		await SeedBatchAsync(dbRedis, batch1Id, batch1Invitations, DateTimeOffset.UtcNow.AddSeconds(-10).ToUnixTimeSeconds());
-		await SeedBatchAsync(dbRedis, batch2Id, batch2Invitations);
+		// Arrange - a worker crashed mid-send 25 hours ago and left the row claimed
+		var stale = await SeedEmailInvitationRequestsAsync(
+			1,
+			emailSentStatus: "Processing",
+			emailClaimedAt: DateTime.UtcNow.AddHours(-25));
 
 		// Act
 		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
-		// Assert - one invocation claims exactly one batch (the oldest); the other stays pending
-		var batch1Processed = await _dbContext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(e => batch1Invitations.Select(ei => ei.EmailInvitationID).Contains(e.EmailInvitationID))
-			.ToListAsync();
+		// Assert - released back to Pending, then claimed and settled in the same tick
+		var recovered = await ReloadAsync(stale);
 
-		batch1Processed.Should().NotBeEmpty();
-		batch1Processed.Should().AllSatisfy(e => e.EmailSentStatus.Should().NotBe("Pending"));
-
-		(await dbRedis.SortedSetScoreAsync(PendingKey, batch1Id)).Should().BeNull();
-		(await dbRedis.SortedSetScoreAsync(PendingKey, batch2Id)).Should().NotBeNull();
+		recovered.Should().ContainSingle();
+		recovered[0].EmailSentStatus.Should().NotBe("Pending");
+		recovered[0].EmailSentStatus.Should().NotBe("Processing");
 	}
+	#endregion
 
+	#region Negative Path
 	[Fact]
-	public async Task RequeueStaleBatchesAsync_WithStaleBatch_ShouldMoveItBackToPending()
+	public async Task ProcessForPendingStatusAsync_WithFreshClaim_ShouldLeaveItAlone()
 	{
-		// Arrange
-		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync(PendingKey);
-		await dbRedis.KeyDeleteAsync(ProcessingKey);
-
-		// Simulate a batch claimed 25 hours ago and never finished
-		await dbRedis.SortedSetAddAsync(
-			ProcessingKey,
-			batchId,
-			DateTimeOffset.UtcNow.AddHours(-25).ToUnixTimeSeconds());
+		// Arrange - another worker claimed this row moments ago and is still sending it
+		var claimed = await SeedEmailInvitationRequestsAsync(
+			1,
+			emailSentStatus: "Processing",
+			emailClaimedAt: DateTime.UtcNow);
 
 		// Act
-		await _emailNotificationRecoveryService.RequeueStaleBatchesAsync(CancellationToken.None);
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
-		// Assert
-		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().NotBeNull();
-		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().BeNull();
-	}
+		// Assert - the live worker is not robbed of rows it is still processing
+		var untouched = await ReloadAsync(claimed);
 
-	[Fact]
-	public async Task RequeueStaleBatchesAsync_WithFreshBatch_ShouldLeaveItInProcessing()
-	{
-		// Arrange
-		var batchId = $"testbatch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		var dbRedis = _redis.GetDatabase();
-		await dbRedis.KeyDeleteAsync(PendingKey);
-		await dbRedis.KeyDeleteAsync(ProcessingKey);
-
-		await dbRedis.SortedSetAddAsync(
-			ProcessingKey,
-			batchId,
-			DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-
-		// Act
-		await _emailNotificationRecoveryService.RequeueStaleBatchesAsync(CancellationToken.None);
-
-		// Assert
-		(await dbRedis.SortedSetScoreAsync(ProcessingKey, batchId)).Should().NotBeNull();
-		(await dbRedis.SortedSetScoreAsync(PendingKey, batchId)).Should().BeNull();
+		untouched.Should().ContainSingle();
+		untouched[0].EmailSentStatus.Should().Be("Processing");
+		untouched[0].EmailClaimedAt.Should().NotBeNull();
 	}
 	#endregion
 
 }
-

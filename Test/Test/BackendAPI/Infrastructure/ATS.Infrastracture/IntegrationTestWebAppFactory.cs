@@ -20,11 +20,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 {
 	private readonly PostgreSqlContainer _dbContainer;
 
-	// The Redis server is shared by every test host (and anything else pointed at
-	// it), while xUnit runs test classes in parallel. Unique batch-queue keys per
-	// factory keep one class's ZPOPMIN/KeyDelete from racing another's batches.
-	private readonly string _batchQueueRunId = Guid.CreateVersion7().ToString("N");
-
 	public IntegrationTestWebAppFactory()
 	{
 		_dbContainer = new PostgreSqlBuilder()
@@ -41,15 +36,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 		var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
 		DotEnvLoader.Load(Path.Combine(solutionRoot, ".env"));
-
-		builder.ConfigureAppConfiguration((_, config) =>
-		{
-			config.AddInMemoryCollection(new Dictionary<string, string?>
-			{
-				["CacheKeys:ATSBatchesPending"] = $"test-ats-batches:{_batchQueueRunId}:pending",
-				["CacheKeys:ATSBatchesProcessing"] = $"test-ats-batches:{_batchQueueRunId}:processing"
-			});
-		});
 
 		builder.ConfigureServices(services =>
 		{

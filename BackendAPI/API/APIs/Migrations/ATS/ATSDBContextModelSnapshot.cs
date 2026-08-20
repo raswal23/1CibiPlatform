@@ -755,6 +755,9 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("OrderCompletedAt", "EmailInvitationID")
                         .IsDescending(true, false);
 
+                    b.HasIndex("OrderCreatedAt", "EmailInvitationID")
+                        .IsDescending(true, false);
+
                     b.HasIndex("OrderStatus", "EmailInvitationID");
 
                     b.HasIndex("FirstName", "LastName", "EmailInvitationID");

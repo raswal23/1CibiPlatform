@@ -2,7 +2,6 @@
 using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.EmailNotificationProcessor;
-using ATS.Services.EmailNotificationRecovery;
 using ATS.Services.EndorsementSubmission;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -11,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using StackExchange.Redis;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
@@ -23,8 +21,6 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IObjectStorageService> MockObjectStorage { get; private set; }
 	public Mock<ISecureToken> MockSecureToken { get; private set; }
 	public Mock<IHashService> MockHashService { get; private set; }
-	public Mock<IConnectionMultiplexer> MockRedis { get; private set; }
-	public Mock<IDatabase> MockRedisDatabase { get; private set; }
 	public Mock<IHubContext<ATSHub, IATSClient>> MockHubContext { get; private set; }
 	public Mock<IHubClients<IATSClient>> MockClients { get; private set; }
 	public Mock<IATSClient> MockATSClient { get; private set; }
@@ -34,7 +30,6 @@ public class ATSServiceFixture : IDisposable
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
 	public Mock<ILogger<EmailNotificationProcessorService>> EmailNotificationProcessoServiceLogger { get; private set; }
-	public Mock<ILogger<EmailNotificationRecoveryService>> EmailNotificationRecoveryServiceLogger { get; private set; }
 
 	// Configuration
 	public IConfiguration Configuration { get; private set; }
@@ -42,7 +37,6 @@ public class ATSServiceFixture : IDisposable
 	// Service instances
 	public BulkSubmissionProcessorService BulkSubmissionProcessorService { get; private set; }
 	public EmailNotificationProcessorService EmailNotificationProcessorService { get; private set; }
-	public EmailNotificationRecoveryService EmailNotificationRecoveryService { get; private set; }
 
 	public ATSServiceFixture()
 	{
@@ -52,8 +46,6 @@ public class ATSServiceFixture : IDisposable
 		MockObjectStorage = new Mock<IObjectStorageService>();
 		MockSecureToken = new Mock<ISecureToken>();
 		MockHashService = new Mock<IHashService>();
-		MockRedis = new Mock<IConnectionMultiplexer>();
-		MockRedisDatabase = new Mock<IDatabase>();
 		MockHubContext = new Mock<IHubContext<ATSHub, IATSClient>>();
 		MockClients = new Mock<IHubClients<IATSClient>>();
 		MockATSClient = new Mock<IATSClient>();
@@ -62,22 +54,15 @@ public class ATSServiceFixture : IDisposable
 
 		MockBulkSubmissionProcessorServiceLogger = new();
 		EmailNotificationProcessoServiceLogger = new();
-		EmailNotificationRecoveryServiceLogger = new();
 
 		// configuration values required by several services
 		Configuration = new ConfigurationBuilder()
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
 				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
-				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" },
-				{ "CacheKeys:ATSBatchesPending", "ats-batches-pending" },
-				{ "CacheKeys:ATSBatchesProcessing", "ats-batches-processing" }
+				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" }
 			})
 			.Build();
-
-		MockRedis
-			.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
-			.Returns(MockRedisDatabase.Object);
 
 		MockHubContext
 			.Setup(x => x.Clients)
@@ -105,11 +90,6 @@ public class ATSServiceFixture : IDisposable
 			MockRepository.Object,
 			Configuration
 			);
-
-		EmailNotificationRecoveryService = new EmailNotificationRecoveryService(
-			EmailNotificationRecoveryServiceLogger.Object,
-			Configuration,
-			MockRedis.Object);
 	}
 
 	public void Dispose()

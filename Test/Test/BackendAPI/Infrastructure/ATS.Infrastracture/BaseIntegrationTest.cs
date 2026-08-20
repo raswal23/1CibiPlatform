@@ -5,7 +5,6 @@ using ATS.Services.ApplicantSearchProjections;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.Dashboard;
 using ATS.Services.EmailNotificationProcessor;
-using ATS.Services.EmailNotificationRecovery;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.Report;
 using ATS.Services.Settings.ClientAssignment;
@@ -23,7 +22,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 
 namespace Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
@@ -40,7 +38,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IObjectStorageService _objectStorageService;
 	protected readonly IEndorsementSubmissionService _endorsementSubmissionService;
 	protected readonly IEmailNotificationProcessorService _emailNotificationProcessorService;
-	protected readonly IEmailNotificationRecoveryService _emailNotificationRecoveryService;
 	protected readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
 	protected readonly IPackageManagementService _packageManagementService;
 	protected readonly IRoleManagementService _roleManagementService;
@@ -55,7 +52,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly HybridCache _hybridCache;
-	protected readonly IConnectionMultiplexer _redis;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
 	{
@@ -66,13 +62,11 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_dbContext = _scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		_authDbContext = _scope.ServiceProvider.GetRequiredService<AuthApplicationDbContext>();
 		_hybridCache = _scope.ServiceProvider.GetRequiredService<HybridCache>();
-		_redis = _scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
 		_httpContextAccessor = _scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
 		_endorsementSubmissionService = _scope.ServiceProvider.GetRequiredService<IEndorsementSubmissionService>();
 		_emailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationProcessorService>();
-		_emailNotificationRecoveryService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationRecoveryService>();
 		_bulkSubmissionProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkSubmissionProcessorService>();
 		_packageManagementService = _scope.ServiceProvider.GetRequiredService<IPackageManagementService>();
 		_roleManagementService = _scope.ServiceProvider.GetRequiredService<IRoleManagementService>();

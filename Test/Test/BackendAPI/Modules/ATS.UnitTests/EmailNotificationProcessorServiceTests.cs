@@ -35,7 +35,6 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	{
 		// Arrange
 		var service = _fixture.EmailNotificationProcessorService;
-		_fixture.MockRedisDatabase.Invocations.Clear();
 		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
 
 		_fixture.MockRepository
@@ -86,22 +85,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	{
 		// Arrange
 		var service = _fixture.EmailNotificationProcessorService;
-		_fixture.MockRedisDatabase.Invocations.Clear();
 		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
-
-		var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		var request = new EmailInvitationRequest
-		{
-			EmailInvitationID = Guid.CreateVersion7(),
-			FirstName = "Juan",
-			LastName = "Dela Cruz",
-			EmailAddress = "juan@example.com",
-			HashToken = "hashed-token"
-		};
-
-		var payload = JsonSerializer.Serialize(
-			new List<List<EmailInvitationRequest>> { new() { request } });
 
 		_fixture.MockRepository
 			.Setup(x => x.ReleaseStaleEmailInvitationClaimsAsync(It.IsAny<TimeSpan>()))

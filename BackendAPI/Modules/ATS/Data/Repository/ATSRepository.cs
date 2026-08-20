@@ -269,12 +269,12 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<Guid> bulkUploadFileDetailIds, string orderStatus)
+	public async Task<bool> UpdateBulkFileDetailsStatusAsync(List<Guid> bulkUploadFileDetailIds, string status)
 	{
 		await _dbcontext.BulkUploadFileDetails
 				.Where(x => bulkUploadFileDetailIds.Contains(x.FileID))
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => BulkFileStatus.Done)
+				.SetProperty(x => x.Status, x => status)
 				.SetProperty(x => x.ClaimedAt, x => null));
 
 		return true;

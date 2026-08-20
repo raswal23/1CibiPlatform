@@ -17,7 +17,7 @@ public sealed class EmploymentVerificationDbContextFactory
 			?? "Host=localhost;Database=oneplatform;Username=postgres;Password=postgres";
 
 		var options = new DbContextOptionsBuilder<EmploymentVerificationDbContext>()
-			.UseNpgsql(connection)
+			.UseNpgsql(connection, o => o.MigrationsAssembly("APIs"))
 			.Options;
 
 		return new EmploymentVerificationDbContext(options);

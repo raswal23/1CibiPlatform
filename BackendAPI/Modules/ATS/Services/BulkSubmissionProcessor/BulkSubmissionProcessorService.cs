@@ -57,10 +57,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		if (!pendingFiles.Any())
 			return;
 
-		var pendingFileIds = pendingFiles.Select(file => file.FileID).ToList();
-
-		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFileIds, OrderStatus.InProgress);
-
 		var semaphore = new SemaphoreSlim(3);
 
 		var tasks = pendingFiles.Select(async file =>
@@ -204,7 +200,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		{
 			// The invitation rows are already persisted with EmailSentStatus = Pending,
 			// so the email notification job picks them up straight from PostgreSQL.
-			await _repository.UpdateBulkFileDetailsStatusAsync(processedFiles);
+			var processedFileIds = processedFiles.Select(file => file.FileID).ToList();
+
+			await _repository.UpdateBulkFileDetailsStatusAsync(processedFileIds, BulkFileStatus.Done);
 		}
 
 		if (failedFiles.Count > 0)
