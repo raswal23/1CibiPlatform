@@ -40,6 +40,11 @@ public static class ATSDatabaseExtensions
 			(initData.GetATSRoles());
 		}
 
+		if (!await context.ModuleDetails.AnyAsync())
+		{
+			await context.ModuleDetails.AddRangeAsync(initData.GetATSModules());
+		}
+
 		if (!await context.UserDetails.AnyAsync())
 		{
 			var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(

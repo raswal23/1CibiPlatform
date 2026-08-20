@@ -83,12 +83,138 @@ public class ATSRepository : IATSRepository
 
 	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync()
 	{
+		// Same claim pattern as the email queue: SKIP LOCKED lets a second worker step
+		// over files another worker is claiming, and the Processing write keeps the
+		// claim after this transaction ends so the same CSV is never parsed twice.
 		return await _dbcontext.BulkUploadFileDetails
+			.FromSqlRaw(
+				"""
+				WITH ranked AS (
+					SELECT "FileID",
+						   ROW_NUMBER() OVER (
+							   PARTITION BY "ClientId"
+							   ORDER BY "FileID") AS rn
+					FROM ats."BulkUploadFileDetails"
+					WHERE "Status" = {2}
+				)
+				UPDATE ats."BulkUploadFileDetails" t
+				SET "Status" = {0},
+					"ClaimedAt" = {1}
+				WHERE t."FileID" IN (
+					SELECT f."FileID"
+					FROM ats."BulkUploadFileDetails" f
+					WHERE f."FileID" IN (
+						SELECT "FileID" FROM ranked WHERE rn <= {3})
+					ORDER BY f."FileID"
+					LIMIT {4}
+					FOR UPDATE SKIP LOCKED
+				)
+				RETURNING t.*;
+				""",
+				BulkFileStatus.Processing,
+				DateTime.UtcNow,
+				BulkFileStatus.Pending,
+				PerClientFileSliceSize,
+				10)
 			.AsNoTracking()
-			.Where(bf => bf.Status == BulkFileStatus.Pending)
-			.OrderBy(bf => bf.FileID)
-			.Take(10)
 			.ToListAsync();
+	}
+
+	public async Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
+	{
+		// A file that failed to process goes straight back to Pending so the next tick
+		// retries it, rather than waiting for the stale-claim sweeper.
+		var fileIds = bulkUploadFileDetails.Select(x => x.FileID).ToList();
+
+		return await _dbcontext.BulkUploadFileDetails
+			.Where(x => fileIds.Contains(x.FileID))
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => BulkFileStatus.Pending)
+				.SetProperty(x => x.ClaimedAt, x => null));
+	}
+
+	public async Task<int> ReleaseStaleBulkFileClaimsAsync(TimeSpan staleAfter)
+	{
+		// A crash mid-parse leaves files stuck in Processing with no live worker.
+		var cutoff = DateTime.UtcNow.Subtract(staleAfter);
+
+		return await _dbcontext.BulkUploadFileDetails
+			.Where(x => x.Status == BulkFileStatus.Processing
+					 && x.ClaimedAt != null
+					 && x.ClaimedAt < cutoff)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.Status, x => BulkFileStatus.Pending)
+				.SetProperty(x => x.ClaimedAt, x => null));
+	}
+
+	// An invitation is retried until this many failed sends, then it stays Error for a
+	// human to look at - a mistyped or dead address must not consume the daily quota
+	// forever.
+	private const int MaxEmailSendAttempts = 5;
+
+	// Round-robin: each client may contribute at most this many invitations per tick, so
+	// one large upload cannot block every other client behind it.
+	private const int PerClientSliceSize = 30;
+
+	// Same fairness rule for CSV parsing.
+	private const int PerClientFileSliceSize = 3;
+
+	public async Task<List<EmailInvitationRequest>> GetPendingEmailInvitationRequestsAsync()
+	{
+		// Claim and return in one statement. FOR UPDATE SKIP LOCKED lets a concurrent
+		// worker step over rows another worker is already claiming instead of blocking,
+		// and the Processing write is what keeps the claim after this transaction ends.
+		// EF cannot express SKIP LOCKED, so this is raw SQL.
+		return await _dbcontext.EmailInvitationRequests
+			.FromSqlRaw(
+				"""
+				WITH ranked AS (
+					SELECT "EmailInvitationID",
+						   ROW_NUMBER() OVER (
+							   PARTITION BY "ClientId"
+							   ORDER BY "OrderCreatedAt") AS rn
+					FROM ats."EmailInvitationRequest"
+					WHERE ("EmailSentStatus" = {2}
+						OR ("EmailSentStatus" = {3} AND "EmailSendAttempts" < {4}))
+				)
+				UPDATE ats."EmailInvitationRequest" t
+				SET "EmailSentStatus" = {0},
+					"EmailClaimedAt" = {1}
+				WHERE t."EmailInvitationID" IN (
+					SELECT e."EmailInvitationID"
+					FROM ats."EmailInvitationRequest" e
+					WHERE e."EmailInvitationID" IN (
+						SELECT "EmailInvitationID" FROM ranked WHERE rn <= {5})
+					ORDER BY e."OrderCreatedAt"
+					LIMIT {6}
+					FOR UPDATE SKIP LOCKED
+				)
+				RETURNING t.*;
+				""",
+				EmailStatus.Processing,
+				DateTime.UtcNow,
+				EmailStatus.Pending,
+				EmailStatus.Error,
+				MaxEmailSendAttempts,
+				PerClientSliceSize,
+				100)
+			.AsNoTracking()
+			.ToListAsync();
+	}
+
+	public async Task<int> ReleaseStaleEmailInvitationClaimsAsync(TimeSpan staleAfter)
+	{
+		// A crash mid-send leaves rows stuck in Processing with no live worker. Anything
+		// claimed longer ago than staleAfter goes back to Pending for the next tick.
+		var cutoff = DateTime.UtcNow.Subtract(staleAfter);
+
+		return await _dbcontext.EmailInvitationRequests
+			.Where(x => x.EmailSentStatus == EmailStatus.Processing
+					 && x.EmailClaimedAt != null
+					 && x.EmailClaimedAt < cutoff)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Pending)
+				.SetProperty(x => x.EmailClaimedAt, x => null));
 	}
 
 	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
@@ -118,7 +244,9 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error));
+			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error)
+			.SetProperty(x => x.EmailClaimedAt, x => null)
+			.SetProperty(x => x.EmailSendAttempts, x => x.EmailSendAttempts + 1));
 
 		return true;
 	}
@@ -148,7 +276,8 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.BulkUploadFileDetails
 				.Where(x => fileIds.Contains(x.FileID))
 				.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.Status, x => BulkFileStatus.Done));
+				.SetProperty(x => x.Status, x => BulkFileStatus.Done)
+				.SetProperty(x => x.ClaimedAt, x => null));
 
 		return true;
 	}

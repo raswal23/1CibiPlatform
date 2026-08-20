@@ -11,8 +11,12 @@ public sealed class PlatformLogRepository(
 	public bool IsEnabled => _options.PostgreSqlEnabled;
 
 	public async Task<PlatformLogPageDTO> GetLogsAsync(DateTimeOffset? from, DateTimeOffset? to,
-		string? application, string? level, string? search, int pageSize,
-		DateTimeOffset? cursorTime, long? cursorId, CancellationToken cancellationToken)
+		string? application,
+		string? level,
+		string? search,
+		int pageSize,
+		DateTimeOffset? cursorTime,
+		long? cursorId, CancellationToken cancellationToken)
 	{
 		if (!IsEnabled)
 		{

@@ -638,6 +638,83 @@
     box-shadow: none;
 }
 
+/* Dictation ---------------------------------------------------------------
+   Idle mirrors the ghost .ats-assistant-clear button; the gradient/solid fill
+   is reserved for the listening state so "recording" reads at a glance. */
+
+.ats-assistant-mic {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 11px;
+    background: #fff;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease, opacity .15s ease;
+}
+
+.ats-assistant-mic svg {
+    width: 17px;
+    height: 17px;
+}
+
+.ats-assistant-mic:hover:not(:disabled) {
+    border-color: var(--blue-500);
+    background: var(--blue-tint);
+    color: var(--blue-600);
+}
+
+.ats-assistant-mic:active:not(:disabled) {
+    transform: scale(.95);
+}
+
+.ats-assistant-mic:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.ats-assistant-mic.is-listening {
+    border-color: var(--blue-600);
+    background: var(--blue-600);
+    color: #fff;
+    animation: ats-assistant-mic-pulse 1.6s ease-out infinite;
+}
+
+.ats-assistant-mic.is-listening:hover:not(:disabled) {
+    background: var(--blue-600);
+    color: #fff;
+}
+
+@keyframes ats-assistant-mic-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(29, 95, 209, .45);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(29, 95, 209, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(29, 95, 209, 0);
+    }
+}
+
+.ats-assistant-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .ats-assistant-hint {
     margin: 9px 2px 0;
     color: var(--text-3);

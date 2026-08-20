@@ -12,6 +12,17 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 	public BulkSubmissionProcessorServiceTests(ATSServiceFixture fixture)
 	{
 		_fixture = fixture;
+
+		// The fixture is shared across the class, so clear per-test state. Mocks that
+		// are configured in the fixture constructor only have their invocation history
+		// cleared, so their setups survive.
+		_fixture.MockRepository.Reset();
+		_fixture.MockObjectStorage.Reset();
+		_fixture.MockSecureToken.Reset();
+		_fixture.MockHashService.Reset();
+		_fixture.MockHubContext.Invocations.Clear();
+		_fixture.MockClients.Invocations.Clear();
+		_fixture.MockATSClient.Invocations.Clear();
 	}
 
 	#region Positive Path
@@ -73,9 +84,6 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()))
 			.ReturnsAsync(true);
 
-		_fixture.MockRedisDatabase.Setup(x => x.ListRightPushAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<StackExchange.Redis.RedisValue>()))
-			.ReturnsAsync(1L);
-
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
@@ -98,7 +106,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 
 	#region Negative Path
 	[Fact]
-	public async Task ProcessAsync_ShouldThrow_WhenGenerateTokenFails()
+	public async Task ProcessAsync_ShouldLeaveFilePending_WhenGenerateTokenFails()
 	{
 		// Arrange
 		var service = _fixture.BulkSubmissionProcessorService;
@@ -132,13 +140,16 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
-		// Assert
-		await act.Should().ThrowAsync<InternalServerException>()
-			.WithMessage("Failed to generate Token.");
+		// Assert: the failure is contained and the file stays Pending for the next tick.
+		await act.Should().NotThrowAsync();
+
+		_fixture.MockRepository.Verify(
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			Times.Never);
 	}
 
 	[Fact]
-	public async Task ProcessAsync_ShouldThrow_WhenHashTokenFails()
+	public async Task ProcessAsync_ShouldLeaveFilePending_WhenHashTokenFails()
 	{
 		// Arrange
 		var service = _fixture.BulkSubmissionProcessorService;
@@ -175,13 +186,43 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
-		// Assert
-		await act.Should().ThrowAsync<InternalServerException>()
-			.WithMessage("Failed to hash Token.");
+		// Assert: the failure is contained and the claim is released back to Pending.
+		await act.Should().NotThrowAsync();
+
+		_fixture.MockRepository.Verify(
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			Times.Never);
+
+		_fixture.MockRepository.Verify(
+			x => x.ReleaseBulkFileClaimsAsync(
+				It.Is<List<BulkUploadFileDetails>>(list => list.Count == 1 && list[0].FileID == fileId)),
+			Times.Once);
 	}
 
 	[Fact]
-	public async Task ProcessAsync_ShouldThrow_WhenDownloadFails()
+	public async Task ProcessAsync_ShouldReleaseStaleClaims_BeforeClaimingWork()
+	{
+		// Arrange
+		var service = _fixture.BulkSubmissionProcessorService;
+
+		_fixture.MockRepository
+			.Setup(x => x.ReleaseStaleBulkFileClaimsAsync(It.IsAny<TimeSpan>()))
+			.ReturnsAsync(2);
+
+		_fixture.MockRepository.Setup(x => x.GetBulkUploadFileDetailsAsync())
+			.ReturnsAsync(new List<BulkUploadFileDetails>());
+
+		// Act
+		await service.ProcessAsync(CancellationToken.None);
+
+		// Assert: files stranded in Processing by a crashed worker are recovered.
+		_fixture.MockRepository.Verify(
+			x => x.ReleaseStaleBulkFileClaimsAsync(It.Is<TimeSpan>(t => t > TimeSpan.Zero)),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task ProcessAsync_ShouldLeaveFilePending_WhenDownloadFails()
 	{
 		// Arrange
 		var service = _fixture.BulkSubmissionProcessorService;
@@ -210,9 +251,13 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
-		// Assert
-		await act.Should().ThrowAsync<InvalidOperationException>()
-			.WithMessage("Download failed");
+		// Assert: a transient OSS failure leaves the file Pending so the next tick
+		// retries it.
+		await act.Should().NotThrowAsync();
+
+		_fixture.MockRepository.Verify(
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			Times.Never);
 	}
 	#endregion
 

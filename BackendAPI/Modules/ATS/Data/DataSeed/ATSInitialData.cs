@@ -236,17 +236,17 @@ public class ATSInitialData
 			"atsPlatformManager@cibi.com",
 			"ATS Platform Manager",
 			1,
-			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 12)]),
 		new ATSUserModuleSeedRow(
 			"atsAdmin@cibi.com",
 			"ATS Admin",
 			2,
-			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 12)]),
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
 			"ATS User",
 			3,
-			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 3)]),
 		new ATSUserModuleSeedRow(
 			"atsUploader@cibi.com",
 			"ATS Uploader",
@@ -265,45 +265,157 @@ public class ATSInitialData
 	public IEnumerable<RoleDetails> GetATSRoles()
 	{
 		return new List<RoleDetails>
-		{
+		   {
 
-			new RoleDetails
-			{
-				RoleId = 1,
-				RoleName = "Platform Manager",
-				RoleDescription = "Platform manager role for ATS system.",
-				IsActive = true,
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow
-			},
-			new RoleDetails
-			{
-				RoleId = 2,
-				RoleName = "Admin",
-				RoleDescription = "Administrator role for ATS system.",
-				IsActive = true,
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow
-			},
-			new RoleDetails
-			{
-				RoleId = 3,
-				RoleName = "User",
-				RoleDescription = "Basic user role for ATS system.",
-				IsActive = true,
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow
-			},
-			new RoleDetails
-			{
-				RoleId = 4,
-				RoleName = "Uploader",
-				RoleDescription = "Uploader role for ATS system.",
-				IsActive = true,
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow
-			}
-		};
+			   new RoleDetails
+			   {
+				   RoleId = 1,
+				   RoleName = "Platform Manager",
+				   RoleDescription = "Platform manager role for ATS system.",
+				   IsActive = true,
+				   CreatedAt = DateTime.UtcNow,
+				   UpdatedAt = DateTime.UtcNow
+			   },
+			   new RoleDetails
+			   {
+				   RoleId = 2,
+				   RoleName = "Admin",
+				   RoleDescription = "Administrator role for ATS system.",
+				   IsActive = true,
+				   CreatedAt = DateTime.UtcNow,
+				   UpdatedAt = DateTime.UtcNow
+			   },
+			   new RoleDetails
+			   {
+				   RoleId = 3,
+				   RoleName = "User",
+				   RoleDescription = "Basic user role for ATS system.",
+				   IsActive = true,
+				   CreatedAt = DateTime.UtcNow,
+				   UpdatedAt = DateTime.UtcNow
+			   },
+			   new RoleDetails
+			   {
+				   RoleId = 4,
+				   RoleName = "Uploader",
+				   RoleDescription = "Uploader role for ATS system.",
+				   IsActive = true,
+				   CreatedAt = DateTime.UtcNow,
+				   UpdatedAt = DateTime.UtcNow
+			   }
+		   };
 	}
+
+	public IEnumerable<ModuleDetails> GetATSModules() =>
+	[
+		new()
+		   {
+			   ModuleId = AtsModuleIds.Dashboard,
+			   ModuleName = "Dashboard",
+			   ModuleDescription = "Dashboard module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.NewOrder,
+			   ModuleName = "New Order",
+			   ModuleDescription = "New order module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.OrdersAndReports,
+			   ModuleName = "Orders & Reports",
+			   ModuleDescription = "Orders and reports module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.Disputes,
+			   ModuleName = "Disputes",
+			   ModuleDescription = "Disputes module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.Withdrawn,
+			   ModuleName = "Withdrawn",
+			   ModuleDescription = "Withdrawn module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.PackageManagement,
+			   ModuleName = "Package Management",
+			   ModuleDescription = "Package management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ClientManagement,
+			   ModuleName = "Client Management",
+			   ModuleDescription = "Client management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.RoleManagement,
+			   ModuleName = "Role Management",
+			   ModuleDescription = "Role management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ModuleManagement,
+			   ModuleName = "Module Management",
+			   ModuleDescription = "Module management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.UserManagement,
+			   ModuleName = "User Management",
+			   ModuleDescription = "User management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ClientAssigning,
+			   ModuleName = "Client Assigning",
+			   ModuleDescription = "Client assigning module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.AIAssistant,
+			   ModuleName = "AI Assistant",
+			   ModuleDescription = "AI assistant module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   }
+	];
 	#endregion
 }

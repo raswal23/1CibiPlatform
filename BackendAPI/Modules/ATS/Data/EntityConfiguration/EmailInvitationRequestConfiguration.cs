@@ -89,5 +89,22 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 
 		builder.Property(e => e.DisputedAt)
 			   .IsRequired(false);
+
+		builder.Property(e => e.EmailClaimedAt)
+			   .IsRequired(false);
+
+		builder.Property(e => e.EmailSendAttempts)
+			   .IsRequired(true)
+			   .HasDefaultValue(0);
+
+		// Null for single inquiries; set to the source file for bulk uploads.
+		builder.Property(e => e.BulkFileID)
+			   .IsRequired(false);
+
+		// Drives the email notification job's claim query and the stale-claim sweeper.
+		builder.HasIndex(e => e.EmailSentStatus);
+
+		// Supports tracing every invitation back to the bulk file it came from.
+		builder.HasIndex(e => e.BulkFileID);
 	}
 }

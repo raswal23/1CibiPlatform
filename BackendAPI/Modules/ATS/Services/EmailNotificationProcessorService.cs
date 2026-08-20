@@ -6,66 +6,46 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
 	private readonly IATSRepository _repository;
 	private readonly IConfiguration _configuration;
-	private readonly IConnectionMultiplexer _redis;
-	private readonly HybridCache _hybridCache;
 	private readonly string _applicationformBaseUrl;
-	private readonly string _batchesPending;
-	private readonly string _batchesProcessing;
+
+	// Comfortably longer than a full send pass (100 messages, 3 retries each) so a live
+	// worker is never robbed of rows it is still processing.
+	private static readonly TimeSpan StaleClaimTimeout = TimeSpan.FromMinutes(30);
 
 	public EmailNotificationProcessorService(
 		ILogger<EmailNotificationProcessorService> logger,
 		IEndorsementSubmissionService endorsementSubmissionService,
 		IATSRepository repository,
-		IConfiguration configuration,
-		IConnectionMultiplexer redis,
-		HybridCache hybridCache)
+		IConfiguration configuration)
 	{
 		_logger = logger;
 		_endorsementSubmissionService = endorsementSubmissionService;
 		_repository = repository;
-		_redis = redis;
-		_hybridCache = hybridCache;
 		_configuration = configuration;
-		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
-		_batchesProcessing = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesProcessing") ?? string.Empty;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 	}
 
 	public async Task ProcessForPendingStatusAsync(CancellationToken cancellationToken)
 	{
-		string? cacheKey = string.Empty;
+		// A crash mid-send leaves rows claimed as Processing with no live worker, so
+		// release anything stale before claiming the next slice.
+		var released = await _repository.ReleaseStaleEmailInvitationClaimsAsync(StaleClaimTimeout);
 
-		var dbRedis = _redis.GetDatabase();
-
-		try
+		if (released > 0)
 		{
-			cacheKey = await dbRedis.ListMoveAsync(
-						_batchesPending,
-						_batchesProcessing,
-						ListSide.Left,
-						ListSide.Right);
-
-			if (string.IsNullOrEmpty(cacheKey))
-			{
-				return;
-			}
-
+			_logger.LogWarning(
+				"Released {ReleasedCount} stale email invitation claim(s) back to Pending.",
+				released);
 		}
-		catch (RedisTimeoutException ex)
-		{
-			_logger.LogWarning(ex, "Redis timeout while reading {_batchesPending}", _batchesPending);
 
+		// PostgreSQL is the queue: the claim atomically moves a slice of Pending rows to
+		// Processing, so a concurrent worker cannot pick up the same invitations.
+		var allRequests = await _repository.GetPendingEmailInvitationRequestsAsync();
+
+		if (allRequests.Count == 0)
+		{
 			return;
 		}
-
-		var cached = await _hybridCache.GetOrCreateAsync(
-			cacheKey!,
-			async entry =>
-			{
-				return new List<List<EmailInvitationRequest>>();
-			});
-
-		var allRequests = cached.SelectMany(x => x).ToList();
 
 		List<EmailInvitationRequest> successList = new();
 		List<EmailInvitationRequest> errorList = new();
@@ -101,12 +81,6 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		{
 			await _repository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(errorList);
 		}
-
-		await _hybridCache.RemoveAsync(cacheKey!);
-
-		await dbRedis.ListRemoveAsync(
-			_batchesProcessing,
-			cacheKey);
 	}
 
 
