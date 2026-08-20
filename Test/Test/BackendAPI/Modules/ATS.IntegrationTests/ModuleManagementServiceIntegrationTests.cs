@@ -52,17 +52,25 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 			("Candidate Management", "First module"),
 			("Search Reports", "Second module"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 2);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _moduleManagementService.GetModulesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.PageIndex.Should().Be(1);
-		result.PageSize.Should().Be(2);
-		result.Count.Should().Be(3);
-		result.Data.Select(x => x.ModuleName)
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(x => x.ModuleName)
 			.Should().Equal("Candidate Management", "Search Reports");
+		result.NextCursor.Should().NotBeNull();
+
+		var secondPage = await _moduleManagementService.GetModulesAsync(
+			new KeysetPaginationRequest(Cursor: result.NextCursor, PageSize: 2),
+			CancellationToken.None);
+
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(x => x.ModuleName)
+			.Should().Equal("Withdrawn Orders");
+		secondPage.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -74,15 +82,16 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 			("Report Search", "Finds PREMIUM screening reports"),
 			("Premium Orders", "Handles complex screening"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "premium");
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "premium");
 
 		// Act
 		var result = await _moduleManagementService.GetModulesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(2);
-		result.Data.Select(x => x.ModuleName)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(x => x.ModuleName)
 			.Should().Equal("Premium Orders", "Report Search");
+		result.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

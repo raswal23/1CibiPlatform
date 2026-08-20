@@ -21,12 +21,7 @@ public class RoleServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task GetRolesAsync_ShouldReturnPaginatedResult()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = null
-		};
+		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: null);
 
 		var roleData = new List<RolesDTO>
 		{
@@ -34,57 +29,100 @@ public class RoleServiceTests : IClassFixture<AuthServiceFixture>
 			new RolesDTO(2, "Admin", "Admin")
 		};
 
-		var expectedResult = new PaginatedResult<RolesDTO>(1, 2, 10, roleData);
-
-		var mockAuthRepository = _fixture
-			.MockAuthRepository
-			.Setup(x => x.GetRolesAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetRolesPageAsync(null, null, 11, CancellationToken.None))
+			.ReturnsAsync(roleData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountRolesAsync(null, CancellationToken.None))
+			.ReturnsAsync(10);
 
 		// Act
 		var result = await _fixture.RoleService.GetRolesAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(10);
+		result.NextCursor.Should().BeNull();
+		result.Items.Should().BeEquivalentTo(roleData);
 	}
 
 	[Fact]
-	public async Task GetRolesAsync_ShouldCallSearchRoleAsync_WhenSearchTermProvided()
+	public async Task GetRolesAsync_ShouldPassSearchTerm_WhenProvided()
 	{
 		// Arrange
-		var service = _fixture.UserManagementService;
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = "SuperAdmin"
-		};
+		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "SuperAdmin");
 
 		var roleData = new List<RolesDTO>
 		{
 			new RolesDTO(1, "SuperAdmin", "SuperAdmin"),
 		};
 
-		var expectedResult = new PaginatedResult<RolesDTO>(1, 2, 10, roleData);
-
-		var mockAuthRepository = _fixture
-			.MockAuthRepository
-			.Setup(x => x.SearchRoleAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetRolesPageAsync("SuperAdmin", null, 11, CancellationToken.None))
+			.ReturnsAsync(roleData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountRolesAsync("SuperAdmin", CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
 		var result = await _fixture.RoleService.GetRolesAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().BeEquivalentTo(roleData);
+	}
+
+	[Fact]
+	public async Task GetRolesAsync_ShouldReturnFirstPage_WhenCursorIsMalformed()
+	{
+		// A garbage cursor must never throw — it silently restarts the walk.
+		var paginationRequest = new KeysetPaginationRequest(Cursor: "not-base64!!!", PageSize: 10, SearchTerm: null);
+
+		var roleData = new List<RolesDTO> { new RolesDTO(1, "SuperAdmin", "SuperAdmin") };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetRolesPageAsync(null, null, 11, CancellationToken.None))
+			.ReturnsAsync(roleData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountRolesAsync(null, CancellationToken.None))
+			.ReturnsAsync(1);
+
+		// Act
+		var result = await _fixture.RoleService.GetRolesAsync(paginationRequest, CancellationToken.None);
+
+		// Assert: treated as first page — TotalCount populated, no seek anchor used.
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().BeEquivalentTo(roleData);
+	}
+
+	[Fact]
+	public async Task GetRolesAsync_ShouldMintDecodableCursor_WhenMorePagesExist()
+	{
+		// Arrange: repo returns pageSize + 1 rows, so a next cursor must be minted.
+		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 2, SearchTerm: null);
+
+		var roleData = new List<RolesDTO>
+		{
+			new RolesDTO(1, "Admin", "Admin"),
+			new RolesDTO(2, "SuperAdmin", "SuperAdmin"),
+			new RolesDTO(3, "Viewer", "Viewer")
+		};
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetRolesPageAsync(null, null, 3, CancellationToken.None))
+			.ReturnsAsync(roleData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountRolesAsync(null, CancellationToken.None))
+			.ReturnsAsync(3);
+
+		// Act
+		var result = await _fixture.RoleService.GetRolesAsync(paginationRequest, CancellationToken.None);
+
+		// Assert: trimmed to pageSize and the cursor round-trips to the last RoleId.
+		result.Items.Should().HaveCount(2);
+		var fields = CursorCodec.Decode(result.NextCursor, 1);
+		fields.Should().Equal("2");
 	}
 
 	[Fact]

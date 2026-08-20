@@ -1,4 +1,4 @@
-namespace Auth.Services;
+﻿namespace Auth.Services;
 
 public class SubMenuService : ISubMenuService
 {
@@ -64,8 +64,8 @@ public class SubMenuService : ISubMenuService
 		return subMenu.Adapt<SubMenuDTO>();
 	}
 
-	public Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<SubMenusDTO>> GetSubMenusAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -78,8 +78,21 @@ public class SubMenuService : ISubMenuService
 
 		_logger.LogInformation("Fetching submenus with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_authRepository.GetSubMenusAsync(paginationRequest, cancellationToken) :
-			_authRepository.SearchSubMenusAsync(paginationRequest, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		int? afterSubMenuId = int.TryParse(fields?[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var subMenuId) ? subMenuId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _authRepository.GetSubMenusPageAsync(paginationRequest.SearchTerm, afterSubMenuId, pageSize + 1, cancellationToken);
+		var (subMenus, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(subMenus[^1].subMenuId.ToString(CultureInfo.InvariantCulture))
+			: null;
+		long? totalCount = afterSubMenuId is null
+			? await _authRepository.CountSubMenusAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<SubMenusDTO>(subMenus, nextCursor, totalCount);
 	}
 }

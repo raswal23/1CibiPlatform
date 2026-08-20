@@ -1,7 +1,18 @@
 ﻿using ATS.Data.Context;
 using ATS.Data.Repository;
-using ATS.Services;
 using ATS.Services.AIAssistant;
+using ATS.Services.ApplicantSearchProjections;
+using ATS.Services.BulkSubmissionProcessor;
+using ATS.Services.Dashboard;
+using ATS.Services.EmailNotificationProcessor;
+using ATS.Services.EndorsementSubmission;
+using ATS.Services.Report;
+using ATS.Services.Settings.ClientAssignment;
+using ATS.Services.Settings.ClientManagement;
+using ATS.Services.Settings.ModuleManagement;
+using ATS.Services.Settings.PackageManagement;
+using ATS.Services.Settings.RoleManagement;
+using ATS.Services.Settings.UserManagement;
 using Auth.Data.Context;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -11,7 +22,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using StackExchange.Redis;
 
 namespace Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
@@ -42,7 +52,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly HybridCache _hybridCache;
-	protected readonly IConnectionMultiplexer _redis;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
 	{
@@ -53,7 +62,6 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_dbContext = _scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		_authDbContext = _scope.ServiceProvider.GetRequiredService<AuthApplicationDbContext>();
 		_hybridCache = _scope.ServiceProvider.GetRequiredService<HybridCache>();
-		_redis = _scope.ServiceProvider.GetRequiredService<IConnectionMultiplexer>();
 		_httpContextAccessor = _scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>();
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
@@ -117,6 +125,8 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 				await _authDbContext.Database.ExecuteSqlRawAsync(sql);
 			}
 
+			// Every tag used by the ATS/Auth cache decorators must be listed — cached
+			// first pages and counts survive the table truncation above otherwise.
 			await _hybridCache.RemoveByTagAsync("user");
 			await _hybridCache.RemoveByTagAsync("userclient");
 			await _hybridCache.RemoveByTagAsync("users");
@@ -124,6 +134,10 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 			await _hybridCache.RemoveByTagAsync("disputeorder");
 			await _hybridCache.RemoveByTagAsync("report");
 			await _hybridCache.RemoveByTagAsync("withdrawnapplication");
+			await _hybridCache.RemoveByTagAsync("role");
+			await _hybridCache.RemoveByTagAsync("module");
+			await _hybridCache.RemoveByTagAsync("client");
+			await _hybridCache.RemoveByTagAsync("package");
 
 			if (_objectStorageService is MockObjectStorageService mockObjectStorage)
 				mockObjectStorage.Clear();

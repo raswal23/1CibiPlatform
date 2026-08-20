@@ -8,6 +8,7 @@ public partial class SearchReportComponent
 	[Inject]
 	private LocalStorageService LocalStorageService { get; set; } = default!;
 
+	private readonly CursorTableLoader<ReportListDTO> _reportsLoader = new();
 	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
 	private string? _searchString;
@@ -82,38 +83,32 @@ public partial class SearchReportComponent
 
 	private async Task<TableData<ReportListDTO>> LoadReportData(TableState state, CancellationToken cancellationToken)
 	{
-		try
-		{
-			var result = await ReportService.GetReportsAsync(
-				   state.Page + 1,
-				   state.PageSize,
-				   searchString,
-				   state.SortLabel,
-				   state.SortDirection == SortDirection.Descending,
-				   _dateRange?.Start,
-				   _dateRange?.End);
-			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+		var signature = $"{searchString}|{_dateRange?.Start:yyyy-MM-dd}|{_dateRange?.End:yyyy-MM-dd}";
 
-			return new TableData<ReportListDTO>
-			{
-				Items = currentPageData,
-				TotalItems = (int)result.Count
-			};
-		}
-		catch (Exception)
-		{
-			Snackbar.Add("Failed to load reports.", Severity.Error);
-			return new TableData<ReportListDTO>
-			{
-				Items = Array.Empty<ReportListDTO>(),
-				TotalItems = 0
-			};
-		}
+		var tableData = await _reportsLoader.LoadAsync(
+			state,
+			signature,
+			(cursor, pageSize) => ReportService.GetReportsAsync(
+				cursor,
+				pageSize,
+				searchString,
+				_dateRange?.Start,
+				_dateRange?.End),
+			message => Snackbar.Add(message, Severity.Error));
+
+		currentPageData = tableData.Items?.ToList() ?? new List<ReportListDTO>();
+
+		return tableData;
 	}
 
 	private async Task OnDateRangeChanged(DateRange range)
 	{
 		_dateRange = range;
+
+		// A changed filter starts a new keyset walk; keep MudTable's page in
+		// sync with the loader's reset-to-first-page.
+		if (reportsTable?.TableRef is not null)
+			reportsTable.TableRef.CurrentPage = 0;
 
 		await ReloadTable();
 	}
@@ -136,14 +131,15 @@ public partial class SearchReportComponent
 			downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList.Add(report.EmailInvitationRequestId);
 		}
 
-		var response = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
+		var downloadResponse = await ReportService.DownloadMultipleOrderRecordsAsync(downloadMultipleOrderRecordsRequest);
 
-		if (!response.IsSuccessStatusCode)
+		if (!downloadResponse.IsSuccess || downloadResponse.Data is null)
 		{
-			Snackbar.Add("Failed to download records.", Severity.Error);
+			Snackbar.Add(downloadResponse.ErrorDetail, Severity.Error);
 			return;
 		}
 
+		var response = downloadResponse.Data;
 		var fileBytes = await response.Content.ReadAsByteArrayAsync();
 
 		using (var ms = new MemoryStream(fileBytes))
@@ -189,26 +185,25 @@ public partial class SearchReportComponent
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
 	{
-		try
-		{
-			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
+		var resultResponse = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 
-			var parameters = new DialogParameters
-			{
-				{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
-				{ nameof(ATSResultComponent.ReportResult), reportResult }
-			};
-
-			await OpenResultDialog<ATSResultComponent>(
-				"",
-				parameters,
-				MaxWidth.Medium,
-				fullWidth: false);
-		}
-		catch (Exception)
+		if (!resultResponse.IsSuccess)
 		{
-			Snackbar.Add("Failed to load ATS result details.", Severity.Error);
+			Snackbar.Add(resultResponse.ErrorDetail, Severity.Error);
+			return;
 		}
+
+		var parameters = new DialogParameters
+		{
+			{ nameof(ATSResultComponent.EmailInvitationId), emailInvitationId },
+			{ nameof(ATSResultComponent.ReportResult), resultResponse.Data }
+		};
+
+		await OpenResultDialog<ATSResultComponent>(
+			"",
+			parameters,
+			MaxWidth.Medium,
+			fullWidth: false);
 	}
 
 	private async Task OpenUploadReportDialog(Guid emailInvitationId)

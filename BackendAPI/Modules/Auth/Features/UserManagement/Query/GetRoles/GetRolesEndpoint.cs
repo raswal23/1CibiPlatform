@@ -1,8 +1,8 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetRoles;
 
-public record GetRolesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetRolesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetRolesEndpointResponse(PaginatedResult<RolesDTO> Roles);
+public record GetRolesEndpointResponse(KeysetPaginatedResult<RolesDTO> Roles);
 public class GetRolesEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -13,7 +13,7 @@ public class GetRolesEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetRolesQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

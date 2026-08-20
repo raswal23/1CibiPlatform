@@ -1,7 +1,7 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetLockedUsers;
-public record GetLockedUsersEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetLockedUsersEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetLockedUsersEndpointResponse(PaginatedResult<AuthAttempts> LockedUsers);
+public record GetLockedUsersEndpointResponse(KeysetPaginatedResult<AuthAttempts> LockedUsers);
 public class GetLockedUsersEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -12,7 +12,7 @@ public class GetLockedUsersEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetLockedUsersQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

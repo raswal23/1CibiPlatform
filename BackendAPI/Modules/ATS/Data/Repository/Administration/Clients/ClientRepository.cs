@@ -6,27 +6,63 @@ public sealed class ClientRepository : IClientRepository
 
 	public ClientRepository(ATSDBContext dbContext) => _dbContext = dbContext;
 
-	public Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest request, CancellationToken cancellationToken) =>
-		GetPageAsync(request, false, cancellationToken);
+	// Keyset over the grouped projection (ClientName, ClientId): one page is take-1
+	// logical clients, each expanding to a row per package via GetClientsByIdsAsync.
+	// The service mints the cursor from the last key returned here.
+	public async Task<List<ClientLookupDTO>> GetClientPageKeysAsync(string? searchTerm, string? afterClientName, int? afterClientId, int take, CancellationToken cancellationToken)
+	{
+		var logical = BuildLogicalQuery(searchTerm);
+		if (afterClientName is not null && afterClientId.HasValue)
+		{
+			var cId = afterClientId.Value;
+			logical = logical.Where(client =>
+				string.Compare(client.ClientName, afterClientName) > 0
+				|| (client.ClientName == afterClientName && client.ClientId > cId));
+		}
 
-	public Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest request, CancellationToken cancellationToken) =>
-		GetPageAsync(request, true, cancellationToken);
+		return await logical.OrderBy(client => client.ClientName).ThenBy(client => client.ClientId)
+			.Take(take).ToListAsync(cancellationToken);
+	}
+
+	public Task<List<ClientDetailsDTO>> GetClientsByIdsAsync(IReadOnlyCollection<int> clientIds, string? searchTerm, CancellationToken cancellationToken) =>
+		BuildQuery(searchTerm).Where(client => clientIds.Contains(client.ClientId)).OrderBy(client => client.ClientName)
+			.ThenBy(client => client.ClientId).ThenBy(client => client.PackageId)
+			.Select(client => new ClientDetailsDTO
+			{
+				ClientId = client.ClientId,
+				ClientName = client.ClientName,
+				ClientDescription = client.ClientDescription,
+				IsActive = client.IsActive,
+				PackageId = client.PackageId,
+				CreatedAt = client.CreatedAt,
+				UpdatedAt = client.UpdatedAt
+			}).ToListAsync(cancellationToken);
+
+	public Task<long> CountClientsAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		BuildLogicalQuery(searchTerm).LongCountAsync(cancellationToken);
+
+	private IQueryable<ClientDetails> BuildQuery(string? searchTerm)
+	{
+		var query = _dbContext.ClientDetails.AsNoTracking();
+		if (!string.IsNullOrEmpty(searchTerm))
+		{
+			var term = $"%{searchTerm}%";
+			query = query.Where(client => EF.Functions.ILike(client.ClientName, term) || EF.Functions.ILike(client.ClientDescription, term));
+		}
+		return query;
+	}
+
+	private IQueryable<ClientLookupDTO> BuildLogicalQuery(string? searchTerm) =>
+		BuildQuery(searchTerm).GroupBy(client => client.ClientId).Select(group => new ClientLookupDTO
+		{
+			ClientId = group.Key,
+			ClientName = group.Min(client => client.ClientName)
+		});
 
 	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var clients = clientDTOs.ToArray();
-		if (clients.Length == 0)
-			throw new BadRequestException("At least one package must be selected.");
-
 		var clientName = clients[0].ClientName.Trim();
-		if (await _dbContext.ClientDetails.AsNoTracking().AnyAsync(client => EF.Functions.ILike(client.ClientName, clientName), cancellationToken))
-			throw new BadRequestException($"Client '{clientName}' already exists.");
-
-		var packageIds = clients.Select(client => client.PackageId).Distinct().ToArray();
-		var activePackageCount = await _dbContext.PackageDetails.AsNoTracking()
-			.CountAsync(package => packageIds.Contains(package.PackageId) && package.IsActive, cancellationToken);
-		if (activePackageCount != packageIds.Length)
-			throw new BadRequestException("One or more selected packages do not exist or are inactive.");
 
 		var now = DateTime.UtcNow;
 		await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -60,31 +96,25 @@ public sealed class ClientRepository : IClientRepository
 		await _dbContext.ClientDetails.AsNoTracking().Where(client => client.ClientId == clientId)
 			.OrderBy(client => client.PackageId).ToListAsync(cancellationToken);
 
+	public Task<bool> ClientNameExistsAsync(string clientName, int? excludeClientId, CancellationToken cancellationToken) =>
+		_dbContext.ClientDetails.AsNoTracking()
+			.AnyAsync(client => (!excludeClientId.HasValue || client.ClientId != excludeClientId.Value)
+				&& EF.Functions.ILike(client.ClientName, clientName), cancellationToken);
+
+	public Task<int> CountActivePackagesAsync(IReadOnlyCollection<int> packageIds, CancellationToken cancellationToken) =>
+		_dbContext.PackageDetails.AsNoTracking()
+			.CountAsync(package => packageIds.Contains(package.PackageId) && package.IsActive, cancellationToken);
+
 	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var clients = clientDTOs.ToArray();
-		if (clients.Length == 0)
-			throw new BadRequestException("At least one package must be selected.");
-
 		var clientId = clients[0].ClientId;
 		var existing = await _dbContext.ClientDetails.Where(client => client.ClientId == clientId).ToListAsync(cancellationToken);
-		if (existing.Count == 0)
-			throw new NotFoundException($"Client with ID {clientId} was not found.");
 
 		var name = clients[0].ClientName.Trim();
-		if (await _dbContext.ClientDetails.AsNoTracking().AnyAsync(client => client.ClientId != clientId && EF.Functions.ILike(client.ClientName, name), cancellationToken))
-			throw new BadRequestException($"Client '{name}' already exists.");
-
 		var selectedPackageIds = clients.Select(client => client.PackageId).Distinct().ToHashSet();
 		var existingPackageIds = existing.Select(client => client.PackageId).ToHashSet();
 		var newPackageIds = selectedPackageIds.Except(existingPackageIds).ToArray();
-		if (newPackageIds.Length > 0)
-		{
-			var count = await _dbContext.PackageDetails.AsNoTracking()
-				.CountAsync(package => newPackageIds.Contains(package.PackageId) && package.IsActive, cancellationToken);
-			if (count != newPackageIds.Length)
-				throw new BadRequestException("One or more newly selected packages do not exist or are inactive.");
-		}
 
 		var now = DateTime.UtcNow;
 		var createdAt = existing.Min(client => client.CreatedAt);
@@ -113,30 +143,4 @@ public sealed class ClientRepository : IClientRepository
 		return existing.Where(client => selectedPackageIds.Contains(client.PackageId)).Concat(added).OrderBy(client => client.PackageId).ToArray();
 	}
 
-	private async Task<PaginatedResult<ClientDetailsDTO>> GetPageAsync(PaginationRequest request, bool search, CancellationToken cancellationToken)
-	{
-		var query = _dbContext.ClientDetails.AsNoTracking();
-		if (search)
-		{
-			var term = $"%{request.SearchTerm}%";
-			query = query.Where(client => EF.Functions.ILike(client.ClientName, term) || EF.Functions.ILike(client.ClientDescription, term));
-		}
-		var logical = query.GroupBy(client => client.ClientId).Select(group => new { ClientId = group.Key, ClientName = group.Min(client => client.ClientName) });
-		var count = await logical.LongCountAsync(cancellationToken);
-		var ids = await logical.OrderBy(client => client.ClientName).ThenBy(client => client.ClientId)
-			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize).Select(client => client.ClientId).ToListAsync(cancellationToken);
-		var items = await query.Where(client => ids.Contains(client.ClientId)).OrderBy(client => client.ClientName)
-			.ThenBy(client => client.ClientId).ThenBy(client => client.PackageId)
-			.Select(client => new ClientDetailsDTO
-			{
-				ClientId = client.ClientId,
-				ClientName = client.ClientName,
-				ClientDescription = client.ClientDescription,
-				IsActive = client.IsActive,
-				PackageId = client.PackageId,
-				CreatedAt = client.CreatedAt,
-				UpdatedAt = client.UpdatedAt
-			}).ToListAsync(cancellationToken);
-		return new PaginatedResult<ClientDetailsDTO>(request.PageIndex, request.PageSize, count, items);
-	}
 }

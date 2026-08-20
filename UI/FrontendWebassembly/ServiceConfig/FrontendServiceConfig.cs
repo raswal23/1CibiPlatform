@@ -70,7 +70,6 @@ public static class FrontendServiceConfig
 		services.AddScoped<IUserManagementService, UserManagementService>();
 		services.AddScoped<ISSOService, SSOService>();
 		services.AddScoped<IAIAgentChatService, AIChatService>();
-		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService, FrontendWebassembly.Services.EmploymentVerification.Implementation.EmploymentVerificationService>();

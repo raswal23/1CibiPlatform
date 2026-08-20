@@ -7,6 +7,7 @@ public partial class AddUserComponent
 	private const string ATSRoleIdStorageKey = "ATSRoleId";
 	private MudForm? UserForm;
 	private bool _canViewAllModules;
+	private bool _canAssignAllRoles;
 
 	[Inject]
 	private IAccessService AccessService { get; set; } = default!;
@@ -43,12 +44,26 @@ public partial class AddUserComponent
 		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules));
 	private IEnumerable<ModuleDetailsDTO> SelectedModules => VisibleModules
 		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+	private IEnumerable<RoleDetailsDTO> AssignableRoles
+	{
+		get
+		{
+			var activeRoles = Roles.Where(role => role.IsActive);
+			if (_canAssignAllRoles)
+				return activeRoles;
+
+			return activeRoles.Where(role =>
+				role.RoleId != AtsRoleList.PlatformManagerId &&
+				role.RoleId != AtsRoleList.ServiceDeliveryId);
+		}
+	}
 
 	protected override async Task OnInitializedAsync()
 	{
 		var isPlatformSuperAdmin = await AccessService.HasRoleAsync(RoleList.SuperAdminId);
 		var atsRoleId = await GetStoredATSRoleIdAsync();
-		_canViewAllModules = isPlatformSuperAdmin || atsRoleId == 1;
+		_canViewAllModules = isPlatformSuperAdmin || atsRoleId == AtsRoleList.PlatformManagerId;
+		_canAssignAllRoles = isPlatformSuperAdmin || atsRoleId == AtsRoleList.PlatformManagerId;
 	}
 
 	private async Task<int> GetStoredATSRoleIdAsync()

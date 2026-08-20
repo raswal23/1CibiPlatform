@@ -1,0 +1,12 @@
+/* MudBlazor's .mud-table-pagination-select sets only cursor/margin/min-width, never a
+   display rule — stock MudTablePager keeps the caption and the select as flex siblings
+   of its MudToolBar. This pager nests them in that div instead, so without a display
+   rule they fall into block flow and the label stacks above the dropdown.
+   The 10px side margins are MudBlazor's; dropping them sits the group next to the
+   "1-10 of 428" info text rather than floating apart from it. */
+.cursor-table-pager .mud-table-pagination-select {
+    display: flex;
+    align-items: center;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}

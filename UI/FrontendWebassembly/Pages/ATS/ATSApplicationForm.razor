@@ -10,7 +10,11 @@
                 OnBeforeInternalNavigation="ConfirmNavigation" />
 
 <div class="@RootCssClass">
-    @if (string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase))
+    @if (_initError is not null)
+    {
+        <ErrorDialogComponent Message="@_initError" />
+    }
+    else if (string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase))
     {
         <CompletedComponent />
     }

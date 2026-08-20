@@ -6,7 +6,6 @@
 @inject IClientManagementService ClientManagementService
 @inject IRoleManagementService RoleManagementService
 @inject IModuleManagementService ModuleManagementService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - User Management</PageTitle>
@@ -36,6 +35,7 @@
                         RowsPerPage="10"
                         PageSizeOptions="@(new[] { 10, 25, 50 })"
                         LoadServerData="LoadUserData"
+                        CursorPagerState="_usersLoader"
                         SearchString="@searchString"
                         SearchStringChanged="@((string value) => searchString = value)">
 
@@ -121,6 +121,7 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<UserManagementViewModel> _usersLoader = new();
     private TableComponent<UserManagementViewModel>? usersTable;
     private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
     private IReadOnlyList<ClientDetailsDTO> clients = Array.Empty<ClientDetailsDTO>();
@@ -132,8 +133,9 @@
     private Dictionary<int, ModuleDetailsDTO> moduleLookup = new();
     private Dictionary<Guid, ATSUserLookupDTO> authUserLookup = new();
     private Dictionary<Guid, UserClientDetailsDTO> userClientAssignmentLookup = new();
-    private Task? referenceDataLoadTask;
+    private Task<bool>? referenceDataLoadTask;
     private bool referenceDataLoaded;
+    private string? referenceDataError;
 
     private static string GetUserInitials(string? userName)
     {
@@ -150,13 +152,21 @@
     }
 
     private async Task<TableData<UserManagementViewModel>> LoadUserData(TableState state, CancellationToken cancellationToken)
-        => await LoadPagedDataAsync(state, async (page, pageSize) =>
+        => await LoadCursorPagedDataAsync(_usersLoader, state, $"{searchString}", async (cursor, pageSize) =>
         {
             var referenceTask = EnsureReferenceDataLoadedAsync(cancellationToken);
-            var usersTask = UserManagementService.GetUsersAsync(page, pageSize, searchString, cancellationToken);
+            var usersTask = UserManagementService.GetUsersAsync(cursor, pageSize, searchString, cancellationToken);
             await Task.WhenAll(referenceTask, usersTask);
 
-            var result = await usersTask;
+            var usersResponse = await usersTask;
+
+            if (!usersResponse.IsSuccess || usersResponse.Data is null)
+                return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Failure(usersResponse.ErrorDetail);
+
+            if (!await referenceTask)
+                return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Failure(referenceDataError ?? "Failed to load reference data.");
+
+            var result = usersResponse.Data;
             var groupedUsers = result.Items
                 .GroupBy(user => user.UserId)
                 .Select(group =>
@@ -194,26 +204,34 @@
                 .ThenBy(user => user.UserEmail)
                 .ToArray();
 
-            return new PaginatedResult<UserManagementViewModel>(
-                result.PageIndex,
-                result.PageSize,
-                result.TotalRecords,
-                groupedUsers);
+            return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Success(
+                new KeysetPaginatedResult<UserManagementViewModel>(
+                    groupedUsers,
+                    result.NextCursor,
+                    result.TotalCount));
         });
 
-    private async Task EnsureReferenceDataLoadedAsync(CancellationToken cancellationToken)
+    private async Task<bool> EnsureReferenceDataLoadedAsync(CancellationToken cancellationToken)
     {
         if (referenceDataLoaded)
-            return;
+            return true;
 
         referenceDataLoadTask ??= LoadReferenceDataAsync(cancellationToken);
 
         try
         {
-            await referenceDataLoadTask.WaitAsync(cancellationToken);
+            var loaded = await referenceDataLoadTask.WaitAsync(cancellationToken);
+
+            if (!loaded)
+            {
+                referenceDataLoadTask = null;
+                return false;
+            }
+
             referenceDataLoaded = true;
+            return true;
         }
-        catch
+        catch (OperationCanceledException)
         {
             if (referenceDataLoadTask.IsCanceled || referenceDataLoadTask.IsFaulted)
                 referenceDataLoadTask = null;
@@ -221,7 +239,7 @@
         }
     }
 
-    private async Task LoadReferenceDataAsync(CancellationToken cancellationToken)
+    private async Task<bool> LoadReferenceDataAsync(CancellationToken cancellationToken)
     {
         var authUsersTask = UserManagementService.GetAuthUsersAsync(cancellationToken);
         var clientsTask = ClientManagementService.GetAllClientsAsync(cancellationToken);
@@ -230,21 +248,43 @@
         var assignmentsTask = UserManagementService.GetUserClientAssignmentsAsync(cancellationToken);
         await Task.WhenAll(authUsersTask, clientsTask, rolesTask, modulesTask, assignmentsTask);
 
-        authUsers = (await authUsersTask).OrderBy(user => user.UserName).ToArray();
-        clients = (await clientsTask)
+        var authUsersResponse = await authUsersTask;
+        var clientsResponse = await clientsTask;
+        var rolesResponse = await rolesTask;
+        var modulesResponse = await modulesTask;
+        var assignmentsResponse = await assignmentsTask;
+
+        var firstFailure = new[]
+        {
+            authUsersResponse.IsSuccess ? null : authUsersResponse.ErrorDetail,
+            clientsResponse.IsSuccess ? null : clientsResponse.ErrorDetail,
+            rolesResponse.IsSuccess ? null : rolesResponse.ErrorDetail,
+            modulesResponse.IsSuccess ? null : modulesResponse.ErrorDetail,
+            assignmentsResponse.IsSuccess ? null : assignmentsResponse.ErrorDetail
+        }.FirstOrDefault(error => error is not null);
+
+        if (firstFailure is not null)
+        {
+            referenceDataError = firstFailure;
+            return false;
+        }
+
+        authUsers = authUsersResponse.Data!.OrderBy(user => user.UserName).ToArray();
+        clients = clientsResponse.Data!
             .GroupBy(client => client.ClientId)
             .Select(group => group.First())
             .OrderBy(client => client.ClientName)
             .ToArray();
-        roles = (await rolesTask).OrderBy(role => role.RoleName).ToArray();
-        modules = (await modulesTask).OrderBy(module => module.ModuleName).ToArray();
-        userClientAssignments = (await assignmentsTask).ToArray();
+        roles = rolesResponse.Data!.OrderBy(role => role.RoleName).ToArray();
+        modules = modulesResponse.Data!.OrderBy(module => module.ModuleName).ToArray();
+        userClientAssignments = assignmentsResponse.Data!.ToArray();
 
         clientLookup = clients.ToDictionary(client => client.ClientId);
         roleLookup = roles.ToDictionary(role => role.RoleId);
         moduleLookup = modules.ToDictionary(module => module.ModuleId);
         authUserLookup = authUsers.ToDictionary(user => user.UserId);
         userClientAssignmentLookup = userClientAssignments.ToDictionary(assignment => assignment.UserId);
+        return true;
     }
 
     private async Task AddNewUser()
@@ -286,18 +326,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var addedUser = (AddATSUserDTO)result.Data!;
+            var addResponse = await UserManagementService.AddUserAsync(addedUser);
+
+            if (!addResponse.IsSuccess)
             {
-                var addedUser = (AddATSUserDTO)result.Data!;
-                await UserManagementService.AddUserAsync(addedUser);
-                Snackbar.Add("User added successfully", Severity.Success);
-                if (usersTable is not null)
-                    await usersTable.ReloadServerData();
+                Snackbar.Add(addResponse.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("User added successfully", Severity.Success);
+            if (usersTable is not null)
+                await usersTable.ReloadServerData();
         }
     }
 
@@ -327,31 +367,28 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var editResponse = await UserManagementService.EditUserAsync((EditATSUserDTO)result.Data!);
+
+            if (!editResponse.IsSuccess)
             {
-                await UserManagementService.EditUserAsync((EditATSUserDTO)result.Data!);
-                Snackbar.Add("User updated successfully", Severity.Success);
-                if (usersTable is not null)
-                    await usersTable.ReloadServerData();
+                Snackbar.Add(editResponse.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("User updated successfully", Severity.Success);
+            if (usersTable is not null)
+                await usersTable.ReloadServerData();
         }
     }
 
     private async Task<bool> EnsureReferencesForDialogAsync()
     {
-        try
+        if (!await EnsureReferenceDataLoadedAsync(CancellationToken.None))
         {
-            await EnsureReferenceDataLoadedAsync(CancellationToken.None);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(referenceDataError ?? "Failed to load reference data.", Severity.Error);
             return false;
         }
+
+        return true;
     }
 }

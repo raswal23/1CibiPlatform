@@ -2,8 +2,8 @@
 
 public interface IAppSubRoleService
 {
-	Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> DeleteAppSubRoleAsync(int AppSubRoleId);

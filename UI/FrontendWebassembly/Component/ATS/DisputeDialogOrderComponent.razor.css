@@ -287,6 +287,7 @@
 }
 
 .dd-pills-wrap ::deep .dd-pill {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -299,6 +300,25 @@
     color: var(--dd-text-1);
     cursor: pointer;
     transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-input-control-input-container {
+    position: static;
+    width: 100%;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-radio {
+    position: static;
+    width: 100%;
+    justify-content: center;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-radio::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    border-radius: 20px;
+    cursor: pointer;
 }
 
 .dd-pills-wrap ::deep .dd-pill:hover {

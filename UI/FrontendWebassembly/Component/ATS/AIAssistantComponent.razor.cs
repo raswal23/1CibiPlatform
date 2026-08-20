@@ -388,6 +388,9 @@ public partial class AIAssistantComponent
 		{
 			_isConfirming = true;
 
+			await InvokeAsync(StateHasChanged);
+			await Task.Yield();
+
 			var answer = await AssistantService.ConfirmOrderDraftAsync(message.Draft.DraftId);
 
 			message.DraftState = OrderDraftState.Confirmed;

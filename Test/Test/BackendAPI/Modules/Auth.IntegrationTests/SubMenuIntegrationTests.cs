@@ -24,14 +24,14 @@ public class SubMenuIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedSubMenuData();
 
-		var query = new GetSubMenusQueryRequest(PageNumber: 1, PageSize: 3);
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 3);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.subMenus.Data.Count().Should().Be(3);
+		result.subMenus.Items.Count.Should().Be(3);
 	}
 
 	[Fact]
@@ -40,7 +40,7 @@ public class SubMenuIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedSubMenuData();
 
-		var query = new GetSubMenusQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "Dashboard");
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "Dashboard");
 
 		// Act
 		var result = await _sender.Send(query);
@@ -48,53 +48,61 @@ public class SubMenuIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 
-		result.subMenus.Count.Should().Be(1);
-		result.subMenus.Data.ElementAt(0).subMenuName.Should().Be("Dashboard");
-		result.subMenus.Data.ElementAt(0).Description.Should().Be("CNX Dashboard");
+		result.subMenus.TotalCount.Should().Be(1);
+		result.subMenus.Items.ElementAt(0).subMenuName.Should().Be("Dashboard");
+		result.subMenus.Items.ElementAt(0).Description.Should().Be("CNX Dashboard");
 	}
 
 	[Fact]
 	public async Task GetSubMenus_ShouldReturnEmptyList_WhenNoSubMenusExist()
 	{
 		// Arrange
-		var query = new GetSubMenusQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 5);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.subMenus.Count.Should().Be(0);
+		result.subMenus.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetSubMenus_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetSubMenus_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedSubMenuData();
-		var query = new GetSubMenusQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.subMenus.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.subMenus.NextCursor });
 
 		// Assert
-		result.subMenus.PageIndex.Should().Be(1);
-		result.subMenus.PageSize.Should().Be(2);
+		page1.subMenus.Items.Count.Should().Be(2);
+		page1.subMenus.TotalCount.Should().Be(3);
+		page2.subMenus.TotalCount.Should().BeNull();
+		page2.subMenus.Items.Select(s => s.subMenuId)
+			.Should().NotIntersectWith(page1.subMenus.Items.Select(s => s.subMenuId));
 	}
 
 	[Fact]
-	public async Task GetSubMenus_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetSubMenus_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedSubMenuData();
 
-		var query = new GetSubMenusQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.subMenus.NextCursor });
 
 		// Assert
-		result.subMenus.Data.Count().Should().Be(0);
+		page2.subMenus.Items.Count.Should().Be(1);
+		page2.subMenus.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

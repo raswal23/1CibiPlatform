@@ -15,5 +15,5 @@ public record AppSubRolesDTO
 
 public record AppSubRolesResponseDTO
 {
-	public PaginatedResult<AppSubRolesDTO>? appsubroles { get; set; }
+	public KeysetPaginatedResult<AppSubRolesDTO>? appsubroles { get; set; }
 }

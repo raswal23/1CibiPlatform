@@ -1,8 +1,8 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetApplications;
 
-public record GetApplicationsEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetApplicationsEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetApplicationsEndpointResponse(PaginatedResult<ApplicationsDTO> Applications);
+public record GetApplicationsEndpointResponse(KeysetPaginatedResult<ApplicationsDTO> Applications);
 public class GetApplicationsEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -13,7 +13,7 @@ public class GetApplicationsEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetApplicationsQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

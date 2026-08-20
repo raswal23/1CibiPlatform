@@ -25,13 +25,13 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedAppSubRoleData();
 
-		var query = new GetAppSubRolesQueryRequest(PageNumber: 1, PageSize: 3);
+		var query = new GetAppSubRolesQueryRequest(Cursor: null, PageSize: 3);
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.AppSubRoles.Data.Count().Should().Be(3);
+		result.AppSubRoles.Items.Count.Should().Be(3);
 	}
 
 	[Fact]
@@ -40,7 +40,7 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedAppSubRoleData();
 
-		var query = new GetAppSubRolesQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "1");
+		var query = new GetAppSubRolesQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "1");
 
 		// Act
 		var result = await _sender.Send(query);
@@ -55,44 +55,52 @@ public class AppSubRoleIntegrationTests : BaseIntegrationTest
 	public async Task GetAppSubRoles_ShouldReturnEmptyList_WhenNoAppSubRoleExist()
 	{
 		// Arrange
-		var query = new GetAppSubRolesQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetAppSubRolesQueryRequest(Cursor: null, PageSize: 5);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.AppSubRoles.Count.Should().Be(0);
+		result.AppSubRoles.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetAppSubRoles_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetAppSubRoles_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedAppSubRoleData();
-		var query = new GetAppSubRolesQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetAppSubRolesQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.AppSubRoles.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.AppSubRoles.NextCursor });
 
 		// Assert
-		result.AppSubRoles.PageIndex.Should().Be(1);
-		result.AppSubRoles.PageSize.Should().Be(2);
+		page1.AppSubRoles.Items.Count.Should().Be(2);
+		page1.AppSubRoles.TotalCount.Should().Be(3);
+		page2.AppSubRoles.TotalCount.Should().BeNull();
+		page2.AppSubRoles.Items.Select(a => a.AppRoleId)
+			.Should().NotIntersectWith(page1.AppSubRoles.Items.Select(a => a.AppRoleId));
 	}
 
 	[Fact]
-	public async Task GetAppSubRoles_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetAppSubRoles_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedAppSubRoleData();
 
-		var query = new GetAppSubRolesQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetAppSubRolesQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.AppSubRoles.NextCursor });
 
 		// Assert
-		result.AppSubRoles.Data.Count().Should().Be(0);
+		page2.AppSubRoles.Items.Count.Should().Be(1);
+		page2.AppSubRoles.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

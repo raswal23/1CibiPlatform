@@ -42,7 +42,8 @@ public static class ATSDatabaseExtensions
 
 		if (!await context.ModuleDetails.AnyAsync())
 		{
-			await context.ModuleDetails.AddRangeAsync(initData.GetATSModules());
+			await context.ModuleDetails.AddRangeAsync
+			(initData.GetATSModules());
 		}
 
 		if (!await context.UserDetails.AnyAsync())

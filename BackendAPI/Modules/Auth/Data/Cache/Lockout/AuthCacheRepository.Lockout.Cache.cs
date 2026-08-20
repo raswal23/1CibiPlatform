@@ -2,26 +2,27 @@ namespace Auth.Data.Cache;
 
 public partial class AuthCacheRepository
 {
-	public async Task<PaginatedResult<AuthAttempts>> GetLockedUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<AuthAttempts>> GetLockedUsersPageAsync(string? searchTerm, Guid? afterUserId, int take, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"lockedusers_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AuthAttempts>>(
+			if (afterUserId.HasValue)
+				return await _authRepository.GetLockedUsersPageAsync(searchTerm, afterUserId, take, cancellationToken);
+
+			var cacheKey = $"lockedusers_first_take_{take}_search_{searchTerm}";
+
+			return await _hybridCache.GetOrCreateAsync<List<AuthAttempts>>(
 				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.GetLockedUsersAsync(req, token),
+				async token => await _authRepository.GetLockedUsersPageAsync(searchTerm, null, take, token),
 				tags: [LockedUsersTag],
 				cancellationToken: cancellationToken);
 		}
-	
-	public async Task<PaginatedResult<AuthAttempts>> SearchLockedUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+
+	public async Task<long> CountLockedUsersAsync(string? searchTerm, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"lockedusers_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AuthAttempts>>(
-				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.SearchLockedUserAsync(req, token),
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"lockedusers_count_search_{searchTerm}",
+				async token => await _authRepository.CountLockedUsersAsync(searchTerm, token),
 				tags: [LockedUsersTag],
 				cancellationToken: cancellationToken);
 		}

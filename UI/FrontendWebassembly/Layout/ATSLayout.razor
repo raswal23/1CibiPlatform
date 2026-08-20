@@ -188,12 +188,23 @@ else
 		_userDisplayName = string.IsNullOrWhiteSpace(storedUserName) ? "User" : storedUserName.Trim();
 		_userInitials = GetUserInitials(_userDisplayName);
 
-		var atsRoleId = await UserManagementService.GetMyRoleIdAsync() ?? 0;
+		var roleIdResponse = await UserManagementService.GetMyRoleIdAsync();
+		var atsRoleId = (roleIdResponse.IsSuccess ? roleIdResponse.Data : null) ?? 0;
 		await LocalStorageService.SetItemAsync(ATSRoleIdStorageKey, atsRoleId);
 
-		_accessibleModuleIds = await AccessService.HasRoleAsync(RoleList.SuperAdminId)
-			? ModuleList.List.Keys.ToHashSet()
-			: (await UserManagementService.GetMyModuleIdsAsync()).ToHashSet();
+		if (await AccessService.HasRoleAsync(RoleList.SuperAdminId))
+		{
+			_accessibleModuleIds = ModuleList.List.Keys.ToHashSet();
+		}
+		else
+		{
+			var moduleIdsResponse = await UserManagementService.GetMyModuleIdsAsync();
+
+			// Fail closed: no module list means no access; the route check below redirects.
+			_accessibleModuleIds = moduleIdsResponse.IsSuccess && moduleIdsResponse.Data is not null
+				? moduleIdsResponse.Data.ToHashSet()
+				: new HashSet<int>();
+		}
 		if (!CanAccessRoute(NavigationManager.Uri))
 		{
 			NavigationManager.NavigateTo("/access-denied");

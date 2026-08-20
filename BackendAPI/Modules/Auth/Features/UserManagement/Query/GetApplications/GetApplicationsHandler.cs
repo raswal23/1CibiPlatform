@@ -1,18 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetApplications;
 
-public record GetApplicationsQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetApplicationsQueryResult>;
+public record GetApplicationsQueryRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetApplicationsQueryResult>;
 
-public record GetApplicationsQueryResult(PaginatedResult<ApplicationsDTO> Applications);
+public record GetApplicationsQueryResult(KeysetPaginatedResult<ApplicationsDTO> Applications);
 
 public class GetApplicationsQueryRequestValidator : AbstractValidator<GetApplicationsQueryRequest>
 {
 	public GetApplicationsQueryRequestValidator()
 	{
-		RuleFor(x => x.PageNumber).Must(pageIndex => pageIndex >= 0)
-			.WithMessage("PageNumber must be greater than 0.");
-
-		RuleFor(x => x.PageSize).Must(pageSize => pageSize > 0 && pageSize <= 100)
-			.WithMessage("PageSize must be greater than 0.");
+		RuleFor(x => x.PageSize).Must(pageSize => pageSize is null || (pageSize > 0 && pageSize <= 100))
+			.WithMessage("PageSize must be between 1 and 100.");
 	}
 }
 public class GetApplicationsHandler : IQueryHandler<GetApplicationsQueryRequest, GetApplicationsQueryResult>
@@ -25,8 +22,8 @@ public class GetApplicationsHandler : IQueryHandler<GetApplicationsQueryRequest,
 	}
 	public async Task<GetApplicationsQueryResult> Handle(GetApplicationsQueryRequest request, CancellationToken cancellationToken)
 	{
-		var paginationRequest = new PaginationRequest(
-			request.PageNumber ?? 1,
+		var paginationRequest = new KeysetPaginationRequest(
+			request.Cursor,
 			request.PageSize ?? 10,
 			request.SearchTerm);
 

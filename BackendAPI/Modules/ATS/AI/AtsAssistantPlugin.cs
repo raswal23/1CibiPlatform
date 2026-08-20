@@ -6,8 +6,9 @@ namespace ATS.AI;
 
 /// <summary>
 /// The functions the ATS assistant is allowed to call. A new instance is created per
-/// request and carries the caller's already-resolved <see cref="AtsQueryScope"/>, so the
-/// model can never reach another client's orders.
+/// request and carries the caller's <see cref="ICurrentUser"/>, so every lookup is
+/// limited to the clients and requests the caller is authorized for and the model can
+/// never reach another client's orders.
 /// </summary>
 public sealed class AtsAssistantPlugin
 {
@@ -17,7 +18,8 @@ public sealed class AtsAssistantPlugin
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IPackageManagementService _packageManagementService;
 	private readonly AtsOrderDraftStore _draftStore;
-	private readonly AtsQueryScope _scope;
+	private readonly ICurrentUser _currentUser;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly Guid _userId;
 	private readonly int? _clientId;
 
@@ -26,17 +28,17 @@ public sealed class AtsAssistantPlugin
 		IOrderHistoryService orderHistoryService,
 		IPackageManagementService packageManagementService,
 		AtsOrderDraftStore draftStore,
-		AtsQueryScope scope,
-		Guid userId,
-		int? clientId)
+		ICurrentUser currentUser,
+		IUserClientRepository userClientRepository)
 	{
 		_atsRepository = atsRepository;
 		_orderHistoryService = orderHistoryService;
 		_packageManagementService = packageManagementService;
 		_draftStore = draftStore;
-		_scope = scope;
-		_userId = userId;
-		_clientId = clientId;
+		_currentUser = currentUser;
+		_userClientRepository = userClientRepository;
+		_userId = currentUser.UserId ?? Guid.Empty;
+		_clientId = currentUser.AtsClientId;
 	}
 
 	/// <summary>
@@ -62,30 +64,32 @@ public sealed class AtsAssistantPlugin
 			return Array.Empty<AtsOrderSummaryDTO>();
 		}
 
-		if (_scope.Kind == AtsQueryScopeKind.Denied)
+		var scope = await ResolveReportScopeAsync(cancellationToken);
+
+		if (scope is null)
 		{
 			return Array.Empty<AtsOrderSummaryDTO>();
 		}
 
-		var paginationRequest = new PaginationRequest(
-			PageIndex: 1,
-			PageSize: MaxSearchResults,
-			SearchTerm: name.Trim());
-
-		var reports = await _atsRepository.SearchReportsAsync(
-			paginationRequest,
-			_scope,
-			SortColumn.SubjectName,
-			sortDescending: false,
+		var reports = await _atsRepository.SearchReportsPageAsync(
+			afterRank: null,
+			afterCompletedAt: null,
+			afterId: null,
+			take: MaxSearchResults,
+			searchTerm: name.Trim(),
+			startDate: null,
+			endDate: null,
+			scope.Value.AuthorizedClientIds,
+			scope.Value.RequiredRequestorId,
 			cancellationToken);
 
-		var orders = reports.Data
+		var orders = reports
 			.Select(report => new AtsOrderSummaryDTO
 			{
-				EmailInvitationRequestId = report.EmailInvitationRequestId,
-				SubjectName = report.SubjectName,
+				EmailInvitationRequestId = report.EmailInvitationID,
+				SubjectName = $"{report.FirstName} {report.LastName}".Trim(),
 				OrderStatus = report.OrderStatus,
-				SelectedPackage = report.SelectedPackage,
+				SelectedPackage = report.SelectPackage,
 				Requestor = report.Requestor,
 				HitStatus = report.HitStatus,
 				OrderCompletedAt = report.OrderCompletedAt
@@ -205,11 +209,56 @@ public sealed class AtsAssistantPlugin
 			+ "or ask the user to press anything.";
 	}
 
+	// Mirrors the authorization block in ReportService.GetReportsAsync: null means the
+	// caller may not read reports at all, (null, null) means unrestricted (super admin).
+	private async Task<(IReadOnlyCollection<int>? AuthorizedClientIds, Guid? RequiredRequestorId)?>
+		ResolveReportScopeAsync(CancellationToken cancellationToken)
+	{
+		if (!_currentUser.IsAuthenticated
+			|| _currentUser.UserId is not { } userId
+			|| userId == Guid.Empty)
+		{
+			return null;
+		}
+
+		if (_currentUser.IsPlatformSuperAdmin)
+		{
+			return (null, null);
+		}
+
+		if (_currentUser.AtsRoleId is not { } roleId)
+		{
+			return null;
+		}
+
+		if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
+		{
+			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
+				[userId],
+				cancellationToken);
+
+			var clientIds = assignments
+				.Select(assignment => assignment.ClientId)
+				.Distinct()
+				.ToArray();
+
+			return (clientIds, null);
+		}
+
+		if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
+			&& _currentUser.AtsClientId is { } clientId)
+		{
+			return (new[] { clientId }, userId);
+		}
+
+		return null;
+	}
+
 	private async Task<IReadOnlyList<PackageDetailsDTO>> GetAssignedPackagesAsync(
 		CancellationToken cancellationToken)
 	{
-		var paginationRequest = new PaginationRequest(
-			PageIndex: 1,
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
 			PageSize: 100);
 
 		var packages = await _packageManagementService.GetPackagesAsync(
@@ -217,7 +266,7 @@ public sealed class AtsAssistantPlugin
 			cancellationToken,
 			_clientId);
 
-		return packages.Data
+		return packages.Items
 			.Where(package => package.IsActive)
 			.DistinctBy(package => package.PackageId)
 			.OrderBy(package => package.PackageName)

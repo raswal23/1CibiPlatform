@@ -1,8 +1,18 @@
+using FrontendWebassembly.ShareData.ATS;
+
 namespace FrontendWebassembly.Component.ATS;
 
 public partial class EditUserComponent
 {
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
 	private MudForm? UserForm;
+	private bool _canAssignAllRoles;
+
+	[Inject]
+	private IAccessService AccessService { get; set; } = default!;
+
+	[Inject]
+	private LocalStorageService LocalStorageService { get; set; } = default!;
 
 	[CascadingParameter]
 	private IMudDialogInstance? EditUserDialog { get; set; }
@@ -29,6 +39,19 @@ public partial class EditUserComponent
 	private string? ModuleError { get; set; }
 	private IEnumerable<ModuleDetailsDTO> SelectedModules => Modules
 		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+	private IEnumerable<RoleDetailsDTO> AssignableRoles
+	{
+		get
+		{
+			if (_canAssignAllRoles)
+				return Roles;
+
+			return Roles.Where(role =>
+				(role.RoleId != AtsRoleList.PlatformManagerId &&
+				 role.RoleId != AtsRoleList.ServiceDeliveryId) ||
+				role.RoleId == EditUser.RoleId);
+		}
+	}
 	private string DisplayUserName => SelectedAuthUser?.UserName ?? User.UserName;
 	private string DisplayUserEmail => SelectedAuthUser?.UserEmail ?? User.UserEmail;
 	private string UserInitials
@@ -45,6 +68,25 @@ public partial class EditUserComponent
 				return nameParts[0][..Math.Min(2, nameParts[0].Length)].ToUpperInvariant();
 
 			return $"{nameParts[0][0]}{nameParts[1][0]}".ToUpperInvariant();
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		var isPlatformSuperAdmin = await AccessService.HasRoleAsync(RoleList.SuperAdminId);
+		var atsRoleId = await GetStoredATSRoleIdAsync();
+		_canAssignAllRoles = isPlatformSuperAdmin || atsRoleId == AtsRoleList.PlatformManagerId;
+	}
+
+	private async Task<int> GetStoredATSRoleIdAsync()
+	{
+		try
+		{
+			return await LocalStorageService.GetItemAsync<int>(ATSRoleIdStorageKey);
+		}
+		catch (JsonException)
+		{
+			return 0;
 		}
 	}
 

@@ -1,4 +1,5 @@
 ﻿using ATS.Data.Context;
+using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -6,6 +7,7 @@ using Auth.Data.Context;
 using Auth.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -73,6 +75,20 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 			services.RemoveAll<IObjectStorageService>();
 			services.AddSingleton<IObjectStorageService, MockObjectStorageService>();
+
+			// Replace the keyed "ats" email sender — tests must not send real SMTP mail
+			var atsEmailDescriptors = services
+				.Where(s => s.ServiceType == typeof(IEmailService)
+					&& s.IsKeyedService
+					&& Equals(s.ServiceKey, "ats"))
+				.ToList();
+
+			foreach (var atsEmailDescriptor in atsEmailDescriptors)
+			{
+				services.Remove(atsEmailDescriptor);
+			}
+
+			services.AddKeyedSingleton<IEmailService, Test.BackendAPI.Infrastructure.Auth.Infrastructure.FakeEmailSender>("ats");
 
 			// Register HttpContextAccessor (scoped, not singleton)
 			services.RemoveAll<IHttpContextAccessor>();

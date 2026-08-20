@@ -1,8 +1,8 @@
-namespace ATS.Features.ModuleManagement.Query.GetModules;
+﻿namespace ATS.Features.ModuleManagement.Query.GetModules;
 
-public record GetModulesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetModulesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetModulesEndpointResponse(PaginatedResult<ModuleDetailsDTO> Modules);
+public record GetModulesEndpointResponse(KeysetPaginatedResult<ModuleDetailsDTO> Modules);
 
 public class GetModulesEndpoint : ICarterModule
 {
@@ -14,7 +14,7 @@ public class GetModulesEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetModulesQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

@@ -83,7 +83,7 @@ public partial class ApplicationFormComponent
 
 	//Final
 	private SignatureDetailsDTO signatureDetails = new();
-	private DateTime? SignatureDate = DateTime.UtcNow;
+	private DateTime? SignatureDate;
 	private bool _signatureError;
 
 	//Validations
@@ -145,6 +145,7 @@ public partial class ApplicationFormComponent
 		EndOfEmployment1 = DateTime.UnixEpoch;
 		EndOfEmployment2 = DateTime.UnixEpoch;
 		EndOfEmployment3 = DateTime.UnixEpoch;
+		SignatureDate = DateTime.UtcNow;
 
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
 		_draftPersistenceEnabled = true;
@@ -389,9 +390,15 @@ public partial class ApplicationFormComponent
 		if (result!.Canceled)
 			return;
 
-		var IsSuccess = await ATSService.WithdrawApplicationForm(HashToken!);
+		var withdrawResponse = await ATSService.WithdrawApplicationForm(HashToken!);
 
-		if (!IsSuccess)
+		if (!withdrawResponse.IsSuccess)
+		{
+			Snackbar.Add(withdrawResponse.ErrorDetail, Severity.Error);
+			return;
+		}
+
+		if (!withdrawResponse.Data)
 			return;
 
 		await IsWithDrawn.InvokeAsync("Withdrawn");
@@ -887,12 +894,12 @@ public partial class ApplicationFormComponent
 			await InvokeAsync(StateHasChanged);
 			var response = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 
-			if (!response.isSuccess)
+			if (!response.IsSuccess)
 			{
-				Snackbar.Add($"{response.errorDetail}", Severity.Error);
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
 				return;
 			}
-			IsSuccess = response.isSuccess;
+			IsSuccess = response.IsSuccess;
 			await RemoveItemsAsync();
 		}
 		finally

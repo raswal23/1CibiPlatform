@@ -65,8 +65,10 @@ Search reuses `IATSRepository.SearchReportsAsync`, which already matches on
 1. Add a method to `AtsAssistantPlugin` with `[KernelFunction]` and a `[Description]` that says
    when to call it. Describe every parameter too — the descriptions are the model's only
    documentation.
-2. If it reads data, take the scope into account: the plugin already holds the resolved
-   `AtsQueryScope`, so pass it to the repository rather than querying unscoped.
+2. If it reads data, take the caller's access into account: the plugin holds `ICurrentUser`
+   and resolves the authorized client ids / required requestor id the same way
+   `ReportService.GetReportsAsync` does, so pass those to the repository rather than
+   querying unscoped.
 3. If it writes data, stage it and require a confirmation step. Do not let the model write.
 4. Mention the function in the system prompt only if the model needs sequencing rules
    (for example "call `GetAvailablePackages` before staging").
@@ -90,15 +92,16 @@ who staged it, so a stale or copied card cannot be replayed.
 
 ## Access scope
 
-`AtsAssistantService` is scoped, so it injects `ICurrentUser` and `AtsQueryScopeResolver`
-directly. The resolved `AtsQueryScope` is handed to a **new plugin instance per request**, and the
-kernel is `Clone()`d before the plugin is added.
+`AtsAssistantService` is scoped, so it injects `ICurrentUser` and `IUserClientRepository`
+directly. Both are handed to a **new plugin instance per request**, which derives the
+authorized client ids and required requestor id from the caller's role — the same rules as
+`ReportService.GetReportsAsync` — and the kernel is `Clone()`d before the plugin is added.
 
 This matters: `AddFromType<T>()` would resolve the plugin from the root provider and give it a
 root-scoped `ICurrentUser`, which would leak one client's data into another's conversation.
 Always construct the plugin explicitly and use `AddFromObject`.
 
-A `Denied` scope returns no orders rather than throwing.
+An unauthenticated or unauthorized caller gets no orders rather than an exception.
 
 ## Prompt injection
 

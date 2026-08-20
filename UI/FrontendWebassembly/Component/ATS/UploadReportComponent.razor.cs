@@ -78,9 +78,15 @@ public partial class UploadReportComponent
 
 			reportDetails.EmailInvitationRequestId = EmailInvitationRequestId;
 
-			var success = await ReportUploadService.UploadReportAsync(reportDetails);
+			var uploadResponse = await ReportUploadService.UploadReportAsync(reportDetails);
 
-			if (!success)
+			if (!uploadResponse.IsSuccess)
+			{
+				Snackbar.Add(uploadResponse.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			if (!uploadResponse.Data)
 			{
 				Snackbar.Add("Failed to upload report.", Severity.Error);
 				return;

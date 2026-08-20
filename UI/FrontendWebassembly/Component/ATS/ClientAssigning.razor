@@ -3,7 +3,6 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(11)]
 @inject IClientAssignmentService ClientAssignmentService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Client Assigning</PageTitle>
@@ -25,6 +24,7 @@
                         RowsPerPage="10"
                         PageSizeOptions="@(new[] { 10, 25, 50 })"
                         LoadServerData="LoadAssignmentData"
+                        CursorPagerState="_assignmentsLoader"
                         SearchString="@searchString"
                         SearchStringChanged="@((string value) => searchString = value)">
 

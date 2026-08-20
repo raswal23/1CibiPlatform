@@ -31,7 +31,15 @@ public partial class NewOrderComponent
 	{
 		try
 		{
-			var access = await ATSUserManagementService.GetMyAtsAccessAsync();
+			var accessResponse = await ATSUserManagementService.GetMyAtsAccessAsync();
+
+			if (!accessResponse.IsSuccess || accessResponse.Data is null)
+			{
+				Snackbar.Add(accessResponse.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			var access = accessResponse.Data;
 			var clientId = access.RoleId == 1 ? null : access.ClientId;
 			if (access.RoleId != 1 && clientId is not > 0)
 			{
@@ -39,17 +47,19 @@ public partial class NewOrderComponent
 				return;
 			}
 
-			var packages = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
+			var packagesResponse = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
 
-			availablePackages = packages
+			if (!packagesResponse.IsSuccess || packagesResponse.Data is null)
+			{
+				Snackbar.Add(packagesResponse.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			availablePackages = packagesResponse.Data
 				.Where(package => package.IsActive)
 				.DistinctBy(package => package.PackageId)
 				.OrderBy(package => package.PackageName)
 				.ToArray();
-		}
-		catch (Exception)
-		{
-			Snackbar.Add("Unable to load the packages assigned to your client.", Severity.Error);
 		}
 		finally
 		{
@@ -107,9 +117,15 @@ public partial class NewOrderComponent
 	}
 	private async Task DownloadTemplate()
 	{
-		var url = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
+		var response = await EndorsementSubmissionService.DownloadBulkTemplateAsync();
 
-		NavigationManager.NavigateTo(url!);
+		if (!response.IsSuccess)
+		{
+			Snackbar.Add(response.ErrorDetail, Severity.Error);
+			return;
+		}
+
+		NavigationManager.NavigateTo(response.Data!);
 	}
 
 	private async void OnATSResponse(string message)
@@ -195,11 +211,17 @@ public partial class NewOrderComponent
 			await InvokeAsync(StateHasChanged);
 			await Task.Yield();
 
-			var isSent =
+			var sendResponse =
 			await EndorsementSubmissionService
 				.InsertEmailInvitationRequestAsync(subject);
 
-			if (isSent)
+			if (!sendResponse.IsSuccess)
+			{
+				Snackbar.Add(sendResponse.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			if (sendResponse.Data)
 			{
 				Snackbar.Add("An email invitation will be sent to your candidate.", Severity.Success);
 
@@ -278,10 +300,16 @@ public partial class NewOrderComponent
 			isUploadingBulk = true;
 			StateHasChanged();
 
-			var isSent = await EndorsementSubmissionService
+			var uploadResponse = await EndorsementSubmissionService
 			.InsertBulkSubjectAsync(bulkUploadFileDetailsDTO);
 
-			if (isSent)
+			if (!uploadResponse.IsSuccess)
+			{
+				Snackbar.Add(uploadResponse.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			if (uploadResponse.Data)
 			{
 				Snackbar.Add("Bulk upload successful. An email invitation will be sent to your candidates.", Severity.Success);
 

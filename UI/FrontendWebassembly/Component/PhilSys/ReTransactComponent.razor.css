@@ -108,8 +108,6 @@
     transform: scale(.97);
 }
 
-/* Disabled state: the gradient must be dropped or MudBlazor's disabled colour
-   is painted under an opaque background and the button still looks active. */
 .philsys-retransact-action ::deep .philsys-retransact-button.mud-button-disabled,
 .philsys-retransact-action ::deep .philsys-retransact-button:disabled {
     background: #eef1f7 !important;

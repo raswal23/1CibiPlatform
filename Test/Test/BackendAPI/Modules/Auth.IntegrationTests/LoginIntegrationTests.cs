@@ -69,9 +69,9 @@ public class LoginIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.loginResponseWebDTO.Should().NotBeNull();
-		result.loginResponseWebDTO.AccessToken.Should().NotBeNullOrEmpty();
+		result.loginResponseWebDTO.AccessToken.Should().BeEmpty("browser tokens are delivered only through HttpOnly cookies");
 		result.loginResponseWebDTO.UserId.Should().NotBeNullOrEmpty();
-		result.loginResponseWebDTO.RefreshToken.Should().NotBeNullOrEmpty();
+		result.loginResponseWebDTO.RefreshToken.Should().BeEmpty("browser tokens are delivered only through HttpOnly cookies");
 		result.loginResponseWebDTO.TokenType.Should().Be("bearer");
 		result.loginResponseWebDTO.ExpiresIn.Should().BeGreaterThan(0);
 	}

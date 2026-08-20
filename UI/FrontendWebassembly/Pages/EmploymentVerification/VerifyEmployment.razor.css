@@ -44,8 +44,6 @@
         height: 1.6rem;
     }
 
-/* Expired links get a muted amber treatment so the page reads as a dead end
-   rather than an error the recipient caused. */
 .ev-confirm-header-expired {
     background: linear-gradient(120deg, #8a6410, #c98a1d 54%, #f0b850);
 }

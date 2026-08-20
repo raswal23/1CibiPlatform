@@ -3,7 +3,6 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(9)]
 @inject IModuleManagementService ModuleManagementService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Module Management</PageTitle>
@@ -29,6 +28,7 @@
                 ColumnCount="6"
                 RowsPerPage="10"
                 LoadServerData="LoadModuleData"
+                CursorPagerState="_modulesLoader"
                 SearchString="@searchString"
                 SearchStringChanged="@((string val) => searchString = val)">
 
@@ -99,11 +99,12 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<ModuleDetailsDTO> _modulesLoader = new();
     private TableComponent<ModuleDetailsDTO>? modulesTable;
 
     private async Task<TableData<ModuleDetailsDTO>> LoadModuleData(TableState state, CancellationToken cancellationToken)
-        => await LoadPagedDataAsync(state, (page, pageSize) =>
-            ModuleManagementService.GetModulesAsync(page, pageSize, searchString, cancellationToken));
+        => await LoadCursorPagedDataAsync(_modulesLoader, state, $"{searchString}", (cursor, pageSize) =>
+            ModuleManagementService.GetModulesAsync(cursor, pageSize, searchString, cancellationToken));
 
     private async Task AddNewModule()
     {
@@ -120,18 +121,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var moduleDTO = (AddATSModuleDTO)result.Data!;
+            var response = await ModuleManagementService.AddModuleAsync(moduleDTO);
+
+            if (!response.IsSuccess)
             {
-                var moduleDTO = (AddATSModuleDTO)result.Data!;
-                await ModuleManagementService.AddModuleAsync(moduleDTO);
-                Snackbar.Add("Module added successfully", Severity.Success);
-                if (modulesTable?.TableRef != null)
-                    await modulesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Module added successfully", Severity.Success);
+            if (modulesTable?.TableRef != null)
+                await modulesTable.TableRef.ReloadServerData();
         }
     }
 
@@ -151,18 +152,18 @@
 
         if (result is not null && !result.Canceled)
         {
-            try
+            var editModuleDTO = (EditATSModuleDTO)result.Data!;
+            var response = await ModuleManagementService.EditModuleAsync(editModuleDTO);
+
+            if (!response.IsSuccess)
             {
-                var editModuleDTO = (EditATSModuleDTO)result.Data!;
-                await ModuleManagementService.EditModuleAsync(editModuleDTO);
-                Snackbar.Add("Module updated successfully", Severity.Success);
-                if (modulesTable?.TableRef != null)
-                    await modulesTable.TableRef.ReloadServerData();
+                Snackbar.Add(response.ErrorDetail, Severity.Error);
+                return;
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add(ex.Message, Severity.Error);
-            }
+
+            Snackbar.Add("Module updated successfully", Severity.Success);
+            if (modulesTable?.TableRef != null)
+                await modulesTable.TableRef.ReloadServerData();
         }
     }
 }

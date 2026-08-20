@@ -1,4 +1,4 @@
-﻿namespace ATS.Data.UnitOfWork;
+namespace ATS.Data.UnitOfWork;
 
 public class UnitOfWork : IUnitOfWork
 {
@@ -15,13 +15,18 @@ public class UnitOfWork : IUnitOfWork
 		_transaction = await _atsDBContext.Database.BeginTransactionAsync(ct);
 	}
 
-	public async Task CommitAsync(CancellationToken ct = default)
+	public async Task SaveChangesAsync(CancellationToken ct = default)
 	{
 		await _atsDBContext.SaveChangesAsync(ct);
+	}
 
+	public async Task CommitAsync(CancellationToken ct = default)
+	{
 		if (_transaction != null)
 		{
 			await _transaction.CommitAsync(ct);
+			await _transaction.DisposeAsync();
+			_transaction = null;
 		}
 	}
 
@@ -30,6 +35,8 @@ public class UnitOfWork : IUnitOfWork
 		if (_transaction != null)
 		{
 			await _transaction.RollbackAsync(ct);
+			await _transaction.DisposeAsync();
+			_transaction = null;
 		}
 	}
 }

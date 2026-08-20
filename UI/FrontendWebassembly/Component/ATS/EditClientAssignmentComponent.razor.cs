@@ -50,12 +50,17 @@ public partial class EditClientAssignmentComponent
 		string value,
 		CancellationToken cancellationToken)
 	{
-		var result = await ClientAssignmentService.GetAssignableClientsAsync(
-			1,
+		// First page only: the autocomplete narrows by search term instead of paging.
+		var response = await ClientAssignmentService.GetAssignableClientsAsync(
+			null,
 			25,
 			value,
 			cancellationToken);
-		return result.Items;
+
+		if (!response.IsSuccess || response.Data is null)
+			return Array.Empty<ClientLookupDTO>();
+
+		return response.Data.Items;
 	}
 
 	private static string GetClientText(ClientLookupDTO? client) =>
@@ -73,17 +78,20 @@ public partial class EditClientAssignmentComponent
 		isSubmitting = true;
 		try
 		{
-			var assignment = await ClientAssignmentService.AssignClientAsync(
+			var response = await ClientAssignmentService.AssignClientAsync(
 				new AssignATSUserClientDTO
 				{
 					UserId = CurrentAssignment.UserId,
 					ClientId = selectedClient!.ClientId
 				});
-			Dialog?.Close(DialogResult.Ok(assignment));
-		}
-		catch (Exception ex)
-		{
-			Snackbar.Add(ex.Message, Severity.Error);
+
+			if (!response.IsSuccess)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			Dialog?.Close(DialogResult.Ok(response.Data));
 		}
 		finally
 		{

@@ -57,5 +57,7 @@ public class UserDetailsConfiguration : IEntityTypeConfiguration<UserDetails>
 
 		builder.HasIndex(x => x.UserEmail);
 		builder.HasIndex(x => x.ClientId);
+		// Matches the keyset pagination ordering of the admin users list.
+		builder.HasIndex(x => new { x.UserName, x.UserEmail, x.UserId });
 	}
 }

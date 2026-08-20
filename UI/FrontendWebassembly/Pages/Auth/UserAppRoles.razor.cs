@@ -17,6 +17,13 @@ public partial class UserAppRoles
 	private TableComponent<SubMenusDTO> subMenusTable;
 	private TableComponent<RolesDTO> rolesTable;
 	private TableComponent<AppSubRolesDTO> appSubRolesTable;
+	private readonly CursorTableLoader<UnApprovedUsersDTO> _unapprovedUsersLoader = new();
+	private readonly CursorTableLoader<LockedUsersDTO> _lockedUsersLoader = new();
+	private readonly CursorTableLoader<UsersDTO> _usersLoader = new();
+	private readonly CursorTableLoader<ApplicationsDTO> _applicationsLoader = new();
+	private readonly CursorTableLoader<SubMenusDTO> _subMenusLoader = new();
+	private readonly CursorTableLoader<RolesDTO> _rolesLoader = new();
+	private readonly CursorTableLoader<AppSubRolesDTO> _appSubRolesLoader = new();
 
 	private string GetTabClass(int index)
 	{
@@ -80,32 +87,32 @@ public partial class UserAppRoles
 
 	// Load Tables
 	private async Task<TableData<UsersDTO>> LoadUsersServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetUsersAsync(page, pageSize, searchStringUser));
+		=> await LoadCursorPagedDataAsync(_usersLoader, state, $"{searchStringUser}", (cursor, pageSize) =>
+			UserManagementService.GetUsersAsync(cursor, pageSize, searchStringUser));
 
 	private async Task<TableData<UnApprovedUsersDTO>> LoadUnApprovedUsersServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetUnApprovedUsersAsync(page, pageSize, searchStringUnApprovedUser));
+		=> await LoadCursorPagedDataAsync(_unapprovedUsersLoader, state, $"{searchStringUnApprovedUser}", (cursor, pageSize) =>
+			UserManagementService.GetUnApprovedUsersAsync(cursor, pageSize, searchStringUnApprovedUser));
 
 	private async Task<TableData<LockedUsersDTO>> LoadLockedUsersServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetLockedUsersAsync(page, pageSize, searchStringLockedUser));
+		=> await LoadCursorPagedDataAsync(_lockedUsersLoader, state, $"{searchStringLockedUser}", (cursor, pageSize) =>
+			UserManagementService.GetLockedUsersAsync(cursor, pageSize, searchStringLockedUser));
 
 	private async Task<TableData<ApplicationsDTO>> LoadApplicationsServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetApplicationsAsync(page, pageSize, searchStringApp));
+		=> await LoadCursorPagedDataAsync(_applicationsLoader, state, $"{searchStringApp}", (cursor, pageSize) =>
+			UserManagementService.GetApplicationsAsync(cursor, pageSize, searchStringApp));
 
 	private async Task<TableData<SubMenusDTO>> LoadSubMenusServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetSubMenusAsync(page, pageSize, searchStringSub));
+		=> await LoadCursorPagedDataAsync(_subMenusLoader, state, $"{searchStringSub}", (cursor, pageSize) =>
+			UserManagementService.GetSubMenusAsync(cursor, pageSize, searchStringSub));
 
 	private async Task<TableData<RolesDTO>> LoadRolesServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetRolesAsync(page, pageSize, searchStringRole));
+		=> await LoadCursorPagedDataAsync(_rolesLoader, state, $"{searchStringRole}", (cursor, pageSize) =>
+			UserManagementService.GetRolesAsync(cursor, pageSize, searchStringRole));
 
 	private async Task<TableData<AppSubRolesDTO>> LoadUserAppSubRolesServerData(TableState state, CancellationToken cancellationToken)
-		=> await LoadPagedDataAsync(state, (page, pageSize) =>
-			UserManagementService.GetAppSubRolesAsync(page, pageSize, searchStringAppSubRole));
+		=> await LoadCursorPagedDataAsync(_appSubRolesLoader, state, $"{searchStringAppSubRole}", (cursor, pageSize) =>
+			UserManagementService.GetAppSubRolesAsync(cursor, pageSize, searchStringAppSubRole));
 
 	// Add and Edit Dialog
 	private async Task OpenAddApplicationDialog()
@@ -131,8 +138,12 @@ public partial class UserAppRoles
 					return;
 				}
 
-				await UserManagementService.SendNotificationAsync(notificationDto);
+				var notificationResponse = await UserManagementService.SendNotificationAsync(notificationDto);
 
+				if (!notificationResponse.IsSuccess)
+				{
+					Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
+				}
 			});
 	}
 
@@ -141,7 +152,13 @@ public partial class UserAppRoles
 		await OpenEditDialogAsync<EditUserApprovalComponent, UnApprovedUsersDTO>("User Approval", "User", unapproveduser, async result =>
 		{
 			await EditUser(result);
-			await UserManagementService.SendApprovalNotificationAsync(result.email!);
+
+			var notificationResponse = await UserManagementService.SendApprovalNotificationAsync(result.email!);
+
+			if (!notificationResponse.IsSuccess)
+			{
+				Snackbar.Add("Saved, but the approval notification could not be sent.", Severity.Warning);
+			}
 		});
 	}
 	private async Task OpenEditApplicationDialog(ApplicationsDTO app)
@@ -242,12 +259,20 @@ public partial class UserAppRoles
 
 	private async Task<bool> AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
 	{
-		var isSuccess = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
-		if (!isSuccess)
+		var response = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
+
+		if (!response.IsSuccess)
+		{
+			Snackbar.Add(response.ErrorDetail, Severity.Error);
+			return false;
+		}
+
+		if (!response.Data)
 		{
 			return false;
 		}
-		await ExecuteAndReloadAsync(() => Task.CompletedTask, appSubRolesTable);
+
+		await appSubRolesTable.TableRef.ReloadServerData();
 		return true;
 	}
 

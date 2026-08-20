@@ -61,49 +61,59 @@ public sealed class UserClientRepository : IUserClientRepository
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
-		PaginationRequest request,
+	// Keyset over the grouped projection (ClientName, ClientId); the predicate on
+	// the Min() aggregate translates to HAVING/subquery filtering on Postgres.
+	// Pure query — the service decodes the cursor and mints the next one.
+	public async Task<List<ClientLookupDTO>> GetAssignableClientsPageAsync(
+		string? searchTerm, string? afterClientName, int? afterClientId, int take,
 		CancellationToken cancellationToken)
 	{
-		var query = _dbContext.ClientDetails.AsNoTracking().Where(client => client.IsActive);
-		if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+		var logicalClients = BuildAssignableClientsQuery(searchTerm);
+		if (afterClientName is not null && afterClientId.HasValue)
 		{
-			var term = $"%{request.SearchTerm.Trim()}%";
+			var cId = afterClientId.Value;
+			logicalClients = logicalClients.Where(client =>
+				string.Compare(client.ClientName, afterClientName) > 0
+				|| (client.ClientName == afterClientName && client.ClientId > cId));
+		}
+
+		return await logicalClients
+			.OrderBy(client => client.ClientName)
+			.ThenBy(client => client.ClientId)
+			.Take(take)
+			.ToListAsync(cancellationToken);
+	}
+
+	public Task<long> CountAssignableClientsAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		BuildAssignableClientsQuery(searchTerm).LongCountAsync(cancellationToken);
+
+	private IQueryable<ClientLookupDTO> BuildAssignableClientsQuery(string? searchTerm)
+	{
+		var query = _dbContext.ClientDetails.AsNoTracking().Where(client => client.IsActive);
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			var term = $"%{searchTerm.Trim()}%";
 			query = query.Where(client => EF.Functions.ILike(client.ClientName, term));
 		}
 
-		var logicalClients = query
+		return query
 			.GroupBy(client => client.ClientId)
 			.Select(group => new ClientLookupDTO
 			{
 				ClientId = group.Key,
 				ClientName = group.Min(client => client.ClientName)!
 			});
-		var count = await logicalClients.LongCountAsync(cancellationToken);
-		var clients = await logicalClients
-			.OrderBy(client => client.ClientName)
-			.ThenBy(client => client.ClientId)
-			.Skip((request.PageIndex - 1) * request.PageSize)
-			.Take(request.PageSize)
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<ClientLookupDTO>(
-			request.PageIndex,
-			request.PageSize,
-			count,
-			clients);
 	}
 
 	public Task<UserClientDetails?> GetUserClientAssignmentAsync(Guid userId, CancellationToken cancellationToken) =>
 		_dbContext.UserClientDetails.AsNoTracking().FirstOrDefaultAsync(assignment => assignment.UserId == userId, cancellationToken);
 
+	public Task<bool> ClientIsActiveAsync(int clientId, CancellationToken cancellationToken) =>
+		_dbContext.ClientDetails.AsNoTracking()
+			.AnyAsync(client => client.ClientId == clientId && client.IsActive, cancellationToken);
+
 	public async Task<UserClientDetails> AssignUserClientAsync(AssignUserClientDTO assignment, CancellationToken cancellationToken)
 	{
-		var clientExists = await _dbContext.ClientDetails.AsNoTracking()
-			.AnyAsync(client => client.ClientId == assignment.ClientId && client.IsActive, cancellationToken);
-		if (!clientExists)
-			throw new BadRequestException("The selected client does not exist or is inactive.");
-
 		var now = DateTime.UtcNow;
 		var userClient = await _dbContext.UserClientDetails.FirstOrDefaultAsync(item => item.UserId == assignment.UserId, cancellationToken);
 		if (userClient?.ClientId == assignment.ClientId)

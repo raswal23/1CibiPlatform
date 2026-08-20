@@ -3,7 +3,6 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(4)]
 @inject IDisputeOrderService DisputeOrderService
-@inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Dispute Order</PageTitle>
@@ -30,6 +29,7 @@
                     ColumnCount="6"
                     RowsPerPage="10"
                     LoadServerData="LoadOrderData"
+                    CursorPagerState="_ordersLoader"
                     SearchString="@searchString"
                     SearchStringChanged="@((string val) => searchString = val)">
 

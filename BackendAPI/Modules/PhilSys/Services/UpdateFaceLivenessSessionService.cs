@@ -66,14 +66,17 @@ public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionServic
 		
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
 
-			await UpdateTransactionStatus(HashToken);
-
+			await _unitOfWork.BeginTransactionAsync();
 
 			try
 			{
+				await UpdateTransactionStatus(HashToken);
+
 				await AddConvertedResponseToDbAsync(convertedResponse);
 
 				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
+
+				await _unitOfWork.SaveChangesAsync();
 
 				await _unitOfWork.CommitAsync();
 
@@ -93,14 +96,18 @@ public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionServic
 		if (result.InquiryType.Equals("pcn", StringComparison.OrdinalIgnoreCase))
 		{
 			responseBody = await _philSysService.PostPCNAsync(result.PCN!, accessToken, result.FaceLivenessSessionId!);
-		
+
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
+
+			await _unitOfWork.BeginTransactionAsync();
 
 			try
 			{
 				await AddConvertedResponseToDbAsync(convertedResponse);
 
 				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
+
+				await _unitOfWork.SaveChangesAsync();
 
 				await _unitOfWork.CommitAsync();
 

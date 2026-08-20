@@ -1,10 +1,10 @@
-namespace Auth.Data.Repository;
+﻿namespace Auth.Data.Repository;
 
 public interface IApplicationRepository
 {
-	Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<ApplicationsDTO>> GetApplicationsPageAsync(string? searchTerm, int? afterAppId, int take, CancellationToken cancellationToken);
+	Task<long> CountApplicationsAsync(string? searchTerm, CancellationToken cancellationToken);
 	Task<AuthApplication> GetApplicationAsync(int applicationId);
-	Task<PaginatedResult<ApplicationsDTO>> SearchApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddApplicationAsync(AddApplicationDTO application);
 	Task<AuthApplication> EditApplicationAsync(AuthApplication application);
 	Task<bool> DeleteApplicationAsync(AuthApplication application);

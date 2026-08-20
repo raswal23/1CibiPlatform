@@ -1,10 +1,11 @@
-namespace ATS.Data.Repository.Administration.Modules;
+﻿namespace ATS.Data.Repository.Administration.Modules;
 
 public interface IModuleRepository
 {
-	Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<ModuleDetailsDTO>> GetModulesPageAsync(string? searchTerm, string? afterModuleName, int take, CancellationToken cancellationToken);
+	Task<long> CountModulesAsync(string? searchTerm, CancellationToken cancellationToken);
 	Task<bool> AddModuleAsync(AddModuleDTO moduleDTO);
+	Task<bool> ModuleNameExistsAsync(string moduleName);
 	Task<ModuleDetails?> GetModuleAsync(int moduleId);
 	Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails);
 }

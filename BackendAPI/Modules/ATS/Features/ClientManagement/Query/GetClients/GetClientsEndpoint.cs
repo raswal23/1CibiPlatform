@@ -1,30 +1,30 @@
-namespace ATS.Features.ClientManagement.Query.GetClients;
+﻿namespace ATS.Features.ClientManagement.Query.GetClients;
 
-public record GetClientsRequest(PaginationRequest paginationRequest);
+public record GetClientsRequest(KeysetPaginationRequest KeysetPaginationRequest);
 
-public record GetClientsResponse(PaginatedResult<ClientDetailsDTO> clients);
+public record GetClientsResponse(KeysetPaginatedResult<ClientDetailsDTO> clients);
 
 public class GetClientsEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapGet("getclients", async (int pageIndex = 1, int pageSize = 10, string? search = null, ISender sender = null!, CancellationToken cancellationToken = default) =>
+		app.MapGet("getclients", async (string? cursor = null, int pageSize = 10, string? search = null, ISender sender = null!, CancellationToken cancellationToken = default) =>
 		{
-			var paginationRequest = new PaginationRequest
+			var KeysetPaginationRequest = new KeysetPaginationRequest
 			{
-				PageIndex = pageIndex,
+				Cursor = cursor,
 				PageSize = pageSize,
 				SearchTerm = search
 			};
 
-			var query = new GetClientsQuery(paginationRequest);
+			var query = new GetClientsQuery(KeysetPaginationRequest);
 			GetClientsResult result = await sender.Send(query, cancellationToken);
 			var response = new GetClientsResponse(result.clients);
 			return Results.Ok(response.clients);
 		})
 		.WithName("GetClients")
 		.WithTags("Client Management")
-		.Produces<PaginatedResult<ClientDetailsDTO>>()
+		.Produces<KeysetPaginatedResult<ClientDetailsDTO>>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Clients")
 		.WithDescription("Retrieves a paginated list of clients.")

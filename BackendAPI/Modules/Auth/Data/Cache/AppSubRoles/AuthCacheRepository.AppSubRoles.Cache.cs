@@ -2,26 +2,27 @@ namespace Auth.Data.Cache;
 
 public partial class AuthCacheRepository
 {
-	public async Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<AppSubRolesDTO>> GetAppSubRolesPageAsync(string? searchTerm, int? afterAppRoleId, int take, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
+			if (afterAppRoleId.HasValue)
+				return await _authRepository.GetAppSubRolesPageAsync(searchTerm, afterAppRoleId, take, cancellationToken);
+
+			var cacheKey = $"appsubroles_first_take_{take}_search_{searchTerm}";
+
+			return await _hybridCache.GetOrCreateAsync<List<AppSubRolesDTO>>(
 				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.GetAppSubRolesAsync(req, token),
+				async token => await _authRepository.GetAppSubRolesPageAsync(searchTerm, null, take, token),
 				tags: [AppSubRolesTag],
 				cancellationToken: cancellationToken);
 		}
-	
-	public async Task<PaginatedResult<AppSubRolesDTO>> SearchAppSubRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+
+	public async Task<long> CountAppSubRolesAsync(string? searchTerm, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"appsubroles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<AppSubRolesDTO>>(
-				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.SearchAppSubRoleAsync(req, token),
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"appsubroles_count_search_{searchTerm}",
+				async token => await _authRepository.CountAppSubRolesAsync(searchTerm, token),
 				tags: [AppSubRolesTag],
 				cancellationToken: cancellationToken);
 		}

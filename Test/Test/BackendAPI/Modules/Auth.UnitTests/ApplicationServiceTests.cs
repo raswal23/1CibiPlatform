@@ -21,12 +21,10 @@ public class ApplicationServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task GetApplicationsAsync_ShouldReturnPaginatedResult()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = null
-		};
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
+			PageSize: 10,
+			SearchTerm: null);
 
 		var applicationData = new List<ApplicationsDTO>
 		{
@@ -34,57 +32,52 @@ public class ApplicationServiceTests : IClassFixture<AuthServiceFixture>
 			new ApplicationsDTO(2, "CNX", "CNX Dashboard", true)
 		};
 
-		var expectedResult = new PaginatedResult<ApplicationsDTO>(1, 2, 10, applicationData);
-
-		var mockAuthRepository = _fixture
-			.MockAuthRepository
-			.Setup(x => x.GetApplicationsAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetApplicationsPageAsync(null, null, 11, CancellationToken.None))
+			.ReturnsAsync(applicationData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountApplicationsAsync(null, CancellationToken.None))
+			.ReturnsAsync(2);
 
 		// Act
 		var result = await _fixture.ApplicationService.GetApplicationsAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(2);
+		result.NextCursor.Should().BeNull();
+		result.Items.Should().BeEquivalentTo(applicationData);
 	}
 
 	[Fact]
-	public async Task GetUsersAsync_ShouldCallSearchUserAsync_WhenSearchTermProvided()
+	public async Task GetApplicationsAsync_ShouldPassSearchTerm_WhenProvided()
 	{
 		// Arrange
-		var service = _fixture.UserManagementService;
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = "PhilSys"
-		};
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
+			PageSize: 10,
+			SearchTerm: "PhilSys");
 
 		var applicationData = new List<ApplicationsDTO>
 		{
 			new ApplicationsDTO(1, "PhilSys", "PhilSys IDV", true),
 		};
 
-		var expectedResult = new PaginatedResult<ApplicationsDTO>(1, 2, 10, applicationData);
-
-		var mockAuthRepository = _fixture
-			.MockAuthRepository
-			.Setup(x => x.SearchApplicationsAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetApplicationsPageAsync("PhilSys", null, 11, CancellationToken.None))
+			.ReturnsAsync(applicationData.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountApplicationsAsync("PhilSys", CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
 		var result = await _fixture.ApplicationService.GetApplicationsAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(1);
+		result.NextCursor.Should().BeNull();
+		result.Items.Should().BeEquivalentTo(applicationData);
 	}
 
 	[Fact]

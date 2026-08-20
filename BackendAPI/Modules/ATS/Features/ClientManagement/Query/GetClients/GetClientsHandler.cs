@@ -1,17 +1,17 @@
-namespace ATS.Features.ClientManagement.Query.GetClients;
+﻿namespace ATS.Features.ClientManagement.Query.GetClients;
 
-public record GetClientsQuery(PaginationRequest paginationRequest) : IQuery<GetClientsResult>;
+public record GetClientsQuery(KeysetPaginationRequest KeysetPaginationRequest) : IQuery<GetClientsResult>;
 
 public class GetClientsQueryValidator : AbstractValidator<GetClientsQuery>
 {
 	public GetClientsQueryValidator()
 	{
-		RuleFor(x => x.paginationRequest)
+		RuleFor(x => x.KeysetPaginationRequest)
 			.NotNull().WithMessage("Pagination request is required.");
 	}
 }
 
-public record GetClientsResult(PaginatedResult<ClientDetailsDTO> clients);
+public record GetClientsResult(KeysetPaginatedResult<ClientDetailsDTO> clients);
 
 public class GetClientsHandler : IQueryHandler<GetClientsQuery, GetClientsResult>
 {
@@ -24,7 +24,7 @@ public class GetClientsHandler : IQueryHandler<GetClientsQuery, GetClientsResult
 
 	public async Task<GetClientsResult> Handle(GetClientsQuery request, CancellationToken cancellationToken)
 	{
-		var clients = await _clientManagementService.GetClientsAsync(request.paginationRequest, cancellationToken);
+		var clients = await _clientManagementService.GetClientsAsync(request.KeysetPaginationRequest, cancellationToken);
 		return new GetClientsResult(clients);
 	}
 }

@@ -1,4 +1,4 @@
-namespace Auth.Services;
+﻿namespace Auth.Services;
 
 public class LockedUserService : ILockerUserService
 {
@@ -32,7 +32,7 @@ public class LockedUserService : ILockerUserService
 		return isDeleted;
 	}
 
-	public Task<PaginatedResult<AuthAttempts>> GetLockedUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<KeysetPaginatedResult<AuthAttempts>> GetLockedUsersAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -44,8 +44,21 @@ public class LockedUserService : ILockerUserService
 
 		_logger.LogInformation("Fetching locked users with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_authRepository.GetLockedUsersAsync(paginationRequest, cancellationToken) :
-			_authRepository.SearchLockedUserAsync(paginationRequest, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		Guid? afterUserId = Guid.TryParse(fields?[0], out var userId) ? userId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _authRepository.GetLockedUsersPageAsync(paginationRequest.SearchTerm, afterUserId, pageSize + 1, cancellationToken);
+		var (lockedUsers, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(lockedUsers[^1].UserId.ToString("D"))
+			: null;
+		long? totalCount = afterUserId is null
+			? await _authRepository.CountLockedUsersAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<AuthAttempts>(lockedUsers, nextCursor, totalCount);
 	}
 }

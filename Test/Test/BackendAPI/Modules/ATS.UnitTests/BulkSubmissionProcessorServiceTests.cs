@@ -81,7 +81,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		_fixture.MockRepository.Setup(x => x.AddBulkEmailInvitationRequestAsync(It.IsAny<List<EmailInvitationRequest>>()))
 			.ReturnsAsync(true);
 
-		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()))
+		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()))
 			.ReturnsAsync(true);
 
 		// Act
@@ -95,8 +95,8 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 			Times.Once);
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
-			Times.Once);
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
+			Times.AtLeastOnce);
 
 		_fixture.MockHubContext.Verify(
 			x => x.Clients,
@@ -144,7 +144,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 	}
 
@@ -190,7 +190,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 
 		_fixture.MockRepository.Verify(
@@ -256,7 +256,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		await act.Should().NotThrowAsync();
 
 		_fixture.MockRepository.Verify(
-			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()),
+			x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()),
 			Times.Never);
 	}
 	#endregion

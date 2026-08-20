@@ -95,19 +95,19 @@
         _loading = true;
         _failed = false;
 
-        try
+        var response = await ReportService.GetOrderStatusHistoryAsync(
+            EmailInvitationRequestId);
+
+        if (response.IsSuccess && response.Data is not null)
         {
-            _history = await ReportService.GetOrderStatusHistoryAsync(
-                EmailInvitationRequestId);
+            _history = response.Data;
         }
-        catch
+        else
         {
             _failed = true;
         }
-        finally
-        {
-            _loading = false;
-        }
+
+        _loading = false;
     }
 
     private void Cancel() => MudDialog.Cancel();

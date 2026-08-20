@@ -1380,8 +1380,6 @@
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\obj\Release\net10.0\BuildingBlocks.sourcelink.json" />
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\obj\Release\net10.0\refint\BuildingBlocks.dll" />
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\obj\Release\net10.0\ref\BuildingBlocks.dll" />
-    <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\Pagination\PaginatedResult.cs" />
-    <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\Pagination\PaginationRequest.cs" />
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\SharedConstants\GatewayConstants.cs" />
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\SharedDTO\ClusterDefinitionDTO.cs" />
     <None Include="BackendAPI\BuildingBlocks\BuildingBlocks\SharedDTO\RouteDefinitionDTO.cs" />
@@ -1574,7 +1572,6 @@
     <None Include="BackendAPI\Modules\ATS\Constants\OrderHistorySource.cs" />
     <None Include="BackendAPI\Modules\ATS\Constants\OrderStatus.cs" />
     <None Include="BackendAPI\Modules\ATS\Constants\ReportStatus.cs" />
-    <None Include="BackendAPI\Modules\ATS\Constants\SortColumn.cs" />
     <None Include="BackendAPI\Modules\ATS\Data\Cache\Administration\ATSUserCacheRepository.cs" />
     <None Include="BackendAPI\Modules\ATS\Data\Cache\Administration\ClientCacheRepository.cs" />
     <None Include="BackendAPI\Modules\ATS\Data\Cache\Administration\ModuleCacheRepository.cs" />
@@ -4263,7 +4260,6 @@
     <None Include="UI\FrontendWebassembly\DTO\Auth\OtpVerificationRequestDTO.cs" />
     <None Include="UI\FrontendWebassembly\DTO\Auth\OtpVerificationResponseDTO.cs" />
     <None Include="UI\FrontendWebassembly\DTO\Auth\OtpVerificationSessionResponse.cs" />
-    <None Include="UI\FrontendWebassembly\DTO\Auth\PaginatedResult.cs" />
     <None Include="UI\FrontendWebassembly\DTO\Auth\RegisterRequestDTO.cs" />
     <None Include="UI\FrontendWebassembly\DTO\Auth\RegisterResponseDTO.cs" />
     <None Include="UI\FrontendWebassembly\DTO\Auth\RolesDTO.cs" />

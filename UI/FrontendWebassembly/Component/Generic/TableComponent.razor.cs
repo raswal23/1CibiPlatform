@@ -34,6 +34,9 @@ public partial class TableComponent<TItem>
 	[Parameter] public EventCallback<string> SearchStringChanged { get; set; }
 	[Parameter] public RenderFragment? ToolBarLeft { get; set; }
 	[Parameter] public Func<TItem, int, string>? RowClassFunc { get; set; }
+	// When set, the table is keyset-paginated: renders CursorTablePager (First/Prev/Next,
+	// no jump-to-page) instead of MudTablePager. Pass the table's CursorTableLoader.
+	[Parameter] public ICursorPagerState? CursorPagerState { get; set; }
 
 	public MudTable<TItem>? TableRef { get; private set; }
 	public Task ReloadServerData() => TableRef?.ReloadServerData() ?? Task.CompletedTask;
@@ -81,7 +84,14 @@ public partial class TableComponent<TItem>
 			await SearchStringChanged.InvokeAsync(value);
 
 		if (TableRef is not null && LoadServerData is not null)
+		{
+			// A changed filter starts a new keyset walk; MudTable's page state must
+			// match the loader's reset-to-first-page or the pager shows a stale page.
+			if (CursorPagerState is not null)
+				TableRef.CurrentPage = 0;
+
 			await TableRef.ReloadServerData();
+		}
 	}
 
 	private async Task ReloadDataAsync()

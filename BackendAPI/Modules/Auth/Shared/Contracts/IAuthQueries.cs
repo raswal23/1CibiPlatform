@@ -1,12 +1,12 @@
-namespace Auth.Shared.Contracts;
+﻿namespace Auth.Shared.Contracts;
 
 public interface IAuthQueries
 {
 	Task<IReadOnlyList<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
 		CancellationToken cancellationToken);
 
-	Task<PaginatedResult<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<ATSUserLookupDTO?> GetATSAssignedUserAsync(

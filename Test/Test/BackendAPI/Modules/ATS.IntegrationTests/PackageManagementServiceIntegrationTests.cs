@@ -54,17 +54,25 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			("Alpha Screening", "First package"),
 			("Middle Screening", "Second package"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 2);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _packageManagementService.GetPackagesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.PageIndex.Should().Be(1);
-		result.PageSize.Should().Be(2);
-		result.Count.Should().Be(3);
-		result.Data.Select(x => x.PackageName)
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(x => x.PackageName)
 			.Should().Equal("Alpha Screening", "Middle Screening");
+		result.NextCursor.Should().NotBeNull();
+
+		var secondPage = await _packageManagementService.GetPackagesAsync(
+			new KeysetPaginationRequest(Cursor: result.NextCursor, PageSize: 2),
+			CancellationToken.None);
+
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(x => x.PackageName)
+			.Should().Equal("Zulu Screening");
+		secondPage.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -76,15 +84,16 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			("Executive Screening", "Premium leadership checks"),
 			("Premium Screening", "Comprehensive checks"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "PREMIUM");
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "PREMIUM");
 
 		// Act
 		var result = await _packageManagementService.GetPackagesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(2);
-		result.Data.Select(x => x.PackageName)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(x => x.PackageName)
 			.Should().Equal("Executive Screening", "Premium Screening");
+		result.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

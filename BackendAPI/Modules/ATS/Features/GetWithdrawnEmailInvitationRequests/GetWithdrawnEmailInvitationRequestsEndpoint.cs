@@ -1,8 +1,8 @@
-namespace ATS.Features.EmailInvitationRequest;
+﻿namespace ATS.Features.EmailInvitationRequest;
 
-public record GetWithdrawnEmailInvitationRequestsEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetWithdrawnEmailInvitationRequestsEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetWithdrawnEmailInvitationRequestsEndpointResponse(PaginatedResult<EmailInvitationRequestListDTO> Requests);
+public record GetWithdrawnEmailInvitationRequestsEndpointResponse(KeysetPaginatedResult<EmailInvitationRequestListDTO> Requests);
 
 public class GetWithdrawnEmailInvitationRequestsEndpoint : ICarterModule
 {
@@ -14,7 +14,7 @@ public class GetWithdrawnEmailInvitationRequestsEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetWithdrawnEmailInvitationRequestsQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

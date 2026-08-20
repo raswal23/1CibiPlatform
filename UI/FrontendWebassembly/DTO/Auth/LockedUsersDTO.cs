@@ -10,5 +10,5 @@ public record LockedUsersDTO
 
 public record LockedUsersResponseDTO
 {
-	public PaginatedResult<LockedUsersDTO>? lockedusers { get; set; }
+	public KeysetPaginatedResult<LockedUsersDTO>? lockedusers { get; set; }
 }

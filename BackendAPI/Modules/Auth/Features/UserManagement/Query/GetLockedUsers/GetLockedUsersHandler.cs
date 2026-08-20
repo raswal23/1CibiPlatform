@@ -1,16 +1,13 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetLockedUsers;
-public record GetLockedUsersQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetLockedUsersQueryResult>;
+public record GetLockedUsersQueryRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetLockedUsersQueryResult>;
 
-public record GetLockedUsersQueryResult(PaginatedResult<AuthAttempts> LockedUsers);
+public record GetLockedUsersQueryResult(KeysetPaginatedResult<AuthAttempts> LockedUsers);
 public class GetLockedUsersQueryRequestValidator : AbstractValidator<GetLockedUsersQueryRequest>
 {
 	public GetLockedUsersQueryRequestValidator()
 	{
-		RuleFor(x => x.PageNumber).Must(pageIndex => pageIndex >= 0)
-			.WithMessage("PageNumber must be greater than 0.");
-
-		RuleFor(x => x.PageSize).Must(pageSize => pageSize > 0 && pageSize <= 100)
-			.WithMessage("PageSize must be greater than 0.");
+		RuleFor(x => x.PageSize).Must(pageSize => pageSize is null || (pageSize > 0 && pageSize <= 100))
+			.WithMessage("PageSize must be between 1 and 100.");
 	}
 }
 public class GetLockedUsersHandler : IQueryHandler<GetLockedUsersQueryRequest, GetLockedUsersQueryResult>
@@ -22,8 +19,8 @@ public class GetLockedUsersHandler : IQueryHandler<GetLockedUsersQueryRequest, G
 	}
 	public async Task<GetLockedUsersQueryResult> Handle(GetLockedUsersQueryRequest request, CancellationToken cancellationToken)
 	{
-		var paginationRequest = new PaginationRequest(
-			request.PageNumber ?? 1,
+		var paginationRequest = new KeysetPaginationRequest(
+			request.Cursor,
 			request.PageSize ?? 10,
 			request.SearchTerm);
 

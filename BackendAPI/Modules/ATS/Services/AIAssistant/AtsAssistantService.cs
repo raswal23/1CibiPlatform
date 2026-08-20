@@ -1,3 +1,5 @@
+using ATS.Services.Settings.PackageManagement;
+
 namespace ATS.Services.AIAssistant;
 
 public class AtsAssistantService : IAtsAssistantService
@@ -42,7 +44,7 @@ public class AtsAssistantService : IAtsAssistantService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IPackageManagementService _packageManagementService;
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
-	private readonly AtsQueryScopeResolver _scopeResolver;
+	private readonly IUserClientRepository _userClientRepository;
 	private readonly AtsOrderDraftStore _draftStore;
 	private readonly AtsChatHistoryStore _historyStore;
 	private readonly ICurrentUser _currentUser;
@@ -55,7 +57,7 @@ public class AtsAssistantService : IAtsAssistantService
 		IOrderHistoryService orderHistoryService,
 		IPackageManagementService packageManagementService,
 		IEndorsementSubmissionService endorsementSubmissionService,
-		AtsQueryScopeResolver scopeResolver,
+		IUserClientRepository userClientRepository,
 		AtsOrderDraftStore draftStore,
 		AtsChatHistoryStore historyStore,
 		ICurrentUser currentUser,
@@ -67,7 +69,7 @@ public class AtsAssistantService : IAtsAssistantService
 		_orderHistoryService = orderHistoryService;
 		_packageManagementService = packageManagementService;
 		_endorsementSubmissionService = endorsementSubmissionService;
-		_scopeResolver = scopeResolver;
+		_userClientRepository = userClientRepository;
 		_draftStore = draftStore;
 		_historyStore = historyStore;
 		_currentUser = currentUser;
@@ -87,16 +89,13 @@ public class AtsAssistantService : IAtsAssistantService
 		{
 			await _hubContext.Clients.Group(userGroup).ReceiveChatTyping(true);
 
-			var scope = await _scopeResolver.ResolveAsync(cancellationToken);
-
 			var plugin = new AtsAssistantPlugin(
 				_atsRepository,
 				_orderHistoryService,
 				_packageManagementService,
 				_draftStore,
-				scope,
-				userId,
-				_currentUser.AtsClientId);
+				_currentUser,
+				_userClientRepository);
 
 			// Clone so ATS plugins never leak onto the kernel shared with other modules,
 			// and so one user's scope is never visible to another.
@@ -189,16 +188,13 @@ public class AtsAssistantService : IAtsAssistantService
 		string name,
 		CancellationToken cancellationToken)
 	{
-		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
-
 		var plugin = new AtsAssistantPlugin(
 			_atsRepository,
 			_orderHistoryService,
 			_packageManagementService,
 			_draftStore,
-			scope,
-			_currentUser.UserId ?? Guid.Empty,
-			_currentUser.AtsClientId);
+			_currentUser,
+			_userClientRepository);
 
 		return await plugin.SearchOrdersBySubjectAsync(name, cancellationToken);
 	}

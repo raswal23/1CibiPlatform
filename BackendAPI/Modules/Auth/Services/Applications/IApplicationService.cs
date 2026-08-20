@@ -1,8 +1,8 @@
 ﻿namespace Auth.Services;
 public interface IApplicationService
 {
-	Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<ApplicationsDTO>> GetApplicationsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> DeleteApplicationAsync(int AppId);

@@ -35,6 +35,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	{
 		// Arrange
 		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
 
 		_fixture.MockRepository
 			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
@@ -84,6 +85,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	{
 		// Arrange
 		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
 
 		_fixture.MockRepository
 			.Setup(x => x.ReleaseStaleEmailInvitationClaimsAsync(It.IsAny<TimeSpan>()))

@@ -2,6 +2,7 @@
 
 public partial class WithdrawnApplicationComponent
 {
+	private readonly CursorTableLoader<EmailInvitationRequestListDTO> _withdrawnLoader = new();
 	private TableComponent<EmailInvitationRequestListDTO>? lockedUsersTable;
 	private string? _searchString;
 
@@ -73,8 +74,8 @@ public partial class WithdrawnApplicationComponent
 	}
 
 	private async Task<TableData<EmailInvitationRequestListDTO>> LoadWithdrawnServerData(TableState state, CancellationToken cancellationToken)
-	=> await LoadPagedDataAsync(state, (page, pageSize) =>
-		EndorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(page, pageSize, searchString));
+	=> await LoadCursorPagedDataAsync(_withdrawnLoader, state, $"{searchString}", (cursor, pageSize) =>
+		EndorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(cursor, pageSize, searchString));
 
 	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
@@ -98,19 +99,15 @@ public partial class WithdrawnApplicationComponent
 
 		try
 		{
-			bool success;
+			var resendResponse = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
 
-			try
+			if (!resendResponse.IsSuccess)
 			{
-				success = await EndorsementSubmissionService.ResendApplicationFormAsync(emailInvitationId);
-			}
-			catch (Exception)
-			{
-				Snackbar.Add("Failed to resend application form.", Severity.Error);
+				Snackbar.Add(resendResponse.ErrorDetail, Severity.Error);
 				return false;
 			}
 
-			if (!success)
+			if (!resendResponse.Data)
 			{
 				Snackbar.Add("Failed to resend application form.", Severity.Error);
 				return false;

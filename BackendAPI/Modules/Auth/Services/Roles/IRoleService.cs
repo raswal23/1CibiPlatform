@@ -1,8 +1,8 @@
 ﻿namespace Auth.Services;
 public interface IRoleService
 {
-	Task<PaginatedResult<RolesDTO>> GetRolesAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<RolesDTO>> GetRolesAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> DeleteRoleAsync(int RoleId);

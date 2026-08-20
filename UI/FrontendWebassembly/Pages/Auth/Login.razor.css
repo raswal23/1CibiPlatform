@@ -12,9 +12,6 @@
     --text-2: #5b6b8c;
     --text-3: #8a97b5;
     display: flex;
-    /* Keep the auth surface inside the viewport.  `min-width: 100vw` makes
-       the element wider than the layout viewport when a vertical scrollbar
-       is present, which is what caused the horizontal scrollbar on laptops. */
     width: 100%;
     min-width: 0;
     height: 100dvh;
@@ -120,7 +117,6 @@
 
 .auth-front {
     z-index: 3;
-    /* Keep the sign-up prompt from showing mirrored text on the back of the flip. */
     backface-visibility: hidden;
     background: linear-gradient(150deg, var(--navy-900) 0%, var(--blue-600) 100%) no-repeat 0 0 / 200%;
 }
@@ -645,9 +641,6 @@
     }
 }
 
-/* Short laptop/tablet viewports need a little less chrome so the complete
-   form remains visible without growing the document and introducing a page
-   scrollbar. */
 @media (max-height: 700px) and (min-width: 621px) {
     .auth-content {
         padding-top: 1.25em;

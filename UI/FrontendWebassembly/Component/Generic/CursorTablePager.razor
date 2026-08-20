@@ -1,0 +1,46 @@
+@using FrontendWebassembly.Services.Shared.Interfaces
+
+@* Pager for keyset-paginated tables: First/Prev/Next only. Keyset cursors cannot
+   jump to an arbitrary page, so there is no page-number list and no Last button. *@
+<div class="mud-table-pagination mud-table-pagination-toolbar cursor-table-pager">
+    <div class="mud-table-pagination-spacer"></div>
+
+    @if (!HideRowsPerPage)
+    {
+        <div class="mud-table-pagination-select">
+            <MudText Typo="Typo.caption" Class="mr-2">@RowsPerPageString</MudText>
+            <MudSelect T="int"
+                       Value="RowsPerPage"
+                       ValueChanged="SetRowsPerPageAsync"
+                       Dense="true"
+                       Margin="Margin.Dense"
+                       Variant="Variant.Text"
+                       Class="cursor-table-pager-select">
+                @foreach (var size in PageSizeOptions)
+                {
+                    <MudSelectItem T="int" Value="@size">@size</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+    }
+
+    <MudText Typo="Typo.caption" Class="mud-table-page-number-information mx-4">@InfoText</MudText>
+
+    <div class="mud-table-pagination-actions">
+        <MudIconButton Icon="@Icons.Material.Filled.FirstPage"
+                       Size="Size.Small"
+                       Disabled="@IsFirstPage"
+                       aria-label="First page"
+                       OnClick="@(() => Navigate(Page.First))" />
+        <MudIconButton Icon="@Icons.Material.Filled.NavigateBefore"
+                       Size="Size.Small"
+                       Disabled="@IsFirstPage"
+                       aria-label="Previous page"
+                       OnClick="@(() => Navigate(Page.Previous))" />
+        <MudIconButton Icon="@Icons.Material.Filled.NavigateNext"
+                       Size="Size.Small"
+                       Disabled="@(PagerState is null || !PagerState.HasNextPage)"
+                       aria-label="Next page"
+                       OnClick="@(() => Navigate(Page.Next))" />
+    </div>
+</div>
