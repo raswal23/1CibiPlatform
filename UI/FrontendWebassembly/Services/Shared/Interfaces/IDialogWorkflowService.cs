@@ -6,14 +6,16 @@ public interface IDialogWorkflowService
 {
 	Task<TDto?> OpenAddDialogAsync<TComponent, TDto>(
 		IDialogService dialogService,
-		string title)
+		string title,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase;
 
 	Task<TDto?> OpenEditDialogAsync<TComponent, TDto>(
 		IDialogService dialogService,
 		string title,
 		string parameterName,
-		TDto dto)
+		TDto dto,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase;
 
 	Task<bool> ConfirmActionAsync(

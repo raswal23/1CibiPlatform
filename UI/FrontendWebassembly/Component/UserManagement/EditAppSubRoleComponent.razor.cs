@@ -50,6 +50,10 @@ public partial class EditAppSubRoleComponent
 
 	async Task Submit()
 	{
+		await EditAppSubRoleForm!.ValidateAsync();
+		if (!EditAppSubRoleForm!.IsValid)
+			return;
+
 		AppSubRole.UserId = selectedUser!.userId;
 		AppSubRole.AppId = selectedApp!.applicationId;
 		AppSubRole.SubMenuId = selectedMenu!.subMenuId;

@@ -3,10 +3,6 @@
 public partial class AddAppSubRoleComponent
 {
 	private MudForm? AddAppSubRoleForm;
-	private bool showUserError;
-	private bool showAppError;
-	private bool showSubMenuError;
-	private bool showRoleError;
 
 	private UsersDTO? selectedUser;
 	private ApplicationsDTO? selectedApp;
@@ -48,6 +44,10 @@ public partial class AddAppSubRoleComponent
 
 	async Task Submit()
 	{
+		await AddAppSubRoleForm!.ValidateAsync();
+		if (!AddAppSubRoleForm!.IsValid)
+			return;
+
 		var notification = new AssignmentNotificationDTO
 		{
 			Gmail = selectedUser?.email,

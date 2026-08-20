@@ -1,0 +1,77 @@
+<MudDialog Class="um-dialog ats-scroll-dialog"
+           Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        <div class="um-shell ats-dialog-shell">
+            <header class="um-header ats-dialog-header">
+                <div class="um-header-row">
+                    <div class="um-header-left">
+                        <div class="um-icon-badge" aria-hidden="true">
+                            <MudIcon Icon="@Icon" />
+                        </div>
+                        <div class="um-header-text">
+                            <h1>@Title</h1>
+                            <p>@Subtitle</p>
+                        </div>
+                    </div>
+                    <button type="button" class="um-close" aria-label="Close dialog" @onclick="OnClose">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="um-body ats-dialog-body">
+                <section class="um-section @SectionClass">
+                    <div class="um-section-head">
+                        <span class="um-section-number">1</span>
+                        <h2>@SectionTitle</h2>
+                        @if (!string.IsNullOrWhiteSpace(SectionHelper))
+                        {
+                            <span class="um-section-helper">@SectionHelper</span>
+                        }
+                    </div>
+                    <div class="um-section-body">
+                        @ChildContent
+                    </div>
+                </section>
+                @if (SecondaryContent is not null)
+                {
+                    <section class="um-section um-secondary-section">
+                        <div class="um-section-head">
+                            <span class="um-section-number">2</span>
+                            <h2>@SecondarySectionTitle</h2>
+                            @if (!string.IsNullOrWhiteSpace(SecondarySectionHelper))
+                            {
+                                <span class="um-section-helper">@SecondarySectionHelper</span>
+                            }
+                        </div>
+                        <div class="um-section-body">
+                            @SecondaryContent
+                        </div>
+                    </section>
+                }
+            </main>
+
+            <footer class="um-footer ats-dialog-footer @(SplitFooter ? "is-split" : null)">
+                @FooterContent
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Subtitle { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string SectionTitle { get; set; } = string.Empty;
+    [Parameter] public string? SectionHelper { get; set; }
+    [Parameter] public string? SectionClass { get; set; }
+    [Parameter] public string Icon { get; set; } = Icons.Material.Outlined.Settings;
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? SecondarySectionTitle { get; set; }
+    [Parameter] public string? SecondarySectionHelper { get; set; }
+    [Parameter] public RenderFragment? SecondaryContent { get; set; }
+    [Parameter, EditorRequired] public RenderFragment? FooterContent { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public bool SplitFooter { get; set; }
+}

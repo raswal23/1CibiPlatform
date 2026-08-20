@@ -24,13 +24,18 @@ public partial class UserAppRoles
 	private readonly CursorTableLoader<SubMenusDTO> _subMenusLoader = new();
 	private readonly CursorTableLoader<RolesDTO> _rolesLoader = new();
 	private readonly CursorTableLoader<AppSubRolesDTO> _appSubRolesLoader = new();
-
-	private string GetTabClass(int index)
+	private static DialogOptions UserManagementDialogOptions => new()
 	{
-		return _activeIndex == index
-			? "philsys-tab-pannel-active"
-			: "philsys-tab-pannel-inactive";
-	}
+		NoHeader = true,
+		MaxWidth = MaxWidth.Small,
+		FullWidth = true,
+		BackdropClick = false
+	};
+
+	private string GetTabButtonClass(int index) =>
+		_activeIndex == index ? "user-management-tab active" : "user-management-tab";
+
+	private void SelectTab(int index) => _activeIndex = index;
 
 	// Generic Functions
 	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
@@ -116,13 +121,13 @@ public partial class UserAppRoles
 
 	// Add and Edit Dialog
 	private async Task OpenAddApplicationDialog()
-	 => await OpenAddDialogAsync<AddApplicationComponent, AddApplicationDTO>("Add Application", AddApplication);
+	 => await OpenAddDialogAsync<AddApplicationComponent, AddApplicationDTO>("Add Application", AddApplication, UserManagementDialogOptions);
 
 	private async Task OpenAddSubMenuDialog()
-	 => await OpenAddDialogAsync<AddSubMenuComponent, AddSubMenuDTO>("Add SubMenu", AddSubMenu);
+	 => await OpenAddDialogAsync<AddSubMenuComponent, AddSubMenuDTO>("Add SubMenu", AddSubMenu, UserManagementDialogOptions);
 
 	private async Task OpenAddRoleDialog()
-		=> await OpenAddDialogAsync<AddRoleComponent, AddRoleDTO>("Add Role", AddRole);
+		=> await OpenAddDialogAsync<AddRoleComponent, AddRoleDTO>("Add Role", AddRole, UserManagementDialogOptions);
 
 	private async Task OpenAddAppSubRoleDialog()
 	{
@@ -144,7 +149,8 @@ public partial class UserAppRoles
 				{
 					Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
 				}
-			});
+			},
+			UserManagementDialogOptions);
 	}
 
 	private async Task OpenEditUserApprovalDialog(UnApprovedUsersDTO unapproveduser)
@@ -159,24 +165,27 @@ public partial class UserAppRoles
 			{
 				Snackbar.Add("Saved, but the approval notification could not be sent.", Severity.Warning);
 			}
-		});
+		}, UserManagementDialogOptions);
 	}
 	private async Task OpenEditApplicationDialog(ApplicationsDTO app)
-	  => await OpenEditDialogAsync<EditApplicationComponent, ApplicationsDTO>("Edit Application", "Application", app, EditApplication);
+	  => await OpenEditDialogAsync<EditApplicationComponent, ApplicationsDTO>("Edit Application", "Application", app, EditApplication, UserManagementDialogOptions);
 
 	private async Task OpenEditSubMenuDialog(SubMenusDTO sub)
-		=> await OpenEditDialogAsync<EditSubMenuComponent, SubMenusDTO>("Edit SubMenu", "SubMenu", sub, EditSubMenu);
+		=> await OpenEditDialogAsync<EditSubMenuComponent, SubMenusDTO>("Edit SubMenu", "SubMenu", sub, EditSubMenu, UserManagementDialogOptions);
 
 	private async Task OpenEditRoleDialog(RolesDTO role)
-		=> await OpenEditDialogAsync<EditRoleComponent, RolesDTO>("Edit Role", "Role", role, EditRole);
+		=> await OpenEditDialogAsync<EditRoleComponent, RolesDTO>("Edit Role", "Role", role, EditRole, UserManagementDialogOptions);
 
 	private async Task OpenEditAppSubRoleDialog(AppSubRolesDTO appsubrole)
-		=> await OpenEditDialogAsync<EditAppSubRoleComponent, AppSubRolesDTO>("Edit UserAppSubRole", "AppSubRole", appsubrole, EditAppSubRole);
+		=> await OpenEditDialogAsync<EditAppSubRoleComponent, AppSubRolesDTO>("Edit UserAppSubRole", "AppSubRole", appsubrole, EditAppSubRole, UserManagementDialogOptions);
 
 	// Delete Dialog
 	private async Task ConfirmDelete(int id, string table)
 	{
-		var confirmed = await ConfirmActionAsync("Confirm Delete", $"Are you sure you want to delete this {table}?", "Delete");
+		var confirmed = await ShowUserManagementConfirmationAsync(
+			"Confirm Delete",
+			$"Are you sure you want to delete this {table}?",
+			"Delete");
 
 		if (confirmed)
 		{
@@ -200,12 +209,33 @@ public partial class UserAppRoles
 
 	private async Task ConfirmUnlockAccount(Guid id)
 	{
-		var confirmed = await ConfirmActionAsync("Unlocking User Account", "Are you sure you want to unlock this account?", "Unlock");
+		var confirmed = await ShowUserManagementConfirmationAsync(
+			"Unlocking User Account",
+			"Are you sure you want to unlock this account?",
+			"Unlock");
 
 		if (confirmed)
 		{
 			await DeleteLockedUser(id);
 		}
+	}
+
+	private async Task<bool> ShowUserManagementConfirmationAsync(string title, string message, string confirmText)
+	{
+		var parameters = new DialogParameters<ConfirmationDialogComponent>
+		{
+			{ component => component.Title, title },
+			{ component => component.Message, message },
+			{ component => component.ConfirmText, confirmText }
+		};
+
+		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
+			title,
+			parameters,
+			UserManagementDialogOptions);
+		var result = await dialog.Result;
+
+		return result is not null && !result.Canceled;
 	}
 
 	// Command Execution 

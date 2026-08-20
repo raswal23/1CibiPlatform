@@ -41,6 +41,8 @@ public partial class EditApplicationComponent
 
 	void Cancel() => EditApplicationDialog!.Cancel();
 
+	private void ToggleStatus() => EditApplication.IsActive = !EditApplication.IsActive;
+
 	async Task Submit()
 	{
 		await EditApplicationForm!.ValidateAsync();
