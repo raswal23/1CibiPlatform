@@ -54,16 +54,25 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 			RuleFor(x => x.PersonalDetails.AdditionalGovtIDFile)
 				.NotNull().WithMessage("Government ID is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
 				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.PersonalDetails.NBIClearanceFile)
 				.NotNull().WithMessage("NBI Clearance is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
 				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.PersonalDetails.ResumeFile)
 				.NotNull().WithMessage("Resume is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
 				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 				.WithMessage("File size exceeds the 25 MB limit.");
 		});
@@ -147,6 +156,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.EducationalBackground.HighSchoolDiplomaFile)
 					.NotNull()
 					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 			});
@@ -165,6 +177,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.EducationalBackground.SeniorHighSchoolDiplomaFile)
 					.NotNull()
 					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -188,6 +203,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.EducationalBackground.BachelorsDiplomaFile)
 					.NotNull()
 					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -211,6 +229,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.EducationalBackground.MastersDiplomaFile)
 					.NotNull()
 					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -234,6 +255,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.EducationalBackground.DoctorateDiplomaFile)
 					.NotNull()
 					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -277,6 +301,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.LicensesDetails.LicenseUploadFile)
 					.NotNull()
 					.WithMessage("Professional License is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 			});
@@ -336,6 +363,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 			RuleFor(x => x.ProfessionalExperiences.Emp1COEUploadFile)
 				.NotNull()
 				.WithMessage("COE/ID #1 is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
 				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 				.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -394,6 +424,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2COEUploadFile)
 						.NotNull()
+						.Must(file => file != null &&
+						 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+						.WithMessage("Only .pdf files are allowed.")
 						.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 						.WithMessage("File size exceeds the 25 MB limit.");
 				});
@@ -453,6 +486,9 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3COEUploadFile)
 					.NotNull()
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
 					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 					.WithMessage("File size exceeds the 25 MB limit.");
 
@@ -579,7 +615,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 		{
 			RuleFor(x => x.SignatureDetails.Signature)
 				.NotNull()
-				.WithMessage("Signature is required.");
+				.WithMessage("Signature is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".png", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .png files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.SignatureDetails.SignerName)
 				.NotEmpty()
