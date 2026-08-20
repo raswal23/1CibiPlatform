@@ -117,7 +117,7 @@ public partial class UserAppRoles
 
 	private async Task<TableData<AppSubRolesDTO>> LoadUserAppSubRolesServerData(TableState state, CancellationToken cancellationToken)
 		=> await LoadCursorPagedDataAsync(_appSubRolesLoader, state, $"{searchStringAppSubRole}", (cursor, pageSize) =>
-			UserManagementService.GetAppSubRolesAsync(cursor, pageSize, searchStringAppSubRole));
+			UserManagementService.GetAppSubRolesAsync(cursor, pageSize, searchStringAppSubRole, cancellationToken));
 
 	// Add and Edit Dialog
 	private async Task OpenAddApplicationDialog()
@@ -131,26 +131,29 @@ public partial class UserAppRoles
 
 	private async Task OpenAddAppSubRoleDialog()
 	{
-		await OpenAddDialogAsync<AddAppSubRoleComponent, AddAppSubRoleResult>(
+		var dialog = await DialogService.ShowAsync<AddAppSubRoleComponent>(
 			"Add User's AppSubRole",
-			async result =>
-			{
-				var appSubRoleDto = result.AppSubRole;
-				var notificationDto = result.Notification;
-				var success = await AddAppSubRole(appSubRoleDto);
-				if (!success)
-				{
-					return;
-				}
-
-				var notificationResponse = await UserManagementService.SendNotificationAsync(notificationDto);
-
-				if (!notificationResponse.IsSuccess)
-				{
-					Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
-				}
-			},
 			UserManagementDialogOptions);
+		var result = await dialog.Result;
+
+		if (result is null || result.Canceled || result.Data is not AddAppSubRoleResult addResult)
+			return;
+
+		var response = await UserManagementService.AddAppSubRoleAsync(addResult.AppSubRole);
+		if (!response.IsSuccess || !response.Data)
+		{
+			if (!response.IsSuccess)
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+			return;
+		}
+
+		Snackbar.Add("Application role assigned successfully", Severity.Success);
+		if (appSubRolesTable?.TableRef is not null)
+			await appSubRolesTable.TableRef.ReloadServerData();
+
+		var notificationResponse = await UserManagementService.SendNotificationAsync(addResult.Notification);
+		if (!notificationResponse.IsSuccess)
+			Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
 	}
 
 	private async Task OpenEditUserApprovalDialog(UnApprovedUsersDTO unapproveduser)
@@ -176,8 +179,32 @@ public partial class UserAppRoles
 	private async Task OpenEditRoleDialog(RolesDTO role)
 		=> await OpenEditDialogAsync<EditRoleComponent, RolesDTO>("Edit Role", "Role", role, EditRole, UserManagementDialogOptions);
 
-	private async Task OpenEditAppSubRoleDialog(AppSubRolesDTO appsubrole)
-		=> await OpenEditDialogAsync<EditAppSubRoleComponent, AppSubRolesDTO>("Edit UserAppSubRole", "AppSubRole", appsubrole, EditAppSubRole, UserManagementDialogOptions);
+	private async Task OpenEditAppSubRoleDialog(AppSubRolesDTO appSubRole)
+	{
+		var parameters = new DialogParameters<EditAppSubRoleComponent>
+		{
+			{ component => component.AppSubRole, appSubRole }
+		};
+		var dialog = await DialogService.ShowAsync<EditAppSubRoleComponent>(
+			"Edit User's AppSubRole",
+			parameters,
+			UserManagementDialogOptions);
+		var result = await dialog.Result;
+
+		if (result is null || result.Canceled || result.Data is not EditAppSubRoleDTO editAppSubRole)
+			return;
+
+		var response = await UserManagementService.EditAppSubRoleAsync(editAppSubRole);
+		if (!response.IsSuccess)
+		{
+			Snackbar.Add(response.ErrorDetail, Severity.Error);
+			return;
+		}
+
+		Snackbar.Add("Application role updated successfully", Severity.Success);
+		if (appSubRolesTable?.TableRef is not null)
+			await appSubRolesTable.TableRef.ReloadServerData();
+	}
 
 	// Delete Dialog
 	private async Task ConfirmDelete(int id, string table)
@@ -287,25 +314,6 @@ public partial class UserAppRoles
 		return;
 	}
 
-	private async Task<bool> AddAppSubRole(AddAppSubRoleDTO addAppSubRoleDTO)
-	{
-		var response = await UserManagementService.AddAppSubRoleAsync(addAppSubRoleDTO);
-
-		if (!response.IsSuccess)
-		{
-			Snackbar.Add(response.ErrorDetail, Severity.Error);
-			return false;
-		}
-
-		if (!response.Data)
-		{
-			return false;
-		}
-
-		await appSubRolesTable.TableRef.ReloadServerData();
-		return true;
-	}
-
 	private async Task EditUser(UnApprovedUsersDTO editUserDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.EditUserAsync(editUserDTO), unapprovedUsersTable);
@@ -332,9 +340,4 @@ public partial class UserAppRoles
 		return;
 	}
 
-	private async Task EditAppSubRole(AppSubRolesDTO editAppSubRoleDTO)
-	{
-		await ExecuteAndReloadAsync(() => UserManagementService.EditAppSubRoleAsync(editAppSubRoleDTO), appSubRolesTable);
-		return;
-	}
 }

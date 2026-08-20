@@ -40,12 +40,12 @@ public partial class EditAppSubRoleComponent
 		SubMenus = subMenus;
 		Roles = roles;
 
-		selectedUser = Users?.FirstOrDefault(u => u.email == AppSubRole.UserEmail);
+		selectedUser = Users?.FirstOrDefault(u => u.userId == AppSubRole.UserId);
 		selectedApp = Apps?.FirstOrDefault(a => a.applicationId == AppSubRole.AppId);
 		selectedMenu = SubMenus?.FirstOrDefault(s => s.subMenuId == AppSubRole.SubMenuId);
 		selectedRole = Roles?.FirstOrDefault(r => r.roleId == AppSubRole.RoleId);
 
-		IsLoaded = true;
+		IsLoaded = firstFailure is null;
 	}
 
 	async Task Submit()
@@ -54,12 +54,16 @@ public partial class EditAppSubRoleComponent
 		if (!EditAppSubRoleForm!.IsValid)
 			return;
 
-		AppSubRole.UserId = selectedUser!.userId;
-		AppSubRole.AppId = selectedApp!.applicationId;
-		AppSubRole.SubMenuId = selectedMenu!.subMenuId;
-		AppSubRole.RoleId = selectedRole!.roleId;
+		var editAppSubRole = new EditAppSubRoleDTO
+		{
+			AppSubRoleId = AppSubRole.AppRoleId,
+			UserId = selectedUser!.userId,
+			AppId = selectedApp!.applicationId,
+			SubMenuId = selectedMenu!.subMenuId,
+			RoleId = selectedRole!.roleId
+		};
 
-		EditAppSubRoleDialog!.Close(DialogResult.Ok(AppSubRole));
+		EditAppSubRoleDialog!.Close(DialogResult.Ok(editAppSubRole));
 	}
 
 	private async Task<IEnumerable<T>> Search<T>(

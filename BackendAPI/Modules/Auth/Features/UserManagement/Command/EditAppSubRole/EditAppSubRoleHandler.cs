@@ -20,11 +20,11 @@ public class EditAppSubRoleCommandValidator : AbstractValidator<EditAppSubRoleCo
 				.NotEmpty().WithMessage("UserId is required.")
 				.Must(userId => userId != Guid.Empty).WithMessage("UserId must be a valid GUID.");
 			RuleFor(x => x.editAppSubRole.SubMenuId)
-				.NotEmpty().WithMessage("SubRoleName is required.")
-				.GreaterThan(0).WithMessage("SubRoleName cannot exceed 100 characters.");
+				.NotEmpty().WithMessage("SubMenuId is required.")
+				.GreaterThan(0).WithMessage("SubMenuId must be greater than zero.");
 			RuleFor(x => x.editAppSubRole.RoleId)
 				.NotEmpty().WithMessage("RoleId is required.")
-				.GreaterThan(0).WithMessage("RoleId cannot exceed 100 characters.");
+				.GreaterThan(0).WithMessage("RoleId must be greater than zero.");
 		});
 	}
 }

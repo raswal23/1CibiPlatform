@@ -27,10 +27,8 @@ public partial class AuthCacheRepository
 				cancellationToken: cancellationToken);
 		}
 	
-	public async Task<AuthUserAppRole> GetAppSubRoleAsync(int appSubRoleId)
-		{
-			return await _authRepository.GetAppSubRoleAsync(appSubRoleId);
-		}
+	public Task<AuthUserAppRole?> GetAppSubRoleAsync(int appSubRoleId) =>
+		_authRepository.GetAppSubRoleAsync(appSubRoleId);
 	
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 		{

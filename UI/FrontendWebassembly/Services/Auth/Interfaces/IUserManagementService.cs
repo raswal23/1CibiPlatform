@@ -25,7 +25,7 @@ public interface IUserManagementService
 	Task<ServiceResponse<EditApplicationDTO>> EditApplicationAsync(ApplicationsDTO editApplicationDTO);
 	Task<ServiceResponse<EditSubMenuDTO>> EditSubMenuAsync(SubMenusDTO editSubMenuDTO);
 	Task<ServiceResponse<EditRoleDTO>> EditRoleAsync(RolesDTO editRoleDTO);
-	Task<ServiceResponse<EditAppSubRoleDTO>> EditAppSubRoleAsync(AppSubRolesDTO editAppSubRoleDTO);
+	Task<ServiceResponse<AppSubRoleDTO>> EditAppSubRoleAsync(EditAppSubRoleDTO editAppSubRoleDTO);
 
 	Task<ServiceResponse<bool>> SendNotificationAsync(AssignmentNotificationDTO accountNotificationDTO);
 	Task<ServiceResponse<bool>> SendApprovalNotificationAsync(string Gmail);

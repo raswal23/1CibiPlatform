@@ -83,16 +83,28 @@ public class AppSubRoleService : IAppSubRoleService
 		}
 
 		existingAppSubRole.UserId = appSubRoleDTO.UserId;
-		existingAppSubRole.AppId = appSubRoleDTO.AppId!;
+		existingAppSubRole.AppId = appSubRoleDTO.AppId;
 		existingAppSubRole.Submenu = appSubRoleDTO.SubMenuId;
 		existingAppSubRole.RoleId = appSubRoleDTO.RoleId;
 
-		var application = await _authRepository.EditAppSubRoleAsync(existingAppSubRole);
-		return application.Adapt<AppSubRoleDTO>();
+		var updatedAppSubRole = await _authRepository.EditAppSubRoleAsync(existingAppSubRole);
+		return updatedAppSubRole.Adapt<AppSubRoleDTO>();
 	}
 
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 	{
+		var logContext = new
+		{
+			Action = "AddAppSubRole",
+			Step = "CreatingAppSubRole",
+			UserId = appSubRole.UserId,
+			AppId = appSubRole.AppId,
+			SubMenuId = appSubRole.SubMenuId,
+			RoleId = appSubRole.RoleId,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Adding app sub-role: {@Context}", logContext);
 		var isAdded = await _authRepository.AddAppSubRoleAsync(appSubRole);
 		return isAdded;
 	}
