@@ -7,17 +7,27 @@
 		<UserSecretsId>333c826c-3e2b-4fe2-9771-4d0039307c63</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileContext>..\..</DockerfileContext>
+		<!-- Replace #[.{fingerprint}] placeholders in wwwroot/index.html with
+		     content-hashed file names at build/publish so deploys bust browser caches. -->
+		<OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
 	</PropertyGroup>
 
+	<!-- Fingerprint app JS referenced from index.html via placeholder markers.
+	     CSS is deliberately excluded: the .NET 10 HTML placeholder pass resolves
+	     stylesheet links to the un-fingerprinted name (dotnet/aspnetcore#64170),
+	     so fingerprinting CSS file names on disk would 404. -->
 	<ItemGroup>
-		<PackageReference Include="Blazor.SignaturePad" Version="10.0.0" />
+		<StaticWebAssetFingerprintPattern Include="JS" Pattern="*.js" Expression="#[.{fingerprint}]!" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="ExcelDataReader" Version="3.8.0" />
 		<PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
 		<PackageReference Include="Markdig" Version="1.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.8" PrivateAssets="all" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.8" />
 		<PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.76.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
@@ -44,6 +54,23 @@
 
 	<ItemGroup>
 	  <Folder Include="wwwroot\images\mfa\" />
+	</ItemGroup>
+
+	<!-- Keep Blazor partial classes and scoped styles nested under their Razor component
+	     in Visual Studio Solution Explorer. -->
+	<ItemGroup>
+		<None Update="**\*.razor.cs">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</None>
+		<Compile Update="**\*.razor.cs">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</Compile>
+		<None Update="**\*.razor.css">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</None>
+		<Content Update="**\*.razor.css">
+			<DependentUpon>%(Filename)</DependentUpon>
+		</Content>
 	</ItemGroup>
 
 </Project>

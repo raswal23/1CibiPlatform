@@ -3,6 +3,6 @@
 public interface IATSQueries
 {
 	Task<bool> IsHashTokenValidAsync(
-		string hashToken, 
+		string hashToken,
 		CancellationToken cancellationToken);
 }

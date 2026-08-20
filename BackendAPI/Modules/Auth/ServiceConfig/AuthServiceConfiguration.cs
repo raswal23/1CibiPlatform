@@ -26,11 +26,13 @@ public static class AuthServiceConfiguration
 	public static IServiceCollection AddAuthServices(this IServiceCollection services)
 	{
 		services.AddHttpContextAccessor();
+		services.AddScoped<ICurrentUser, CurrentUser>();
 		services.AddTransient<AuthInitialData>();
 		services.AddTransient<IPasswordHasherService, PasswordHasherService>();
 		services.AddScoped<IJWTService, JWTService>();
 		services.AddScoped<IAuthRepository, AuthRepository>();
 		services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+		services.AddScoped<IAuthSessionValidator, AuthSessionValidator>();
 		services.AddScoped<ILoginService, LoginService>();
 		services.AddKeyedScoped<IEmailService, EmailService>("auth");
 		services.AddScoped<IOtpService, OtpService>();
@@ -44,8 +46,20 @@ public static class AuthServiceConfiguration
 		services.AddScoped<IAppSubRoleService, AppSubRoleService>();
 		services.AddScoped<IUserService, UserService>();
 		services.AddScoped<ILockerUserService, LockedUserService>();
+		services.AddScoped<IAuthQueries, AuthQueries>();
 
 		services.Decorate<IAuthRepository, AuthCacheRepository>();
+		services.AddScoped<IApplicationRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IAppSubRoleRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ILockoutRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ILoginRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IPasswordRecoveryRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRefreshTokenRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRegistrationRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<ISubMenuRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IUserDirectoryRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IUserRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 
 		return services;
 	}

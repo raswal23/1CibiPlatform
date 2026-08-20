@@ -1,0 +1,752 @@
+.ats-management-page {
+    --management-navy-900: #0b1b3d;
+    --management-navy-800: #132a54;
+    --management-blue-600: #1d5fd1;
+    --management-blue-500: #2e7ce0;
+    --management-blue-tint: #edf3fc;
+    --management-blue-tint-2: #e3ecfb;
+    --management-border: #e4eaf6;
+    --management-border-strong: #c2d2f0;
+    --management-text-1: #16233f;
+    --management-text-2: #5b6b8c;
+    --management-text-3: #8a97b5;
+    --management-green: #1e9e64;
+    --management-green-tint: #e4f7ed;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    color: var(--management-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-management-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.ats-management-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(120deg, var(--management-navy-800), var(--management-blue-600));
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.ats-management-button:hover {
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, 0.65);
+}
+
+.ats-management-button:active {
+    transform: scale(0.97);
+}
+
+.ats-management-button:focus-visible,
+.ats-management-edit:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, 0.25);
+    outline-offset: 2px;
+}
+
+.ats-management-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ats-management-card.responsive-table-container {
+    width: 100%;
+    height: auto;
+    padding: 26px 28px 10px;
+    overflow: hidden;
+    border: 1px solid var(--management-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 32px -12px rgba(11, 27, 61, 0.12);
+}
+
+.ats-management-card .mud-table {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.ats-management-card .mud-table-toolbar {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 0 22px !important;
+    background: transparent;
+}
+
+.ats-management-card .table-component-toolbar > .mud-typography {
+    width: auto !important;
+    margin: 0 !important;
+    background: none !important;
+    color: var(--management-navy-900) !important;
+    font-family: "Poppins", sans-serif;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+.ats-management-card .table-component-search .mud-input-control,
+.ats-management-card .table-component-search .mud-input-control-input-container {
+    margin: 0;
+}
+
+.ats-management-card .table-component-search .mud-input {
+    min-height: 40px;
+    border-radius: 10px;
+    background: #fcfdff;
+    color: var(--management-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+}
+
+.ats-management-card .table-component-search .mud-input-slot {
+    min-height: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+}
+
+.ats-management-card .table-component-search .mud-input-slot::placeholder {
+    color: var(--management-text-3);
+    opacity: 1;
+}
+
+.ats-management-card .table-component-search .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--management-border-strong);
+    border-radius: 10px;
+}
+
+.ats-management-card .table-component-search .mud-input:focus-within .mud-input-outlined-border {
+    border-color: var(--management-blue-500);
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.12);
+}
+
+.ats-management-card .table-component-search .mud-input-adornment-start {
+    margin-left: 14px;
+    margin-right: 8px;
+    color: var(--management-text-3);
+}
+
+.ats-management-card .table-component-search .mud-input-adornment-start .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.ats-management-card .mud-table-container {
+    overflow-x: auto;
+    border: 0;
+}
+
+.ats-management-card table {
+    width: 100%;
+    min-width: 880px;
+    border-collapse: collapse;
+}
+
+.ats-management-card .mud-table-cell {
+    min-width: auto !important;
+    white-space: normal !important;
+}
+
+.ats-management-card thead .mud-table-cell {
+    padding: 10px 14px 12px;
+    border-bottom: 1.5px solid var(--management-border-strong);
+    color: var(--management-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px;
+    line-height: 1.25;
+    text-align: left !important;
+    text-transform: uppercase;
+    white-space: nowrap !important;
+}
+
+.ats-management-card tbody .mud-table-cell {
+    padding: 18px 14px;
+    border-bottom: 1px solid var(--management-border);
+    color: var(--management-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+    line-height: 1.4;
+    text-align: left !important;
+    vertical-align: top;
+}
+
+.ats-management-card tbody .mud-table-row:hover {
+    background: #fafbff;
+}
+
+/* Keep the final row visually separate from the paginator. */
+.ats-management-card tbody .mud-table-row:last-child .mud-table-cell {
+    border-bottom: 1px solid var(--management-border) !important;
+}
+
+.ats-management-card .ats-management-primary {
+    min-width: 150px !important;
+    color: var(--management-text-1);
+    font-weight: 600;
+}
+
+.ats-management-card .ats-management-description {
+    min-width: 260px !important;
+    color: var(--management-text-2);
+}
+
+.ats-module-card table {
+    table-layout: fixed;
+}
+
+.ats-module-card thead .mud-table-cell:nth-child(1) {
+    width: 26%;
+}
+
+.ats-module-card thead .mud-table-cell:nth-child(2) {
+    width: 21%;
+}
+
+.ats-module-card thead .mud-table-cell:nth-child(3) {
+    width: 11%;
+}
+
+.ats-module-card thead .mud-table-cell:nth-child(4),
+.ats-module-card thead .mud-table-cell:nth-child(5) {
+    width: 16%;
+}
+
+.ats-module-card thead .mud-table-cell:nth-child(6) {
+    width: 10%;
+}
+
+.ats-module-card tbody .mud-table-cell {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+}
+
+.ats-module-card .ats-management-primary,
+.ats-module-card .ats-management-description {
+    min-width: 0 !important;
+}
+
+.ats-management-module-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-management-module-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-management-module-icon {
+    display: inline-flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 10px;
+    background: var(--management-blue-tint-2);
+    color: var(--management-blue-600);
+}
+
+.ats-management-module-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.ats-role-card table {
+    table-layout: fixed;
+}
+
+.ats-role-card thead .mud-table-cell:nth-child(1) {
+    width: 17%;
+}
+
+.ats-role-card thead .mud-table-cell:nth-child(2) {
+    width: 22%;
+}
+
+.ats-role-card thead .mud-table-cell:nth-child(3) {
+    width: 14%;
+}
+
+.ats-role-card thead .mud-table-cell:nth-child(4),
+.ats-role-card thead .mud-table-cell:nth-child(5) {
+    width: 18%;
+}
+
+.ats-role-card thead .mud-table-cell:nth-child(6) {
+    width: 11%;
+}
+
+.ats-role-card tbody .mud-table-cell {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+}
+
+.ats-role-card .ats-management-primary,
+.ats-role-card .ats-management-description {
+    min-width: 0 !important;
+}
+
+.ats-management-role-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-management-role-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-management-role-icon {
+    display: inline-flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 10px;
+    background: var(--management-blue-tint-2);
+    color: var(--management-blue-600);
+}
+
+.ats-management-role-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.ats-client-card table {
+    table-layout: fixed;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(1) {
+    width: 16%;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(2) {
+    width: 15%;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(3) {
+    width: 13%;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(4) {
+    width: 12%;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(5),
+.ats-client-card thead .mud-table-cell:nth-child(6) {
+    width: 17%;
+}
+
+.ats-client-card thead .mud-table-cell:nth-child(7) {
+    width: 10%;
+}
+
+.ats-client-card tbody .mud-table-cell {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+}
+
+.ats-client-card .ats-management-primary,
+.ats-client-card .ats-management-description {
+    min-width: 0 !important;
+}
+
+.ats-management-client-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-management-client-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-management-client-icon {
+    display: inline-flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 10px;
+    background: var(--management-blue-tint-2);
+    color: var(--management-blue-600);
+}
+
+.ats-management-client-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.ats-package-card table {
+    min-width: 920px;
+    table-layout: fixed;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(1),
+.ats-package-card thead .mud-table-cell:nth-child(2) {
+    width: 15%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(3) {
+    width: 17%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(4) {
+    width: 11%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(5),
+.ats-package-card thead .mud-table-cell:nth-child(6) {
+    width: 16%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(7) {
+    width: 10%;
+}
+
+.ats-package-card tbody .mud-table-cell {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+}
+
+.ats-package-card .ats-management-primary,
+.ats-package-card .ats-management-description {
+    min-width: 0 !important;
+}
+
+.ats-management-package-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-management-package-cell > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-management-package-icon {
+    display: inline-flex;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 10px;
+    background: var(--management-blue-tint-2);
+    color: var(--management-blue-600);
+}
+
+.ats-management-package-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.ats-management-package-empty {
+    color: var(--management-text-3);
+    font-style: italic;
+}
+
+.ats-management-email-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--management-border);
+    border-radius: 20px;
+    background: #f3f5fa;
+    color: var(--management-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ats-management-email-badge svg {
+    width: 13px;
+    height: 13px;
+    color: var(--management-text-3);
+}
+
+.ats-management-card .ats-management-date {
+    color: var(--management-text-2);
+    white-space: nowrap !important;
+}
+
+.ats-management-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 320px;
+}
+
+.ats-management-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 20px;
+    background: var(--management-blue-tint-2);
+    color: var(--management-blue-600);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.ats-management-chip-more {
+    border-color: var(--management-navy-900);
+    background: var(--management-navy-900);
+    color: #fff;
+}
+
+.ats-management-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--management-green-tint);
+    color: var(--management-green);
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-management-status::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--management-green);
+    content: "";
+}
+
+.ats-management-status.is-disabled {
+    background: #eef0f5;
+    color: var(--management-text-2);
+}
+
+.ats-management-status.is-disabled::before {
+    background: var(--management-text-3);
+}
+
+.ats-management-card .ats-management-edit.mud-icon-button {
+    width: 30px;
+    height: 30px;
+    padding: 7px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 8px;
+    background: var(--management-blue-tint);
+    color: var(--management-blue-600) !important;
+}
+
+.ats-management-card .ats-management-edit.mud-icon-button:hover {
+    background: var(--management-blue-tint-2);
+}
+
+.ats-management-card .ats-management-edit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 8px;
+    background: var(--management-blue-tint);
+    color: var(--management-blue-600);
+    cursor: pointer;
+}
+
+.ats-management-card .ats-management-edit-button:hover {
+    background: var(--management-blue-tint-2);
+}
+
+.ats-management-card .ats-management-edit-button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.ats-management-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 180px;
+    color: var(--management-text-3);
+    text-align: center;
+}
+
+.ats-management-empty .mud-icon-root {
+    margin-bottom: 6px;
+    color: var(--management-blue-500);
+    font-size: 34px;
+}
+
+.ats-management-empty strong {
+    color: var(--management-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+}
+
+.ats-management-empty span {
+    font-size: 12px;
+}
+
+.ats-management-card .mud-table-pagination {
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    border-top: 0;
+    color: var(--management-text-2);
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+}
+
+.ats-management-card .mud-table-pagination-select .mud-input {
+    min-height: 28px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--management-text-1);
+}
+
+.ats-management-card .mud-table-pagination-actions .mud-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+    border: 1.5px solid var(--management-border-strong);
+    border-radius: 7px;
+    color: var(--management-text-2);
+}
+
+.ats-management-card .mud-table-pagination-actions .mud-icon-button + .mud-icon-button {
+    margin-left: 6px;
+}
+
+@media (max-width: 900px) {
+    .ats-management-card.responsive-table-container {
+        padding: 22px 20px 8px;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Keep add/edit dialog chrome visible while only the form body scrolls. */
+    .um-dialog {
+        max-height: calc(100dvh - 24px);
+        overflow: hidden;
+    }
+
+    .um-dialog > .mud-dialog-content {
+        display: flex;
+        max-height: inherit;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .um-dialog :is(
+        .ac-shell, .ec-shell,
+        .am-shell, .em-shell,
+        .ap-shell, .ep-shell,
+        .ar-shell, .er-shell,
+        .au-shell, .eu-shell) {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        max-height: inherit;
+    }
+
+    .um-dialog :is(
+        .ac-header, .ec-header,
+        .am-header, .em-header,
+        .ap-header, .ep-header,
+        .ar-header, .er-header,
+        .au-header, .eu-header,
+        .ac-footer, .ec-footer,
+        .am-footer, .em-footer,
+        .ap-footer, .ep-footer,
+        .ar-footer, .er-footer,
+        .au-footer, .eu-footer) {
+        flex: 0 0 auto;
+    }
+
+    .um-dialog :is(
+        .ac-body, .ec-body,
+        .am-body, .em-body,
+        .ap-body, .ep-body,
+        .ar-body, .er-body,
+        .au-body, .eu-body) {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .ats-management-button {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .ats-management-card.responsive-table-container {
+        padding: 18px 14px 6px;
+        border-radius: 14px;
+    }
+
+    .ats-management-card .table-component-toolbar > .mud-typography {
+        font-size: 20px !important;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-management-page *,
+    .ats-management-page *::before,
+    .ats-management-page *::after {
+        transition-duration: 0.01ms !important;
+    }
+}

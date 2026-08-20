@@ -1,22 +1,29 @@
 ﻿@page "/s&i/ats/withdrawn"
 @layout ATSLayout
 @attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(5)]
 @inject IEndorsementSubmissionService EndorsementSubmissionService
 @inject ISnackbar Snackbar
 @inherits CrudPageBase
 
 <PageTitle>ATS - Withdrawn</PageTitle>
 
+<div class="ats-management-page withdrawn-applications-scope">
 <TableComponent @ref="lockedUsersTable"
                 TItem="FrontendWebassembly.DTO.ATS.EmailInvitationRequestListDTO"
-                Title="Withdrawn Applications"
+                Title="Withdrawn applications"
+                EnableReload="true"
+                ContainerClass="ats-management-card withdrawn-applications"
                 EnableSearch="true"
+                SearchLabel=""
+                SearchPlaceholder="Search withdrawn applications"
                 LoadServerData="LoadWithdrawnServerData"
                 SearchString="@searchString"
-                ColumnCount="8"
+                ColumnCount="6"
                 SearchStringChanged="@((string val) => searchString = val)">
     <HeaderTemplate>
-        <MudTh>Email</MudTh>
+        <MudTh>Candidate</MudTh>
+        <MudTh>Requestor</MudTh>
         <MudTh>First Name</MudTh>
         <MudTh>Last Name</MudTh>
         <MudTh>Ticket Status</MudTh>
@@ -29,6 +36,7 @@
             <MudTd><MudSkeleton Height="20px" Width="90%" /></MudTd>
             <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
+            <MudTd><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd><MudSkeleton Height="24px" Width="100px" /></MudTd>
             <MudTd>
                 <MudSkeleton Height="36px" Width="36px" />
@@ -36,24 +44,37 @@
         }
         else
         {
-            <MudTd DataLabel="Email">@item.EmailAddress</MudTd>
-            <MudTd DataLabel="First Name">@item.FirstName</MudTd>
-            <MudTd DataLabel="Last Name">@item.LastName</MudTd>
-            <MudTd DataLabel="Ticket Status"><span class="@ATSStatusBadgeResolver.GetBadgeClass(item.OrderStatus)">@item.OrderStatus</span></MudTd>
+            <MudTd DataLabel="Candidate">
+                <div class="withdrawn-candidate">
+                    <span class="withdrawn-avatar">@GetInitials(item.FirstName, item.LastName)</span>
+                    <span class="withdrawn-email">@item.EmailAddress</span>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Requestor">@item.Requestor</MudTd>
+            <MudTd DataLabel="First Name" Class="withdrawn-name">@item.FirstName</MudTd>
+            <MudTd DataLabel="Last Name" Class="withdrawn-name">@item.LastName</MudTd>
+            <MudTd DataLabel="Ticket Status"><span class="withdrawn-status">Application withdrawn</span></MudTd>
             <MudTd DataLabel="Action">
-                <MudIconButton Icon="@Icons.Material.Filled.Send"
-                               Color="Color.Primary"
-                               Size="Size.Medium"
-                               OnClick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))" />
+                <button type="button"
+                        class="withdrawn-action"
+                        aria-label="@($"Send follow up to {item.FirstName} {item.LastName}")"
+                        @onclick="@(() => ConfirmResendApplicationForm(item.EmailInvitationID))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                    </svg>
+                </button>
             </MudTd>
         }
 
     </RowTemplate>
 
     <NoRecordsTemplate>
-        <div class="ats-no-records-center">
-            <MudText Typo="Typo.body2">No withdrawn application forms found.</MudText>
+        <div class="ats-management-empty">
+            <MudIcon Icon="@Icons.Material.Filled.PersonOff" />
+            <strong>No withdrawn applications</strong>
+            <span>Withdrawn candidate applications will appear here.</span>
         </div>
     </NoRecordsTemplate>
 </TableComponent>
+</div>
 

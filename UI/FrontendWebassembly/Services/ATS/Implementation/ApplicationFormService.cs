@@ -1,24 +1,23 @@
-﻿
-namespace FrontendWebassembly.Services.ATS.Implementation;
+﻿namespace FrontendWebassembly.Services.ATS.Implementation;
 
 public class ApplicationFormService : IApplicationFormService
 {
-    private readonly HttpClient _httpClient;
+	private readonly HttpClient _httpClient;
 
 	public ApplicationFormService(IHttpClientFactory httpClientFactory)
 	{
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails, 
-														AddressDetailsDTO AddressDetails, 
-														EducationalBackgroundDTO EducationalBackground, 
-														LicensesDetailsDTO LicensesDetails, 
-														ProfessionalExperiencesDTO ProfessionalExperiences, 
+	public async Task<ApplicationFormResponse> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
+														AddressDetailsDTO AddressDetails,
+														EducationalBackgroundDTO EducationalBackground,
+														LicensesDetailsDTO LicensesDetails,
+														ProfessionalExperiencesDTO ProfessionalExperiences,
 														ReferenceDetailsDTO ReferenceDetails,
 														SignatureDetailsDTO SignatureDetails)
 	{
-     using var content = new MultipartFormDataContent();
+		using var content = new MultipartFormDataContent();
 
 		void AddString(string? value, string name)
 		{
@@ -48,7 +47,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.Suffix, "PersonalDetails.Suffix");
 		AddString(PersonalDetails.Sex, "PersonalDetails.Sex");
 		AddString(PersonalDetails.DOB?.ToString("MM-dd-yyyy"), "PersonalDetails.DOB");
-		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");	
+		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");
 		AddString(PersonalDetails.EmailAlternative, "PersonalDetails.EmailAlternative");
 		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile");
 		AddString(PersonalDetails.AdditionalGovtIDFileName, "PersonalDetails.AdditionalGovtIDFileName");
@@ -207,10 +206,10 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
-			throw new Exception($"Error: {errorContent!.Title}\n" + $"Status Code: {errorContent!.TraceId}");
+			return new ApplicationFormResponse(false, errorContent!.Detail);
 		}
 
-		return successContentInfo;
+		return new ApplicationFormResponse(true, string.Empty);
 	}
 
 	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string HashToken)

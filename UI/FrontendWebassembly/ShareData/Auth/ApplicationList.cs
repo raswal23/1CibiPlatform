@@ -9,7 +9,9 @@ public static class ApplicationListDescriptionIcon
 		{ 3, ("settings", "Settings", Icons.Material.Filled.Settings) },
 		{ 4, ("ai", "AI", Icons.Material.Filled.Android) },
 		{ 5, ("creditbureau", "Credit Bureau", Icons.Material.Filled.AccountBalance) },
-		{ 6, ("s&i", "S&I", Icons.Material.Filled.Apps) }
+		{ 6, ("s&i", "S&I", Icons.Material.Filled.Apps) },
+		{ 7, ("administration", "Administration", Icons.Material.Filled.AdminPanelSettings) },
+		{ 8, ("employmentverification", "Employment Verification", Icons.Material.Filled.VerifiedUser) }
 	};
 
 }

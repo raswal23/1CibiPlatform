@@ -28,6 +28,8 @@ public class MarkAsDisputedEndpoint : ICarterModule
 		.WithTags("ATS")
 		.Produces<bool>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status403Forbidden)
+		.Produces(StatusCodes.Status401Unauthorized)
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Mark As Disputed")
 		.WithDescription("Marks an order as disputed by setting IsDisputed to true and DisputedAt to current UTC time.")

@@ -10,7 +10,9 @@ public record LoginDTO(
 	bool IsApproved,
 	List<int> AppId,
 	List<List<int>> SubMenuId,
-	List<int> roleId
+	List<int> roleId,
+	int? AtsClientId = null,
+	int? AtsRoleId = null
 	);
 
 public record UserDataDTO(

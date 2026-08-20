@@ -16,11 +16,13 @@ public partial class SelectFilesToDownloadComponent
 	private bool CoeSelected;
 	private bool ConsentSelected;
 	private bool ReportSelected;
+	private bool BiometricPhotoSelected;
 
 	private int TotalDocuments => 6;
 
 	private int AvailableDocumentCount =>
-		(!string.IsNullOrWhiteSpace(ReportResult?.ResumeFileName) ? 1 : 0)
+		(!string.IsNullOrWhiteSpace(ReportResult?.BiometricPhotoFileName) ? 1 : 0)
+		+ (!string.IsNullOrWhiteSpace(ReportResult?.ResumeFileName) ? 1 : 0)
 		+ (!string.IsNullOrWhiteSpace(ReportResult?.IdUploadedFileName) ? 1 : 0)
 		+ (!string.IsNullOrWhiteSpace(ReportResult?.DiplomaFileName) ? 1 : 0)
 		+ (!string.IsNullOrWhiteSpace(ReportResult?.CoeFileName) ? 1 : 0)
@@ -28,7 +30,16 @@ public partial class SelectFilesToDownloadComponent
 		+ (!string.IsNullOrWhiteSpace(ReportResult?.UploadedReportFileName) ? 1 : 0);
 
 	private bool HasSelectedFile =>
-		ResumeSelected || GovernmentIdSelected || DiplomaSelected || CoeSelected || ConsentSelected || ReportSelected;
+		BiometricPhotoSelected || ResumeSelected || GovernmentIdSelected || DiplomaSelected || CoeSelected || ConsentSelected || ReportSelected;
+
+	private int SelectedFileCount =>
+		(BiometricPhotoSelected ? 1 : 0)
+		+ (ResumeSelected ? 1 : 0)
+		+ (GovernmentIdSelected ? 1 : 0)
+		+ (DiplomaSelected ? 1 : 0)
+		+ (CoeSelected ? 1 : 0)
+		+ (ConsentSelected ? 1 : 0)
+		+ (ReportSelected ? 1 : 0);
 
 	public async Task DownloadDocumentsAsync()
 	{
@@ -39,6 +50,13 @@ public partial class SelectFilesToDownloadComponent
 		}
 
 		DownloadRequest.FileDocuments.Clear();
+
+		if (BiometricPhotoSelected)
+			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
+			{
+				FileKey = ReportResult!.BiometricPhotoFileKey!,
+				FileName = ReportResult.BiometricPhotoFileName
+			});
 
 		if (ResumeSelected)
 			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments

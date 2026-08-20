@@ -4,20 +4,57 @@ public partial class NewOrderComponent
 {
 	private MudForm? candidateForm;
 	private MudForm? bulkForm;
-	private EmailInvitationRequestDTO subject = new();
-	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new();
+	private EmailInvitationRequestDTO subject = new() { RushNormal = "Normal" };
+	private BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO = new() { OrderType = "Normal" };
 	private MudFileUpload<IBrowserFile> bulkFileUpload = default!;
 	private bool isSavingCandidate = false;
 	private bool isUploadingBulk = false;
 	private bool isPreview = false;
 	private bool isBulkMode = false;
+	private bool isLoadingPackages = true;
+	private IReadOnlyList<PackageDetailsDTO> availablePackages = Array.Empty<PackageDetailsDTO>();
 
 	protected override async Task OnInitializedAsync()
 	{
+		await base.OnInitializedAsync();
+		if (!IsPageAuthorized)
+			return;
+
+		await LoadAvailablePackagesAsync();
 
 		EndorsementSubmissionService.ATSResponseReceived += OnATSResponse;
 		await EndorsementSubmissionService.StartAsync();
 
+	}
+
+	private async Task LoadAvailablePackagesAsync()
+	{
+		try
+		{
+			var access = await ATSUserManagementService.GetMyAtsAccessAsync();
+			var clientId = access.RoleId == 1 ? null : access.ClientId;
+			if (access.RoleId != 1 && clientId is not > 0)
+			{
+				Snackbar.Add("No client is assigned to your user account.", Severity.Warning);
+				return;
+			}
+
+			var packages = await PackageManagementService.GetAllPackagesAsync(clientId: clientId);
+
+			availablePackages = packages
+				.Where(package => package.IsActive)
+				.DistinctBy(package => package.PackageId)
+				.OrderBy(package => package.PackageName)
+				.ToArray();
+		}
+		catch (Exception)
+		{
+			Snackbar.Add("Unable to load the packages assigned to your client.", Severity.Error);
+		}
+		finally
+		{
+			isLoadingPackages = false;
+		}
 	}
 
 	private void SetOrderMode(bool bulk)
@@ -62,7 +99,7 @@ public partial class NewOrderComponent
 	{
 		bulkUploadFileDetailsDTO.BulkFile = null;
 		bulkUploadFileDetailsDTO.FileName = null;
-		bulkUploadFileDetailsDTO.OrderType = null;
+		bulkUploadFileDetailsDTO.OrderType = "Normal";
 		bulkUploadFileDetailsDTO.PackageType = null;
 
 		if (bulkForm is not null)
@@ -85,7 +122,7 @@ public partial class NewOrderComponent
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
-	{	
+	{
 
 		var result = FileValidationService.ValidateExtension(e.File.Name, ".csv");
 
@@ -113,19 +150,38 @@ public partial class NewOrderComponent
 
 		if (string.IsNullOrWhiteSpace(subject.RushNormal))
 		{
-			Snackbar.Add("Processing speed is required",Severity.Error);
+			Snackbar.Add("Processing speed is required", Severity.Error);
 			return;
 		}
 
 		var confirmParam = new DialogParameters
 		{
-			{ nameof(ConfirmationDialogComponent.Message),
-			  "Do you want to save the candidate's information?" }
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Submit Candidate"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				"Please be advised that this action will send an email invitation to your candidate."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Proceed"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking 'Proceed' will  send an email invitation. Would you like to proceed?"
+			}
 		};
 
-		var dialog = await DialogService.ShowAsync<ConfirmationDialogComponent>(
-			"Confirmation",
-			confirmParam);
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
 		var result = await dialog.Result;
 
@@ -145,9 +201,9 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				Snackbar.Add("Candidate's information saved successfully.", Severity.Success);
+				Snackbar.Add("An email invitation will be sent to your candidate.", Severity.Success);
 
-				subject.RushNormal = null;
+				subject.RushNormal = "Normal";
 
 				await candidateForm.ResetAsync();
 			}
@@ -157,7 +213,7 @@ public partial class NewOrderComponent
 			isSavingCandidate = false;
 		}
 	}
-	
+
 	private async Task OnSubmitBulk()
 	{
 		await bulkForm!.ValidateAsync();
@@ -179,7 +235,7 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
-		var hasData = previewData.Rows.Any(row => 
+		var hasData = previewData.Rows.Any(row =>
 					row.Any(cell => !string.IsNullOrWhiteSpace(cell)));
 
 		if (!hasData)
@@ -202,7 +258,7 @@ public partial class NewOrderComponent
 		{
 			MaxWidth = MaxWidth.Large,
 			FullWidth = true,
-			CloseButton = true
+			NoHeader = true
 		};
 
 		isPreview = false;
@@ -227,9 +283,9 @@ public partial class NewOrderComponent
 
 			if (isSent)
 			{
-				Snackbar.Add("Bulk upload successful.", Severity.Success);
+				Snackbar.Add("Bulk upload successful. An email invitation will be sent to your candidates.", Severity.Success);
 
-				bulkUploadFileDetailsDTO.OrderType = null;
+				bulkUploadFileDetailsDTO.OrderType = "Normal";
 				bulkUploadFileDetailsDTO.BulkFile = null;
 
 				await bulkForm.ResetAsync();

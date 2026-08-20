@@ -21,6 +21,13 @@ public partial class ATSApplicationForm
 	[SupplyParameterFromQuery(Name = "showAppForm")]
 	public string? showAppForm { get; set; }
 	public Guid EmailId;
+	private bool IsInstructionsVisible =>
+		!_showApplicationForm &&
+		!IsExpired &&
+		!string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase) &&
+		!string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase);
+	private string RootCssClass =>
+		$"ats-application-form ats-appform-modern{(IsInstructionsVisible ? " ats-application-intro-host" : string.Empty)}";
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -33,7 +40,7 @@ public partial class ATSApplicationForm
 		{
 			"true" => true,
 			"false" => false,
-			_ => false 
+			_ => false
 		};
 
 		_showPhilsys = philSysShow?.ToLowerInvariant() switch
@@ -78,6 +85,11 @@ public partial class ATSApplicationForm
 	private void SetWithdrawnStatus(string value)
 	{
 		Status = value;
+	}
+
+	private void ShowApplicationForm()
+	{
+		_showApplicationForm = true;
 	}
 
 	private void SetDirtyState(bool value)

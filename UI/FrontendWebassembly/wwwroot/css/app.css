@@ -118,6 +118,100 @@ body,
     }
 }
 
+.startup-loader-container {
+    height: 100vh;
+}
+
+.cibi-loader-container {
+    width: 100%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cibi-loader-container > .cibi-brand-loader {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.cibi-brand-loader > svg {
+    width: 64px;
+    height: 64px;
+    margin: 0 5px;
+}
+
+.cibi-brand-loader > svg:nth-child(3) {
+    margin-right: 7px;
+}
+
+.cibi-brand-loader > svg:nth-child(4) {
+    margin-left: 7px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-definitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-i {
+    width: 19px;
+    height: 64px;
+}
+
+.cibi-brand-loader > svg.cibi-loader-letter-b {
+    width: 49px;
+    height: 64px;
+}
+
+.cibi-loader-spacer {
+    width: 0.5em;
+}
+
+.cibi-loader-dash {
+    animation: cibiDashArray 2s ease-in-out infinite,
+               cibiDashOffset 2s linear infinite;
+}
+
+.cibi-loader-gradient-b {
+    stroke: url(#cibi-loader-b);
+}
+
+.cibi-loader-gradient-c {
+    stroke: url(#cibi-loader-c);
+}
+
+.cibi-loader-gradient-d {
+    stroke: url(#cibi-loader-d);
+}
+
+@keyframes cibiDashArray {
+    0% {
+        stroke-dasharray: 0 1 359 0;
+    }
+
+    50% {
+        stroke-dasharray: 0 359 1 0;
+    }
+
+    100% {
+        stroke-dasharray: 359 1 0 0;
+    }
+}
+
+@keyframes cibiDashOffset {
+    0% {
+        stroke-dashoffset: 365;
+    }
+
+    100% {
+        stroke-dashoffset: 5;
+    }
+}
+
 code {
     color: #c02d76;
 }
@@ -132,6 +226,245 @@ code {
 
 .mud-appbar {
     border-radius: 4px !important;
+}
+
+.main-topbar.mud-appbar {
+    overflow: hidden;
+    border-radius: 0 !important;
+    background: linear-gradient(100deg, #0B1B3D 0%, #1C3A70 35%, #1D5FD1 75%, #4F93EA 100%) !important;
+    box-shadow: 0 6px 16px -8px rgba(11, 27, 61, 0.35) !important;
+    color: #FFFFFF !important;
+    font-family: "Inter", sans-serif;
+}
+
+.main-topbar.mud-appbar::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.3;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, #000, transparent 75%);
+    mask-image: linear-gradient(to right, #000, transparent 75%);
+}
+
+.main-topbar .mud-toolbar-appbar {
+    position: relative;
+    z-index: 1;
+    min-height: 64px !important;
+    height: 64px !important;
+    padding: 14px 22px !important;
+    gap: 16px;
+}
+
+.main-topbar-brand,
+.main-topbar-actions,
+.main-topbar-greeting {
+    display: flex;
+    align-items: center;
+}
+
+.main-topbar-brand {
+    min-width: 0;
+    gap: 12px;
+    padding: 5px 12px 5px 6px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.main-topbar-brand:hover {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(103, 164, 255, 0.14),
+                0 0 24px rgba(103, 164, 255, 0.48),
+                0 8px 20px rgba(5, 18, 48, 0.24);
+    transform: translateY(-1px);
+}
+
+.main-topbar-brand:active {
+    transform: translateY(0);
+}
+
+.main-topbar-brand:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.42);
+    outline-offset: 2px;
+}
+
+.main-topbar-brand-badge {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.16);
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.main-topbar-brand:hover .main-topbar-brand-badge {
+    background: rgba(255, 255, 255, 0.24);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.24);
+}
+
+.main-topbar-brand-badge svg {
+    width: 16px;
+    height: 16px;
+    color: #FFFFFF;
+}
+
+.main-topbar-brand-name {
+    overflow: hidden;
+    color: #FFFFFF;
+    font-family: "Poppins", sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-topbar-actions {
+    flex: 0 0 auto;
+    gap: 14px;
+}
+
+.main-topbar-greeting {
+    min-width: 0;
+    gap: 10px;
+}
+
+.main-topbar-greeting-text {
+    max-width: min(32vw, 360px);
+    overflow: hidden;
+    color: #EAF0FC;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.main-topbar-greeting-text strong {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.main-topbar-avatar {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    color: #FFFFFF;
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.main-topbar-divider {
+    width: 1px;
+    height: 24px;
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF !important;
+    transition: background 0.15s ease;
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.main-topbar .main-topbar-theme-toggle.mud-icon-button:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.main-topbar .main-topbar-theme-toggle .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    color: #FFFFFF !important;
+    font-size: 17px;
+}
+
+.main-topbar .main-topbar-logout.mud-button-root {
+    min-width: 0;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-transform: none;
+    transition: background 0.15s ease;
+}
+
+.main-topbar .main-topbar-logout.mud-button-root:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.main-topbar .main-topbar-logout.mud-button-root:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.main-topbar .main-topbar-logout .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+}
+
+@media (max-width: 600px) {
+    .main-topbar .mud-toolbar-appbar {
+        padding-right: 14px !important;
+        padding-left: 14px !important;
+    }
+
+    .main-topbar-brand-name,
+    .main-topbar-greeting-text,
+    .main-topbar-logout-label {
+        display: none;
+    }
+
+    .main-topbar-actions {
+        gap: 10px;
+    }
+
+    .main-topbar .main-topbar-logout.mud-button-root {
+        padding: 0 10px;
+    }
+
+    .main-topbar .main-topbar-logout .mud-button-label .mud-button-icon-start {
+        margin-right: 0;
+    }
+}
+
+.philsys-wrapper {
+    max-width: 900px;
+    margin: 0 auto !important;
 }
 
 .nav-active-light {
@@ -187,6 +520,12 @@ code {
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
     }
 
+.theme-button-delete {
+    background: #F44336 !important;
+    color: white !important;
+    border-radius: 12px !important;
+}
+
 .theme-button-inactive {
     background: #cbd5e1 !important;
     cursor: not-allowed;
@@ -200,10 +539,25 @@ code {
     color: white !important;
 }
 
-.theme-button-delete {
-    background: #F44336 !important;
+.theme-button, .theme-button-warning {
+    background: linear-gradient(90deg,#102247 0%,#2a77ae 50%,#68c0d6 100%);
+    text-transform: none !important;
+    font-size: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+    .theme-button:hover, .theme-button-warning:hover {
+        transform: scale(1.06);
+        box-shadow: 0 12px 40px rgba(251, 140, 0, .25) !important;
+    }
+
+
+
+.theme-button-warning {
+    background: linear-gradient(90deg, #E65100 0%, #FB8C00 55%, #FFB74D 100%) !important;
     color: white !important;
-    border-radius: 4px !important;
+    border-radius: 12px !important;
 }
 
 .main-nav-item-custom {
@@ -343,8 +697,26 @@ code {
         padding: 0 !important;
     }
 
+.um-dialog.ats-upload-report-dialog,
+.um-dialog.ats-result-modal-dialog,
+.um-dialog.ats-order-history-dialog {
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+}
+
+.um-dialog.ats-upload-report-dialog > .mud-dialog-content,
+.um-dialog.ats-result-modal-dialog > .mud-dialog-content,
+.um-dialog.ats-order-history-dialog > .mud-dialog-content {
+    display: block;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
 .um-dialog-shell {
-    width: min(100%, 620px);
+    width: 100%;
     background: #fff;
 }
 
@@ -385,7 +757,6 @@ code {
 .um-switch-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
     padding: 4px 0;
 }
@@ -442,54 +813,9 @@ code {
     }
 }
 
-.philsys-loader-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    background-color: white;
-    overflow: hidden;
-}
-
-.philsys-loader-grid {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    max-height: 100vh;
-}
-
-.philsys-loader-paper {
-    border-radius: 4px !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 2rem;
-    width: min(90%, 425px);
-    height: 200px;
-    max-height: 100vh;
-    background: #fff;
-    box-sizing: border-box;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1), 0 0 40px rgba(0, 0, 0, 0.05), 0 0 60px rgba(0, 0, 0, 0.03);
-    animation: fadeIn 0.4s ease-in-out;
-}
-
-.philsys-loader-text {
-    margin-top: 3px !important;
-    color: #333;
-    letter-spacing: 0.3px;
-    word-wrap: break-word;
-    max-width: 100%;
-    font-size: clamp(0.9rem, 2.5vw, 1.3rem) !important;
-}
+/* PhilSys loader styling now lives in PhilSysLoaderComponent.razor.css.
+   The old global rules (incl. the teal .philsys-loader-grid glow) were removed
+   because they fought the scoped PhilSys theme. */
 
 .mud-table th {
     font-weight: 700 !important;
@@ -601,7 +927,7 @@ code {
     font-weight: 700;
 }
 
-.ats-step-final .ats-signature-panel {
+.ats-step-final .ats-signature-section {
     margin-top: 14px;
     padding: 8px 0 0;
 }
@@ -619,9 +945,6 @@ code {
     margin-top: 3px;
 }
 
-.ats-step-final .ats-signature-meta-row {
-    margin-top: 14px;
-}
 
     .ats-step-final .ats-signature-meta-row .mud-item {
         margin-bottom: 4px;
@@ -741,6 +1064,13 @@ code {
     align-items: center;
     padding: 24px;
     background: #F4F7FB;
+}
+
+/* The result card is tall enough to overflow the viewport on short screens;
+   centring it there would clip the top. Allow it to scroll from the top. */
+.philsys-liveness-page:has(.philsys-result-shell) {
+    align-items: flex-start;
+    padding: 0;
 }
 
 .ats-result-dialog {
@@ -911,6 +1241,105 @@ code {
         padding: 0 !important;
     }
 
+/* Chart zoom dialog. .mud-dialog-content is an ancestor of the scoped markup in
+   DashboardChartDetailComponent, so its padding cannot be reset from that
+   component's isolated stylesheet - it lives here with the other ATS dialogs.
+   No overflow:hidden on .ats-chart-detail-dialog: that element is .mud-dialog,
+   which is the scroll container - hiding its overflow would clip the chart.
+   Corner rounding is handled inside the component instead. */
+.ats-chart-detail-dialog .mud-dialog-content {
+    padding: 0 !important;
+}
+
+/* ATS dialogs keep their title and actions visible on short viewports.
+   Only the semantic dialog body becomes scrollable. */
+.ats-scroll-dialog.mud-dialog {
+    display: flex;
+    max-height: calc(100vh - 24px) !important;
+    max-height: min(90vh, calc(100dvh - 24px)) !important;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+.ats-scroll-dialog > .mud-dialog-content {
+    display: flex !important;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+.ats-scroll-dialog .ats-dialog-shell {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    max-height: calc(100vh - 24px);
+    max-height: min(90vh, calc(100dvh - 24px));
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ats-scroll-dialog .ats-dialog-header,
+.ats-scroll-dialog .ats-dialog-footer {
+    flex: 0 0 auto;
+}
+
+.ats-scroll-dialog .ats-dialog-body {
+    min-height: 0;
+    max-height: none !important;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ats-scroll-dialog .ats-dialog-form {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Zoom-open: the dialog grows out of the card the user clicked. Replaces
+   MudBlazor's mud-open-dialog-center (a flat scale from 0.5) with a softer
+   curve that starts lower and settles, so it reads as the card expanding.
+   The .mud-dialog qualifier is required, not cosmetic: MudBlazor.min.css loads
+   after this file and its `animation` shorthand on .mud-dialog has the same
+   specificity, so an unqualified rule here would be reset by it. */
+.mud-dialog.ats-chart-detail-dialog {
+    animation-name: ats-chart-zoom-in;
+    animation-duration: 0.28s;
+    animation-timing-function: cubic-bezier(0.2, 0.75, 0.3, 1);
+    animation-fill-mode: both;
+    transform-origin: center center;
+}
+
+@keyframes ats-chart-zoom-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.86) translateY(18px);
+    }
+
+    60% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mud-dialog.ats-chart-detail-dialog {
+        animation-duration: 0.01ms;
+        animation-delay: 0ms;
+    }
+}
+
 .ats-download-header {
     padding: 24px 28px 14px;
     border-bottom: 1px solid #e6edf5;
@@ -1053,12 +1482,6 @@ code {
 .ats-upload-report-shell-subtitle {
     margin-top: 2px;
     color: #6b7b92;
-}
-
-.ats-upload-report-shell-close {
-    background: #eef3f9 !important;
-    border-radius: 12px !important;
-    color: #7d91ab !important;
 }
 
 .ats-upload-report-card {
@@ -1232,8 +1655,26 @@ code {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(127, 196, 232, 0.65) transparent;
     transition: width .2s ease, padding .2s ease;
+}
+
+.ats-console-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ats-console-sidebar::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(127, 196, 232, 0.65);
+}
+
+.ats-console-sidebar::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .ats-console-logo {
@@ -1291,6 +1732,14 @@ code {
     letter-spacing: 0.1em;
     color: #fff;
     text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+button.ats-console-brand-text {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
 }
 
 .ats-console-nav-text {
@@ -1358,6 +1807,10 @@ code {
 
 .ats-console-collapsed .ats-console-nav-ic {
     width: auto;
+}
+
+.ats-console-mobile-overlay {
+    display: none;
 }
 
 .ats-console-main {
@@ -1511,6 +1964,21 @@ code {
     background: #fff;
 }
 
+.ats-console .responsive-table-container > .mud-table > .mud-table-pagination {
+    position: relative;
+    z-index: 1;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    background: #fff;
+}
+
+.ats-console .responsive-table-container > .mud-table > .mud-table-pagination .mud-table-pagination-toolbar {
+    height: auto !important;
+    min-height: 62px;
+    padding: 16px 0 18px !important;
+    border-top: 0 !important;
+}
+
 .ats-console .mud-table {
     background: #fff;
 }
@@ -1530,12 +1998,16 @@ code {
         color: var(--ats-text-main);
     }
 
+    .ats-console .mud-table tbody .mud-table-row:last-child .mud-table-cell {
+        border-bottom: 1px solid var(--ats-border) !important;
+    }
+
 .ats-console .mud-input-outlined .mud-input-outlined-border,
 .ats-console .mud-select-outlined .mud-input-outlined-border {
     border-color: var(--ats-border);
 }
 
-.ats-console .mud-input-control {
+.ats-console .mud-input-control:not(.ats-select) {
     margin-top: 3px;
 }
 
@@ -2031,6 +2503,7 @@ code {
 }
 
 .ats-step-one .ats-step-one-choice-card {
+    position: relative;
     margin: 0 !important;
     width: 100%;
     border: 1px solid #C9D9EC;
@@ -2043,6 +2516,22 @@ code {
     box-sizing: border-box;
     transition: all .18s ease;
 }
+
+    /* The MudRadio click handler lives on the inner label; stretch it over the whole card.
+       MudBlazor's own .mud-input-control-input-container is position:relative and would
+       capture the ::after overlay, so it must be static for the overlay to reach the card. */
+    .ats-step-one .ats-step-one-choice-card .mud-input-control-input-container {
+        position: static;
+        width: 100%;
+    }
+
+    .ats-step-one .ats-step-one-choice-card .mud-radio::after {
+        position: absolute;
+        content: "";
+        inset: 0;
+        border-radius: 14px;
+        cursor: pointer;
+    }
 
     .ats-step-one .ats-step-one-choice-card.selected,
     .ats-step-one .ats-step-one-choice-card.mud-checked,
@@ -2244,7 +2733,6 @@ code {
     }
 
 .ats-step-two-upload-btn-icon {
-    color: #4F4F4F !important;
     flex-shrink: 0;
 }
 
@@ -2714,9 +3202,46 @@ code {
     border-radius: 14px !important;
     box-shadow: 0 8px 24px -18px rgba(11,31,58,.15) !important;
 }
+.philsys-shadow-box {
+    border-radius: 20px;    
+    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15) !important;
+}
+
+/* MudDialog is rendered outside a Razor component's scoped DOM. Keep only
+   the confirmation dialog host bridge global; its inner design stays scoped. */
+.mud-dialog.confirmation-dialog {
+    width: 100%;
+    max-width: 420px;
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 20px !important;
+    background: #fff;
+    box-shadow:
+        0 30px 60px -20px rgba(7, 18, 48, 0.3),
+        0 10px 24px -8px rgba(7, 18, 48, 0.18) !important;
+    font-family: "Inter", sans-serif;
+}
+
+.mud-dialog.confirmation-dialog .confirmation-dialog-content {
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
 
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
+}
+
+.ats-appform-modern .ats-modern-card.ats-success-card-host {
+    width: auto;
+    max-width: 100%;
+    margin: auto;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
 }
 
 .ats-appform-modern .mud-input-outlined .mud-input-outlined-border,
@@ -2811,153 +3336,9 @@ code {
             color: #D8503A;
         }
 
-.philsys-liveness-shell {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.philsys-liveness-card {
-    width: 100%;
-    max-width: 440px;
-    padding: 34px 28px 30px !important;
-    border-radius: 20px !important;
-    background: #FFFFFF !important;
-    border: 1px solid #E3E9F1 !important;
-    box-shadow: 0 20px 45px -28px rgba(11,31,58,.28) !important;
-    text-align: center;
-}
-
-.philsys-liveness-badge-wrap {
-    position: relative;
-    width: 84px;
-    height: 84px;
-    margin: 0 auto 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.philsys-liveness-badge-pulse {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: rgba(44,127,184,.14);
-    animation: philsys-liveness-pulse 2s ease-out infinite;
-}
-
-.philsys-liveness-badge {
-    position: relative;
-    z-index: 1;
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg,#102247,#2C7FB8);
-    color: #fff;
-    box-shadow: 0 10px 22px -16px rgba(16,34,71,.7);
-}
-
-.philsys-liveness-title {
-    margin-bottom: 10px;
-    color: #0B1F3A;
-    font-weight: 700;
-    font-size: 20px;
-}
-
-.philsys-liveness-subtitle {
-    margin: 0 auto 20px;
-    color: #6B7B92;
-    line-height: 1.6;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.philsys-liveness-tips {
-    border: 1px solid #E3E9F1;
-    border-radius: 14px;
-    background: #FAFCFF;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-}
-
-.philsys-liveness-tip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #1E2A3C;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-    .philsys-liveness-tip + .philsys-liveness-tip {
-        margin-top: 10px;
-    }
-
-.philsys-liveness-tip-check {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #E7F5EC;
-    color: #1E8E5A;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.philsys-liveness-action {
-    width: 100%;
-    margin-bottom: 16px;
-}
-
-.philsys-liveness-button {
-    min-height: 48px !important;
-    border-radius: 14px !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    text-transform: none !important;
-}
-
-.philsys-liveness-privacy {
-    color: #7A8CA8;
-    font-size: 12px;
-    line-height: 1.6;
-    margin: 0;
-}
-
-.philsys-liveness-privacy-link {
-    display: inline-block;
-    margin-left: 4px;
-    color: #2C7FB8;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-    .philsys-liveness-privacy-link:hover {
-        text-decoration: underline;
-    }
-
-@keyframes philsys-liveness-pulse {
-    0% {
-        transform: scale(.82);
-        opacity: .75;
-    }
-
-    70% {
-        transform: scale(1.22);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1.22);
-        opacity: 0;
-    }
-}
+/* Liveness check styling now lives in LivenessCheckComponent.razor.css.
+   The old global rules were removed because their !important card overrides
+   (and the teal .philsys-shadow-box glow) fought the scoped PhilSys theme. */
 
 .philsys-lookup-shell {
     display: flex;
@@ -2967,156 +3348,70 @@ code {
 
     .philsys-lookup-shell > * {
         width: 100%;
-        max-width: 700px;
+        max-width: 820px;
     }
 
-.philsys-lookup-form {
-    width: 100%;
-    border-radius: 16px !important;
-    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
-    max-width: 600px;
-}
-
-.philsys-lookup-card {
-    border-radius: 16px !important;
-    padding: 5px !important;
-    width: 100% !important;
-}
-
-    .philsys-lookup-card .mud-input-control {
-        margin-top: 3px;
-    }
-
-    .philsys-lookup-card .mud-input-outlined {
-        min-height: 34px !important;
-    }
-
-    .philsys-lookup-card .mud-input-slot:not(.mud-select-input) {
-        min-height: 34px !important;
-        font-size: 14px !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-    }
-
-    .philsys-lookup-card .mud-select-input {
-        min-height: 18px !important;
-        padding-top: 8px !important;
-        padding-bottom: 6px !important;
-    }
-
-    .philsys-lookup-card .mud-input {
-        min-height: 24px !important;
-        font-size: 12px;
-    }
-
-    .philsys-lookup-card .mud-input-label,
-    .philsys-lookup-card .mud-input-label-inputcontrol {
-        font-size: 12px !important;
-    }
-
-    .philsys-lookup-card .oneplatform-rounded-input .mud-input-outlined,
-    .philsys-lookup-card .oneplatform-rounded-input fieldset {
-        border-radius: 8px !important;
-    }
-
-    .philsys-lookup-card .mud-input-adornment {
-        margin-top: 0 !important;
-    }
-
-    .philsys-lookup-card .philsys-modern-title {
-        font-size: 16px;
-        line-height: 1.1;
-    }
-
-    .philsys-lookup-card .philsys-modern-sub {
-        font-size: 11px;
-    }
-
-    .philsys-lookup-card .philsys-modern-actions .mud-button-root {
-        min-width: 120px;
-        min-height: 38px;
-        border-radius: 10px !important;
-        font-size: 13px !important;
-    }
-
-.philsys-lookup-tabs-wrap {
-    margin-bottom: 16px;
-}
-
-.philsys-lookup-caption {
-    text-align: center;
-    font-size: 12px;
-    letter-spacing: .09em;
-    font-weight: 700;
-    color: #7A8CA8;
-    margin-bottom: 10px;
-}
-
-.philsys-lookup-tabs {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.philsys-lookup-tab {
-    border: 1px solid #DCE7F4;
-    border-radius: 12px;
-    background: #fff;
-    padding: 10px 12px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 10px;
-    align-items: center;
-    text-align: left;
-    box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
-    cursor: pointer;
-}
-
-    .philsys-lookup-tab.active {
-        border-color: #2C7FB8;
-        background: #F4F9FE;
-    }
-
-.philsys-tab-button {
-    width: 100% !important;
-}
-
-.philsys-lookup-tab-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg,#102247,#2C7FB8);
-    color: #fff;
-    font-size: 13px;
-}
-
-.philsys-lookup-tab-title {
-    display: block;
-    font-size: 14px;
-    font-weight: 700;
-    color: #0B1F3A;
-}
-
-.philsys-lookup-tab-sub {
-    display: block;
-    font-size: 12px;
-    color: #6B7B92;
-}
-
-.philsys-lookup-tab-check {
-    color: #2C7FB8;
-    font-size: 16px;
-    font-weight: 700;
-}
+/* Visual styling for .philsys-lookup-form / -card / -tab* now lives in the
+   component-scoped stylesheets (PhilSysFormTabComponent.razor.css,
+   BasicInformationFormComponent.razor.css, PhilSysCardNumbeFormComponent.razor.css).
+   The old global rules were removed because their !important input overrides
+   fought the scoped theme. */
 
 @media (max-width: 920px) {
     .ats-console-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 1100;
+        width: 232px;
+        padding: 22px 14px;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+    }
+
+    .ats-console-mobile-drawer-open .ats-console-sidebar {
+        transform: translateX(0);
+        box-shadow: 0 18px 40px rgba(11, 31, 58, 0.35);
+    }
+
+    .ats-console-mobile-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1090;
+        border: 0;
+        background: rgba(11, 31, 58, 0.35);
+        display: block;
+    }
+
+    .ats-console-collapsed .ats-console-sidebar {
+        width: 232px;
+        padding: 22px 14px;
+    }
+
+    .ats-console-collapsed .ats-console-brand-text,
+    .ats-console-collapsed .ats-console-nav-text,
+    .ats-console-collapsed .ats-console-nav-label,
+    .ats-console-collapsed .ats-console-sidebar-bottom {
+        display: block;
+    }
+
+    .ats-console-collapsed .ats-console-nav-item {
+        justify-content: flex-start;
+        gap: 11px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .ats-console-collapsed .ats-console-nav-ic {
+        width: 16px;
+    }
+
+    .ats-console-topbar {
+        padding: 0 16px;
+    }
+
+    .ats-console-crumb {
         display: none;
     }
 
@@ -3133,24 +3428,1176 @@ code {
         flex-wrap: wrap;
     }
 
-    .philsys-lookup-tabs {
-        grid-template-columns: 1fr;
-    }
-
     .ats-table-cell-center {
         text-align: center;
         vertical-align: middle;
     }
+}
 
-    .philsys-lookup-card {
-        padding: 12px 10px !important;
+.ats-console-nav-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ats-console-nav-item-toggle {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.ats-console-nav-item-expanded {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.ats-console-nav-chevron {
+    margin-left: auto;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    transition: transform 0.25s ease;
+}
+
+.ats-console-nav-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.ats-console-nav-item-expanded .ats-console-nav-chevron {
+    transform: rotate(180deg);
+}
+
+.ats-console-nav-submenu-shell {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows 0.28s ease, opacity 0.2s ease, visibility 0s linear 0.28s;
+}
+
+.ats-console-nav-submenu-shell.is-expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition: grid-template-rows 0.28s ease, opacity 0.2s ease, visibility 0s linear 0s;
+}
+
+.ats-console-nav-submenu {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    margin-left: .3rem;
+    padding-left: 0.85rem;
+}
+
+.ats-console-nav-subitem {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1rem 0.75rem;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-console-nav-subitem:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.ats-console-nav-subitem.active {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.ats-console-nav-subitem .ats-console-nav-ic {
+    font-size: 0.9rem;
+    width: 1.1rem;
+    text-align: center;
+}
+
+.ats-console-collapsed .ats-console-nav-submenu-shell,
+.ats-console-collapsed .ats-console-nav-chevron {
+    display: none;
+}
+
+.ats-signature-canvas {
+    display: block;
+    width: 100%;
+    min-height: 76px;
+    flex: 1 1 auto;
+    cursor: crosshair;
+}
+
+.ats-signature-modern {
+    width: min(680px, 100%);
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #e1e9f4;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(16, 34, 71, 0.08);
+}
+
+.ats-signature-modern-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ats-signature-modern-title {
+    color: #102247;
+    font-weight: 700 !important;
+}
+
+.ats-signature-modern-subtitle {
+    color: #6f7d91;
+}
+
+.ats-signature-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 16px;
+    border: 1px solid #e3eaf3;
+    border-radius: 12px;
+    background: #f7f9fc;
+}
+
+.ats-signature-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 9px;
+    color: #6d7889;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.ats-signature-tab.active {
+    color: #1769d2;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(16, 34, 71, 0.09);
+}
+
+.ats-signature-tab:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.ats-signature-panel {
+    display: none;
+}
+
+.ats-signature-panel.active {
+    display: block;
+}
+
+.ats-signature-draw-surface {
+    position: relative;
+    height: 230px;
+    overflow: hidden;
+    border: 2px dashed #62a8ff;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+}
+
+.ats-signature-draw-surface .ats-signature-canvas {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.ats-signature-draw-hint {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    color: #8794a8;
+    font-size: 13px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.ats-signature-panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    color: #7d899a;
+    font-size: 12px;
+}
+
+.ats-signature-clear-link {
+    padding: 4px 0;
+    border: 0;
+    color: #1769d2;
+    background: transparent;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ats-signature-upload-zone {
+    position: relative;
+    display: flex;
+    min-height: 230px;
+    padding: 24px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+    border: 2px dashed #62a8ff;
+    border-radius: 14px;
+    color: #7d899a;
+    text-align: center;
+    background: linear-gradient(180deg, #fbfdff 0%, #f7faff 100%);
+    cursor: pointer;
+}
+
+.ats-signature-upload-zone.disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+.ats-signature-upload-input {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.ats-signature-upload-icon {
+    display: grid;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 14px;
+    place-items: center;
+    border-radius: 18px;
+    color: #1769d2;
+    background: #eaf4ff;
+    box-shadow: 0 8px 20px rgba(23, 105, 210, .13);
+}
+
+.ats-signature-upload-prompt {
+    color: #4f5d70;
+}
+
+.ats-signature-upload-prompt span {
+    color: #1769d2;
+    font-weight: 700;
+}
+
+.ats-signature-upload-preview {
+    max-width: 85%;
+    max-height: 130px;
+    margin-bottom: 10px;
+    object-fit: contain;
+}
+
+.ats-signature-upload-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: #263852;
+    font-weight: 600 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-signature-privacy-note {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    color: #8793a5;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+    .ats-signature-modern {
+        padding: 14px;
+        border-radius: 14px;
     }
 
-        .philsys-lookup-card .philsys-modern-title {
-            font-size: 17px;
-        }
+    .ats-signature-draw-surface,
+    .ats-signature-upload-zone {
+        min-height: 190px;
+        height: 190px;
+    }
 
-        .philsys-lookup-card .philsys-modern-sub {
-            font-size: 11px;
-        }
+    .ats-signature-panel-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* ATS application form: Step 2 identity verification */
+.ats-application-card .ats-step-one .ats-step-one-shell {
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0 !important;
+    background: #FFFFFF;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 36px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid > .mud-grid-item {
+    width: auto;
+    max-width: none;
+    padding: 0;
+    flex: none;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-grid > .mud-grid-item:first-child {
+    display: flex;
+    align-items: stretch;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-hero {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0 0;
+    border-radius: 0 !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-hero-content {
+    display: flex;
+    min-height: 100%;
+    gap: 20px;
+    width: 100%;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-title {
+    max-width: 410px;
+    margin: 0;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0;
+}
+
+/* Keep the existing PhilSys artwork; only size it for the refreshed layout. */
+.ats-application-card .ats-step-one .ats-step-one-logo {
+    width: min(270px, 100%);
+    max-width: 270px;
+    height: auto;
+    object-fit: contain;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice {
+    width: 100%;
+    max-width: none;
+    padding: 22px;
+    border: 1.5px solid var(--ats-border-strong);
+    border-radius: 14px !important;
+    background: var(--ats-blue-tint);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice-title {
+    margin: 0 0 8px;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-notice-text {
+    margin: 0 0 18px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-actions,
+.ats-application-card .ats-step-one .ats-step-one-choice-group {
+    gap: 10px;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card {
+    min-height: 0;
+    margin: 0 !important;
+    padding: 13px 16px;
+    border: 2px solid var(--ats-border-strong);
+    border-radius: 11px;
+    background: #FFFFFF;
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card:hover {
+    border-color: #4F93EA;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card.selected,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-checked,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-radio-checked {
+    border-color: var(--ats-blue-500);
+    background: #FFFFFF;
+    box-shadow: 0 4px 14px -6px rgba(29, 95, 209, .25);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card .mud-radio-icon {
+    margin-right: 12px;
+    color: var(--ats-border-strong);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card.selected .mud-radio-icon,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-checked .mud-radio-icon,
+.ats-application-card .ats-step-one .ats-step-one-choice-card.mud-radio-checked .mud-radio-icon {
+    color: var(--ats-blue-600);
+}
+
+.ats-application-card .ats-step-one .ats-step-one-choice-card .mud-typography {
+    color: var(--ats-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-button-row {
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed,
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn {
+    min-height: 40px;
+    border-radius: 9px !important;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed.theme-button-active {
+    border: 0 !important;
+    background: linear-gradient(120deg, var(--ats-navy-800), var(--ats-blue-500)) !important;
+    box-shadow: 0 8px 18px -6px rgba(29, 95, 209, .5) !important;
+    color: #FFFFFF !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-proceed.theme-button-active:hover {
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, .65) !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn {
+    border: 1.5px solid var(--ats-border-strong) !important;
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+    color: var(--ats-blue-600) !important;
+}
+
+.ats-application-card .ats-step-one .ats-step-one-secondary-btn:hover:not(:disabled) {
+    background: #F4F7FC !important;
+    color: var(--ats-blue-600) !important;
+}
+
+@media (max-width: 760px) {
+    .ats-application-card .ats-step-one .ats-step-one-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .ats-application-card .ats-step-one .ats-step-one-hero {
+        padding-top: 0;
+    }
+
+    .ats-application-card .ats-step-one .ats-step-one-title {
+        max-width: 100%;
+        font-size: 20px;
+    }
+}
+
+/* ATS application form: consent step */
+.ats-appform-modern {
+    --ats-navy-900: #0B1B3D;
+    --ats-navy-800: #132A54;
+    --ats-blue-600: #1D5FD1;
+    --ats-blue-500: #2E7CE0;
+    --ats-blue-tint: #EDF3FC;
+    --ats-blue-tint-2: #E3ECFB;
+    --ats-border: #DCE6F7;
+    --ats-border-strong: #C2D2F0;
+    --ats-text-1: #16233F;
+    --ats-text-2: #5B6B8C;
+    --ats-text-3: #8A97B5;
+    align-items: flex-start;
+    padding: 40px 20px;
+    background: #EEF2F9;
+    color: var(--ats-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-appform-modern,
+.ats-appform-modern * {
+    box-sizing: border-box;
+}
+
+.ats-appform-modern .ats-application-card {
+    width: min(900px, 100%);
+    max-width: 900px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--ats-border);
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
+}
+
+/* Keep the PhilSys lookup shell specific to ApplicationFormComponent. */
+.ats-appform-modern .ats-modern-card.ats-philsys-card {
+    width: min(900px, 100%);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 26px 34px 34px;
+    overflow: hidden;
+    border: 1px solid var(--ats-border);
+    border-radius: 20px;
+    background: #FFFFFF;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
+    color: var(--ats-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-philsys-card .ats-philsys-state {
+    width: 100%;
+}
+
+.ats-philsys-card .ats-philsys-back-button {
+    width: 36px;
+    height: 36px;
+    margin: 0 0 14px;
+    padding: 8px !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: var(--ats-text-2) !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ats-philsys-card .ats-philsys-back-button:hover {
+    background: var(--ats-blue-tint) !important;
+    color: var(--ats-blue-600) !important;
+}
+
+.ats-philsys-card .ats-philsys-back-button .mud-icon-root {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+}
+
+.ats-philsys-card .ats-philsys-wrap {
+    padding: 0 !important;
+    overflow: visible;
+}
+
+.ats-philsys-card .ats-philsys-wrap > .mud-grid {
+    width: 100%;
+    margin: 0;
+}
+
+.ats-philsys-card .ats-philsys-wrap > .mud-grid > .mud-grid-item {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+.ats-appform-modern .ats-philsys-card .philsys-lookup-tab {
+    padding: 16px 18px;
+    gap: 14px;
+}
+
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-button,
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-root {
+    color: var(--ats-blue-600) !important;
+}
+
+.ats-application-card .mud-checkbox:not(.mud-disabled):has(input[type="checkbox"]:checked) .mud-icon-button {
+    --mud-ripple-color: var(--ats-blue-600) !important;
+}
+
+.ats-application-card .ats-appform-stepper {
+    padding: 30px 34px 34px;
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: none !important;
+    color: var(--ats-text-1);
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: 0 0 34px;
+}
+
+.ats-application-card .ats-appform-stepper.mud-stepper__horizontal.mud-stepper__center-labels > .mud-stepper-nav > .mud-step {
+    min-width: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    flex-basis: auto;
+    flex-shrink: 0;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label {
+    gap: 8px !important;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-icon {
+    width: 32px !important;
+    height: 32px !important;
+    margin: 0 auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--ats-border-strong) !important;
+    border-radius: 50%;
+    background: var(--ats-blue-tint-2) !important;
+    color: var(--ats-text-3) !important;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+    font-size: 13px !important;
+    font-weight: 700;
+    transition: transform 0.12s ease;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) !important;
+    box-shadow: none !important;
+    color: #FFFFFF !important;
+    transform: scale(1.08);
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed {
+    border-color: transparent !important;
+    background: linear-gradient(135deg, #34C77E, #0E7A4C) !important;
+    color: #FFFFFF !important;
+    font-size: 13px !important;
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon::before,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed::before {
+    content: none !important;
+}
+
+.ats-application-card .ats-appform-stepper :is(.mud-step-completed, .mud-completed) .mud-step-label-icon svg,
+.ats-application-card .ats-appform-stepper .mud-step-label-icon.mud-completed svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-content {
+    width: auto !important;
+    margin-top: 0 !important;
+    color: var(--ats-text-2) !important;
+    text-align: center !important;
+    white-space: nowrap;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step-label-content-title {
+    color: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-content {
+    color: var(--ats-navy-900) !important;
+    font-weight: 700;
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav > .mud-stepper-nav-connector {
+    flex: 1 1 auto;
+    min-width: 20px;
+    height: 2px;
+    margin: 15px 6px 0 !important;
+    align-self: flex-start;
+}
+
+.ats-application-card .ats-appform-stepper .mud-stepper-nav-connector-line {
+    height: 2px;
+    border: 0 !important;
+    border-color: var(--ats-border-strong) !important;
+    background: var(--ats-border-strong);
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav >
+    .mud-step:is(.mud-step-completed, .mud-completed) + .mud-stepper-nav-connector .mud-stepper-nav-connector-line,
+.ats-application-card .ats-appform-stepper > .mud-stepper-nav >
+    .mud-step:has(.mud-step-label-icon.mud-completed) + .mud-stepper-nav-connector .mud-stepper-nav-connector-line {
+    background: linear-gradient(90deg, #34C77E, #0E7A4C);
+}
+
+.ats-application-card .ats-appform-stepper > .mud-stepper-content {
+    margin-top: 0;
+    padding: 0;
+    background: #FFFFFF;
+}
+
+.ats-consent-step .ats-consent-step-grid {
+    width: 100%;
+    margin: 0;
+    gap: 26px;
+    row-gap: 26px !important;
+}
+
+.ats-consent-step .ats-consent-step-grid > .mud-grid-item {
+    padding: 0;
+}
+
+.ats-consent-step .ats-consent-copy-section {
+    width: 100%;
+    border-radius: 0 !important;
+}
+
+.ats-consent-step .ats-consent-title {
+    margin: 0 0 20px;
+    color: var(--ats-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.ats-consent-step .ats-consent-document {
+    max-height: 190px;
+    margin: 0;
+    padding: 18px 20px;
+    overflow-y: auto;
+    border: 1.5px solid var(--ats-border-strong);
+    border-radius: 12px;
+    background: var(--ats-blue-tint);
+    scrollbar-color: #939393 #F0F4FA;
+    scrollbar-width: auto;
+}
+
+.ats-consent-step .ats-consent-document .mud-typography {
+    margin: 0 0 12px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.ats-consent-step .ats-consent-document .mud-typography:last-child {
+    margin-bottom: 0;
+}
+
+.ats-consent-step .ats-consent-document .ats-consent-subheading {
+    margin: 14px 0 8px;
+    color: var(--ats-text-1) !important;
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-consent-step .ats-signature-section {
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+}
+
+.ats-consent-step .ats-signature-section > .mud-grid {
+    width: 100%;
+    margin: 0;
+    gap: 18px;
+    row-gap: 18px !important;
+}
+
+.ats-consent-step .ats-signature-section > .mud-grid > .mud-grid-item {
+    padding: 0;
+}
+
+.ats-consent-step .ats-signature-block {
+    display: block;
+}
+
+.ats-consent-step .ats-consent-signature-pad {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 22px 24px 26px;
+    border: 1px solid var(--ats-border);
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-shadow: 0 8px 24px -14px rgba(11, 27, 61, 0.20);
+}
+
+.ats-consent-step .ats-signature-modern-header {
+    margin-bottom: 16px;
+}
+
+.ats-consent-step .ats-signature-modern-title {
+    margin: 0 0 4px;
+    color: var(--ats-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 15.5px;
+    font-weight: 700 !important;
+}
+
+.ats-consent-step .ats-signature-modern-subtitle {
+    color: var(--ats-text-2);
+    font-size: 12.5px;
+}
+
+.ats-consent-step .ats-signature-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--ats-blue-tint);
+}
+
+.ats-consent-step .ats-signature-tab {
+    width: 50%;
+    min-width: 0;
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 10px;
+    border-radius: 8px;
+    color: var(--ats-text-2);
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.12s ease;
+}
+
+.ats-consent-step .ats-signature-tab.active {
+    color: var(--ats-blue-600);
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(11, 27, 61, 0.10);
+}
+
+.ats-consent-step .ats-signature-tab .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.ats-consent-step .ats-signature-draw-surface,
+.ats-consent-step .ats-signature-upload-zone {
+    height: 170px;
+    min-height: 170px;
+    border: 2px dashed var(--ats-border-strong);
+    border-radius: 12px;
+    background: #FBFCFF;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ats-consent-step .ats-signature-draw-surface:hover,
+.ats-consent-step .ats-signature-upload-zone:hover {
+    border-color: #4F93EA;
+    background: var(--ats-blue-tint);
+}
+
+.ats-consent-step .ats-signature-draw-hint {
+    color: var(--ats-text-3);
+    font-size: 13px;
+    font-style: italic;
+}
+
+.ats-consent-step .ats-signature-panel-footer {
+    margin-top: 10px;
+    color: var(--ats-text-3);
+    font-size: 12px;
+}
+
+.ats-consent-step .ats-signature-clear-link {
+    color: var(--ats-blue-600);
+    font-weight: 700;
+}
+
+.ats-consent-step .ats-signature-clear-link:hover {
+    text-decoration: underline;
+}
+
+.ats-consent-step .ats-signature-privacy-note {
+    margin-top: 14px;
+    color: var(--ats-text-2);
+    font-size: 11.5px;
+}
+
+.ats-consent-step .ats-signature-privacy-note .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--ats-text-3);
+    font-size: 14px;
+}
+
+.ats-consent-step .ats-signature-error {
+    justify-content: flex-start;
+    margin: 8px 0 0;
+}
+
+.ats-consent-step .ats-consent-fields-wrap {
+    margin-top: 0;
+}
+
+.ats-consent-step .ats-consent-fields {
+    margin: -8px;
+}
+
+.ats-consent-step .ats-consent-field-label {
+    display: block;
+    margin: 0 0 6px;
+    color: var(--ats-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
+}
+
+.ats-consent-step .ats-consent-field-label span {
+    margin-left: 2px;
+    color: #D64545;
+}
+
+.ats-consent-step .ats-consent-field {
+    display: flex;
+    min-width: 0;
+    align-self: flex-start;
+    flex-direction: column;
+}
+
+.ats-consent-step .ats-consent-field > .mud-input-control,
+.ats-consent-step .ats-consent-date-wrap,
+.ats-consent-step .ats-consent-date-wrap .mud-picker,
+.ats-consent-step .ats-consent-date-wrap .mud-picker-inline,
+.ats-consent-step .ats-consent-date-wrap .mud-input-control {
+    width: 100%;
+    margin: 0;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined {
+    width: 100%;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    color: var(--ats-text-1);
+    background: #FFFFFF;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined-border {
+    border: 1.5px solid var(--ats-border-strong) !important;
+    border-radius: 10px !important;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-slot {
+    height: 44px !important;
+    min-height: 44px !important;
+    box-sizing: border-box;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    font-family: "Inter", sans-serif;
+    font-size: 14px !important;
+    line-height: 44px;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-adornment {
+    color: var(--ats-text-3);
+}
+
+.ats-consent-step .ats-consent-input .mud-input-adornment .mud-icon-root {
+    width: 17px;
+    height: 17px;
+    font-size: 17px;
+}
+
+.ats-consent-step .ats-consent-input .mud-input-outlined:focus-within .mud-input-outlined-border {
+    border-color: var(--ats-blue-500) !important;
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ats-consent-step .ats-consent-input input::placeholder {
+    color: var(--ats-text-3);
+    opacity: 1;
+}
+
+.ats-consent-step .ats-consent-date-wrap {
+    position: relative;
+}
+
+.ats-consent-step .ats-consent-date-leading-icon {
+    position: absolute;
+    z-index: 2;
+    top: 22px;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    color: var(--ats-text-3);
+    font-size: 16px;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.ats-consent-step .ats-consent-date-wrap input.mud-input-root,
+.ats-consent-step .ats-consent-date-wrap input.mud-input-root-outlined,
+.ats-consent-step .ats-consent-date-wrap .mud-input-slot {
+    padding-left: 38px !important;
+}
+
+.ats-consent-step .ats-consent-date-wrap .mud-input-adornment-end {
+    display: flex;
+    height: 44px;
+    margin-top: 0 !important;
+    margin-right: 12px;
+    align-items: center;
+    align-self: center;
+}
+
+.ats-consent-step .ats-consent-date-wrap .mud-input-adornment-end .mud-icon-button {
+    padding: 0;
+}
+
+.ats-application-card .ats-step-action-bar:has(.ats-consent-save-button) {
+    padding: 0 !important;
+}
+
+.ats-application-card .ats-consent-save-button {
+    height: 46px;
+    min-width: 0;
+    padding: 0 26px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(120deg, var(--ats-navy-800), var(--ats-blue-500));
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.50);
+    color: #FFFFFF;
+    font-family: "Inter", sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: box-shadow 0.15s ease, transform 0.10s ease;
+}
+
+.ats-application-card .ats-consent-save-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65);
+}
+
+.ats-application-card .ats-consent-save-button:active {
+    transform: scale(0.97);
+}
+
+.ats-application-card .ats-consent-save-button .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+@media (max-width: 700px) {
+    .ats-appform-modern {
+        padding: 12px 8px;
+    }
+
+    .ats-appform-modern .ats-modern-card.ats-philsys-card {
+        width: calc(100% - 12px);
+        margin: 8px 6px;
+        padding: 18px 16px 24px;
+        border-radius: 16px;
+    }
+
+    .ats-appform-modern .ats-philsys-card .philsys-lookup-tab {
+        padding: 14px;
+    }
+
+    .ats-appform-modern .ats-application-card {
+        width: 100%;
+    }
+
+    .ats-application-card .ats-appform-stepper {
+        padding: 22px 18px 26px;
+    }
+
+    .ats-application-card .ats-appform-stepper > .mud-stepper-nav {
+        padding: 4px;
+        overflow-x: auto;
+    }
+
+    .ats-application-card .ats-appform-stepper .mud-step-label-content-title {
+        font-size: 10px;
+    }
+
+    .ats-application-card .ats-appform-stepper > .mud-stepper-nav > .mud-stepper-nav-connector {
+        min-width: 24px;
+    }
+
+    .ats-consent-step .ats-signature-panel-footer {
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .ats-application-card .ats-step-action-bar:has(.ats-consent-save-button) {
+        justify-content: stretch !important;
+    }
+
+    .ats-application-card .ats-consent-save-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 599px) {
+    .ats-consent-step .ats-consent-fields {
+        width: 100%;
+        margin: 0;
+        gap: 14px;
+        row-gap: 14px !important;
+    }
+
+    .ats-consent-step .ats-consent-fields > .mud-grid-item {
+        padding: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-consent-step .ats-signature-tab,
+    .ats-consent-step .ats-signature-draw-surface,
+    .ats-consent-step .ats-signature-upload-zone,
+    .ats-application-card .ats-consent-save-button {
+        transition: none;
+    }
 }

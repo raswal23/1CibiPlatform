@@ -1,0 +1,262 @@
+.ats-history-header,
+.ats-history-header *,
+.ats-history-timeline,
+.ats-history-timeline * {
+    box-sizing: border-box;
+}
+
+.ats-order-history-dialog {
+    border-radius: 20px !important;
+    background: #fff;
+    overflow: hidden !important;
+}
+
+.ats-history-header {
+    position: relative;
+    display: flex;
+    min-height: 102px;
+    padding: 26px 32px 24px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    overflow: hidden;
+    background: linear-gradient(120deg, #0b1b3d 0%, #1c3a70 55%, #1d5fd1 130%);
+}
+
+.ats-history-header::before {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: .35;
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+.ats-history-header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 14px;
+}
+
+.ats-history-header-icon {
+    display: flex;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+}
+
+.ats-history-header-icon ::deep .mud-icon-root {
+    width: 23px;
+    height: 23px;
+    font-size: 23px;
+}
+
+.ats-history-header-text {
+    min-width: 0;
+}
+
+.ats-history-header h2 {
+    margin: 0;
+    color: #fff;
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: .1px;
+}
+
+.ats-history-header p {
+    margin: 4px 0 0;
+    color: #c6d5f5;
+    font-size: 13.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-history-close {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    flex: 0 0 34px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .1);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color .15s ease;
+}
+
+.ats-history-close:hover,
+.ats-history-close:focus-visible {
+    background: rgba(255, 255, 255, .22);
+}
+
+.ats-history-timeline {
+    max-height: min(62vh, 620px);
+    padding: 28px 32px;
+    overflow: auto;
+}
+
+.ats-history-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 13px;
+    padding-bottom: 25px;
+}
+
+.ats-history-item:not(:last-child)::before {
+    position: absolute;
+    top: 34px;
+    bottom: 0;
+    left: 18px;
+    width: 2px;
+    background: #e4eaf6;
+    content: "";
+}
+
+.ats-history-marker {
+    z-index: 1;
+    display: flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #c2d2f0;
+    border-radius: 50%;
+    background: #fff;
+    color: #7d8aa8;
+}
+
+.ats-history-title {
+    color: #16233f;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ats-history-description {
+    margin-top: 3px;
+    color: #5b6b8c;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.ats-history-meta {
+    margin-top: 7px;
+    color: #8a97b5;
+    font-size: 11px;
+}
+
+.active .ats-history-marker {
+    border-color: #2e7ce0;
+    background: #edf3fc;
+    color: #1d5fd1;
+}
+
+.success .ats-history-marker {
+    border-color: #43b77b;
+    background: #e4f7ed;
+    color: #1e9e64;
+}
+
+.warning .ats-history-marker {
+    border-color: #e2ad4d;
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+.danger .ats-history-marker {
+    border-color: #df7771;
+    background: #fdecec;
+    color: #c0453e;
+}
+
+.ats-history-state,
+.ats-history-empty-state {
+    display: flex;
+    min-height: 300px;
+    padding: 42px 32px;
+    align-items: center;
+    justify-content: center;
+    color: #5b6b8c;
+}
+
+.ats-history-state {
+    gap: 10px;
+}
+
+.ats-history-empty-state {
+    flex-direction: column;
+    text-align: center;
+}
+
+.ats-history-empty-icon {
+    position: relative;
+    display: flex;
+    width: 78px;
+    height: 78px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d9e3f5;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #f5f8fe, #e7eefb);
+    box-shadow: 0 14px 32px -20px rgba(29, 95, 209, .65);
+    color: #1d5fd1;
+}
+
+.ats-history-empty-icon::after {
+    position: absolute;
+    inset: -9px;
+    border: 1px dashed #c2d2f0;
+    border-radius: 30px;
+    content: "";
+}
+
+.ats-history-empty-icon ::deep .mud-icon-root {
+    width: 34px;
+    height: 34px;
+    font-size: 34px;
+}
+
+.ats-history-empty-state h3 {
+    margin: 0;
+    color: #16233f;
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.ats-history-empty-state p {
+    max-width: 330px;
+    margin: 8px 0 0;
+    color: #7d8aa8;
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+
+@media (max-width: 540px) {
+    .ats-history-header {
+        padding: 22px 20px;
+    }
+
+    .ats-history-timeline {
+        padding: 24px 20px;
+    }
+}

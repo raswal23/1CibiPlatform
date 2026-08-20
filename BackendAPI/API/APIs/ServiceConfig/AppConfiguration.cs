@@ -10,22 +10,26 @@ public static class AppConfiguration
 	{
 		app.UseForwardedHeaders();
 
-		if (app.Environment.IsEnvironment("Testing"))
-		{
-			return app;
-		}
-
-		if (app.Environment.IsEnvironment("UAT"))
-		{
-			await DatabaseExtensions.IntializeDatabaseAsync(app);
-		}
-
 		if (app.Environment.IsDevelopment())
 		{
 			await DatabaseExtensions.IntializeDatabaseAsync(app);
 			app.UseSwagger();
 			app.UseSwaggerUI();
+		}
 
+		if (app.Environment.IsEnvironment("Testing"))
+		{
+			return app;
+		}
+
+		if (app.Environment.IsEnvironment("Sandbox"))
+		{
+			await DatabaseExtensions.IntializeDatabaseAsync(app);
+		}
+
+		if (app.Environment.IsEnvironment("UAT"))
+		{
+			await DatabaseExtensions.IntializeDatabaseAsync(app);
 		}
 
 		if (app.Environment.IsProduction())

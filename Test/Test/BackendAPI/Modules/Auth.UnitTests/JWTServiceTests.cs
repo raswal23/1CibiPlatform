@@ -6,6 +6,7 @@ using FluentAssertions;
 using Auth.Services;
 using Auth.DTO;
 using System.Security.Claims;
+using Auth.Constants;
 
 namespace Test.BackendAPI.Modules.Auth.UnitTests;
 
@@ -68,5 +69,49 @@ public class JWTServiceTests
 		var fullNameClaim = principal.FindFirst("fullName") ?? principal.FindFirst(ClaimTypes.Name);
 		fullNameClaim.Should().NotBeNull("JWT should contain 'fullName' or Name claim");
 		fullNameClaim!.Value.Should().Contain(dto.FirstName).And.Contain(dto.LastName);
+	}
+
+	[Fact]
+	public void GetAccessToken_ShouldIncludeAtsClaims_WhenAssignmentIsPresent()
+	{
+		var cfg = BuildConfiguration();
+		var service = new JWTService(cfg);
+		var dto = new LoginDTO(
+			Guid.CreateVersion7(),
+			"hash",
+			"user@example.com",
+			"First",
+			"Last",
+			null,
+			true,
+			[],
+			[],
+			[1, 2, 1],
+			AtsClientId: 42,
+			AtsRoleId: 2);
+
+		var token = service.GetAccessToken(dto);
+		var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+		jwt.Claims.Single(claim => claim.Type == AuthClaimTypes.AtsRoleId).Value.Should().Be("2");
+		jwt.Claims.Single(claim => claim.Type == AuthClaimTypes.AtsClientId).Value.Should().Be("42");
+		jwt.Claims
+			.Where(claim => claim.Type == AuthClaimTypes.PlatformRoleId)
+			.Select(claim => claim.Value)
+			.Should().Equal("1", "2");
+	}
+
+	[Fact]
+	public void GetAccessToken_ShouldIncludeUniqueJtiAndProvidedSessionId()
+	{
+		var service = new JWTService(BuildConfiguration());
+		var dto = new LoginDTO(Guid.CreateVersion7(), "hash", "user@example.com", "First", "Last", null, true, [], [], []);
+
+		var firstToken = new JwtSecurityTokenHandler().ReadJwtToken(service.GetAccessToken(dto, 42));
+		var secondToken = new JwtSecurityTokenHandler().ReadJwtToken(service.GetAccessToken(dto, 42));
+
+		firstToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Sid).Value.Should().Be("42");
+		firstToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Jti).Value
+			.Should().NotBe(secondToken.Claims.Single(claim => claim.Type == JwtRegisteredClaimNames.Jti).Value);
 	}
 }

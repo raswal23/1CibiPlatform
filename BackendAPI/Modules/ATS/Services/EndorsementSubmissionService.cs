@@ -1,4 +1,4 @@
-﻿namespace ATS.Services;
+namespace ATS.Services;
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
@@ -11,11 +11,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IHttpContextAccessor _httpContextAccessor;
 	private readonly IATSRepository _atsRepository;
 	private readonly IObjectStorageService _objectStorageService;
+	private readonly ICurrentUser _currentUser;
+	private readonly AtsQueryScopeResolver _scopeResolver;
+	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly int _applicationFormExpiryInHours;
 	private readonly string _folderName;
-	
+
 	public EndorsementSubmissionService(
 		ILogger<EndorsementSubmissionService> logger,
 		IATSRepository atsRepository,
@@ -25,7 +28,10 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		HybridCache hybridCache,
 		ISecureToken secureToken,
 		IHttpContextAccessor httpContextAccessor,
-		IObjectStorageService objectStorageService)
+		ICurrentUser currentUser,
+		IObjectStorageService objectStorageService,
+		AtsQueryScopeResolver scopeResolver,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -36,6 +42,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_configuration = configuration;
 		_atsRepository = atsRepository;
 		_objectStorageService = objectStorageService;
+		_currentUser = currentUser;
+		_scopeResolver = scopeResolver;
+		_orderHistoryService = orderHistoryService;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
@@ -90,12 +99,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		EmailInvitationRequest emailInvitationRequest = emailInvitationRequestDTO.Adapt<EmailInvitationRequest>();
 		emailInvitationRequest.EmailInvitationID = Guid.CreateVersion7();
-		emailInvitationRequest.HashToken =HashToken;
+		emailInvitationRequest.HashToken = HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
 		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
+		emailInvitationRequest.RequestorId = _currentUser.UserId;
+		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
+		emailInvitationRequest.Requestor = _currentUser.FullName;
 		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		try
@@ -140,6 +152,12 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
 				emailInvitationRequest.EmailInvitationID);
+
+			await _orderHistoryService.RecordAsync(
+				emailInvitationRequest.EmailInvitationID,
+				OrderHistoryEventType.OrderCreated,
+				null,
+				OrderStatus.PendingCandidateInfo, ct);
 		}
 		catch (Exception ex)
 		{
@@ -206,6 +224,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
 		bulkUploadFileDetails.Status = BulkFileStatus.Pending;
 		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
+		bulkUploadFileDetails.ClientId = _currentUser.AtsClientId;
+		bulkUploadFileDetails.UploadedByUserId = _currentUser.UserId;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
 
 		try
@@ -252,7 +272,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return isSent;
 	}
 
-	public Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -263,14 +283,28 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		_logger.LogInformation("Fetching withdrawn application form with pagination: {@Context}", logContext);
+		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ? 
-			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken) :
-			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, cancellationToken);
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+		{
+			return new PaginatedResult<EmailInvitationRequestListDTO>(
+				paginationRequest.PageIndex,
+				paginationRequest.PageSize,
+				0,
+				[]);
+		}
+
+		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
+			_atsRepository.GetWithdrawnEmailInvitationRequestsAsync(paginationRequest, scope, cancellationToken) :
+			_atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(paginationRequest, scope, cancellationToken));
 	}
 
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{
+		var scope = await _scopeResolver.ResolveAsync(cancellationToken);
+		if (scope.Kind == AtsQueryScopeKind.Denied)
+			throw new ForbiddenException("The current user does not have access to this withdrawn application.");
+
 		var logContext = new
 		{
 			Action = "ResendApplicationForm",
@@ -288,6 +322,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			_logger.LogError("Failed to find email invitation for resend: {@Context}", logContext);
 			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
 		}
+		if (!IsAuthorized(invitation, scope))
+			throw new ForbiddenException("The current user does not have access to this withdrawn application.");
 
 		var token = _secureToken.GenerateSecureToken();
 		if (string.IsNullOrEmpty(token))
@@ -325,6 +361,13 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				fullName,
 				applicationFormLink);
 
+			await _orderHistoryService.RecordAsync(
+				emailInvitationId,
+				OrderHistoryEventType.ApplicationFormResent,
+				invitation.OrderStatus,
+				OrderStatus.PendingCandidateInfo,
+				cancellationToken);
+
 			_logger.LogInformation("Successfully resent application form for invitation: {@Context}", logContext);
 			return true;
 		}
@@ -334,4 +377,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException($"Failed to resend application form. {ex.InnerException?.Message ?? ex.Message}");
 		}
 	}
+
+	private static bool IsAuthorized(EmailInvitationRequest invitation, AtsQueryScope scope) => scope.Kind switch
+	{
+		AtsQueryScopeKind.All => true,
+		AtsQueryScopeKind.Client => invitation.ClientId == scope.ClientId,
+		AtsQueryScopeKind.Clients => invitation.ClientId.HasValue && scope.ClientIds.Contains(invitation.ClientId.Value),
+		AtsQueryScopeKind.ClientRequestor => invitation.ClientId == scope.ClientId && invitation.RequestorId == scope.RequestorId,
+		AtsQueryScopeKind.Requestor => invitation.RequestorId == scope.RequestorId,
+		_ => false
+	};
 }

@@ -4,11 +4,11 @@ public partial class EditRoleComponent
 {
 	private MudForm? EditRoleForm;
 
-	[CascadingParameter] 
+	[CascadingParameter]
 	IMudDialogInstance? EditRoleDialog { get; set; }
 
-	[Parameter] 
-	public RolesDTO Role { get; set; } = new ();
+	[Parameter]
+	public RolesDTO Role { get; set; } = new();
 
 	private RolesDTO EditRole = new();
 	protected override void OnParametersSet()

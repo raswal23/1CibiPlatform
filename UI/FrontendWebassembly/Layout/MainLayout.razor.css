@@ -1,82 +1,71 @@
-.page {
+/* MainLayout topbar base styles live in wwwroot/css/app.css. */
+
+.main-topbar-search-box {
     position: relative;
     display: flex;
-    flex-direction: column;
-}
-
-main {
-    flex: 1;
-}
-
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
-}
-
-.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
-    display: flex;
     align-items: center;
+    flex: 0 1 auto;
 }
 
-.top-row ::deep a, .top-row ::deep .btn-link {
-    white-space: nowrap;
-    margin-left: 1.5rem;
-    text-decoration: none;
+.main-topbar-search-box input {
+    width: 220px;
+    padding: 8px 12px 8px 34px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 10px;
+    outline: none;
+    background: #ffffff;
+    color: #101828;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    transition: width 0.2s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
 }
 
-.top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-    text-decoration: underline;
+.main-topbar-search-box input::placeholder {
+    color: #8992a6;
 }
 
-.top-row ::deep a:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+.main-topbar-search-box input:focus {
+    width: 260px;
+    border-color: #9ec1ff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+.main-topbar-search-box > svg {
+    position: absolute;
+    z-index: 1;
+    left: 11px;
+    width: 14px;
+    height: 14px;
+    color: #8992a6;
+    stroke: currentColor;
+    stroke-width: 2;
+    pointer-events: none;
 }
 
-@media (min-width: 641px) {
-    .page {
-        flex-direction: row;
+@media (max-width: 920px) {
+    .main-topbar-search-box input {
+        width: 160px;
     }
 
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-    }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+    .main-topbar-search-box input:focus {
+        width: 190px;
     }
 }
 
-.philsys-wrapper {
-    max-width: 900px; 
-    margin: 0 auto !important; 
+@media (max-width: 600px) {
+    .main-topbar-search-box input {
+        width: 140px;
+    }
+
+    .main-topbar-search-box input:focus {
+        width: 160px;
+    }
+}
+
+@media (max-width: 420px) {
+    .main-topbar-search-box input,
+    .main-topbar-search-box input:focus {
+        width: 110px;
+    }
 }

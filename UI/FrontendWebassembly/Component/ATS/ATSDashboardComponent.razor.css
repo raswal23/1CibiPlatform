@@ -1,0 +1,808 @@
+/*
+ * Dashboard spacing scale.
+ * Single source of truth for card padding, card-to-card gaps and the inset that
+ * keeps plotting areas, axis labels and legends off the card boundary.
+ *
+ * NOTE: cards and titles are rendered by MudBlazor components (MudPaper, MudText),
+ * which do not receive this component's scope attribute. Descendant rules must
+ * therefore go through ::deep. The custom properties below are declared on the
+ * scoped root and still inherit across those component boundaries.
+ */
+.ats-dashboard {
+    --ats-dashboard-gap: 24px;
+    --ats-card-padding: 24px;
+    --ats-chart-inset: 6px;
+    --ats-stack-xs: 4px;
+    --ats-stack-sm: 10px;
+    --ats-stack-md: 16px;
+    --ats-stack-lg: 20px;
+    --ats-filter-navy-950: #071230;
+    --ats-filter-navy-800: #0f2a5c;
+    --ats-filter-blue-600: #2f6fed;
+    --ats-filter-card: #fff;
+    --ats-filter-border: #e2e6f0;
+    --ats-filter-border-soft: #eef1f7;
+    --ats-filter-text-900: #101828;
+    --ats-filter-text-600: #4b5468;
+    --ats-filter-text-400: #8992a6;
+    --ats-filter-gradient: linear-gradient(
+        100deg,
+        var(--ats-filter-navy-950) 0%,
+        var(--ats-filter-navy-800) 45%,
+        var(--ats-filter-blue-600) 100%);
+}
+
+::deep .ats-dashboard-filter-card {
+    margin-bottom: var(--ats-dashboard-gap);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    border: 1px solid var(--ats-filter-border-soft);
+    border-radius: 12px !important;
+    background: var(--ats-filter-card);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 1px rgba(16, 24, 40, 0.03) !important;
+}
+
+::deep .ats-dashboard-filter-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+::deep .ats-dashboard-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+::deep .ats-dashboard-filter-field > label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ats-filter-text-400);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .ats-dashboard-filter-field > label svg {
+    width: 11px;
+    height: 11px;
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-select-wrap {
+    position: relative;
+}
+
+::deep .ats-dashboard-select-wrap select {
+    width: 230px;
+    min-width: 230px;
+    height: 40px;
+    padding: 0 36px 0 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1.5px solid var(--ats-filter-border);
+    border-radius: 10px;
+    background: var(--ats-filter-card);
+    color: var(--ats-filter-text-900);
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+::deep .ats-dashboard-select-wrap select:hover:not(:disabled) {
+    border-color: #c7cee0;
+}
+
+::deep .ats-dashboard-select-wrap select:focus-visible {
+    border-color: var(--ats-filter-blue-600);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.14);
+}
+
+::deep .ats-dashboard-select-wrap select:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+::deep .ats-dashboard-select-chevron {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    width: 14px;
+    height: 14px;
+    color: var(--ats-filter-text-400);
+    transform: translateY(-50%);
+    transition: color 0.15s ease;
+    pointer-events: none;
+}
+
+::deep .ats-dashboard-select-wrap select:focus-visible + .ats-dashboard-select-chevron {
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-filter-divider {
+    width: 1px;
+    height: 34px;
+    margin-bottom: 3px;
+    background: var(--ats-filter-border-soft);
+}
+
+::deep .ats-dashboard-active-summary {
+    display: flex;
+    min-width: 0;
+    height: 40px;
+    align-items: center;
+    color: var(--ats-filter-text-600);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+::deep .ats-dashboard-active-chip {
+    display: inline-flex;
+    max-width: 260px;
+    padding: 5px 10px 5px 8px;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(47, 111, 237, 0.18);
+    border-radius: 999px;
+    background: rgba(47, 111, 237, 0.08);
+    color: var(--ats-filter-blue-600);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+::deep .ats-dashboard-active-chip svg {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 auto;
+}
+
+::deep .ats-dashboard-active-chip > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-dashboard-filter-actions {
+    display: flex;
+    margin-left: auto;
+    align-items: center;
+    gap: 10px;
+}
+
+::deep .ats-dashboard-sync-status {
+    display: flex;
+    padding: 8px 4px;
+    align-items: center;
+    gap: 7px;
+    color: var(--ats-filter-text-400);
+    font-size: 12px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+}
+
+::deep .ats-dashboard-sync-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #16a34a;
+}
+
+::deep .ats-dashboard-sync-status.is-loading {
+    color: var(--ats-filter-blue-600);
+}
+
+::deep .ats-dashboard-sync-status.is-loading .ats-dashboard-sync-dot {
+    background: var(--ats-filter-blue-600);
+    animation: ats-dashboard-filter-pulse 0.8s ease-in-out infinite;
+}
+
+::deep .ats-dashboard-reset {
+    display: flex;
+    min-height: 40px;
+    padding: 10px 16px;
+    align-items: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--ats-filter-gradient);
+    box-shadow: 0 6px 14px -4px rgba(15, 42, 92, 0.35);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+::deep .ats-dashboard-reset:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+::deep .ats-dashboard-reset:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+::deep .ats-dashboard-reset:focus-visible {
+    outline: 3px solid rgba(47, 111, 237, 0.24);
+    outline-offset: 2px;
+}
+
+::deep .ats-dashboard-reset:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+::deep .ats-dashboard-reset svg {
+    width: 13px;
+    height: 13px;
+}
+
+@keyframes ats-dashboard-filter-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.6);
+    }
+}
+
+::deep .ats-dashboard-grid {
+    display: grid;
+    margin-bottom: var(--ats-dashboard-gap);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ats-dashboard-gap);
+    align-items: stretch;
+}
+
+::deep .ats-dashboard-chart-card {
+    display: flex;
+    min-width: 0;
+    min-height: 424px;
+    padding: var(--ats-card-padding);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(11, 31, 58, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+::deep .ats-dashboard-chart-card-clickable,
+::deep .ats-dashboard-chart-card-clickable * {
+    cursor: pointer;
+}
+
+::deep .ats-dashboard-chart-card-clickable:hover {
+    border-color: #cfd8ee;
+    box-shadow: 0 10px 24px -16px rgba(11, 31, 58, 0.35);
+    transform: translateY(-1px);
+}
+
+/*
+ * Press-in cue. The card dips as it is clicked and the zoom dialog grows out of
+ * it (see .ats-chart-detail-dialog in app.css), so the two read as one gesture.
+ */
+::deep .ats-dashboard-chart-card-clickable:active {
+    box-shadow: 0 4px 12px -10px rgba(11, 31, 58, 0.35);
+    transform: scale(0.985);
+    transition-duration: 0.08s;
+}
+
+::deep .ats-dashboard-chart-card-clickable:focus-visible {
+    outline: 2px solid #4d8de8;
+    outline-offset: 2px;
+}
+
+::deep .ats-dashboard-chart-header {
+    display: grid;
+    margin-bottom: var(--ats-stack-lg);
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--ats-stack-md);
+}
+
+::deep .ats-dashboard-chart-heading {
+    min-width: 0;
+}
+
+/*
+ * Export action. The wrapper is the plain element the stopPropagation directives
+ * hang off - MudIconButton renders its own markup, so the directives cannot go
+ * on it, and the card underneath is itself a button.
+ */
+::deep .ats-dashboard-chart-actions {
+    display: inline-flex;
+    margin-top: -4px;
+    align-items: center;
+}
+
+::deep .ats-dashboard-chart-export {
+    color: var(--ats-text-sub, #6b7b92);
+    background: #f4f7fb;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 10px;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+::deep .ats-dashboard-chart-export:hover {
+    color: #b3261e;
+    background: #fff5f4;
+    border-color: #f2c9c4;
+}
+
+::deep .ats-dashboard-chart-export:disabled {
+    /* Disabled means "nothing to export yet", so it recedes rather than shouting. */
+    background: #f8fafd;
+    border-color: #eef1f8;
+    opacity: 0.55;
+}
+
+::deep .ats-dashboard-chart-title {
+    color: #0b1f3a;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+::deep .ats-dashboard-chart-hint {
+    margin-top: var(--ats-stack-xs);
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+
+/*
+ * Chart content is inset from the card padding so plotting areas, axis labels
+ * and legends never sit against the card border.
+ */
+::deep .ats-dashboard-chart-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 0 var(--ats-chart-inset) var(--ats-chart-inset);
+    flex-direction: column;
+    justify-content: center;
+}
+
+::deep .ats-chart-legend {
+    display: flex;
+    min-height: 28px;
+    margin: 0 0 var(--ats-stack-md);
+    padding: 0 var(--ats-stack-xs);
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px 16px;
+    color: #3e4b5e;
+    font-size: 11.5px;
+}
+
+::deep .ats-chart-legend-item {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+::deep .ats-chart-legend-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+}
+
+::deep .ats-chart-total {
+    padding-left: 8px;
+    color: #0b1f3a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+::deep .ats-stacked-area-shell {
+    position: relative;
+    width: 100%;
+    height: 245px;
+}
+
+::deep .ats-stacked-area-chart {
+    display: block;
+    width: 100%;
+    height: 245px;
+    overflow: visible;
+}
+
+::deep .ats-stacked-area-grid-line {
+    stroke: rgba(62, 75, 94, 0.12);
+    stroke-width: 1;
+}
+
+::deep .ats-stacked-area-axis-line {
+    stroke: rgba(62, 75, 94, 0.35);
+    stroke-width: 1;
+}
+
+::deep .ats-stacked-area-hover-target {
+    fill: transparent;
+    stroke: transparent;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+::deep .ats-stacked-area-hover-target:focus {
+    fill: rgba(255, 255, 255, 0.2);
+    stroke: rgba(11, 31, 58, 0.35);
+    stroke-width: 1.5;
+    outline: none;
+}
+
+::deep .ats-stacked-area-hover-marker {
+    stroke: #fff;
+    stroke-width: 2;
+    filter: drop-shadow(0 1px 2px rgba(11, 31, 58, 0.35));
+    pointer-events: none;
+}
+
+::deep .ats-stacked-area-tooltip {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    min-width: 120px;
+    padding: 7px 9px;
+    align-items: flex-start;
+    gap: 7px;
+    color: #344054;
+    background: #fff;
+    border: 1px solid rgba(11, 31, 58, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(11, 31, 58, 0.18);
+    font-size: 11px;
+    line-height: 1.25;
+    transform: translate(-50%, calc(-100% - 11px));
+    pointer-events: none;
+}
+
+::deep .ats-stacked-area-tooltip-below {
+    transform: translate(-50%, 11px);
+}
+
+::deep .ats-stacked-area-tooltip > span:last-child {
+    display: flex;
+    flex-direction: column;
+}
+
+::deep .ats-stacked-area-tooltip strong {
+    color: #0b1f3a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+::deep .ats-stacked-area-tooltip-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 2px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+}
+
+::deep .ats-stacked-area-y-label {
+    position: absolute;
+    left: 4px;
+    width: 34px;
+    color: #3e4b5e;
+    font-size: 10px;
+    line-height: 12px;
+    text-align: right;
+    transform: translateY(-50%);
+}
+
+::deep .ats-stacked-area-x-labels {
+    position: absolute;
+    right: 4%;
+    bottom: 6px;
+    left: 11%;
+    display: flex;
+    justify-content: space-between;
+    color: #3e4b5e;
+    font-size: 10px;
+}
+
+/*
+ * Empty state (no data) - not an error state.
+ * Fills the chart area so card dimensions stay constant and the dashboard grid
+ * does not jump between the populated and empty presentations.
+ */
+::deep .ats-dashboard-empty {
+    display: flex;
+    min-height: 260px;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ats-stack-sm);
+    padding: var(--ats-stack-lg);
+    color: var(--ats-text-sub, #6b7b92);
+    background: #fafbff;
+    border: 1px dashed #dbe1f0;
+    border-radius: 12px;
+    text-align: center;
+}
+
+::deep .ats-dashboard-empty-icon {
+    color: #a3accb;
+    font-size: 30px;
+}
+
+::deep .ats-dashboard-empty-title {
+    color: #3d4a68;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+::deep .ats-dashboard-empty-text {
+    max-width: 300px;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+::deep .ats-dashboard-section-loading {
+    display: flex;
+    min-height: 260px;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+::deep .ats-donut-body {
+    display: grid;
+    padding: var(--ats-stack-sm) 0;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--ats-dashboard-gap);
+}
+
+::deep .ats-donut-figure {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+::deep .ats-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 38px;
+    text-align: center;
+    pointer-events: none;
+}
+
+::deep .ats-donut-center-value {
+    color: #0b1f3a;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+::deep .ats-donut-center-label {
+    margin-top: 6px;
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .ats-donut-center-delta {
+    margin-top: 4px;
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 10.5px;
+    line-height: 1.3;
+}
+
+::deep .ats-donut-stats {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--ats-stack-sm);
+}
+
+::deep .ats-donut-stat {
+    display: grid;
+    padding: 12px 14px;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2px 12px;
+    border: 1px solid var(--ats-border, #e3e9f1);
+    border-radius: 12px;
+}
+
+::deep .ats-donut-stat-dot {
+    width: 10px;
+    height: 10px;
+    grid-row: 1 / 3;
+    border-radius: 50%;
+}
+
+::deep .ats-donut-stat-name {
+    color: #1b2337;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .ats-donut-stat-value {
+    color: #0b1f3a;
+    font-size: 16px;
+    font-weight: 700;
+    grid-row: 1 / 3;
+    letter-spacing: -0.02em;
+    text-align: right;
+}
+
+::deep .ats-donut-stat-meta {
+    color: var(--ats-text-sub, #6b7b92);
+    font-size: 11.5px;
+    line-height: 1.2;
+}
+
+::deep .ats-donut-stat-bar {
+    display: block;
+    height: 5px;
+    grid-column: 1 / -1;
+    margin-top: 6px;
+    overflow: hidden;
+    background: #eef1f8;
+    border-radius: 99px;
+}
+
+::deep .ats-donut-stat-bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+}
+
+::deep .ats-line-chart-shell {
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--ats-stack-sm) 0 var(--ats-stack-md);
+    overflow: visible;
+}
+
+/* Keep every MudChart wrapper on the same full-width bounds. The component's
+ * MatchBoundsToSize setting then sizes its viewBox to this space, avoiding the
+ * default aspect-ratio letterboxing that previously narrowed the plotted line. */
+::deep .ats-line-chart-shell .mud-chart,
+::deep .ats-line-chart-shell .mud-chart > svg {
+    width: 100% !important;
+    min-width: 0;
+}
+
+::deep .mud-chart-serie-axis,
+::deep .mud-chart-serie-label {
+    font-size: 10px;
+}
+
+@media (max-width: 1399.98px) {
+    ::deep .ats-donut-body {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: var(--ats-stack-lg);
+    }
+
+    ::deep .ats-donut-stats {
+        width: 100%;
+    }
+}
+
+@media (max-width: 959.98px) {
+    ::deep .ats-dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    ::deep .ats-donut-body {
+        grid-template-columns: 200px minmax(0, 1fr);
+        justify-items: stretch;
+        gap: var(--ats-dashboard-gap);
+    }
+}
+
+@media (max-width: 767.98px) {
+    ::deep .ats-dashboard-filter-group {
+        width: 100%;
+    }
+
+    ::deep .ats-dashboard-filter-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+}
+
+/* Tighten the spacing scale on small screens; the proportions stay the same. */
+@media (max-width: 599.98px) {
+    .ats-dashboard {
+        --ats-dashboard-gap: 16px;
+        --ats-card-padding: 18px;
+        --ats-chart-inset: 2px;
+        --ats-stack-lg: 16px;
+    }
+
+    ::deep .ats-dashboard-filter-card {
+        padding: 14px;
+    }
+
+    ::deep .ats-dashboard-filter-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    ::deep .ats-dashboard-filter-field,
+    ::deep .ats-dashboard-select-wrap,
+    ::deep .ats-dashboard-select-wrap select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    ::deep .ats-dashboard-filter-divider {
+        display: none;
+    }
+
+    ::deep .ats-dashboard-active-summary {
+        height: auto;
+        min-height: 30px;
+    }
+
+    ::deep .ats-dashboard-active-chip {
+        max-width: 100%;
+    }
+
+    ::deep .ats-dashboard-filter-actions {
+        justify-content: space-between;
+    }
+
+    ::deep .ats-donut-body {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+        gap: var(--ats-stack-lg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .ats-dashboard-sync-status.is-loading .ats-dashboard-sync-dot {
+        animation: none;
+    }
+
+    ::deep .ats-dashboard-chart-card,
+    ::deep .ats-dashboard-chart-card-clickable:hover,
+    ::deep .ats-dashboard-chart-card-clickable:active {
+        transition-duration: 0.01ms;
+        transform: none;
+    }
+}

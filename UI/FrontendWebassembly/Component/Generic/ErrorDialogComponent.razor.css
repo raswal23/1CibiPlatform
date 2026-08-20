@@ -1,0 +1,174 @@
+.philsys-error-shell,
+.philsys-error-shell *,
+.philsys-error-shell *::before,
+.philsys-error-shell *::after {
+    box-sizing: border-box;
+}
+
+.philsys-error-shell {
+    --philsys-navy-900: #0b1b3d;
+    --philsys-navy-800: #132a54;
+    --philsys-blue-500: #2e7ce0;
+    --philsys-border: #e4eaf6;
+    --philsys-border-strong: #c2d2f0;
+    --philsys-text-1: #16233f;
+    --philsys-text-2: #5b6b8c;
+    --philsys-red: #d64545;
+    --philsys-red-tint: #fdecec;
+    --philsys-red-border: #f1c7c7;
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    font-family: Inter, sans-serif !important;
+}
+
+.philsys-error-shell ::deep .philsys-error-card {
+    width: 100%;
+    max-width: 460px;
+    padding: 38px 34px 34px !important;
+    border: 1px solid var(--philsys-border) !important;
+    border-radius: 20px !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 6px rgba(46,124,224,.1), 0 18px 40px -16px rgba(11,27,61,.25) !important;
+    text-align: center;
+}
+
+.philsys-error-badge {
+    display: flex;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: var(--philsys-red-tint);
+    color: var(--philsys-red);
+}
+
+.philsys-error-badge svg {
+    width: 28px;
+    height: 28px;
+}
+
+.philsys-error-title {
+    margin: 0 0 6px;
+    color: var(--philsys-navy-900);
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.philsys-error-subtitle {
+    margin: 0 auto 22px;
+    max-width: 38ch;
+    color: var(--philsys-text-2);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.philsys-error-details {
+    margin-bottom: 18px;
+    overflow: hidden;
+    border: 1.5px solid var(--philsys-border-strong);
+    border-radius: 12px;
+    background: #fcfdff;
+    text-align: left;
+}
+
+.philsys-error-details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 13px 40px 13px 16px;
+    color: var(--philsys-text-1);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    list-style: none;
+}
+
+.philsys-error-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.philsys-error-chevron { position:absolute; right:16px; top:50%; width:18px; height:18px; transform:translateY(-50%); color:var(--philsys-text-2); transition:transform .15s ease; }
+
+.philsys-error-details[open] > summary {
+    border-bottom: 1px solid var(--philsys-border);
+}
+
+.philsys-error-details[open] > summary .philsys-error-chevron { transform:translateY(-50%) rotate(180deg); }
+
+.philsys-error-message {
+    max-height: 180px;
+    margin: 0;
+    overflow: auto;
+    padding: 14px 16px;
+    color: var(--philsys-text-1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.philsys-error-action {
+    width: 100%;
+}
+
+.philsys-error-button {
+    width: 100% !important;
+    height: 48px;
+    border: 0;
+    border-radius: 12px !important;
+    background: linear-gradient(120deg, var(--philsys-navy-800), var(--philsys-blue-500)) !important;
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, .5) !important;
+    color: #fff !important;
+    font-family: Inter, sans-serif;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    letter-spacing: 0;
+    text-transform: none !important;
+    transition: box-shadow .15s ease, transform .1s ease;
+}
+.philsys-error-button svg { width:17px; height:17px; }
+
+.philsys-error-button:hover {
+    box-shadow: 0 14px 28px -8px rgba(29, 95, 209, .65) !important;
+}
+
+.philsys-error-button:active {
+    transform: scale(.97);
+}
+
+@media (max-width: 640px) {
+    .philsys-error-shell ::deep .philsys-error-card {
+        padding: 24px 20px 20px !important;
+        border-radius: 14px !important;
+    }
+
+    .philsys-error-title {
+        font-size: 18px;
+    }
+
+    .philsys-error-badge {
+        width: 54px;
+        height: 54px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .philsys-error-button {
+        transition-duration: .01ms !important;
+    }
+}

@@ -2,39 +2,37 @@
 
 public partial class MainLayout
 {
-	private readonly Dictionary<int, int> AppOrder = new()
-	{
-		{ 5, 1 }, // Credit Bureau
-        { 6, 2 }, // S&I
-        { 2, 3 }, // PhilSys
-        { 1, 4 }, // CNX
-        { 4, 5 }, // AI
-        { 3, int.MaxValue } // Settings
-    };
-
-	private bool _drawerOpen = true;
 	private bool _isDarkMode = false;
 	private bool _isLoading = true;
 	private string name = "";
+	private string _applicationSearchQuery = string.Empty;
 
-	private const string _appIdKey = "AppId";
-	private const string _subMenuKey = "SubMenuId";
-	private const string _roleIdKey = "RoleId";
-	private const string _userNameKey = "Name";
-
-	private List<int> Apps = new List<int>();
-	private List<List<int>> SubMenus = new List<List<int>>();
-	private List<int> Roles = new List<int>();
-
-	private bool UseATSLayout => Navigation.Uri.Contains("/s&i/ats");
-
-	private string GetContainerStyle()
+	private bool IsHomeRoute
 	{
-		var background = !_isDarkMode
-			? "white"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%)";
+		get
+		{
+			var path = NavigationManager.ToBaseRelativePath(NavigationManager.Uri)
+				.Split('?', '#')[0]
+				.Trim('/');
 
-		return $"display:flex;justify-content:center;align-items:center;background:{background} !important;";
+			return string.IsNullOrEmpty(path) ||
+				string.Equals(path, "dashboard", StringComparison.OrdinalIgnoreCase);
+		}
+	}
+
+	private const string _userNameKey = "Name";
+	private string UserInitials
+	{
+		get
+		{
+			var initials = name
+				.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+				.Take(2)
+				.Select(part => char.ToUpperInvariant(part[0]));
+
+			var value = string.Concat(initials);
+			return string.IsNullOrEmpty(value) ? "U" : value;
+		}
 	}
 
 	private MudTheme _myTheme = new MudTheme()
@@ -62,12 +60,10 @@ public partial class MainLayout
 		LayoutProperties = new LayoutProperties()
 		{
 			DefaultBorderRadius = "4px",
-			DrawerWidthLeft = "260px",
-			AppbarHeight = "69px"
+			AppbarHeight = "64px"
 		}
 	};
 
-	private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 	private async Task ToggleDarkMode()
 	{
 		_isDarkMode = !_isDarkMode;
@@ -76,29 +72,6 @@ public partial class MainLayout
 
 	}
 
-	private string GetAppBarStyle()
-	{
-		var gradient = _isDarkMode
-			? "linear-gradient(90deg, #68c0d6 0%, #2a77ae 50%, #102247 100%)"
-			: "linear-gradient(90deg, #102247 0%, #2a77ae 50%, #68c0d6 100%)";
-
-		// dynamically adjust margin-left if drawer is open
-
-
-		return $@"
-        width: auto !important;
-        background: {gradient} !important;
-		border-radius: 4px;
-        transition: margin-left 0.3s ease, margin-right 0.3s ease;
-    ";
-	}
-
-	private string GetMenuIconStyle()
-	{
-		return _isDarkMode
-			? "color: #102247;"
-			: "color: white;";
-	}
 	protected override async Task OnInitializedAsync()
 	{
 		try
@@ -119,15 +92,6 @@ public partial class MainLayout
 				return;
 			}
 
-			Apps = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_appIdKey) ?? string.Empty) ?? new List<int>();
-			Console.WriteLine($"Apps: {string.Join(", ", Apps)}");
-
-			SubMenus = JsonSerializer.Deserialize<List<List<int>>>(await LocalStorageService.GetItemAsync<string>(_subMenuKey) ?? string.Empty) ?? new List<List<int>>();
-			Console.WriteLine($"SubMenus: {string.Join(", ", SubMenus.SelectMany(sm => sm))}");
-
-			Roles = JsonSerializer.Deserialize<List<int>>(await LocalStorageService.GetItemAsync<string>(_roleIdKey) ?? string.Empty) ?? new List<int>();
-			Console.WriteLine($"Roles: {string.Join(", ", Roles)}");
-
 			name = await LocalStorageService.GetItemAsync<string>(_userNameKey) ?? string.Empty;
 
 			var stored = await LocalStorageService.GetItemAsync<bool?>("isDarkMode");
@@ -136,6 +100,7 @@ public partial class MainLayout
 
 			await JS.InvokeVoidAsync("setStartupTheme", _isDarkMode);
 
+			NavigationManager.LocationChanged += HandleLocationChanged;
 			_isLoading = false;
 		}
 		catch (Exception ex)
@@ -147,9 +112,22 @@ public partial class MainLayout
 		}
 	}
 
-	private string GetActiveNavClass()
+	private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
 	{
-		return _isDarkMode ? "nav-active-light" : "nav-active-dark";
+		if (!IsHomeRoute)
+		{
+			_applicationSearchQuery = string.Empty;
+		}
+
+		InvokeAsync(StateHasChanged);
+	}
+
+	private void HandleApplicationSearchKeyDown(KeyboardEventArgs args)
+	{
+		if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+		{
+			_applicationSearchQuery = string.Empty;
+		}
 	}
 
 	private async Task HandleLogout()
@@ -176,4 +154,10 @@ public partial class MainLayout
 			throw;
 		}
 	}
+
+	public void Dispose()
+	{
+		NavigationManager.LocationChanged -= HandleLocationChanged;
+	}
+
 }

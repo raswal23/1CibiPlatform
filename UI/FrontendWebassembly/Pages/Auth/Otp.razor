@@ -1,4 +1,4 @@
-﻿@page "/verify-otp"
+@page "/verify-otp"
 @layout GenericLayout
 @inject NavigationManager Navigation
 @inject IAuthService IAuthService
@@ -10,102 +10,201 @@
 
 @if (!_isLoading)
 {
-   <div class="login-container">
-       <MudPaper Class="login-card" Elevation="2">
-           <div class="login-header">
-               <div class="login-logo">
-                   <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Large" Style="color: white;" />
-               </div>
-               <div class="login-title">Verify Your Email</div>
-               <div class="login-subtitle">Enter the verification code sent to @email</div>
-           </div>
-   
-           <div class="login-body">
-   
-               @if (!isOtpValid)
-               {
-                   <MudAlert Severity="Severity.Error" Elevation="0" Variant="Variant.Filled" Class="mb-4">
-                       @errorMessage
-                   </MudAlert>
-               }
-               
-                @if (showSuccessMessage)
-               {
-                   <MudAlert Severity="Severity.Success" Elevation="0" Variant="Variant.Filled" Class="mb-4">
-                       Email verified successfully! Redirecting to login in @redirectCountdown seconds...
-                   </MudAlert>
-               }
+    <main class="otp-page">
+        <section class="otp-card">
+            <div class="otp-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M12 2l7.5 3.3v6c0 5.2-3.2 8.7-7.5 10.7-4.3-2-7.5-5.5-7.5-10.7v-6L12 2z" />
+                    <path d="M9 12l2 2 4-4" />
+                </svg>
+            </div>
 
+            <h1>Verify Your Email</h1>
+            <p class="otp-subtitle">
+                Enter the verification code sent to <strong>@email</strong>
+            </p>
 
-                @if (isResendSuccess)
-                {
-                    <MudAlert Severity="Severity.Success" Elevation="0" Variant="Variant.Filled" Class="mb-4">
-                        New OTP has been sent to your email.
-                    </MudAlert>
-                }
-   
-   
-             <MudForm @ref="form" @bind-IsValid="@success">
-                   <MudTextField @bind-Value="otpCode"
-                                 Label="Verification Code"
+            @if (!isOtpValid)
+            {
+                <div class="otp-banner error" role="alert">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         aria-hidden="true">
+                        <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0z" />
+                        <path d="M12 9v4M12 17h.01" />
+                    </svg>
+                    <span>@errorMessage</span>
+                </div>
+            }
+
+            @if (showSuccessMessage)
+            {
+                <div class="otp-banner success" role="status">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.4"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M5 12l5 5L20 7" />
+                    </svg>
+                    <span>
+                        Email verified successfully! Redirecting to login in @redirectCountdown seconds...
+                    </span>
+                </div>
+            }
+
+            @if (isResendSuccess)
+            {
+                <div class="otp-banner success" role="status">
+                    <svg viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2.4"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         aria-hidden="true">
+                        <path d="M5 12l5 5L20 7" />
+                    </svg>
+                    <span>New OTP has been sent to your email.</span>
+                </div>
+            }
+
+            <div class="otp-field-label">
+                Verification code <span>*</span>
+            </div>
+
+            <div class="@GetOtpBoxesClass()"
+                 role="group"
+                 aria-label="Six-digit verification code">
+                <input @ref="otpInput1"
+                       value="@otpDigits[0]"
+                       @oninput="@(args => UpdateOtpDigitAsync(0, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(0, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       autocomplete="one-time-code"
+                       aria-label="Verification code digit 1"
+                       disabled="@isDone"
+                       autofocus />
+                <input @ref="otpInput2"
+                       value="@otpDigits[1]"
+                       @oninput="@(args => UpdateOtpDigitAsync(1, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(1, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       aria-label="Verification code digit 2"
+                       disabled="@isDone" />
+                <input @ref="otpInput3"
+                       value="@otpDigits[2]"
+                       @oninput="@(args => UpdateOtpDigitAsync(2, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(2, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       aria-label="Verification code digit 3"
+                       disabled="@isDone" />
+                <input @ref="otpInput4"
+                       value="@otpDigits[3]"
+                       @oninput="@(args => UpdateOtpDigitAsync(3, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(3, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       aria-label="Verification code digit 4"
+                       disabled="@isDone" />
+                <input @ref="otpInput5"
+                       value="@otpDigits[4]"
+                       @oninput="@(args => UpdateOtpDigitAsync(4, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(4, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       aria-label="Verification code digit 5"
+                       disabled="@isDone" />
+                <input @ref="otpInput6"
+                       value="@otpDigits[5]"
+                       @oninput="@(args => UpdateOtpDigitAsync(5, args))"
+                       @onkeydown="@(args => HandleOtpKeyDownAsync(5, args))"
+                       class="otp-box"
+                       maxlength="1"
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       aria-label="Verification code digit 6"
+                       disabled="@isDone" />
+            </div>
+
+            @if (!isOtpValid)
+            {
+                <div class="otp-field-error">@errorMessage</div>
+            }
+            else
+            {
+                <div class="otp-field-spacer" aria-hidden="true"></div>
+            }
+
+            <div class="otp-actions">
+                <ButtonComponent ButtonType="ButtonType.Button"
+                                 OnClick="HandleResendOtp"
+                                 Disabled="@(isLoading || isDone)"
                                  Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Required="true"
-                                 RequiredError="Verification code is required"
-                                 Validation="@(new Func<string, string>(ValidateOtp))"
-                                 Adornment="Adornment.Start"
-                                 AdornmentIcon="@Icons.Material.Filled.Pin"
-                                 MaxLength="6"
-                                 Class="mb-4"
-                                 Disabled="@isDone"
-                                 InputType="InputType.Text"
-                                 AutoFocus="true" />
-                <MudGrid>
-                        <MudItem xs="6">
-                            <ButtonComponent ButtonType="ButtonType.Submit"       
-                                             OnClick="HandleResendOtp"
-                                             Disabled="@isResendLoading"
-                                             Color="MudBlazor.Color.Primary"
-                                             Variant="Variant.Outlined"
-                                             Class="h-100 shadow-sm">
-                                @if (isLoading)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                }
-                                else
-                                {
-                                    <span>Resend OTP</span>
-                                }
-                            </ButtonComponent>
-                        </MudItem>
-                        <MudItem xs="6">
-                            <ButtonComponent ButtonType="ButtonType.Submit"                                     
-                                             OnClick="HandleVerifyOtp"
-                                             Disabled="@(!success || isLoading || isDone)"
-                                             Class="@($"theme-button {(success ? "theme-button-active" : "theme-button-inactive")}")">
-                                @if (isLoading)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                }
-                                else
-                                {
-                                    <span>Verify Email</span>
-                                }
-                            </ButtonComponent>
-                        </MudItem>
-               </MudGrid>
+                                 Class="otp-resend-button">
+                    @if (isLoading && isResendLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <span>Resend OTP</span>
+                    }
+                </ButtonComponent>
 
-             </MudForm>
-   
-               <div class="footer-links">
-                   Wrong email? <a href="/register" class="gradient-text">Go back to registration</a>
-               </div>
-           </div>
-       </MudPaper>
-   </div>
+                <ButtonComponent ButtonType="ButtonType.Button"
+                                 OnClick="HandleVerifyOtp"
+                                 Disabled="@(!IsOtpComplete || isLoading || isDone)"
+                                 Class="@GetVerifyButtonClass()">
+                    @if (isLoading && !isResendLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2.2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                        <span>Verify email</span>
+                    }
+                </ButtonComponent>
+            </div>
+
+            <p class="otp-footer">
+                Wrong email? <a href="/register">Go back to registration</a>
+            </p>
+        </section>
+    </main>
 }
 else
 {
-    <!-- Loading -->
-    <LoaderComponent />
+    <CibiLoaderComponent />
 }

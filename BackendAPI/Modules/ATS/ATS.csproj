@@ -16,15 +16,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Data\DataSeed\IntouchEmailInvitationInitialData.json" />
+  </ItemGroup>
+
+  <ItemGroup>
       <PackageReference Include="Carter" Version="10.0.0" />
       <PackageReference Include="CsvHelper" Version="33.1.0" />
 	  <PackageReference Include="Mapster" Version="10.0.7" />
 	  <PackageReference Include="MediatR" Version="12.2.0" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.8" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
 	  <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.8" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
 	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
+	  <PackageReference Include="Microsoft.SemanticKernel" Version="1.76.0" />
+	  <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.76.0" />
 	  <PackageReference Include="PDFsharp" Version="6.2.4" />
 	  <PackageReference Include="QuestPDF" Version="2024.12.1" />
 	  <PackageReference Include="Quartz" Version="3.18.2" />
@@ -33,10 +40,12 @@
 	  <PackageReference Include="Quartz.Plugins.TimeZoneConverter" Version="3.18.2" />
 	  <PackageReference Include="Quartz.Serialization.Json" Version="3.18.2" />
 	  <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
+	  <PackageReference Include="Scrutor" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj" />
-  </ItemGroup>
+	  <ProjectReference Include="..\Auth\Auth.csproj" />
+	</ItemGroup>
 
 </Project>

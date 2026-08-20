@@ -1,4 +1,5 @@
 ﻿namespace FrontendWebassembly.Component.Generic;
+
 public partial class DeleteDialogConfirmation
 {
 	[CascadingParameter]

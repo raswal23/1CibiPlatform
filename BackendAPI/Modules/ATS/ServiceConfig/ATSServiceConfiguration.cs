@@ -1,8 +1,9 @@
 namespace ATS.ServiceConfig;
+
 public static class ATSServiceConfiguration
 {
-    private const string assemblyName = "APIs";
-    private const string connStringSegment = "OnePlatform_Connection";
+	private const string assemblyName = "APIs";
+	private const string connStringSegment = "OnePlatform_Connection";
 
 	#region Carter Config
 	public static IServiceCollection AddATSCarterModules(this IServiceCollection services, Assembly assembly)
@@ -20,36 +21,66 @@ public static class ATSServiceConfiguration
 
 	#region MediatR Config
 	public static IServiceCollection AddATSMediaTR(this IServiceCollection services, Assembly assembly)
-    {
-        services.AddMediatR(config =>
-        {
-            config.RegisterServicesFromAssembly(assembly);
-            config.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            config.AddOpenBehavior(typeof(LoggingBehavior<,>));
-        });
+	{
+		services.AddMediatR(config =>
+		{
+			config.RegisterServicesFromAssembly(assembly);
+			config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+			config.AddOpenBehavior(typeof(LoggingBehavior<,>));
+		});
 
-        services.AddValidatorsFromAssembly(assembly);
-        services.AddExceptionHandler<CustomExceptionHandler>();
-        return services;
-    }
-    #endregion
+		services.AddValidatorsFromAssembly(assembly);
+		services.AddExceptionHandler<CustomExceptionHandler>();
+		return services;
+	}
+	#endregion
 
-    #region Services
-    public static IServiceCollection AddATSServices(this IServiceCollection services)
-    {
+	#region Services
+	public static IServiceCollection AddATSServices(this IServiceCollection services)
+	{
+		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
+		services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
+		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
+		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
+		services.Decorate<IATSRepository, ATSCacheRepository>();
+		services.AddScoped<IPackageRepository, PackageRepository>();
+		services.Decorate<IPackageRepository, PackageCacheRepository>();
+		services.AddScoped<IClientRepository, ClientRepository>();
+		services.Decorate<IClientRepository, ClientCacheRepository>();
+		services.AddScoped<IRoleRepository, RoleRepository>();
+		services.Decorate<IRoleRepository, RoleCacheRepository>();
+		services.AddScoped<IModuleRepository, ModuleRepository>();
+		services.Decorate<IModuleRepository, ModuleCacheRepository>();
+		services.AddScoped<IATSUserRepository, ATSUserRepository>();
+		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
+		services.AddScoped<IUserClientRepository, UserClientRepository>();
+		services.Decorate<IUserClientRepository, UserClientCacheRepository>();
+		services.AddScoped<AtsQueryScopeResolver>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IApplicantSearchProjectionService, ApplicantSearchProjectionService>();
 		services.AddScoped<IFilePdfService, FilePdfService>();
+		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IClientManagementService, ClientManagementService>();
+		services.AddScoped<IRoleManagementService, RoleManagementService>();
+		services.AddScoped<IModuleManagementService, ModuleManagementService>();
+		services.AddScoped<IUserManagementService, UserManagementService>();
+		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
+		services.AddScoped<IATSVerificationDataProvider, ATSVerificationDataProvider>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
+		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
+		services.AddScoped<IAtsAssistantService, AtsAssistantService>();
+		services.AddSingleton<AtsOrderDraftStore>();
+		services.AddSingleton<AtsChatHistoryStore>();
 		services.AddSignalR();
 
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
@@ -57,21 +88,53 @@ public static class ATSServiceConfiguration
 		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
 
 		return services;
-    }
-    #endregion
+	}
+	#endregion
 
-    #region Db Config
-    public static IServiceCollection AddATSInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services.AddDbContext<ATSDBContext>(options =>
-        {
-            options.UseNpgsql(
-                configuration.GetConnectionString(connStringSegment),
-                npgsqlOptions => npgsqlOptions.MigrationsAssembly(assemblyName)
-            );
-        });
+	#region AI Assistant Config
+	/// <summary>
+	/// Registers the chat completion service and kernel used by the ATS assistant. ATS
+	/// registers its own chat completion so automatic function calling is available for
+	/// its <see cref="KernelFunctionAttribute"/> plugin.
+	/// </summary>
+	public static IServiceCollection AddATSAssistantConfiguration(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+		var endpoint = configuration.GetValue<string>("OpenAI:Endpoint");
+		var apiKey = configuration.GetValue<string>("OpenAI:ApiKey");
+		var model = configuration.GetValue<string>("OpenAI:Model");
+
+		if (string.IsNullOrWhiteSpace(endpoint)
+			|| string.IsNullOrWhiteSpace(apiKey)
+			|| string.IsNullOrWhiteSpace(model))
+		{
+			return services;
+		}
+
+		services.AddOpenAIChatCompletion(
+			modelId: model,
+			endpoint: new Uri(endpoint),
+			apiKey: apiKey);
+
+		services.AddKernel();
+
+		return services;
+	}
+	#endregion
+
+	#region Db Config
+	public static IServiceCollection AddATSInfrastructure(
+		this IServiceCollection services,
+		IConfiguration configuration)
+	{
+		services.AddDbContext<ATSDBContext>(options =>
+		{
+			options.UseNpgsql(
+				configuration.GetConnectionString(connStringSegment),
+				npgsqlOptions => npgsqlOptions.MigrationsAssembly(assemblyName)
+			);
+		});
 
 
 		services.AddQuartz(q =>
@@ -109,7 +172,7 @@ public static class ATSServiceConfiguration
 		});
 
 		return services;
-    }
+	}
 	#endregion
 
 }

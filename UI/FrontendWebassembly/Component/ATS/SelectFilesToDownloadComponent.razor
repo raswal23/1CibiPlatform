@@ -2,14 +2,38 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-<MudDialog Class="ats-download-dialog" Style="padding: 0;">
+<MudDialog Class="ats-download-dialog ats-scroll-dialog" Style="padding: 0;">
     <DialogContent>
-        <div class="ats-download-header">
-            <MudText Typo="Typo.h5" Class="ats-download-title">Select files to download</MudText>
-            <MudText Typo="Typo.body1" Class="ats-download-subtitle">@AvailableDocumentCount of @TotalDocuments documents are available</MudText>
+        <div class="ats-download-shell ats-dialog-shell">
+        <div class="ats-download-header ats-dialog-header">
+            <div class="ats-download-header-row">
+                <div class="ats-download-header-left">
+                    <span class="ats-download-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v12M12 16l-4.5-4.5M12 16l4.5-4.5" /><path d="M4 18v1.5A1.5 1.5 0 005.5 21h13a1.5 1.5 0 001.5-1.5V18" /></svg>
+                    </span>
+                    <div>
+                        <MudText Typo="Typo.h5" Class="ats-download-title">Select files to download</MudText>
+                        <MudText Typo="Typo.body1" Class="ats-download-subtitle">@AvailableDocumentCount of @TotalDocuments documents are available</MudText>
+                    </div>
+                </div>
+                <button type="button" class="ats-download-close" aria-label="Close" @onclick="Cancel">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+            </div>
         </div>
 
-        <div class="ats-download-list">
+        <div class="ats-download-list ats-dialog-body">
+            <div class="ats-download-item">
+                <MudCheckBox @bind-Value="BiometricPhotoSelected"
+                                 Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.BiometricPhotoFileName))"
+                                Class="ats-download-checkbox" />
+                <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "available")">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                </div>
+                <MudText Class="ats-download-doc-name">Biometric Photo</MudText>
+                <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.BiometricPhotoFileName) ? "Not uploaded" : "Available")</MudText>
+            </div>
+
             <div class="ats-download-item">
                 <MudCheckBox @bind-Value="ResumeSelected"
                              Disabled="@(string.IsNullOrWhiteSpace(ReportResult!.ResumeFileName))"
@@ -77,7 +101,7 @@
             </div>
         </div>
 
-        <div class="ats-download-actions">
+        <div class="ats-download-actions ats-dialog-footer">
             <MudButton Variant="Variant.Outlined"
                        Class="ats-download-cancel"
                        OnClick="Cancel">Cancel</MudButton>
@@ -85,7 +109,9 @@
             <MudButton Variant="Variant.Filled"
                        Disabled="@(!HasSelectedFile)"
                        Class="@($"ats-download-submit {(HasSelectedFile ? "theme-button theme-button-active" : "theme-button-inactive")}")"
-                       OnClick="DownloadDocumentsAsync">Download</MudButton>
+                       StartIcon="@Icons.Material.Outlined.Download"
+                       OnClick="DownloadDocumentsAsync">@(HasSelectedFile ? $"Download ({SelectedFileCount})" : "Download")</MudButton>
+        </div>
         </div>
     </DialogContent>
 </MudDialog>

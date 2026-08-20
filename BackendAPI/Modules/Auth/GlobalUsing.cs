@@ -19,6 +19,7 @@ global using FluentValidation;
 global using System.IdentityModel.Tokens.Jwt;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Caching.Hybrid;
+global using System.Globalization;
 
 
 // path
@@ -40,3 +41,6 @@ global using BuildingBlocks.SharedDTO;
 global using BuildingBlocks.SharedConstants;
 global using Auth.Data.Cache;
 global using BuildingBlocks.SharedServices.Implementations;
+global using Auth.Shared.Contracts;
+global using Auth.Shared.Implementations;
+global using Auth.Constants;

@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Auth.Data.Context;
+using Auth.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,6 +64,13 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			services.AddDbContext<ATSDBContext>(options =>
 				options.UseNpgsql(_dbContainer.GetConnectionString()));
 
+			services.RemoveAll<AuthApplicationDbContext>();
+			services.RemoveAll<DbContextOptions<AuthApplicationDbContext>>();
+			services.AddDbContext<AuthApplicationDbContext>(options =>
+				options.UseNpgsql(
+					_dbContainer.GetConnectionString(),
+					npgsqlOptions => npgsqlOptions.MigrationsAssembly("APIs")));
+
 			services.RemoveAll<IObjectStorageService>();
 			services.AddSingleton<IObjectStorageService, MockObjectStorageService>();
 
@@ -74,7 +83,8 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
 				var claims = new List<Claim>
 				{
-					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+					new Claim(AuthClaimTypes.AtsRoleId, "1")
 				};
 
 				fakeHttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
@@ -89,6 +99,9 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 		await _dbContainer.StartAsync();
 
 		using var scope = Services.CreateScope();
+		var authDb = scope.ServiceProvider.GetRequiredService<AuthApplicationDbContext>();
+		await authDb.Database.MigrateAsync();
+
 		var db = scope.ServiceProvider.GetRequiredService<ATSDBContext>();
 		await db.Database.MigrateAsync();
 	}

@@ -2,7 +2,7 @@
 
 public interface IRefreshTokenService
 {
-	Task<AuthResponseDTO> GetNewAccessAndRefreshToken(Guid userId);
+	Task<AuthResponseDTO> GetNewAccessAndRefreshToken();
 
 	Task<bool> Logout();
 }

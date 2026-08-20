@@ -8,9 +8,12 @@ public class EmailInvitationRequest
 	public string? MiddleInitial { get; set; }
 	public string? EmailAddress { get; set; }
 	public string? MobileNumber { get; set; }
+	public string? Requestor { get; set; }
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }
+	public int? ClientId { get; set; }
+	public Guid? RequestorId { get; set; }
 	public string? ApplicationFormStatus { get; set; }
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }
@@ -20,7 +23,7 @@ public class EmailInvitationRequest
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }
-    public bool NeedsProjection { get; set; } = true;
+	public bool NeedsProjection { get; set; } = true;
 	public DateTime? ProjectionUpdatedAt { get; set; }
 	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
@@ -34,7 +37,8 @@ public class EmailInvitationRequest
 	public ReferenceDetails? ReferenceDetails { get; set; }
 	public SignatureDetails? SignatureDetails { get; set; }
 	public ICollection<DocumentDetails>? Documents { get; set; }
-    public ICollection<ReportDetails>? ReportDetails { get; set; }
+	public ICollection<ReportDetails>? ReportDetails { get; set; }
 	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
-   public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
+	public ICollection<OrderStatusHistory>? OrderStatusHistories { get; set; }
+	public ApplicantSearchProjection? ApplicantSearchProjection { get; set; }
 }

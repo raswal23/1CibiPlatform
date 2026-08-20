@@ -1,4 +1,4 @@
-﻿namespace ATS.Data.Repository;
+namespace ATS.Data.Repository;
 
 public class ATSRepository : IATSRepository
 {
@@ -176,7 +176,7 @@ public class ATSRepository : IATSRepository
 	{
 		return await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
-			.AnyAsync(eir => eir.HashToken == hashToken && 
+			.AnyAsync(eir => eir.HashToken == hashToken &&
 					  eir.HashTokenExpiration > DateTime.UtcNow,
 					  cancellationToken);
 	}
@@ -189,10 +189,11 @@ public class ATSRepository : IATSRepository
 				.SetProperty(x => x.OrderStatus, x => OrderStatus.ApplicationWithdrawn));
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var usersQuery = ApplyQueryScope(
+				_dbcontext.EmailInvitationRequests.AsNoTracking(),
+				scope)
 			.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn);
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
@@ -207,6 +208,7 @@ public class ATSRepository : IATSRepository
 						EmailAddress = eir.EmailAddress,
 						FirstName = eir.FirstName,
 						LastName = eir.LastName,
+						Requestor = eir.Requestor,
 						OrderStatus = eir.OrderStatus,
 					})
 					.ToListAsync(cancellationToken);
@@ -218,54 +220,58 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-							.AsNoTracking()
+		var usersQuery = ApplyQueryScope(
+							_dbcontext.EmailInvitationRequests.AsNoTracking(),
+							scope)
 							.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn)
 							.Where(eir =>
 								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 								EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-								EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
-								EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
+				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
 
 		var totalRecords = await usersQuery.CountAsync(cancellationToken);
 
-        var users = await usersQuery
-                    .OrderBy(eir => eir.EmailInvitationID)
-                    .Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-                    .Take(paginationRequest.PageSize)
-                    .Select(eir => new EmailInvitationRequestListDTO
-                    {
-                        EmailInvitationID = eir.EmailInvitationID,
-                        EmailAddress = eir.EmailAddress,
-                        FirstName = eir.FirstName,
-                        LastName = eir.LastName,
-                        OrderStatus = eir.OrderStatus,
-                    })
-                    .ToListAsync(cancellationToken);
+		var users = await usersQuery
+					.OrderBy(eir => eir.EmailInvitationID)
+					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
+					.Take(paginationRequest.PageSize)
+					.Select(eir => new EmailInvitationRequestListDTO
+					{
+						EmailInvitationID = eir.EmailInvitationID,
+						EmailAddress = eir.EmailAddress,
+						FirstName = eir.FirstName,
+						LastName = eir.LastName,
+						Requestor = eir.Requestor,
+						OrderStatus = eir.OrderStatus,
+					})
+					.ToListAsync(cancellationToken);
 
-        return new PaginatedResult<EmailInvitationRequestListDTO>(
-          paginationRequest.PageIndex,
-          paginationRequest.PageSize,
-          totalRecords,
-          users
-        );
+		return new PaginatedResult<EmailInvitationRequestListDTO>(
+		  paginationRequest.PageIndex,
+		  paginationRequest.PageSize,
+		  totalRecords,
+		  users
+		);
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
-		var usersQuery =  _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var usersQuery = ApplyQueryScope(
+				_dbcontext.EmailInvitationRequests.AsNoTracking(),
+				scope)
 			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
 
 		var items = await usersQuery
 			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
-	        .ThenByDescending(eir => eir.OrderCreatedAt)
+			.ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
 			.Take(paginationRequest.PageSize)
@@ -274,6 +280,7 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
+				Requestor = eir.Requestor,
 				DisputeCategory = eir.DisputeCategory,
 				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt
@@ -282,21 +289,23 @@ public class ATSRepository : IATSRepository
 
 		return new PaginatedResult<DisputeOrderListDTO>(
 			paginationRequest.PageIndex,
-		    paginationRequest.PageSize,
+			paginationRequest.PageSize,
 			totalRecords,
 			items);
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(PaginationRequest paginationRequest, AtsQueryScope scope, CancellationToken cancellationToken)
 	{
 		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
 
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var usersQuery = ApplyQueryScope(
+				_dbcontext.EmailInvitationRequests.AsNoTracking(),
+				scope)
 			.Where(eir =>
 				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
 			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
 
 		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
@@ -312,6 +321,7 @@ public class ATSRepository : IATSRepository
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
+				Requestor = eir.Requestor,
 				DisputeCategory = eir.DisputeCategory,
 				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
@@ -372,7 +382,7 @@ public class ATSRepository : IATSRepository
 		var affectedRows = await _dbcontext.EmailInvitationRequests
 			.Where(x => x.EmailInvitationID == EmailInvitationRequestId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(x => x.OrderStatus, 
+				.SetProperty(x => x.OrderStatus,
 							 x => x.OrderStatus == OrderStatus.Completed ? x.OrderStatus : orderStatus)
 				.SetProperty(x => x.OrderCompletedAt, orderCompletedAt),
 				cancellationToken);
@@ -388,15 +398,239 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
-   public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<ATSDashboardDTO> GetDashboardAsync(
+		string? requester,
+		AtsQueryScope scope,
+		CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var now = DateTime.UtcNow;
+		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var yearEnd = yearStart.AddYears(1);
+		var invitations = ApplyQueryScope(
+			_dbcontext.EmailInvitationRequests.AsNoTracking(),
+			scope);
+
+		var requesterOptions = await invitations
+			.Where(x => x.Requestor != null && x.Requestor != string.Empty)
+			.Select(x => x.Requestor!)
+			.Distinct()
+			.OrderBy(x => x)
+			.ToListAsync(cancellationToken);
+
+		var allYtdHireRows = await invitations
+			.Where(x => x.OrderCreatedAt.HasValue
+				&& x.OrderCreatedAt >= yearStart
+				&& x.OrderCreatedAt < yearEnd
+				&& x.Requestor != null
+				&& x.Requestor.Trim() != string.Empty)
+			.Select(x => new
+			{
+				Requestor = x.Requestor!,
+				OrderCreatedAt = x.OrderCreatedAt!.Value
+			})
+			.ToListAsync(cancellationToken);
+		var ytdHireRows = string.IsNullOrWhiteSpace(requester)
+			? allYtdHireRows
+			: allYtdHireRows
+				.Where(x => x.Requestor == requester)
+				.ToList();
+
+		if (!string.IsNullOrWhiteSpace(requester))
+		{
+			invitations = invitations.Where(x => x.Requestor == requester);
+		}
+
+		var ytdPeriods = Enumerable.Range(0, 12)
+			.Select(monthOffset => yearStart.AddMonths(monthOffset))
+			.ToArray();
+
+		var ytdHireSeries = ytdHireRows
+			.GroupBy(x => x.Requestor)
+			.OrderByDescending(group => group.Count())
+			.ThenBy(group => group.Key)
+			.Select(group =>
+			{
+				var countLookup = group
+					.GroupBy(x => (x.OrderCreatedAt.Year, x.OrderCreatedAt.Month))
+					.ToDictionary(monthGroup => monthGroup.Key, monthGroup => monthGroup.Count());
+
+				return new DashboardVolumeSeriesDTO
+				{
+					Name = group.Key,
+					Points = ytdPeriods
+						.Select(periodStart => new DashboardVolumePointDTO
+						{
+							PeriodStart = periodStart,
+							Count = countLookup.GetValueOrDefault((periodStart.Year, periodStart.Month))
+						})
+						.ToArray()
+				};
+			})
+			.ToArray();
+
+		var sentInvitations = invitations.Where(x => x.EmailSentStatus == EmailStatus.Done);
+		var responseCounts = await sentInvitations
+			.GroupBy(_ => 1)
+			.Select(x => new
+			{
+				Total = x.Count(),
+				Completed = x.Count(invitation =>
+					invitation.ApplicationFormStatus == ApplicationFormStatus.Done
+					|| invitation.FormCompletedAt.HasValue),
+				Incomplete = x.Count(invitation =>
+					invitation.ApplicationFormStatus != ApplicationFormStatus.Done
+					&& !invitation.FormCompletedAt.HasValue
+					&& invitation.ApplicationFormStatus == ApplicationFormStatus.Withdrawn)
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+		var completedResponses = responseCounts?.Completed ?? 0;
+		var incompleteResponses = responseCounts?.Incomplete ?? 0;
+		var notStartedResponses = (responseCounts?.Total ?? 0) - completedResponses - incompleteResponses;
+
+		var reportRows = await invitations
+			.SelectMany(invitation => invitation.ReportDetails!
+				.Select(report => new DashboardReportRow
+				{
+					ReportStatus = report.ReportStatus,
+					HitStatus = report.HitStatus,
+					ReportUploadedAt = report.ReportUploadedAt,
+					RushNormal = invitation.RushNormal
+				}))
+			.ToListAsync(cancellationToken);
+
+		var serviceLevelRows = reportRows
+			.Where(IsServiceLevelReport)
+			.ToArray();
+		var latestTurnaroundDate = serviceLevelRows
+			.Select(report => (DateTime?)report.ReportUploadedAt)
+			.Max();
+		var turnaroundEndDate = latestTurnaroundDate?.Date ?? now.Date;
+		var turnaroundStart = turnaroundEndDate.AddDays(-6);
+
+		var turnaroundPeriods = Enumerable.Range(0, 7)
+			.Select(dayOffset => turnaroundStart.AddDays(dayOffset))
+			.ToArray();
+
+		var turnaroundTimeTrend = new (string Name, Func<DashboardReportRow, bool> Matches)[]
+			{
+				("Complete", report => report.ReportStatus == ReportStatus.CompleteFinalReport),
+				("Closed", report => report.ReportStatus == ReportStatus.ClosedFinalReport),
+				("Clear", report => string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)),
+				("Not Clear", report => string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase))
+			}
+			.Select(series => new TurnaroundTimeSeriesDTO
+			{
+				Name = series.Name,
+				Points = turnaroundPeriods
+					.Select(date => new TurnaroundTimePointDTO
+					{
+						Date = date,
+						Count = serviceLevelRows.Count(report =>
+							report.ReportUploadedAt.Date == date.Date
+							&& series.Matches(report))
+					})
+					.ToArray()
+			})
+			.ToArray();
+
+		var completeReports = reportRows.Count(report => report.ReportStatus == ReportStatus.CompleteFinalReport);
+		var closedReports = reportRows.Count(report => report.ReportStatus == ReportStatus.ClosedFinalReport);
+		var initialReports = reportRows.Count(report => report.ReportStatus == ReportStatus.InitialReport);
+		var supplementaryReports = reportRows.Count(report => report.ReportStatus == ReportStatus.SupplementaryReport);
+
+		var recentOrders = await invitations
+			.OrderByDescending(x => x.OrderCreatedAt)
+			.ThenByDescending(x => x.EmailInvitationID)
+			.Select(x => new DashboardRecentOrderDTO
+			{
+				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+				OrderStatus = x.OrderStatus,
+				HitStatus = x.ReportDetails!
+					.OrderByDescending(report => report.ReportUploadedAt)
+					.Select(report => report.HitStatus)
+					.FirstOrDefault(),
+				OrderCreatedAt = x.OrderCreatedAt,
+				OrderCompletedAt = x.OrderCompletedAt
+			})
+			.ToListAsync(cancellationToken);
+
+		return new ATSDashboardDTO
+		{
+			Requesters = requesterOptions,
+			YtdHireSeries = ytdHireSeries,
+			CandidateResponseRate = new CandidateResponseRateDTO
+			{
+				Categories = CreateCategories(
+					("Completed", completedResponses),
+					("Incomplete", incompleteResponses),
+					("Not Started", notStartedResponses))
+			},
+			TurnaroundTimeTrend = turnaroundTimeTrend,
+			CompletionRate = new CompletionRateDTO
+			{
+				Categories = CreateCategories(
+					("Complete", completeReports),
+					("Closed", closedReports),
+					("Initial", initialReports),
+					("Supplementary", supplementaryReports))
+			},
+			RecentOrders = recentOrders
+		};
+	}
+
+	private static IReadOnlyList<DashboardCategoryDTO> CreateCategories(
+		params (string Name, int Count)[] categoryCounts)
+	{
+		var total = categoryCounts.Sum(category => category.Count);
+		return categoryCounts
+			.Select(category => new DashboardCategoryDTO
+			{
+				Name = category.Name,
+				Count = category.Count,
+				Percentage = CalculatePercentage(category.Count, total)
+			})
+			.ToArray();
+	}
+
+	private static double CalculatePercentage(int numerator, int denominator)
+	{
+		return denominator == 0
+			? 0
+			: Math.Round(numerator * 100d / denominator, 1);
+	}
+
+	private static bool IsServiceLevelReport(DashboardReportRow report)
+	{
+		var hasServiceLevel = string.Equals(report.RushNormal?.Trim(), "Normal", StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(report.RushNormal?.Trim(), "Rush", StringComparison.OrdinalIgnoreCase);
+
+		return hasServiceLevel
+			&& (report.ReportStatus == ReportStatus.CompleteFinalReport
+			|| report.ReportStatus == ReportStatus.ClosedFinalReport
+			|| string.Equals(report.HitStatus, "Clear", StringComparison.OrdinalIgnoreCase)
+			|| string.Equals(report.HitStatus, "Not Clear", StringComparison.OrdinalIgnoreCase));
+	}
+
+	private sealed record DashboardReportRow
+	{
+		public string? ReportStatus { get; init; }
+		public string? HitStatus { get; init; }
+		public DateTime ReportUploadedAt { get; init; }
+		public string? RushNormal { get; init; }
+	}
+
+	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	{
+		var usersQuery = ApplyQueryScope(
+			_dbcontext.EmailInvitationRequests.AsNoTracking(),
+			scope)
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,
 				eir.FirstName,
 				eir.LastName,
+				eir.Requestor,
 				eir.OrderStatus,
 				eir.OrderCompletedAt,
 				eir.SelectPackage,
@@ -410,9 +644,14 @@ public class ATSRepository : IATSRepository
 		if (string.IsNullOrWhiteSpace(sortColumn))
 		{
 			usersQuery = usersQuery
-						.OrderByDescending(x => x.OrderCompletedAt.HasValue)
-						.ThenByDescending(x => x.OrderCompletedAt)
-						.ThenBy(x => x.EmailInvitationID);
+				.OrderBy(x =>
+					x.OrderStatus == OrderStatus.Completed ? 0 :
+					x.OrderStatus == OrderStatus.InProgress ? 1 :
+					x.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
+					x.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
+					4)
+				.ThenByDescending(x => x.OrderCompletedAt)
+				.ThenBy(x => x.EmailInvitationID);
 		}
 		else
 		{
@@ -446,6 +685,7 @@ public class ATSRepository : IATSRepository
 				OrderStatus = x.OrderStatus,
 				OrderCompletedAt = x.OrderCompletedAt,
 				SelectedPackage = x.SelectPackage,
+				Requestor = x.Requestor,
 				HitStatus = x.HitStatus
 			})
 			.ToListAsync(cancellationToken);
@@ -457,15 +697,17 @@ public class ATSRepository : IATSRepository
 			items);
 	}
 
-   public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(PaginationRequest paginationRequest, AtsQueryScope scope, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
+		var usersQuery = ApplyQueryScope(
+			_dbcontext.EmailInvitationRequests.AsNoTracking(),
+			scope)
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,
 				eir.FirstName,
 				eir.LastName,
+				eir.Requestor,
 				eir.OrderStatus,
 				eir.OrderCompletedAt,
 				eir.SelectPackage,
@@ -502,6 +744,7 @@ public class ATSRepository : IATSRepository
 
 			usersQuery = usersQuery.Where(x =>
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
+				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
 		}
@@ -533,6 +776,7 @@ public class ATSRepository : IATSRepository
 				OrderStatus = x.OrderStatus,
 				OrderCompletedAt = x.OrderCompletedAt,
 				SelectedPackage = x.SelectPackage,
+				Requestor = x.Requestor,
 				HitStatus = x.HitStatus
 			})
 			.ToListAsync(cancellationToken);
@@ -543,6 +787,21 @@ public class ATSRepository : IATSRepository
 			totalRecords,
 			items);
 	}
+
+	private static IQueryable<EmailInvitationRequest> ApplyQueryScope(
+		IQueryable<EmailInvitationRequest> query,
+		AtsQueryScope scope) => scope.Kind switch
+		{
+			AtsQueryScopeKind.All => query,
+			AtsQueryScopeKind.Client => query.Where(invitation => invitation.ClientId == scope.ClientId),
+			AtsQueryScopeKind.Clients => query.Where(invitation =>
+				invitation.ClientId.HasValue && scope.ClientIds.Contains(invitation.ClientId.Value)),
+			AtsQueryScopeKind.ClientRequestor => query.Where(invitation =>
+				invitation.ClientId == scope.ClientId
+				&& invitation.RequestorId == scope.RequestorId),
+			AtsQueryScopeKind.Requestor => query.Where(invitation => invitation.RequestorId == scope.RequestorId),
+			_ => query.Where(_ => false)
+		};
 
 	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
 	{
@@ -590,7 +849,7 @@ public class ATSRepository : IATSRepository
 					eir.ProfessionalExperiences!.COEUploadFileKey
 				},
 				Signature = new
-				{ 
+				{
 					eir.SignatureDetails!.ConsentFormFileName,
 					eir.SignatureDetails!.ConsentFormFileKey
 				},
@@ -610,10 +869,11 @@ public class ATSRepository : IATSRepository
 					rd.HitStatus,
 					rd.ReportFileName,
 					rd.ReportFileKey,
-					rd.ReportUploadedAt
+					rd.ReportUploadedAt,
+					rd.ReportStatus
 				})
 				.FirstOrDefault()
-				})
+			})
 			.FirstOrDefaultAsync(cancellationToken);
 
 		string? diplomaFileName = result!.Educational?.DoctorateDiplomaFileName
@@ -659,7 +919,8 @@ public class ATSRepository : IATSRepository
 			UploadedReportFileName = result.LatestReport?.ReportFileName,
 			UploadedReportFileKey = result.LatestReport?.ReportFileKey,
 			FilledFormAt = result.FormCompletedAt?.ToString("MMMM dd, yyyy"),
-			ReportUploadedAt = result.LatestReport?.ReportUploadedAt.ToString("MMMM dd, yyyy")
+			ReportUploadedAt = result.LatestReport?.ReportUploadedAt.ToString("MMMM dd, yyyy"),
+			ReportStatus = result.LatestReport?.ReportStatus?.ToString() ?? "No Report"
 		};
 	}
 

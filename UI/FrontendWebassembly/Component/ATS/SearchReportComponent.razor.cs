@@ -2,20 +2,78 @@
 
 public partial class SearchReportComponent
 {
-    private TableComponent<ReportListDTO>? reportsTable;
+	private const string RoleIdStorageKey = "RoleId";
+	private const string ATSRoleIdStorageKey = "ATSRoleId";
+
+	[Inject]
+	private LocalStorageService LocalStorageService { get; set; } = default!;
+
+	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
-    private string? _searchString;
+	private string? _searchString;
 	private List<ReportListDTO> currentPageData = new();
+	private bool _isStatusLegendExpanded = false;
+	private bool _canUploadReport;
+	private int ReportColumnCount => _canUploadReport ? 9 : 8;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var roleIds = await GetStoredRoleIdsAsync();
+		var atsRoleId = await GetStoredATSRoleIdAsync();
+
+		_canUploadReport = roleIds.Contains(1) || atsRoleId is 1 or 3;
+	}
+
+	private async Task<List<int>> GetStoredRoleIdsAsync()
+	{
+		try
+		{
+			var roleIdsJson = await LocalStorageService.GetItemAsync<string>(RoleIdStorageKey);
+			return string.IsNullOrWhiteSpace(roleIdsJson)
+				? []
+				: JsonSerializer.Deserialize<List<int>>(roleIdsJson) ?? [];
+		}
+		catch (JsonException)
+		{
+			return [];
+		}
+	}
+
+	private async Task<int> GetStoredATSRoleIdAsync()
+	{
+		try
+		{
+			return await LocalStorageService.GetItemAsync<int>(ATSRoleIdStorageKey);
+		}
+		catch (JsonException)
+		{
+			return 0;
+		}
+	}
+
+	private void ToggleStatusLegend() => _isStatusLegendExpanded = !_isStatusLegendExpanded;
+
+	private static string GetInitials(string? name)
+		=> string.Join(string.Empty, (name ?? string.Empty)
+			.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+			.Take(2)
+			.Select(part => char.ToUpperInvariant(part[0])));
+
+	private static string GetOrderStatusClass(string? status) => OrderStatusDisplay.GetClass(status);
+	private static string GetOrderStatusText(string? status) => OrderStatusDisplay.GetText(status);
+
+	private static string GetHitStatusClass(string? status) => HitStatusDisplay.GetClass(status);
+	private static string GetHitStatusText(string? status) => HitStatusDisplay.GetText(status);
 
 	private string searchString
 	{
-      get => _searchString!;
+		get => _searchString!;
 		set => UpdateSearch(ref _searchString!, value, reportsTable!);
 	}
 
-    private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
+	private void UpdateSearch<T>(ref string field, string value, TableComponent<T> table) where T : class
 	{
-      if (field != value)
+		if (field != value)
 		{
 			field = value;
 			table?.TableRef!.ReloadServerData();
@@ -26,20 +84,20 @@ public partial class SearchReportComponent
 	{
 		try
 		{
-         var result = await ReportService.GetReportsAsync(
-				state.Page + 1,
-				state.PageSize,
-				searchString,
-				state.SortLabel,
-				state.SortDirection == SortDirection.Descending,
-				_dateRange?.Start,
-				_dateRange?.End);
+			var result = await ReportService.GetReportsAsync(
+				   state.Page + 1,
+				   state.PageSize,
+				   searchString,
+				   state.SortLabel,
+				   state.SortDirection == SortDirection.Descending,
+				   _dateRange?.Start,
+				   _dateRange?.End);
 			currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
 
 			return new TableData<ReportListDTO>
 			{
 				Items = currentPageData,
-               TotalItems = (int)result.Count
+				TotalItems = (int)result.Count
 			};
 		}
 		catch (Exception)
@@ -53,14 +111,14 @@ public partial class SearchReportComponent
 		}
 	}
 
-    private async Task OnDateRangeChanged(DateRange range)
-    {
-        _dateRange = range;
+	private async Task OnDateRangeChanged(DateRange range)
+	{
+		_dateRange = range;
 
-        await ReloadTable();
-    }
+		await ReloadTable();
+	}
 
-    private async Task DownloadSelected()
+	private async Task DownloadSelected()
 	{
 
 		if (!currentPageData.Any(r => r.Selected))
@@ -131,7 +189,7 @@ public partial class SearchReportComponent
 
 	private async Task OpenResultTriggerDialog(Guid emailInvitationId)
 	{
-       try
+		try
 		{
 			var reportResult = await ReportService.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationId);
 
@@ -143,7 +201,9 @@ public partial class SearchReportComponent
 
 			await OpenResultDialog<ATSResultComponent>(
 				"",
-				parameters);
+				parameters,
+				MaxWidth.Medium,
+				fullWidth: false);
 		}
 		catch (Exception)
 		{
@@ -166,7 +226,7 @@ public partial class SearchReportComponent
 			CloseButton = false,
 			NoHeader = true,
 			MaxWidth = MaxWidth.Small,
-			FullWidth = true
+			FullWidth = false
 		};
 
 		dialog = await DialogService.ShowAsync<UploadReportComponent>(
@@ -175,6 +235,11 @@ public partial class SearchReportComponent
 			options);
 
 		await dialog.Result;
+	}
+	private async Task OpenStatusHistoryDialog(ReportListDTO report)
+	{
+		var parameters = new DialogParameters { { nameof(OrderStatusHistoryDialog.EmailInvitationRequestId), report.EmailInvitationRequestId }, { nameof(OrderStatusHistoryDialog.SubjectName), report.SubjectName } };
+		await OpenResultDialog<OrderStatusHistoryDialog>(string.Empty, parameters, MaxWidth.Small, noHeader: true);
 	}
 
 	private async Task ReloadTable()

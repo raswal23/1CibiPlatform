@@ -40,7 +40,7 @@ public class DisputeOrderService : IDisputeOrderService
 		if (!response.IsSuccessStatusCode)
 		{
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
-			throw new Exception($"Error: {errorContent?.Title}\nTraceId: {errorContent?.TraceId}");
+			throw new Exception(errorContent?.Detail ?? "Failed to mark order as disputed.");
 		}
 
 		var result = await response.Content.ReadFromJsonAsync<bool>();

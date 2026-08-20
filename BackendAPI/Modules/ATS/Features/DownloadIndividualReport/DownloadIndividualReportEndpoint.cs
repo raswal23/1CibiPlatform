@@ -8,7 +8,7 @@ public class DownloadIndividualReportEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapPost("downloadindividualreport", async(DownloadIndividualReportRequest request, ISender sender, CancellationToken cancellationToken) =>
+		app.MapPost("downloadindividualreport", async (DownloadIndividualReportRequest request, ISender sender, CancellationToken cancellationToken) =>
 		{
 			var command = new DownloadIndividualReportHandlerRequest(request.downloadInvididualRequest);
 			DownloadIndividualReportResult result = await sender.Send(command, cancellationToken);

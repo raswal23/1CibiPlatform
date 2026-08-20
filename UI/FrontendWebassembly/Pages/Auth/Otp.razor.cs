@@ -5,8 +5,6 @@ public partial class Otp
 	public string? email = "";
 	public string? userId = "";
 
-	private MudForm? form;
-	private bool success;
 	private bool isLoading = false;
 	private bool isResending = false;
 	private bool _isLoading = true;
@@ -16,6 +14,15 @@ public partial class Otp
 	private bool hasUnsavedChanges = true;
 
 	private string otpCode = "";
+	private readonly string[] otpDigits = Enumerable
+		.Repeat(string.Empty, 6)
+		.ToArray();
+	private ElementReference otpInput1;
+	private ElementReference otpInput2;
+	private ElementReference otpInput3;
+	private ElementReference otpInput4;
+	private ElementReference otpInput5;
+	private ElementReference otpInput6;
 	private bool isOtpValid = true;
 	private string errorMessage = "";
 	private bool showResendSuccess = false;
@@ -25,6 +32,7 @@ public partial class Otp
 
 	private bool showSuccessMessage = false;
 	private int redirectCountdown = 5;
+	private bool IsOtpComplete => otpDigits.All(digit => !string.IsNullOrEmpty(digit));
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -66,20 +74,62 @@ public partial class Otp
 		}
 	}
 
-	private string? ValidateOtp(string otp)
+	private string GetOtpBoxesClass()
 	{
-		if (string.IsNullOrWhiteSpace(otp))
-			return "Verification code is required";
+		if (showSuccessMessage)
+			return "otp-boxes success";
 
-		if (otp.Length != 6)
-			return "Verification code must be 6 characters";
-
-		return null;
+		return isOtpValid ? "otp-boxes" : "otp-boxes error";
 	}
+
+	private string GetVerifyButtonClass()
+		=> IsOtpComplete
+			? "otp-verify-button active"
+			: "otp-verify-button";
+
+	private async Task UpdateOtpDigitAsync(int index, ChangeEventArgs args)
+	{
+		var value = args.Value?.ToString() ?? string.Empty;
+		var digit = value.LastOrDefault(char.IsDigit);
+		otpDigits[index] = digit == default ? string.Empty : digit.ToString();
+		otpCode = string.Concat(otpDigits);
+
+		if (!string.IsNullOrEmpty(otpDigits[index]) && index < otpDigits.Length - 1)
+			await GetOtpInput(index + 1).FocusAsync();
+	}
+
+	private async Task HandleOtpKeyDownAsync(int index, KeyboardEventArgs args)
+	{
+		if (args.Key == "Enter")
+		{
+			if (IsOtpComplete && !isLoading && !isDone)
+				await HandleVerifyOtp();
+
+			return;
+		}
+
+		if (args.Key == "Backspace"
+			&& string.IsNullOrEmpty(otpDigits[index])
+			&& index > 0)
+		{
+			await GetOtpInput(index - 1).FocusAsync();
+		}
+	}
+
+	private ElementReference GetOtpInput(int index)
+		=> index switch
+		{
+			0 => otpInput1,
+			1 => otpInput2,
+			2 => otpInput3,
+			3 => otpInput4,
+			4 => otpInput5,
+			_ => otpInput6
+		};
 
 	private async Task HandleVerifyOtp()
 	{
-		SetState();
+		SetState(false);
 
 		try
 		{
@@ -140,7 +190,7 @@ public partial class Otp
 
 	private async void HandleResendOtp()
 	{
-		SetState();
+		SetState(true);
 
 		try
 		{
@@ -173,11 +223,11 @@ public partial class Otp
 		}
 	}
 
-	private void SetState()
+	private void SetState(bool isResendRequest)
 	{
 		isLoading = true;
 		isOtpValid = true;
-		isResendLoading = true;
+		isResendLoading = isResendRequest;
 		errorMessage = "";
 		showResendSuccess = true;
 		isResendSuccess = false;

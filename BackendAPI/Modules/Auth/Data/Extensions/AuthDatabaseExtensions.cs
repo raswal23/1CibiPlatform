@@ -32,14 +32,70 @@ public static class AuthDatabaseExtensions
 		{
 			await context.AuthRoles.AddRangeAsync(initData.GetRoles());
 		}
-		if (!await context.AuthUserAppRoles.AnyAsync())
-		{
-			await context.AuthUserAppRoles.AddRangeAsync(initData.GetUserAppRoles());
-		}
 		if (!await context.AuthSubmenu.AnyAsync())
 		{
 			await context.AuthSubmenu.AddRangeAsync(initData.GetSubMenus());
 		}
+		await context.SaveChangesAsync();
+
+		await SyncIdentitySequences(context);
+
+		await SeedUserAppRoles(context, initData);
+	}
+
+	private static async Task SyncIdentitySequences(AuthApplicationDbContext context)
+	{
+		await context.Database.ExecuteSqlRawAsync(
+			"""
+			SELECT setval(
+				pg_get_serial_sequence('"AuthApplications"', 'AppId'),
+				GREATEST((SELECT MAX("AppId") FROM "AuthApplications"), 1),
+				TRUE);
+
+			SELECT setval(
+				pg_get_serial_sequence('"AuthRoles"', 'RoleId'),
+				GREATEST((SELECT MAX("RoleId") FROM "AuthRoles"), 1),
+				TRUE);
+
+			SELECT setval(
+				pg_get_serial_sequence('"AuthSubmenu"', 'SubMenuId'),
+				GREATEST((SELECT MAX("SubMenuId") FROM "AuthSubmenu"), 1),
+				TRUE);
+			""");
+	}
+
+	private static async Task SeedUserAppRoles(
+		AuthApplicationDbContext context,
+		AuthInitialData initData)
+	{
+		if (await context.AuthUserAppRoles.AnyAsync())
+		{
+			return;
+		}
+
+		var userIdsByEmail = await context.AuthUsers
+			.ToDictionaryAsync(user => user.Email, user => user.Id);
+
+		// The super admin owns every assignment, so nothing can be assigned without it.
+		if (!userIdsByEmail.ContainsKey(AuthInitialData.SuperAdminEmail))
+		{
+			return;
+		}
+
+		var appIdsByName = await context.AuthApplications
+			.ToDictionaryAsync(app => app.AppName, app => app.AppId);
+		var subMenuIdsByName = await context.AuthSubmenu
+			.ToDictionaryAsync(subMenu => subMenu.SubMenuName, subMenu => subMenu.SubMenuId);
+		var roleIdsByName = await context.AuthRoles
+			.ToDictionaryAsync(role => role.RoleName, role => role.RoleId);
+
+		await context.AuthUserAppRoles.AddRangeAsync(initData.GetUserAppRoles(
+			userIdsByEmail[AuthInitialData.SuperAdminEmail],
+			userIdsByEmail,
+			appIdsByName,
+			subMenuIdsByName,
+			roleIdsByName));
+
 		await context.SaveChangesAsync();
 	}
 }

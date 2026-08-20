@@ -1,0 +1,171 @@
+.philsys-liveness-shell,
+.philsys-liveness-shell *,
+.philsys-liveness-shell *::before,
+.philsys-liveness-shell *::after {
+    box-sizing: border-box;
+}
+
+.philsys-liveness-shell {
+    --philsys-navy-900: #0b1b3d;
+    --philsys-navy-800: #132a54;
+    --philsys-blue-500: #2e7ce0;
+    --philsys-blue-tint: #edf3fc;
+    --philsys-border: #e4eaf6;
+    --philsys-border-strong: #c2d2f0;
+    --philsys-text-1: #16233f;
+    --philsys-text-2: #5b6b8c;
+    --philsys-text-3: #8a97b5;
+    --philsys-green: #1e9e64;
+    --philsys-green-tint: #e4f7ed;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    font-family: "Inter", sans-serif;
+}
+
+.philsys-liveness-shell ::deep .philsys-liveness-card {
+    width: 100%;
+    max-width: 420px;
+    padding: 34px 30px 30px !important;
+    border: 1px solid var(--philsys-border) !important;
+    border-radius: 20px !important;
+    background: #fff !important;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
+    text-align: center;
+}
+
+.philsys-liveness-badge {
+    display: flex;
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 20px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 19px;
+    background: linear-gradient(135deg, var(--philsys-blue-500), var(--philsys-navy-900));
+    box-shadow: 0 12px 24px -10px rgba(29, 95, 209, 0.5);
+    color: #fff;
+}
+
+.philsys-liveness-badge ::deep .mud-icon-root {
+    width: 28px;
+    height: 28px;
+    color: #fff !important;
+    font-size: 28px;
+}
+
+.philsys-liveness-title {
+    margin: 0 0 8px;
+    color: var(--philsys-text-1);
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.philsys-liveness-subtitle {
+    max-width: 34ch;
+    margin: 0 auto 22px;
+    color: var(--philsys-text-2);
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+.philsys-liveness-tips {
+    display: flex;
+    margin-bottom: 22px;
+    padding: 16px 18px;
+    flex-direction: column;
+    gap: 12px;
+    border: 1.5px solid var(--philsys-border-strong);
+    border-radius: 14px;
+    background: var(--philsys-blue-tint);
+    text-align: left;
+}
+
+.philsys-liveness-tip {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    color: var(--philsys-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.philsys-liveness-tip-check {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 22px;
+    border-radius: 50%;
+    background: var(--philsys-green-tint);
+    color: var(--philsys-green);
+}
+
+.philsys-liveness-tip-check svg {
+    width: 12px;
+    height: 12px;
+}
+
+.philsys-liveness-action {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.philsys-liveness-action ::deep .philsys-liveness-button {
+    height: 50px;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: linear-gradient(120deg, var(--philsys-navy-800), var(--philsys-blue-500)) !important;
+    box-shadow: 0 12px 26px -8px rgba(29, 95, 209, 0.55) !important;
+    color: #fff !important;
+    font-family: "Inter", sans-serif;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0;
+    text-transform: none !important;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.philsys-liveness-action ::deep .philsys-liveness-button:hover {
+    box-shadow: 0 14px 30px -8px rgba(29, 95, 209, 0.7) !important;
+}
+
+.philsys-liveness-action ::deep .philsys-liveness-button:active {
+    transform: scale(0.98);
+}
+
+.philsys-liveness-action ::deep .philsys-liveness-button .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.philsys-liveness-privacy {
+    max-width: 38ch;
+    margin: 0 auto;
+    color: var(--philsys-text-3);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+@media (max-width: 360px) {
+    .philsys-liveness-shell ::deep .philsys-liveness-card {
+        padding: 28px 20px 24px !important;
+    }
+
+    .philsys-liveness-tips {
+        padding: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .philsys-liveness-action ::deep .philsys-liveness-button {
+        transition: none;
+    }
+}

@@ -1,0 +1,67 @@
+.ats-expired-card,
+.ats-expired-card *,
+.ats-expired-card *::before,
+.ats-expired-card *::after {
+    box-sizing: border-box;
+}
+
+.ats-expired-card {
+    --expired-border: #e4eaf6;
+    --expired-text-1: #16233f;
+    --expired-text-2: #5b6b8c;
+    --expired-red: #d64545;
+    --expired-red-tint: #fbe9e9;
+    --expired-red-border: #f1c7c7;
+    width: min(420px, calc(100vw - 40px));
+    max-width: 420px;
+    padding: 36px 30px 32px;
+    border: 1px solid var(--expired-border);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.1),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25);
+    font-family: "Inter", sans-serif;
+    text-align: center;
+}
+
+.ats-expired-icon-badge {
+    display: flex;
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 22px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--expired-red-border);
+    border-radius: 50%;
+    background: var(--expired-red-tint);
+}
+
+.ats-expired-icon-badge svg {
+    width: 30px;
+    height: 30px;
+    color: var(--expired-red);
+}
+
+.ats-expired-card h1 {
+    margin: 0 0 8px;
+    color: var(--expired-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.ats-expired-description {
+    margin: 0;
+    color: var(--expired-text-2);
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+@media (max-width: 480px) {
+    .ats-expired-card {
+        width: calc(100vw - 28px);
+        padding: 30px 24px 26px;
+    }
+}

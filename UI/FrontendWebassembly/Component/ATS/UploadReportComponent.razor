@@ -2,55 +2,69 @@
 @inject IReportService ReportUploadService
 @inject ISnackbar Snackbar
 
-
-<div class="ats-upload-report-shell">
-                <div class="ats-upload-report-shell-header">
-                    <div>
-                        <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
-                        <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
+<MudDialog Class="um-dialog ats-upload-report-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+    <DialogContent>
+<div class="ats-upload-report-shell ats-dialog-shell">
+                <div class="ats-upload-report-shell-header ats-dialog-header">
+                    <div class="ats-upload-report-header-left">
+                        <span class="ats-upload-report-header-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 4v12M12 16l-4.5-4.5M12 16l4.5-4.5" /><path d="M4 18v1.5A1.5 1.5 0 005.5 21h13a1.5 1.5 0 001.5-1.5V18" /></svg>
+                        </span>
+                        <div>
+                            <MudText Typo="Typo.h5" Class="ats-upload-report-shell-title">Upload report</MudText>
+                            <MudText Typo="Typo.body1" Class="ats-upload-report-shell-subtitle">Attach the final report and update its status</MudText>
+                        </div>
                     </div>
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   Class="ats-upload-report-shell-close"
-                                   OnClick="CloseDialog" />
+                    <button type="button" class="ats-upload-report-shell-close" aria-label="Close" @onclick="CloseDialog">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
                 </div>
-<MudForm @ref="uploadReportForm">
-    <MudPaper Elevation="0" Class="oneplatform-surface-card ats-upload-report-card">
-        <MudGrid Spacing="2" Class="pa-4">
-            <MudItem xs="12">
+<MudForm @ref="uploadReportForm" Class="ats-dialog-form">
+    <div class="ats-upload-report-body ats-dialog-body">
+        <section class="ats-upload-report-section">
+            <div class="ats-upload-report-section-head"><span>1</span><h2>Screening result</h2></div>
+            <div class="ats-upload-report-section-body ats-upload-report-fields">
+                <div class="ats-upload-report-field">
+                    <label>Hit status <b>*</b></label>
                 <MudSelect @bind-Value="reportDetails.HitStatus"
-                           Label="Hit status"
+                           Placeholder="Select hit status"
                            FullWidth="true"
                            Required="true"
                            RequiredError="Hit Status is required"
                            Variant="Variant.Outlined"
-                           Adornment="Adornment.End"
+                           Adornment="Adornment.Start"
+                           AdornmentIcon="@Icons.Material.Outlined.CheckCircleOutline"
                            Margin="Margin.Dense"
-                           Class="oneplatform-rounded-input">
-                    <MudSelectItem Value=@("Clear")>Clear</MudSelectItem>
-                    <MudSelectItem Value=@("Not Clear")>Not Clear</MudSelectItem>
+                           Class="ats-upload-report-select">
+                    <MudSelectItem Value=@(HitStatusDisplay.Clear)>Clear</MudSelectItem>
+                    <MudSelectItem Value=@(HitStatusDisplay.NotClear)>Not Clear</MudSelectItem>
                 </MudSelect>
-            </MudItem>
+                </div>
 
-            <MudItem xs="12">
+                <div class="ats-upload-report-field">
+                    <label>Report status <b>*</b></label>
                 <MudSelect @bind-Value="reportDetails.ReportStatus"
-                           Label="Report status"
+                           Placeholder="Select report status"
                            FullWidth="true"
                            Required="true"
                            RequiredError="Report Status is required"
-                           Adornment="Adornment.End"
+                           Adornment="Adornment.Start"
+                           AdornmentIcon="@Icons.Material.Outlined.Article"
                            Variant="Variant.Outlined"
                            Margin="Margin.Dense"
-                           Class="oneplatform-rounded-input">
+                           Class="ats-upload-report-select">
                     <MudSelectItem Value=@("Initial Report")>Initial Report</MudSelectItem>
                     <MudSelectItem Value=@("Complete Final Report")>Complete Final Report</MudSelectItem>
                     <MudSelectItem Value=@("Closed Final Report")>Closed Final Report</MudSelectItem>
                     <MudSelectItem Value=@("Supplementary Report")>Supplementary Report</MudSelectItem>
                 </MudSelect>
-            </MudItem>
+                </div>
+            </div>
+        </section>
 
-            <MudItem xs="12">
-                <MudText>Report file</MudText>
-
+        <section class="ats-upload-report-section">
+            <div class="ats-upload-report-section-head"><span>2</span><h2>Report file</h2></div>
+            <div class="ats-upload-report-section-body">
                 <MudFileUpload T="IBrowserFile"
                                MaxFileSize="26214400"
                                Accept=".pdf"
@@ -59,9 +73,9 @@
                                RequiredError="Report File is required">
                     <CustomContent>
                         <MudPaper Elevation="0" Class="ats-upload-dropzone" @onclick="context.OpenFilePickerAsync">
-                            <MudIcon Icon="@Icons.Material.Filled.North" Size="Size.Medium" Class="ats-upload-dropzone-icon" />
+                            <span class="ats-upload-dropzone-icon"><MudIcon Icon="@Icons.Material.Outlined.FileUpload" Size="Size.Small" /></span>
                             <MudText Class="ats-upload-dropzone-title">Upload report file</MudText>
-                            <MudText Class="ats-upload-dropzone-subtitle">PDF, drag and drop or click to browse</MudText>
+                            <MudText Class="ats-upload-dropzone-subtitle">PDF · drag and drop or click to browse</MudText>
                         </MudPaper>
                     </CustomContent>
                     <SelectedTemplate />
@@ -78,13 +92,16 @@
                                        OnClick="@(() => RemoveFileFromUploadsAsync(reportDetails.ReportFile))" />
                     </MudPaper>
                 }
-            </MudItem>
+            </div>
+        </section>
+    </div>
 
-            <MudItem xs="12" Class="mt-2">
-                <div class="ats-upload-report-actions">
+                <div class="ats-upload-report-actions ats-dialog-footer">
+                    <MudButton Variant="Variant.Outlined" Class="ats-upload-report-cancel" OnClick="CloseDialog">Cancel</MudButton>
                     <MudButton OnClick="SubmitUploadReport"
                                Disabled="@isUploading"
-                               Class="theme-button theme-button-active ats-upload-report-submit">
+                               StartIcon="@Icons.Material.Outlined.FileUpload"
+                               Class="ats-upload-report-submit">
                         @if (isUploading)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -96,8 +113,7 @@
                         }
                     </MudButton>
                 </div>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
 </MudForm>
 </div>
+    </DialogContent>
+</MudDialog>

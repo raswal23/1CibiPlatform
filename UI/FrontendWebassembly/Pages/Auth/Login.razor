@@ -1,4 +1,6 @@
-﻿@page "/login"
+@page "/login"
+@page "/register"
+@page "/forgot-password"
 @layout GenericLayout
 @inject NavigationManager Navigation
 @inject IAuthService IAuthService
@@ -7,80 +9,489 @@
 
 @if (!_isLoading)
 {
-    <div class="login-container">
-       <MudPaper Class="login-card transparent-paper" Elevation="2">
-           <div class="login-header">
-               <div class="login-logo">
-                   <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Style="color: white;" />
-               </div>
-               <div class="login-title gradient-text">One Platform</div>
-               <div class="login-subtitle">Sign in to your account to continue</div>
-           </div>
-    
-           <div class="login-body">
-   
-               @if (!isUserValid)
-               {
-                   <MudAlert Severity="Severity.Error" Elevation="0" Variant="Variant.Filled" Class="mb-4">
-                       @errorMessage
-                   </MudAlert>
-               }
-   
-               <MudForm @ref="form" @bind-IsValid="@success">
-                    <MudTextField @bind-Value="email"
-                                  Label="Email"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  Required="true"
-                                  RequiredError="Email is required"
-                                  InputType="InputType.Email"
-                                  Adornment="Adornment.Start"
-                                  Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
-                                  AdornmentIcon="@Icons.Material.Filled.Email"
-                                  Class="mb-4" />
+    <main class="auth-page">
+        <div class="@GetAuthCardClass()">
+            <section class="auth-panel auth-login-panel"
+                     aria-hidden="@(isRegisterMode || isForgotPasswordMode)"
+                     inert="@(isRegisterMode || isForgotPasswordMode ? string.Empty : null)">
+                <div class="auth-content">
+                    <div class="auth-icon-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <rect x="4" y="10" width="16" height="10" rx="2" />
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                        </svg>
+                    </div>
 
-                   <MudTextField @bind-Value="password"
-                                 Label="Password"
-                                 Variant="Variant.Outlined"
-                                 Margin="Margin.Dense"
-                                 Required="true"
-                                 RequiredError="Password is required"
-                                 InputType="@passwordInput"
-                                 Adornment="Adornment.Start"
-                                 AdornmentIcon="@passwordIcon"
-                                 OnAdornmentClick="TogglePasswordVisibility"
-                                 AdornmentAriaLabel="Show Password"
-                                 Class="mb-3" />
-   
-                   <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-                       <MudCheckBox @bind-Value="rememberMe" Label="Remember me" Color="Color.Primary" Dense="true" />
-                       <MudLink Href="/forgot-password" Class="gradient-text" Typo="Typo.body2">Forgot password?</MudLink>
-                   </MudStack>
-              
-                   <ButtonComponent ButtonType="ButtonType.Submit"
-                                    OnClick="HandleLogin"
-                                    Disabled="@(!success || isLoading)"
-                                    Class="@($"theme-button {(success ? "theme-button-active " : "theme-button-inactive")}")">
-                        @if (isLoading)
-                        {
-                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                        }
-                        else
-                        {
-                            <span>Sign In</span>
-                        }
-                   </ButtonComponent>
-               </MudForm>
-   
-               <div class="footer-links">
-                    Don't have an account? <a class="gradient-text" href="/register">Sign up</a>
-               </div>
-           </div>
-       </MudPaper>
-   </div>
+                    <h1>One Platform</h1>
+                    <p class="auth-subtitle">Sign in to your account to continue</p>
+
+                    @if (!isLoginUserValid)
+                    {
+                        <MudAlert Severity="Severity.Error"
+                                  Elevation="0"
+                                  Variant="Variant.Filled"
+                                  Class="auth-alert">
+                            @loginErrorMessage
+                        </MudAlert>
+                    }
+
+                    <MudForm @ref="loginForm"
+                             @bind-IsValid="@loginFormValid"
+                             OnEnterPressed="HandleLoginEnter">
+                        <div class="auth-field">
+                            <label>Email <span>*</span></label>
+                            <div class="auth-input-wrap">
+                                <svg class="auth-leading-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     aria-hidden="true">
+                                    <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                                    <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <MudTextField @bind-Value="loginEmail"
+                                              Placeholder="admin@cibi.com"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Required="true"
+                                              RequiredError="Email is required"
+                                              InputType="InputType.Email"
+                                              Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                              Class="auth-input"
+                                              aria-label="Email" />
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label>Password <span>*</span></label>
+                            <div class="auth-input-wrap has-trailing">
+                                <svg class="auth-leading-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     aria-hidden="true">
+                                    <rect x="4" y="10" width="16" height="10" rx="2" />
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                </svg>
+                                <MudTextField @bind-Value="loginPassword"
+                                              Placeholder="••••••••"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Required="true"
+                                              RequiredError="Password is required"
+                                              InputType="@loginPasswordInput"
+                                              Adornment="Adornment.End"
+                                              AdornmentIcon="@loginPasswordIcon"
+                                              OnAdornmentClick="ToggleLoginPasswordVisibility"
+                                              AdornmentAriaLabel="Show password"
+                                              Class="auth-input"
+                                              aria-label="Password" />
+                            </div>
+                        </div>
+
+                        <div class="auth-row-between">
+                            <MudCheckBox @bind-Value="rememberMe"
+                                         Label="Remember me"
+                                         Color="Color.Primary"
+                                         Dense="true"
+                                         Class="auth-remember" />
+                            <button type="button" class="auth-link auth-link-button" @onclick="ShowForgotPassword">
+                                Forgot password?
+                            </button>
+                        </div>
+
+                        <ButtonComponent ButtonType="ButtonType.Submit"
+                                         OnClick="HandleLogin"
+                                         Disabled="@(!loginFormValid || isLoginLoading)"
+                                         Class="auth-submit">
+                            @if (isLoginLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>Sign In</span>
+                            }
+                        </ButtonComponent>
+                    </MudForm>
+
+                    <p class="auth-footer-line">
+                        Don't have an account?
+                        <button type="button" class="auth-inline-link" @onclick="ShowRegister">Sign up</button>
+                    </p>
+                </div>
+            </section>
+
+            <section class="auth-panel auth-forgot-panel"
+                     aria-hidden="@(!isForgotPasswordMode)"
+                     inert="@(!isForgotPasswordMode ? string.Empty : null)">
+                <div class="auth-content auth-forgot-content">
+                    <div class="auth-icon-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <rect x="4" y="10" width="16" height="10" rx="2" />
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                        </svg>
+                    </div>
+
+                    <h1>One Platform</h1>
+                    <p class="auth-subtitle auth-forgot-subtitle">
+                        Enter the email associated with your account and we'll send you a link to reset your password.
+                    </p>
+
+                    @if (!isForgotPasswordUserValid)
+                    {
+                        <MudAlert Severity="Severity.Error"
+                                  Elevation="0"
+                                  Variant="Variant.Filled"
+                                  Class="auth-alert">
+                            @forgotPasswordErrorMessage
+                        </MudAlert>
+                    }
+
+                    @if (isForgotPasswordSuccess)
+                    {
+                        <MudAlert Severity="Severity.Success"
+                                  Elevation="0"
+                                  Variant="Variant.Filled"
+                                  Class="auth-alert">
+                            @forgotPasswordSuccessMessage
+                        </MudAlert>
+                    }
+
+                    <MudForm @ref="forgotPasswordForm"
+                             @bind-IsValid="@forgotPasswordFormValid"
+                             OnEnterPressed="HandleForgotPasswordEnter">
+                        <div class="auth-field auth-forgot-field">
+                            <label>Email <span>*</span></label>
+                            <div class="auth-input-wrap">
+                                <svg class="auth-leading-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     aria-hidden="true">
+                                    <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                                    <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <MudTextField @bind-Value="forgotPasswordEmail"
+                                              Placeholder="admin@cibi.com"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Required="true"
+                                              RequiredError="Email is required"
+                                              InputType="InputType.Email"
+                                              Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                              Class="auth-input"
+                                              aria-label="Email" />
+                            </div>
+                        </div>
+
+                        <ButtonComponent ButtonType="ButtonType.Submit"
+                                         OnClick="HandleForgotPassword"
+                                         Disabled="@(!forgotPasswordFormValid || isForgotPasswordLoading)"
+                                         Class="auth-submit">
+                            @if (isForgotPasswordLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span> Sending...</span>
+                            }
+                            else
+                            {
+                                <svg class="auth-submit-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2.2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     aria-hidden="true">
+                                    <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                                </svg>
+                                <span>Send reset link</span>
+                            }
+                        </ButtonComponent>
+                    </MudForm>
+
+                    <p class="auth-footer-line">
+                        Remembered your password?
+                        <button type="button" class="auth-inline-link" @onclick="ShowLogin">Sign in</button>
+                    </p>
+                </div>
+            </section>
+
+            <section class="auth-panel auth-register-panel"
+                     aria-hidden="@(!isRegisterMode)"
+                     inert="@(!isRegisterMode ? string.Empty : null)">
+                <div class="auth-content auth-register-content">
+                    <div class="auth-icon-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <circle cx="12" cy="8" r="3.4" />
+                            <path d="M4.5 20c0-3.9 3.1-6.8 7.5-6.8s7.5 2.9 7.5 6.8" />
+                            <path d="M18 8h4M20 6v4" stroke-linecap="round" />
+                        </svg>
+                    </div>
+
+                    <h1>One Platform</h1>
+                    <p class="auth-subtitle">Create your account to get started</p>
+
+                    @if (!isRegisterUserValid)
+                    {
+                        <MudAlert Severity="Severity.Error"
+                                  Elevation="0"
+                                  Variant="Variant.Filled"
+                                  Class="auth-alert">
+                            @registerErrorMessage
+                        </MudAlert>
+                    }
+
+                    <MudForm @ref="registerForm" @bind-IsValid="@registerFormValid">
+                        <div class="auth-field-row">
+                            <div class="auth-field">
+                                <label>First name <span>*</span></label>
+                                <div class="auth-input-wrap">
+                                    <svg class="auth-leading-icon auth-person-icon"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         aria-hidden="true">
+                                        <path d="M4 20c0-3.6 2.8-6.4 6.5-6.4h3c3.7 0 6.5 2.8 6.5 6.4" stroke-linecap="round" />
+                                        <circle cx="12" cy="8" r="3.4" />
+                                    </svg>
+                                    <MudTextField @bind-Value="firstName"
+                                                  Placeholder="Juan"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="First name is required"
+                                                  Class="auth-input"
+                                                  aria-label="First name" />
+                                </div>
+                            </div>
+
+                            <div class="auth-field">
+                                <label>Last name <span>*</span></label>
+                                <div class="auth-input-wrap">
+                                    <svg class="auth-leading-icon auth-person-icon"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         aria-hidden="true">
+                                        <path d="M4 20c0-3.6 2.8-6.4 6.5-6.4h3c3.7 0 6.5 2.8 6.5 6.4" stroke-linecap="round" />
+                                        <circle cx="12" cy="8" r="3.4" />
+                                    </svg>
+                                    <MudTextField @bind-Value="lastName"
+                                                  Placeholder="Dela Cruz"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Last name is required"
+                                                  Class="auth-input"
+                                                  aria-label="Last name" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label>Middle name <em>(Optional)</em></label>
+                            <div class="auth-input-wrap">
+                                <svg class="auth-leading-icon auth-person-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     aria-hidden="true">
+                                    <path d="M4 20c0-3.6 2.8-6.4 6.5-6.4h3c3.7 0 6.5 2.8 6.5 6.4" stroke-linecap="round" />
+                                    <circle cx="12" cy="8" r="3.4" />
+                                </svg>
+                                <MudTextField @bind-Value="middleName"
+                                              Placeholder="Santos"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="auth-input"
+                                              aria-label="Middle name" />
+                            </div>
+                        </div>
+
+                        <div class="auth-field">
+                            <label>Email <span>*</span></label>
+                            <div class="auth-input-wrap">
+                                <svg class="auth-leading-icon"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="1.8"
+                                     aria-hidden="true">
+                                    <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                                    <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <MudTextField @bind-Value="registerEmail"
+                                              Placeholder="juan.delacruz@email.com"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Required="true"
+                                              RequiredError="Email is required"
+                                              InputType="InputType.Email"
+                                              Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                              Class="auth-input"
+                                              aria-label="Email" />
+                            </div>
+                        </div>
+
+                        <div class="auth-field-row">
+                            <div class="auth-field">
+                                <label>Password <span>*</span></label>
+                                <div class="auth-input-wrap has-trailing">
+                                    <svg class="auth-leading-icon"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         aria-hidden="true">
+                                        <rect x="4" y="10" width="16" height="10" rx="2" />
+                                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                    </svg>
+                                    <MudTextField @bind-Value="registerPassword"
+                                                  Placeholder="••••••••"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Password is required"
+                                                  InputType="@registerPasswordInput"
+                                                  Validation="@((string value) => ValidatePassword(value))"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@registerPasswordIcon"
+                                                  OnAdornmentClick="ToggleRegisterPasswordVisibility"
+                                                  AdornmentAriaLabel="Show password"
+                                                  Class="auth-input"
+                                                  aria-label="Password" />
+                                </div>
+                            </div>
+
+                            <div class="auth-field">
+                                <label>Confirm password <span>*</span></label>
+                                <div class="auth-input-wrap has-trailing">
+                                    <svg class="auth-leading-icon"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="1.8"
+                                         aria-hidden="true">
+                                        <rect x="4" y="10" width="16" height="10" rx="2" />
+                                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                    </svg>
+                                    <MudTextField @bind-Value="confirmPassword"
+                                                  Placeholder="••••••••"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Required="true"
+                                                  RequiredError="Please confirm your password"
+                                                  InputType="@confirmPasswordInput"
+                                                  Validation="@((string value) => ValidateConfirmPassword(value))"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@confirmPasswordIcon"
+                                                  OnAdornmentClick="ToggleConfirmPasswordVisibility"
+                                                  AdornmentAriaLabel="Show password"
+                                                  Class="auth-input"
+                                                  aria-label="Confirm password" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <ButtonComponent ButtonType="ButtonType.Submit"
+                                         OnClick="HandleRegister"
+                                         Disabled="@(!registerFormValid || isRegisterLoading)"
+                                         Class="auth-submit auth-register-submit">
+                            @if (isRegisterLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                            }
+                            else
+                            {
+                                <span>Create Account</span>
+                            }
+                        </ButtonComponent>
+                    </MudForm>
+
+                    <p class="auth-footer-line">
+                        Already have an account?
+                        <button type="button" class="auth-inline-link" @onclick="ShowLogin">Sign in</button>
+                    </p>
+                </div>
+            </section>
+
+            <section class="auth-panel auth-page-panel auth-front"
+                     aria-hidden="@isRegisterMode"
+                     inert="@(isRegisterMode ? string.Empty : null)">
+                <div class="auth-content">
+                    @if (isForgotPasswordMode)
+                    {
+                        <div class="auth-icon-badge ghost" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8">
+                                <rect x="4" y="10" width="16" height="10" rx="2" />
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                            </svg>
+                        </div>
+                        <h1>Welcome Back!</h1>
+                        <p>Remembered your password? Return to sign in and continue to One Platform.</p>
+                        <button type="button" class="auth-ghost-button" @onclick="ShowLogin">Sign In</button>
+                    }
+                    else
+                    {
+                        <div class="auth-icon-badge ghost" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="1.8">
+                                <circle cx="12" cy="8" r="3.4" />
+                                <path d="M4.5 20c0-3.9 3.1-6.8 7.5-6.8s7.5 2.9 7.5 6.8" />
+                                <path d="M18 8h4M20 6v4" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <h1>Hello, Friend!</h1>
+                        <p>Enter your personal details and start your journey with One Platform.</p>
+                        <button type="button" class="auth-ghost-button" @onclick="ShowRegister">Sign Up</button>
+                    }
+                </div>
+            </section>
+
+            <section class="auth-panel auth-page-panel auth-back"
+                     aria-hidden="@(!isRegisterMode)"
+                     inert="@(!isRegisterMode ? string.Empty : null)">
+                <div class="auth-content">
+                    <div class="auth-icon-badge ghost" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8">
+                            <rect x="4" y="10" width="16" height="10" rx="2" />
+                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                        </svg>
+                    </div>
+                    <h1>Welcome Back!</h1>
+                    <p>To keep connected with us, please sign in with your personal info.</p>
+                    <button type="button" class="auth-ghost-button" @onclick="ShowLogin">Sign In</button>
+                </div>
+            </section>
+        </div>
+    </main>
 }
 else
 {
-    <!-- Loading -->
-    <LoaderComponent />
+    <CibiLoaderComponent />
 }

@@ -1,0 +1,374 @@
+.ats-application-form.ats-appform-modern {
+    min-height: 100vh;
+    min-height: 100dvh;
+    align-items: safe center;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.ats-application-form.ats-application-intro-host {
+    --intro-navy-900: #0b1b3d;
+    --intro-navy-800: #132a54;
+    --intro-blue-600: #1d5fd1;
+    --intro-blue-500: #2e7ce0;
+    --intro-blue-tint: #edf3fc;
+    --intro-blue-tint-2: #e3ecfb;
+    --intro-border: #dce6f7;
+    --intro-border-strong: #c2d2f0;
+    --intro-text-1: #16233f;
+    --intro-text-2: #5b6b8c;
+    --intro-text-3: #8a97b5;
+    --intro-amber: #b5790f;
+    --intro-amber-tint: #fcf1dd;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 40px 20px;
+    align-items: safe center;
+    justify-content: center;
+    background: #eef2f9;
+    color: var(--intro-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ats-application-intro-page,
+.ats-application-intro-page * {
+    box-sizing: border-box;
+}
+
+.ats-application-intro-page {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.ats-application-intro-card {
+    overflow: hidden;
+    border: 1px solid var(--intro-border);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.1),
+        0 18px 40px -16px rgba(11, 27, 61, 0.25);
+}
+
+.ats-application-intro-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 32px;
+    border-bottom: 1px solid var(--intro-border);
+    background: var(--intro-blue-tint);
+}
+
+.ats-application-logo-badge {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--intro-blue-500), var(--intro-navy-800));
+}
+
+.ats-application-logo-badge svg {
+    width: 20px;
+    height: 20px;
+    color: #fff;
+}
+
+.ats-application-intro-header h1 {
+    margin: 0;
+    color: var(--intro-navy-900);
+    font-family: "Poppins", sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.ats-application-intro-body {
+    padding: 30px 32px 34px;
+    background: #fff;
+}
+
+.ats-application-intro-lead {
+    margin: 0 0 10px;
+    color: var(--intro-text-1);
+    font-size: 14.5px;
+    font-weight: 600;
+}
+
+.ats-application-intro-copy {
+    margin: 0 0 26px;
+    color: var(--intro-text-2);
+    font-size: 13.5px;
+    line-height: 1.65;
+}
+
+.ats-application-section {
+    margin-bottom: 26px;
+}
+
+.ats-application-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ats-application-section-icon {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--intro-border-strong);
+    border-radius: 8px;
+    background: var(--intro-blue-tint-2);
+    color: var(--intro-blue-600);
+}
+
+.ats-application-section-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+.ats-application-section-title h2 {
+    margin: 0;
+    color: var(--intro-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 15.5px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.ats-application-section-copy {
+    margin: 0 0 14px;
+    color: var(--intro-text-2);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ats-application-document-list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+}
+
+.ats-application-document-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--intro-border);
+    border-radius: 10px;
+    background: #fcfdff;
+    color: var(--intro-text-1);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.ats-application-document-index {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 7px;
+    background: var(--intro-navy-900);
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ats-application-document-list li.is-optional {
+    background: #f8fafd;
+}
+
+.ats-application-document-list li.is-optional .ats-application-document-index {
+    background: var(--intro-text-3);
+}
+
+.ats-application-reminder-block {
+    margin-bottom: 14px;
+}
+
+.ats-application-reminder-block h3 {
+    margin: 0 0 10px;
+    color: var(--intro-text-1);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-application-reminder-list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 9px;
+    list-style: none;
+}
+
+.ats-application-reminder-list li {
+    position: relative;
+    padding-left: 16px;
+    color: var(--intro-text-2);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+.ats-application-reminder-list li::before {
+    position: absolute;
+    top: 7px;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--intro-blue-500);
+    content: "";
+}
+
+.ats-application-reminder-list a {
+    color: var(--intro-blue-600);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.ats-application-reminder-list a:hover {
+    color: var(--intro-navy-800);
+}
+
+.ats-application-reminder-list a:focus-visible,
+.ats-application-notice a:focus-visible,
+.ats-application-proceed-button:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, 0.28);
+    outline-offset: 3px;
+}
+
+.ats-application-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 26px 0 30px;
+    padding: 14px 16px;
+    border: 1.5px solid #f0dca8;
+    border-left: 4px solid var(--intro-amber);
+    border-radius: 12px;
+    background: var(--intro-amber-tint);
+}
+
+.ats-application-notice > svg {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    flex: 0 0 auto;
+    color: var(--intro-amber);
+}
+
+.ats-application-notice p {
+    margin: 0;
+    color: #7a5209;
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.ats-application-notice strong {
+    font-weight: 700;
+}
+
+.ats-application-notice a {
+    color: var(--intro-blue-600);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.ats-application-notice a:hover {
+    text-decoration: underline;
+}
+
+.ats-application-intro-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.ats-application-proceed-button {
+    display: flex;
+    height: 48px;
+    padding: 0 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(120deg, var(--intro-navy-800), var(--intro-blue-500));
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.ats-application-proceed-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65);
+}
+
+.ats-application-proceed-button:active {
+    transform: scale(0.97);
+}
+
+.ats-application-proceed-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+@media (max-width: 600px) {
+    .ats-application-form.ats-application-intro-host {
+        padding: 24px 12px;
+    }
+
+    .ats-application-intro-header {
+        padding: 18px 20px;
+    }
+
+    .ats-application-intro-body {
+        padding: 24px 20px 28px;
+    }
+
+    .ats-application-proceed-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .ats-application-logo-badge {
+        width: 36px;
+        height: 36px;
+    }
+
+    .ats-application-intro-header h1 {
+        font-size: 18px;
+    }
+
+    .ats-application-document-list li {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-application-proceed-button {
+        transition: none;
+    }
+}

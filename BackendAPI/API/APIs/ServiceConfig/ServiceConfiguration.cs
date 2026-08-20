@@ -9,21 +9,35 @@ public static class ServiceConfiguration
 	private static readonly Assembly _ssoAssembly = typeof(SSOMarker).Assembly;
 	private static readonly Assembly _aiAgentAssembly = typeof(AIAgentMarker).Assembly;
 	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
+	private static readonly Assembly _platformLoggingAssembly = typeof(PlatformLoggingMarker).Assembly;
+	private static readonly Assembly _employmentVerificationAssembly = typeof(EmploymentVerificationMarker).Assembly;
 
 
 	#region Logging Config
 
 	public static IServiceCollection AddLoggingConfiguration(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IHostEnvironment environment)
 	{
-		Log.Logger = new LoggerConfiguration()
+		var loggerConfiguration = new LoggerConfiguration()
 				   .MinimumLevel.Information()
 				   .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
 				   .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
 				   .Enrich.FromLogContext()
-				   .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter())
-				   .CreateLogger();
+				   .Enrich.WithProperty("Platform", "1CibiPlatform")
+				   .Enrich.WithProperty("Environment", environment.EnvironmentName)
+				   .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
+
+		var sink = configuration.CreatePlatformLogSink();
+		if (sink is not null)
+		{
+			services.AddSingleton(sink);
+			services.AddSingleton<IHostedService>(sink);
+			loggerConfiguration.WriteTo.Sink(sink, LogEventLevel.Warning);
+		}
+
+		Log.Logger = loggerConfiguration.CreateLogger();
 
 		services.AddLogging(builder =>
 		{
@@ -34,6 +48,7 @@ public static class ServiceConfiguration
 
 		return services;
 	}
+
 	#endregion
 
 	#region Environment Config
@@ -128,6 +143,7 @@ public static class ServiceConfiguration
 				ValidAudience = audience,
 				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!)),
 				RoleClaimType = ClaimTypes.Role,
+				ClockSkew = TimeSpan.Zero
 			};
 			options.Events = new JwtBearerEvents
 			{
@@ -138,6 +154,23 @@ public static class ServiceConfiguration
 						context.Token = token;
 					}
 					return Task.CompletedTask;
+				},
+				OnTokenValidated = async context =>
+				{
+					var sessionClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Sid)?.Value;
+					if (string.IsNullOrWhiteSpace(sessionClaim))
+						return; // API/SSO tokens without a browser refresh session keep their existing behavior.
+
+					var userClaim = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+					if (!int.TryParse(sessionClaim, out var sessionId) || !Guid.TryParse(userClaim, out var userId))
+					{
+						context.Fail("Invalid authentication session.");
+						return;
+					}
+
+					var validator = context.HttpContext.RequestServices.GetRequiredService<IAuthSessionValidator>();
+					if (!await validator.IsActiveAsync(sessionId, userId, context.HttpContext.RequestAborted))
+						context.Fail("Authentication session is no longer active.");
 				}
 			};
 		})
@@ -196,6 +229,8 @@ public static class ServiceConfiguration
 		services.AddPhilSysInfrastructure(configuration);
 		services.AddAIAgentInfrastructure(configuration);
 		services.AddATSInfrastructure(configuration);
+		services.AddEmploymentVerificationInfrastructure(configuration);
+		services.AddPlatformLoggingInfrastructure(configuration);
 		return services;
 	}
 	#endregion
@@ -209,7 +244,9 @@ public static class ServiceConfiguration
 			 _philsysAssembly,
 			 _ssoAssembly,
 			 _aiAgentAssembly,
-			 _atsAssembly
+			 _atsAssembly,
+			 _platformLoggingAssembly
+			 ,_employmentVerificationAssembly
 		 ]));
 
 
@@ -229,13 +266,15 @@ public static class ServiceConfiguration
 		services.AddSSOMediaTR(_ssoAssembly);
 		services.AddAIAgentMediaTR(_aiAgentAssembly);
 		services.AddATSMediaTR(_atsAssembly);
+		services.AddPlatformLoggingMediaTR(_platformLoggingAssembly);
+		services.AddEmploymentVerificationMediaTR(_employmentVerificationAssembly);
 		return services;
 	}
 
 	#endregion
 
 	#region Services Config
-	public static IServiceCollection AddModuleServices(this IServiceCollection services)
+	public static IServiceCollection AddModuleServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		// Add Services
 		services.AddAuthServices();
@@ -243,7 +282,10 @@ public static class ServiceConfiguration
 		services.AddPhilSysServices();
 		services.AddSSOServices();
 		services.AddAIAgentServices();
-		services.AddATSServices();
+			services.AddATSServices();
+			services.AddATSAssistantConfiguration(configuration);
+			services.AddEmploymentVerificationServices();
+		services.AddPlatformLoggingServices(configuration);
 		return services;
 	}
 	#endregion
@@ -266,9 +308,9 @@ public static class ServiceConfiguration
 		{
 			options.DefaultEntryOptions = new HybridCacheEntryOptions
 			{
-				Expiration = TimeSpan.FromMinutes(5),
-				LocalCacheExpiration = TimeSpan.FromMinutes(5),
-				//Flags = HybridCacheEntryFlags.DisableDistributedCache
+				Expiration = TimeSpan.FromMinutes(10),
+				LocalCacheExpiration = TimeSpan.FromMinutes(10),
+				Flags = HybridCacheEntryFlags.DisableDistributedCache
 			};
 		});
 

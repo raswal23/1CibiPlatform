@@ -1,4 +1,8 @@
+using System.Security.Claims;
+using ATS.Constants;
 using ATS.Data.Entities;
+using Auth.Constants;
+using BuildingBlocks.Pagination;
 using FluentAssertions;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
@@ -6,9 +10,11 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrationTest
 {
+	private readonly Guid _currentUserId = Guid.CreateVersion7();
 	public GetWithdrawnEmailInvitationRequestsIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
+		SetDefaultUserScope();
 	}
 
 	#region Positive Path
@@ -31,6 +37,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -49,6 +56,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -67,6 +75,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Pending Candidate Info"
 		};
 
@@ -105,7 +114,8 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 				RushNormal = "Normal",
 				EmailSentStatus = "Done",
 				ApplicationFormStatus = "Pending",
-				OrderStatus = "Application Withdrawn"
+				RequestorId = _currentUserId,
+			OrderStatus = "Application Withdrawn"
 			});
 		}
 
@@ -150,6 +160,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Pending Candidate Info"
 		};
 
@@ -185,6 +196,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -203,6 +215,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -238,6 +251,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -256,6 +270,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -290,6 +305,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
+			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -303,6 +319,95 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		result.Should().NotBeNull();
 		result!.Data.Should().BeEmpty();
         result.Count.Should().Be(0);
+	}
+
+	[Fact]
+	public async Task GetWithdrawnEmailInvitationRequests_ShouldEnforceRoleBasedScopes()
+	{
+		var userId = Guid.CreateVersion7();
+		var uploaderId = Guid.CreateVersion7();
+		var adminId = Guid.CreateVersion7();
+		var managerId = Guid.CreateVersion7();
+		var clientUserId = Guid.CreateVersion7();
+		var superAdminId = Guid.CreateVersion7();
+		var userRecord = CreateWithdrawn("User", 1, userId);
+		var uploaderRecord = CreateWithdrawn("Uploader", 2, uploaderId);
+		var adminRecord = CreateWithdrawn("Admin", 3, Guid.CreateVersion7());
+		var managerRecord = CreateWithdrawn("Manager", 4, Guid.CreateVersion7());
+		var clientRecord = CreateWithdrawn("Client", 6, clientUserId);
+		var unauthorizedRecord = CreateWithdrawn("Unauthorized", 5, Guid.CreateVersion7());
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(
+			userRecord, uploaderRecord, adminRecord, managerRecord, clientRecord, unauthorizedRecord);
+		await _dbContext.UserClientDetails.AddRangeAsync(
+			new UserClientDetails { UserId = adminId, ClientId = 3 },
+			new UserClientDetails { UserId = managerId, ClientId = 4 });
+		await _dbContext.SaveChangesAsync();
+		var request = new PaginationRequest(1, 20);
+
+		SetWithdrawnScope(userId, AtsRoleIds.User, clientId: 999);
+		var userResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+		SetWithdrawnScope(uploaderId, AtsRoleIds.Uploader, clientId: 999);
+		var uploaderResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+		SetWithdrawnScope(adminId, AtsRoleIds.Admin, clientId: 999);
+		var adminResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+		SetWithdrawnScope(managerId, AtsRoleIds.PlatformManager, clientId: 999);
+		var managerResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+		SetWithdrawnScope(clientUserId, roleId: 99, clientId: 6);
+		var clientResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+		SetWithdrawnScope(superAdminId, AtsRoleIds.User, null, isPlatformSuperAdmin: true);
+		var allResult = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(request, CancellationToken.None);
+
+		userResult.Data.Should().ContainSingle(item => item.EmailInvitationID == userRecord.EmailInvitationID);
+		uploaderResult.Data.Should().ContainSingle(item => item.EmailInvitationID == uploaderRecord.EmailInvitationID);
+		adminResult.Data.Should().ContainSingle(item => item.EmailInvitationID == adminRecord.EmailInvitationID);
+		managerResult.Data.Should().ContainSingle(item => item.EmailInvitationID == managerRecord.EmailInvitationID);
+		clientResult.Data.Should().ContainSingle(item => item.EmailInvitationID == clientRecord.EmailInvitationID);
+		allResult.Count.Should().Be(6);
+	}
+
+	private void SetDefaultUserScope()
+	{
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([
+			new Claim(ClaimTypes.NameIdentifier, _currentUserId.ToString()),
+			new Claim(AuthClaimTypes.AtsRoleId, AtsRoleIds.User.ToString())
+		], "TestAuth"));
+	}
+
+	private void SetWithdrawnScope(Guid userId, int roleId, int? clientId, bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString())
+		};
+		if (clientId.HasValue)
+			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
+		if (isPlatformSuperAdmin)
+			claims.Add(new Claim(AuthClaimTypes.PlatformRoleId, PlatformRoleIds.SuperAdmin.ToString()));
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+	}
+
+	private static EmailInvitationRequest CreateWithdrawn(string firstName, int clientId, Guid requestorId)
+	{
+		var id = Guid.CreateVersion7();
+		return new EmailInvitationRequest
+		{
+			EmailInvitationID = id,
+			FirstName = firstName,
+			LastName = "Withdrawn",
+			EmailAddress = $"{id:N}@example.com",
+			MobileNumber = "09171234567",
+			HashToken = $"hash-{id:N}",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			EmailSentStatus = "Done",
+			ApplicationFormStatus = "Withdrawn",
+			OrderStatus = "Application Withdrawn",
+			ClientId = clientId,
+			RequestorId = requestorId
+		};
 	}
 
 	#endregion

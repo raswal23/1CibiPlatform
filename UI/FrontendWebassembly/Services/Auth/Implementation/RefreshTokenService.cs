@@ -32,22 +32,17 @@ public class RefreshTokenService : IRefreshTokenService
 	}
 
 
-	public async Task<AuthResponseDTO> GetNewAccessAndRefreshToken(Guid userId)
+	public async Task<AuthResponseDTO> GetNewAccessAndRefreshToken()
 	{
-		_logger.LogDebug("Starting Getting New Token request for UserId: {UserId}...", userId);
+		_logger.LogDebug("Starting token refresh request...");
 
-		var payload = new
-		{
-			userId = userId,
-		};
-
-		var response = await _httpClient.PostAsJsonAsync("/token/web/getnewaccesstoken", payload);
+		var response = await _httpClient.PostAsync("/token/web/getnewaccesstoken", null);
 
 		_logger.LogDebug("Received response: {Status} {Reason}", (int)response.StatusCode, response.ReasonPhrase);
 
 		if (!response.IsSuccessStatusCode)
 		{
-			_logger.LogWarning("Getting new token failed for UserId {UserId}. Reading error content...", userId);
+			_logger.LogWarning("Getting new token failed. Reading error content...");
 
 			var errorContent = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
 
@@ -55,7 +50,7 @@ public class RefreshTokenService : IRefreshTokenService
 			return new AuthResponseDTO(Guid.Empty, string.Empty, errorContent.Detail, "Error");
 		}
 
-		_logger.LogInformation("Getting new token successful for UserId {UserId}. Reading success content...", userId);
+		_logger.LogInformation("Getting new token successful. Reading success content...");
 
 		var successContent = await response.Content.ReadFromJsonAsync<CredResponseDTO>();
 
@@ -63,7 +58,7 @@ public class RefreshTokenService : IRefreshTokenService
 		await this.SetLocalstorage(successContent!);
 
 
-		return new AuthResponseDTO(successContent!.UserId, successContent.AccessToken, string.Empty, string.Empty);
+		return new AuthResponseDTO(successContent!.UserId, string.Empty, string.Empty, string.Empty);
 	}
 
 	protected virtual async Task SetLocalstorage(CredResponseDTO credResponseDTO)
@@ -80,24 +75,7 @@ public class RefreshTokenService : IRefreshTokenService
 	{
 		_logger.LogDebug("Starting logout request...");
 
-		var userId = await _localStorageService.GetItemAsync<Guid>(_userIdKey);
-
-		if (userId == Guid.Empty)
-		{
-			_logger.LogWarning("UserId not found in local storage. Cannot proceed with logout.");
-			return false;
-		}
-
-		var payload = new
-		{
-			logoutDTO = new
-			{
-				UserId = userId,
-				RevokeReason = "User Logged out"
-			}
-		};
-
-		var response = await _httpClient.PostAsJsonAsync("/auth/logout", payload);
+		var response = await _httpClient.PostAsync("/auth/logout", null);
 
 		if (!response.IsSuccessStatusCode)
 		{

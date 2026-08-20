@@ -7,7 +7,8 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IConfiguration _configuration;
 	private readonly IObjectStorageService _objectStorageService;
-    private readonly IFilePdfService _filePdfService;
+	private readonly IFilePdfService _filePdfService;
+	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 	private string resumeFileKey = "";
@@ -26,12 +27,13 @@ public class ApplicationFormService : IApplicationFormService
 	private string signatureKey = "";
 	private string consentFormKey = "";
 
-	public ApplicationFormService(ILogger<ApplicationFormService> logger, 
+	public ApplicationFormService(ILogger<ApplicationFormService> logger,
 					  IATSRepository atsRepository,
 					  IUnitOfWork unitOfWork,
 					  IConfiguration configuration,
-                      IObjectStorageService objectStorageService,
-					  IFilePdfService filePdfService)
+					  IObjectStorageService objectStorageService,
+					  IFilePdfService filePdfService,
+					  IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -39,6 +41,7 @@ public class ApplicationFormService : IApplicationFormService
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
 		_filePdfService = filePdfService;
+		_orderHistoryService = orderHistoryService;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
@@ -84,6 +87,12 @@ public class ApplicationFormService : IApplicationFormService
 
 			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
 
+			await _orderHistoryService.RecordAsync(
+				personalDetails.EmailInvitationID,
+				OrderHistoryEventType.ApplicationFormSubmitted,
+				OrderStatus.PendingCandidateInfo,
+				OrderStatus.InProgress, ct);
+
 			return true;
 		}
 		catch (Exception ex)
@@ -103,7 +112,7 @@ public class ApplicationFormService : IApplicationFormService
 				emp2COEKey,
 				emp3COEKey,
 				licenseKey,
-                signatureKey,
+				signatureKey,
 				consentFormKey
 			};
 
@@ -126,7 +135,7 @@ public class ApplicationFormService : IApplicationFormService
 
 	}
 
-	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken) 
+	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken)
 	{
 		if (personalDetailsDTO.ResumeFile != null)
 		{
@@ -331,7 +340,7 @@ public class ApplicationFormService : IApplicationFormService
 		SignatureDetailsDTO signatureDetailsDTO,
 		CancellationToken cancellationToken)
 	{
-       if (signatureDetailsDTO.Signature == null)
+		if (signatureDetailsDTO.Signature == null)
 			throw new BadRequestException("Signature is required.");
 
 		await using var stream = signatureDetailsDTO.Signature.OpenReadStream();
@@ -341,7 +350,7 @@ public class ApplicationFormService : IApplicationFormService
 
 		var signatureBytes = memory.ToArray();
 
-		var test = 
+		var test =
 	BitConverter.ToString(signatureBytes.Take(16).ToArray());
 
 		var consentFormFileName = $"{signatureDetailsDTO.SignerName}_ConsentForm.pdf";
@@ -391,12 +400,17 @@ public class ApplicationFormService : IApplicationFormService
 
 	public async Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default)
 	{
+		var invitationInfo = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
+		var invitation = invitationInfo.EmailId == Guid.Empty
+			? new EmailInvitationRequest()
+			: await _atsRepository.GetEmailInvitationRequestByIdAsync(invitationInfo.EmailId, ct);
 		var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
 
 		if (isUpdated == 0)
 		{
 			throw new NotFoundException("No record found for the provided hash token.");
 		}
+		await _orderHistoryService.RecordAsync(invitation.EmailInvitationID, OrderHistoryEventType.ApplicationFormWithdrawn, invitation.OrderStatus, OrderStatus.ApplicationWithdrawn, ct);
 		return true;
 	}
 }

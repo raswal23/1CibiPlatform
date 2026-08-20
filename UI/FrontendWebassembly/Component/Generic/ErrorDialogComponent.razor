@@ -1,27 +1,23 @@
-﻿@inject NavigationManager Navigation
+@inject NavigationManager Navigation
 
-<MudContainer Class="d-flex flex-column justify-center align-center transparent-paper" Style="height: 100vh; gap: 20px; border-radius: 12px;">
-    <MudPaper Class="pa-8" Elevation="3" Style="max-width: 600px; text-align: center; border-radius: 12px;">
-        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Large" Class="mb-4" />
-        <MudText Typo="Typo.h4" Color="Color.Error" Class="mb-2">
-            Oops! Something went wrong
-        </MudText>
-        <MudText Typo="Typo.body1" Class="mb-4">
-            We encountered an unexpected error. Please try refreshing the page.
-        </MudText>
-        <MudExpansionPanels>
-            <MudExpansionPanel Text="Error Details">
-                <MudText Typo="Typo.body2" Style="font-family: monospace; white-space: pre-wrap; word-break: break-word;  text-align: center; font-weight: 950;">
-                    @Message
-                </MudText>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
-        <ButtonComponent OnClick="@(() => Navigation.NavigateTo(Navigation.Uri, true))"
-                            StartIcon="@Icons.Material.Filled.Refresh"
-                            Class="theme-button theme-button-active mt-4"
-                            Style="width: 200px; border-radius: 4px;">
-            Reload Page
-        </ButtonComponent>
-    </MudPaper>
-</MudContainer>
-
+<div class="philsys-error-shell">
+    <section class="philsys-error-card" aria-labelledby="philsys-error-title">
+        <div class="philsys-error-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5M12 16.5h.01"/></svg></div>
+        <h1 id="philsys-error-title" class="philsys-error-title">Oops! Something went wrong</h1>
+        <p class="philsys-error-subtitle">We encountered an unexpected error. Please try refreshing the page.</p>
+        @if (!string.IsNullOrWhiteSpace(Message))
+        {
+            <details class="philsys-error-details">
+                <summary>
+                    <span>Error Details</span>
+                    <svg class="philsys-error-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                </summary>
+                <pre class="philsys-error-message">@Message</pre>
+            </details>
+        }
+        <button type="button" class="philsys-error-button" @onclick="@(() => Navigation.NavigateTo(Navigation.Uri, true))">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 0-2.6 5.9M20 8v4h-4"/></svg>
+            Reload page
+        </button>
+    </section>
+</div>

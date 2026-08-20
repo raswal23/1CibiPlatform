@@ -1,0 +1,492 @@
+.search-report-warning,
+.search-report-legend,
+::deep .search-report-results {
+    --navy-900: #0b1b3d;
+    --blue-600: #1d5fd1;
+    --blue-500: #2e7ce0;
+    --blue-tint: #edf3fc;
+    --blue-tint-2: #e3ecfb;
+    --border: #e4eaf6;
+    --border-strong: #c2d2f0;
+    --text-1: #16233f;
+    --text-2: #5b6b8c;
+    --text-3: #8a97b5;
+}
+
+.search-report-warning {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid #f0dca8;
+    border-left: 4px solid #b5790f;
+    border-radius: 12px;
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+.search-report-warning-title { margin: 0; color: #7a5209; font-size: 13.5px; font-weight: 700; }
+.search-report-warning-text { margin: 4px 0 0; color: #8a6212; font-size: 12.5px; line-height: 1.5; }
+/* Compact horizontal workflow legend between the warning and the results card. */
+.search-report-legend {
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fcfdff;
+    font-family: Inter, sans-serif;
+}
+
+/* The whole header row toggles the legend; it stays visually identical to the old title line. */
+.search-report-legend-header {
+    display: flex;
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Collapsed: nothing below the header, so drop the spacing it reserved. */
+.search-report-legend.is-collapsed .search-report-legend-header { margin: 0; }
+
+.search-report-legend-title {
+    margin: 0;
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.search-report-legend-chevron {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    color: var(--text-3);
+}
+
+.search-report-legend-chevron ::deep .mud-icon-root {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+.search-report-legend-track {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px 14px;
+    max-height: 500px;
+    opacity: 1;
+    overflow: hidden;
+    transform: translateY(0);
+    transition: max-height .7s ease, opacity .45s ease, transform .7s ease;
+}
+
+    .search-report-legend-track.is-collapsed {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-12px);
+        pointer-events: none;
+    }
+
+    .search-report-legend-track.is-expanded {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+.search-report-legend-item {
+    display: flex;
+    flex: 1 1 220px;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.search-report-legend-icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+}
+
+.search-report-legend-icon ::deep .mud-icon-root {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+}
+
+.search-report-legend-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.search-report-legend-label {
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.search-report-legend-text {
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.search-report-legend-loop {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 3px 8px 3px 6px;
+    align-items: center;
+    gap: 4px;
+    border: 1px dashed #e6d3a8;
+    border-radius: 20px;
+    background: #fdf7ec;
+    color: #8a6212;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.search-report-legend-loop ::deep .mud-icon-root {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 12px;
+    font-size: 12px;
+    transform: scaleX(-1);
+}
+
+/* Match the table's existing status colours so the legend reads as the same system. */
+.search-report-legend-item.is-pending .search-report-legend-icon { background: #f8f9fc; color: var(--text-3); }
+.search-report-legend-item.is-progress .search-report-legend-icon { background: #fcf1dd; color: #b5790f; }
+.search-report-legend-item.is-completed .search-report-legend-icon { background: #e4f7ed; color: #1e9e64; }
+
+/* Anchor the connectors to the icon row so they stay level regardless of item height. */
+.search-report-legend-arrow {
+    display: inline-flex;
+    margin-top: 6px;
+    flex: 0 0 auto;
+    align-items: center;
+    align-self: flex-start;
+    color: var(--border-strong);
+}
+
+.search-report-legend-arrow ::deep .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.search-report-results-scope { width: 100%; }
+::deep .search-report-results { width: 100%; max-width: none; margin: 0; }
+
+::deep .search-report-download-button {
+    min-height: 46px;
+    padding: 0 26px;
+    border: 0 !important;
+    border-radius: 11px !important;
+    background: linear-gradient(120deg, #132a54, #2e7ce0) !important;
+    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, .5) !important;
+    color: #fff !important;
+    font-family: Inter, sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: box-shadow .15s ease, transform .1s ease;
+}
+
+::deep .search-report-download-button:hover {
+    box-shadow: 0 12px 26px -6px rgba(29, 95, 209, .65) !important;
+}
+
+::deep .search-report-download-button:active {
+    transform: scale(.97);
+}
+
+::deep .search-report-results .mud-table {
+    padding: 26px 28px 8px !important;
+    border: 1px solid var(--border);
+    border-radius: 16px !important;
+    background: #fff;
+    box-shadow: 0 12px 32px -12px rgba(11, 27, 61, .12);
+    overflow: hidden;
+}
+
+::deep .search-report-results .mud-table-root { min-width: 1100px; }
+
+/* Let the shared Package Management card own the outer padding and chrome. */
+::deep .ats-management-card.search-report-results .mud-table {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+::deep .search-report-results .mud-input-control { margin: 0; }
+::deep .search-report-results .mud-input-label { color: var(--text-2); font-size: 11.5px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+::deep .search-report-results .mud-input-outlined-border { border-width: 1.5px; border-color: var(--border-strong); border-radius: 10px; }
+::deep .search-report-results .mud-input-slot { color: var(--text-1); font-size: 13.5px; }
+::deep .search-report-results .mud-input-adornment { color: var(--blue-600); }
+::deep .search-report-results input::placeholder { color: var(--text-3); opacity: 1; }
+
+/* Keep the date filter anchored to the left, independently of the shared table toolbar. */
+::deep .search-report-results .mud-table-toolbar {
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+::deep .search-report-results .table-component-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr) 2.375rem minmax(0, 400px) !important;
+    align-items: end;
+    gap: 16px 12px;
+}
+
+::deep .search-report-results .table-component-toolbar > .mud-typography {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+
+::deep .search-report-results .table-component-toolbar-row {
+    display: contents !important;
+}
+
+::deep .search-report-results .table-component-toolbar-left {
+    grid-column: 1;
+    grid-row: 2;
+    width: 400px !important;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0 !important;
+    justify-self: start;
+}
+
+::deep .search-report-results .table-component-search {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    grid-column: 4;
+    grid-row: 2;
+    width: 400px !important;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0 !important;
+    justify-self: end;
+    align-self: end;
+}
+
+::deep .search-report-results .table-component-reload-button {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: end;
+    margin-bottom: 9px;
+}
+
+::deep .search-report-results .table-component-search .mud-input-control,
+::deep .search-report-results .table-component-search .table-component-search-input {
+    width: 100%;
+    height: 56px !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+}
+
+::deep .search-report-results .table-component-search .mud-input-control-input-container {
+    height: 56px !important;
+    min-height: 56px !important;
+}
+
+::deep .search-report-results .table-component-search .mud-input {
+    box-sizing: border-box;
+    height: 56px !important;
+    min-height: 56px !important;
+}
+
+::deep .search-report-results .table-component-search .mud-input-slot,
+::deep .search-report-results .table-component-search input.mud-input-root {
+    height: 56px !important;
+    min-height: 56px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Keep the supplied date-range treatment local to the Search Report picker. */
+.search-report-date-field {
+    width: 400px;
+    max-width: 100%;
+    font-family: Inter, sans-serif;
+}
+
+.search-report-date-field > label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.search-report-date-field ::deep .mud-input-control {
+    width: 100%;
+    margin: 0;
+}
+
+
+
+::deep .search-report-results .mud-table-head .mud-table-cell {
+    padding: 10px 14px 12px;
+    border-bottom: 1.5px solid var(--border-strong);
+    color: var(--text-1);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+::deep .search-report-results .mud-table-sort-label { color: inherit; font-size: inherit; font-weight: inherit; }
+::deep .search-report-results .mud-table-body .mud-table-cell {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-1);
+    font-size: 13.5px;
+    vertical-align: middle;
+    background-color: transparent;
+    transition: background-color .32s ease;
+}
+
+::deep .search-report-results .mud-table-row:hover .mud-table-cell { background: #fafbff; }
+::deep .search-report-results .ats-selected-row .mud-table-cell { background: var(--blue-tint) !important; }
+::deep .search-report-results .ats-selected-row .mud-table-cell:first-child { box-shadow: inset 3px 0 0 var(--blue-500); }
+
+.report-checkbox {
+    display: flex;
+    width: 19px;
+    height: 19px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 5px;
+    background: #fff;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease;
+}
+
+.report-checkbox:hover { border-color: var(--blue-500); }
+.report-checkbox.checked { border-color: var(--blue-600); background: var(--blue-600); }
+.report-checkbox svg { width: 12px; height: 12px; opacity: 0; transform: scale(.5); transition: opacity .15s ease, transform .15s ease; }
+.report-checkbox.checked svg { opacity: 1; transform: scale(1); }
+.report-subject { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.report-avatar {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-500), #132a54);
+    color: #fff;
+    font-family: Poppins, Inter, sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.report-name { color: var(--text-1); font-weight: 600; }
+.report-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.report-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.report-status-button{padding:0;border:0;background:none;cursor:pointer}.report-status-button:hover .report-status{box-shadow:0 0 0 3px var(--blue-tint-2)}
+.report-status.completed { background: #e4f7ed; color: #1e9e64; }
+.report-status.progress { background: #fcf1dd; color: #b5790f; }
+.report-status.pending { background: #f8f9fc; color: #7d8aa8; border: 1px dashed var(--border-strong); }
+.report-status.withdrawn { background: #fdecec; color: #c0453e; }
+.report-status.withdrawn2 { display: flex; width: fit-content; margin-top: 4px; background: #fdecec; color: #c0453e; white-space: normal; overflow-wrap: break-word}
+.report-status.withdrawn2::before{ display: none; }
+.report-status.unknown { background: #eef0f5; color: #6b7690; }
+::deep .report-date { color: var(--text-2) !important; white-space: nowrap; }
+.report-package { display: inline-flex; padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--blue-tint-2); color: var(--blue-600); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.report-hit { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.report-hit.clear { background: #e4f7ed; color: #1e9e64; }
+.report-hit.not-clear { background: #eef0f5; color: #6b7690; }
+.report-hit.pending { border: 1px dashed var(--border-strong); background: #f8f9fc; color: var(--text-3); font-style: italic; }
+.report-hit.unknown { background: #eef0f5; color: #6b7690; }
+.report-icon-action {
+    display: flex;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--blue-tint);
+    color: var(--blue-600);
+    cursor: pointer;
+}
+.report-status.withdrawn span {
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+
+.report-icon-action:hover { background: var(--blue-tint-2); }
+.report-icon-action svg { width: 14px; height: 14px; }
+
+/* Once the three items can no longer share a row, drop the connectors instead of leaving them orphaned. */
+@media (max-width: 860px) {
+    .search-report-legend-arrow { display: none; }
+    .search-report-legend-item { flex: 1 1 100%; }
+}
+
+@media (max-width: 900px) {
+    ::deep .search-report-results .table-component-toolbar {
+        grid-template-columns: 2.375rem minmax(0, 1fr) !important;
+        align-items: stretch;
+    }
+
+    ::deep .search-report-results .table-component-toolbar > .mud-typography,
+    ::deep .search-report-results .table-component-toolbar-left {
+        grid-column: 1 / -1;
+    }
+
+    ::deep .search-report-results .table-component-toolbar > .mud-typography { grid-row: 1; }
+    ::deep .search-report-results .table-component-toolbar-left { grid-row: 2; }
+    ::deep .search-report-results .table-component-reload-button {
+        grid-column: 1;
+        grid-row: 3;
+        align-self: center;
+        margin-bottom: 0;
+    }
+    ::deep .search-report-results .table-component-search {
+        grid-row: 3;
+        grid-column: 2;
+        width: 100% !important;
+        justify-self: stretch;
+    }
+}
