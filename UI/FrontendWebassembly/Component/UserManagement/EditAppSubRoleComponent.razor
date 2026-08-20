@@ -1,118 +1,137 @@
-@inject LocalStorageService LocalStorageService
-@inject IUserManagementService UserManagementService
-@inject ISnackbar Snackbar
-
-<UserManagementDialogShell Title="Edit application role"
-                           Subtitle="Update linked user, application, submenu, and role"
-                           SectionTitle="Assignment details"
-                           SectionHelper="Review all access mappings"
-                           Icon="@Icons.Material.Outlined.ManageAccounts"
-                           OnClose="Cancel">
+<AppSubRoleDialogShell Title="Edit application role"
+                       Subtitle="Update this user's application and submenu access"
+                       OnClose="Cancel">
     <ChildContent>
         <MudForm @ref="EditAppSubRoleForm">
-                <div class="um-field">
-                    <label for="um-edit-appsubrole-user">User <span class="um-required">*</span></label>
-                    <div class="um-input-wrap um-single-line-wrap">
-                        <MudAutocomplete T="UsersDTO"
-                                         @bind-Value="selectedUser"
-                                         InputId="um-edit-appsubrole-user"
-                                         Placeholder="Search by email address"
-                                         SearchFunc="@SearchUsers"
-                                         ToStringFunc="u => u?.email"
-                                         Required="true"
-                                         RequiredError="User is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxItems="50"
-                                         Dense="true"
-                                         OpenOnFocus="true"
-                                         Clearable="true"
-                                         ResetValueOnEmptyText="false"
-                                         Adornment="Adornment.Start"
-                                         AdornmentIcon="@Icons.Material.Outlined.Person"
-                                         OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                         CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
-                    </div>
+            <section class="asr-section" aria-labelledby="asr-edit-user-heading">
+                <div class="asr-section-head">
+                    <span class="asr-section-number">1</span>
+                    <h2 id="asr-edit-user-heading">User identity</h2>
+                    <span class="asr-section-helper">This assignment remains with the selected user</span>
                 </div>
+                <div class="asr-section-body">
+                    <div class="asr-avatar-row">
+                        <div class="asr-avatar" aria-label="Selected user initials">@UserInitials</div>
+                        <div class="asr-avatar-copy">
+                            <strong>@DisplayUserName</strong>
+                            <span>@DisplayUserEmail</span>
+                        </div>
+                    </div>
 
-                <div class="um-field">
-                    <label for="um-edit-appsubrole-application">Application <span class="um-required">*</span></label>
-                    <div class="um-input-wrap um-single-line-wrap">
-                        <MudAutocomplete T="ApplicationsDTO"
-                                         @bind-Value="selectedApp"
-                                         InputId="um-edit-appsubrole-application"
-                                         Placeholder="Select an application"
-                                         SearchFunc="@SearchApplications"
-                                         ToStringFunc="a => a?.applicationName"
-                                         Required="true"
-                                         RequiredError="Application is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxItems="50"
-                                         Dense="true"
-                                         OpenOnFocus="true"
-                                         Clearable="true"
-                                         ResetValueOnEmptyText="false"
-                                         Adornment="Adornment.Start"
-                                         AdornmentIcon="@Icons.Material.Outlined.Apps"
-                                         OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                         CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                    <div class="asr-field">
+                        <label for="asr-edit-user">User</label>
+                        <div class="asr-input-wrap">
+                            <MudAutocomplete T="UsersDTO"
+                                             Value="selectedUser"
+                                             InputId="asr-edit-user"
+                                             Placeholder="Selected user"
+                                             SearchFunc="SearchUsers"
+                                             ToStringFunc="GetUserText"
+                                             Disabled="true"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Dense="true"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="um-field">
-                    <label for="um-edit-appsubrole-submenu">Submenu <span class="um-required">*</span></label>
-                    <div class="um-input-wrap um-single-line-wrap">
-                        <MudAutocomplete T="SubMenusDTO"
-                                         @bind-Value="selectedMenu"
-                                         InputId="um-edit-appsubrole-submenu"
-                                         Placeholder="Select a submenu"
-                                         SearchFunc="@SearchSubMenus"
-                                         ToStringFunc="s => s?.subMenuName"
-                                         Required="true"
-                                         RequiredError="SubMenu is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxItems="50"
-                                         Dense="true"
-                                         OpenOnFocus="true"
-                                         Clearable="true"
-                                         ResetValueOnEmptyText="false"
-                                         Adornment="Adornment.Start"
-                                         AdornmentIcon="@Icons.Material.Outlined.Menu"
-                                         OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                         CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
-                    </div>
+            <section class="asr-section" aria-labelledby="asr-edit-access-heading">
+                <div class="asr-section-head">
+                    <span class="asr-section-number">2</span>
+                    <h2 id="asr-edit-access-heading">Access assignment</h2>
+                    <span class="asr-section-helper">One application and submenu per record</span>
                 </div>
+                <div class="asr-section-body">
+                    <div class="asr-grid-two">
+                        <div class="asr-field">
+                            <label for="asr-edit-application">Application <span class="asr-required">*</span></label>
+                            <div class="asr-input-wrap">
+                                <MudAutocomplete T="ApplicationsDTO"
+                                                 @bind-Value="selectedApp"
+                                                 InputId="asr-edit-application"
+                                                 Placeholder="Select an application"
+                                                 SearchFunc="SearchApplications"
+                                                 ToStringFunc="a => a?.applicationName"
+                                                 Required="true"
+                                                 RequiredError="Application is required"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 MaxItems="50"
+                                                 Dense="true"
+                                                 OpenOnFocus="true"
+                                                 Clearable="true"
+                                                 ResetValueOnEmptyText="false"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentIcon="@Icons.Material.Outlined.Apps"
+                                                 OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                 CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                            </div>
+                        </div>
 
-                <div class="um-field">
-                    <label for="um-edit-appsubrole-role">Role <span class="um-required">*</span></label>
-                    <div class="um-input-wrap um-single-line-wrap">
-                        <MudAutocomplete T="RolesDTO"
-                                         @bind-Value="selectedRole"
-                                         InputId="um-edit-appsubrole-role"
-                                         Placeholder="Select a role"
-                                         SearchFunc="@SearchRoles"
-                                         ToStringFunc="r => r?.roleName"
-                                         Required="true"
-                                         RequiredError="Role is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxItems="50"
-                                         Dense="true"
-                                         OpenOnFocus="true"
-                                         Clearable="true"
-                                         ResetValueOnEmptyText="false"
-                                         Adornment="Adornment.Start"
-                                         AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings"
-                                         OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                         CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                        <div class="asr-field">
+                            <label for="asr-edit-submenu">Submenu <span class="asr-required">*</span></label>
+                            <div class="asr-input-wrap">
+                                <MudAutocomplete T="SubMenusDTO"
+                                                 @bind-Value="selectedMenu"
+                                                 InputId="asr-edit-submenu"
+                                                 Placeholder="Select a submenu"
+                                                 SearchFunc="SearchSubMenus"
+                                                 ToStringFunc="s => s?.subMenuName"
+                                                 Required="true"
+                                                 RequiredError="Submenu is required"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 MaxItems="50"
+                                                 Dense="true"
+                                                 OpenOnFocus="true"
+                                                 Clearable="true"
+                                                 ResetValueOnEmptyText="false"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentIcon="@Icons.Material.Outlined.Menu"
+                                                 OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                 CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="asr-field">
+                        <label for="asr-edit-role">Role <span class="asr-required">*</span></label>
+                        <div class="asr-input-wrap">
+                            <MudAutocomplete T="RolesDTO"
+                                             @bind-Value="selectedRole"
+                                             InputId="asr-edit-role"
+                                             Placeholder="Select a role"
+                                             SearchFunc="SearchRoles"
+                                             ToStringFunc="r => r?.roleName"
+                                             Required="true"
+                                             RequiredError="Role is required"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             MaxItems="50"
+                                             Dense="true"
+                                             OpenOnFocus="true"
+                                             Clearable="true"
+                                             ResetValueOnEmptyText="false"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings"
+                                             OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                             CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                        </div>
                     </div>
                 </div>
+            </section>
         </MudForm>
     </ChildContent>
     <FooterContent>
-        <button type="button" class="um-button um-button-cancel" @onclick="Cancel">Cancel</button>
-        <button type="button" class="um-button um-button-save" disabled="@(!IsLoaded)" @onclick="Submit">Save changes</button>
+        <button type="button" class="asr-button asr-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button" class="asr-button asr-button-save" disabled="@(!IsLoaded)" @onclick="Submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+            </svg>
+            Save changes
+        </button>
     </FooterContent>
-</UserManagementDialogShell>
+</AppSubRoleDialogShell>

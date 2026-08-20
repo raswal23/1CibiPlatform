@@ -24,10 +24,24 @@ public partial class UserAppRoles
 	private readonly CursorTableLoader<SubMenusDTO> _subMenusLoader = new();
 	private readonly CursorTableLoader<RolesDTO> _rolesLoader = new();
 	private readonly CursorTableLoader<AppSubRolesDTO> _appSubRolesLoader = new();
+	private IReadOnlyList<UsersDTO> _appSubRoleUsers = Array.Empty<UsersDTO>();
+	private IReadOnlyList<ApplicationsDTO> _appSubRoleApplications = Array.Empty<ApplicationsDTO>();
+	private IReadOnlyList<SubMenusDTO> _appSubRoleSubMenus = Array.Empty<SubMenusDTO>();
+	private IReadOnlyList<RolesDTO> _appSubRoleRoles = Array.Empty<RolesDTO>();
+	private Task<bool>? _appSubRoleReferenceDataLoadTask;
+	private bool _appSubRoleReferenceDataLoaded;
+	private string? _appSubRoleReferenceDataError;
 	private static DialogOptions UserManagementDialogOptions => new()
 	{
 		NoHeader = true,
 		MaxWidth = MaxWidth.Small,
+		FullWidth = true,
+		BackdropClick = false
+	};
+	private static DialogOptions AppSubRoleDialogOptions => new()
+	{
+		NoHeader = true,
+		MaxWidth = MaxWidth.Medium,
 		FullWidth = true,
 		BackdropClick = false
 	};
@@ -131,9 +145,23 @@ public partial class UserAppRoles
 
 	private async Task OpenAddAppSubRoleDialog()
 	{
+		if (!await EnsureAppSubRoleReferenceDataAsync())
+		{
+			Snackbar.Add(_appSubRoleReferenceDataError ?? "Failed to load application role reference data.", Severity.Error);
+			return;
+		}
+
+		var parameters = new DialogParameters<AddAppSubRoleComponent>
+		{
+			{ component => component.Users, _appSubRoleUsers },
+			{ component => component.Apps, _appSubRoleApplications },
+			{ component => component.SubMenus, _appSubRoleSubMenus },
+			{ component => component.Roles, _appSubRoleRoles }
+		};
 		var dialog = await DialogService.ShowAsync<AddAppSubRoleComponent>(
 			"Add User's AppSubRole",
-			UserManagementDialogOptions);
+			parameters,
+			AppSubRoleDialogOptions);
 		var result = await dialog.Result;
 
 		if (result is null || result.Canceled || result.Data is not AddAppSubRoleResult addResult)
@@ -181,14 +209,24 @@ public partial class UserAppRoles
 
 	private async Task OpenEditAppSubRoleDialog(AppSubRolesDTO appSubRole)
 	{
+		if (!await EnsureAppSubRoleReferenceDataAsync())
+		{
+			Snackbar.Add(_appSubRoleReferenceDataError ?? "Failed to load application role reference data.", Severity.Error);
+			return;
+		}
+
 		var parameters = new DialogParameters<EditAppSubRoleComponent>
 		{
-			{ component => component.AppSubRole, appSubRole }
+			{ component => component.AppSubRole, appSubRole },
+			{ component => component.Users, _appSubRoleUsers },
+			{ component => component.Apps, _appSubRoleApplications },
+			{ component => component.SubMenus, _appSubRoleSubMenus },
+			{ component => component.Roles, _appSubRoleRoles }
 		};
 		var dialog = await DialogService.ShowAsync<EditAppSubRoleComponent>(
 			"Edit User's AppSubRole",
 			parameters,
-			UserManagementDialogOptions);
+			AppSubRoleDialogOptions);
 		var result = await dialog.Result;
 
 		if (result is null || result.Canceled || result.Data is not EditAppSubRoleDTO editAppSubRole)
@@ -269,18 +307,21 @@ public partial class UserAppRoles
 	private async Task DeleteApplication(int AppId)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.DeleteApplicationAsync(AppId), applicationsTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
 	private async Task DeleteSubMenu(int SubMenuId)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.DeleteSubMenuAsync(SubMenuId), subMenusTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
 	private async Task DeleteRole(int RoleId)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.DeleteRoleAsync(RoleId), rolesTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
@@ -299,18 +340,21 @@ public partial class UserAppRoles
 	private async Task AddApplication(AddApplicationDTO addApplicationDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.AddApplicationAsync(addApplicationDTO), applicationsTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
 	private async Task AddSubMenu(AddSubMenuDTO addSubMenuDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.AddSubMenuAsync(addSubMenuDTO), subMenusTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
 	private async Task AddRole(AddRoleDTO addRoleDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.AddRoleAsync(addRoleDTO), rolesTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
@@ -324,6 +368,7 @@ public partial class UserAppRoles
 	private async Task EditApplication(ApplicationsDTO editApplicationDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.EditApplicationAsync(editApplicationDTO), applicationsTable);
+		InvalidateAppSubRoleReferenceData();
 		StateHasChanged();
 		return;
 	}
@@ -331,13 +376,81 @@ public partial class UserAppRoles
 	private async Task EditSubMenu(SubMenusDTO editSubMenuDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.EditSubMenuAsync(editSubMenuDTO), subMenusTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
 	}
 
 	private async Task EditRole(RolesDTO editRoleDTO)
 	{
 		await ExecuteAndReloadAsync(() => UserManagementService.EditRoleAsync(editRoleDTO), rolesTable);
+		InvalidateAppSubRoleReferenceData();
 		return;
+	}
+
+	private void InvalidateAppSubRoleReferenceData()
+	{
+		_appSubRoleReferenceDataLoaded = false;
+		_appSubRoleReferenceDataLoadTask = null;
+		_appSubRoleReferenceDataError = null;
+	}
+
+	private async Task<bool> EnsureAppSubRoleReferenceDataAsync()
+	{
+		if (_appSubRoleReferenceDataLoaded)
+			return true;
+
+		_appSubRoleReferenceDataLoadTask ??= LoadAppSubRoleReferenceDataAsync();
+		var loaded = await _appSubRoleReferenceDataLoadTask;
+
+		if (loaded)
+		{
+			_appSubRoleReferenceDataLoaded = true;
+			return true;
+		}
+
+		_appSubRoleReferenceDataLoadTask = null;
+		return false;
+	}
+
+	private async Task<bool> LoadAppSubRoleReferenceDataAsync()
+	{
+		var usersTask = KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) =>
+			UserManagementService.GetUsersAsync(cursor, pageSize));
+		var applicationsTask = KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) =>
+			UserManagementService.GetApplicationsAsync(cursor, pageSize));
+		var subMenusTask = KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) =>
+			UserManagementService.GetSubMenusAsync(cursor, pageSize));
+		var rolesTask = KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) =>
+			UserManagementService.GetRolesAsync(cursor, pageSize));
+
+		await Task.WhenAll(usersTask, applicationsTask, subMenusTask, rolesTask);
+
+		var users = await usersTask;
+		var applications = await applicationsTask;
+		var subMenus = await subMenusTask;
+		var roles = await rolesTask;
+		_appSubRoleReferenceDataError = new[] { users.Error, applications.Error, subMenus.Error, roles.Error }
+			.FirstOrDefault(error => !string.IsNullOrWhiteSpace(error));
+
+		if (_appSubRoleReferenceDataError is not null)
+			return false;
+
+		_appSubRoleUsers = users.Items
+			.OrderBy(user => user.firstName)
+			.ThenBy(user => user.lastName)
+			.ThenBy(user => user.email)
+			.ToArray();
+		_appSubRoleApplications = applications.Items
+			.OrderBy(application => application.applicationName)
+			.ToArray();
+		_appSubRoleSubMenus = subMenus.Items
+			.OrderBy(subMenu => subMenu.subMenuName)
+			.ToArray();
+		_appSubRoleRoles = roles.Items
+			.OrderBy(role => role.roleName)
+			.ToArray();
+
+		return true;
 	}
 
 }

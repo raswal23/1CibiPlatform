@@ -27,6 +27,30 @@
     font-family: "Inter", sans-serif;
 }
 
+/* Match the ATS Package Management Add button: hover strengthens the shadow
+   without scaling the button. */
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button {
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(120deg, #132a54, #1d5fd1);
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, .5) !important;
+    font-size: 13px !important;
+    font-weight: 700;
+    letter-spacing: .3px;
+    transition: transform .1s ease, box-shadow .15s ease;
+}
+
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button:hover {
+    transform: none !important;
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, .65) !important;
+}
+
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button:active {
+    transform: scale(.97) !important;
+}
+
 .user-management-tab-shell {
     position: relative;
     overflow: hidden;
