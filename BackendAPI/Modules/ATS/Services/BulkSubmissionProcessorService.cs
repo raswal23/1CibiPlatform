@@ -123,6 +123,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					subjects.Add(new EmailInvitationRequest
 					{
 						EmailInvitationID = Guid.CreateVersion7(),
+						BulkFileID = file.FileID,
 						HashToken = HashToken,
 						HashTokenCreatedAt = DateTime.UtcNow,
 						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
@@ -150,7 +151,16 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						.Group(file.UploadedByUserId.ToString()!)
 						.ReceiveATSResponse($"Your bulk upload \"{file.FileName}\" has been received and is now being processed.");
 
-				return subjects;
+				return (file, succeeded: true);
+			}
+			catch (Exception ex)
+			{
+				// Leave the file Pending so the next tick retries it. The catch is here
+				// so one failing file does not stop its siblings from being marked Done,
+				// which would otherwise re-insert their candidates on the next tick.
+				_logger.LogError(ex, "Failed Transaction: Bulk file processing failed, will retry: {@Context}", logContext);
+
+				return (file, succeeded: false);
 			}
 			finally
 			{
@@ -158,10 +168,20 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			}
 		});
 
-		await Task.WhenAll(tasks);
+		var results = await Task.WhenAll(tasks);
 
-		// The invitation rows are already persisted with EmailSentStatus = Pending, so
-		// the email notification job picks them up straight from PostgreSQL.
-		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFiles);
+		// Only files that actually inserted their invitation rows are marked Done; the
+		// rest stay Pending and are picked up again on the next tick.
+		var processedFiles = results
+			.Where(r => r.succeeded)
+			.Select(r => r.file)
+			.ToList();
+
+		if (processedFiles.Count > 0)
+		{
+			// The invitation rows are already persisted with EmailSentStatus = Pending,
+			// so the email notification job picks them up straight from PostgreSQL.
+			await _repository.UpdateBulkFileDetailsStatusAsync(processedFiles);
+		}
 	}
 }

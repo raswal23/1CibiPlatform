@@ -8,6 +8,10 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly IConfiguration _configuration;
 	private readonly string _applicationformBaseUrl;
 
+	// Comfortably longer than a full send pass (100 messages, 3 retries each) so a live
+	// worker is never robbed of rows it is still processing.
+	private static readonly TimeSpan StaleClaimTimeout = TimeSpan.FromMinutes(30);
+
 	public EmailNotificationProcessorService(
 		ILogger<EmailNotificationProcessorService> logger,
 		IEndorsementSubmissionService endorsementSubmissionService,
@@ -23,8 +27,19 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 	public async Task ProcessForPendingStatusAsync(CancellationToken cancellationToken)
 	{
-		// PostgreSQL is the queue: rows still marked Pending are the work item, so a
-		// restart mid-batch simply re-reads them on the next tick.
+		// A crash mid-send leaves rows claimed as Processing with no live worker, so
+		// release anything stale before claiming the next slice.
+		var released = await _repository.ReleaseStaleEmailInvitationClaimsAsync(StaleClaimTimeout);
+
+		if (released > 0)
+		{
+			_logger.LogWarning(
+				"Released {ReleasedCount} stale email invitation claim(s) back to Pending.",
+				released);
+		}
+
+		// PostgreSQL is the queue: the claim atomically moves a slice of Pending rows to
+		// Processing, so a concurrent worker cannot pick up the same invitations.
 		var allRequests = await _repository.GetPendingEmailInvitationRequestsAsync();
 
 		if (allRequests.Count == 0)

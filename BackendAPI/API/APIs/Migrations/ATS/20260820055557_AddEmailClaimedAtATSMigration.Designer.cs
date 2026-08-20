@@ -3,6 +3,7 @@ using System;
 using ATS.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace APIs.Migrations.ATS
 {
     [DbContext(typeof(ATSDBContext))]
-    partial class ATSDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260820055557_AddEmailClaimedAtATSMigration")]
+    partial class AddEmailClaimedAtATSMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -638,9 +641,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<Guid?>("BulkFileID")
-                        .HasColumnType("uuid");
-
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
 
@@ -658,11 +658,6 @@ namespace APIs.Migrations.ATS
 
                     b.Property<DateTime?>("EmailClaimedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("EmailSendAttempts")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("EmailSentAt")
                         .HasColumnType("timestamp with time zone");
@@ -742,8 +737,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("EmailInvitationID");
-
-                    b.HasIndex("BulkFileID");
 
                     b.HasIndex("EmailSentStatus");
 

@@ -78,6 +78,29 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.Is<List<EmailInvitationRequest>>(list => list.Count == 1)),
 			Times.Once);
 	}
+
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldReleaseStaleClaims_BeforeClaimingWork()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+
+		_fixture.MockRepository
+			.Setup(x => x.ReleaseStaleEmailInvitationClaimsAsync(It.IsAny<TimeSpan>()))
+			.ReturnsAsync(3);
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest>());
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert: rows stranded in Processing by a crashed worker are recovered.
+		_fixture.MockRepository.Verify(
+			x => x.ReleaseStaleEmailInvitationClaimsAsync(It.Is<TimeSpan>(t => t > TimeSpan.Zero)),
+			Times.Once);
+	}
 	#endregion
 
 	#region Negative Path

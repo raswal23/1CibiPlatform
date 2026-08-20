@@ -4,6 +4,7 @@
 public class BulkSubmissionBackgroundJob : IJob
 {
 	private readonly IServiceScopeFactory _scopeFactory;
+
 	private readonly ILogger<BulkSubmissionBackgroundJob> _logger;
 
 	public BulkSubmissionBackgroundJob(IServiceScopeFactory scopeFactory, ILogger<BulkSubmissionBackgroundJob> logger)

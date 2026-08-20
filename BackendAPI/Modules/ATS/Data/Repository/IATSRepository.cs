@@ -16,6 +16,7 @@ public interface IATSRepository
 
 	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync();
 	Task<List<EmailInvitationRequest>> GetPendingEmailInvitationRequestsAsync();
+	Task<int> ReleaseStaleEmailInvitationClaimsAsync(TimeSpan staleAfter);
 	Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests);
 	Task<bool> UpdateBulkEmailInvitationRequestForSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests);
 	Task<bool> UpdateBulkEmailInvitationRequestForNotSentEmailAsync(List<EmailInvitationRequest> emailInvitationRequests);

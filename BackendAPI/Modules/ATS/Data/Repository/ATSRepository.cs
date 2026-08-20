@@ -91,14 +91,57 @@ public class ATSRepository : IATSRepository
 			.ToListAsync();
 	}
 
+	// An invitation is retried until this many failed sends, then it stays Error for a
+	// human to look at - a mistyped or dead address must not consume the daily quota
+	// forever.
+	private const int MaxEmailSendAttempts = 5;
+
 	public async Task<List<EmailInvitationRequest>> GetPendingEmailInvitationRequestsAsync()
 	{
+		// Claim and return in one statement. FOR UPDATE SKIP LOCKED lets a concurrent
+		// worker step over rows another worker is already claiming instead of blocking,
+		// and the Processing write is what keeps the claim after this transaction ends.
+		// EF cannot express SKIP LOCKED, so this is raw SQL.
 		return await _dbcontext.EmailInvitationRequests
+			.FromSqlRaw(
+				"""
+				UPDATE ats."EmailInvitationRequest"
+				SET "EmailSentStatus" = {0},
+					"EmailClaimedAt" = {1}
+				WHERE "EmailInvitationID" IN (
+					SELECT "EmailInvitationID"
+					FROM ats."EmailInvitationRequest"
+					WHERE ("EmailSentStatus" = {2}
+						OR ("EmailSentStatus" = {3} AND "EmailSendAttempts" < {4}))
+					ORDER BY "OrderCreatedAt"
+					LIMIT {5}
+					FOR UPDATE SKIP LOCKED
+				)
+				RETURNING *;
+				""",
+				EmailStatus.Processing,
+				DateTime.UtcNow,
+				EmailStatus.Pending,
+				EmailStatus.Error,
+				MaxEmailSendAttempts,
+				100)
 			.AsNoTracking()
-			.Where(x => x.EmailSentStatus == EmailStatus.Pending)
-			.OrderBy(x => x.OrderCreatedAt)
-			.Take(100)
 			.ToListAsync();
+	}
+
+	public async Task<int> ReleaseStaleEmailInvitationClaimsAsync(TimeSpan staleAfter)
+	{
+		// A crash mid-send leaves rows stuck in Processing with no live worker. Anything
+		// claimed longer ago than staleAfter goes back to Pending for the next tick.
+		var cutoff = DateTime.UtcNow.Subtract(staleAfter);
+
+		return await _dbcontext.EmailInvitationRequests
+			.Where(x => x.EmailSentStatus == EmailStatus.Processing
+					 && x.EmailClaimedAt != null
+					 && x.EmailClaimedAt < cutoff)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Pending)
+				.SetProperty(x => x.EmailClaimedAt, x => null));
 	}
 
 	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
@@ -116,7 +159,8 @@ public class ATSRepository : IATSRepository
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
 			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Done)
-			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
+			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow)
+			.SetProperty(x => x.EmailClaimedAt, x => null));
 
 		return true;
 	}
@@ -128,7 +172,9 @@ public class ATSRepository : IATSRepository
 		await _dbcontext.EmailInvitationRequests
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
-			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error));
+			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Error)
+			.SetProperty(x => x.EmailClaimedAt, x => null)
+			.SetProperty(x => x.EmailSendAttempts, x => x.EmailSendAttempts + 1));
 
 		return true;
 	}

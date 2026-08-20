@@ -84,6 +84,11 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.GetPendingEmailInvitationRequestsAsync();
 	}
 
+	public async Task<int> ReleaseStaleEmailInvitationClaimsAsync(TimeSpan staleAfter)
+	{
+		return await _atsRepository.ReleaseStaleEmailInvitationClaimsAsync(staleAfter);
+	}
+
 	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		var result = await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
