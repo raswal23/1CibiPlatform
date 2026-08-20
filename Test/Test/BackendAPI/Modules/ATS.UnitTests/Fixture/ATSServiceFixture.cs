@@ -91,8 +91,6 @@ public class ATSServiceFixture : IDisposable
 			MockObjectStorage.Object,
 			MockSecureToken.Object,
 			MockHashService.Object,
-			MockHybridCache.Object,
-			MockRedis.Object,
 			MockHubContext.Object,
 			MockBulkSubmissionProcessorServiceLogger.Object,
 			MockCurrentUser.Object,
@@ -102,9 +100,7 @@ public class ATSServiceFixture : IDisposable
 			EmailNotificationProcessoServiceLogger.Object,
 			MockEndorsementSubmissionService.Object,
 			MockRepository.Object,
-			Configuration,
-			MockRedis.Object,
-			MockHybridCache.Object
+			Configuration
 			);
 	}
 

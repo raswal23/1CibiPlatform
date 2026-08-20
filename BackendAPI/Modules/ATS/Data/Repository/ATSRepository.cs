@@ -91,6 +91,16 @@ public class ATSRepository : IATSRepository
 			.ToListAsync();
 	}
 
+	public async Task<List<EmailInvitationRequest>> GetPendingEmailInvitationRequestsAsync()
+	{
+		return await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => x.EmailSentStatus == EmailStatus.Pending)
+			.OrderBy(x => x.OrderCreatedAt)
+			.Take(100)
+			.ToListAsync();
+	}
+
 	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		await _dbcontext.EmailInvitationRequests.AddRangeAsync(emailInvitationRequests);

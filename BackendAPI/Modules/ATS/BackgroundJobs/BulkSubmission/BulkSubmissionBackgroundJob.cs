@@ -1,5 +1,6 @@
 ﻿namespace ATS.BackgroundJobs.BulkSubmission;
 
+[DisallowConcurrentExecution]
 public class BulkSubmissionBackgroundJob : IJob
 {
 	private readonly IServiceScopeFactory _scopeFactory;

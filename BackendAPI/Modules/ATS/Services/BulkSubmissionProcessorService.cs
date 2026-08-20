@@ -7,14 +7,11 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
-	private readonly HybridCache _hybridCache;
-	private readonly IConnectionMultiplexer _redis;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
 	private readonly ICurrentUser _currentUser;
 	private readonly IConfiguration _configuration;
 	private readonly int _applicationFormExpiryInHours;
-	private readonly string _batchesPending;
 
 	public BulkSubmissionProcessorService(
 		IATSRepository repository,
@@ -22,8 +19,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IObjectStorageService objectStorageService,
 		ISecureToken secureToken,
 		IHashService hashService,
-		HybridCache hybridCache,
-		IConnectionMultiplexer redis,
 		IHubContext<ATSHub, IATSClient> hubContext,
 		ILogger<BulkSubmissionProcessorService> logger,
 		ICurrentUser currentUser,
@@ -34,20 +29,15 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_objectStorageService = objectStorageService;
 		_secureToken = secureToken;
 		_hashService = hashService;
-		_hybridCache = hybridCache;
-		_redis = redis;
 		_hubContext = hubContext;
 		_logger = logger;
 		_currentUser = currentUser;
 		_configuration = configuration;
-		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	public async Task ProcessAsync(CancellationToken cancellationToken)
 	{
-		var dbRedis = _redis.GetDatabase();
-
 		var pendingFiles = await _repository.GetBulkUploadFileDetailsAsync();
 
 		if (!pendingFiles.Any())
@@ -168,22 +158,10 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			}
 		});
 
-		List<EmailInvitationRequest>[] results = await Task.WhenAll(tasks);
+		await Task.WhenAll(tasks);
 
+		// The invitation rows are already persisted with EmailSentStatus = Pending, so
+		// the email notification job picks them up straight from PostgreSQL.
 		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFiles);
-
-		var listOfListOfSubjects = results.ToList();
-
-		var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
-
-		await _hybridCache.SetAsync(
-				batchId,
-				listOfListOfSubjects,
-				new HybridCacheEntryOptions
-				{
-					Expiration = TimeSpan.FromMinutes(30)
-				});
-
-		await dbRedis.ListRightPushAsync(_batchesPending, batchId);
 	}
 }

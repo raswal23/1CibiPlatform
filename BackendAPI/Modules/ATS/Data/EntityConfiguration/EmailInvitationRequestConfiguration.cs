@@ -89,5 +89,8 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 
 		builder.Property(e => e.DisputedAt)
 			   .IsRequired(false);
+
+		// Drives the email notification job's pending-invitation poll.
+		builder.HasIndex(e => e.EmailSentStatus);
 	}
 }

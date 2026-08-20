@@ -73,9 +73,6 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<BulkUploadFileDetails>>()))
 			.ReturnsAsync(true);
 
-		_fixture.MockRedisDatabase.Setup(x => x.ListRightPushAsync(It.IsAny<StackExchange.Redis.RedisKey>(), It.IsAny<StackExchange.Redis.RedisValue>()))
-			.ReturnsAsync(1L);
-
 		// Act
 		Func<Task> act = async () => await service.ProcessAsync(CancellationToken.None);
 
