@@ -232,8 +232,7 @@ public class ATSRepository : IATSRepository
 			.Where(x => ids.Contains(x.EmailInvitationID))
 			.ExecuteUpdateAsync(setters => setters
 			.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Done)
-			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow)
-			.SetProperty(x => x.EmailClaimedAt, x => null));
+			.SetProperty(x => x.EmailSentAt, x => DateTime.UtcNow));
 
 		return true;
 	}
