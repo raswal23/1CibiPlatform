@@ -302,9 +302,6 @@
     transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
 }
 
-/* The MudRadio click handler lives on the inner label; stretch it over the whole pill.
-   MudBlazor's own .mud-input-control-input-container is position:relative and would
-   capture the ::after overlay, so it must be static for the overlay to reach the pill. */
 .dd-pills-wrap ::deep .dd-pill .mud-input-control-input-container {
     position: static;
     width: 100%;

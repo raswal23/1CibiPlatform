@@ -53,13 +53,28 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				.WithMessage("A valid email address is required.");
 
 			RuleFor(x => x.PersonalDetails.AdditionalGovtIDFile)
-				.NotNull().WithMessage("Government ID is required.");
+				.NotNull().WithMessage("Government ID is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.PersonalDetails.NBIClearanceFile)
-				.NotNull().WithMessage("NBI Clearance is required.");
+				.NotNull().WithMessage("NBI Clearance is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.PersonalDetails.ResumeFile)
-				.NotNull().WithMessage("Resume is required.");
+				.NotNull().WithMessage("Resume is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 		});
 
 		//address
@@ -140,7 +155,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.EducationalBackground.HighSchoolDiplomaFile)
 					.NotNull()
-					.WithMessage("Diploma is required.");
+					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
 			});
 
 			// senior
@@ -156,7 +176,13 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.EducationalBackground.SeniorHighSchoolDiplomaFile)
 					.NotNull()
-					.WithMessage("Diploma is required.");
+					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+
 			});
 
 			// college
@@ -176,7 +202,13 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.EducationalBackground.BachelorsDiplomaFile)
 					.NotNull()
-					.WithMessage("Diploma is required.");
+					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+
 			});
 
 			// master
@@ -196,7 +228,13 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.EducationalBackground.MastersDiplomaFile)
 					.NotNull()
-					.WithMessage("Diploma is required.");
+					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+
 			});
 
 			// doc
@@ -216,7 +254,13 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.EducationalBackground.DoctorateDiplomaFile)
 					.NotNull()
-					.WithMessage("Diploma is required.");
+					.WithMessage("Diploma is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+
 			});
 
 			// none/elem
@@ -256,7 +300,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 				RuleFor(x => x.LicensesDetails.LicenseUploadFile)
 					.NotNull()
-					.WithMessage("Professional License is required.");
+					.WithMessage("Professional License is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
 			});
 		});
 
@@ -313,7 +362,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 			RuleFor(x => x.ProfessionalExperiences.Emp1COEUploadFile)
 				.NotNull()
-				.WithMessage("COE/ID #1 is required.");
+				.WithMessage("COE/ID #1 is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .pdf files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 
 			//employer 2
 			When(x =>
@@ -325,40 +379,56 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				() =>
 				{
 					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyName)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Company Name #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCity)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Company City / Address #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyProvince)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("State / Province / Region #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyCountry)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Country #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2CompanyPostalCode)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Zip Code #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2DatePermittedToContact)
-						.NotNull();
+						.NotNull()
+						.WithMessage("Date permitted to contact #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2JobTitle)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Job Title #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2StartDate)
-						.NotNull();
+						.NotNull()
+						.WithMessage("Start Date of Employment #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2EndDate)
-						.NotNull();
+						.NotNull()
+						.WithMessage("End Date of Employment #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorName)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Supervisor Name #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorContactNumber)
-						.NotEmpty();
+						.NotEmpty()
+						.WithMessage("Supervisor Contact Number #2 is required.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2COEUploadFile)
-						.NotNull();
+						.NotNull()
+						.Must(file => file != null &&
+						 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+						.WithMessage("Only .pdf files are allowed.")
+						.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+						.WithMessage("File size exceeds the 25 MB limit.");
 				});
 
 			//employer 3
@@ -371,40 +441,56 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 			() =>
 			{
 				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyName)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Company Name #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCity)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Company City / Address #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyProvince)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("State / Province / Region #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyCountry)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Country #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3CompanyPostalCode)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Zip Code #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3DatePermittedToContact)
-					.NotNull();
+					.NotNull()
+					.WithMessage("Date permitted to contact #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3JobTitle)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Job Title #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3StartDate)
-					.NotNull();
+					.NotNull()
+					.WithMessage("Start Date of Employment #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3EndDate)
-					.NotNull();
+					.NotNull()
+					.WithMessage("End Date of Employment #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorName)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Supervisor Name #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorContactNumber)
-					.NotEmpty();
+					.NotEmpty()
+					.WithMessage("Supervisor Contact Number #3 is required.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3COEUploadFile)
-					.NotNull();
+					.NotNull()
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
 
 			});
 		});
@@ -529,7 +615,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 		{
 			RuleFor(x => x.SignatureDetails.Signature)
 				.NotNull()
-				.WithMessage("Signature is required.");
+				.WithMessage("Signature is required.")
+				.Must(file => file != null &&
+				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".png", StringComparison.OrdinalIgnoreCase))
+				.WithMessage("Only .png files are allowed.")
+				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+				.WithMessage("File size exceeds the 25 MB limit.");
 
 			RuleFor(x => x.SignatureDetails.SignerName)
 				.NotEmpty()

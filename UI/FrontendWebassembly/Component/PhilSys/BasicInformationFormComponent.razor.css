@@ -125,14 +125,6 @@
     line-height: 44px;
 }
 
-/* MudSelect: `mud-select-input` is on the CONTAINER (.mud-input). The visible
-   value is rendered by MudInput either as an <input class="mud-input-root...">
-   or, when the item has ChildContent, as a <div class="mud-input-slot ...">
-   carrying an INLINE style="display:inline" attribute. That inline style beats
-   any stylesheet `display` rule, so flex centring silently did nothing and the
-   text sat on the baseline near the top of the 44px box.
-   Fix: don't rely on display/flex at all — zero the vertical padding and set
-   line-height equal to the control height, which centres text in both cases. */
 .philsys-suffix-field ::deep .mud-input.mud-select-input {
     height: 44px !important;
     min-height: 44px !important;
@@ -217,10 +209,6 @@
     transform: translateY(-50%);
 }
 
-/* MudDatePicker puts the `philsys-date-input` class on the picker root, not on
-   the inner .mud-input, so scoping the padding to that class silently missed
-   the input and the placeholder ran under the leading icon. Target the input
-   directly inside the wrapper instead. */
 .philsys-date-input-wrap ::deep input.mud-input-root,
 .philsys-date-input-wrap ::deep input.mud-input-root-outlined,
 .philsys-date-input-wrap ::deep .mud-input-slot {

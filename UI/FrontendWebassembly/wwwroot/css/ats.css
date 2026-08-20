@@ -196,7 +196,6 @@
     background: #fafbff;
 }
 
-/* Keep the final row visually separate from the paginator. */
 .ats-management-card tbody .mud-table-row:last-child .mud-table-cell {
     border-bottom: 1px solid var(--management-border) !important;
 }
@@ -675,7 +674,7 @@
 }
 
 @media (max-width: 600px) {
-    /* Keep add/edit dialog chrome visible while only the form body scrolls. */
+
     .um-dialog {
         max-height: calc(100dvh - 24px);
         overflow: hidden;
@@ -2345,9 +2344,6 @@ button.ats-console-brand-text {
     transition: all .18s ease;
 }
 
-    /* The MudRadio click handler lives on the inner label; stretch it over the whole card.
-       MudBlazor's own .mud-input-control-input-container is position:relative and would
-       capture the ::after overlay, so it must be static for the overlay to reach the card. */
     .ats-step-one .ats-step-one-choice-card .mud-input-control-input-container {
         position: static;
         width: 100%;
@@ -3432,9 +3428,6 @@ button.ats-console-brand-text {
     transition: all .18s ease;
 }
 
-    /* The MudRadio click handler lives on the inner label; stretch it over the whole card.
-       MudBlazor's own .mud-input-control-input-container is position:relative and would
-       capture the ::after overlay, so it must be static for the overlay to reach the card. */
     .ats-step-one .ats-step-one-choice-card .mud-input-control-input-container {
         position: static;
         width: 100%;
@@ -4557,7 +4550,6 @@ button.ats-console-brand-text {
     }
 }
 
-/* ATS application form: Step 2 identity verification */
 .ats-application-card .ats-step-one .ats-step-one-shell {
     padding: 0;
     overflow: visible;
@@ -4621,7 +4613,6 @@ button.ats-console-brand-text {
     letter-spacing: 0;
 }
 
-/* Keep the existing PhilSys artwork; only size it for the refreshed layout. */
 .ats-application-card .ats-step-one .ats-step-one-logo {
     width: min(270px, 100%);
     max-width: 270px;
@@ -4751,7 +4742,6 @@ button.ats-console-brand-text {
     }
 }
 
-/* ATS application form: consent step */
 .ats-appform-modern {
     --ats-navy-900: #0B1B3D;
     --ats-navy-800: #132A54;
@@ -4787,7 +4777,6 @@ button.ats-console-brand-text {
             box-shadow: 0 0 0 6px rgba(46, 124, 224, 0.10), 0 18px 40px -16px rgba(11, 27, 61, 0.25) !important;
         }
 
-        /* Keep the PhilSys lookup shell specific to ApplicationFormComponent. */
         .ats-appform-modern .ats-modern-card.ats-philsys-card {
             width: min(900px, 100%);
             max-width: 900px;
@@ -4878,8 +4867,6 @@ button.ats-console-brand-text {
         flex: 0 0 auto;
         flex-basis: auto;
         flex-shrink: 0;
-        /* mud-ripple sets overflow:hidden, which clips the enlarged active icon
-       (34px in a 32px row). Steps here aren't clickable, so no ripple needs containing. */
         overflow: visible;
     }
 
@@ -4905,9 +4892,6 @@ button.ats-console-brand-text {
     }
 
     .ats-application-card .ats-appform-stepper .mud-step.active .mud-step-label-icon {
-        /* Keep the same 32px geometry as the other icons — enlarging via scale() or
-       an oversized box gets clipped/blurred at fractional browser-zoom levels.
-       The halo ring supplies the "active" emphasis instead. */
         border-color: transparent !important;
         background: linear-gradient(135deg, var(--ats-blue-500), var(--ats-navy-800)) border-box !important;
         color: #FFFFFF !important;

@@ -318,4 +318,118 @@ public class ATSInitialData
 		};
 	}
 	#endregion
+
+	#region Modules
+	public IEnumerable<ModuleDetails> GetATSModules() =>
+	[
+		new()
+		   {
+			   ModuleId = AtsModuleIds.Dashboard,
+			   ModuleName = "Dashboard",
+			   ModuleDescription = "Dashboard module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.NewOrder,
+			   ModuleName = "New Order",
+			   ModuleDescription = "New order module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.OrdersAndReports,
+			   ModuleName = "Orders & Reports",
+			   ModuleDescription = "Orders and reports module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.Disputes,
+			   ModuleName = "Disputes",
+			   ModuleDescription = "Disputes module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.Withdrawn,
+			   ModuleName = "Withdrawn",
+			   ModuleDescription = "Withdrawn module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.PackageManagement,
+			   ModuleName = "Package Management",
+			   ModuleDescription = "Package management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ClientManagement,
+			   ModuleName = "Client Management",
+			   ModuleDescription = "Client management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.RoleManagement,
+			   ModuleName = "Role Management",
+			   ModuleDescription = "Role management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ModuleManagement,
+			   ModuleName = "Module Management",
+			   ModuleDescription = "Module management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.UserManagement,
+			   ModuleName = "User Management",
+			   ModuleDescription = "User management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.ClientAssigning,
+			   ModuleName = "Client Assigning",
+			   ModuleDescription = "Client assigning module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.AIAssistant,
+			   ModuleName = "AI Assistant",
+			   ModuleDescription = "AI assistant module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   }
+	];
+	#endregion
 }

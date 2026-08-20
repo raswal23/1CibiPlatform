@@ -153,7 +153,6 @@
 ::deep .ats-input .mud-input-adornment-start { color: var(--text-3); }
 ::deep .ats-input input::placeholder { color: var(--text-3); opacity: 1; }
 
-/* MudSelect uses a different internal slot layout than MudTextField. */
 ::deep .ats-select .mud-select-input {
     display: flex;
     height: 44px !important;

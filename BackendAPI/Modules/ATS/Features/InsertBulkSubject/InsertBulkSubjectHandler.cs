@@ -15,7 +15,9 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			.WithMessage("Bulk upload file is required.")
 			.Must(file => file != null &&
 			 string.Equals(System.IO.Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
-			.WithMessage("Only .csv files are allowed.");
+			.WithMessage("Only .csv files are allowed.")
+			.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+			.WithMessage("File size exceeds the 25 MB limit.");
 	}
 }
 
