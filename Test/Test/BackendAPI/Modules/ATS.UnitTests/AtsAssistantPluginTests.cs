@@ -185,8 +185,8 @@ public class AtsAssistantPluginTests
 			"09171234567",
 			"standard screening",
 			"Rush",
-			CancellationToken.None,
-			"M");
+			middleInitial: "M",
+			CancellationToken.None);
 
 		// Assert
 		message.Should().Contain("NOT been created");
@@ -225,6 +225,7 @@ public class AtsAssistantPluginTests
 			mobileNumber,
 			"Standard Screening",
 			"Normal",
+			middleInitial: null,
 			CancellationToken.None);
 
 		// Assert
@@ -246,6 +247,7 @@ public class AtsAssistantPluginTests
 			"09171234567",
 			"Hallucinated Package",
 			"Normal",
+			middleInitial: null,
 			CancellationToken.None);
 
 		// Assert
@@ -268,6 +270,7 @@ public class AtsAssistantPluginTests
 			"09171234567",
 			"Standard Screening",
 			"whenever",
+			middleInitial: null,
 			CancellationToken.None);
 
 		// Assert
@@ -291,6 +294,7 @@ public class AtsAssistantPluginTests
 			"09171234567",
 			"Standard Screening",
 			"Normal",
+			middleInitial: null,
 			CancellationToken.None);
 
 		var draftId = plugin.StagedDraft!.DraftId;
@@ -317,6 +321,7 @@ public class AtsAssistantPluginTests
 			"09171234567",
 			"Standard Screening",
 			"Normal",
+			middleInitial: null,
 			CancellationToken.None);
 
 		var draftId = plugin.StagedDraft!.DraftId;

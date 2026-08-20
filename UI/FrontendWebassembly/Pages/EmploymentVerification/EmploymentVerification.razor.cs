@@ -204,11 +204,11 @@ public partial class EmploymentVerification
 			{
 				AtsSubjectId = SelectedCandidate.SubjectId,
 				CandidateName = SelectedCandidate.CandidateName,
-				PreviousEmployer = "Google", //SelectedCandidate.Employer
+				PreviousEmployer = SelectedCandidate.Employer, // "Google", 
 				Position = string.IsNullOrWhiteSpace(SelectedCandidate.Position)
 					? "Not provided"
 					: SelectedCandidate.Position,
-				HrEmail = "contract.fullstackdev@cibi.com.ph",//SelectedCandidate.HrEmail
+				HrEmail = SelectedCandidate.HrEmail, //"contract.fullstackdev@cibi.com.ph",
 				EmploymentStartDate = ToDateTime(SelectedCandidate.StartDate)
 					?? DateTime.UtcNow.AddYears(-2),
 				EmploymentEndDate = ToDateTime(SelectedCandidate.EndDate)

@@ -7,13 +7,14 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
-	private readonly IConnectionMultiplexer _redis;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
-	private readonly ICurrentUser _currentUser;
 	private readonly IConfiguration _configuration;
 	private readonly int _applicationFormExpiryInHours;
-	private readonly string _batchesPending;
+
+	// Comfortably longer than a full parse pass so a live worker is never robbed of
+	// files it is still processing.
+	private static readonly TimeSpan StaleClaimTimeout = TimeSpan.FromMinutes(30);
 
 	public BulkSubmissionProcessorService(
 		IATSRepository repository,
@@ -21,10 +22,8 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		IObjectStorageService objectStorageService,
 		ISecureToken secureToken,
 		IHashService hashService,
-		IConnectionMultiplexer redis,
 		IHubContext<ATSHub, IATSClient> hubContext,
 		ILogger<BulkSubmissionProcessorService> logger,
-		ICurrentUser currentUser,
 		IConfiguration configuration)
 	{
 		_repository = repository;
@@ -32,19 +31,27 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_objectStorageService = objectStorageService;
 		_secureToken = secureToken;
 		_hashService = hashService;
-		_redis = redis;
 		_hubContext = hubContext;
 		_logger = logger;
-		_currentUser = currentUser;
 		_configuration = configuration;
-		_batchesPending = _configuration.GetSection("CacheKeys").GetValue<string>("ATSBatchesPending") ?? string.Empty;
 		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	public async Task ProcessAsync(CancellationToken cancellationToken)
 	{
-		var dbRedis = _redis.GetDatabase();
+		// A crash mid-parse leaves files claimed as Processing with no live worker, so
+		// release anything stale before claiming the next batch.
+		var released = await _repository.ReleaseStaleBulkFileClaimsAsync(StaleClaimTimeout);
 
+		if (released > 0)
+		{
+			_logger.LogWarning(
+				"Released {ReleasedCount} stale bulk file claim(s) back to Pending.",
+				released);
+		}
+
+		// The claim atomically moves a batch of Pending files to Processing, so a
+		// concurrent worker cannot parse the same CSV.
 		var pendingFiles = await _repository.GetBulkUploadFileDetailsAsync();
 
 		if (!pendingFiles.Any())
@@ -134,6 +141,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					subjects.Add(new EmailInvitationRequest
 					{
 						EmailInvitationID = Guid.CreateVersion7(),
+						BulkFileID = file.FileID,
 						HashToken = HashToken,
 						HashTokenCreatedAt = DateTime.UtcNow,
 						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
@@ -147,9 +155,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,
-						ClientId = _currentUser.AtsClientId,
-						RequestorId = _currentUser.UserId,
-						Requestor = _currentUser.FullName,
+						ClientId = file.ClientId,
+						RequestorId = file.UploadedByUserId,
+						Requestor = file.Requestor,
 						OrderCreatedAt = DateTime.UtcNow
 					});
 				}
@@ -161,7 +169,16 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						.Group(file.UploadedByUserId.ToString()!)
 						.ReceiveATSResponse($"Your bulk upload \"{file.FileName}\" has been received and is now being processed.");
 
-				return subjects;
+				return (file, succeeded: true);
+			}
+			catch (Exception ex)
+			{
+				// Leave the file Pending so the next tick retries it. The catch is here
+				// so one failing file does not stop its siblings from being marked Done,
+				// which would otherwise re-insert their candidates on the next tick.
+				_logger.LogError(ex, "Failed Transaction: Bulk file processing failed, will retry: {@Context}", logContext);
+
+				return (file, succeeded: false);
 			}
 			finally
 			{
@@ -169,24 +186,31 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			}
 		});
 
-		List<EmailInvitationRequest>[] results = await Task.WhenAll(tasks);
+		var results = await Task.WhenAll(tasks);
 
-		await _repository.UpdateBulkFileDetailsStatusAsync(pendingFileIds, OrderStatus.InProgress);
+		// Only files that actually inserted their invitation rows are marked Done; the
+		// rest are released back to Pending and picked up again on the next tick.
+		var processedFiles = results
+			.Where(r => r.succeeded)
+			.Select(r => r.file)
+			.ToList();
 
-		var listOfListOfSubjects = results.ToList();
+		var failedFiles = results
+			.Where(r => !r.succeeded)
+			.Select(r => r.file)
+			.ToList();
 
-		var batchId = $"batch:{Guid.CreateVersion7():N}:{DateTime.UtcNow:yyyyMMdd}";
+		if (processedFiles.Count > 0)
+		{
+			// The invitation rows are already persisted with EmailSentStatus = Pending,
+			// so the email notification job picks them up straight from PostgreSQL.
+			await _repository.UpdateBulkFileDetailsStatusAsync(processedFiles);
+		}
 
-		// Payload must outlive the recovery job's stale threshold (1 day) so a
-		// requeued batch can still be reprocessed; hence Redis string, not HybridCache.
-		await dbRedis.StringSetAsync(
-				batchId,
-				JsonSerializer.Serialize(listOfListOfSubjects),
-				TimeSpan.FromDays(2));
-
-		await dbRedis.SortedSetAddAsync(
-				_batchesPending,
-				batchId,
-				DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		if (failedFiles.Count > 0)
+		{
+			// Release the claim now instead of leaving these files to the sweeper.
+			await _repository.ReleaseBulkFileClaimsAsync(failedFiles);
+		}
 	}
 }

@@ -17,36 +17,6 @@ services:
       context: .
       dockerfile: BackendAPI/API/APIs/Dockerfile
 
-  promtail:
-    image: grafana/promtail:2.9.3
-    container_name: promtail
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./promtail-config.yml:/etc/promtail/promtail.yml
-    command: -config.file=/etc/promtail/promtail.yml
-    restart: unless-stopped
-
-  loki:
-    image: grafana/loki:2.9.3
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
-      - ./monitoring/loki-data:/loki
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:10.4.2
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    depends_on:
-      - loki
-    restart: unless-stopped
-
   # frontendwebassembly:
   #   profiles: ["docker"]
   #   container_name: oneplatform-frontend

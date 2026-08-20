@@ -3,6 +3,7 @@ using System;
 using ATS.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace APIs.Migrations.ATS
 {
     [DbContext(typeof(ATSDBContext))]
-    partial class ATSDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260820061452_AddEmailRetryAndBulkFileLinkATSMigration")]
+    partial class AddEmailRetryAndBulkFileLinkATSMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -357,9 +360,6 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("FileID")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ClaimedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
 
@@ -386,10 +386,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Requestor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -399,8 +395,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("uuid");
 
                     b.HasKey("FileID");
-
-                    b.HasIndex("Status");
 
                     b.ToTable("BulkUploadFileDetails", "ats");
                 });
@@ -437,9 +431,9 @@ namespace APIs.Migrations.ATS
 
                     b.HasKey("ClientId", "PackageId");
 
-                    b.HasIndex("PackageId");
+                    b.HasIndex("ClientName");
 
-                    b.HasIndex("ClientName", "ClientId");
+                    b.HasIndex("PackageId");
 
                     b.ToTable("ClientDetails", "ats");
                 });
@@ -751,13 +745,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("EmailInvitationID");
-
-                    b.HasIndex("OrderCompletedAt", "EmailInvitationID")
-                        .IsDescending(true, false);
-
-                    b.HasIndex("OrderStatus", "EmailInvitationID");
-
-                    b.HasIndex("FirstName", "LastName", "EmailInvitationID");
 
                     b.HasIndex("BulkFileID");
 
@@ -1473,8 +1460,6 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("RoleId");
 
                     b.HasIndex("UserEmail");
-
-                    b.HasIndex("UserName", "UserEmail", "UserId");
 
                     b.ToTable("UserDetails", "ats");
                 });

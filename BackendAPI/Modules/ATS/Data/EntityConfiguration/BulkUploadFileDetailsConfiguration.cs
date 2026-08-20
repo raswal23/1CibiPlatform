@@ -15,6 +15,11 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 		builder.Property(a => a.UploadedByUserId)
 			   .IsRequired();
 
+		// Carried to every invitation the bulk job creates from this file.
+		builder.Property(a => a.Requestor)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
 		builder.Property(a => a.FileName)
 			   .IsRequired()
 			   .HasMaxLength(255);
@@ -37,7 +42,13 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(50);
 
+		builder.Property(a => a.ClaimedAt)
+			   .IsRequired(false);
+
 		builder.Property(a => a.DateCreated)
 			   .IsRequired();
+
+		// Drives the bulk submission job's claim query and the stale-claim sweeper.
+		builder.HasIndex(a => a.Status);
 	}
 }

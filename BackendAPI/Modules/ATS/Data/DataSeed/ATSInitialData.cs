@@ -248,7 +248,7 @@ public class ATSInitialData
 			"atsService@cibi.com",
 			"ATS Service Delivery",
 			3,
-			[3]),
+			[.. Enumerable.Range(1, 12)]),
 
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
@@ -274,8 +274,7 @@ public class ATSInitialData
 	public IEnumerable<RoleDetails> GetATSRoles()
 	{
 		return new List<RoleDetails>
-		{
-
+		   {
 			new RoleDetails
 			{
 				RoleId = 1,
@@ -316,6 +315,7 @@ public class ATSInitialData
 				UpdatedAt = DateTime.UtcNow
 			}
 		};
+
 	}
 	#endregion
 

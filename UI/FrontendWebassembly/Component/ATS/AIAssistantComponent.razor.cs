@@ -19,6 +19,8 @@ public partial class AIAssistantComponent
 			.UseTaskLists()
 			.Build();
 
+	private const string DictationModulePath = "./js/ats/voiceDictation.js";
+
 	private readonly List<ChatMessage> _messages = new();
 
 	private string _currentMessage = string.Empty;
@@ -28,6 +30,16 @@ public partial class AIAssistantComponent
 	private bool _shouldScroll;
 	private ElementReference _streamRef;
 	private CancellationTokenSource? _cts;
+
+	private IJSObjectReference? _dictationModule;
+	private DotNetObjectReference<AIAssistantComponent>? _componentReference;
+	private bool _isSpeechSupported;
+	private bool _isListening;
+	private string _dictationStatus = string.Empty;
+
+	// The transcript confirmed so far. Interim words are appended to it for display only,
+	// so the next result replaces the guess instead of duplicating it.
+	private string _committedMessage = string.Empty;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -53,12 +65,41 @@ public partial class AIAssistantComponent
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		if (firstRender)
+			await InitializeDictationAsync();
+
 		if (!_shouldScroll)
 			return;
 
 		_shouldScroll = false;
 
 		await ScrollToBottomAsync();
+	}
+
+	private async Task InitializeDictationAsync()
+	{
+		// No IsPageAuthorized guard here: SecurePageBase sets that flag after an await, so
+		// the first render happens while it is still false. An unauthorized user has already
+		// been redirected to /access-denied, and importing the module has no side effect.
+		try
+		{
+			_dictationModule = await JS.InvokeAsync<IJSObjectReference>(
+				"import",
+				DictationModulePath);
+
+			_isSpeechSupported = await _dictationModule.InvokeAsync<bool>("isSupported");
+		}
+		catch (Exception exception)
+		{
+			// Dictation is an enhancement. If the module or the browser API is missing the
+			// composer simply stays keyboard-only, so this must not break the conversation.
+			// It is logged rather than swallowed: a missing button is otherwise invisible.
+			_isSpeechSupported = false;
+
+			await LogDictationFailureAsync(exception.Message);
+		}
+
+		StateHasChanged();
 	}
 
 	private void OnTypingChanged(bool isTyping)
@@ -71,6 +112,167 @@ public partial class AIAssistantComponent
 		_isTyping = isTyping;
 
 		InvokeAsync(StateHasChanged);
+	}
+
+	private async Task LogDictationFailureAsync(string reason)
+	{
+		try
+		{
+			await JS.InvokeVoidAsync(
+				"console.warn",
+				$"ATS assistant: voice dictation is unavailable — {reason}");
+		}
+		catch (JSException)
+		{
+			// Nothing more can be done from here.
+		}
+	}
+
+	private async Task ToggleDictationAsync()
+	{
+		if (!_isSpeechSupported || _dictationModule is null)
+			return;
+
+		if (_isListening)
+		{
+			await StopDictationAsync();
+
+			return;
+		}
+
+		_componentReference ??= DotNetObjectReference.Create(this);
+
+		// Anything already in the box is kept, and dictation continues from it.
+		_committedMessage = _currentMessage;
+
+		bool started;
+
+		try
+		{
+			started = await _dictationModule.InvokeAsync<bool>(
+				"start",
+				_componentReference,
+				null);
+		}
+		catch (JSException)
+		{
+			started = false;
+		}
+
+		if (!started)
+		{
+			Snackbar.Add(
+				"Dictation could not start. Check that this site is allowed to use your microphone.",
+				Severity.Warning);
+
+			return;
+		}
+
+		_isListening = true;
+		_dictationStatus = "Listening.";
+
+		StateHasChanged();
+	}
+
+	private async Task StopDictationAsync()
+	{
+		if (_dictationModule is null || !_isListening)
+			return;
+
+		_isListening = false;
+		_dictationStatus = "Dictation stopped.";
+
+		try
+		{
+			await _dictationModule.InvokeVoidAsync("stop");
+		}
+		catch (JSException)
+		{
+			// The recognizer was already torn down by the browser.
+		}
+		catch (JSDisconnectedException)
+		{
+			// The circuit is gone; nothing to release.
+		}
+
+		StateHasChanged();
+	}
+
+	[JSInvokable]
+	public async Task OnSpeechResultAsync(string finalText, string interimText)
+	{
+		if (!string.IsNullOrWhiteSpace(finalText))
+			_committedMessage = AppendTranscript(_committedMessage, finalText);
+
+		_currentMessage = AppendTranscript(_committedMessage, interimText);
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	[JSInvokable]
+	public async Task OnSpeechErrorAsync(string code)
+	{
+		// A pause in speech is normal dictation behavior, and the browser restarts itself.
+		if (code is "no-speech")
+			return;
+
+		// The user pressed the button; the stop is already reflected in the UI.
+		if (code is not "aborted")
+		{
+			var (message, severity) = DescribeSpeechError(code);
+
+			Snackbar.Add(message, severity);
+		}
+
+		_isListening = false;
+		_dictationStatus = "Dictation stopped.";
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	[JSInvokable]
+	public async Task OnSpeechEndedAsync()
+	{
+		if (!_isListening)
+			return;
+
+		_isListening = false;
+		_dictationStatus = "Dictation stopped.";
+
+		await InvokeAsync(StateHasChanged);
+	}
+
+	// Typing while the mic is open must win, otherwise the next transcript would
+	// overwrite the correction the user just made by hand.
+	private void OnMessageTyped() =>
+		_committedMessage = _currentMessage;
+
+	private static (string Message, Severity Severity) DescribeSpeechError(string code) => code switch
+	{
+		"not-allowed" or "service-not-allowed" => (
+			"Microphone access is blocked. Allow it in your browser's site settings to dictate.",
+			Severity.Warning),
+		"audio-capture" => (
+			"No microphone was found.",
+			Severity.Error),
+		"network" => (
+			"Speech recognition is offline right now.",
+			Severity.Warning),
+		_ => (
+			"Dictation stopped unexpectedly. Please try again.",
+			Severity.Warning)
+	};
+
+	private static string AppendTranscript(string existing, string addition)
+	{
+		var trimmedAddition = addition?.Trim();
+
+		if (string.IsNullOrEmpty(trimmedAddition))
+			return existing;
+
+		return string.IsNullOrWhiteSpace(existing)
+			? trimmedAddition
+			: $"{existing.TrimEnd()} {trimmedAddition}";
 	}
 
 	private async Task HandleKeyDown(KeyboardEventArgs args)
@@ -93,9 +295,14 @@ public partial class AIAssistantComponent
 		if (_isSending || string.IsNullOrWhiteSpace(_currentMessage))
 			return;
 
+		// Release the microphone before the request goes out, so a trailing transcript
+		// cannot land in the box after the message was already sent.
+		await StopDictationAsync();
+
 		var question = _currentMessage.Trim();
 
 		_currentMessage = string.Empty;
+		_committedMessage = string.Empty;
 		_isSending = true;
 		_isTyping = true;
 
@@ -209,10 +416,13 @@ public partial class AIAssistantComponent
 		Snackbar.Add("The draft order was discarded.", Severity.Info);
 	}
 
-	private void ClearConversation()
+	private async Task ClearConversation()
 	{
+		await StopDictationAsync();
+
 		_messages.Clear();
 		_isTyping = false;
+		_committedMessage = string.Empty;
 	}
 
 	private void AddMessage(ChatMessage message)
@@ -237,6 +447,11 @@ public partial class AIAssistantComponent
 
 	private static string ToHtml(string? markdown) =>
 		Markdown.ToHtml(markdown ?? string.Empty, MarkdownPipeline);
+
+	private string GetMicClass() =>
+		_isListening
+			? "ats-assistant-mic is-listening"
+			: "ats-assistant-mic";
 
 	private static string GetRowClass(ChatMessage message) =>
 		message.IsUser
@@ -264,10 +479,33 @@ public partial class AIAssistantComponent
 	private static string FormatDate(DateTime? value) =>
 		value.HasValue ? value.Value.ToLocalTime().ToString("dd MMM yyyy") : "—";
 
-	public void Dispose()
+	public async ValueTask DisposeAsync()
 	{
 		AssistantService.TypingChanged -= OnTypingChanged;
 		_cts?.Dispose();
+
+		if (_dictationModule is not null)
+		{
+			try
+			{
+				// Releases the microphone even if the user navigated away mid-sentence.
+				await _dictationModule.InvokeVoidAsync("destroy");
+				await _dictationModule.DisposeAsync();
+			}
+			catch (JSDisconnectedException)
+			{
+				// The browser context is already gone.
+			}
+			catch (JSException)
+			{
+				// The recognizer was torn down with the page.
+			}
+
+			_dictationModule = null;
+		}
+
+		_componentReference?.Dispose();
+		_componentReference = null;
 	}
 
 	private enum OrderDraftState

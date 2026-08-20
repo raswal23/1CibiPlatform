@@ -1,5 +1,6 @@
 ﻿namespace ATS.BackgroundJobs.EmailNotification;
 
+[DisallowConcurrentExecution]
 public class EmailNotificationBackgroundJob : IJob
 {
 	private readonly IServiceScopeFactory _scopeFactory;

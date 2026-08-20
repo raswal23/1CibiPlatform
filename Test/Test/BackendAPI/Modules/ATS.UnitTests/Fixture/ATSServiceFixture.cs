@@ -95,18 +95,15 @@ public class ATSServiceFixture : IDisposable
 			MockObjectStorage.Object,
 			MockSecureToken.Object,
 			MockHashService.Object,
-			MockRedis.Object,
 			MockHubContext.Object,
 			MockBulkSubmissionProcessorServiceLogger.Object,
-			MockCurrentUser.Object,
 			Configuration);
 
 		EmailNotificationProcessorService = new EmailNotificationProcessorService(
 			EmailNotificationProcessoServiceLogger.Object,
 			MockEndorsementSubmissionService.Object,
 			MockRepository.Object,
-			Configuration,
-			MockRedis.Object
+			Configuration
 			);
 
 		EmailNotificationRecoveryService = new EmailNotificationRecoveryService(

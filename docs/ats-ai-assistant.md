@@ -118,6 +118,18 @@ The assistant reuses the existing `ATSHub` at `/hubs/atsbulk` rather than adding
 gateway entry was required. The chat works over HTTP alone if the hub is unavailable — only the
 typing indicator is lost.
 
+## Voice input
+
+The composer has a microphone button: press it, speak, and the words fill the text box. You still
+press **Send** yourself — dictation never auto-submits, because the assistant can stage an order.
+
+It is browser speech recognition reached through JS interop
+(`wwwroot/js/ats/voiceDictation.js`), not a server feature: no endpoint, no gateway route and no
+audio reaches our API. The button is hidden in Firefox, which does not implement the API.
+
+See `docs/ats-ai-assistant-voice-input.md` for the interop contract, error codes, privacy note
+and browser support.
+
 ## Configuration
 
 Uses the existing `OpenAI:Endpoint`, `OpenAI:ApiKey` and `OpenAI:Model` settings

@@ -6,7 +6,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @inherits CrudPageBase
-@implements IDisposable
+@implements IAsyncDisposable
 
 <PageTitle>ATS - AI Assistant</PageTitle>
 
@@ -215,12 +215,30 @@
             <div class="ats-assistant-input-wrap">
                 <input class="ats-assistant-input"
                        type="text"
-                       placeholder="Ask about an order, or describe a new one…"
+                       placeholder="@(_isListening ? "Listening…" : "Ask about an order, or describe a new one…")"
                        aria-label="Message the ATS assistant"
                        disabled="@_isSending"
                        @bind="_currentMessage"
                        @bind:event="oninput"
+                       @bind:after="OnMessageTyped"
                        @onkeydown="HandleKeyDown" />
+
+                @if (_isSpeechSupported)
+                {
+                    <button type="button"
+                            class="@GetMicClass()"
+                            aria-label="@(_isListening ? "Stop dictation" : "Dictate your message")"
+                            aria-pressed="@_isListening"
+                            title="@(_isListening ? "Listening — click to stop" : "Dictate your message")"
+                            disabled="@_isSending"
+                            @onclick="ToggleDictationAsync">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="9" y="2" width="6" height="11" rx="3" />
+                            <path d="M5 11a7 7 0 0 0 14 0M12 18v4M9 22h6" />
+                        </svg>
+                    </button>
+                }
 
                 <button type="button"
                         class="ats-assistant-send"
@@ -241,8 +259,16 @@
                 </button>
             </div>
 
+            <span class="ats-assistant-sr-only" role="status" aria-live="polite">
+                @_dictationStatus
+            </span>
+
             <p class="ats-assistant-hint">
                 The assistant always asks you to confirm before an order is created.
+                @if (_isSpeechSupported)
+                {
+                    <span>Dictation is handled by your browser and is never sent to us.</span>
+                }
             </p>
         </div>
     </div>

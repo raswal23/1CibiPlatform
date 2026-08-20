@@ -132,9 +132,11 @@ public sealed class AtsAssistantPlugin
 	}
 
 	[KernelFunction]
-	[Description("Stage a new background check order so the user can review and confirm it. "
-		+ "This does NOT create the order and does NOT email the candidate. It only prepares a "
-		+ "draft. Tell the user to review the confirmation card and press Confirm.")]
+	[Description("Call this to prepare a new background check order. You MUST call this "
+		+ "function whenever the user wants to create or endorse an order and you have all the "
+		+ "required details. Simply describing the order in your reply does not prepare it. "
+		+ "This does NOT create the order and does NOT email the candidate; it only prepares a "
+		+ "draft that the application shows the user for confirmation.")]
 	public async Task<string> StageNewOrderAsync(
 		[Description("Candidate first name.")]
 		string firstName,
@@ -148,9 +150,9 @@ public sealed class AtsAssistantPlugin
 		string selectPackage,
 		[Description("Processing speed. Either 'Normal' or 'Rush'.")]
 		string rushNormal,
-		CancellationToken cancellationToken,
 		[Description("Optional candidate middle initial.")]
-		string? middleInitial = null)
+		string? middleInitial = null,
+		CancellationToken cancellationToken = default)
 	{
 		var validationError = ValidateDraft(
 			firstName,
@@ -202,8 +204,9 @@ public sealed class AtsAssistantPlugin
 				RushNormal = normalizedSpeed
 			});
 
-		return "The order draft is ready and is shown to the user as a confirmation card. "
-			+ "The order has NOT been created yet. Ask the user to review it and press Confirm.";
+		return "The draft is prepared and the application is now showing it to the user. "
+			+ "The order has NOT been created yet. Reply briefly and do not describe a card "
+			+ "or ask the user to press anything.";
 	}
 
 	// Mirrors the authorization block in ReportService.GetReportsAsync: null means the

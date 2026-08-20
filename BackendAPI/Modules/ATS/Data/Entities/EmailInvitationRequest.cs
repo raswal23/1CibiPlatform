@@ -18,6 +18,10 @@ public class EmailInvitationRequest
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }
 	public DateTime? EmailSentAt { get; set; }
+	public DateTime? EmailClaimedAt { get; set; }
+	public int EmailSendAttempts { get; set; }
+	// Null means the invitation came from a single inquiry rather than a bulk upload.
+	public Guid? BulkFileID { get; set; }
 	public DateTime? HashTokenCreatedAt { get; set; }
 	public DateTime? HashTokenExpiration { get; set; }
 	public string? OrderStatus { get; set; }
