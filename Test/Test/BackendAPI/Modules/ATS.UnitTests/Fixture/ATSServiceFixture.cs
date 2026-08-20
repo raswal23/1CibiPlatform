@@ -93,7 +93,6 @@ public class ATSServiceFixture : IDisposable
 			MockHashService.Object,
 			MockHubContext.Object,
 			MockBulkSubmissionProcessorServiceLogger.Object,
-			MockCurrentUser.Object,
 			Configuration);
 
 		EmailNotificationProcessorService = new EmailNotificationProcessorService(
