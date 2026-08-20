@@ -45,25 +45,30 @@ public class AtsAssistantPluginTests
 		var orderId = Guid.CreateVersion7();
 
 		_repository
-			.Setup(repository => repository.SearchReportsAsync(
-				It.Is<PaginationRequest>(request => request.SearchTerm == "Russel Gutierrez"),
-				"SubjectName",
-				false,
+			.Setup(repository => repository.SearchReportsPageAsync(
+				null,
+				null,
+				null,
+				It.IsAny<int>(),
+				"Russel Gutierrez",
+				null,
+				null,
 				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.Single() == ClientId),
 				AuthenticatedUserId,
 				It.IsAny<CancellationToken>()))
-			.ReturnsAsync(new PaginatedResult<ReportListDTO>(1, 10, 1,
+			.ReturnsAsync(
 			[
-				new ReportListDTO
+				new ReportRowDTO
 				{
-					EmailInvitationRequestId = orderId,
-					SubjectName = "Russel Gutierrez",
+					EmailInvitationID = orderId,
+					FirstName = "Russel",
+					LastName = "Gutierrez",
 					OrderStatus = "In Progress",
-					SelectedPackage = "Standard Screening",
+					SelectPackage = "Standard Screening",
 					Requestor = "ATS User",
 					HitStatus = "Clear"
 				}
-			]));
+			]);
 
 		var plugin = await CreatePluginAsync();
 
@@ -91,10 +96,14 @@ public class AtsAssistantPluginTests
 		orders.Should().BeEmpty();
 
 		_repository.Verify(
-			repository => repository.SearchReportsAsync(
-				It.IsAny<PaginationRequest>(),
-				It.IsAny<string>(),
-				It.IsAny<bool>(),
+			repository => repository.SearchReportsPageAsync(
+				It.IsAny<int?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
 				It.IsAny<IReadOnlyCollection<int>?>(),
 				It.IsAny<Guid?>(),
 				It.IsAny<CancellationToken>()),
@@ -116,10 +125,14 @@ public class AtsAssistantPluginTests
 		orders.Should().BeEmpty();
 
 		_repository.Verify(
-			repository => repository.SearchReportsAsync(
-				It.IsAny<PaginationRequest>(),
-				It.IsAny<string>(),
-				It.IsAny<bool>(),
+			repository => repository.SearchReportsPageAsync(
+				It.IsAny<int?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
 				It.IsAny<IReadOnlyCollection<int>?>(),
 				It.IsAny<Guid?>(),
 				It.IsAny<CancellationToken>()),
@@ -136,14 +149,14 @@ public class AtsAssistantPluginTests
 		// Arrange
 		_packageManagementService
 			.Setup(service => service.GetPackagesAsync(
-				It.IsAny<PaginationRequest>(),
+				It.IsAny<KeysetPaginationRequest>(),
 				It.IsAny<CancellationToken>(),
 				ClientId))
-			.ReturnsAsync(new PaginatedResult<PackageDetailsDTO>(1, 100, 2,
+			.ReturnsAsync(new KeysetPaginatedResult<PackageDetailsDTO>(
 			[
 				new PackageDetailsDTO { PackageId = 1, PackageName = "Standard Screening", IsActive = true },
 				new PackageDetailsDTO { PackageId = 2, PackageName = "Retired Screening", IsActive = false }
-			]));
+			], null, 2));
 
 		var plugin = await CreatePluginAsync();
 
@@ -331,10 +344,10 @@ public class AtsAssistantPluginTests
 
 		_packageManagementService
 			.Setup(service => service.GetPackagesAsync(
-				It.IsAny<PaginationRequest>(),
+				It.IsAny<KeysetPaginationRequest>(),
 				It.IsAny<CancellationToken>(),
 				It.IsAny<int?>()))
-			.ReturnsAsync(new PaginatedResult<PackageDetailsDTO>(1, 100, packages.Length, packages));
+			.ReturnsAsync(new KeysetPaginatedResult<PackageDetailsDTO>(packages, null, packages.Length));
 	}
 
 	private Task<AtsAssistantPlugin> CreatePluginAsync() =>

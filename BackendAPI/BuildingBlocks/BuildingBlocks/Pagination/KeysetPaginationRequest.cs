@@ -1,6 +1,6 @@
-﻿namespace BuildingBlocks.Pagination;
-public record PaginationRequest(
-	int PageIndex = 0,
+namespace BuildingBlocks.Pagination;
+public record KeysetPaginationRequest(
+	string? Cursor = null,
 	int PageSize = 10,
 	string? SearchTerm = null,
 	DateTime? StartDate = null,

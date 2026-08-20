@@ -6,8 +6,36 @@ public sealed class RoleRepository : IRoleRepository
 
 	public RoleRepository(ATSDBContext dbContext) => _dbContext = dbContext;
 
-	public Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest request, CancellationToken cancellationToken) => GetPageAsync(request, false, cancellationToken);
-	public Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest request, CancellationToken cancellationToken) => GetPageAsync(request, true, cancellationToken);
+	// Keyset ordered by RoleName (unique index) — pure query; the service decodes
+	// the cursor and mints the next one.
+	public async Task<List<RoleDetailsDTO>> GetRolesPageAsync(string? searchTerm, string? afterRoleName, int take, CancellationToken cancellationToken)
+	{
+		var query = BuildQuery(searchTerm);
+		if (afterRoleName is not null)
+			query = query.Where(role => string.Compare(role.RoleName, afterRoleName) > 0);
+
+		return await query.OrderBy(role => role.RoleName).Take(take)
+			.Select(role => new RoleDetailsDTO
+			{
+				RoleId = role.RoleId,
+				RoleName = role.RoleName,
+				RoleDescription = role.RoleDescription,
+				IsActive = role.IsActive,
+				CreatedAt = role.CreatedAt,
+				UpdatedAt = role.UpdatedAt
+			}).ToListAsync(cancellationToken);
+	}
+
+	public Task<long> CountRolesAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		BuildQuery(searchTerm).LongCountAsync(cancellationToken);
+
+	private IQueryable<RoleDetails> BuildQuery(string? searchTerm)
+	{
+		var query = _dbContext.RoleDetails.AsNoTracking();
+		if (!string.IsNullOrEmpty(searchTerm))
+			query = query.Where(role => EF.Functions.ILike(role.RoleName, $"%{searchTerm}%") || EF.Functions.ILike(role.RoleDescription, $"%{searchTerm}%"));
+		return query;
+	}
 
 	public async Task<bool> AddRoleAsync(AddRoleDTO dto)
 	{
@@ -34,22 +62,4 @@ public sealed class RoleRepository : IRoleRepository
 		return role;
 	}
 
-	private async Task<PaginatedResult<RoleDetailsDTO>> GetPageAsync(PaginationRequest request, bool search, CancellationToken cancellationToken)
-	{
-		var query = _dbContext.RoleDetails.AsNoTracking();
-		if (search)
-			query = query.Where(role => EF.Functions.ILike(role.RoleName, $"%{request.SearchTerm}%") || EF.Functions.ILike(role.RoleDescription, $"%{request.SearchTerm}%"));
-		var count = await query.CountAsync(cancellationToken);
-		var items = await query.OrderBy(role => role.RoleName).Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize)
-			.Select(role => new RoleDetailsDTO
-			{
-				RoleId = role.RoleId,
-				RoleName = role.RoleName,
-				RoleDescription = role.RoleDescription,
-				IsActive = role.IsActive,
-				CreatedAt = role.CreatedAt,
-				UpdatedAt = role.UpdatedAt
-			}).ToListAsync(cancellationToken);
-		return new PaginatedResult<RoleDetailsDTO>(request.PageIndex, request.PageSize, count, items);
-	}
 }

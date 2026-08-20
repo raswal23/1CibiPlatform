@@ -1,9 +1,9 @@
-namespace ATS.Services.Settings.ClientManagement;
+﻿namespace ATS.Services.Settings.ClientManagement;
 
 public interface IClientManagementService
 {
-	Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<ClientDetailsDTO>> GetClientsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> AddClientAsync(

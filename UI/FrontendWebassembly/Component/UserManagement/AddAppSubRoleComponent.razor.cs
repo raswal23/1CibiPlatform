@@ -27,12 +27,12 @@ public partial class AddAppSubRoleComponent
 	{
 		AppSubRole.AssignedBy = await LocalStorageService.GetItemAsync<Guid>("UserId");
 
-		var usersResponse = await UserManagementService.GetUsersAsync(1, int.MaxValue);
-		var appsResponse = await UserManagementService.GetApplicationsAsync(1, int.MaxValue);
-		var subMenusResponse = await UserManagementService.GetSubMenusAsync(1, int.MaxValue);
-		var rolesResponse = await UserManagementService.GetRolesAsync(1, int.MaxValue);
+		var (users, usersError) = await KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) => UserManagementService.GetUsersAsync(cursor, pageSize));
+		var (apps, appsError) = await KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) => UserManagementService.GetApplicationsAsync(cursor, pageSize));
+		var (subMenus, subMenusError) = await KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) => UserManagementService.GetSubMenusAsync(cursor, pageSize));
+		var (roles, rolesError) = await KeysetPageWalker.FetchAllPagesAsync((cursor, pageSize) => UserManagementService.GetRolesAsync(cursor, pageSize));
 
-		var firstFailure = new[] { usersResponse.ErrorDetail, appsResponse.ErrorDetail, subMenusResponse.ErrorDetail, rolesResponse.ErrorDetail }
+		var firstFailure = new[] { usersError, appsError, subMenusError, rolesError }
 			.FirstOrDefault(error => !string.IsNullOrEmpty(error));
 
 		if (firstFailure is not null)
@@ -40,10 +40,10 @@ public partial class AddAppSubRoleComponent
 			Snackbar.Add(firstFailure, Severity.Error);
 		}
 
-		Users = usersResponse.Data?.Data.ToList() ?? new();
-		Apps = appsResponse.Data?.Data.ToList() ?? new();
-		SubMenus = subMenusResponse.Data?.Data.ToList() ?? new();
-		Roles = rolesResponse.Data?.Data.ToList() ?? new();
+		Users = users;
+		Apps = apps;
+		SubMenus = subMenus;
+		Roles = roles;
 	}
 
 	async Task Submit()

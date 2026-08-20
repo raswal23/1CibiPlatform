@@ -28,6 +28,7 @@
                 ColumnCount="6"
                 RowsPerPage="10"
                 LoadServerData="LoadRoleData"
+                CursorPagerState="_rolesLoader"
                 SearchString="@searchString"
                 SearchStringChanged="@((string val) => searchString = val)">
 
@@ -95,11 +96,12 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<RoleDetailsDTO> _rolesLoader = new();
     private TableComponent<RoleDetailsDTO>? rolesTable;
 
     private async Task<TableData<RoleDetailsDTO>> LoadRoleData(TableState state, CancellationToken cancellationToken)
-        => await LoadPagedDataAsync(state, (page, pageSize) =>
-            RoleManagementService.GetRolesAsync(page, pageSize, searchString, cancellationToken));
+        => await LoadCursorPagedDataAsync(_rolesLoader, state, $"{searchString}", (cursor, pageSize) =>
+            RoleManagementService.GetRolesAsync(cursor, pageSize, searchString, cancellationToken));
 
     private async Task AddNewRole()
     {

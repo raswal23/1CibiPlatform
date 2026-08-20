@@ -131,6 +131,8 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 				await _authDbContext.Database.ExecuteSqlRawAsync(sql);
 			}
 
+			// Every tag used by the ATS/Auth cache decorators must be listed — cached
+			// first pages and counts survive the table truncation above otherwise.
 			await _hybridCache.RemoveByTagAsync("user");
 			await _hybridCache.RemoveByTagAsync("userclient");
 			await _hybridCache.RemoveByTagAsync("users");
@@ -138,6 +140,10 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 			await _hybridCache.RemoveByTagAsync("disputeorder");
 			await _hybridCache.RemoveByTagAsync("report");
 			await _hybridCache.RemoveByTagAsync("withdrawnapplication");
+			await _hybridCache.RemoveByTagAsync("role");
+			await _hybridCache.RemoveByTagAsync("module");
+			await _hybridCache.RemoveByTagAsync("client");
+			await _hybridCache.RemoveByTagAsync("package");
 
 			if (_objectStorageService is MockObjectStorageService mockObjectStorage)
 				mockObjectStorage.Clear();

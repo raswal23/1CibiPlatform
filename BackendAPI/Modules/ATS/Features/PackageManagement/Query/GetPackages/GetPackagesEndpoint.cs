@@ -1,8 +1,8 @@
-namespace ATS.Features.PackageManagement.Query.GetPackages;
+﻿namespace ATS.Features.PackageManagement.Query.GetPackages;
 
-public record GetPackagesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null);
+public record GetPackagesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null);
 
-public record GetPackagesEndpointResponse(PaginatedResult<PackageDetailsDTO> Packages);
+public record GetPackagesEndpointResponse(KeysetPaginatedResult<PackageDetailsDTO> Packages);
 
 public class GetPackagesEndpoint : ICarterModule
 {
@@ -14,7 +14,7 @@ public class GetPackagesEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetPackagesQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm,
 				request.ClientId);

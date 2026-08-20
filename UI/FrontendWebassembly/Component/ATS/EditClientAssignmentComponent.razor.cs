@@ -50,8 +50,9 @@ public partial class EditClientAssignmentComponent
 		string value,
 		CancellationToken cancellationToken)
 	{
+		// First page only: the autocomplete narrows by search term instead of paging.
 		var response = await ClientAssignmentService.GetAssignableClientsAsync(
-			1,
+			null,
 			25,
 			value,
 			cancellationToken);

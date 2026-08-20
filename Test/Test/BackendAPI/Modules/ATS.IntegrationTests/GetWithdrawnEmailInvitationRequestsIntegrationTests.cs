@@ -31,11 +31,11 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		SetAuthenticatedUser(userId, roleId, clientId: 99);
 
 		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
-			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(invitation => invitation.EmailInvitationID)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(invitation => invitation.EmailInvitationID)
 			.Should().BeEquivalentTo(new[]
 			{
 				assigned.EmailInvitationID,
@@ -58,11 +58,11 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		SetAuthenticatedUser(userId, roleId, clientId: 5);
 
 		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
-			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(1);
-		result.Data.Should().ContainSingle()
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().ContainSingle()
 			.Which.EmailInvitationID.Should().Be(matching.EmailInvitationID);
 	}
 
@@ -80,11 +80,11 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 			isPlatformSuperAdmin: true);
 
 		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(
-			new BuildingBlocks.Pagination.PaginationRequest(1, 10),
+			new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(invitation => invitation.EmailInvitationID)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(invitation => invitation.EmailInvitationID)
 			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
 	}
 
@@ -156,13 +156,13 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.SaveChangesAsync();
 
       // Act
-		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10), CancellationToken.None);
+		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10), CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result!.Data.Should().HaveCount(2);
-		result.Data.Should().AllSatisfy(x => x.OrderStatus.Should().Be("Application Withdrawn"));
-		result.Data.Select(x => x.EmailAddress).Should().Contain(new[] { "withdrawn1@example.com", "withdrawn2@example.com" });
+		result!.Items.Should().HaveCount(2);
+		result.Items.Should().AllSatisfy(x => x.OrderStatus.Should().Be("Application Withdrawn"));
+		result.Items.Select(x => x.EmailAddress).Should().Contain(new[] { "withdrawn1@example.com", "withdrawn2@example.com" });
 	}
 
 	[Fact]
@@ -198,23 +198,25 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawnRecords);
 		await _dbContext.SaveChangesAsync();
 
-     // Act - Get first page
-		var page1 = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10), CancellationToken.None);
+		// Act - Get first page
+		var page1 = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10), CancellationToken.None);
 
 		// Assert
 		page1.Should().NotBeNull();
-		page1!.Data.Should().HaveCount(10);
-       page1.Count.Should().Be(15);
-		page1.PageIndex.Should().Be(1);
-		page1.PageSize.Should().Be(10);
+		page1!.Items.Should().HaveCount(10);
+		page1.TotalCount.Should().Be(15);
+		page1.NextCursor.Should().NotBeNull();
 
-        // Act - Get second page
-		var page2 = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(2, 10), CancellationToken.None);
+		// Act - Get second page via the returned cursor
+		var page2 = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(page1.NextCursor, 10), CancellationToken.None);
 
 		// Assert
 		page2.Should().NotBeNull();
-		page2!.Data.Should().HaveCount(5);
-        page2.PageIndex.Should().Be(2);
+		page2!.Items.Should().HaveCount(5);
+		page2.TotalCount.Should().BeNull();
+		page2.Items.Select(x => x.EmailInvitationID)
+			.Should().NotIntersectWith(page1.Items.Select(x => x.EmailInvitationID));
+		page2.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -244,12 +246,13 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.SaveChangesAsync();
 
       // Act
-		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10), CancellationToken.None);
+		var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10), CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result!.Data.Should().BeEmpty();
-        result.Count.Should().Be(0);
+		result!.Items.Should().BeEmpty();
+		result.TotalCount.Should().Be(0);
+		result.NextCursor.Should().BeNull();
 	}
 
 
@@ -303,13 +306,13 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.SaveChangesAsync();
 
 		// Act
-       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10, "john"), CancellationToken.None);
+       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10, "john"), CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result!.Data.Should().HaveCount(1);
-		result.Data.First().FirstName.Should().Be("John");
-		result.Data.First().EmailAddress.Should().Be("john.doe@example.com");
+		result!.Items.Should().HaveCount(1);
+		result.Items.First().FirstName.Should().Be("John");
+		result.Items.First().EmailAddress.Should().Be("john.doe@example.com");
 	}
 
 	[Fact]
@@ -362,12 +365,12 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.SaveChangesAsync();
 
 		// Act
-       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10, "doe"), CancellationToken.None);
+       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10, "doe"), CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result!.Data.Should().HaveCount(2);
-		result.Data.Should().AllSatisfy(x => x.LastName.Should().Be("Doe"));
+		result!.Items.Should().HaveCount(2);
+		result.Items.Should().AllSatisfy(x => x.LastName.Should().Be("Doe"));
 	}
 
 	[Fact]
@@ -400,12 +403,12 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		await _dbContext.SaveChangesAsync();
 
 		// Act
-       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.PaginationRequest(1, 10, "nonexistent"), CancellationToken.None);
+       var result = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(null, 10, "nonexistent"), CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result!.Data.Should().BeEmpty();
-        result.Count.Should().Be(0);
+		result!.Items.Should().BeEmpty();
+		result.TotalCount.Should().Be(0);
 	}
 
 	#endregion

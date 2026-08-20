@@ -1,13 +1,13 @@
-namespace ATS.Services.Settings.ClientAssignment;
+﻿namespace ATS.Services.Settings.ClientAssignment;
 
 public interface IClientAssignmentService
 {
-	Task<PaginatedResult<ClientAssignmentDetailsDTO>> GetAssignmentsAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<ClientAssignmentDetailsDTO>> GetAssignmentsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
-	Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<ClientAssignmentDetailsDTO> AssignClientAsync(

@@ -97,13 +97,15 @@ public class ATSUserManagementService : IATSUserManagementService
 		}
 	}
 
-	public async Task<ServiceResponse<GetUsersResponseDTO>> GetUsersAsync(
-		int pageIndex,
+	public async Task<ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>> GetUsersAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = $"ats/getusers?pageIndex={pageIndex}&pageSize={pageSize}";
+		var query = $"ats/getusers?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
 		if (!string.IsNullOrWhiteSpace(searchTerm))
 			query += $"&search={Uri.EscapeDataString(searchTerm)}";
 
@@ -113,22 +115,22 @@ public class ATSUserManagementService : IATSUserManagementService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<GetUsersResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
-			var result = await response.Content.ReadFromJsonAsync<GetUsersResponseDTO>(cancellationToken: cancellationToken);
+			var result = await response.Content.ReadFromJsonAsync<KeysetPaginatedResult<UserDetailsDTO>>(cancellationToken: cancellationToken);
 
 			if (result is null)
 			{
-				return ServiceResponse<GetUsersResponseDTO>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<GetUsersResponseDTO>.Success(result);
+			return ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<GetUsersResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

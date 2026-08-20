@@ -33,10 +33,13 @@ public sealed class UserClientCacheRepository : IUserClientRepository
 		CancellationToken cancellationToken) =>
 		_repository.GetUserClientAssignmentsAsync(userIds, cancellationToken);
 
-	public Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
-		PaginationRequest paginationRequest,
+	public Task<List<ClientLookupDTO>> GetAssignableClientsPageAsync(
+		string? searchTerm, string? afterClientName, int? afterClientId, int take,
 		CancellationToken cancellationToken) =>
-		_repository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
+		_repository.GetAssignableClientsPageAsync(searchTerm, afterClientName, afterClientId, take, cancellationToken);
+
+	public Task<long> CountAssignableClientsAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		_repository.CountAssignableClientsAsync(searchTerm, cancellationToken);
 
 	public Task<bool> ClientIsActiveAsync(int clientId, CancellationToken cancellationToken) =>
 		_repository.ClientIsActiveAsync(clientId, cancellationToken);

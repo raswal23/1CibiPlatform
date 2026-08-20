@@ -129,6 +129,7 @@
                     ColumnCount="@ReportColumnCount"
                     RowsPerPage="10"
                     LoadServerData="LoadReportData"
+                    CursorPagerState="_reportsLoader"
                     SearchString="@searchString"
                     RowClassFunc="GetRowClass"
                     SearchStringChanged="@((string val) => searchString = val)">
@@ -150,16 +151,10 @@
         </ToolBarLeft>
         <HeaderTemplate>
             <MudTh> Action</MudTh>
-            <MudTh>
-                <MudTableSortLabel T="ReportListDTO" SortLabel="SubjectName">Subject Name</MudTableSortLabel>
-            </MudTh>
+            <MudTh>Subject Name</MudTh>
             <MudTh>Requestor</MudTh>
-            <MudTh>
-                <MudTableSortLabel T="ReportListDTO" SortLabel="OrderStatus">Status</MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel T="ReportListDTO" SortLabel="OrderCompletedAt">Date Completed</MudTableSortLabel>
-            </MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Date Completed</MudTh>
             <MudTh>Selected Package</MudTh>
             <MudTh>Hit Status</MudTh>
             @if (_canUploadReport)

@@ -218,31 +218,39 @@ public class ReportServiceTests
 	{
 		// Arrange
 		var userId = SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		var expected = CreateReportListResult();
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
+		var rows = CreateReportRows();
 		_repository
-			.Setup(repository => repository.GetReportsAsync(
-				request,
-				"SubjectName",
-				false,
+			.Setup(repository => repository.GetReportsPageAsync(
+				null,
+				null,
+				null,
+				11,
 				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
 				userId,
 				CancellationToken.None))
-			.ReturnsAsync(expected);
+			.ReturnsAsync(rows.ToList());
+		_repository
+			.Setup(repository => repository.CountReportsAsync(
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
+				CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
-		var result = await _service.GetReportsAsync(
-			request,
-			"SubjectName",
-			false,
-			CancellationToken.None);
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Should().BeSameAs(expected);
-		_repository.Verify(repository => repository.SearchReportsAsync(
-			It.IsAny<PaginationRequest>(),
+		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
+		result.TotalCount.Should().Be(1);
+		_repository.Verify(repository => repository.SearchReportsPageAsync(
+			It.IsAny<int?>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<int>(),
 			It.IsAny<string?>(),
-			It.IsAny<bool>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<DateTime?>(),
 			It.IsAny<IReadOnlyCollection<int>>(),
 			It.IsAny<Guid?>(),
 			It.IsAny<CancellationToken>()), Times.Never);
@@ -260,36 +268,46 @@ public class ReportServiceTests
 				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
 				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
 			]);
-		var request = new PaginationRequest(
-			PageIndex: 1,
+		var request = new KeysetPaginationRequest(
+			Cursor: null,
 			PageSize: 10,
 			SearchTerm: "ada",
 			StartDate: new DateTime(2026, 8, 1),
 			EndDate: new DateTime(2026, 8, 31));
-		var expected = CreateReportListResult();
+		var rows = CreateReportRows();
 		_repository
-			.Setup(repository => repository.SearchReportsAsync(
-				request,
-				"OrderCompletedAt",
-				true,
+			.Setup(repository => repository.SearchReportsPageAsync(
+				null,
+				null,
+				null,
+				11,
+				"ada",
+				request.StartDate,
+				request.EndDate,
 				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
 				null,
 				CancellationToken.None))
-			.ReturnsAsync(expected);
+			.ReturnsAsync(rows.ToList());
+		_repository
+			.Setup(repository => repository.CountSearchReportsAsync(
+				"ada",
+				request.StartDate,
+				request.EndDate,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
+				CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
-		var result = await _service.GetReportsAsync(
-			request,
-			"OrderCompletedAt",
-			true,
-			CancellationToken.None);
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Should().BeSameAs(expected);
-		_repository.Verify(repository => repository.GetReportsAsync(
-			It.IsAny<PaginationRequest>(),
-			It.IsAny<string?>(),
-			It.IsAny<bool>(),
+		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
+		_repository.Verify(repository => repository.GetReportsPageAsync(
+			It.IsAny<int?>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<int>(),
 			It.IsAny<IReadOnlyCollection<int>>(),
 			It.IsAny<Guid?>(),
 			It.IsAny<CancellationToken>()), Times.Never);
@@ -298,26 +316,27 @@ public class ReportServiceTests
 	[Fact]
 	public async Task GetReportsAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
 	{
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		var expected = CreateReportListResult();
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
+		var rows = CreateReportRows();
 		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
 		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
 		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
-		_repository.Setup(repository => repository.GetReportsAsync(
-			request,
-			"SubjectName",
-			false,
+		_repository.Setup(repository => repository.GetReportsPageAsync(
 			null,
 			null,
-			CancellationToken.None)).ReturnsAsync(expected);
+			null,
+			11,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(rows.ToList());
+		_repository.Setup(repository => repository.CountReportsAsync(
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(1);
 
-		var result = await _service.GetReportsAsync(
-			request,
-			"SubjectName",
-			false,
-			CancellationToken.None);
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
-		result.Should().BeSameAs(expected);
+		result.Items.Should().ContainSingle();
 		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
 			It.IsAny<IReadOnlyCollection<Guid>>(),
 			It.IsAny<CancellationToken>()), Times.Never);
@@ -658,18 +677,17 @@ public class ReportServiceTests
 		OrderStatus = "In Progress"
 	};
 
-	private static PaginatedResult<ReportListDTO> CreateReportListResult()
-	{
-		var report = new ReportListDTO
+	private static List<ReportRowDTO> CreateReportRows() =>
+	[
+		new ReportRowDTO
 		{
-			EmailInvitationRequestId = Guid.CreateVersion7(),
-			SubjectName = "Ada Lovelace",
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Ada",
+			LastName = "Lovelace",
 			OrderStatus = "Completed",
 			HitStatus = "Clear"
-		};
-
-		return new PaginatedResult<ReportListDTO>(1, 10, 1, [report]);
-	}
+		}
+	];
 
 	private static async Task<string> ReadEntryAsync(ZipArchiveEntry entry)
 	{

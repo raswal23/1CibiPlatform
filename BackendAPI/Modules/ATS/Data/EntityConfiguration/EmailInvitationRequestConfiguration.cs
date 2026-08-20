@@ -89,5 +89,14 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 
 		builder.Property(e => e.DisputedAt)
 			   .IsRequired(false);
+
+		// Composite indexes matching the keyset (seek) pagination orderings; each seek
+		// tuple needs an index with the same columns and directions to avoid full scans.
+		builder.HasIndex(e => new { e.OrderCompletedAt, e.EmailInvitationID })
+			   .IsDescending(true, false);
+		builder.HasIndex(e => new { e.FirstName, e.LastName, e.EmailInvitationID });
+		builder.HasIndex(e => new { e.OrderStatus, e.EmailInvitationID });
+		builder.HasIndex(e => new { e.OrderCreatedAt, e.EmailInvitationID })
+			   .IsDescending(true, false);
 	}
 }

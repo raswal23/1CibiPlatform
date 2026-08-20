@@ -1,8 +1,8 @@
-﻿namespace Auth.Features.UserManagement.Query.GetUsers;
+namespace Auth.Features.UserManagement.Query.GetUsers;
 
-public record GetUsersEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetUsersEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetUsersEndpointResponse(PaginatedResult<UsersDTO> Users);
+public record GetUsersEndpointResponse(KeysetPaginatedResult<UsersDTO> Users);
 
 public class GetUsersEndpoint : ICarterModule
 {
@@ -14,7 +14,7 @@ public class GetUsersEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetUsersQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

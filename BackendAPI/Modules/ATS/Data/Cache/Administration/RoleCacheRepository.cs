@@ -11,21 +11,23 @@ public sealed class RoleCacheRepository : IRoleRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest request, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public Task<List<RoleDetailsDTO>> GetRolesPageAsync(string? searchTerm, string? afterRoleName, int take, CancellationToken cancellationToken)
 	{
-		var key = $"role_page_{request.PageIndex}_size_{request.PageSize}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RoleDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetRolesAsync(value, token), null,
+		if (afterRoleName is not null)
+			return _repository.GetRolesPageAsync(searchTerm, afterRoleName, take, cancellationToken);
+
+		var key = $"role_first_take_{take}_search_{searchTerm}";
+		return _cache.GetOrCreateAsync<List<RoleDetailsDTO>>(
+			key, async token => await _repository.GetRolesPageAsync(searchTerm, null, take, token),
 			tags: [CacheTags.Role], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest request, CancellationToken cancellationToken)
-	{
-		var key = $"role_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RoleDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchRolesAsync(value, token), null,
+	public Task<long> CountRolesAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		_cache.GetOrCreateAsync<long>(
+			$"role_count_search_{searchTerm}", async token => await _repository.CountRolesAsync(searchTerm, token),
 			tags: [CacheTags.Role], cancellationToken: cancellationToken).AsTask();
-	}
 
 	public async Task<bool> AddRoleAsync(AddRoleDTO roleDTO)
 	{

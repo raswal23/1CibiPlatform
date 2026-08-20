@@ -1,4 +1,4 @@
-namespace ATS.Services.Settings.PackageManagement;
+﻿namespace ATS.Services.Settings.PackageManagement;
 
 public class PackageManagementService : IPackageManagementService
 {
@@ -12,8 +12,8 @@ public class PackageManagementService : IPackageManagementService
 		_logger = logger;
 	}
 
-	public Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<PackageDetailsDTO>> GetPackagesAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken,
 		int? clientId = null)
 	{
@@ -27,9 +27,20 @@ public class PackageManagementService : IPackageManagementService
 
 		_logger.LogInformation("Fetching packages with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_packageRepository.GetPackagesAsync(paginationRequest, clientId, cancellationToken) :
-			_packageRepository.SearchPackagesAsync(paginationRequest, clientId, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		var afterPackageName = fields?[0];
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _packageRepository.GetPackagesPageAsync(paginationRequest.SearchTerm, clientId, afterPackageName, pageSize + 1, cancellationToken);
+		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore ? CursorCodec.Encode(items[^1].PackageName) : null;
+		long? totalCount = afterPackageName is null
+			? await _packageRepository.CountPackagesAsync(paginationRequest.SearchTerm, clientId, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<PackageDetailsDTO>(items, nextCursor, totalCount);
 	}
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)

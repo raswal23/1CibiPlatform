@@ -56,16 +56,16 @@ public class ReportService : IReportService
 		}
 	}
 
-    public async Task<ServiceResponse<PaginatedResult<ReportListDTO>>> GetReportsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, string? SortColumn = null, bool SortDescending = false, DateTime? StartDate = null, DateTime? EndDate = null)
+    public async Task<ServiceResponse<KeysetPaginatedResult<ReportListDTO>>> GetReportsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, DateTime? StartDate = null, DateTime? EndDate = null)
 	{
-		var query = $"ats/getreports?pageNumber={PageNumber}&pageSize={PageSize}";
+		var query = $"ats/getreports?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
-		}
-		if (!string.IsNullOrWhiteSpace(SortColumn))
-		{
-			query += $"&sortColumn={Uri.EscapeDataString(SortColumn)}&sortDescending={SortDescending}";
 		}
 		if (StartDate.HasValue)
 		{
@@ -82,22 +82,22 @@ public class ReportService : IReportService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<ReportListDTO>>.Failure(await response.ReadErrorDetailAsync());
+				return ServiceResponse<KeysetPaginatedResult<ReportListDTO>>.Failure(await response.ReadErrorDetailAsync());
 			}
 
 			var result = await response.Content.ReadFromJsonAsync<GetReportsResponseDTO>();
 
 			if (result?.Reports is null)
 			{
-				return ServiceResponse<PaginatedResult<ReportListDTO>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<ReportListDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<ReportListDTO>>.Success(result.Reports);
+			return ServiceResponse<KeysetPaginatedResult<ReportListDTO>>.Success(result.Reports);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<ReportListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<ReportListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

@@ -9,9 +9,13 @@ public class ClientManagementService : IClientManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<GetClientsResponseDTO>> GetClientsAsync(int pageIndex = 1, int pageSize = 10, string? searchTerm = null, CancellationToken cancellationToken = default)
+	public async Task<ServiceResponse<KeysetPaginatedResult<ClientDetailsDTO>>> GetClientsAsync(string? cursor, int pageSize, string? searchTerm = null, CancellationToken cancellationToken = default)
 	{
-		var query = $"ats/getclients?pageIndex={pageIndex}&pageSize={pageSize}";
+		var query = $"ats/getclients?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
 		if (!string.IsNullOrWhiteSpace(searchTerm))
 		{
 			query += $"&search={Uri.EscapeDataString(searchTerm)}";
@@ -23,22 +27,22 @@ public class ClientManagementService : IClientManagementService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<GetClientsResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<ClientDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
-			var result = await response.Content.ReadFromJsonAsync<GetClientsResponseDTO>(cancellationToken: cancellationToken);
+			var result = await response.Content.ReadFromJsonAsync<KeysetPaginatedResult<ClientDetailsDTO>>(cancellationToken: cancellationToken);
 
 			if (result is null)
 			{
-				return ServiceResponse<GetClientsResponseDTO>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<ClientDetailsDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<GetClientsResponseDTO>.Success(result);
+			return ServiceResponse<KeysetPaginatedResult<ClientDetailsDTO>>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<GetClientsResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<ClientDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 
@@ -118,12 +122,12 @@ public class ClientManagementService : IClientManagementService
 	public async Task<ServiceResponse<IReadOnlyList<ClientDetailsDTO>>> GetAllClientsAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
-		var pageIndex = 1;
+		string? cursor = null;
 		var clients = new List<ClientDetailsDTO>();
 
 		while (true)
 		{
-			var pageResponse = await GetClientsAsync(pageIndex, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetClientsAsync(cursor, pageSize, cancellationToken: cancellationToken);
 
 			if (!pageResponse.IsSuccess || pageResponse.Data is null)
 			{
@@ -133,10 +137,10 @@ public class ClientManagementService : IClientManagementService
 			var page = pageResponse.Data;
 			clients.AddRange(page.Items);
 
-			if (clients.Select(client => client.ClientId).Distinct().LongCount() >= page.TotalRecords || page.Items.Count == 0)
+			if (page.NextCursor is null || page.Items.Count == 0)
 				return ServiceResponse<IReadOnlyList<ClientDetailsDTO>>.Success(clients);
 
-			pageIndex++;
+			cursor = page.NextCursor;
 		}
 	}
 }

@@ -28,6 +28,7 @@
                 ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadPackageData"
+                CursorPagerState="_packagesLoader"
                 SearchString="@searchString"
                 SearchStringChanged="@((string val) => searchString = val)">
 
@@ -114,11 +115,12 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<PackageDetailsDTO> _packagesLoader = new();
     private TableComponent<PackageDetailsDTO>? packagesTable;
 
     private async Task<TableData<PackageDetailsDTO>> LoadPackageData(TableState state, CancellationToken cancellationToken)
-    => await LoadPagedDataAsync(state, (page, pageSize) =>
-                PackageManagementService.GetPackagesAsync(page, pageSize, searchString, cancellationToken));
+    => await LoadCursorPagedDataAsync(_packagesLoader, state, $"{searchString}", (cursor, pageSize) =>
+                PackageManagementService.GetPackagesAsync(cursor, pageSize, searchString, cancellationToken));
 
     private async Task AddNewPackage()
     {

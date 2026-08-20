@@ -1,10 +1,10 @@
-namespace Auth.Data.Repository;
+﻿namespace Auth.Data.Repository;
 
 public interface ISubMenuRepository
 {
-	Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<SubMenusDTO>> GetSubMenusPageAsync(string? searchTerm, int? afterSubMenuId, int take, CancellationToken cancellationToken);
+	Task<long> CountSubMenusAsync(string? searchTerm, CancellationToken cancellationToken);
 	Task<AuthSubMenu> GetSubMenuAsync(int applicationId);
-	Task<PaginatedResult<SubMenusDTO>> SearchSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddSubMenuAsync(AddSubMenuDTO subMenu);
 	Task<AuthSubMenu> EditSubMenuAsync(AuthSubMenu subMenu);
 	Task<bool> DeleteSubMenuAsync(AuthSubMenu subMenu);

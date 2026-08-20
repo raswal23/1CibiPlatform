@@ -2,13 +2,13 @@ namespace FrontendWebassembly.Services.Auth.Interfaces;
 
 public interface IUserManagementService
 {
-	Task<ServiceResponse<PaginatedResult<UsersDTO>>> GetUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
-	Task<ServiceResponse<PaginatedResult<UnApprovedUsersDTO>>> GetUnApprovedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default);
-	Task<ServiceResponse<PaginatedResult<LockedUsersDTO>>> GetLockedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default);
-	Task<ServiceResponse<PaginatedResult<ApplicationsDTO>>> GetApplicationsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
-	Task<ServiceResponse<PaginatedResult<SubMenusDTO>>> GetSubMenusAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
-	Task<ServiceResponse<PaginatedResult<RolesDTO>>> GetRolesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
-	Task<ServiceResponse<PaginatedResult<AppSubRolesDTO>>> GetAppSubRolesAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<KeysetPaginatedResult<UsersDTO>>> GetUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<KeysetPaginatedResult<UnApprovedUsersDTO>>> GetUnApprovedUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default);
+	Task<ServiceResponse<KeysetPaginatedResult<LockedUsersDTO>>> GetLockedUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default);
+	Task<ServiceResponse<KeysetPaginatedResult<ApplicationsDTO>>> GetApplicationsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<KeysetPaginatedResult<SubMenusDTO>>> GetSubMenusAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<KeysetPaginatedResult<RolesDTO>>> GetRolesAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<KeysetPaginatedResult<AppSubRolesDTO>>> GetAppSubRolesAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default);
 
 	Task<ServiceResponse<bool>> DeleteApplicationAsync(int AppId);
 	Task<ServiceResponse<bool>> DeleteSubMenuAsync(int SubMenuId);

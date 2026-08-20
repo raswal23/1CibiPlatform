@@ -1,35 +1,34 @@
-namespace ATS.Features.UserManagement.Query.GetUsers;
+﻿namespace ATS.Features.UserManagement.Query.GetUsers;
 
-public record GetUsersRequest(PaginationRequest paginationRequest);
+public record GetUsersRequest(KeysetPaginationRequest KeysetPaginationRequest);
 
-public record GetUsersResponse(PaginatedResult<UserDetailsDTO> users);
+public record GetUsersResponse(KeysetPaginatedResult<UserDetailsDTO> users);
 
 public class GetUsersEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
 		app.MapGet("getusers", async (
-			int pageIndex = 1,
-			int pageSize = 10,
+			string? cursor = null, int pageSize = 10,
 			string? search = null,
 			ISender sender = null!,
 			CancellationToken cancellationToken = default) =>
 		{
-			var paginationRequest = new PaginationRequest
+			var KeysetPaginationRequest = new KeysetPaginationRequest
 			{
-				PageIndex = pageIndex,
+				Cursor = cursor,
 				PageSize = pageSize,
 				SearchTerm = search
 			};
 
-			var query = new GetUsersQuery(paginationRequest);
+			var query = new GetUsersQuery(KeysetPaginationRequest);
 			var result = await sender.Send(query, cancellationToken);
 			var response = new GetUsersResponse(result.users);
 			return Results.Ok(response.users);
 		})
 		.WithName("ATSGetUsers")
 		.WithTags("ATS User Management")
-		.Produces<PaginatedResult<UserDetailsDTO>>()
+		.Produces<KeysetPaginatedResult<UserDetailsDTO>>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get ATS Users")
 		.WithDescription("Retrieves a paginated list of ATS users and their module assignments.")

@@ -3,30 +3,18 @@ namespace FrontendWebassembly.Component.ATS;
 public partial class ClientAssigning
 {
 	private string searchString = string.Empty;
+	private readonly CursorTableLoader<ClientAssignmentDetailsDTO> _assignmentsLoader = new();
 	private TableComponent<ClientAssignmentDetailsDTO>? assignmentsTable;
 
 	private async Task<TableData<ClientAssignmentDetailsDTO>> LoadAssignmentData(
 		TableState state,
 		CancellationToken cancellationToken) =>
-		await LoadPagedDataAsync(state, async (page, pageSize) =>
-		{
-			var response = await ClientAssignmentService.GetAssignmentsAsync(
-				page,
+		await LoadCursorPagedDataAsync(_assignmentsLoader, state, $"{searchString}", (cursor, pageSize) =>
+			ClientAssignmentService.GetAssignmentsAsync(
+				cursor,
 				pageSize,
 				searchString,
-				cancellationToken);
-
-			if (!response.IsSuccess || response.Data is null)
-				return ServiceResponse<PaginatedResult<ClientAssignmentDetailsDTO>>.Failure(response.ErrorDetail);
-
-			var result = response.Data;
-			return ServiceResponse<PaginatedResult<ClientAssignmentDetailsDTO>>.Success(
-				new PaginatedResult<ClientAssignmentDetailsDTO>(
-					result.PageIndex,
-					result.PageSize,
-					result.TotalRecords,
-					result.Items));
-		});
+				cancellationToken));
 
 	private async Task EditAssignment(ClientAssignmentDetailsDTO assignment)
 	{

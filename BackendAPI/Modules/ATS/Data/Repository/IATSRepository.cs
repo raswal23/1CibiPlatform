@@ -24,23 +24,29 @@ public interface IATSRepository
 	Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId);
 	Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken);
 	Task<int> WithdrawnApplicationForm(string hashToken, CancellationToken cancellationToken);
-	Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(
-		PaginationRequest paginationRequest,
+	Task<List<EmailInvitationRequestListDTO>> GetWithdrawnPageAsync(
+		string? searchTerm,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(
-		PaginationRequest paginationRequest,
+	Task<long> CountWithdrawnAsync(
+		string? searchTerm,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(
-		PaginationRequest paginationRequest,
+	Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
+		string? searchTerm,
+		bool? afterHasDispute,
+		DateTime? afterCreatedAt,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(
-		PaginationRequest paginationRequest,
+	Task<long> CountDisputeOrdersAsync(
+		string? searchTerm,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
@@ -55,17 +61,33 @@ public interface IATSRepository
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<PaginatedResult<ReportListDTO>> GetReportsAsync(
-		PaginationRequest paginationRequest,
-		string? sortColumn,
-		bool sortDescending,
+	Task<List<ReportRowDTO>> GetReportsPageAsync(
+		int? afterRank,
+		DateTime? afterCompletedAt,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(
-		PaginationRequest paginationRequest,
-		string? sortColumn,
-		bool sortDescending,
+	Task<List<ReportRowDTO>> SearchReportsPageAsync(
+		int? afterRank,
+		DateTime? afterCompletedAt,
+		Guid? afterId,
+		int take,
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
+	Task<long> CountReportsAsync(
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
+	Task<long> CountSearchReportsAsync(
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);

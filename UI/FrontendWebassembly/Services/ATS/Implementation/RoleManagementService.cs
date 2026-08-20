@@ -9,13 +9,17 @@ public class RoleManagementService : IRoleManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<PaginatedResult<RoleDetailsDTO>>> GetRolesAsync(
-		int? pageNumber = 1,
+	public async Task<ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>> GetRolesAsync(
+		string? cursor = null,
 		int? pageSize = 10,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = $"ats/getroles?pageNumber={pageNumber}&pageSize={pageSize}";
+		var query = $"ats/getroles?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
 		if (!string.IsNullOrWhiteSpace(searchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
@@ -27,34 +31,34 @@ public class RoleManagementService : IRoleManagementService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
 			var result = await response.Content.ReadFromJsonAsync<GetRolesResponseDTO>(cancellationToken: cancellationToken);
 
 			if (result?.Roles is null)
 			{
-				return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Success(result.Roles);
+			return ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>.Success(result.Roles);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<RoleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 
 	public async Task<ServiceResponse<IReadOnlyList<RoleDetailsDTO>>> GetAllRolesAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
-		var pageNumber = 1;
+		string? cursor = null;
 		var roles = new List<RoleDetailsDTO>();
 
 		while (true)
 		{
-			var pageResponse = await GetRolesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetRolesAsync(cursor, pageSize, cancellationToken: cancellationToken);
 
 			if (!pageResponse.IsSuccess || pageResponse.Data is null)
 			{
@@ -62,13 +66,12 @@ public class RoleManagementService : IRoleManagementService
 			}
 
 			var page = pageResponse.Data;
-			var pageItems = page.Data.ToArray();
-			roles.AddRange(pageItems);
+			roles.AddRange(page.Items);
 
-			if (roles.Count >= page.Count || pageItems.Length == 0)
+			if (page.NextCursor is null || page.Items.Count == 0)
 				return ServiceResponse<IReadOnlyList<RoleDetailsDTO>>.Success(roles);
 
-			pageNumber++;
+			cursor = page.NextCursor;
 		}
 	}
 

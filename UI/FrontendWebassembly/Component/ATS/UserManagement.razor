@@ -35,6 +35,7 @@
                         RowsPerPage="10"
                         PageSizeOptions="@(new[] { 10, 25, 50 })"
                         LoadServerData="LoadUserData"
+                        CursorPagerState="_usersLoader"
                         SearchString="@searchString"
                         SearchStringChanged="@((string value) => searchString = value)">
 
@@ -120,6 +121,7 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<UserManagementViewModel> _usersLoader = new();
     private TableComponent<UserManagementViewModel>? usersTable;
     private IReadOnlyList<ATSUserLookupDTO> authUsers = Array.Empty<ATSUserLookupDTO>();
     private IReadOnlyList<ClientDetailsDTO> clients = Array.Empty<ClientDetailsDTO>();
@@ -150,19 +152,19 @@
     }
 
     private async Task<TableData<UserManagementViewModel>> LoadUserData(TableState state, CancellationToken cancellationToken)
-        => await LoadPagedDataAsync(state, async (page, pageSize) =>
+        => await LoadCursorPagedDataAsync(_usersLoader, state, $"{searchString}", async (cursor, pageSize) =>
         {
             var referenceTask = EnsureReferenceDataLoadedAsync(cancellationToken);
-            var usersTask = UserManagementService.GetUsersAsync(page, pageSize, searchString, cancellationToken);
+            var usersTask = UserManagementService.GetUsersAsync(cursor, pageSize, searchString, cancellationToken);
             await Task.WhenAll(referenceTask, usersTask);
 
             var usersResponse = await usersTask;
 
             if (!usersResponse.IsSuccess || usersResponse.Data is null)
-                return ServiceResponse<PaginatedResult<UserManagementViewModel>>.Failure(usersResponse.ErrorDetail);
+                return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Failure(usersResponse.ErrorDetail);
 
             if (!await referenceTask)
-                return ServiceResponse<PaginatedResult<UserManagementViewModel>>.Failure(referenceDataError ?? "Failed to load reference data.");
+                return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Failure(referenceDataError ?? "Failed to load reference data.");
 
             var result = usersResponse.Data;
             var groupedUsers = result.Items
@@ -202,12 +204,11 @@
                 .ThenBy(user => user.UserEmail)
                 .ToArray();
 
-            return ServiceResponse<PaginatedResult<UserManagementViewModel>>.Success(
-                new PaginatedResult<UserManagementViewModel>(
-                    result.PageIndex,
-                    result.PageSize,
-                    result.TotalRecords,
-                    groupedUsers));
+            return ServiceResponse<KeysetPaginatedResult<UserManagementViewModel>>.Success(
+                new KeysetPaginatedResult<UserManagementViewModel>(
+                    groupedUsers,
+                    result.NextCursor,
+                    result.TotalCount));
         });
 
     private async Task<bool> EnsureReferenceDataLoadedAsync(CancellationToken cancellationToken)

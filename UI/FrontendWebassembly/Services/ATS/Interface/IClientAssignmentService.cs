@@ -2,14 +2,14 @@ namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IClientAssignmentService
 {
-	Task<ServiceResponse<GetClientAssignmentsResponseDTO>> GetAssignmentsAsync(
-		int pageIndex,
+	Task<ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>> GetAssignmentsAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);
 
-	Task<ServiceResponse<GetClientLookupResponseDTO>> GetAssignableClientsAsync(
-		int pageIndex,
+	Task<ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>> GetAssignableClientsAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);

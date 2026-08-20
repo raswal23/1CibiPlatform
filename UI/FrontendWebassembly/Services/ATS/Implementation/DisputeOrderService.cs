@@ -11,9 +11,13 @@ public class DisputeOrderService : IDisputeOrderService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<PaginatedResult<DisputeOrderListDTO>>> GetDisputeOrdersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+	public async Task<ServiceResponse<KeysetPaginatedResult<DisputeOrderListDTO>>> GetDisputeOrdersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null)
 	{
-		var query = $"ats/getdisputeorders?pageNumber={PageNumber}&pageSize={PageSize}";
+		var query = $"ats/getdisputeorders?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
 		if (!string.IsNullOrWhiteSpace(SearchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
@@ -25,22 +29,22 @@ public class DisputeOrderService : IDisputeOrderService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<DisputeOrderListDTO>>.Failure(await response.ReadErrorDetailAsync());
+				return ServiceResponse<KeysetPaginatedResult<DisputeOrderListDTO>>.Failure(await response.ReadErrorDetailAsync());
 			}
 
 			var result = await response.Content.ReadFromJsonAsync<GetDisputeOrdersResponseDTO>();
 
 			if (result?.Orders is null)
 			{
-				return ServiceResponse<PaginatedResult<DisputeOrderListDTO>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<DisputeOrderListDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<DisputeOrderListDTO>>.Success(result.Orders);
+			return ServiceResponse<KeysetPaginatedResult<DisputeOrderListDTO>>.Success(result.Orders);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<DisputeOrderListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<DisputeOrderListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

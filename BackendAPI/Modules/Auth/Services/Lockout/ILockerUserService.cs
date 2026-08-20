@@ -2,8 +2,8 @@
 
 public interface ILockerUserService
 {
-	Task<PaginatedResult<AuthAttempts>> GetLockedUsersAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<AuthAttempts>> GetLockedUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> DeleteLockedUserAsync(Guid lockedUserId);

@@ -8,6 +8,7 @@ public partial class SearchReportComponent
 	[Inject]
 	private LocalStorageService LocalStorageService { get; set; } = default!;
 
+	private readonly CursorTableLoader<ReportListDTO> _reportsLoader = new();
 	private TableComponent<ReportListDTO>? reportsTable;
 	private DateRange? _dateRange { get; set; }
 	private string? _searchString;
@@ -82,38 +83,32 @@ public partial class SearchReportComponent
 
 	private async Task<TableData<ReportListDTO>> LoadReportData(TableState state, CancellationToken cancellationToken)
 	{
-		var response = await ReportService.GetReportsAsync(
-			state.Page + 1,
-			state.PageSize,
-			searchString,
-			state.SortLabel,
-			state.SortDirection == SortDirection.Descending,
-			_dateRange?.Start,
-			_dateRange?.End);
+		var signature = $"{searchString}|{_dateRange?.Start:yyyy-MM-dd}|{_dateRange?.End:yyyy-MM-dd}";
 
-		if (!response.IsSuccess || response.Data is null)
-		{
-			Snackbar.Add(response.ErrorDetail, Severity.Error);
-			return new TableData<ReportListDTO>
-			{
-				Items = Array.Empty<ReportListDTO>(),
-				TotalItems = 0
-			};
-		}
+		var tableData = await _reportsLoader.LoadAsync(
+			state,
+			signature,
+			(cursor, pageSize) => ReportService.GetReportsAsync(
+				cursor,
+				pageSize,
+				searchString,
+				_dateRange?.Start,
+				_dateRange?.End),
+			message => Snackbar.Add(message, Severity.Error));
 
-		var result = response.Data;
-		currentPageData = result.Data?.ToList() ?? new List<ReportListDTO>();
+		currentPageData = tableData.Items?.ToList() ?? new List<ReportListDTO>();
 
-		return new TableData<ReportListDTO>
-		{
-			Items = currentPageData,
-			TotalItems = (int)result.Count
-		};
+		return tableData;
 	}
 
 	private async Task OnDateRangeChanged(DateRange range)
 	{
 		_dateRange = range;
+
+		// A changed filter starts a new keyset walk; keep MudTable's page in
+		// sync with the loader's reset-to-first-page.
+		if (reportsTable?.TableRef is not null)
+			reportsTable.TableRef.CurrentPage = 0;
 
 		await ReloadTable();
 	}

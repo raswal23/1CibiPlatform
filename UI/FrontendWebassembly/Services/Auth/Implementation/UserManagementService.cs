@@ -11,57 +11,57 @@ public class UserManagementService : IUserManagementService
 		_logger = logger;
 	}
 
-	public Task<ServiceResponse<PaginatedResult<UsersDTO>>> GetUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+	public Task<ServiceResponse<KeysetPaginatedResult<UsersDTO>>> GetUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
 		=> GetPagedAsync<UsersResponseDTO, UsersDTO>(
-			BuildPagedQuery("auth/getusers", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getusers", cursor, pageSize, SearchTerm),
 			envelope => envelope.users,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<UnApprovedUsersDTO>>> GetUnApprovedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+	public Task<ServiceResponse<KeysetPaginatedResult<UnApprovedUsersDTO>>> GetUnApprovedUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
 		=> GetPagedAsync<UnApprovedUsersResponseDTO, UnApprovedUsersDTO>(
-			BuildPagedQuery("auth/getunapprovedusers", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getunapprovedusers", cursor, pageSize, SearchTerm),
 			envelope => envelope.users,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<ApplicationsDTO>>> GetApplicationsAsync(int? PageNumber = 1, int? PageSize = int.MaxValue, string? SearchTerm = null, CancellationToken ct = default)
+	public Task<ServiceResponse<KeysetPaginatedResult<ApplicationsDTO>>> GetApplicationsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
 		=> GetPagedAsync<ApplicationsResponseDTO, ApplicationsDTO>(
-			BuildPagedQuery("auth/getapplications", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getapplications", cursor, pageSize, SearchTerm),
 			envelope => envelope.applications,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<SubMenusDTO>>> GetSubMenusAsync(
-		int? PageNumber = 1,
-		int? PageSize = 10,
+	public Task<ServiceResponse<KeysetPaginatedResult<SubMenusDTO>>> GetSubMenusAsync(
+		string? cursor = null,
+		int? pageSize = 10,
 		string? SearchTerm = null,
 		CancellationToken ct = default)
 		=> GetPagedAsync<SubMenusResponseDTO, SubMenusDTO>(
-			BuildPagedQuery("auth/getsubmenus", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getsubmenus", cursor, pageSize, SearchTerm),
 			envelope => envelope.submenus,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<LockedUsersDTO>>> GetLockedUsersAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
+	public Task<ServiceResponse<KeysetPaginatedResult<LockedUsersDTO>>> GetLockedUsersAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken ct = default)
 		=> GetPagedAsync<LockedUsersResponseDTO, LockedUsersDTO>(
-			BuildPagedQuery("auth/getlockedusers", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getlockedusers", cursor, pageSize, SearchTerm),
 			envelope => envelope.lockedusers,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<RolesDTO>>> GetRolesAsync(
-		int? PageNumber = 1,
-		int? PageSize = 10,
+	public Task<ServiceResponse<KeysetPaginatedResult<RolesDTO>>> GetRolesAsync(
+		string? cursor = null,
+		int? pageSize = 10,
 		string? SearchTerm = null,
 		CancellationToken ct = default)
 		=> GetPagedAsync<RolesResponseDTO, RolesDTO>(
-			BuildPagedQuery("auth/getroles", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getroles", cursor, pageSize, SearchTerm),
 			envelope => envelope.roles,
 			ct);
 
-	public Task<ServiceResponse<PaginatedResult<AppSubRolesDTO>>> GetAppSubRolesAsync(
-		int? PageNumber = 1,
-		int? PageSize = 10,
+	public Task<ServiceResponse<KeysetPaginatedResult<AppSubRolesDTO>>> GetAppSubRolesAsync(
+		string? cursor = null,
+		int? pageSize = 10,
 		string? SearchTerm = null,
 		CancellationToken ct = default)
 		=> GetPagedAsync<AppSubRolesResponseDTO, AppSubRolesDTO>(
-			BuildPagedQuery("auth/getappsubroles", PageNumber, PageSize, SearchTerm),
+			BuildPagedQuery("auth/getappsubroles", cursor, pageSize, SearchTerm),
 			envelope => envelope.appsubroles,
 			ct);
 
@@ -161,18 +161,20 @@ public class UserManagementService : IUserManagementService
 		return PatchForAsync<EditUserDTO>("auth/edituser", new { editUser });
 	}
 
-	private static string BuildPagedQuery(string route, int? pageNumber, int? pageSize, string? searchTerm)
+	private static string BuildPagedQuery(string route, string? cursor, int? pageSize, string? searchTerm)
 	{
-		var query = $"{route}?pageNumber={pageNumber}&pageSize={pageSize}";
+		var query = $"{route}?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
 		if (!string.IsNullOrEmpty(searchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(searchTerm)}";
+			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
 
 		return query;
 	}
 
-	private async Task<ServiceResponse<PaginatedResult<TItem>>> GetPagedAsync<TEnvelope, TItem>(
+	private async Task<ServiceResponse<KeysetPaginatedResult<TItem>>> GetPagedAsync<TEnvelope, TItem>(
 		string query,
-		Func<TEnvelope, PaginatedResult<TItem>?> project,
+		Func<TEnvelope, KeysetPaginatedResult<TItem>?> project,
 		CancellationToken ct)
 		where TItem : class
 	{
@@ -182,7 +184,7 @@ public class UserManagementService : IUserManagementService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<TItem>>.Failure(await response.ReadErrorDetailAsync(ct));
+				return ServiceResponse<KeysetPaginatedResult<TItem>>.Failure(await response.ReadErrorDetailAsync(ct));
 			}
 
 			var envelope = await response.Content.ReadFromJsonAsync<TEnvelope>(cancellationToken: ct);
@@ -190,15 +192,15 @@ public class UserManagementService : IUserManagementService
 
 			if (result is null)
 			{
-				return ServiceResponse<PaginatedResult<TItem>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<TItem>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<TItem>>.Success(result);
+			return ServiceResponse<KeysetPaginatedResult<TItem>>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<TItem>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<TItem>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

@@ -10,13 +10,15 @@ public sealed class PlatformLogRepository(
 	private readonly PlatformLoggingOptions _options = options.Value;
 	public bool IsEnabled => _options.PostgreSqlEnabled;
 
-	public async Task<PlatformLogPageDTO> GetLogsAsync(DateTimeOffset? from, DateTimeOffset? to,
-		string? application, string? level, string? search, int pageSize,
-		DateTimeOffset? cursorTime, long? cursorId, CancellationToken cancellationToken)
+	// Keyset over (OccurredAt DESC, Id DESC). Pure query — the service decodes the
+	// cursor and mints the next one.
+	public async Task<List<PlatformLogDTO>> GetLogsPageAsync(DateTimeOffset? from, DateTimeOffset? to,
+		string? application, string? level, string? search, int take,
+		DateTimeOffset? afterOccurredAt, long? afterId, CancellationToken cancellationToken)
 	{
 		if (!IsEnabled)
 		{
-			return new PlatformLogPageDTO([], null);
+			return [];
 		}
 
 		var query = context.LogEvents.AsNoTracking();
@@ -48,31 +50,19 @@ public sealed class PlatformLogRepository(
 				EF.Functions.ILike(log.RenderedMessage, searchPattern));
 		}
 
-		if (cursorTime.HasValue && cursorId.HasValue)
+		if (afterOccurredAt.HasValue && afterId.HasValue)
 		{
 			query = query.Where(log =>
-				log.OccurredAt < cursorTime.Value
-				|| log.OccurredAt == cursorTime.Value && log.Id < cursorId.Value);
+				log.OccurredAt < afterOccurredAt.Value
+				|| log.OccurredAt == afterOccurredAt.Value && log.Id < afterId.Value);
 		}
 
-		var items = await query
+		return await query
 			.OrderByDescending(log => log.OccurredAt)
 			.ThenByDescending(log => log.Id)
-			.Take(pageSize + 1)
+			.Take(take)
 			.Select(LogProjection)
 			.ToListAsync(cancellationToken);
-
-		string? nextCursor = null;
-		if (items.Count > pageSize)
-		{
-			items.RemoveAt(items.Count - 1);
-			var last = items[^1];
-			var cursorValue = $"{last.OccurredAt:O}|{last.Id}";
-			nextCursor = Convert.ToBase64String(
-				Encoding.UTF8.GetBytes(cursorValue));
-		}
-
-		return new PlatformLogPageDTO(items, nextCursor);
 	}
 
 	public Task<PlatformLogDTO?> GetLogByIdAsync(long id, CancellationToken cancellationToken)

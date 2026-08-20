@@ -32,6 +32,7 @@
                     Title="Locked User/s"
                     EnableSearch="true"
                     LoadServerData="LoadLockedUsersServerData"
+                    CursorPagerState="_lockedUsersLoader"
                     SearchString="@searchStringLockedUser"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringLockedUser = val)">
@@ -60,6 +61,7 @@ else if (_activeIndex == 1)
                     Title="User Approval"
                     EnableSearch="true"
                     LoadServerData="LoadUnApprovedUsersServerData"
+                    CursorPagerState="_unapprovedUsersLoader"
                     SearchString="@searchStringUnApprovedUser"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringUnApprovedUser = val)">
@@ -84,6 +86,7 @@ else if (_activeIndex == 2)
                     Title="User Management"
                     EnableSearch="true"
                     LoadServerData="LoadUsersServerData"
+                    CursorPagerState="_usersLoader"
                     SearchString="@searchStringUser"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringUser = val)">
@@ -112,6 +115,7 @@ else if (_activeIndex == 3)
                     AddButtonText="Add"
                     OnAddClicked="OpenAddApplicationDialog"
                     LoadServerData="LoadApplicationsServerData"
+                    CursorPagerState="_applicationsLoader"
                     SearchString="@searchStringApp"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringApp = val)">
@@ -146,6 +150,7 @@ else if (_activeIndex == 4)
                     AddButtonText="Add"
                     OnAddClicked="OpenAddSubMenuDialog"
                     LoadServerData="LoadSubMenusServerData"
+                    CursorPagerState="_subMenusLoader"
                     SearchString="@searchStringSub"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringSub = val)">
@@ -184,6 +189,7 @@ else if (_activeIndex == 5)
                     AddButtonText="Add"
                     OnAddClicked="OpenAddRoleDialog"
                     LoadServerData="LoadRolesServerData"
+                    CursorPagerState="_rolesLoader"
                     SearchString="@searchStringRole"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringRole = val)">
@@ -222,6 +228,7 @@ else if (_activeIndex == 6)
                     AddButtonText="Add"
                     OnAddClicked="OpenAddAppSubRoleDialog"
                     LoadServerData="LoadUserAppSubRolesServerData"
+                    CursorPagerState="_appSubRolesLoader"
                     SearchString="@searchStringAppSubRole"
                     ColumnCount="5"
                     SearchStringChanged="@((string val) => searchStringAppSubRole = val)">

@@ -172,31 +172,27 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var unfiltered = await _reportService.GetReportsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
-			sortColumn: null,
-			sortDescending: false,
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 		var filtered = await _reportService.GetReportsAsync(
-			new PaginationRequest(
-				PageIndex: 1,
+			new KeysetPaginationRequest(
+				Cursor: null,
 				PageSize: 10,
 				SearchTerm: "ada lovelace",
 				StartDate: new DateTime(2026, 8, 1),
 				EndDate: new DateTime(2026, 8, 31)),
-			sortColumn: "SubjectName",
-			sortDescending: false,
 			CancellationToken.None);
 
 		// Assert
-		unfiltered.Count.Should().Be(3);
-		unfiltered.Data.Should().HaveCount(3);
-		unfiltered.Data.First().EmailInvitationRequestId.Should().Be(grace.EmailInvitationID);
-		unfiltered.Data.Single(item => item.EmailInvitationRequestId == ada.EmailInvitationID)
+		unfiltered.TotalCount.Should().Be(3);
+		unfiltered.Items.Should().HaveCount(3);
+		unfiltered.Items.First().EmailInvitationRequestId.Should().Be(grace.EmailInvitationID);
+		unfiltered.Items.Single(item => item.EmailInvitationRequestId == ada.EmailInvitationID)
 			.HitStatus.Should().Be("Not Clear");
 
-		filtered.Count.Should().Be(1);
-		filtered.Data.Should().ContainSingle();
-		filtered.Data.Single().Should().BeEquivalentTo(new
+		filtered.TotalCount.Should().Be(1);
+		filtered.Items.Should().ContainSingle();
+		filtered.Items.Single().Should().BeEquivalentTo(new
 		{
 			EmailInvitationRequestId = ada.EmailInvitationID,
 			SubjectName = "Ada Lovelace",
@@ -228,13 +224,11 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		SetAuthenticatedUser(userId, roleId, claimedClientId: 99);
 
 		var result = await _reportService.GetReportsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
-			sortColumn: null,
-			sortDescending: false,
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(report => report.EmailInvitationRequestId)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(report => report.EmailInvitationRequestId)
 			.Should().BeEquivalentTo(new[]
 			{
 				assigned.EmailInvitationID,
@@ -262,13 +256,11 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		SetAuthenticatedUser(userId, roleId, claimedClientId: 5);
 
 		var result = await _reportService.GetReportsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
-			sortColumn: null,
-			sortDescending: false,
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(1);
-		result.Data.Should().ContainSingle()
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().ContainSingle()
 			.Which.EmailInvitationRequestId.Should().Be(matching.EmailInvitationID);
 	}
 
@@ -289,13 +281,11 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			isPlatformSuperAdmin: true);
 
 		var result = await _reportService.GetReportsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
-			sortColumn: null,
-			sortDescending: false,
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(report => report.EmailInvitationRequestId)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(report => report.EmailInvitationRequestId)
 			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
 	}
 

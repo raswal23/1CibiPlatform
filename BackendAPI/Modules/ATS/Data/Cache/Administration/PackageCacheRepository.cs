@@ -11,21 +11,24 @@ public sealed class PackageCacheRepository : IPackageRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<PackageDetailsDTO>> GetPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public Task<List<PackageDetailsDTO>> GetPackagesPageAsync(string? searchTerm, int? clientId, string? afterPackageName, int take, CancellationToken cancellationToken)
 	{
-		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetPackagesAsync(value, clientId, token), null,
+		if (afterPackageName is not null)
+			return _repository.GetPackagesPageAsync(searchTerm, clientId, afterPackageName, take, cancellationToken);
+
+		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_first_take_{take}_search_{searchTerm}";
+		return _cache.GetOrCreateAsync<List<PackageDetailsDTO>>(
+			key, async token => await _repository.GetPackagesPageAsync(searchTerm, clientId, null, take, token),
 			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<PackageDetailsDTO>> SearchPackagesAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
-	{
-		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<PackageDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchPackagesAsync(value, clientId, token), null,
+	public Task<long> CountPackagesAsync(string? searchTerm, int? clientId, CancellationToken cancellationToken) =>
+		_cache.GetOrCreateAsync<long>(
+			$"package_v4_client_{clientId?.ToString() ?? "all"}_count_search_{searchTerm}",
+			async token => await _repository.CountPackagesAsync(searchTerm, clientId, token),
 			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
-	}
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)
 	{

@@ -9,13 +9,17 @@ public class ModuleManagementService : IModuleManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<PaginatedResult<ModuleDetailsDTO>>> GetModulesAsync(
-		int? pageNumber = 1,
+	public async Task<ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>> GetModulesAsync(
+		string? cursor = null,
 		int? pageSize = 10,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = $"ats/getmodules?pageNumber={pageNumber}&pageSize={pageSize}";
+		var query = $"ats/getmodules?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
 		if (!string.IsNullOrWhiteSpace(searchTerm))
 		{
 			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
@@ -27,34 +31,34 @@ public class ModuleManagementService : IModuleManagementService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
 			var result = await response.Content.ReadFromJsonAsync<GetModulesResponseDTO>(cancellationToken: cancellationToken);
 
 			if (result?.Modules is null)
 			{
-				return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Success(result.Modules);
+			return ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>.Success(result.Modules);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<ModuleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 
 	public async Task<ServiceResponse<IReadOnlyList<ModuleDetailsDTO>>> GetAllModulesAsync(CancellationToken cancellationToken = default)
 	{
 		const int pageSize = 100;
-		var pageNumber = 1;
+		string? cursor = null;
 		var modules = new List<ModuleDetailsDTO>();
 
 		while (true)
 		{
-			var pageResponse = await GetModulesAsync(pageNumber, pageSize, cancellationToken: cancellationToken);
+			var pageResponse = await GetModulesAsync(cursor, pageSize, cancellationToken: cancellationToken);
 
 			if (!pageResponse.IsSuccess || pageResponse.Data is null)
 			{
@@ -62,13 +66,12 @@ public class ModuleManagementService : IModuleManagementService
 			}
 
 			var page = pageResponse.Data;
-			var pageItems = page.Data.ToArray();
-			modules.AddRange(pageItems);
+			modules.AddRange(page.Items);
 
-			if (modules.Count >= page.Count || pageItems.Length == 0)
+			if (page.NextCursor is null || page.Items.Count == 0)
 				return ServiceResponse<IReadOnlyList<ModuleDetailsDTO>>.Success(modules);
 
-			pageNumber++;
+			cursor = page.NextCursor;
 		}
 	}
 

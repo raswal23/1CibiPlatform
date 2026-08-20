@@ -2,8 +2,8 @@ namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IRoleManagementService
 {
-	Task<ServiceResponse<PaginatedResult<RoleDetailsDTO>>> GetRolesAsync(
-		int? pageNumber = 1,
+	Task<ServiceResponse<KeysetPaginatedResult<RoleDetailsDTO>>> GetRolesAsync(
+		string? cursor = null,
 		int? pageSize = 10,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);

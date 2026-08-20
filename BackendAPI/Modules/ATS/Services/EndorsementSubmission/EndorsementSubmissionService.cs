@@ -1,4 +1,4 @@
-namespace ATS.Services.EndorsementSubmission;
+﻿namespace ATS.Services.EndorsementSubmission;
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
@@ -283,7 +283,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return isSent;
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<KeysetPaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -334,26 +334,30 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			return CreateEmptyWithdrawnResult(paginationRequest);
 		}
 
-		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm)
-			? _atsRepository.GetWithdrawnEmailInvitationRequestsAsync(
-				paginationRequest,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken)
-			: _atsRepository.SearchWithdrawnEmailInvitationRequestsAsync(
-				paginationRequest,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken));
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		Guid? afterId = Guid.TryParse(fields?[0], out var invitationId) ? invitationId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _atsRepository.GetWithdrawnPageAsync(
+			paginationRequest.SearchTerm, afterId, pageSize + 1, clientIds, requiredRequestorId, cancellationToken);
+		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(items[^1].EmailInvitationID.ToString("D"))
+			: null;
+		long? totalCount = afterId.HasValue
+			? null
+			: await _atsRepository.CountWithdrawnAsync(
+				paginationRequest.SearchTerm, clientIds, requiredRequestorId, cancellationToken);
+
+		return new KeysetPaginatedResult<EmailInvitationRequestListDTO>(items, nextCursor, totalCount);
 	}
 
-	private static PaginatedResult<EmailInvitationRequestListDTO> CreateEmptyWithdrawnResult(
-		PaginationRequest paginationRequest) =>
+	private static KeysetPaginatedResult<EmailInvitationRequestListDTO> CreateEmptyWithdrawnResult(
+		KeysetPaginationRequest paginationRequest) =>
 		new(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			0,
-			Array.Empty<EmailInvitationRequestListDTO>());
+			Array.Empty<EmailInvitationRequestListDTO>(), null, 0);
 
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken)
 	{

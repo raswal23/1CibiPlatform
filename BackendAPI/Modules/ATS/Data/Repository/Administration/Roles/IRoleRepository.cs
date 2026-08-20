@@ -1,9 +1,9 @@
-namespace ATS.Data.Repository.Administration.Roles;
+﻿namespace ATS.Data.Repository.Administration.Roles;
 
 public interface IRoleRepository
 {
-	Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<PaginatedResult<RoleDetailsDTO>> SearchRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<RoleDetailsDTO>> GetRolesPageAsync(string? searchTerm, string? afterRoleName, int take, CancellationToken cancellationToken);
+	Task<long> CountRolesAsync(string? searchTerm, CancellationToken cancellationToken);
 	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
 	Task<RoleDetails?> GetRoleAsync(int roleId);
 	Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails);

@@ -80,15 +80,14 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var result = await service.GetDisputeOrdersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 2),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 2),
 			CancellationToken.None);
 
 		// Assert
-		result.PageIndex.Should().Be(1);
-		result.PageSize.Should().Be(2);
-		result.Count.Should().Be(3);
+		result.TotalCount.Should().Be(3);
+		result.NextCursor.Should().NotBeNull();
 
-		var orders = result.Data.ToArray();
+		var orders = result.Items.ToArray();
 		orders.Select(order => order.EmailInvitationID)
 			.Should().Equal(disputed.EmailInvitationID, newest.EmailInvitationID);
 		orders[0].Should().BeEquivalentTo(new
@@ -104,6 +103,15 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		orders[0].OrderCompletedAt.Should().BeCloseTo(
 			disputed.OrderCompletedAt!.Value,
 			TimeSpan.FromMilliseconds(1));
+
+		var secondPage = await service.GetDisputeOrdersAsync(
+			new KeysetPaginationRequest(Cursor: result.NextCursor, PageSize: 2),
+			CancellationToken.None);
+
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(order => order.EmailInvitationID)
+			.Should().Equal(oldest.EmailInvitationID);
+		secondPage.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -153,12 +161,12 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var result = await service.GetDisputeOrdersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "needle"),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "needle"),
 			CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(3);
-		result.Data.Select(order => order.EmailInvitationID).Should().BeEquivalentTo([
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(order => order.EmailInvitationID).Should().BeEquivalentTo([
 			firstNameMatch.EmailInvitationID,
 			lastNameMatch.EmailInvitationID,
 			emailMatch.EmailInvitationID
@@ -203,11 +211,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var service = CreateService(CreateSuccessfulEmailService());
 
 		var result = await service.GetDisputeOrdersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(order => order.EmailInvitationID)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(order => order.EmailInvitationID)
 			.Should().BeEquivalentTo(new[]
 			{
 				assigned.EmailInvitationID,
@@ -252,11 +260,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var service = CreateService(CreateSuccessfulEmailService());
 
 		var result = await service.GetDisputeOrdersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(1);
-		result.Data.Should().ContainSingle()
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().ContainSingle()
 			.Which.EmailInvitationID.Should().Be(matching.EmailInvitationID);
 	}
 
@@ -289,11 +297,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var service = CreateService(CreateSuccessfulEmailService());
 
 		var result = await service.GetDisputeOrdersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
-		result.Count.Should().Be(2);
-		result.Data.Select(order => order.EmailInvitationID)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(order => order.EmailInvitationID)
 			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
 	}
 
@@ -321,11 +329,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 		var emailService = CreateSuccessfulEmailService();
 		var service = CreateService(emailService);
-		var pagination = new PaginationRequest(PageIndex: 1, PageSize: 10);
+		var pagination = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
 		var cachedBeforeUpdate = await service.GetDisputeOrdersAsync(
 			pagination,
 			CancellationToken.None);
-		cachedBeforeUpdate.Data.Should().ContainSingle().Which.DisputeCategory.Should().BeNull();
+		cachedBeforeUpdate.Items.Should().ContainSingle().Which.DisputeCategory.Should().BeNull();
 
 		var request = new DisputeOrderRequestDTO
 		{
@@ -353,7 +361,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		persisted.DisputedAt.Value.Should().BeOnOrBefore(DateTime.UtcNow);
 
 		var refreshed = await service.GetDisputeOrdersAsync(pagination, CancellationToken.None);
-		refreshed.Data.Should().ContainSingle().Which.DisputeCategory.Should().Be("Report");
+		refreshed.Items.Should().ContainSingle().Which.DisputeCategory.Should().Be("Report");
 
 		var recipient = _configuration["ATS:DisputeOrderEmailRecipient"] ?? string.Empty;
 		emailService.Verify(serviceMock => serviceMock.SendEmailForDispute(

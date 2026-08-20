@@ -1,4 +1,4 @@
-namespace ATS.Services.Report;
+﻿namespace ATS.Services.Report;
 
 public class ReportService : IReportService
 {
@@ -166,7 +166,7 @@ public class ReportService : IReportService
 		}
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(PaginationRequest paginationRequest, string? sortColumn, bool sortDescending, CancellationToken cancellationToken)
+	public async Task<KeysetPaginatedResult<ReportListDTO>> GetReportsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -181,11 +181,7 @@ public class ReportService : IReportService
 			|| _currentUser.UserId is not { } userId
 			|| userId == Guid.Empty)
 		{
-			return new PaginatedResult<ReportListDTO>(
-				paginationRequest.PageIndex,
-				paginationRequest.PageSize,
-				0,
-				Array.Empty<ReportListDTO>());
+			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
 		}
 
 		IReadOnlyCollection<int>? clientIds;
@@ -197,11 +193,7 @@ public class ReportService : IReportService
 		}
 		else if (_currentUser.AtsRoleId is not { } roleId)
 		{
-			return new PaginatedResult<ReportListDTO>(
-				paginationRequest.PageIndex,
-				paginationRequest.PageSize,
-				0,
-				Array.Empty<ReportListDTO>());
+			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
 		}
 		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
 		{
@@ -222,30 +214,62 @@ public class ReportService : IReportService
 		}
 		else
 		{
-			return new PaginatedResult<ReportListDTO>(
-				paginationRequest.PageIndex,
-				paginationRequest.PageSize,
-				0,
-				Array.Empty<ReportListDTO>());
+			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
 		}
 
-		return await (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
-			   || paginationRequest.StartDate.HasValue
-			   || paginationRequest.EndDate.HasValue
-			? _atsRepository.SearchReportsAsync(
-				paginationRequest,
-				sortColumn,
-				sortDescending,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken)
-			: _atsRepository.GetReportsAsync(
-				paginationRequest,
-				sortColumn,
-				sortDescending,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken));
+		var isSearch = !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
+			|| paginationRequest.StartDate.HasValue
+			|| paginationRequest.EndDate.HasValue;
+
+		// Cursor over the fixed (rank, completedAt?, id) ordering. An undecodable
+		// cursor (malformed, stale) means "first page"; rank and id are required —
+		// an empty completedAt legitimately round-trips a NULL sort key.
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 3);
+		int? afterRank = int.TryParse(fields?[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var rank) ? rank : null;
+		Guid? afterId = Guid.TryParse(fields?[2], out var invitationId) ? invitationId : null;
+		var hasSeek = afterRank.HasValue && afterId.HasValue;
+		DateTime? afterCompletedAt = hasSeek
+			&& DateTime.TryParse(fields![1], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var completedAt)
+			? completedAt : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = isSearch
+			? await _atsRepository.SearchReportsPageAsync(
+				hasSeek ? afterRank : null, afterCompletedAt, hasSeek ? afterId : null, pageSize + 1,
+				paginationRequest.SearchTerm, paginationRequest.StartDate, paginationRequest.EndDate,
+				clientIds, requiredRequestorId, cancellationToken)
+			: await _atsRepository.GetReportsPageAsync(
+				hasSeek ? afterRank : null, afterCompletedAt, hasSeek ? afterId : null, pageSize + 1,
+				clientIds, requiredRequestorId, cancellationToken);
+
+		var (page, hasMore) = KeysetPage.Trim(rows, pageSize);
+		var nextCursor = hasMore
+			? CursorCodec.Encode(
+				page[^1].Rank.ToString(CultureInfo.InvariantCulture),
+				page[^1].OrderCompletedAt?.ToString("O"),
+				page[^1].EmailInvitationID.ToString("D"))
+			: null;
+
+		long? totalCount = hasSeek
+			? null
+			: await (isSearch
+				? _atsRepository.CountSearchReportsAsync(
+					paginationRequest.SearchTerm, paginationRequest.StartDate, paginationRequest.EndDate,
+					clientIds, requiredRequestorId, cancellationToken)
+				: _atsRepository.CountReportsAsync(clientIds, requiredRequestorId, cancellationToken));
+
+		var items = page.Select(x => new ReportListDTO
+		{
+			EmailInvitationRequestId = x.EmailInvitationID,
+			SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+			OrderStatus = x.OrderStatus,
+			OrderCompletedAt = x.OrderCompletedAt,
+			SelectedPackage = x.SelectPackage,
+			Requestor = x.Requestor,
+			HitStatus = x.HitStatus
+		}).ToList();
+
+		return new KeysetPaginatedResult<ReportListDTO>(items, nextCursor, totalCount);
 	}
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

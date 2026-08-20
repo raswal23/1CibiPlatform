@@ -24,14 +24,14 @@ public class RoleIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedRoleData();
 
-		var query = new GetRolesQueryRequest(PageNumber: 1, PageSize: 3);
+		var query = new GetRolesQueryRequest(Cursor: null, PageSize: 3);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.Roles.Data.Count().Should().Be(3);
+		result.Roles.Items.Count.Should().Be(3);
 	}
 
 	[Fact]
@@ -40,7 +40,7 @@ public class RoleIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedRoleData();
 
-		var query = new GetRolesQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "SuperAdmin");
+		var query = new GetRolesQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "SuperAdmin");
 
 		// Act
 		var result = await _sender.Send(query);
@@ -48,51 +48,59 @@ public class RoleIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 
-		result.Roles.Count.Should().Be(1);
-		result.Roles.Data.ElementAt(0).roleName.Should().Be("SuperAdmin");
-		result.Roles.Data.ElementAt(0).Description.Should().Be("SuperAdmin");
+		result.Roles.TotalCount.Should().Be(1);
+		result.Roles.Items.ElementAt(0).roleName.Should().Be("SuperAdmin");
+		result.Roles.Items.ElementAt(0).Description.Should().Be("SuperAdmin");
 	}
 
 	[Fact]
 	public async Task GetRoles_ShouldReturnEmptyList_WhenNoRolesExist()
 	{
 		// Arrange
-		var query = new GetRolesQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetRolesQueryRequest(Cursor: null, PageSize: 5);
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
-		result.Roles.Count.Should().Be(0);
+		result.Roles.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetRoles_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetRoles_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedRoleData();
-		var query = new GetRolesQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetRolesQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.Roles.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.Roles.NextCursor });
 
 		// Assert
-		result.Roles.PageIndex.Should().Be(1);
-		result.Roles.PageSize.Should().Be(2);
+		page1.Roles.Items.Count.Should().Be(2);
+		page1.Roles.TotalCount.Should().Be(3);
+		page2.Roles.TotalCount.Should().BeNull();
+		page2.Roles.Items.Select(r => r.roleId)
+			.Should().NotIntersectWith(page1.Roles.Items.Select(r => r.roleId));
 	}
 
 	[Fact]
-	public async Task GetRoles_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetRoles_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedRoleData();
 
-		var query = new GetRolesQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetRolesQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.Roles.NextCursor });
 
 		// Assert
-		result.Roles.Data.Count().Should().Be(0);
+		page2.Roles.Items.Count.Should().Be(1);
+		page2.Roles.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

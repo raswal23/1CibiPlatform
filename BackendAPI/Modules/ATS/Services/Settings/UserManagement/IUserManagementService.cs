@@ -1,4 +1,4 @@
-namespace ATS.Services.Settings.UserManagement;
+﻿namespace ATS.Services.Settings.UserManagement;
 
 public interface IUserManagementService
 {
@@ -12,8 +12,8 @@ public interface IUserManagementService
 		AssignUserClientDTO assignment,
 		CancellationToken cancellationToken);
 
-	Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<UserDetailsDTO>> GetUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<int?> GetCurrentUserRoleIdAsync(CancellationToken cancellationToken);

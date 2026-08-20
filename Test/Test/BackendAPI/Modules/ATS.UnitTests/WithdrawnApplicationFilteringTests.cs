@@ -49,8 +49,7 @@ public class WithdrawnApplicationFilteringTests
 		int roleId)
 	{
 		var userId = SetAuthenticatedUser(roleId, clientId: 99);
-		var request = new PaginationRequest(1, 10, "withdrawn");
-		var expected = EmptyResult(request);
+		var request = new KeysetPaginationRequest(null, 10, "withdrawn");
 		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
 			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
 			CancellationToken.None)).ReturnsAsync(
@@ -58,17 +57,26 @@ public class WithdrawnApplicationFilteringTests
 				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
 				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
 			]);
-		_repository.Setup(repository => repository.SearchWithdrawnEmailInvitationRequestsAsync(
-			request,
+		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
+			"withdrawn",
+			null,
+			11,
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
 			null,
-			CancellationToken.None)).ReturnsAsync(expected);
+			CancellationToken.None)).ReturnsAsync([]);
+		_repository.Setup(repository => repository.CountWithdrawnAsync(
+			"withdrawn",
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+			null,
+			CancellationToken.None)).ReturnsAsync(0);
 
 		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
 			request,
 			CancellationToken.None);
 
-		result.Should().BeSameAs(expected);
+		result.Items.Should().BeEmpty();
+		result.TotalCount.Should().Be(0);
+		_repository.VerifyAll();
 	}
 
 	[Theory]
@@ -78,19 +86,26 @@ public class WithdrawnApplicationFilteringTests
 		int roleId)
 	{
 		var userId = SetAuthenticatedUser(roleId, clientId: 7);
-		var request = new PaginationRequest(1, 10);
-		var expected = EmptyResult(request);
-		_repository.Setup(repository => repository.GetWithdrawnEmailInvitationRequestsAsync(
-			request,
+		var request = new KeysetPaginationRequest(null, 10);
+		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
+			null,
+			null,
+			11,
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
 			userId,
-			CancellationToken.None)).ReturnsAsync(expected);
+			CancellationToken.None)).ReturnsAsync([]);
+		_repository.Setup(repository => repository.CountWithdrawnAsync(
+			null,
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+			userId,
+			CancellationToken.None)).ReturnsAsync(0);
 
 		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
 			request,
 			CancellationToken.None);
 
-		result.Should().BeSameAs(expected);
+		result.Items.Should().BeEmpty();
+		_repository.VerifyAll();
 	}
 
 	[Fact]
@@ -99,19 +114,26 @@ public class WithdrawnApplicationFilteringTests
 		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
 		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
 		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
-		var request = new PaginationRequest(1, 10);
-		var expected = EmptyResult(request);
-		_repository.Setup(repository => repository.GetWithdrawnEmailInvitationRequestsAsync(
-			request,
+		var request = new KeysetPaginationRequest(null, 10);
+		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
 			null,
 			null,
-			CancellationToken.None)).ReturnsAsync(expected);
+			11,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync([]);
+		_repository.Setup(repository => repository.CountWithdrawnAsync(
+			null,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(0);
 
 		var result = await _service.GetWithdrawnEmailInvitationRequestsAsync(
 			request,
 			CancellationToken.None);
 
-		result.Should().BeSameAs(expected);
+		result.Items.Should().BeEmpty();
+		_repository.VerifyAll();
 		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
 			It.IsAny<IReadOnlyCollection<Guid>>(),
 			It.IsAny<CancellationToken>()), Times.Never);
@@ -126,8 +148,4 @@ public class WithdrawnApplicationFilteringTests
 		_currentUser.SetupGet(user => user.AtsClientId).Returns(clientId);
 		return userId;
 	}
-
-	private static PaginatedResult<EmailInvitationRequestListDTO> EmptyResult(
-		PaginationRequest request) =>
-		new(request.PageIndex, request.PageSize, 0, Array.Empty<EmailInvitationRequestListDTO>());
 }

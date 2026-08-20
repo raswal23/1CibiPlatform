@@ -18,15 +18,10 @@ public class SubMenuServiceTests : IClassFixture<AuthServiceFixture>
 	}
 
 	[Fact]
-	public async Task GetSubMenusAsync_ShouldCallGetSubMenus_WhenNoSearchTerm()
+	public async Task GetSubMenusAsync_ShouldReturnPaginatedResult_WhenNoSearchTerm()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = null
-		};
+		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: null);
 
 		var data = new List<SubMenusDTO>
 		{
@@ -34,33 +29,27 @@ public class SubMenuServiceTests : IClassFixture<AuthServiceFixture>
 			new SubMenusDTO ( 2, "IDV", "PhilSys IDV", true)
 		};
 
-		var expectedResult = new PaginatedResult<SubMenusDTO>(1, 1, 10, data);
-
 		_fixture.MockAuthRepository
-			.Setup(x => x.GetSubMenusAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+			.Setup(x => x.GetSubMenusPageAsync(null, null, 11, CancellationToken.None))
+			.ReturnsAsync(data.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountSubMenusAsync(null, CancellationToken.None))
+			.ReturnsAsync(10);
 
 		// Act
 		var result = await _fixture.SubMenuService.GetSubMenusAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(10);
+		result.Items.Should().BeEquivalentTo(data);
 	}
 
 	[Fact]
-	public async Task GetSubMenusAsync_ShouldCallSearchSubMenus_WhenSearchTermProvided()
+	public async Task GetSubMenusAsync_ShouldPassSearchTerm_WhenProvided()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = "Dashboard"
-		};
+		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "Dashboard");
 
 		var data = new List<SubMenusDTO>
 		{
@@ -68,21 +57,20 @@ public class SubMenuServiceTests : IClassFixture<AuthServiceFixture>
 			new SubMenusDTO ( 2, "IDV", "PhilSys IDV", true)
 		};
 
-		var expectedResult = new PaginatedResult<SubMenusDTO>(1, 1, 10, data);
-
 		_fixture.MockAuthRepository
-			.Setup(x => x.SearchSubMenusAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+			.Setup(x => x.GetSubMenusPageAsync("Dashboard", null, 11, CancellationToken.None))
+			.ReturnsAsync(data.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountSubMenusAsync("Dashboard", CancellationToken.None))
+			.ReturnsAsync(10);
 
 		// Act
 		var result = await _fixture.SubMenuService.GetSubMenusAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(10);
+		result.Items.Should().BeEquivalentTo(data);
 	}
 
 	[Fact]

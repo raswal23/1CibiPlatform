@@ -10,5 +10,5 @@ public record SubMenusDTO
 
 public record SubMenusResponseDTO
 {
-	public PaginatedResult<SubMenusDTO>? submenus { get; set; }
+	public KeysetPaginatedResult<SubMenusDTO>? submenus { get; set; }
 }

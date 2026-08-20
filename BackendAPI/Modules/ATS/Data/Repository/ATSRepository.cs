@@ -187,11 +187,46 @@ public class ATSRepository : IATSRepository
 				.SetProperty(x => x.OrderStatus, x => OrderStatus.ApplicationWithdrawn));
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(
-		PaginationRequest paginationRequest,
+	// Keyset page over withdrawn invitations ordered by EmailInvitationID (unique PK).
+	// Pure query — the service decodes the cursor and mints the next one.
+	public async Task<List<EmailInvitationRequestListDTO>> GetWithdrawnPageAsync(
+		string? searchTerm,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken)
+	{
+		var usersQuery = BuildWithdrawnQuery(searchTerm, authorizedClientIds, requiredRequestorId);
+		if (afterId.HasValue)
+			usersQuery = usersQuery.Where(eir => eir.EmailInvitationID.CompareTo(afterId.Value) > 0);
+
+		return await usersQuery
+					.OrderBy(eir => eir.EmailInvitationID)
+					.Take(take)
+					.Select(eir => new EmailInvitationRequestListDTO
+					{
+						EmailInvitationID = eir.EmailInvitationID,
+						EmailAddress = eir.EmailAddress,
+						FirstName = eir.FirstName,
+						LastName = eir.LastName,
+						Requestor = eir.Requestor,
+						OrderStatus = eir.OrderStatus,
+					})
+					.ToListAsync(cancellationToken);
+	}
+
+	public Task<long> CountWithdrawnAsync(
+		string? searchTerm,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken) =>
+		BuildWithdrawnQuery(searchTerm, authorizedClientIds, requiredRequestorId).LongCountAsync(cancellationToken);
+
+	private IQueryable<EmailInvitationRequest> BuildWithdrawnQuery(
+		string? searchTerm,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId)
 	{
 		var usersQuery = _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
@@ -201,147 +236,56 @@ public class ATSRepository : IATSRepository
 					|| eir.RequestorId == requiredRequestorId.Value))
 			.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn);
 
-		var totalRecords = await usersQuery.CountAsync(cancellationToken);
+		if (!string.IsNullOrEmpty(searchTerm))
+			usersQuery = usersQuery.Where(eir =>
+				EF.Functions.ILike(eir.FirstName!, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.LastName!, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.EmailAddress!, $"%{searchTerm}%"));
 
-		var items = await usersQuery
-					.OrderBy(eir => eir.EmailInvitationID)
-					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-					.Take(paginationRequest.PageSize)
-					.Select(eir => new EmailInvitationRequestListDTO
-					{
-						EmailInvitationID = eir.EmailInvitationID,
-						EmailAddress = eir.EmailAddress,
-						FirstName = eir.FirstName,
-						LastName = eir.LastName,
-						Requestor = eir.Requestor,
-						OrderStatus = eir.OrderStatus,
-					})
-					.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<EmailInvitationRequestListDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
+		return usersQuery;
 	}
 
-	public async Task<PaginatedResult<EmailInvitationRequestListDTO>> SearchWithdrawnEmailInvitationRequestsAsync(
-		PaginationRequest paginationRequest,
+	// Keyset over (hasDispute DESC, OrderCreatedAt DESC, EmailInvitationID ASC). The
+	// computed lead key must appear verbatim in the seek predicate so it matches the
+	// ORDER BY expression. OrderCreatedAt is never NULL here — the base filter
+	// requires OrderCreatedAt.HasValue. The 30-day window and dispute flags move
+	// between requests; rows shifting out of (or ahead of) the cursor simply drop
+	// from the walk — keyset never duplicates rows.
+	// Pure query — the service decodes the cursor and mints the next one.
+	public async Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
+		string? searchTerm,
+		bool? afterHasDispute,
+		DateTime? afterCreatedAt,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-							.AsNoTracking()
-							.Where(eir => (authorizedClientIds == null
-									|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
-								&& (!requiredRequestorId.HasValue
-									|| eir.RequestorId == requiredRequestorId.Value))
-							.Where(eir => eir.OrderStatus == OrderStatus.ApplicationWithdrawn)
-							.Where(eir =>
-								EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
-								EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%"));
+		var pageQuery = BuildDisputeOrdersQuery(searchTerm, authorizedClientIds, requiredRequestorId);
+		if (afterHasDispute.HasValue && afterCreatedAt.HasValue && afterId.HasValue)
+		{
+			var cCreatedAt = afterCreatedAt.Value;
+			var cId = afterId.Value;
+			pageQuery = afterHasDispute.Value
+				? pageQuery.Where(eir =>
+					string.IsNullOrEmpty(eir.DisputeCategory)
+					|| (!string.IsNullOrEmpty(eir.DisputeCategory)
+						&& (eir.OrderCreatedAt < cCreatedAt
+							|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0))))
+				: pageQuery.Where(eir =>
+					string.IsNullOrEmpty(eir.DisputeCategory)
+					&& (eir.OrderCreatedAt < cCreatedAt
+						|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0)));
+		}
 
-		var totalRecords = await usersQuery.CountAsync(cancellationToken);
-
-		var users = await usersQuery
-					.OrderBy(eir => eir.EmailInvitationID)
-					.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-					.Take(paginationRequest.PageSize)
-					.Select(eir => new EmailInvitationRequestListDTO
-					{
-						EmailInvitationID = eir.EmailInvitationID,
-						EmailAddress = eir.EmailAddress,
-						FirstName = eir.FirstName,
-						LastName = eir.LastName,
-						Requestor = eir.Requestor,
-						OrderStatus = eir.OrderStatus,
-					})
-					.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<EmailInvitationRequestListDTO>(
-		  paginationRequest.PageIndex,
-		  paginationRequest.PageSize,
-		  totalRecords,
-		  users
-		);
-	}
-
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(
-		PaginationRequest paginationRequest,
-		IReadOnlyCollection<int>? authorizedClientIds,
-		Guid? requiredRequestorId,
-		CancellationToken cancellationToken)
-	{
-		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
-
-		var usersQuery =  _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(eir => (authorizedClientIds == null
-					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
-				&& (!requiredRequestorId.HasValue
-					|| eir.RequestorId == requiredRequestorId.Value))
-			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
-
-		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
-
-		var items = await usersQuery
+		return await pageQuery
 			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
 			.ThenByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(eir => new DisputeOrderListDTO
-			{
-				EmailInvitationID = eir.EmailInvitationID,
-				FirstName = eir.FirstName,
-				LastName = eir.LastName,
-				Requestor = eir.Requestor,
-				DisputeCategory = eir.DisputeCategory,
-				OrderCreatedAt = eir.OrderCreatedAt,
-				OrderCompletedAt = eir.OrderCompletedAt
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<DisputeOrderListDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
-	}
-
-	public async Task<PaginatedResult<DisputeOrderListDTO>> SearchDisputeOrdersAsync(
-		PaginationRequest paginationRequest,
-		IReadOnlyCollection<int>? authorizedClientIds,
-		Guid? requiredRequestorId,
-		CancellationToken cancellationToken)
-	{
-		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
-
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(eir => (authorizedClientIds == null
-					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
-				&& (!requiredRequestorId.HasValue
-					|| eir.RequestorId == requiredRequestorId.Value))
-			.Where(eir =>
-				(eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart) &&
-			   (EF.Functions.ILike(eir.FirstName!, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.LastName!, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{paginationRequest.SearchTerm}%") ||
-				EF.Functions.ILike(eir.EmailAddress!, $"%{paginationRequest.SearchTerm}%")));
-
-		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
-
-		var items = await usersQuery
-			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
-			.ThenByDescending(eir => eir.OrderCreatedAt)
-			.ThenBy(eir => eir.EmailInvitationID)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
+			.Take(take)
 			.Select(eir => new DisputeOrderListDTO
 			{
 				EmailInvitationID = eir.EmailInvitationID,
@@ -353,14 +297,38 @@ public class ATSRepository : IATSRepository
 				OrderCompletedAt = eir.OrderCompletedAt,
 			})
 			.ToListAsync(cancellationToken);
+	}
 
-		return new PaginatedResult<DisputeOrderListDTO>
-			(
-			  paginationRequest.PageIndex,
-			  paginationRequest.PageSize,
-			  totalRecords,
-			  items
-			);
+	public Task<long> CountDisputeOrdersAsync(
+		string? searchTerm,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken) =>
+		BuildDisputeOrdersQuery(searchTerm, authorizedClientIds, requiredRequestorId).LongCountAsync(cancellationToken);
+
+	private IQueryable<EmailInvitationRequest> BuildDisputeOrdersQuery(
+		string? searchTerm,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId)
+	{
+		var disputeWindowStart = DateTime.UtcNow.AddDays(-30);
+
+		var usersQuery = _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
+			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
+
+		if (!string.IsNullOrEmpty(searchTerm))
+			usersQuery = usersQuery.Where(eir =>
+				EF.Functions.ILike(eir.FirstName!, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.LastName!, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.EmailAddress!, $"%{searchTerm}%"));
+
+		return usersQuery;
 	}
 
 	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
@@ -446,146 +414,118 @@ public class ATSRepository : IATSRepository
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> GetReportsAsync(
-		PaginationRequest paginationRequest,
-		string? sortColumn,
-		bool sortDescending,
+	// Keyset over the fixed reports ordering (Rank ASC, OrderCompletedAt DESC,
+	// EmailInvitationID ASC). Pure query — the service decodes the cursor and mints
+	// the next one. The seek applies when afterRank and afterId are present; a NULL
+	// afterCompletedAt legitimately means the last row's sort key was NULL (the
+	// NULLS FIRST branch of the DESC ordering).
+	public async Task<List<ReportRowDTO>> GetReportsPageAsync(
+		int? afterRank,
+		DateTime? afterCompletedAt,
+		Guid? afterId,
+		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
-			.AsNoTracking()
-			.Where(eir => (authorizedClientIds == null
-					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
-				&& (!requiredRequestorId.HasValue
-					|| eir.RequestorId == requiredRequestorId.Value))
-			.Select(eir => new
-			{
-				eir.EmailInvitationID,
-				eir.FirstName,
-				eir.LastName,
-				eir.Requestor,
-				eir.OrderStatus,
-				eir.OrderCompletedAt,
-				eir.SelectPackage,
-				HitStatus = _dbcontext.ReportDetails
-					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
-					.OrderByDescending(rd => rd.ReportUploadedAt)
-					.Select(rd => rd.HitStatus)
-					.FirstOrDefault()
-			});
+		var pageQuery = BuildReportRowsQuery(authorizedClientIds, requiredRequestorId);
+		if (afterRank.HasValue && afterId.HasValue)
+			pageQuery = ApplyReportsSeek(pageQuery, afterRank.Value, afterCompletedAt, afterId.Value);
 
-		if (string.IsNullOrWhiteSpace(sortColumn))
-		{
-			usersQuery = usersQuery
-				.OrderBy(x =>
-					x.OrderStatus == OrderStatus.Completed ? 0 :
-					x.OrderStatus == OrderStatus.InProgress ? 1 :
-					x.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
-					x.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
-					4)
-				.ThenByDescending(x => x.OrderCompletedAt)
-				.ThenBy(x => x.EmailInvitationID);
-		}
-		else
-		{
-			usersQuery = sortColumn switch
-			{
-				SortColumn.SubjectName => sortDescending
-					? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
-					: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
-
-				SortColumn.OrderStatus => sortDescending
-					? usersQuery.OrderByDescending(x => x.OrderStatus)
-					: usersQuery.OrderBy(x => x.OrderStatus),
-
-				SortColumn.OrderCompletedAt => sortDescending
-					? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-					: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
-
-				_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-			};
-		}
-
-		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
-
-		var items = await usersQuery
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(x => new ReportListDTO
-			{
-				EmailInvitationRequestId = x.EmailInvitationID,
-				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
-				OrderStatus = x.OrderStatus,
-				OrderCompletedAt = x.OrderCompletedAt,
-				SelectedPackage = x.SelectPackage,
-				Requestor = x.Requestor,
-				HitStatus = x.HitStatus
-			})
-			.ToListAsync(cancellationToken);
-
-		return new PaginatedResult<ReportListDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
+		return await ApplyReportsOrder(pageQuery).Take(take).ToListAsync(cancellationToken);
 	}
 
-	public async Task<PaginatedResult<ReportListDTO>> SearchReportsAsync(
-		PaginationRequest paginationRequest,
-		string? sortColumn,
-		bool sortDescending,
+	public async Task<List<ReportRowDTO>> SearchReportsPageAsync(
+		int? afterRank,
+		DateTime? afterCompletedAt,
+		Guid? afterId,
+		int take,
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken)
 	{
-		var usersQuery = _dbcontext.EmailInvitationRequests
+		var pageQuery = BuildSearchReportRowsQuery(searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId);
+		if (afterRank.HasValue && afterId.HasValue)
+			pageQuery = ApplyReportsSeek(pageQuery, afterRank.Value, afterCompletedAt, afterId.Value);
+
+		return await ApplyReportsOrder(pageQuery).Take(take).ToListAsync(cancellationToken);
+	}
+
+	public Task<long> CountReportsAsync(
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken) =>
+		BuildReportRowsQuery(authorizedClientIds, requiredRequestorId).LongCountAsync(cancellationToken);
+
+	public Task<long> CountSearchReportsAsync(
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken) =>
+		BuildSearchReportRowsQuery(searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId)
+			.LongCountAsync(cancellationToken);
+
+	private IQueryable<ReportRowDTO> BuildReportRowsQuery(
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId)
+	{
+		return _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir => (authorizedClientIds == null
 					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
 				&& (!requiredRequestorId.HasValue
 					|| eir.RequestorId == requiredRequestorId.Value))
-			.Select(eir => new
+			.Select(eir => new ReportRowDTO
 			{
-				eir.EmailInvitationID,
-				eir.FirstName,
-				eir.LastName,
-				eir.Requestor,
-				eir.OrderStatus,
-				eir.OrderCompletedAt,
-				eir.SelectPackage,
+				EmailInvitationID = eir.EmailInvitationID,
+				FirstName = eir.FirstName,
+				LastName = eir.LastName,
+				Requestor = eir.Requestor,
+				OrderStatus = eir.OrderStatus,
+				OrderCompletedAt = eir.OrderCompletedAt,
+				SelectPackage = eir.SelectPackage,
 				HitStatus = _dbcontext.ReportDetails
 					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
 					.OrderByDescending(rd => rd.ReportUploadedAt)
 					.Select(rd => rd.HitStatus)
-					.FirstOrDefault()
+					.FirstOrDefault(),
+				Rank = eir.OrderStatus == OrderStatus.Completed ? 0 :
+					eir.OrderStatus == OrderStatus.InProgress ? 1 :
+					eir.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
+					eir.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
+					4
 			});
+	}
 
-		if (paginationRequest.StartDate.HasValue)
+	private IQueryable<ReportRowDTO> BuildSearchReportRowsQuery(
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId)
+	{
+		var usersQuery = BuildReportRowsQuery(authorizedClientIds, requiredRequestorId);
+
+		if (startDate.HasValue)
 		{
-			var start = DateTime.SpecifyKind(
-						paginationRequest.StartDate.Value.Date,
-						DateTimeKind.Utc);
-
-			usersQuery = usersQuery.Where(x =>
-				x.OrderCompletedAt >= start);
+			var start = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+			usersQuery = usersQuery.Where(x => x.OrderCompletedAt >= start);
 		}
 
-		if (paginationRequest.EndDate.HasValue)
+		if (endDate.HasValue)
 		{
-			var end = DateTime.SpecifyKind(
-				paginationRequest.EndDate.Value.Date.AddDays(1),
-				DateTimeKind.Utc);
-
-			usersQuery = usersQuery.Where(x =>
-				x.OrderCompletedAt < end);
+			var end = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1), DateTimeKind.Utc);
+			usersQuery = usersQuery.Where(x => x.OrderCompletedAt < end);
 		}
 
-		if (!string.IsNullOrWhiteSpace(paginationRequest.SearchTerm))
+		if (!string.IsNullOrWhiteSpace(searchTerm))
 		{
-			var search = $"%{paginationRequest.SearchTerm}%";
-
+			var search = $"%{searchTerm}%";
 			usersQuery = usersQuery.Where(x =>
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
 				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
@@ -593,43 +533,30 @@ public class ATSRepository : IATSRepository
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
 		}
 
-		usersQuery = sortColumn switch
-		{
-			SortColumn.SubjectName => sortDescending
-				? usersQuery.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName)
-				: usersQuery.OrderBy(x => x.FirstName).ThenBy(x => x.LastName),
-			SortColumn.OrderStatus => sortDescending
-				? usersQuery.OrderByDescending(x => x.OrderStatus)
-				: usersQuery.OrderBy(x => x.OrderStatus),
-			SortColumn.OrderCompletedAt => sortDescending
-				? usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-				: usersQuery.OrderBy(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID),
-			_ => usersQuery.OrderByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID)
-		};
+		return usersQuery;
+	}
 
-		var totalRecords = await usersQuery.LongCountAsync(cancellationToken);
+	// The single reports ordering: status precedence first, newest completions next,
+	// unique id as the tiebreaker. Postgres sorts DESC as NULLS FIRST, which the
+	// seek predicate in ApplyReportsSeek mirrors exactly.
+	private static IQueryable<ReportRowDTO> ApplyReportsOrder(IQueryable<ReportRowDTO> pageQuery) => pageQuery
+		.OrderBy(x => x.Rank).ThenByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID);
 
-		var items = await usersQuery
-			.OrderByDescending(x => x.OrderCompletedAt)
-			.Skip((paginationRequest.PageIndex - 1) * paginationRequest.PageSize)
-			.Take(paginationRequest.PageSize)
-			.Select(x => new ReportListDTO
-			{
-				EmailInvitationRequestId = x.EmailInvitationID,
-				SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
-				OrderStatus = x.OrderStatus,
-				OrderCompletedAt = x.OrderCompletedAt,
-				SelectedPackage = x.SelectPackage,
-				Requestor = x.Requestor,
-				HitStatus = x.HitStatus
-			})
-			.ToListAsync(cancellationToken);
+	// NULL-aware seek predicate for the fixed (Rank ASC, OrderCompletedAt DESC
+	// NULLS FIRST, Id ASC) ordering. A NULL afterCompletedAt means the last row's
+	// sort key was NULL, selecting the NULLS FIRST branch.
+	private static IQueryable<ReportRowDTO> ApplyReportsSeek(
+		IQueryable<ReportRowDTO> query, int afterRank, DateTime? afterCompletedAt, Guid afterId)
+	{
+		if (afterCompletedAt is null)
+			return query.Where(x => x.Rank > afterRank
+				|| (x.Rank == afterRank && ((x.OrderCompletedAt == null && x.EmailInvitationID.CompareTo(afterId) > 0)
+					|| x.OrderCompletedAt != null)));
 
-		return new PaginatedResult<ReportListDTO>(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			totalRecords,
-			items);
+		return query.Where(x => x.Rank > afterRank
+			|| (x.Rank == afterRank && x.OrderCompletedAt != null
+				&& (x.OrderCompletedAt < afterCompletedAt
+					|| (x.OrderCompletedAt == afterCompletedAt && x.EmailInvitationID.CompareTo(afterId) > 0))));
 	}
 
 	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)

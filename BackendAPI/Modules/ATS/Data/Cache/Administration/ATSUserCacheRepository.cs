@@ -11,21 +11,29 @@ public sealed class ATSUserCacheRepository : IATSUserRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public Task<List<UserPageKeyDTO>> GetUserPageKeysAsync(string? searchTerm, int? clientId, string? afterUserName, string? afterUserEmail, Guid? afterUserId, int take, CancellationToken cancellationToken)
 	{
+		if (afterUserName is not null)
+			return _repository.GetUserPageKeysAsync(searchTerm, clientId, afterUserName, afterUserEmail, afterUserId, take, cancellationToken);
+
 		var scope = clientId.HasValue ? $"client_{clientId.Value}" : "all";
-		var key = $"user_scope_{scope}_page_{request.PageIndex}_size_{request.PageSize}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetUsersAsync(value, clientId, token), null,
+		var key = $"user_scope_{scope}_first_take_{take}_search_{searchTerm}";
+		return _cache.GetOrCreateAsync<List<UserPageKeyDTO>>(
+			key, async token => await _repository.GetUserPageKeysAsync(searchTerm, clientId, null, null, null, take, token),
 			tags: [CacheTags.User], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<UserDetailsDTO>> SearchUsersAsync(PaginationRequest request, int? clientId, CancellationToken cancellationToken)
+	public Task<List<UserDetailsDTO>> GetUsersByIdsAsync(IReadOnlyCollection<Guid> userIds, string? searchTerm, int? clientId, CancellationToken cancellationToken) =>
+		_repository.GetUsersByIdsAsync(userIds, searchTerm, clientId, cancellationToken);
+
+	public Task<long> CountUsersAsync(string? searchTerm, int? clientId, CancellationToken cancellationToken)
 	{
 		var scope = clientId.HasValue ? $"client_{clientId.Value}" : "all";
-		var key = $"user_scope_{scope}_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<UserDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchUsersAsync(value, clientId, token), null,
+		return _cache.GetOrCreateAsync<long>(
+			$"user_scope_{scope}_count_search_{searchTerm}",
+			async token => await _repository.CountUsersAsync(searchTerm, clientId, token),
 			tags: [CacheTags.User], cancellationToken: cancellationToken).AsTask();
 	}
 

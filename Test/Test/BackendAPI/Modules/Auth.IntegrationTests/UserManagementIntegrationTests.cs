@@ -24,14 +24,14 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUsersQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.Users.Data.Count().Should().Be(2);
+		result.Users.Items.Count.Should().Be(2);
 	}
 
 	[Fact]
@@ -40,58 +40,66 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUsersQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "Admin4");
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "Admin4");
 
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
 
-		result.Users.Count.Should().Be(1);
-		result.Users.Data.ElementAt(0).firstName.Should().Be("Admin4");
-		result.Users.Data.ElementAt(0).email.Should().Be("john@example4.com");
+		result.Users.TotalCount.Should().Be(1);
+		result.Users.Items.ElementAt(0).firstName.Should().Be("Admin4");
+		result.Users.Items.ElementAt(0).email.Should().Be("john@example4.com");
 	}
 
 	[Fact]
 	public async Task GetUsers_ShouldReturnEmptyList_WhenNoUsersExist()
 	{
 		// Arrange
-		var query = new GetUsersQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 5);
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
-		result.Users.Count.Should().Be(0);
+		result.Users.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetUsers_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetUsers_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedUserData();
-		var query = new GetUsersQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 1);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.Users.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.Users.NextCursor });
 
 		// Assert
-		result.Users.PageIndex.Should().Be(1);
-		result.Users.PageSize.Should().Be(2);
+		page1.Users.Items.Count.Should().Be(1);
+		page1.Users.TotalCount.Should().Be(2);
+		page2.Users.TotalCount.Should().BeNull();
+		page2.Users.Items.Select(u => u.userId)
+			.Should().NotIntersectWith(page1.Users.Items.Select(u => u.userId));
 	}
 
 	[Fact]
-	public async Task GetUsers_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetUsers_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUsersQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 1);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.Users.NextCursor });
 
 		// Assert
-		result.Users.Data.Count().Should().Be(0);
+		page2.Users.Items.Count.Should().Be(1);
+		page2.Users.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -100,14 +108,14 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUnApprovedUsersQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetUnApprovedUsersQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.Users.Data.Count().Should().Be(2);
+		result.Users.Items.Count.Should().Be(2);
 	}
 
 	[Fact]
@@ -116,58 +124,66 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUnApprovedUsersQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "john@example1.com");
+		var query = new GetUnApprovedUsersQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "john@example1.com");
 
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
 
-		result.Users.Count.Should().Be(1);
-		result.Users.Data.ElementAt(0).firstName.Should().Be("Admin1");
-		result.Users.Data.ElementAt(0).email.Should().Be("john@example1.com");
+		result.Users.TotalCount.Should().Be(1);
+		result.Users.Items.ElementAt(0).firstName.Should().Be("Admin1");
+		result.Users.Items.ElementAt(0).email.Should().Be("john@example1.com");
 	}
 
 	[Fact]
 	public async Task GetUnApprovedUsers_ShouldReturnEmptyList_WhenNoUnApprovedUsersExist()
 	{
 		// Arrange
-		var query = new GetUnApprovedUsersQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetUnApprovedUsersQueryRequest(Cursor: null, PageSize: 5);
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
-		result.Users.Count.Should().Be(0);
+		result.Users.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetUnApprovedUserss_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetUnApprovedUserss_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedUserData();
-		var query = new GetUnApprovedUsersQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetUnApprovedUsersQueryRequest(Cursor: null, PageSize: 1);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.Users.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.Users.NextCursor });
 
 		// Assert
-		result.Users.PageIndex.Should().Be(1);
-		result.Users.PageSize.Should().Be(2);
+		page1.Users.Items.Count.Should().Be(1);
+		page1.Users.TotalCount.Should().Be(2);
+		page2.Users.TotalCount.Should().BeNull();
+		page2.Users.Items.Select(u => u.userId)
+			.Should().NotIntersectWith(page1.Users.Items.Select(u => u.userId));
 	}
 
 	[Fact]
-	public async Task GetUnApprovedUsers_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetUnApprovedUsers_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUnApprovedUsersQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetUnApprovedUsersQueryRequest(Cursor: null, PageSize: 1);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.Users.NextCursor });
 
 		// Assert
-		result.Users.Data.Count().Should().Be(0);
+		page2.Users.Items.Count.Should().Be(1);
+		page2.Users.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

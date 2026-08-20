@@ -153,9 +153,14 @@
         }
     </div>;
 
-    private RenderFragment PagerContent => @<MudTablePager PageSizeOptions="@PageSizeOptions"
-                                                               RowsPerPageString="@RowsPerPageString"
-                                                               InfoFormat="@PagerInfoFormat" />;
+    private RenderFragment PagerContent => CursorPagerState is not null
+        ? @<CursorTablePager PagerState="@CursorPagerState"
+                             PageSizeOptions="@PageSizeOptions"
+                             RowsPerPageString="@RowsPerPageString"
+                             InfoFormat="@PagerInfoFormat" />
+        : @<MudTablePager PageSizeOptions="@PageSizeOptions"
+                          RowsPerPageString="@RowsPerPageString"
+                          InfoFormat="@PagerInfoFormat" />;
 
     private RenderFragment LoadingContentBody => @<text>
         @for (int r = 0; r < 4; r++)

@@ -2,8 +2,8 @@ namespace FrontendWebassembly.Services.ATS.Interface;
 
 public interface IModuleManagementService
 {
-	Task<ServiceResponse<PaginatedResult<ModuleDetailsDTO>>> GetModulesAsync(
-		int? pageNumber = 1,
+	Task<ServiceResponse<KeysetPaginatedResult<ModuleDetailsDTO>>> GetModulesAsync(
+		string? cursor = null,
 		int? pageSize = 10,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);

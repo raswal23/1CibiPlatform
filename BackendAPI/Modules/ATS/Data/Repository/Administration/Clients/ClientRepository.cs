@@ -6,11 +6,58 @@ public sealed class ClientRepository : IClientRepository
 
 	public ClientRepository(ATSDBContext dbContext) => _dbContext = dbContext;
 
-	public Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest request, CancellationToken cancellationToken) =>
-		GetPageAsync(request, false, cancellationToken);
+	// Keyset over the grouped projection (ClientName, ClientId): one page is take-1
+	// logical clients, each expanding to a row per package via GetClientsByIdsAsync.
+	// The service mints the cursor from the last key returned here.
+	public async Task<List<ClientLookupDTO>> GetClientPageKeysAsync(string? searchTerm, string? afterClientName, int? afterClientId, int take, CancellationToken cancellationToken)
+	{
+		var logical = BuildLogicalQuery(searchTerm);
+		if (afterClientName is not null && afterClientId.HasValue)
+		{
+			var cId = afterClientId.Value;
+			logical = logical.Where(client =>
+				string.Compare(client.ClientName, afterClientName) > 0
+				|| (client.ClientName == afterClientName && client.ClientId > cId));
+		}
 
-	public Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest request, CancellationToken cancellationToken) =>
-		GetPageAsync(request, true, cancellationToken);
+		return await logical.OrderBy(client => client.ClientName).ThenBy(client => client.ClientId)
+			.Take(take).ToListAsync(cancellationToken);
+	}
+
+	public Task<List<ClientDetailsDTO>> GetClientsByIdsAsync(IReadOnlyCollection<int> clientIds, string? searchTerm, CancellationToken cancellationToken) =>
+		BuildQuery(searchTerm).Where(client => clientIds.Contains(client.ClientId)).OrderBy(client => client.ClientName)
+			.ThenBy(client => client.ClientId).ThenBy(client => client.PackageId)
+			.Select(client => new ClientDetailsDTO
+			{
+				ClientId = client.ClientId,
+				ClientName = client.ClientName,
+				ClientDescription = client.ClientDescription,
+				IsActive = client.IsActive,
+				PackageId = client.PackageId,
+				CreatedAt = client.CreatedAt,
+				UpdatedAt = client.UpdatedAt
+			}).ToListAsync(cancellationToken);
+
+	public Task<long> CountClientsAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		BuildLogicalQuery(searchTerm).LongCountAsync(cancellationToken);
+
+	private IQueryable<ClientDetails> BuildQuery(string? searchTerm)
+	{
+		var query = _dbContext.ClientDetails.AsNoTracking();
+		if (!string.IsNullOrEmpty(searchTerm))
+		{
+			var term = $"%{searchTerm}%";
+			query = query.Where(client => EF.Functions.ILike(client.ClientName, term) || EF.Functions.ILike(client.ClientDescription, term));
+		}
+		return query;
+	}
+
+	private IQueryable<ClientLookupDTO> BuildLogicalQuery(string? searchTerm) =>
+		BuildQuery(searchTerm).GroupBy(client => client.ClientId).Select(group => new ClientLookupDTO
+		{
+			ClientId = group.Key,
+			ClientName = group.Min(client => client.ClientName)
+		});
 
 	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
@@ -96,30 +143,4 @@ public sealed class ClientRepository : IClientRepository
 		return existing.Where(client => selectedPackageIds.Contains(client.PackageId)).Concat(added).OrderBy(client => client.PackageId).ToArray();
 	}
 
-	private async Task<PaginatedResult<ClientDetailsDTO>> GetPageAsync(PaginationRequest request, bool search, CancellationToken cancellationToken)
-	{
-		var query = _dbContext.ClientDetails.AsNoTracking();
-		if (search)
-		{
-			var term = $"%{request.SearchTerm}%";
-			query = query.Where(client => EF.Functions.ILike(client.ClientName, term) || EF.Functions.ILike(client.ClientDescription, term));
-		}
-		var logical = query.GroupBy(client => client.ClientId).Select(group => new { ClientId = group.Key, ClientName = group.Min(client => client.ClientName) });
-		var count = await logical.LongCountAsync(cancellationToken);
-		var ids = await logical.OrderBy(client => client.ClientName).ThenBy(client => client.ClientId)
-			.Skip((request.PageIndex - 1) * request.PageSize).Take(request.PageSize).Select(client => client.ClientId).ToListAsync(cancellationToken);
-		var items = await query.Where(client => ids.Contains(client.ClientId)).OrderBy(client => client.ClientName)
-			.ThenBy(client => client.ClientId).ThenBy(client => client.PackageId)
-			.Select(client => new ClientDetailsDTO
-			{
-				ClientId = client.ClientId,
-				ClientName = client.ClientName,
-				ClientDescription = client.ClientDescription,
-				IsActive = client.IsActive,
-				PackageId = client.PackageId,
-				CreatedAt = client.CreatedAt,
-				UpdatedAt = client.UpdatedAt
-			}).ToListAsync(cancellationToken);
-		return new PaginatedResult<ClientDetailsDTO>(request.PageIndex, request.PageSize, count, items);
-	}
 }

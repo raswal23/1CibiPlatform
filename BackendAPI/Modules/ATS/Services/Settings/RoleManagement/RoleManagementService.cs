@@ -1,4 +1,4 @@
-namespace ATS.Services.Settings.RoleManagement;
+﻿namespace ATS.Services.Settings.RoleManagement;
 
 public class RoleManagementService : IRoleManagementService
 {
@@ -12,8 +12,8 @@ public class RoleManagementService : IRoleManagementService
 		_logger = logger;
 	}
 
-	public Task<PaginatedResult<RoleDetailsDTO>> GetRolesAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<RoleDetailsDTO>> GetRolesAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -26,9 +26,20 @@ public class RoleManagementService : IRoleManagementService
 
 		_logger.LogInformation("Fetching roles with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_roleRepository.GetRolesAsync(paginationRequest, cancellationToken) :
-			_roleRepository.SearchRolesAsync(paginationRequest, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		var afterRoleName = fields?[0];
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _roleRepository.GetRolesPageAsync(paginationRequest.SearchTerm, afterRoleName, pageSize + 1, cancellationToken);
+		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore ? CursorCodec.Encode(items[^1].RoleName) : null;
+		long? totalCount = afterRoleName is null
+			? await _roleRepository.CountRolesAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<RoleDetailsDTO>(items, nextCursor, totalCount);
 	}
 
 	public async Task<bool> AddRoleAsync(AddRoleDTO roleDTO)

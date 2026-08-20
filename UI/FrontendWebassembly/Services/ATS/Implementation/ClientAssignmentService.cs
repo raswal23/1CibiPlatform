@@ -9,8 +9,8 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<GetClientAssignmentsResponseDTO>> GetAssignmentsAsync(
-		int pageIndex,
+	public async Task<ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>> GetAssignmentsAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default)
@@ -18,32 +18,32 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 		try
 		{
 			var response = await _httpClient.GetAsync(
-				BuildPagedUri("/ats/getclientassignments", pageIndex, pageSize, searchTerm),
+				BuildPagedUri("/ats/getclientassignments", cursor, pageSize, searchTerm),
 				cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<GetClientAssignmentsResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
-			var result = await response.Content.ReadFromJsonAsync<GetClientAssignmentsResponseDTO>(cancellationToken: cancellationToken);
+			var result = await response.Content.ReadFromJsonAsync<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>(cancellationToken: cancellationToken);
 
 			if (result is null)
 			{
-				return ServiceResponse<GetClientAssignmentsResponseDTO>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<GetClientAssignmentsResponseDTO>.Success(result);
+			return ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<GetClientAssignmentsResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<ClientAssignmentDetailsDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 
-	public async Task<ServiceResponse<GetClientLookupResponseDTO>> GetAssignableClientsAsync(
-		int pageIndex,
+	public async Task<ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>> GetAssignableClientsAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default)
@@ -51,27 +51,27 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 		try
 		{
 			var response = await _httpClient.GetAsync(
-				BuildPagedUri("ats/getassignableclients", pageIndex, pageSize, searchTerm),
+				BuildPagedUri("ats/getassignableclients", cursor, pageSize, searchTerm),
 				cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<GetClientLookupResponseDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+				return ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
 			}
 
-			var result = await response.Content.ReadFromJsonAsync<GetClientLookupResponseDTO>(cancellationToken: cancellationToken);
+			var result = await response.Content.ReadFromJsonAsync<KeysetPaginatedResult<ClientLookupDTO>>(cancellationToken: cancellationToken);
 
 			if (result is null)
 			{
-				return ServiceResponse<GetClientLookupResponseDTO>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<GetClientLookupResponseDTO>.Success(result);
+			return ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<GetClientLookupResponseDTO>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<ClientLookupDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 
@@ -109,11 +109,16 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 
 	private static string BuildPagedUri(
 		string route,
-		int pageIndex,
+		string? cursor,
 		int pageSize,
 		string? searchTerm)
 	{
-		var uri = $"{route}?pageIndex={pageIndex}&pageSize={pageSize}";
+		var uri = $"{route}?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			uri += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
+
 		return string.IsNullOrWhiteSpace(searchTerm)
 			? uri
 			: $"{uri}&search={Uri.EscapeDataString(searchTerm.Trim())}";

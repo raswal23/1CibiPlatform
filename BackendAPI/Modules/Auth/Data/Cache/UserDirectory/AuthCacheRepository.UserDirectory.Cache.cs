@@ -14,17 +14,34 @@ public partial class AuthCacheRepository
 				cancellationToken: cancellationToken);
 		}
 	
-	public async Task<PaginatedResult<ATSUserLookupDTO>> GetATSAssignedUsersAsync(
-			PaginationRequest paginationRequest,
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<ATSUserLookupDTO>> GetATSAssignedUsersPageAsync(
+			string? searchTerm,
+			string? afterLastName,
+			string? afterFirstName,
+			Guid? afterId,
+			int take,
 			CancellationToken cancellationToken)
 		{
-			var search = paginationRequest.SearchTerm?.Trim().ToLowerInvariant() ?? string.Empty;
-			var cacheKey = $"ats_assigned_users_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{search}";
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ATSUserLookupDTO>>(
+			if (afterLastName is not null)
+				return await _authRepository.GetATSAssignedUsersPageAsync(searchTerm, afterLastName, afterFirstName, afterId, take, cancellationToken);
+
+			var search = searchTerm?.Trim().ToLowerInvariant() ?? string.Empty;
+			var cacheKey = $"ats_assigned_users_first_take_{take}_search_{search}";
+			return await _hybridCache.GetOrCreateAsync<List<ATSUserLookupDTO>>(
 				cacheKey,
-				paginationRequest,
-				async (request, token) => await _authRepository.GetATSAssignedUsersAsync(request, token),
-				null,
+				async token => await _authRepository.GetATSAssignedUsersPageAsync(searchTerm, null, null, null, take, token),
+				tags: [UsersTag, AppSubRolesTag],
+				cancellationToken: cancellationToken);
+		}
+
+	public async Task<long> CountATSAssignedUsersAsync(string? searchTerm, CancellationToken cancellationToken)
+		{
+			var search = searchTerm?.Trim().ToLowerInvariant() ?? string.Empty;
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"ats_assigned_users_count_search_{search}",
+				async token => await _authRepository.CountATSAssignedUsersAsync(searchTerm, token),
 				tags: [UsersTag, AppSubRolesTag],
 				cancellationToken: cancellationToken);
 		}

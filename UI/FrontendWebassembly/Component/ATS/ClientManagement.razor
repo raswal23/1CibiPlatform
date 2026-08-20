@@ -30,6 +30,7 @@
                 ColumnCount="7"
                 RowsPerPage="10"
                 LoadServerData="LoadClientData"
+                CursorPagerState="_clientsLoader"
                 SearchString="@searchString"
                 SearchStringChanged="@((string val) => searchString = val)">
 
@@ -111,6 +112,7 @@
 
 @code {
     private string searchString = string.Empty;
+    private readonly CursorTableLoader<ClientManagementViewModel> _clientsLoader = new();
     private TableComponent<ClientManagementViewModel>? clientsTable;
     private IReadOnlyList<PackageDetailsDTO> packages = Array.Empty<PackageDetailsDTO>();
     private Dictionary<int, PackageDetailsDTO> packageLookup = new();
@@ -119,19 +121,19 @@
     private string? packagesError;
 
     private async Task<TableData<ClientManagementViewModel>> LoadClientData(TableState state, CancellationToken cancellationToken)
-    => await LoadPagedDataAsync(state, async (page, pageSize) =>
+    => await LoadCursorPagedDataAsync(_clientsLoader, state, $"{searchString}", async (cursor, pageSize) =>
     {
         var packagesTask = EnsurePackagesLoadedAsync(cancellationToken);
-        var clientsTask = ClientManagementService.GetClientsAsync(page, pageSize, searchString, cancellationToken);
+        var clientsTask = ClientManagementService.GetClientsAsync(cursor, pageSize, searchString, cancellationToken);
         await Task.WhenAll(packagesTask, clientsTask);
 
         var clientsResponse = await clientsTask;
 
         if (!clientsResponse.IsSuccess || clientsResponse.Data is null)
-            return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Failure(clientsResponse.ErrorDetail);
+            return ServiceResponse<KeysetPaginatedResult<ClientManagementViewModel>>.Failure(clientsResponse.ErrorDetail);
 
         if (!await packagesTask)
-            return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Failure(packagesError ?? "Failed to load packages.");
+            return ServiceResponse<KeysetPaginatedResult<ClientManagementViewModel>>.Failure(packagesError ?? "Failed to load packages.");
 
         var result = clientsResponse.Data;
         var groupedClients = result.Items
@@ -159,12 +161,11 @@
             .OrderBy(client => client.ClientName)
             .ToArray();
 
-        return ServiceResponse<PaginatedResult<ClientManagementViewModel>>.Success(
-            new PaginatedResult<ClientManagementViewModel>(
-                result.PageIndex,
-                result.PageSize,
-                result.TotalRecords,
-                groupedClients));
+        return ServiceResponse<KeysetPaginatedResult<ClientManagementViewModel>>.Success(
+            new KeysetPaginatedResult<ClientManagementViewModel>(
+                groupedClients,
+                result.NextCursor,
+                result.TotalCount));
     });
 
     private async Task<bool> EnsurePackagesLoadedAsync(CancellationToken cancellationToken)

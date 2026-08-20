@@ -24,6 +24,7 @@
                         RowsPerPage="10"
                         PageSizeOptions="@(new[] { 10, 25, 50 })"
                         LoadServerData="LoadAssignmentData"
+                        CursorPagerState="_assignmentsLoader"
                         SearchString="@searchString"
                         SearchStringChanged="@((string value) => searchString = value)">
 

@@ -428,9 +428,9 @@ namespace APIs.Migrations.ATS
 
                     b.HasKey("ClientId", "PackageId");
 
-                    b.HasIndex("ClientName");
-
                     b.HasIndex("PackageId");
+
+                    b.HasIndex("ClientName", "ClientId");
 
                     b.ToTable("ClientDetails", "ats");
                 });
@@ -731,6 +731,16 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("EmailInvitationID");
+
+                    b.HasIndex("OrderCompletedAt", "EmailInvitationID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("OrderCreatedAt", "EmailInvitationID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("OrderStatus", "EmailInvitationID");
+
+                    b.HasIndex("FirstName", "LastName", "EmailInvitationID");
 
                     b.ToTable("EmailInvitationRequest", "ats");
                 });
@@ -1442,6 +1452,8 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("RoleId");
 
                     b.HasIndex("UserEmail");
+
+                    b.HasIndex("UserName", "UserEmail", "UserId");
 
                     b.ToTable("UserDetails", "ats");
                 });

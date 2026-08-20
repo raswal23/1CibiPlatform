@@ -20,12 +20,10 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 	public async Task GetAppSubRolesAsync_ShouldCallGetAppSubRoles_WhenNoSearchTerm()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = null
-		};
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
+			PageSize: 10,
+			SearchTerm: null);
 
 		var data = new List<AppSubRolesDTO>
 			{
@@ -33,33 +31,31 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 				new AppSubRolesDTO ( 2, Guid.CreateVersion7(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
 			};
 
-		var expectedResult = new PaginatedResult<AppSubRolesDTO>(1, 1, 10, data);
-
 		_fixture.MockAuthRepository
-			.Setup(x => x.GetAppSubRolesAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+			.Setup(x => x.GetAppSubRolesPageAsync(null, null, 11, CancellationToken.None))
+			.ReturnsAsync(data.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountAppSubRolesAsync(null, CancellationToken.None))
+			.ReturnsAsync(2);
 
 		// Act
 		var result = await _fixture.AppSubRoleService.GetAppSubRolesAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(2);
+		result.NextCursor.Should().BeNull();
+		result.Items.Should().BeEquivalentTo(data);
 	}
 
 	[Fact]
-	public async Task GetAppSubRolesAsync_ShouldCallAppSubRoles_WhenSearchTermProvided()
+	public async Task GetAppSubRolesAsync_ShouldPassSearchTerm_WhenProvided()
 	{
 		// Arrange
-		var paginationRequest = new PaginationRequest
-		{
-			PageIndex = 1,
-			PageSize = 10,
-			SearchTerm = "1"
-		};
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
+			PageSize: 10,
+			SearchTerm: "1");
 
 		var data = new List<AppSubRolesDTO>
 			{
@@ -67,21 +63,21 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 				new AppSubRolesDTO ( 2, Guid.CreateVersion7(), "doe@example.com", 2, "CNX", 2, "DashBoard", 2, "Admin" )
 			};
 
-		var expectedResult = new PaginatedResult<AppSubRolesDTO>(1, 1, 10, data);
-
 		_fixture.MockAuthRepository
-			.Setup(x => x.SearchAppSubRoleAsync(paginationRequest, CancellationToken.None))
-			.ReturnsAsync(expectedResult);
+			.Setup(x => x.GetAppSubRolesPageAsync("1", null, 11, CancellationToken.None))
+			.ReturnsAsync(data.ToList());
+		_fixture.MockAuthRepository
+			.Setup(x => x.CountAppSubRolesAsync("1", CancellationToken.None))
+			.ReturnsAsync(2);
 
 		// Act
 		var result = await _fixture.AppSubRoleService.GetAppSubRolesAsync(paginationRequest, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.PageIndex.Should().Be(expectedResult.PageIndex);
-		result.PageSize.Should().Be(expectedResult.PageSize);
-		result.Count.Should().Be(expectedResult.Count);
-		result.Data.Should().BeEquivalentTo(expectedResult.Data);
+		result.TotalCount.Should().Be(2);
+		result.NextCursor.Should().BeNull();
+		result.Items.Should().BeEquivalentTo(data);
 	}
 
 	[Fact]

@@ -2,6 +2,7 @@
 
 public partial class DisputeOrderComponent
 {
+	private readonly CursorTableLoader<DisputeOrderListDTO> _ordersLoader = new();
 	private TableComponent<DisputeOrderListDTO>? ordersTable;
 	private string? _searchString;
 
@@ -31,8 +32,8 @@ public partial class DisputeOrderComponent
 	}
 
 	private async Task<TableData<DisputeOrderListDTO>> LoadOrderData(TableState state, CancellationToken cancellationToken)
-	=> await LoadPagedDataAsync(state, (page, pageSize) =>
-				DisputeOrderService.GetDisputeOrdersAsync(page, pageSize, searchString));
+	=> await LoadCursorPagedDataAsync(_ordersLoader, state, $"{searchString}", (cursor, pageSize) =>
+				DisputeOrderService.GetDisputeOrdersAsync(cursor, pageSize, searchString));
 
 	private async Task OpenResultDialog<TComponent>(
 		string title,

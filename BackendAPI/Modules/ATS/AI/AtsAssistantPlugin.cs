@@ -71,26 +71,25 @@ public sealed class AtsAssistantPlugin
 			return Array.Empty<AtsOrderSummaryDTO>();
 		}
 
-		var paginationRequest = new PaginationRequest(
-			PageIndex: 1,
-			PageSize: MaxSearchResults,
-			SearchTerm: name.Trim());
-
-		var reports = await _atsRepository.SearchReportsAsync(
-			paginationRequest,
-			SortColumn.SubjectName,
-			sortDescending: false,
+		var reports = await _atsRepository.SearchReportsPageAsync(
+			afterRank: null,
+			afterCompletedAt: null,
+			afterId: null,
+			take: MaxSearchResults,
+			searchTerm: name.Trim(),
+			startDate: null,
+			endDate: null,
 			scope.Value.AuthorizedClientIds,
 			scope.Value.RequiredRequestorId,
 			cancellationToken);
 
-		var orders = reports.Data
+		var orders = reports
 			.Select(report => new AtsOrderSummaryDTO
 			{
-				EmailInvitationRequestId = report.EmailInvitationRequestId,
-				SubjectName = report.SubjectName,
+				EmailInvitationRequestId = report.EmailInvitationID,
+				SubjectName = $"{report.FirstName} {report.LastName}".Trim(),
 				OrderStatus = report.OrderStatus,
-				SelectedPackage = report.SelectedPackage,
+				SelectedPackage = report.SelectPackage,
 				Requestor = report.Requestor,
 				HitStatus = report.HitStatus,
 				OrderCompletedAt = report.OrderCompletedAt
@@ -255,8 +254,8 @@ public sealed class AtsAssistantPlugin
 	private async Task<IReadOnlyList<PackageDetailsDTO>> GetAssignedPackagesAsync(
 		CancellationToken cancellationToken)
 	{
-		var paginationRequest = new PaginationRequest(
-			PageIndex: 1,
+		var paginationRequest = new KeysetPaginationRequest(
+			Cursor: null,
 			PageSize: 100);
 
 		var packages = await _packageManagementService.GetPackagesAsync(
@@ -264,7 +263,7 @@ public sealed class AtsAssistantPlugin
 			cancellationToken,
 			_clientId);
 
-		return packages.Data
+		return packages.Items
 			.Where(package => package.IsActive)
 			.DistinctBy(package => package.PackageId)
 			.OrderBy(package => package.PackageName)

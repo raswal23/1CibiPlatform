@@ -1,4 +1,4 @@
-namespace ATS.Services.Settings.UserManagement;
+﻿namespace ATS.Services.Settings.UserManagement;
 
 public class UserManagementService : IUserManagementService
 {
@@ -77,8 +77,8 @@ public class UserManagementService : IUserManagementService
 		return result.Adapt<UserClientDetailsDTO>();
 	}
 
-	public Task<PaginatedResult<UserDetailsDTO>> GetUsersAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<UserDetailsDTO>> GetUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -93,18 +93,36 @@ public class UserManagementService : IUserManagementService
 
 		var scope = ResolveScope();
 		if (scope.IsDenied)
-		{
-			return Task.FromResult(new PaginatedResult<UserDetailsDTO>(
-				paginationRequest.PageIndex,
-				paginationRequest.PageSize,
-				0,
-				Array.Empty<UserDetailsDTO>()));
-		}
+			return new KeysetPaginatedResult<UserDetailsDTO>(Array.Empty<UserDetailsDTO>(), null, 0);
 
 		var clientId = scope.CanAccessAll ? null : scope.ClientId;
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm)
-			? _userRepository.GetUsersAsync(paginationRequest, clientId, cancellationToken)
-			: _userRepository.SearchUsersAsync(paginationRequest, clientId, cancellationToken);
+
+		// Keyset over the grouped (UserName, UserEmail, UserId) keys; the page items are
+		// re-fetched by id so each logical user expands to one row per module. An
+		// undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 3);
+		Guid? afterUserId = Guid.TryParse(fields?[2], out var parsedUserId) ? parsedUserId : null;
+		var (afterUserName, afterUserEmail) = afterUserId.HasValue ? (fields![0], fields[1]) : (null, null);
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var keys = await _userRepository.GetUserPageKeysAsync(
+			paginationRequest.SearchTerm, clientId, afterUserName, afterUserEmail,
+			afterUserName is null ? null : afterUserId, pageSize + 1, cancellationToken);
+		var (pageKeys, hasMore) = KeysetPage.Trim(keys, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(pageKeys[^1].UserName, pageKeys[^1].UserEmail, pageKeys[^1].UserId.ToString("D"))
+			: null;
+		long? totalCount = afterUserName is null
+			? await _userRepository.CountUsersAsync(paginationRequest.SearchTerm, clientId, cancellationToken)
+			: null;
+
+		var items = pageKeys.Count == 0
+			? []
+			: await _userRepository.GetUsersByIdsAsync(
+				pageKeys.Select(key => key.UserId).ToList(), paginationRequest.SearchTerm, clientId, cancellationToken);
+
+		return new KeysetPaginatedResult<UserDetailsDTO>(items, nextCursor, totalCount);
 	}
 
 	public async Task<int?> GetCurrentUserRoleIdAsync(CancellationToken cancellationToken)

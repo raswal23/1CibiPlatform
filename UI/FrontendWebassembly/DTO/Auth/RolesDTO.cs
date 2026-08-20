@@ -9,5 +9,5 @@ public record RolesDTO
 
 public record RolesResponseDTO
 {
-	public PaginatedResult<RolesDTO>? roles { get; set; }
+	public KeysetPaginatedResult<RolesDTO>? roles { get; set; }
 }

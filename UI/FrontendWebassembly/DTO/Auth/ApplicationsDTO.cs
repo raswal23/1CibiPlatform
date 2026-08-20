@@ -10,5 +10,5 @@ public record ApplicationsDTO
 
 public record ApplicationsResponseDTO
 {
-	public PaginatedResult<ApplicationsDTO>? applications { get; set; }
+	public KeysetPaginatedResult<ApplicationsDTO>? applications { get; set; }
 }

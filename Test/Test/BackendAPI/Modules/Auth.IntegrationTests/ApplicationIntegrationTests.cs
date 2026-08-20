@@ -24,14 +24,14 @@ public class ApplicationIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedApplicationData();
 
-		var query = new GetApplicationsQueryRequest(PageNumber: 1, PageSize: 3);
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 3);
 
 		// Act
 		var result = await _sender.Send(query);
 
 		// Assert
 		result.Should().NotBeNull();
-		result.Applications.Data.Count().Should().Be(3);
+		result.Applications.Items.Count.Should().Be(3);
 	}
 
 	[Fact]
@@ -40,7 +40,7 @@ public class ApplicationIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedApplicationData();
 
-		var query = new GetApplicationsQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "CNX");
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "CNX");
 
 		// Act
 		var result = await _sender.Send(query);
@@ -48,51 +48,59 @@ public class ApplicationIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 
-		result.Applications.Count.Should().Be(1);
-		result.Applications.Data.ElementAt(0).applicationName.Should().Be("CNX");
-		result.Applications.Data.ElementAt(0).Description.Should().Be("CNX Dashboard");
+		result.Applications.TotalCount.Should().Be(1);
+		result.Applications.Items.ElementAt(0).applicationName.Should().Be("CNX");
+		result.Applications.Items.ElementAt(0).Description.Should().Be("CNX Dashboard");
 	}
 
 	[Fact]
 	public async Task GetApplications_ShouldReturnEmptyList_WhenNoApplicationsExist()
 	{
 		// Arrange
-		var query = new GetApplicationsQueryRequest(PageNumber: 1, PageSize: 5);
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 5);
 		// Act
 		var result = await _sender.Send(query);
 		// Assert
 		result.Should().NotBeNull();
-		result.Applications.Count.Should().Be(0);
+		result.Applications.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetApplications_ShouldReturnCorrectPage_WhenPageNumberAndSizeAreSpecified()
+	public async Task GetApplications_ShouldReturnCorrectPage_WhenCursorAndSizeAreSpecified()
 	{
 		// Arrange
 		await SeedApplicationData();
-		var query = new GetApplicationsQueryRequest(PageNumber: 1, PageSize: 2);
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		page1.Applications.NextCursor.Should().NotBeNull();
+
+		var page2 = await _sender.Send(query with { Cursor = page1.Applications.NextCursor });
 
 		// Assert
-		result.Applications.PageIndex.Should().Be(1);
-		result.Applications.PageSize.Should().Be(2);
+		page1.Applications.Items.Count.Should().Be(2);
+		page1.Applications.TotalCount.Should().Be(3);
+		page2.Applications.TotalCount.Should().BeNull();
+		page2.Applications.Items.Select(a => a.applicationId)
+			.Should().NotIntersectWith(page1.Applications.Items.Select(a => a.applicationId));
 	}
 
 	[Fact]
-	public async Task GetApplications_ShouldReturnEmptyList_WhenPageNumberExceedsTotalPages()
+	public async Task GetApplications_ShouldReturnNullNextCursor_WhenDataIsExhausted()
 	{
 		// Arrange
 		await SeedApplicationData();
 
-		var query = new GetApplicationsQueryRequest(PageNumber: 3, PageSize: 2);
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 2);
 
 		// Act
-		var result = await _sender.Send(query);
+		var page1 = await _sender.Send(query);
+		var page2 = await _sender.Send(query with { Cursor = page1.Applications.NextCursor });
 
 		// Assert
-		result.Applications.Data.Count().Should().Be(0);
+		page2.Applications.Items.Count.Should().Be(1);
+		page2.Applications.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

@@ -12,5 +12,5 @@ public record UsersDTO
 
 public record UsersResponseDTO
 {
-	public PaginatedResult<UsersDTO>? users { get; set; }
+	public KeysetPaginatedResult<UsersDTO>? users { get; set; }
 }

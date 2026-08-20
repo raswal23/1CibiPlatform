@@ -52,17 +52,25 @@ public class RoleManagementServiceIntegrationTests : BaseIntegrationTest
 			("Alpha Reviewer", "First role"),
 			("Middle Reviewer", "Second role"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 2);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _roleManagementService.GetRolesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.PageIndex.Should().Be(1);
-		result.PageSize.Should().Be(2);
-		result.Count.Should().Be(3);
-		result.Data.Select(x => x.RoleName)
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(x => x.RoleName)
 			.Should().Equal("Alpha Reviewer", "Middle Reviewer");
+		result.NextCursor.Should().NotBeNull();
+
+		var secondPage = await _roleManagementService.GetRolesAsync(
+			new KeysetPaginationRequest(Cursor: result.NextCursor, PageSize: 2),
+			CancellationToken.None);
+
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(x => x.RoleName)
+			.Should().Equal("Zulu Reviewer");
+		secondPage.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -74,15 +82,16 @@ public class RoleManagementServiceIntegrationTests : BaseIntegrationTest
 			("Senior Reviewer", "Handles PREMIUM screening orders"),
 			("Premium Specialist", "Handles complex orders"));
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "premium");
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "premium");
 
 		// Act
 		var result = await _roleManagementService.GetRolesAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(2);
-		result.Data.Select(x => x.RoleName)
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(x => x.RoleName)
 			.Should().Equal("Premium Specialist", "Senior Reviewer");
+		result.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

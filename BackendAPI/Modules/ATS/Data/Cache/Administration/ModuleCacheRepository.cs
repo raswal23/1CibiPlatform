@@ -11,21 +11,23 @@ public sealed class ModuleCacheRepository : IModuleRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<ModuleDetailsDTO>> GetModulesAsync(PaginationRequest request, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public Task<List<ModuleDetailsDTO>> GetModulesPageAsync(string? searchTerm, string? afterModuleName, int take, CancellationToken cancellationToken)
 	{
-		var key = $"module_page_{request.PageIndex}_size_{request.PageSize}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetModulesAsync(value, token), null,
+		if (afterModuleName is not null)
+			return _repository.GetModulesPageAsync(searchTerm, afterModuleName, take, cancellationToken);
+
+		var key = $"module_first_take_{take}_search_{searchTerm}";
+		return _cache.GetOrCreateAsync<List<ModuleDetailsDTO>>(
+			key, async token => await _repository.GetModulesPageAsync(searchTerm, null, take, token),
 			tags: [CacheTags.Module], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<ModuleDetailsDTO>> SearchModulesAsync(PaginationRequest request, CancellationToken cancellationToken)
-	{
-		var key = $"module_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ModuleDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchModulesAsync(value, token), null,
+	public Task<long> CountModulesAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		_cache.GetOrCreateAsync<long>(
+			$"module_count_search_{searchTerm}", async token => await _repository.CountModulesAsync(searchTerm, token),
 			tags: [CacheTags.Module], cancellationToken: cancellationToken).AsTask();
-	}
 
 	public async Task<bool> AddModuleAsync(AddModuleDTO moduleDTO)
 	{

@@ -7,15 +7,18 @@ using Microsoft.AspNetCore.Components;
 public abstract class CrudPageBase : SecurePageBase
 {
 	[Inject] protected IDialogWorkflowService DialogWorkflowService { get; set; } = default!;
-	[Inject] protected IServerTableLoader ServerTableLoader { get; set; } = default!;
 	[Inject] protected IDialogService DialogService { get; set; } = default!;
 	[Inject] protected ISnackbar Snackbar { get; set; } = default!;
 
-	protected Task<TableData<TItem>> LoadPagedDataAsync<TItem>(
+	// signature must include every filter that invalidates the keyset walk
+	// (search term, sort column + direction, date range, page size).
+	protected Task<TableData<TItem>> LoadCursorPagedDataAsync<TItem>(
+		CursorTableLoader<TItem> loader,
 		TableState state,
-		Func<int, int, Task<ServiceResponse<PaginatedResult<TItem>>>> fetchData)
+		string signature,
+		Func<string?, int, Task<ServiceResponse<KeysetPaginatedResult<TItem>>>> fetchData)
 		where TItem : class
-		=> ServerTableLoader.LoadPagedDataAsync(state, fetchData,
+		=> loader.LoadAsync(state, signature, fetchData,
 			message => Snackbar.Add(message, Severity.Error));
 
 	protected async Task OpenAddDialogAsync<TComponent, TDto>(

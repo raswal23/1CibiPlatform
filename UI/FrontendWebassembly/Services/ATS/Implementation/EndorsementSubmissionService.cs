@@ -162,11 +162,13 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 	}
 
-	public async Task<ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>> GetWithdrawnEmailInvitationRequestsAsync(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null)
+	public async Task<ServiceResponse<KeysetPaginatedResult<EmailInvitationRequestListDTO>>> GetWithdrawnEmailInvitationRequestsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null)
 	{
-		var query = $"ats/getwithdrawnapplicationforms?pageNumber={PageNumber}&pageSize={PageSize}";
+		var query = $"ats/getwithdrawnapplicationforms?pageSize={pageSize}";
+		if (!string.IsNullOrEmpty(cursor))
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
 		if (!string.IsNullOrEmpty(SearchTerm))
-			query += $"&SearchTerm={Uri.EscapeDataString(SearchTerm)}";
+			query += $"&searchTerm={Uri.EscapeDataString(SearchTerm)}";
 
 		try
 		{
@@ -174,22 +176,22 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 			if (!response.IsSuccessStatusCode)
 			{
-				return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure(await response.ReadErrorDetailAsync());
+				return ServiceResponse<KeysetPaginatedResult<EmailInvitationRequestListDTO>>.Failure(await response.ReadErrorDetailAsync());
 			}
 
 			var result = await response.Content.ReadFromJsonAsync<GetWithdrawnEmailInvitationRequestsResponseDTO>();
 
 			if (result?.Requests is null)
 			{
-				return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure("The server returned an empty response.");
+				return ServiceResponse<KeysetPaginatedResult<EmailInvitationRequestListDTO>>.Failure("The server returned an empty response.");
 			}
 
-			return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Success(result.Requests);
+			return ServiceResponse<KeysetPaginatedResult<EmailInvitationRequestListDTO>>.Success(result.Requests);
 		}
 		catch (OperationCanceledException) { throw; }
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
-			return ServiceResponse<PaginatedResult<EmailInvitationRequestListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
+			return ServiceResponse<KeysetPaginatedResult<EmailInvitationRequestListDTO>>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

@@ -1,7 +1,7 @@
-﻿namespace Auth.Features.UserManagement.Query.GetUnApprovedUsers;
-public record GetUnApprovedUsersEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+namespace Auth.Features.UserManagement.Query.GetUnApprovedUsers;
+public record GetUnApprovedUsersEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetUnApprovedUsersEndpointResponse(PaginatedResult<UsersDTO> Users);
+public record GetUnApprovedUsersEndpointResponse(KeysetPaginatedResult<UsersDTO> Users);
 public class GetUnapprovedUsersEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -12,7 +12,7 @@ public class GetUnapprovedUsersEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetUnApprovedUsersQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 
@@ -31,4 +31,3 @@ public class GetUnapprovedUsersEndpoint : ICarterModule
 		.RequireAuthorization();
 	}
 }
-

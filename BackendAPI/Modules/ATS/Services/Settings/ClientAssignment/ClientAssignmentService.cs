@@ -13,14 +13,14 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 		_authQueries = authQueries;
 	}
 
-	public async Task<PaginatedResult<ClientAssignmentDetailsDTO>> GetAssignmentsAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<ClientAssignmentDetailsDTO>> GetAssignmentsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var users = await _authQueries.GetATSAssignedUsersAsync(
 			paginationRequest,
 			cancellationToken);
-		var pageUsers = users.Data.ToArray();
+		var pageUsers = users.Items.ToArray();
 		var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
 			pageUsers.Select(user => user.UserId).ToArray(),
 			cancellationToken);
@@ -41,17 +41,38 @@ public sealed class ClientAssignmentService : IClientAssignmentService
 			};
 		}).ToArray();
 
-		return new PaginatedResult<ClientAssignmentDetailsDTO>(
-			users.PageIndex,
-			users.PageSize,
-			users.Count,
-			data);
+		// The Auth page drives the walk: its cursor and count pass straight through.
+		return new KeysetPaginatedResult<ClientAssignmentDetailsDTO>(
+			data,
+			users.NextCursor,
+			users.TotalCount);
 	}
 
-	public Task<PaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
-		PaginationRequest paginationRequest,
-		CancellationToken cancellationToken) =>
-		_userClientRepository.GetAssignableClientsAsync(paginationRequest, cancellationToken);
+	public async Task<KeysetPaginatedResult<ClientLookupDTO>> GetAssignableClientsAsync(
+		KeysetPaginationRequest paginationRequest,
+		CancellationToken cancellationToken)
+	{
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
+		int? afterClientId = int.TryParse(fields?[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var clientId) ? clientId : null;
+		var afterClientName = afterClientId.HasValue ? fields![0] : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _userClientRepository.GetAssignableClientsPageAsync(
+			paginationRequest.SearchTerm, afterClientName, afterClientName is null ? null : afterClientId,
+			pageSize + 1, cancellationToken);
+		var (clients, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(clients[^1].ClientName,
+				clients[^1].ClientId.ToString(CultureInfo.InvariantCulture))
+			: null;
+		long? totalCount = afterClientName is null
+			? await _userClientRepository.CountAssignableClientsAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<ClientLookupDTO>(clients, nextCursor, totalCount);
+	}
 
 	public async Task<ClientAssignmentDetailsDTO> AssignClientAsync(
 		AssignUserClientDTO assignment,

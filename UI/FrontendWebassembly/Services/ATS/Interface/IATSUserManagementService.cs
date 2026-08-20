@@ -12,8 +12,8 @@ public interface IATSUserManagementService
 		AssignATSUserClientDTO assignmentDTO,
 		CancellationToken cancellationToken = default);
 
-	Task<ServiceResponse<GetUsersResponseDTO>> GetUsersAsync(
-		int pageIndex,
+	Task<ServiceResponse<KeysetPaginatedResult<UserDetailsDTO>>> GetUsersAsync(
+		string? cursor,
 		int pageSize,
 		string? searchTerm = null,
 		CancellationToken cancellationToken = default);

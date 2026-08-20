@@ -2,5 +2,5 @@ namespace FrontendWebassembly.DTO.ATS;
 
 public class GetRolesResponseDTO
 {
-	public PaginatedResult<RoleDetailsDTO>? Roles { get; set; }
+	public KeysetPaginatedResult<RoleDetailsDTO>? Roles { get; set; }
 }

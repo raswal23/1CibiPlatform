@@ -1,4 +1,4 @@
-namespace ATS.Services.DisputeOrder;
+﻿namespace ATS.Services.DisputeOrder;
 
 public class DisputeOrderService : IDisputeOrderService
 {
@@ -36,7 +36,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<PaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<KeysetPaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -87,26 +87,42 @@ public class DisputeOrderService : IDisputeOrderService
 			return CreateEmptyResult(paginationRequest);
 		}
 
-		return await (string.IsNullOrEmpty(paginationRequest.SearchTerm)
-			? _atsRepository.GetDisputeOrdersAsync(
-				paginationRequest,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken)
-			: _atsRepository.SearchDisputeOrdersAsync(
-				paginationRequest,
-				clientIds,
-				requiredRequestorId,
-				cancellationToken));
+		// An undecodable cursor (malformed, stale) means "first page". All three
+		// anchors are required — if any fails to parse, restart the walk.
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 3);
+		DateTime? afterCreatedAt = DateTime.TryParse(fields?[1], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt) ? createdAt : null;
+		Guid? afterId = Guid.TryParse(fields?[2], out var invitationId) ? invitationId : null;
+		var hasSeek = afterCreatedAt.HasValue && afterId.HasValue;
+		bool? afterHasDispute = hasSeek ? fields![0] == "1" : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _atsRepository.GetDisputeOrdersPageAsync(
+			paginationRequest.SearchTerm, afterHasDispute, hasSeek ? afterCreatedAt : null, hasSeek ? afterId : null,
+			pageSize + 1, clientIds, requiredRequestorId, cancellationToken);
+		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		string? nextCursor = null;
+		if (hasMore)
+		{
+			var last = items[^1];
+			nextCursor = CursorCodec.Encode(
+				string.IsNullOrEmpty(last.DisputeCategory) ? "0" : "1",
+				last.OrderCreatedAt!.Value.ToString("O"),
+				last.EmailInvitationID.ToString("D"));
+		}
+
+		long? totalCount = hasSeek
+			? null
+			: await _atsRepository.CountDisputeOrdersAsync(
+				paginationRequest.SearchTerm, clientIds, requiredRequestorId, cancellationToken);
+
+		return new KeysetPaginatedResult<DisputeOrderListDTO>(items, nextCursor, totalCount);
 	}
 
-	private static PaginatedResult<DisputeOrderListDTO> CreateEmptyResult(
-		PaginationRequest paginationRequest) =>
+	private static KeysetPaginatedResult<DisputeOrderListDTO> CreateEmptyResult(
+		KeysetPaginationRequest paginationRequest) =>
 		new(
-			paginationRequest.PageIndex,
-			paginationRequest.PageSize,
-			0,
-			Array.Empty<DisputeOrderListDTO>());
+			Array.Empty<DisputeOrderListDTO>(), null, 0);
 
 	public async Task<bool> MarkAsDisputedAsync(
 		DisputeOrderRequestDTO disputeRequest,

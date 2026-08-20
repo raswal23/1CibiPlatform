@@ -11,21 +11,26 @@ public sealed class ClientCacheRepository : IClientRepository
 		_cache = cache;
 	}
 
-	public Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(PaginationRequest request, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public Task<List<ClientLookupDTO>> GetClientPageKeysAsync(string? searchTerm, string? afterClientName, int? afterClientId, int take, CancellationToken cancellationToken)
 	{
-		var key = $"client_v2_page_{request.PageIndex}_size_{request.PageSize}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
-			key, request, async (value, token) => await _repository.GetClientsAsync(value, token), null,
+		if (afterClientName is not null)
+			return _repository.GetClientPageKeysAsync(searchTerm, afterClientName, afterClientId, take, cancellationToken);
+
+		var key = $"client_v2_first_take_{take}_search_{searchTerm}";
+		return _cache.GetOrCreateAsync<List<ClientLookupDTO>>(
+			key, async token => await _repository.GetClientPageKeysAsync(searchTerm, null, null, take, token),
 			tags: [CacheTags.Client], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<PaginatedResult<ClientDetailsDTO>> SearchClientsAsync(PaginationRequest request, CancellationToken cancellationToken)
-	{
-		var key = $"client_v2_page_{request.PageIndex}_size_{request.PageSize}_search_{request.SearchTerm}";
-		return _cache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ClientDetailsDTO>>(
-			key, request, async (value, token) => await _repository.SearchClientsAsync(value, token), null,
+	public Task<List<ClientDetailsDTO>> GetClientsByIdsAsync(IReadOnlyCollection<int> clientIds, string? searchTerm, CancellationToken cancellationToken) =>
+		_repository.GetClientsByIdsAsync(clientIds, searchTerm, cancellationToken);
+
+	public Task<long> CountClientsAsync(string? searchTerm, CancellationToken cancellationToken) =>
+		_cache.GetOrCreateAsync<long>(
+			$"client_v2_count_search_{searchTerm}", async token => await _repository.CountClientsAsync(searchTerm, token),
 			tags: [CacheTags.Client], cancellationToken: cancellationToken).AsTask();
-	}
 
 	public async Task<bool> AddClientAsync(IReadOnlyCollection<AddClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{

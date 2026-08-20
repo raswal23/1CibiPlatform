@@ -1,8 +1,8 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetAppSubRoles;
 
-public record GetAppSubRolesEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetAppSubRolesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetAppSubRolesEndpointResponse(PaginatedResult<AppSubRolesDTO> AppSubRoles);
+public record GetAppSubRolesEndpointResponse(KeysetPaginatedResult<AppSubRolesDTO> AppSubRoles);
 public class GetAppSubRolesEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -13,7 +13,7 @@ public class GetAppSubRolesEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetAppSubRolesQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

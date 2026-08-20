@@ -1,4 +1,4 @@
-namespace ATS.Services.Settings.ClientManagement;
+﻿namespace ATS.Services.Settings.ClientManagement;
 
 public class ClientManagementService : IClientManagementService
 {
@@ -12,8 +12,8 @@ public class ClientManagementService : IClientManagementService
 		_logger = logger;
 	}
 
-	public Task<PaginatedResult<ClientDetailsDTO>> GetClientsAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<ClientDetailsDTO>> GetClientsAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -26,9 +26,33 @@ public class ClientManagementService : IClientManagementService
 
 		_logger.LogInformation("Fetching clients with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_clientRepository.GetClientsAsync(paginationRequest, cancellationToken) :
-			_clientRepository.SearchClientsAsync(paginationRequest, cancellationToken);
+		// Keyset over the grouped (ClientName, ClientId) keys; the page items are
+		// re-fetched by id so each logical client expands to one row per package. An
+		// undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
+		int? afterClientId = int.TryParse(fields?[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var clientId) ? clientId : null;
+		var afterClientName = afterClientId.HasValue ? fields![0] : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var keys = await _clientRepository.GetClientPageKeysAsync(
+			paginationRequest.SearchTerm, afterClientName, afterClientName is null ? null : afterClientId,
+			pageSize + 1, cancellationToken);
+		var (pageKeys, hasMore) = KeysetPage.Trim(keys, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(pageKeys[^1].ClientName,
+				pageKeys[^1].ClientId.ToString(CultureInfo.InvariantCulture))
+			: null;
+		long? totalCount = afterClientName is null
+			? await _clientRepository.CountClientsAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		var items = pageKeys.Count == 0
+			? []
+			: await _clientRepository.GetClientsByIdsAsync(
+				pageKeys.Select(key => key.ClientId).ToList(), paginationRequest.SearchTerm, cancellationToken);
+
+		return new KeysetPaginatedResult<ClientDetailsDTO>(items, nextCursor, totalCount);
 	}
 
 	public async Task<bool> AddClientAsync(

@@ -1,7 +1,7 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetSubMenus;
 
-public record GetSubMenusEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
-public record GetSubMenusEndpointResponse(PaginatedResult<SubMenusDTO> SubMenus);
+public record GetSubMenusEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
+public record GetSubMenusEndpointResponse(KeysetPaginatedResult<SubMenusDTO> SubMenus);
 public class GetSubMenusEndpoint : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
@@ -12,7 +12,7 @@ public class GetSubMenusEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetSubMenusQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 
