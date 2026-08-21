@@ -1,6 +1,6 @@
 using ATS.Constants;
 using ATS.Data.DTO;
-using ATS.Data.Repository.BulkUploads;
+using ATS.Data.Repository.BulkUploadDashboard;
 using ATS.Services.AccessScope;
 using ATS.Services.BulkUploadMonitoring;
 using BuildingBlocks.Exceptions;

@@ -334,65 +334,12 @@
 
 /* ---------- Toolbar date range ---------- */
 
-/* TableComponent lays the toolbar out as one flex row above 960px, where
-   .table-component-toolbar-left is `flex: 0 1 20rem; min-width: 0` while the search
-   beside it is pinned at `min-width: 12rem`. The date picker is therefore the only
-   item that can shrink, and at laptop widths it collapses and gets clipped by the
-   container's `overflow: hidden` — visible on a narrow screen (where the row wraps)
-   but not on a wide one. Stop it shrinking and let the search wrap instead. */
-::deep .bulk-uploads-card .table-component-toolbar-row {
-    flex-wrap: wrap;
-    row-gap: 0.75rem;
-}
-
-::deep .bulk-uploads-card .table-component-toolbar-left {
-    flex: 0 0 auto;
-    width: 17.5rem;
-    max-width: 100%;
-    min-width: 0;
-
-    /* The base rule uses `margin-left: auto` to push this right; the date filter
-       reads as the leading control, so anchor it left and push the rest right. */
-    margin-left: 0;
-    margin-right: auto;
-}
-
-.bulk-uploads-date-field {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.bulk-uploads-date-field label {
-    color: var(--text-2);
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: .3px;
-    line-height: 1.2;
-    text-transform: uppercase;
-}
-
-::deep .bulk-uploads-date-range {
-    width: 100%;
-}
-
-::deep .bulk-uploads-date-range .mud-input-control {
-    width: 100%;
-    margin: 0;
-}
+/* The toolbar/date-range treatment lives in wwwroot/css/ats.css (global), beside the
+   management-card search and pager rules it extends. It targets shared TableComponent
+   internals across the ::deep boundary, and the global sheet keeps it independent of
+   the CSS-isolation scope attribute. */
 
 /* ---------- Responsive ---------- */
-
-/* Below the TableComponent breakpoint the toolbar is a single stacked column, so the
-   fixed width above would leave the picker narrower than the controls beside it. */
-@media (max-width: 960px) {
-    ::deep .bulk-uploads-card .table-component-toolbar-left {
-        width: 100%;
-        flex: 1 1 100%;
-        margin-right: 0;
-    }
-}
 
 @media (max-width: 720px) {
     .bulk-status-segmented {

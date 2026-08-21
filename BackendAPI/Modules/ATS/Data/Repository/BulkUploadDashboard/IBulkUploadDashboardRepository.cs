@@ -1,4 +1,4 @@
-namespace ATS.Data.Repository.BulkUploads;
+namespace ATS.Data.Repository.BulkUploadDashboard;
 
 // Read side of ats.BulkUploadFileDetails. The write side and the background job's
 // claim query stay on IBulkUploadRepository (the aggregate partial); this contract

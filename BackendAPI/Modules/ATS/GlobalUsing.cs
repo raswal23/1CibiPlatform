@@ -5,7 +5,7 @@ global using ATS.Data.Entities;
 global using ATS.Data.Context;
 global using ATS.Data.DataSeed;
 global using ATS.Data.Repository;
-global using ATS.Data.Repository.BulkUploads;
+global using ATS.Data.Repository.BulkUploadDashboard;
 global using ATS.Data.Cache;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;

@@ -1,4 +1,4 @@
-namespace ATS.Data.Repository.BulkUploads;
+namespace ATS.Data.Repository.BulkUploadDashboard;
 
 // Deliberately NOT cached, and there is no ATSCacheRepository-style decorator for this
 // contract. Status is the most volatile column in the schema - a Pending file becomes
