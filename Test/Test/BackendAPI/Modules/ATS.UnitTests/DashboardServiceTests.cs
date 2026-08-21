@@ -1,7 +1,6 @@
-using ATS.Constants;
+﻿using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
-using ATS.Data.Repository.Administration.UserClient;
 using ATS.DTO;
 using ATS.Services.Dashboard;
 using Auth.Shared.Contracts;

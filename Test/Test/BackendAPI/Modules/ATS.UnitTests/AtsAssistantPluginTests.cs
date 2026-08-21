@@ -1,8 +1,7 @@
-using ATS.AI;
+﻿using ATS.AI;
 using ATS.Constants;
 using ATS.DTO;
 using ATS.Data.Repository;
-using ATS.Data.Repository.Administration.UserClient;
 using ATS.Services.OrderHistory;
 using ATS.Shared.Implementations;
 using Auth.Shared.Contracts;
