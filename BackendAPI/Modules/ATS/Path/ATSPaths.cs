@@ -128,6 +128,28 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploads",
+				MatchPath: "/ats/getbulkuploads",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploads" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploadStatusCounts",
+				MatchPath: "/ats/getbulkuploadstatuscounts",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploadstatuscounts" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetATSDashboard",
 				MatchPath: "/ats/getdashboard",
 				ClusterId: GatewayConstants.OnePlatformApi,

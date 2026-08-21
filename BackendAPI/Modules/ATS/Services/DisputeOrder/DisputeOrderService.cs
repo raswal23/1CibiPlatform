@@ -70,7 +70,7 @@ public class DisputeOrderService : IDisputeOrderService
 			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
 				[userId],
 				cancellationToken);
-			clientIds = assignments
+			  clientIds = assignments
 				.Select(assignment => assignment.ClientId)
 				.Distinct()
 				.ToArray();

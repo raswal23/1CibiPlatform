@@ -12,9 +12,16 @@ public sealed class PlatformLogRepository(
 
 	// Keyset over (OccurredAt DESC, Id DESC). Pure query — the service decodes the
 	// cursor and mints the next one.
-	public async Task<List<PlatformLogDTO>> GetLogsPageAsync(DateTimeOffset? from, DateTimeOffset? to,
-		string? application, string? level, string? search, int take,
-		DateTimeOffset? afterOccurredAt, long? afterId, CancellationToken cancellationToken)
+	public async Task<List<PlatformLogDTO>> GetLogsPageAsync(
+		DateTimeOffset? from, 
+		DateTimeOffset? to,
+		string? application, 
+		string? level, 
+		string? search, 
+		int take,
+		DateTimeOffset? afterOccurredAt, 
+		long? afterId, 
+		CancellationToken cancellationToken)
 	{
 		if (!IsEnabled)
 		{

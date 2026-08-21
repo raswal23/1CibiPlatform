@@ -1,0 +1,406 @@
+/* Local palette, matching the block SearchReportComponent.razor.css declares. These are
+   the ATS navy/blue values; the module deliberately does not introduce a new hue. */
+.bulk-uploads-intro,
+.bulk-status-segmented,
+::deep .bulk-uploads-card {
+    --navy-900: #0b1b3d;
+    --blue-600: #1d5fd1;
+    --blue-500: #2e7ce0;
+    --blue-tint: #edf3fc;
+    --blue-tint-2: #e3ecfb;
+    --border: #e4eaf6;
+    --border-strong: #c2d2f0;
+    --text-1: #16233f;
+    --text-2: #5b6b8c;
+    --text-3: #8a97b5;
+}
+
+/* ---------- Intro banner ---------- */
+
+.bulk-uploads-intro {
+    display: flex;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--blue-500);
+    border-radius: 12px;
+    background: var(--blue-tint);
+    color: var(--text-2);
+}
+
+.bulk-uploads-intro-title {
+    margin: 0 0 2px;
+    color: var(--navy-900);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.bulk-uploads-intro-text {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.bulk-uploads-intro-text strong {
+    color: var(--navy-900);
+    font-weight: 700;
+}
+
+/* ---------- Clickable status filters ---------- */
+
+.bulk-status-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+::deep .bulk-segment-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-2);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+::deep .bulk-segment-btn:hover:not(:disabled) {
+    color: var(--blue-600);
+    background: var(--blue-tint);
+}
+
+::deep .bulk-segment-btn.active {
+    background: var(--blue-tint-2);
+    color: var(--navy-900);
+    box-shadow: 0 2px 6px rgba(11, 27, 61, .1);
+}
+
+::deep .bulk-segment-btn:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+::deep .bulk-segment-btn:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, .35);
+    outline-offset: 2px;
+}
+
+::deep .bulk-segment-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f4fa;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+::deep .bulk-segment-btn.active .bulk-segment-count {
+    background: linear-gradient(120deg, var(--navy-900), var(--blue-500));
+    color: #fff;
+}
+
+.bulk-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.bulk-status-dot.is-all {
+    background: var(--text-3);
+}
+
+.bulk-status-dot.is-pending {
+    background: #7d8aa8;
+}
+
+.bulk-status-dot.is-processing {
+    background: #b5790f;
+}
+
+.bulk-status-dot.is-done {
+    background: #1e9e64;
+}
+
+/* ---------- Table cells ---------- */
+
+::deep .bulk-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+::deep .bulk-file-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: var(--blue-tint);
+    color: var(--blue-600);
+}
+
+::deep .bulk-file-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+::deep .bulk-file-name {
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .bulk-file-date {
+    color: var(--text-3);
+    font-size: 11.5px;
+}
+
+::deep .bulk-package {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: #f1f4fa;
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+::deep .bulk-order-type {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+::deep .bulk-order-type.is-rush {
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+::deep .bulk-order-type.is-normal {
+    background: #f1f4fa;
+    color: var(--text-2);
+}
+
+::deep .bulk-subject-count {
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+::deep .bulk-muted {
+    color: var(--text-3);
+}
+
+/* ---------- Email send progress ---------- */
+
+::deep .bulk-email-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 96px;
+}
+
+::deep .bulk-email-figures {
+    color: var(--text-1);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+::deep .bulk-email-total {
+    color: var(--text-3);
+    font-weight: 600;
+}
+
+::deep .bulk-email-bar {
+    display: block;
+    width: 100%;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e9eef7;
+}
+
+::deep .bulk-email-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--blue-500), #1e9e64);
+    transition: width .3s ease;
+}
+
+::deep .bulk-email-failed {
+    color: #c0453e;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ---------- Status chip ---------- */
+
+::deep .bulk-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+::deep .bulk-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+::deep .bulk-status.pending {
+    background: #f8f9fc;
+    color: #7d8aa8;
+    border: 1px dashed var(--border-strong);
+}
+
+::deep .bulk-status.processing {
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+/* The only row state that is actively changing, so the dot breathes to say so. */
+::deep .bulk-status.processing::before {
+    animation: bulk-pulse 1.6s ease-in-out infinite;
+}
+
+::deep .bulk-status.done {
+    background: #e4f7ed;
+    color: #1e9e64;
+}
+
+::deep .bulk-status.unknown {
+    background: #eef0f5;
+    color: #6b7690;
+}
+
+@keyframes bulk-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .bulk-status.processing::before {
+        animation: none;
+    }
+
+    ::deep .bulk-email-bar-fill {
+        transition: none;
+    }
+}
+
+/* ---------- Toolbar date range ---------- */
+
+/* TableComponent lays the toolbar out as one flex row above 960px, where
+   .table-component-toolbar-left is `flex: 0 1 20rem; min-width: 0` while the search
+   beside it is pinned at `min-width: 12rem`. The date picker is therefore the only
+   item that can shrink, and at laptop widths it collapses and gets clipped by the
+   container's `overflow: hidden` — visible on a narrow screen (where the row wraps)
+   but not on a wide one. Stop it shrinking and let the search wrap instead. */
+::deep .bulk-uploads-card .table-component-toolbar-row {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+}
+
+::deep .bulk-uploads-card .table-component-toolbar-left {
+    flex: 0 0 auto;
+    width: 17.5rem;
+    max-width: 100%;
+    min-width: 0;
+
+    /* The base rule uses `margin-left: auto` to push this right; the date filter
+       reads as the leading control, so anchor it left and push the rest right. */
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.bulk-uploads-date-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bulk-uploads-date-field label {
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+::deep .bulk-uploads-date-range {
+    width: 100%;
+}
+
+::deep .bulk-uploads-date-range .mud-input-control {
+    width: 100%;
+    margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Below the TableComponent breakpoint the toolbar is a single stacked column, so the
+   fixed width above would leave the picker narrower than the controls beside it. */
+@media (max-width: 960px) {
+    ::deep .bulk-uploads-card .table-component-toolbar-left {
+        width: 100%;
+        flex: 1 1 100%;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .bulk-status-segmented {
+        display: flex;
+        width: 100%;
+    }
+
+    ::deep .bulk-segment-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 9px 10px;
+    }
+
+    ::deep .bulk-email-progress {
+        min-width: 0;
+        align-items: flex-end;
+    }
+}
