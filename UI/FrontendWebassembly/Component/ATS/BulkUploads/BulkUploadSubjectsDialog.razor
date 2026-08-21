@@ -5,16 +5,22 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
-<MudDialog Class="um-dialog ats-bulk-subjects-dialog"
+<MudDialog Class="um-dialog ats-bulk-subjects-dialog ats-scroll-dialog"
            Gutters="false"
            ContentClass="ats-bulk-subjects-content">
 
     <DialogContent>
-        <div class="ats-bulk-subjects-header">
+      @* Same pattern as PreviewComponent: the management-page wrapper lets the shared
+         ats.css management-card table treatment (headers, cells, search, pager) apply
+         inside the dialog, and the ats-scroll-dialog/shell/header/body classes keep
+         the header fixed while only the body scrolls on small screens. *@
+      <div class="ats-management-page ats-bulk-subjects-shell ats-dialog-shell">
+        @* Header styled after PreviewComponent's gradient dialog header. *@
+        <header class="ats-bulk-subjects-header ats-dialog-header">
             <div class="ats-bulk-subjects-header-content">
-                <div class="ats-bulk-subjects-header-icon" aria-hidden="true">
+                <span class="ats-bulk-subjects-header-icon" aria-hidden="true">
                     <MudIcon Icon="@Icons.Material.Outlined.Description" />
-                </div>
+                </span>
 
                 <div class="ats-bulk-subjects-header-text">
                     <h2>@FileName</h2>
@@ -22,43 +28,47 @@
                 </div>
             </div>
 
-            <div class="ats-bulk-subjects-header-actions">
-                <MudButton Variant="Variant.Text"
-                           StartIcon="@Icons.Material.Outlined.FileDownload"
-                           Class="ats-bulk-subjects-export"
-                           Disabled="@(_isExporting || _counts.Total == 0)"
-                           OnClick="ExportSubjectsAsync">
-                    @(_isExporting ? "Exporting..." : "Export CSV")
-                </MudButton>
+            <button type="button"
+                    class="ats-bulk-subjects-close"
+                    aria-label="Close subject list"
+                    @onclick="Cancel">
+                <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+            </button>
+        </header>
 
-                <button type="button"
-                        class="ats-bulk-subjects-close"
-                        aria-label="Close subject list"
-                        @onclick="Cancel">
-                    <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
-                </button>
+        <div class="ats-bulk-subjects-body ats-dialog-body">
+        <div class="ats-bulk-subjects-filter-row">
+            <div class="ats-segmented ats-bulk-subjects-segmented"
+                 role="group"
+                 aria-label="Filter subjects by email status">
+
+                @foreach (var segment in StatusSegments)
+                {
+                    <button type="button"
+                            class="@GetSegmentClass(segment.Value)"
+                            aria-pressed="@(_activeStatus == segment.Value)"
+                            disabled="@_isLoadingCounts"
+                            @onclick="@(() => SetStatusAsync(segment.Value))">
+
+                        <span class="bulk-status-dot @segment.Modifier" aria-hidden="true"></span>
+
+                        @segment.Label
+
+                        <span class="ats-segment-count ats-bulk-subjects-count">@CountFor(segment.Value)</span>
+                    </button>
+                }
             </div>
-        </div>
 
-        <div class="ats-segmented ats-bulk-subjects-segmented"
-             role="group"
-             aria-label="Filter subjects by email status">
-
-            @foreach (var segment in StatusSegments)
-            {
-                <button type="button"
-                        class="@GetSegmentClass(segment.Value)"
-                        aria-pressed="@(_activeStatus == segment.Value)"
-                        disabled="@_isLoadingCounts"
-                        @onclick="@(() => SetStatusAsync(segment.Value))">
-
-                    <span class="bulk-status-dot @segment.Modifier" aria-hidden="true"></span>
-
-                    @segment.Label
-
-                    <span class="ats-segment-count ats-bulk-subjects-count">@CountFor(segment.Value)</span>
-                </button>
-            }
+            @* Same control as the Package Management "Add package" button. *@
+            <button type="button"
+                    class="ats-management-button ats-bulk-subjects-export"
+                    disabled="@(_isExporting || _counts.Total == 0)"
+                    @onclick="ExportSubjectsAsync">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16" />
+                </svg>
+                @(_isExporting ? "Exporting..." : "Export CSV")
+            </button>
         </div>
 
         <TableComponent TItem="BulkUploadSubjectListDTO"
@@ -67,7 +77,7 @@
                         EnableReload="true"
                         SearchLabel=""
                         SearchPlaceholder="Search subject, email or mobile"
-                        ContainerClass="ats-bulk-subjects-table-card"
+                        ContainerClass="ats-management-card ats-bulk-subjects-table-card"
                         TableClass="ats-bulk-subjects-table"
                         TableAriaLabel="Subjects created from this bulk upload"
                         ColumnCount="6"
@@ -179,5 +189,7 @@
             </NoRecordsTemplate>
 
         </TableComponent>
+        </div>
+      </div>
     </DialogContent>
 </MudDialog>

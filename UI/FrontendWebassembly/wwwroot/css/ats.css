@@ -667,24 +667,62 @@
     margin-left: 6px;
 }
 
-/* Bulk upload subjects dialog: same compact pager and search treatment as the
-   management tables above. Anchored on the table's container class (the dialog
-   analogue of .ats-management-card), with the dialog class as a fallback hook.
-   The dialog renders through the dialog provider, outside .ats-management-page, so
-   the management palette variables are restated as literals here. */
-.ats-bulk-subjects-table-card .mud-table-pagination,
-.ats-bulk-subjects-dialog .mud-table-pagination {
+/* Bulk upload subjects dialog: the table card carries .ats-management-card inside an
+   .ats-management-page wrapper (PreviewComponent pattern), so the management search
+   and pager treatment above applies. The pager is restated below at dialog scope:
+   .um-dialog.ats-bulk-subjects-dialog outranks the shared TableComponent pagination
+   rules (which load later and win specificity ties), and it also holds when the
+   running build predates the container-class change. Literal colors, since the
+   dialog may render without the management-page variable scope. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination {
+    display: flex;
+    max-width: 100%;
     min-height: 0;
     margin: 0 !important;
     padding: 0 4px !important;
     border-top: 0;
+    justify-content: flex-end;
+
+    /* The stock MudTablePager bar carries .mud-toolbar, whose align-items:center
+       MudBlazor provides. CursorTablePager renders a plain div without it, so the
+       caption, select, and nav buttons scatter vertically unless restated here. */
+    align-items: center;
+    overflow-x: auto;
     color: #5b6b8c;
     font-family: "Inter", sans-serif;
     font-size: 13px;
 }
 
-.ats-bulk-subjects-table-card .mud-table-pagination-select .mud-input,
-.ats-bulk-subjects-dialog .mud-table-pagination-select .mud-input {
+/* The toolbar sizing PackageManagement's pager gets from the shared TableComponent
+   styles, restated here so the dialog pager matches even when the shared scoped
+   rules lose specificity or predate the current build. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-toolbar {
+    box-sizing: border-box;
+    width: 100%;
+    height: auto !important;
+    min-height: 3.5rem;
+    min-width: min(100%, 32rem);
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-spacer {
+    min-width: 0;
+}
+
+/* This pager nests the caption and select inside .mud-table-pagination-select
+   (CursorTablePager); without a display rule they stack vertically. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-select {
+    display: flex;
+    align-items: center;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-select .mud-input {
     min-height: 28px;
     border: 1px solid #c2d2f0;
     border-radius: 8px;
@@ -692,8 +730,7 @@
     color: #16233f;
 }
 
-.ats-bulk-subjects-table-card .mud-table-pagination-actions .mud-icon-button,
-.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button {
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button {
     width: 28px;
     height: 28px;
     padding: 5px;
@@ -702,61 +739,8 @@
     color: #5b6b8c;
 }
 
-.ats-bulk-subjects-table-card .mud-table-pagination-actions .mud-icon-button + .mud-icon-button,
-.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button + .mud-icon-button {
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button + .mud-icon-button {
     margin-left: 6px;
-}
-
-/* Search bar: the .ats-management-card treatment (ats.css above) restated for the
-   dialog's table container so both search fields read as the same control. */
-.ats-bulk-subjects-table-card .table-component-search .mud-input-control,
-.ats-bulk-subjects-table-card .table-component-search .mud-input-control-input-container {
-    margin: 0;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input {
-    min-height: 40px;
-    border-radius: 10px;
-    background: #fcfdff;
-    color: #16233f;
-    font-family: "Inter", sans-serif;
-    font-size: 13.5px;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input-slot {
-    min-height: 40px;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    font-family: "Inter", sans-serif;
-    font-size: 13.5px;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input-slot::placeholder {
-    color: #8a97b5;
-    opacity: 1;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input-outlined-border {
-    border-width: 1.5px;
-    border-color: #c2d2f0;
-    border-radius: 10px;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input:focus-within .mud-input-outlined-border {
-    border-color: #2e7ce0;
-    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.12);
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input-adornment-start {
-    margin-left: 14px;
-    margin-right: 8px;
-    color: #8a97b5;
-}
-
-.ats-bulk-subjects-table-card .table-component-search .mud-input-adornment-start .mud-icon-root {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
 }
 
 /* ---------- Bulk uploads toolbar: Upload date picker + search + reload ---------- */

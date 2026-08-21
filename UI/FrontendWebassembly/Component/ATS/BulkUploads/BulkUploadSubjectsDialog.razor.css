@@ -14,34 +14,55 @@
     --text-3: #8a97b5;
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header (PreviewComponent's gradient dialog header) ---------- */
 
 .ats-bulk-subjects-header {
+    position: relative;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 24px 30px 20px;
+    color: #fff;
+    background: linear-gradient(120deg, var(--navy-900), #1c3a70 55%, var(--blue-600) 130%);
 }
 
+    .ats-bulk-subjects-header::before {
+        position: absolute;
+        inset: 0;
+        content: "";
+        opacity: .35;
+        background-image: radial-gradient(rgba(255,255,255,.14) 1px, transparent 1.5px);
+        background-size: 16px 16px;
+        -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+        mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    }
+
 .ats-bulk-subjects-header-content {
+    position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    gap: 13px;
     min-width: 0;
 }
 
 .ats-bulk-subjects-header-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: var(--blue-tint);
-    color: var(--blue-600);
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 12px;
+    background: rgba(255,255,255,.14);
+    color: #fff;
+}
+
+.ats-bulk-subjects-header-icon ::deep .mud-icon-root {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
 }
 
 .ats-bulk-subjects-header-text {
@@ -49,67 +70,72 @@
 }
 
     .ats-bulk-subjects-header-text h2 {
-        margin: 0 0 2px;
+        margin: 0;
         overflow: hidden;
-        color: var(--navy-900);
-        font-size: 16px;
-        font-weight: 700;
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: .2px;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     .ats-bulk-subjects-header-text p {
-        margin: 0;
-        color: var(--text-2);
+        margin: 4px 0 0;
+        color: #c6d5f5;
         font-size: 12.5px;
     }
 
-.ats-bulk-subjects-header-actions {
-    display: flex;
-    align-items: center;
-    flex: 0 0 auto;
-    gap: 4px;
-}
-
-::deep .ats-bulk-subjects-export {
-    color: var(--blue-600);
-    font-size: 12.5px;
-    font-weight: 700;
-    text-transform: none;
-}
-
 .ats-bulk-subjects-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+    display: grid;
+    place-items: center;
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-2);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 9px;
+    background: rgba(255,255,255,.1);
+    color: #fff;
     cursor: pointer;
-    transition: background .2s ease, color .2s ease;
 }
 
     .ats-bulk-subjects-close:hover {
-        background: var(--blue-tint);
-        color: var(--navy-900);
+        background: rgba(255,255,255,.22);
     }
 
     .ats-bulk-subjects-close:focus-visible {
-        outline: 3px solid rgba(46, 124, 224, .35);
+        outline: 3px solid rgba(255, 255, 255, .35);
         outline-offset: 2px;
     }
 
-/* ---------- Status filters ---------- */
+/* ---------- Status filters + export ---------- */
+
+/* Tabs on the left, Export CSV on the right, sharing one row. */
+.ats-bulk-subjects-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 24px 0;
+}
+
+/* The export button is styled by .ats-management-button (ats.css); only the
+   disabled state is local, since the shared class has none. */
+.ats-bulk-subjects-export:disabled {
+    opacity: .55;
+    cursor: default;
+    box-shadow: none;
+}
+
+.ats-bulk-subjects-export:disabled:active {
+    transform: none;
+}
 
 .ats-bulk-subjects-segmented {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 4px;
-    margin: 16px 24px 0;
     padding: 4px;
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -188,8 +214,16 @@
 
 /* ---------- Table ---------- */
 
+/* The card carries .ats-management-card (PreviewComponent pattern), which brings the
+   shared table treatment - headers, cells, search, pager - from ats.css. The card's
+   default drop shadow is dropped: the dialog already has its own elevation, and a
+   shadowed card inside it reads as a double border. `width: auto` overrides the
+   shared card's `width: 100%`, which would push the box past the right margin and
+   swallow it (100% + side margins > container). */
 ::deep .ats-bulk-subjects-table-card {
-    padding: 0 12px 8px;
+    width: auto !important;
+    margin: 16px 24px 20px;
+    box-shadow: none !important;
 }
 
 ::deep .ats-bulk-subjects-table {
@@ -314,21 +348,20 @@
 
 @media (max-width: 720px) {
     .ats-bulk-subjects-header {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 16px 16px 12px;
+        padding: 20px 18px;
     }
 
-    .ats-bulk-subjects-header-actions {
-        justify-content: space-between;
-    }
-
-    .ats-bulk-subjects-segmented {
+    .ats-bulk-subjects-filter-row {
         margin: 12px 16px 0;
     }
 
+    .ats-bulk-subjects-export {
+        justify-content: center;
+        width: 100%;
+    }
+
     ::deep .ats-bulk-subjects-table-card {
-        padding: 0 6px 6px;
+        margin: 12px 16px 16px;
     }
 
     /* MudTable stacks below its breakpoint, so the right-aligned actions column
