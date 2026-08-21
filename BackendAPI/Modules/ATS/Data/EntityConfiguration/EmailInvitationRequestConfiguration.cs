@@ -113,7 +113,11 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		// Drives the email notification job's claim query and the stale-claim sweeper.
 		builder.HasIndex(e => e.EmailSentStatus);
 
-		// Supports tracing every invitation back to the bulk file it came from.
-		builder.HasIndex(e => e.BulkFileID);
+		// Traces every invitation back to the bulk file it came from, and matches the
+		// drill-down's (BulkFileID, EmailInvitationID ASC) keyset walk. It replaces the
+		// former single-column BulkFileID index rather than sitting beside it: the
+		// leading column still serves the rollup's WHERE BulkFileID IN (...), and this
+		// table is write-hot enough that a redundant index is pure cost.
+		builder.HasIndex(e => new { e.BulkFileID, e.EmailInvitationID });
 	}
 }

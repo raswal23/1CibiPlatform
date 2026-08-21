@@ -1,0 +1,339 @@
+/* Local palette, matching the block BulkUploadsComponent.razor.css declares. The
+   drill-down is the same module and deliberately does not introduce a new hue. */
+.ats-bulk-subjects-header,
+.ats-bulk-subjects-segmented,
+::deep .ats-bulk-subjects-table-card {
+    --navy-900: #0b1b3d;
+    --blue-600: #1d5fd1;
+    --blue-500: #2e7ce0;
+    --blue-tint: #edf3fc;
+    --blue-tint-2: #e3ecfb;
+    --border: #e4eaf6;
+    --text-1: #16233f;
+    --text-2: #5b6b8c;
+    --text-3: #8a97b5;
+}
+
+/* ---------- Header ---------- */
+
+.ats-bulk-subjects-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.ats-bulk-subjects-header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ats-bulk-subjects-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--blue-tint);
+    color: var(--blue-600);
+}
+
+.ats-bulk-subjects-header-text {
+    min-width: 0;
+}
+
+    .ats-bulk-subjects-header-text h2 {
+        margin: 0 0 2px;
+        overflow: hidden;
+        color: var(--navy-900);
+        font-size: 16px;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ats-bulk-subjects-header-text p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 12.5px;
+    }
+
+.ats-bulk-subjects-header-actions {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 4px;
+}
+
+::deep .ats-bulk-subjects-export {
+    color: var(--blue-600);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: none;
+}
+
+.ats-bulk-subjects-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+}
+
+    .ats-bulk-subjects-close:hover {
+        background: var(--blue-tint);
+        color: var(--navy-900);
+    }
+
+    .ats-bulk-subjects-close:focus-visible {
+        outline: 3px solid rgba(46, 124, 224, .35);
+        outline-offset: 2px;
+    }
+
+/* ---------- Status filters ---------- */
+
+.ats-bulk-subjects-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 16px 24px 0;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+::deep .ats-bulk-subjects-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+    ::deep .ats-bulk-subjects-segment:hover:not(:disabled) {
+        color: var(--blue-600);
+        background: var(--blue-tint);
+    }
+
+    ::deep .ats-bulk-subjects-segment.active {
+        background: var(--blue-tint-2);
+        color: var(--navy-900);
+        box-shadow: 0 2px 6px rgba(11, 27, 61, .1);
+    }
+
+    ::deep .ats-bulk-subjects-segment:disabled {
+        opacity: .6;
+        cursor: default;
+    }
+
+    ::deep .ats-bulk-subjects-segment:focus-visible {
+        outline: 3px solid rgba(46, 124, 224, .35);
+        outline-offset: 2px;
+    }
+
+::deep .ats-bulk-subjects-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f4fa;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+::deep .ats-bulk-subjects-segment.active .ats-bulk-subjects-count {
+    background: linear-gradient(120deg, var(--navy-900), var(--blue-500));
+    color: #fff;
+}
+
+/* The dot classes the parent page defines are page-scoped, so the dialog restates
+   them. is-failed is new here: the file list has no failure bucket. */
+.ats-bulk-subjects-segmented .bulk-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+    .ats-bulk-subjects-segmented .bulk-status-dot.is-all {
+        background: var(--text-3);
+    }
+
+    .ats-bulk-subjects-segmented .bulk-status-dot.is-pending {
+        background: #7d8aa8;
+    }
+
+    .ats-bulk-subjects-segmented .bulk-status-dot.is-done {
+        background: #1e9e64;
+    }
+
+    .ats-bulk-subjects-segmented .bulk-status-dot.is-failed {
+        background: #c8382f;
+    }
+
+/* ---------- Table ---------- */
+
+::deep .ats-bulk-subjects-table-card {
+    padding: 0 12px 8px;
+}
+
+::deep .ats-bulk-subjects-table {
+    box-shadow: none;
+}
+
+::deep .ats-bulk-subjects-table td {
+    vertical-align: middle;
+}
+
+.ats-bulk-subject {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.ats-bulk-subject-initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--blue-tint-2);
+    color: var(--blue-600);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+
+.ats-bulk-subject-name {
+    overflow: hidden;
+    color: var(--text-1);
+    font-size: 13px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-bulk-subject-contact,
+.ats-bulk-subject-email-state {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    align-items: flex-start;
+}
+
+.ats-bulk-subject-email {
+    overflow: hidden;
+    color: var(--text-1);
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-bulk-subject-mobile,
+.ats-bulk-subject-meta {
+    color: var(--text-3);
+    font-size: 11.5px;
+}
+
+.ats-bulk-subject-attempts {
+    color: #b5790f;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.ats-bulk-subject-order {
+    color: var(--text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+::deep .bulk-muted {
+    color: var(--text-3);
+}
+
+.ats-bulk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+    .ats-bulk-badge.is-done {
+        background: #e6f6ee;
+        color: #12724a;
+    }
+
+    .ats-bulk-badge.is-pending {
+        background: #eef1f7;
+        color: #55627e;
+    }
+
+    .ats-bulk-badge.is-failed {
+        background: #fdeceb;
+        color: #a52b23;
+    }
+
+    .ats-bulk-badge.is-unknown {
+        background: #f4f5f8;
+        color: var(--text-3);
+    }
+
+::deep .ats-bulk-subjects-actions-header,
+::deep .ats-bulk-subjects-actions-cell {
+    text-align: right;
+    width: 84px;
+}
+
+::deep .ats-bulk-subject-resend {
+    color: var(--blue-600);
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 720px) {
+    .ats-bulk-subjects-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px 16px 12px;
+    }
+
+    .ats-bulk-subjects-header-actions {
+        justify-content: space-between;
+    }
+
+    .ats-bulk-subjects-segmented {
+        margin: 12px 16px 0;
+    }
+
+    ::deep .ats-bulk-subjects-table-card {
+        padding: 0 6px 6px;
+    }
+
+    /* MudTable stacks below its breakpoint, so the right-aligned actions column
+       would otherwise sit oddly against the stacked labels. */
+    ::deep .ats-bulk-subjects-actions-cell {
+        width: auto;
+    }
+}

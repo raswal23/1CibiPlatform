@@ -1,10 +1,13 @@
-﻿namespace ATS.Constants;
+namespace ATS.Constants;
 
-internal static class BulkFileStatus
+public static class BulkFileStatus
 {
-	internal const string Pending = "Pending";
+	public const string Pending = "Pending";
 
-	internal const string Processing = "Processing";
+	public const string Processing = "Processing";
 
-	internal const string Done = "Done";
+	public const string Done = "Done";
+
+	// The full vocabulary, used to validate a caller-supplied status filter.
+	public static readonly string[] All = [Pending, Processing, Done];
 }

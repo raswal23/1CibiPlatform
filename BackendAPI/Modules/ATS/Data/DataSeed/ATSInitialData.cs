@@ -230,37 +230,39 @@ public class ATSInitialData
 		return users;
 	}
 
+	// Bulk Uploads is granted wherever New Order is: anyone who can submit a CSV must be
+	// able to see what happened to it. Every seed row below already carries module 2.
 	private static IEnumerable<ATSUserModuleSeedRow> GetUserModules() =>
 	[
 		new ATSUserModuleSeedRow(
 			"atsManager@cibi.com",
 			"ATS Platform Manager",
 			1,
-			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 10), AtsModuleIds.AIAssistant, AtsModuleIds.BulkUploads]),
 
 		new ATSUserModuleSeedRow(
 			"atsAdmin@cibi.com",
 			"ATS Admin",
 			2,
-			Enumerable.Range(1, 10).ToArray()),
+			[.. Enumerable.Range(1, 10), AtsModuleIds.BulkUploads]),
 
 		new ATSUserModuleSeedRow(
 			"atsService@cibi.com",
 			"ATS Service Delivery",
 			3,
-			[.. Enumerable.Range(1, 12)]),
+			[.. Enumerable.Range(1, 13)]),
 
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
 			"ATS User",
 			3,
-			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant]),
+			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant, AtsModuleIds.BulkUploads]),
 
 		new ATSUserModuleSeedRow(
 			"atsUploader@cibi.com",
 			"ATS Uploader",
 			4,
-			Enumerable.Range(1, 3).ToArray())
+			[.. Enumerable.Range(1, 3), AtsModuleIds.BulkUploads])
 	];
 
 	private sealed record ATSUserModuleSeedRow(
@@ -426,6 +428,15 @@ public class ATSInitialData
 			   ModuleId = AtsModuleIds.AIAssistant,
 			   ModuleName = "AI Assistant",
 			   ModuleDescription = "AI assistant module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.BulkUploads,
+			   ModuleName = "Bulk Uploads",
+			   ModuleDescription = "Bulk upload monitoring module for ATS system.",
 			   IsActive = true,
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow

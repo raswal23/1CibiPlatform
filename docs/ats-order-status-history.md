@@ -27,6 +27,15 @@ Dispute is an event without an `OrderStatus` transition because ATS currently st
 - The migration is under `BackendAPI/API/APIs/Migrations/ATS`.
 - In Search Report, the existing status badge is a button that lazily opens the ATS-themed timeline dialog. The dialog includes loading, empty, failure/retry, withdrawn, resend, completed, and dispute presentations.
 
+## Resend is scope-checked
+
+`ResendApplicationFormAsync` takes a caller-supplied invitation id and is reachable from
+more than one screen (Withdrawn applications, and the Bulk Uploads subject drill-down).
+It resolves `IAtsAccessScopeResolver` and throws `NotFoundException` when the invitation's
+`ClientId`/`RequestorId` fall outside the caller's scope. Out-of-scope and non-existent
+are deliberately the same response, so a caller cannot probe which ids exist. Do not add
+a new entry point that bypasses that check.
+
 ## Adding another lifecycle event
 
 1. Add its stable name to `OrderHistoryEventType`.

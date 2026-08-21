@@ -15,6 +15,17 @@
     border-radius: 12px;
 }
 
+/* Only applied when RowsClickable is set, so tables that handle clicks on a single
+   cell do not advertise the whole row as interactive. */
+.responsive-table-container ::deep .table-component-clickable-rows tbody tr {
+    cursor: pointer;
+}
+
+.responsive-table-container ::deep .table-component-clickable-rows tbody tr:focus-visible {
+    outline: 2px solid var(--mud-palette-primary, #1c4980);
+    outline-offset: -2px;
+}
+
 .responsive-table-container ::deep .mud-table-toolbar {
     box-sizing: border-box;
     width: 100%;

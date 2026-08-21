@@ -50,7 +50,7 @@ Releasing on rejection and expiry means a bounced or unanswered request can be r
 
 **Known gap:** the older `GET /employmentverification/getrequests` still returns the `EmploymentVerificationRequest` entity directly, including `VerificationTokenHash`. It is authenticated but any authorised caller can read every live token. Replace its projection before relying on that route.
 
-**Known gap:** no `employmentverification` entries exist in the gateway `appsettings.{Development,UAT,Production}.json` files. The typed `EmploymentVerificationPaths` module is currently the only wiring. `docs/feature-development-guide.md` asks for both; deployments that load configuration directly will not see these routes.
+The typed `EmploymentVerificationPaths` module is the only wiring, and that is correct — it is how every module routes. The gateway loads routes exclusively from `IReverseProxyModule` implementations via `LoadFromMemory`; the `ReverseProxy:Routes` section in the gateway appsettings is dead configuration with no reader. Do not add `employmentverification` entries there. See `docs/feature-development-guide.md` §7a.
 
 ## UI
 
