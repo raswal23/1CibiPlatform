@@ -83,6 +83,7 @@ global using System.IO.Compression;
 global using Mapster;
 global using CsvHelper;
 global using System.Globalization;
+global using System.Text;
 global using System.Security.Claims;
 global using System.Net;
 global using System.Net.Mail;

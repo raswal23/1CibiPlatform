@@ -5,6 +5,7 @@ using FluentAssertions;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
@@ -12,28 +13,60 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
 	private readonly string _atsTestFolder;
-	Guid EmailId = Guid.CreateVersion7();
-	byte[] sampleFileContent = File.ReadAllBytes("C:\\Users\\rcgu\\Documents\\GitHub\\1CibiPlatform\\Test\\Test\\BackendAPI\\Modules\\ATS.IntegrationTests\\TestFiles\\signature.png");
-	DateOnly sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
-	string govermentIdFileName = $"{Guid.CreateVersion7()}-govId.txt";
-	string nbiFileName = $"{Guid.CreateVersion7()}-nbiId.txt";
-	string resumeFileName = $"{Guid.CreateVersion7()}-govId.txt";
-	string highSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-highSchoolDiploma.txt";
-	string seniorHighSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-seniorHighSchoolDiplomaFileName.txt";
-	string bachelorDiplomaFileName = $"{Guid.CreateVersion7()}-bachelorSchoolDiplomaFileName.txt";
-	string masterDiplomaFileName = $"{Guid.CreateVersion7()}-masterSchoolDiplomaFileName.txt";
-	string doctorateDiplomaFileName = $"{Guid.CreateVersion7()}-doctorateSchoolDiplomaFileName.txt";
-	string licenseFileName = $"{Guid.CreateVersion7()}-licenseFileName.txt";
-	string emp1COEFileName = $"{Guid.CreateVersion7()}-emp1COEFileName.txt";
-	string emp2COEFileName = $"{Guid.CreateVersion7()}-emp2COEFileName.txt";
-	string emp3COEFileName = $"{Guid.CreateVersion7()}-emp3COEFileName.txt";
-	string signatureFileName = $"{Guid.CreateVersion7()}-signature.txt";
+	private readonly Guid EmailId;
+	private readonly byte[] _sampleFileContent;
+	private readonly DateOnly _sampleDate;
+	private readonly string _govermentIdFileName;
+	private readonly string _nbiFileName;
+	private readonly string _resumeFileName;
+	private readonly string _highSchoolDiplomaFileName;
+	private readonly string _seniorHighSchoolDiplomaFileName;
+	private readonly string _bachelorDiplomaFileName;
+	private readonly string _masterDiplomaFileName;
+	private readonly string _doctorateDiplomaFileName;
+	private readonly string _licenseFileName;
+	private readonly string _emp1COEFileName;
+	private readonly string _emp2COEFileName;
+	private readonly string _emp3COEFileName;
+	private readonly string _signatureFileName;
 
 	public AddApplicationFormDataIntegrationTests(IntegrationTestWebAppFactory factory) : base(factory)
 	{
 		_atsTestFolder = _configuration
-						.GetSection("AlibabaOss")
-						.GetValue<string>("ATSTestFolder", "");
+								.GetSection("AlibabaOss")
+								.GetValue<string>("ATSTestFolder", "");
+
+		// Initialize file content using the assembly location to find TestFiles
+		// Assembly is at: D:\GitHub\1CibiPlatform\Test\Test\bin\Debug\net10.0\Test.dll
+		// TestFiles is at: D:\GitHub\1CibiPlatform\Test\Test\BackendAPI\Modules\ATS.IntegrationTests\TestFiles
+		var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+		var assemblyDir = Path.GetDirectoryName(assemblyLocation); // bin\Debug\net10.0
+		// Navigate up: bin\Debug\net10.0 -> bin -> Test -> Test (3 levels up) -> BackendAPI\Modules\ATS.IntegrationTests\TestFiles
+		var projectSourceDir = Path.GetFullPath(Path.Combine(assemblyDir, "..", "..", "..", "BackendAPI", "Modules", "ATS.IntegrationTests"));
+		var testFilesPath = Path.Combine(projectSourceDir, "TestFiles", "signature.png");
+		_sampleFileContent = File.ReadAllBytes(testFilesPath);
+
+		EmailId = Guid.CreateVersion7();
+		_sampleDate = DateOnly.FromDateTime(DateTime.UtcNow);
+		_govermentIdFileName = $"{Guid.CreateVersion7()}-govId.pdf";
+		_nbiFileName = $"{Guid.CreateVersion7()}-nbiId.pdf";
+		_resumeFileName = $"{Guid.CreateVersion7()}-resume.pdf";
+		_highSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-highSchoolDiploma.pdf";
+		_seniorHighSchoolDiplomaFileName = $"{Guid.CreateVersion7()}-seniorHighSchoolDiploma.pdf";
+		_bachelorDiplomaFileName = $"{Guid.CreateVersion7()}-bachelorDiploma.pdf";
+		_masterDiplomaFileName = $"{Guid.CreateVersion7()}-masterDiploma.pdf";
+		_doctorateDiplomaFileName = $"{Guid.CreateVersion7()}-doctorateDiploma.pdf";
+		_licenseFileName = $"{Guid.CreateVersion7()}-license.pdf";
+		_emp1COEFileName = $"{Guid.CreateVersion7()}-emp1COE.pdf";
+		_emp2COEFileName = $"{Guid.CreateVersion7()}-emp2COE.pdf";
+		_emp3COEFileName = $"{Guid.CreateVersion7()}-emp3COE.pdf";
+		_signatureFileName = $"{Guid.CreateVersion7()}-signature.txt";
+	}
+
+	private byte[] CreatePdfBytes()
+	{
+		// Minimal valid PDF header
+		return System.Text.Encoding.ASCII.GetBytes("%PDF-1.4\n%EOF");
 	}
 
 	private IFormFile CreateFakeFormFile(
@@ -80,6 +113,8 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 	{
 		await SeedEmailInvitationRequestData();
 
+		var pdfContent = CreatePdfBytes();
+
 		var personal = new PersonalDetailsDTO
 		{
 			EmailInvitationID = EmailId,
@@ -89,15 +124,15 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LastName = "Dela Cruz",
 			Suffix = "Jr.",
 			Sex = "Male",
-			DOB = sampleDate,
+			DOB = _sampleDate,
 			MobileNumber = "09171234567",
 			EmailAlternative = "juan.delacruz@gmail.com",
-			AdditionalGovtIDFile = CreateFakeFormFile(sampleFileContent, govermentIdFileName),
-			AdditionalGovtIDFileName = govermentIdFileName,
-			NBIClearanceFile = CreateFakeFormFile(sampleFileContent, nbiFileName),
-			NBIClearanceFileName = nbiFileName,
-			ResumeFile = CreateFakeFormFile(sampleFileContent, resumeFileName),
-			ResumeFileName = resumeFileName,
+			AdditionalGovtIDFile = CreateFakeFormFile(pdfContent, _govermentIdFileName, "application/pdf"),
+			AdditionalGovtIDFileName = _govermentIdFileName,
+			NBIClearanceFile = CreateFakeFormFile(pdfContent, _nbiFileName, "application/pdf"),
+			NBIClearanceFileName = _nbiFileName,
+			ResumeFile = CreateFakeFormFile(pdfContent, _resumeFileName, "application/pdf"),
+			ResumeFileName = _resumeFileName,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -123,27 +158,27 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			EmailInvitationID = EmailId,
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
-			HighSchoolGraduationDate = sampleDate,
-			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, highSchoolDiplomaFileName),
-			HighSchoolDiplomaFileName = highSchoolDiplomaFileName,
+			HighSchoolGraduationDate = _sampleDate,
+			HighSchoolDiplomaFile = CreateFakeFormFile(pdfContent, _highSchoolDiplomaFileName, "application/pdf"),
+			HighSchoolDiplomaFileName = _highSchoolDiplomaFileName,
 			SeniorHighSchoolName = "UST Senior High School",
-			SeniorHighSchoolGraduationDate = sampleDate,
-			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, seniorHighSchoolDiplomaFileName),
-			SeniorHighSchoolDiplomaFileName = highSchoolDiplomaFileName,
+			SeniorHighSchoolGraduationDate = _sampleDate,
+			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(pdfContent, _seniorHighSchoolDiplomaFileName, "application/pdf"),
+			SeniorHighSchoolDiplomaFileName = _highSchoolDiplomaFileName,
 			BachelorsSchoolName = "University of Santo Tomas",
-			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, bachelorDiplomaFileName),
-			BachelorsDiplomaFileName = bachelorDiplomaFileName,
+			BachelorsGraduationDate = _sampleDate,
+			BachelorsDiplomaFile = CreateFakeFormFile(pdfContent, _bachelorDiplomaFileName, "application/pdf"),
+			BachelorsDiplomaFileName = _bachelorDiplomaFileName,
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
-			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, masterDiplomaFileName),
-			MastersDiplomaFileName = masterDiplomaFileName,
+			MastersGraduationDate = _sampleDate,
+			MastersDiplomaFile = CreateFakeFormFile(pdfContent, _masterDiplomaFileName, "application/pdf"),
+			MastersDiplomaFileName = _masterDiplomaFileName,
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
-			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = CreateFakeFormFile(sampleFileContent, doctorateDiplomaFileName),
-			DoctorateDiplomaFileName = doctorateDiplomaFileName,
+			DoctorateGraduationDate = _sampleDate,
+			DoctorateDiplomaFile = CreateFakeFormFile(pdfContent, _doctorateDiplomaFileName, "application/pdf"),
+			DoctorateDiplomaFileName = _doctorateDiplomaFileName,
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -153,9 +188,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			EmailInvitationID = EmailId,
 			LicenseName = "AWS Certified Developer",
 			LicenseNumber = "AWS-DEV-2026-001",
-			LicenseExpiryDate = sampleDate,
-			LicenseUploadFile = CreateFakeFormFile(sampleFileContent, licenseFileName),
-			LicenseUploadFileName = licenseFileName,
+			LicenseExpiryDate = _sampleDate,
+			LicenseUploadFile = CreateFakeFormFile(pdfContent, _licenseFileName, "application/pdf"),
+			LicenseUploadFileName = _licenseFileName,
 			CreatedDate = DateTime.UtcNow
 		};
 
@@ -169,14 +204,14 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1CompanyProvince = "Metro Manila",
 			Emp1CompanyCountry = "Philippines",
 			Emp1CompanyPostalCode = "1630",
-			Emp1StartDate = sampleDate,
-			Emp1EndDate = sampleDate,
+			Emp1StartDate = _sampleDate,
+			Emp1EndDate = _sampleDate,
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
 			Emp1SupervisorContactNumber = "09171234567",
-			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, emp1COEFileName),
-			Emp1COEUploadFileName = emp1COEFileName,
-			Emp1DatePermittedToContact = sampleDate,
+			Emp1COEUploadFile = CreateFakeFormFile(pdfContent, _emp1COEFileName, "application/pdf"),
+			Emp1COEUploadFileName = _emp1COEFileName,
+			Emp1DatePermittedToContact = _sampleDate,
 			Emp2CompanyName = "Globe Telecom",
 			Emp2CurrentlyEmployed = false,
 			Emp2PermissionToContact = true,
@@ -184,14 +219,14 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2CompanyProvince = "Metro Manila",
 			Emp2CompanyCountry = "Philippines",
 			Emp2CompanyPostalCode = "1200",
-			Emp2StartDate = sampleDate,
-			Emp2EndDate = sampleDate,
+			Emp2StartDate = _sampleDate,
+			Emp2EndDate = _sampleDate,
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
 			Emp2SupervisorContactNumber = "09171234567",
-			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, emp2COEFileName),
-			Emp2COEUploadFileName = emp2COEFileName,
-			Emp2DatePermittedToContact = sampleDate,
+			Emp2COEUploadFile = CreateFakeFormFile(pdfContent, _emp2COEFileName, "application/pdf"),
+			Emp2COEUploadFileName = _emp2COEFileName,
+			Emp2DatePermittedToContact = _sampleDate,
 			Emp3CompanyName = "Tech Innovators Inc.",
 			Emp3CurrentlyEmployed = true,
 			Emp3PermissionToContact = true,
@@ -199,14 +234,14 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3CompanyProvince = "Metro Manila",
 			Emp3CompanyCountry = "Philippines",
 			Emp3CompanyPostalCode = "1605",
-			Emp3StartDate = sampleDate,
-			Emp3EndDate = sampleDate,
+			Emp3StartDate = _sampleDate,
+			Emp3EndDate = _sampleDate,
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
 			Emp3SupervisorContactNumber = "09171234567",
-			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, emp3COEFileName),
-			Emp3COEUploadFileName = emp3COEFileName,
-			Emp3DatePermittedToContact = sampleDate,
+			Emp3COEUploadFile = CreateFakeFormFile(pdfContent, _emp3COEFileName, "application/pdf"),
+			Emp3COEUploadFileName = _emp3COEFileName,
+			Emp3DatePermittedToContact = _sampleDate,
 			CreatedDate = DateTime.UtcNow,
 		};
 
@@ -240,9 +275,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		var signature = new SignatureDetailsDTO
 		{
 			EmailInvitationID = EmailId,
-			Signature = CreateFakeFormFile(sampleFileContent,"signature.png","image/png"),
+			Signature = CreateFakeFormFile(_sampleFileContent,"signature.png","image/png"),
 			SignerName = "Juan S. Dela Cruz",
-			SignatureDate = sampleDate
+			SignatureDate = _sampleDate
 		};
 
 		var command = new AddApplicationFormDataCommand(personal, address, education, licenses, experiences, reference, signature);
@@ -258,19 +293,19 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 		if (result.IsAdded == true)
 		{
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{govermentIdFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{nbiFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{resumeFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{highSchoolDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{seniorHighSchoolDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{bachelorDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{masterDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{doctorateDiplomaFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{licenseFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp1COEFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp2COEFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{emp3COEFileName}");
-			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{signatureFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_govermentIdFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_nbiFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_resumeFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_highSchoolDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_seniorHighSchoolDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_bachelorDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_masterDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_doctorateDiplomaFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_licenseFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_emp1COEFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_emp2COEFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_emp3COEFileName}");
+			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{_signatureFileName}");
 			await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{consentFile!.ConsentFormFileName}");
 		}
 	}
@@ -308,26 +343,26 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			HighestEducationalAttainment = "Bachelor's Degree",
 			HighSchoolName = "Manila Science High School",
 			HighSchoolGraduationDate = sampleDate,
-			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, highSchoolDiplomaFileName),
-			HighSchoolDiplomaFileName = highSchoolDiplomaFileName,
+			HighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, _highSchoolDiplomaFileName),
+			HighSchoolDiplomaFileName = _highSchoolDiplomaFileName,
 			SeniorHighSchoolName = "UST Senior High School",
 			SeniorHighSchoolGraduationDate = sampleDate,
-			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, seniorHighSchoolDiplomaFileName),
-			SeniorHighSchoolDiplomaFileName = seniorHighSchoolDiplomaFileName,
+			SeniorHighSchoolDiplomaFile = CreateFakeFormFile(sampleFileContent, _seniorHighSchoolDiplomaFileName),
+			SeniorHighSchoolDiplomaFileName = _seniorHighSchoolDiplomaFileName,
 			BachelorsSchoolName = "University of Santo Tomas",
 			BachelorsGraduationDate = sampleDate,
-			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, bachelorDiplomaFileName),
-			BachelorsDiplomaFileName = bachelorDiplomaFileName,
+			BachelorsDiplomaFile = CreateFakeFormFile(sampleFileContent, _bachelorDiplomaFileName),
+			BachelorsDiplomaFileName = _bachelorDiplomaFileName,
 			BachelorsDegree = "Computer Science",
 			MastersSchoolName = "Ateneo de Manila University",
 			MastersGraduationDate = sampleDate,
-			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, masterDiplomaFileName),
-			MastersDiplomaFileName = masterDiplomaFileName,
+			MastersDiplomaFile = CreateFakeFormFile(sampleFileContent, _masterDiplomaFileName),
+			MastersDiplomaFileName = _masterDiplomaFileName,
 			MastersDegree = "Information Technology",
 			PhDSchoolName = string.Empty,
 			DoctorateGraduationDate = sampleDate,
-			DoctorateDiplomaFile = CreateFakeFormFile(Array.Empty<byte>(), doctorateDiplomaFileName),
-			DoctorateDiplomaFileName = doctorateDiplomaFileName,
+			DoctorateDiplomaFile = CreateFakeFormFile(Array.Empty<byte>(), _doctorateDiplomaFileName),
+			DoctorateDiplomaFileName = _doctorateDiplomaFileName,
 			DoctorateDegree = string.Empty,
 			CreatedDate = DateTime.UtcNow,
 		};
@@ -342,7 +377,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			LicenseUploadFileName = "aws_certificate.txt",
 			CreatedDate = DateTime.UtcNow
 		};
-		
+
 		var experiences = new ProfessionalExperiencesDTO
 		{
 			EmailInvitationID = EmailId,

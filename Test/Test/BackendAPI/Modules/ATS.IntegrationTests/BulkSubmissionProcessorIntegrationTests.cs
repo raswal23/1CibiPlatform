@@ -1,5 +1,4 @@
 ﻿using ATS.Data.Entities;
-using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -9,7 +8,7 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 {
 
-	public BulkSubmissionProcessorIntegrationTests(IntegrationTestWebAppFactory factory) 
+	public BulkSubmissionProcessorIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
 	}
@@ -119,56 +118,72 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 
 	#region Negative Path
 	[Fact]
-	public async Task ProcessAsync_WithEmptyCsvHeader_ShouldThrowInternalServerException()
+	public async Task ProcessAsync_WithEmptyCsvHeader_ShouldMarkFileAsPending()
 	{
 		// Arrange
 		var csvContent = string.Empty;
 
-		await SeedBulkUploadFileAsync(
+		var bulkFile = await SeedBulkUploadFileAsync(
 			"empty-header.csv",
 			"Standard",
 			"Normal",
 			csvContent);
 
 		// Act
-		Func<Task> act = async () =>
-			await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
 
-		// Assert
-		var exception = await act.Should()
-			.ThrowAsync<InternalServerException>();
+		// Assert - File should remain Pending due to error, retry later
+		var fileAfterProcess = await _dbContext.BulkUploadFileDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(f => f.FileID == bulkFile.FileID);
 
-		exception.Which.Message.Should()
-			.Be("Invalid CSV format. Missing header row.");
+		fileAfterProcess.Should().NotBeNull();
+		fileAfterProcess!.Status.Should().Be("Pending");
+
+		// No email invitations should be created
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().BeEmpty();
 	}
 
 	[Fact]
-	public async Task ProcessAsync_WithInvalidColumnHeaders_ShouldThrowInternalServerException()
+	public async Task ProcessAsync_WithInvalidColumnHeaders_ShouldMarkFileAsPending()
 	{
 		// Arrange
 		var csvContent = """
-        Surname,GivenName,MiddleName,Email,Phone
-        Dela Cruz,Juan,S,juan@example.com,+639171234567
-        Santos,Maria,A,maria@example.com,+639178765432
-        """;
+		Surname,GivenName,MiddleName,Email,Phone
+		Dela Cruz,Juan,S,juan@example.com,+639171234567
+		Santos,Maria,A,maria@example.com,+639178765432
+		""";
 
-		await SeedBulkUploadFileAsync(
+		var bulkFile = await SeedBulkUploadFileAsync(
 			"invalid-header.csv",
 			"Standard",
 			"Normal",
 			csvContent);
 
 		// Act
-		Func<Task> act = async () =>
-			await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
 
-		// Assert
-		var exception = await act.Should()
-			.ThrowAsync<InternalServerException>();
+		// Assert - File should remain Pending due to header validation error, retry later
+		var fileAfterProcess = await _dbContext.BulkUploadFileDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(f => f.FileID == bulkFile.FileID);
 
-		exception.Which.Message.Should()
-			.Be("Invalid CSV format. Please use the required column headers.");
+		fileAfterProcess.Should().NotBeNull();
+		fileAfterProcess!.Status.Should().Be("Pending");
+
+		// No email invitations should be created
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().BeEmpty();
 	}
 	#endregion
-	
+
 }

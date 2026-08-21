@@ -124,4 +124,124 @@ public class BulkUploadService : IBulkUploadService
 				$"Unable to reach the server. {ex.Message}");
 		}
 	}
+
+	public async Task<ServiceResponse<BulkUploadSubjectsResultDTO>> GetSubjectsAsync(
+		Guid fileId,
+		string? cursor = null,
+		int? pageSize = 10,
+		string? emailStatus = null,
+		string? searchTerm = null)
+	{
+		var query = $"ats/getbulkuploadsubjects?fileId={fileId:D}&pageSize={pageSize}";
+
+		if (!string.IsNullOrEmpty(cursor))
+		{
+			query += $"&cursor={Uri.EscapeDataString(cursor)}";
+		}
+
+		if (!string.IsNullOrWhiteSpace(emailStatus))
+		{
+			query += $"&emailStatus={Uri.EscapeDataString(emailStatus)}";
+		}
+
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+		}
+
+		try
+		{
+			var response = await _httpClient.GetAsync(query);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<BulkUploadSubjectsResultDTO>.Failure(
+					await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content.ReadFromJsonAsync<GetBulkUploadSubjectsResponseDTO>();
+
+			if (result?.Result?.Subjects is null)
+			{
+				return ServiceResponse<BulkUploadSubjectsResultDTO>.Failure(
+					"The server returned an empty response.");
+			}
+
+			return ServiceResponse<BulkUploadSubjectsResultDTO>.Success(result.Result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<BulkUploadSubjectsResultDTO>.Failure(
+				$"Unable to reach the server. {ex.Message}");
+		}
+	}
+
+	public async Task<ServiceResponse<BulkUploadSubjectCountsDTO>> GetSubjectCountsAsync(
+		Guid fileId,
+		string? searchTerm = null)
+	{
+		var query = $"ats/getbulkuploadsubjectcounts?fileId={fileId:D}";
+
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			query += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+		}
+
+		try
+		{
+			var response = await _httpClient.GetAsync(query);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<BulkUploadSubjectCountsDTO>.Failure(
+					await response.ReadErrorDetailAsync());
+			}
+
+			var result = await response.Content
+				.ReadFromJsonAsync<GetBulkUploadSubjectCountsResponseDTO>();
+
+			if (result?.Counts is null)
+			{
+				return ServiceResponse<BulkUploadSubjectCountsDTO>.Failure(
+					"The server returned an empty response.");
+			}
+
+			return ServiceResponse<BulkUploadSubjectCountsDTO>.Success(result.Counts);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<BulkUploadSubjectCountsDTO>.Failure(
+				$"Unable to reach the server. {ex.Message}");
+		}
+	}
+
+	// Returns the raw response so the caller can read both the bytes and the
+	// server-chosen Content-Disposition filename.
+	public async Task<ServiceResponse<HttpResponseMessage>> ExportSubjectsAsync(
+		Guid fileId,
+		CancellationToken cancellationToken = default)
+	{
+		var query = $"ats/exportbulkuploadsubjects?fileId={fileId:D}";
+
+		try
+		{
+			var response = await _httpClient.GetAsync(query, cancellationToken);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<HttpResponseMessage>.Failure(
+					await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			return ServiceResponse<HttpResponseMessage>.Success(response);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<HttpResponseMessage>.Failure(
+				$"Unable to reach the server. {ex.Message}");
+		}
+	}
 }

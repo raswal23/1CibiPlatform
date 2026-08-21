@@ -127,10 +127,175 @@ public sealed class BulkUploadRepository : IBulkUploadRepository
 				FileID = group.Key,
 				SubjectCount = group.Count(),
 				EmailsSent = group.Count(invitation => invitation.EmailSentStatus == EmailStatus.Done),
-				EmailsFailed = group.Count(invitation => invitation.EmailSentStatus == EmailStatus.Error)
+				EmailsFailed = group.Count(invitation => invitation.EmailSentStatus == EmailStatus.Error),
+
+				// Pending and Processing are both "still in flight" to a requestor; the
+				// job's claim state is an implementation detail of the email worker.
+				EmailsPending = group.Count(invitation =>
+					invitation.EmailSentStatus == EmailStatus.Pending
+					|| invitation.EmailSentStatus == EmailStatus.Processing)
 			})
 			.ToListAsync(cancellationToken);
 	}
+
+	public Task<BulkUploadHeaderDTO?> GetVisibleFileHeaderAsync(
+		Guid fileId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredUploaderId,
+		CancellationToken cancellationToken) =>
+		ApplyFileScope(
+				_dbContext.BulkUploadFileDetails.AsNoTracking(),
+				authorizedClientIds,
+				requiredUploaderId)
+			.Where(file => file.FileID == fileId)
+			.Select(file => new BulkUploadHeaderDTO
+			{
+				FileID = file.FileID,
+				FileName = file.FileName,
+				Requestor = file.Requestor,
+				PackageType = file.PackageType,
+				OrderType = file.OrderType,
+				Status = file.Status,
+				DateCreated = file.DateCreated
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+	public async Task<List<BulkUploadSubjectListDTO>> GetSubjectsPageAsync(
+		Guid fileId,
+		Guid? afterInvitationId,
+		int take,
+		string? emailStatus,
+		string? searchTerm,
+		CancellationToken cancellationToken)
+	{
+		var pageQuery = BuildSubjectsQuery(fileId, emailStatus, searchTerm);
+
+		if (afterInvitationId.HasValue)
+		{
+			pageQuery = ApplySubjectSeek(pageQuery, afterInvitationId.Value);
+		}
+
+		return await ApplySubjectOrder(pageQuery)
+			.Take(take)
+			.ToListAsync(cancellationToken);
+	}
+
+	public Task<long> CountSubjectsAsync(
+		Guid fileId,
+		string? emailStatus,
+		string? searchTerm,
+		CancellationToken cancellationToken) =>
+		BuildSubjectsQuery(fileId, emailStatus, searchTerm)
+			.LongCountAsync(cancellationToken);
+
+	// The email-status filter is deliberately not applied: like the file-level chips,
+	// the subject chips keep showing every bucket's size while one is selected.
+	public async Task<BulkUploadSubjectCountsDTO> GetSubjectCountsAsync(
+		Guid fileId,
+		string? searchTerm,
+		CancellationToken cancellationToken)
+	{
+		var grouped = await BuildSubjectsQuery(
+				fileId,
+				emailStatus: null,
+				searchTerm)
+			.GroupBy(subject => subject.EmailSentStatus)
+			.Select(group => new StatusCountRow
+			{
+				Status = group.Key,
+				Count = group.LongCount()
+			})
+			.ToListAsync(cancellationToken);
+
+		return new BulkUploadSubjectCountsDTO
+		{
+			Pending = CountFor(grouped, EmailStatus.Pending) + CountFor(grouped, EmailStatus.Processing),
+			Sent = CountFor(grouped, EmailStatus.Done),
+			Failed = CountFor(grouped, EmailStatus.Error),
+
+			// Every row, including any status outside the known vocabulary, so the
+			// "All" chip never silently under-reports.
+			Total = grouped.Sum(entry => entry.Count)
+		};
+
+		static long CountFor(List<StatusCountRow> grouped, string status) =>
+			grouped
+				.Where(entry => entry.Status == status)
+				.Select(entry => entry.Count)
+				.FirstOrDefault();
+	}
+
+	public Task<List<BulkUploadSubjectListDTO>> GetAllSubjectsForExportAsync(
+		Guid fileId,
+		CancellationToken cancellationToken) =>
+		ApplySubjectOrder(BuildSubjectsQuery(fileId, emailStatus: null, searchTerm: null))
+			.ToListAsync(cancellationToken);
+
+	private IQueryable<BulkUploadSubjectListDTO> BuildSubjectsQuery(
+		Guid fileId,
+		string? emailStatus,
+		string? searchTerm)
+	{
+		var query = _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(invitation => invitation.BulkFileID == fileId);
+
+		// Pending spans two stored values; the other two buckets map one-to-one.
+		// Anything outside the vocabulary was already normalized away by the service.
+		if (!string.IsNullOrWhiteSpace(emailStatus))
+		{
+			query = emailStatus switch
+			{
+				BulkSubjectEmailStatus.Pending => query.Where(invitation =>
+					invitation.EmailSentStatus == EmailStatus.Pending
+					|| invitation.EmailSentStatus == EmailStatus.Processing),
+				BulkSubjectEmailStatus.Sent => query.Where(invitation =>
+					invitation.EmailSentStatus == EmailStatus.Done),
+				BulkSubjectEmailStatus.Failed => query.Where(invitation =>
+					invitation.EmailSentStatus == EmailStatus.Error),
+				_ => query
+			};
+		}
+
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			var search = $"%{searchTerm.Trim()}%";
+			query = query.Where(invitation =>
+				EF.Functions.ILike(invitation.FirstName ?? string.Empty, search)
+				|| EF.Functions.ILike(invitation.LastName ?? string.Empty, search)
+				|| EF.Functions.ILike(invitation.EmailAddress ?? string.Empty, search)
+				|| EF.Functions.ILike(invitation.MobileNumber ?? string.Empty, search));
+		}
+
+		return query.Select(invitation => new BulkUploadSubjectListDTO
+		{
+			EmailInvitationID = invitation.EmailInvitationID,
+			LastName = invitation.LastName,
+			FirstName = invitation.FirstName,
+			MiddleInitial = invitation.MiddleInitial,
+			EmailAddress = invitation.EmailAddress,
+			MobileNumber = invitation.MobileNumber,
+			EmailSentStatus = invitation.EmailSentStatus,
+			EmailSentAt = invitation.EmailSentAt,
+			EmailSendAttempts = invitation.EmailSendAttempts,
+			EmailClaimedAt = invitation.EmailClaimedAt,
+			ApplicationFormStatus = invitation.ApplicationFormStatus,
+			FormCompletedAt = invitation.FormCompletedAt,
+			OrderStatus = invitation.OrderStatus
+		});
+	}
+
+	// EmailInvitationID is a v7 GUID minted per CSV row in file order, so ordering by
+	// it alone is both unique and the order the user sees in their spreadsheet. That
+	// makes the cursor single-field, unlike the file list's (DateCreated, FileID).
+	private static IQueryable<BulkUploadSubjectListDTO> ApplySubjectOrder(
+		IQueryable<BulkUploadSubjectListDTO> pageQuery) =>
+		pageQuery.OrderBy(row => row.EmailInvitationID);
+
+	private static IQueryable<BulkUploadSubjectListDTO> ApplySubjectSeek(
+		IQueryable<BulkUploadSubjectListDTO> pageQuery,
+		Guid afterInvitationId) =>
+		pageQuery.Where(row => row.EmailInvitationID.CompareTo(afterInvitationId) > 0);
 
 	private IQueryable<BulkUploadRowDTO> BuildBulkUploadRowsQuery(
 		string? status,
@@ -140,15 +305,10 @@ public sealed class BulkUploadRepository : IBulkUploadRepository
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredUploaderId)
 	{
-		// Mirrors ATSRepository.BuildReportRowsQuery: a null client set means
-		// unrestricted (super admin), an empty set filters everything out, and
-		// UploadedByUserId is the bulk analogue of EmailInvitationRequest.RequestorId.
-		var query = _dbContext.BulkUploadFileDetails
-			.AsNoTracking()
-			.Where(file => (authorizedClientIds == null
-					|| (file.ClientId.HasValue && authorizedClientIds.Contains(file.ClientId.Value)))
-				&& (!requiredUploaderId.HasValue
-					|| file.UploadedByUserId == requiredUploaderId.Value));
+		var query = ApplyFileScope(
+			_dbContext.BulkUploadFileDetails.AsNoTracking(),
+			authorizedClientIds,
+			requiredUploaderId);
 
 		if (!string.IsNullOrWhiteSpace(status))
 		{
@@ -190,6 +350,19 @@ public sealed class BulkUploadRepository : IBulkUploadRepository
 			ClaimedAt = file.ClaimedAt
 		});
 	}
+
+	// Mirrors ATSRepository.BuildReportRowsQuery: a null client set means unrestricted
+	// (super admin), an empty set filters everything out, and UploadedByUserId is the
+	// bulk analogue of EmailInvitationRequest.RequestorId. Shared by the list query and
+	// the drill-down's visibility check so the two cannot drift apart.
+	private static IQueryable<BulkUploadFileDetails> ApplyFileScope(
+		IQueryable<BulkUploadFileDetails> query,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredUploaderId) =>
+		query.Where(file => (authorizedClientIds == null
+				|| (file.ClientId.HasValue && authorizedClientIds.Contains(file.ClientId.Value)))
+			&& (!requiredUploaderId.HasValue
+				|| file.UploadedByUserId == requiredUploaderId.Value));
 
 	// The single bulk upload ordering: newest upload first, unique FileID as the
 	// tiebreaker. ApplySeek below must mirror this expression exactly.

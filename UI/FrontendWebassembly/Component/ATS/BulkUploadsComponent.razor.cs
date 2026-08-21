@@ -64,6 +64,49 @@ public partial class BulkUploadsComponent
 		return tableData;
 	}
 
+	private async Task OnUploadRowClickedAsync(TableRowClickEventArgs<BulkUploadListDTO> args)
+	{
+		if (args.Item is not { } upload)
+		{
+			return;
+		}
+
+		// A file the parsing job has not reached yet has no subjects at all. Opening an
+		// empty dialog would read as "the upload lost my rows", so say what is happening.
+		if (!HasSubjects(upload))
+		{
+			Snackbar.Add(
+				"This file has not been parsed yet. Its subjects appear here within seconds.",
+				Severity.Info);
+
+			return;
+		}
+
+		var parameters = new DialogParameters
+		{
+			{ nameof(BulkUploadSubjectsDialog.FileID), upload.FileID },
+			{ nameof(BulkUploadSubjectsDialog.Upload), upload }
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.Large,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<BulkUploadSubjectsDialog>(
+			null,
+			parameters,
+			options);
+
+		await dialog.Result;
+
+		// Resending from the dialog changes a row's email rollup, so pick the new
+		// figures up rather than leaving the dashboard showing pre-resend counts.
+		await ReloadTableAsync();
+	}
+
 	private async Task SetStatusAsync(string? status)
 	{
 		if (_activeStatus == status)

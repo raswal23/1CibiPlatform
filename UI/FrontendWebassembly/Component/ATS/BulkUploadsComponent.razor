@@ -17,6 +17,7 @@
                 A file waits as <strong>Pending</strong>, is parsed as <strong>Processing</strong>,
                 then reports <strong>Done</strong> once every subject has been created.
                 Invitation emails continue to send in the background after that.
+                <strong>Select a row</strong> to see the individual subjects it produced.
             </p>
         </div>
     </div>
@@ -55,6 +56,8 @@
                         SearchPlaceholder="Search file, requestor or package"
                         ColumnCount="7"
                         RowsPerPage="10"
+                        RowsClickable="true"
+                        OnRowClick="OnUploadRowClickedAsync"
                         LoadServerData="LoadUploadsAsync"
                         CursorPagerState="_uploadsLoader"
                         SearchString="@_searchString"
@@ -150,6 +153,14 @@
                                 <span class="bulk-email-failed"
                                       title="@($"{upload.EmailsFailed} email(s) failed to send")">
                                     @upload.EmailsFailed failed
+                                </span>
+                            }
+
+                            @if (upload.EmailsPending > 0)
+                            {
+                                <span class="bulk-email-pending"
+                                      title="@($"{upload.EmailsPending} email(s) have not gone out yet")">
+                                    @upload.EmailsPending pending
                                 </span>
                             }
                         </div>

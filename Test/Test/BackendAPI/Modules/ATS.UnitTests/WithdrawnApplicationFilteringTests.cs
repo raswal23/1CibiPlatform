@@ -3,6 +3,7 @@ using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
+using ATS.Services.AccessScope;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.OrderHistory;
 using Auth.Shared.Contracts;
@@ -39,6 +40,7 @@ public class WithdrawnApplicationFilteringTests
 			Mock.Of<IObjectStorageService>(),
 			Mock.Of<IOrderHistoryService>(),
 			_userClientRepository.Object,
+			Mock.Of<IAtsAccessScopeResolver>(),
 			Mock.Of<IUnitOfWork>());
 	}
 
