@@ -1,11 +1,11 @@
-# ATS AI Assistant — Voice input
+﻿# ATS AI Assistant â€” Voice input
 
 The assistant's composer has a microphone button. Press it, talk, and the words appear in the
 text box as you speak. You read what was captured and press **Send** yourself.
 
 That is the whole feature. It deliberately does **not**:
 
-- auto-send when you stop talking — the assistant can stage a real order, so a misheard
+- auto-send when you stop talking â€” the assistant can stage a real order, so a misheard
   sentence must never reach the confirmation card on its own;
 - read replies back aloud;
 - send audio to 1CibiPlatform. There is no endpoint, no gateway route and no database change.
@@ -17,7 +17,7 @@ Neither Blazor nor MudBlazor ships a speech API. What exists is the **browser's*
 app reaches through JS interop.
 
 We write that interop by hand rather than taking a community NuGet wrapper. The repo already has
-the pattern — `wwwroot/js/generic/safeSignaturePad.js` — and a wrapper package would add a
+the pattern â€” `wwwroot/js/generic/safeSignaturePad.js` â€” and a wrapper package would add a
 dependency that nothing else uses while still needing the same lifecycle handling.
 
 ## Architecture
@@ -43,9 +43,9 @@ Key files:
 | Concern | File |
 |---|---|
 | Recognizer lifecycle | `UI/FrontendWebassembly/wwwroot/js/ats/voiceDictation.js` |
-| Button and status region | `UI/FrontendWebassembly/Component/ATS/AIAssistantComponent.razor` |
-| State, interop, callbacks | `UI/FrontendWebassembly/Component/ATS/AIAssistantComponent.razor.cs` |
-| Mic styling | `UI/FrontendWebassembly/Component/ATS/AIAssistantComponent.razor.css` |
+| Button and status region | `UI/FrontendWebassembly/Component/ATS/AIAssistant/AIAssistantComponent.razor` |
+| State, interop, callbacks | `UI/FrontendWebassembly/Component/ATS/AIAssistant/AIAssistantComponent.razor.cs` |
+| Mic styling | `UI/FrontendWebassembly/Component/ATS/AIAssistant/AIAssistantComponent.razor.css` |
 
 Nothing was added to `index.html`, `FrontendWebassembly.csproj`, `FrontendServiceConfig.cs`, or
 any backend/gateway file.
@@ -60,7 +60,7 @@ other `window.*` helpers. Only users who open the assistant pay for the download
 `safeSignaturePad.js`, which is absent from `index.html` for the same reason.
 
 Because it is imported rather than fingerprinted through the `index.html` placeholder pass, the
-path is the literal file name — do not add a `#[.{fingerprint}]` marker to the import string.
+path is the literal file name â€” do not add a `#[.{fingerprint}]` marker to the import string.
 
 ## Browser support
 
@@ -68,7 +68,7 @@ path is the literal file name — do not add a `#[.{fingerprint}]` marker to the
 |---|---|
 | Chrome, Edge | Yes |
 | Safari (macOS/iOS) | Yes |
-| Firefox | No — `SpeechRecognition` is not implemented |
+| Firefox | No â€” `SpeechRecognition` is not implemented |
 
 `isSupported()` is checked on first render and the button is **hidden** when it returns false,
 so Firefox users see the composer exactly as it was before this feature. A disabled button would
@@ -77,7 +77,7 @@ have been worse: it advertises a capability the user can never get, with no acti
 ## Privacy
 
 Chrome and Edge stream the audio to Google's speech service to transcribe it. Safari uses
-Apple's. **No audio reaches 1CibiPlatform servers, and nothing is recorded or stored by us** —
+Apple's. **No audio reaches 1CibiPlatform servers, and nothing is recorded or stored by us** â€”
 only the resulting text, and only once the requestor presses Send.
 
 This is worth stating plainly because requestors dictate candidate names and email addresses.
@@ -100,7 +100,7 @@ edit the box by hand, so a late transcript cannot clobber a correction you just 
 **Chrome ends the stream on a pause.** Even with `continuous = true`, Chrome fires `onend` after
 a few seconds of silence. `voiceDictation.js` restarts the recognizer in `onend` unless the stop
 was requested, so dictation survives you pausing to think. This is the single most important
-quirk in the file — remove that restart and dictation appears to "randomly stop".
+quirk in the file â€” remove that restart and dictation appears to "randomly stop".
 
 **Sending stops the mic.** `SendAsync` awaits `StopDictationAsync()` first, so a trailing
 transcript cannot land in an already-emptied box. `Clear` does the same.
@@ -110,19 +110,19 @@ lives in C# (`DescribeSpeechError`):
 
 | Code | Surfaced as |
 |---|---|
-| `not-allowed`, `service-not-allowed` | Warning — "Microphone access is blocked. Allow it in your browser's site settings to dictate." |
-| `audio-capture` | Error — "No microphone was found." |
-| `network` | Warning — "Speech recognition is offline right now." |
-| `no-speech` | *nothing* — a pause is normal; the browser restarts itself |
-| `aborted` | *nothing* — the user pressed the button |
-| anything else | Warning — "Dictation stopped unexpectedly. Please try again." |
+| `not-allowed`, `service-not-allowed` | Warning â€” "Microphone access is blocked. Allow it in your browser's site settings to dictate." |
+| `audio-capture` | Error â€” "No microphone was found." |
+| `network` | Warning â€” "Speech recognition is offline right now." |
+| `no-speech` | *nothing* â€” a pause is normal; the browser restarts itself |
+| `aborted` | *nothing* â€” the user pressed the button |
+| anything else | Warning â€” "Dictation stopped unexpectedly. Please try again." |
 
 Everything except `no-speech` also drops the button out of its listening state.
 
 **Disposal.** The component is now `IAsyncDisposable` (it was `IDisposable`). `DisposeAsync`
 calls `destroy()` so the microphone is released even if the user navigates away mid-sentence,
 then disposes the module and the `DotNetObjectReference`. `JSDisconnectedException` and
-`JSException` are swallowed there — the page is already going away.
+`JSException` are swallowed there â€” the page is already going away.
 
 ## Accessibility
 
@@ -137,7 +137,7 @@ then disposes the module and the `DotNetObjectReference`. `JSDisconnectedExcepti
 
 ## Adding dictation to another input
 
-The interop is not a shared service on purpose — this is one composer, and a premature
+The interop is not a shared service on purpose â€” this is one composer, and a premature
 abstraction would have to guess at the second caller's needs. To reuse it:
 
 1. Import the module in `OnAfterRenderAsync(firstRender)` and store `isSupported()`.
@@ -145,8 +145,8 @@ abstraction would have to guess at the second caller's needs. To reuse it:
    `OnSpeechErrorAsync(code)` and `OnSpeechEndedAsync()`.
 3. Make the component `IAsyncDisposable` and call `destroy()`.
 
-If a third screen needs it, that is the point to lift steps 1–3 into a shared
-`VoiceDictation` component under `Component/Generic` — not before.
+If a third screen needs it, that is the point to lift steps 1â€“3 into a shared
+`VoiceDictation` component under `Component/Generic` â€” not before.
 
 Note that the module holds **one** recognizer at module scope. Two components dictating at once
 on the same page would fight over it; `start()` stops any previous session first, so the last
@@ -158,13 +158,13 @@ There is no bUnit/UI test project in this repository (`Test/Test/Test.csproj` co
 only), and the Web Speech API needs a real microphone and a real browser, so this feature is
 verified by build plus manual checks:
 
-1. Chrome/Edge — click the mic, allow the prompt, speak; words appear while you talk.
-2. Send — the mic stops and the message goes out as shown.
-3. Speak, then correct the text by hand before sending — the edit survives.
-4. Pause for more than five seconds and keep talking — dictation continues.
-5. Deny the permission — Warning snackbar, button returns to idle, no console error.
-6. Firefox — no mic button; the composer is otherwise unchanged.
-7. Navigate away while listening — no console errors and the browser's recording indicator clears.
-8. Keyboard only — Tab reaches the button, Enter/Space toggles, focus ring visible.
-9. Narrow viewport (≤600px) — the composer still fits both buttons.
-10. **Clear** while listening — dictation stops.
+1. Chrome/Edge â€” click the mic, allow the prompt, speak; words appear while you talk.
+2. Send â€” the mic stops and the message goes out as shown.
+3. Speak, then correct the text by hand before sending â€” the edit survives.
+4. Pause for more than five seconds and keep talking â€” dictation continues.
+5. Deny the permission â€” Warning snackbar, button returns to idle, no console error.
+6. Firefox â€” no mic button; the composer is otherwise unchanged.
+7. Navigate away while listening â€” no console errors and the browser's recording indicator clears.
+8. Keyboard only â€” Tab reaches the button, Enter/Space toggles, focus ring visible.
+9. Narrow viewport (â‰¤600px) â€” the composer still fits both buttons.
+10. **Clear** while listening â€” dictation stops.

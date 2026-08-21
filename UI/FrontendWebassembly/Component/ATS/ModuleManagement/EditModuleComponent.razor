@@ -1,0 +1,134 @@
+﻿@namespace FrontendWebassembly.Component.ATS
+<MudDialog Class="um-dialog em-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+    <DialogContent>
+        <div class="em-shell ats-dialog-shell">
+            <header class="em-header ats-dialog-header">
+                <div class="em-header-row">
+                    <div class="em-header-left">
+                        <div class="em-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </div>
+                        <div class="em-header-text">
+                            <h1>Edit module</h1>
+                            <p>Update module details</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="em-close" aria-label="Close edit module dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="em-body ats-dialog-body">
+                <MudForm @ref="EditModuleForm">
+                    <section class="em-section" aria-labelledby="edit-module-details-heading">
+                        <div class="em-section-head">
+                            <span class="em-section-number">1</span>
+                            <h2 id="edit-module-details-heading">Module details</h2>
+                            <span class="em-section-helper">Name and describe the module</span>
+                        </div>
+
+                        <div class="em-section-body">
+                            <div class="em-field">
+                                <label for="em-module-name">Module name <span class="em-required">*</span></label>
+                                <div class="em-input-wrap em-autocomplete-wrap">
+                                    <MudAutocomplete T="string"
+                                                     @bind-Value="EditModule.ModuleName"
+                                                     InputId="em-module-name"
+                                                     Placeholder="Select a module name"
+                                                     Required="true"
+                                                     RequiredError="Module name is required"
+                                                     Disabled="true"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     MaxLength="100"
+                                                     SearchFunc="SearchModules"
+                                                     ToStringFunc="@(value => value)"
+                                                     ResetValueOnEmptyText="false"
+                                                     Clearable="true"
+                                                     ClearIcon="@Icons.Material.Filled.Close"
+                                                     Dense="true"
+                                                     OpenOnFocus="true"
+                                                     Adornment="Adornment.Start"
+                                                     AdornmentIcon="@Icons.Material.Outlined.Apps"
+                                                     OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                     CloseIcon="@Icons.Material.Filled.KeyboardArrowUp"
+                                                     Class="em-control" />
+                                </div>
+                            </div>
+
+                            <div class="em-field">
+                                <label for="em-module-description">Module description <span class="em-required">*</span></label>
+                                <div class="em-input-wrap em-description-wrap">
+                                    <MudTextField @bind-Value="EditModule.ModuleDescription"
+                                                  InputId="em-module-description"
+                                                  Placeholder="What does this module let users do?"
+                                                  Required="true"
+                                                  RequiredError="Module description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="em-control em-description-control" />
+                                </div>
+                                <div class="em-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="em-section" aria-labelledby="edit-module-availability-heading">
+                        <div class="em-section-head">
+                            <span class="em-section-number">2</span>
+                            <h2 id="edit-module-availability-heading">Availability</h2>
+                            <span class="em-section-helper">Turn the module on or off</span>
+                        </div>
+
+                        <div class="em-section-body">
+                            <div class="em-field">
+                                <label>Status</label>
+                                <div class="em-status-row">
+                                    <div class="em-status-copy">
+                                        <p>Module @(EditModule.IsActive ? "active" : "inactive")</p>
+                                        <span>Available to assign to roles</span>
+                                    </div>
+                                    <div class="em-status-control">
+                                        <span class="em-status-badge @(EditModule.IsActive ? string.Empty : "is-off")">
+                                            @(EditModule.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="em-toggle @(EditModule.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@EditModule.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle module status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="em-footer ats-dialog-footer">
+                <button type="button" class="em-button em-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="em-button em-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

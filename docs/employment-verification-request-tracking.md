@@ -1,4 +1,4 @@
-# Employment verification request tracking
+﻿# Employment verification request tracking
 
 The Employment Verification page now separates the two datasets it works with: ATS candidates that still need a verification email, and the requests this module has already raised. Previously one table tried to be both.
 
@@ -36,7 +36,7 @@ Releasing on rejection and expiry means a bounced or unanswered request can be r
 - Status transitions use `ExecuteUpdateAsync` (`MarkSentAsync`, `MarkRespondedAsync`) instead of mutating a tracked entity and re-saving.
 - `MarkRespondedAsync` restricts its update to a row that is still `Pending` or `Sent`. Single use is enforced by that predicate, so two simultaneous clicks on the emailed link cannot both record a response; the losing call reports `AlreadyCompleted`.
 - The cache decorator invalidates `RequestsTag` inside each write method, gated on the returned bool, following `ATSCacheRepository`. `ListBlockedAtsSubjectIdsAsync` is deliberately uncached because its result depends on how the supplied instant compares to each token expiry.
-- Carter endpoint → MediatR query handler → `IEmploymentVerificationService` → repository → `EmploymentVerificationDbContext`.
+- Carter endpoint â†’ MediatR query handler â†’ `IEmploymentVerificationService` â†’ repository â†’ `EmploymentVerificationDbContext`.
 - The YARP module route is declared in `EmploymentVerificationPaths`.
 
 ## Public contracts
@@ -54,10 +54,10 @@ Releasing on rejection and expiry means a bounced or unanswered request can be r
 
 ## UI
 
-`Pages/EmploymentVerification/EmploymentVerification.razor` presents one table at a time behind a segmented switcher, following the `ats-segmented` pattern in `Component/ATS/Settings.razor`:
+`Pages/EmploymentVerification/EmploymentVerification.razor` presents one table at a time behind a segmented switcher, following the `ats-segmented` pattern in `Component/ATS/Settings/Settings.razor`:
 
-- **Needs request** — candidate, previous employer, employment period, HR email. No `Requested` column: that value belongs to a verification request, not to an ATS record, so showing it here was misleading.
-- **Tracking** — candidate, previous employer, HR email, requested, responded, status.
+- **Needs request** â€” candidate, previous employer, employment period, HR email. No `Requested` column: that value belongs to a verification request, not to an ATS record, so showing it here was misleading.
+- **Tracking** â€” candidate, previous employer, HR email, requested, responded, status.
 
 Both views render an empty state and replace the table while loading rather than showing an empty body. The response-rate tile is computed from answered requests and reports an em dash until something has been sent, instead of `0%`.
 
