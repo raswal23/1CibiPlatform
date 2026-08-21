@@ -12,8 +12,16 @@ public sealed class PlatformLogService(IPlatformLogRepository repository) : IPla
 		var (afterOccurredAt, afterId) = ParseCursorFields(fields);
 		var clampedPageSize = KeysetPage.Clamp(pageSize);
 
-		var rows = await repository.GetLogsPageAsync(from, to, application, level, search,
-			clampedPageSize + 1, afterOccurredAt, afterId, cancellationToken);
+		var rows = await repository.GetLogsPageAsync(
+			from, 
+			to, 
+			application, 
+			level, 
+			search,
+			clampedPageSize + 1, 
+			afterOccurredAt, 
+			afterId, 
+			cancellationToken);
 		var (items, hasMore) = KeysetPage.Trim(rows, clampedPageSize);
 
 		var nextCursor = hasMore

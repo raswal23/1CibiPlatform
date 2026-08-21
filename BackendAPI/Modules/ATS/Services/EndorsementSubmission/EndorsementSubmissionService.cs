@@ -14,6 +14,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly ICurrentUser _currentUser;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IUserClientRepository _userClientRepository;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
@@ -33,6 +34,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IObjectStorageService objectStorageService,
 		IOrderHistoryService orderHistoryService,
 		IUserClientRepository userClientRepository,
+		IAtsAccessScopeResolver accessScopeResolver,
 		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
@@ -47,6 +49,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_currentUser = currentUser;
 		_orderHistoryService = orderHistoryService;
 		_userClientRepository = userClientRepository;
+		_accessScopeResolver = accessScopeResolver;
 		_unitOfWork = unitOfWork;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
@@ -381,6 +384,17 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			_logger.LogError("Failed to find email invitation for resend: {@Context}", logContext);
 			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
 		}
+
+		// Resend is reachable from more than one screen and takes a caller-supplied id,
+		// so the caller's client/requestor scope is enforced here rather than relying on
+		// the calling page to only offer ids it already listed. Out of scope reads as
+		// not found: the response must not reveal that the invitation exists.
+		if (!await IsInvitationWithinCallerScopeAsync(invitation, cancellationToken))
+		{
+			_logger.LogWarning("Resend denied for out-of-scope invitation: {@Context}", logContext);
+			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
+		}
+
 		var token = _secureToken.GenerateSecureToken();
 		if (string.IsNullOrEmpty(token))
 		{
@@ -440,5 +454,28 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			_logger.LogError("Failed to resend application form: {@Context}, {Exception}", logContext, ex);
 			throw new InternalServerException($"Failed to resend application form. {ex.InnerException?.Message ?? ex.Message}");
 		}
+	}
+
+	// Applies the same role ladder the read paths use. A null scope means the caller may
+	// not read ATS records at all; a null AuthorizedClientIds means super admin.
+	private async Task<bool> IsInvitationWithinCallerScopeAsync(
+		EmailInvitationRequest invitation,
+		CancellationToken cancellationToken)
+	{
+		var scope = await _accessScopeResolver.ResolveAsync(cancellationToken);
+
+		if (scope is not { } accessScope)
+		{
+			return false;
+		}
+
+		if (accessScope.AuthorizedClientIds is { } clientIds
+			&& !(invitation.ClientId.HasValue && clientIds.Contains(invitation.ClientId.Value)))
+		{
+			return false;
+		}
+
+		return !accessScope.RequiredOwnerId.HasValue
+			|| invitation.RequestorId == accessScope.RequiredOwnerId.Value;
 	}
 }

@@ -57,8 +57,13 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IUserClientRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IWithdrawnApplicationRepository>(provider => provider.GetRequiredService<IATSRepository>());
+
+		// No cache decorator: bulk upload status changes every Quartz tick, so a cached
+		// first page would defeat the dashboard this repository feeds.
+		services.AddScoped<IBulkUploadDashboardRepository, BulkUploadRepository>();
 		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
 		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
+
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
@@ -73,6 +78,8 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IUserManagementService, UserManagementService>();
 		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 		services.AddScoped<IATSVerificationDataProvider, ATSVerificationDataProvider>();
+		services.AddScoped<IAtsAccessScopeResolver, AtsAccessScopeResolver>();
+		services.AddScoped<IBulkUploadMonitoringService, BulkUploadMonitoringService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

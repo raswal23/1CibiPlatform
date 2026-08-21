@@ -32,7 +32,12 @@ public class PackageManagementService : IPackageManagementService
 		var afterPackageName = fields?[0];
 		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
 
-		var rows = await _packageRepository.GetPackagesPageAsync(paginationRequest.SearchTerm, clientId, afterPackageName, pageSize + 1, cancellationToken);
+		var rows = await _packageRepository.GetPackagesPageAsync(
+			paginationRequest.SearchTerm, 
+			clientId, 
+			afterPackageName, 
+			pageSize + 1, 
+			cancellationToken);
 		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
 
 		var nextCursor = hasMore ? CursorCodec.Encode(items[^1].PackageName) : null;

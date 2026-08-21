@@ -50,5 +50,13 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 
 		// Drives the bulk submission job's claim query and the stale-claim sweeper.
 		builder.HasIndex(a => a.Status);
+
+		// The dashboard's unfiltered keyset walk: (DateCreated DESC, FileID ASC).
+		builder.HasIndex(a => new { a.DateCreated, a.FileID })
+			   .IsDescending(true, false);
+
+		// The same walk with a status chip selected.
+		builder.HasIndex(a => new { a.Status, a.DateCreated, a.FileID })
+			   .IsDescending(false, true, false);
 	}
 }

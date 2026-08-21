@@ -18,4 +18,5 @@ public static class AtsModuleIds
 	public const int UserManagement = 10;
 	public const int ClientAssigning = 11;
 	public const int AIAssistant = 12;
+	public const int BulkUploads = 13;
 }

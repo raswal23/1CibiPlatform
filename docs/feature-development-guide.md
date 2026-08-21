@@ -259,15 +259,29 @@ Confirm the public route through the gateway. For example, the ATS Carter endpoi
 
 ### 7a. Register every route in the YARP gateway
 
-The gateway is part of the endpoint contract. For each new Carter route, add a named route entry to all environment configuration files:
+The gateway is part of the endpoint contract. Register each new Carter route in the module's typed `Path/<Module>Paths.cs` implementation of `IReverseProxyModule`.
 
-- `ApiGateways/YarpApiGateway/appsettings.Development.json`
-- `ApiGateways/YarpApiGateway/appsettings.UAT.json`
-- `ApiGateways/YarpApiGateway/appsettings.Production.json`
+`GatewayServiceExtensions.AddModuleDiscoveryAndReverseProxy` scans the marker assemblies listed in that method, collects `GetRoutes()`/`GetClusters()` from every discovered module, and hands the result to `LoadFromMemory`. **The typed path module is the only source of routes at runtime.** For a brand-new module, also reference the module project from `YarpApiGateway.csproj` and add its marker assembly to that scan list, or none of its routes will exist.
 
 Match the HTTP method and route template exactly (including route parameters), set the correct cluster, and use `PathSet` to forward the request to the backend Carter path. Keep GET and POST operations as separate entries when they share a path. Follow the existing ATS naming style (`/ats/getusers`), for example `/employmentverification/getrequests` forwarding to backend `api/employment-verification/requests`.
 
-This repository's YARP gateway discovers typed route modules through `IReverseProxyModule`. Therefore, also add a `Path/<Module>Paths.cs` implementation, reference the module project from `YarpApiGateway.csproj`, and include its marker assembly in `GatewayServiceExtensions` assembly scanning. The typed path module is the runtime source of truth; keep the appsettings entries synchronized for deployments that load configuration directly.
+Use `PathPattern`, not `PathSet`, when the route has a `{parameter}` to substitute — `PathSet` forwards the literal text `{token}` to the backend. See the `preview/{token}` entry in `EmploymentVerificationPaths.cs`.
+
+#### Do not add routes to the gateway appsettings files
+
+`appsettings.{Development,UAT,Production}.json` still contain `ReverseProxy:Routes` entries for Auth, PhilSys, CNX, SSO, and token endpoints. **These are dead configuration.** The only code that reads that section is `OnePlatformConfigLoader.AddRoutesFromConfiguration`, which has no callers — `Program.cs` calls `AddGatewayServices()`, which loads routes exclusively from the typed modules. Almost every route in those files is also declared in a `*Paths.cs` module, which is why the gateway still works despite the section being ignored.
+
+No ATS, Employment Verification, PlatformLogging, or AIAgent route appears in appsettings, and those modules route correctly. Adding entries there has no runtime effect and creates a second definition that will silently drift. Register the route in the typed module only.
+
+Confirm this at startup: the gateway logs `[Gateway] Collected N routes and M clusters from modules` — that count comes entirely from the typed modules.
+
+**Two appsettings routes have no typed-module equivalent and are therefore not served at all:** `auth/forgot-password/get-user-id` and `sso/login`. Anything depending on them is already broken; fix by adding them to `AuthPaths`/`SSOPath`, not to appsettings. (`sso/login/callback` does exist in `SSOPath.cs` — only the bare `sso/login` is missing.)
+
+Verify a new route with the gateway's diagnostic endpoint, which returns the actual in-memory catalog:
+
+```text
+GET /__routes
+```
 
 #### Gateway naming convention (ATS-compatible)
 
@@ -437,7 +451,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] UI covers loading, empty, validation, success, failure, and responsive states.
 - [ ] Relevant tests and the solution build pass.
 - [ ] API/UI contracts and gateway route were verified end to end.
-- [ ] Every endpoint has matching Development, UAT, and Production YARP gateway entries.
+- [ ] Every endpoint is registered in the module's typed `Path/<Module>Paths.cs` and appears in `GET /__routes`.
 
 ## Feature brief template
 

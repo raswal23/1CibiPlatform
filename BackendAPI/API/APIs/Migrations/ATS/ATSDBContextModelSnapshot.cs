@@ -402,6 +402,12 @@ namespace APIs.Migrations.ATS
 
                     b.HasIndex("Status");
 
+                    b.HasIndex("DateCreated", "FileID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("Status", "DateCreated", "FileID")
+                        .IsDescending(false, true, false);
+
                     b.ToTable("BulkUploadFileDetails", "ats");
                 });
 
@@ -752,6 +758,10 @@ namespace APIs.Migrations.ATS
 
                     b.HasKey("EmailInvitationID");
 
+                    b.HasIndex("EmailSentStatus");
+
+                    b.HasIndex("BulkFileID", "EmailInvitationID");
+
                     b.HasIndex("OrderCompletedAt", "EmailInvitationID")
                         .IsDescending(true, false);
 
@@ -761,10 +771,6 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("OrderStatus", "EmailInvitationID");
 
                     b.HasIndex("FirstName", "LastName", "EmailInvitationID");
-
-                    b.HasIndex("BulkFileID");
-
-                    b.HasIndex("EmailSentStatus");
 
                     b.ToTable("EmailInvitationRequest", "ats");
                 });

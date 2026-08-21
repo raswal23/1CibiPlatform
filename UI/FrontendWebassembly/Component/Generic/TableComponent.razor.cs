@@ -38,6 +38,11 @@ public partial class TableComponent<TItem>
 	// When set, the table is keyset-paginated: renders CursorTablePager (First/Prev/Next,
 	// no jump-to-page) instead of MudTablePager. Pass the table's CursorTableLoader.
 	[Parameter] public ICursorPagerState? CursorPagerState { get; set; }
+	// Opt-in row activation. RowsClickable only adds the pointer/hover affordance, so a
+	// table can handle clicks on specific cells without claiming the whole row is
+	// clickable. Both default off, leaving every existing table unchanged.
+	[Parameter] public EventCallback<TableRowClickEventArgs<TItem>> OnRowClick { get; set; }
+	[Parameter] public bool RowsClickable { get; set; }
 
 	public MudTable<TItem>? TableRef { get; private set; }
 	public Task ReloadServerData() => TableRef?.ReloadServerData() ?? Task.CompletedTask;
@@ -51,9 +56,19 @@ public partial class TableComponent<TItem>
 		? "responsive-table-container"
 		: $"responsive-table-container {ContainerClass}";
 
-	private string TableCssClass => string.IsNullOrWhiteSpace(TableClass)
-		? "generic-responsive-table transparent-paper"
-		: $"generic-responsive-table transparent-paper {TableClass}";
+	private string TableCssClass
+	{
+		get
+		{
+			var cssClass = string.IsNullOrWhiteSpace(TableClass)
+				? "generic-responsive-table transparent-paper"
+				: $"generic-responsive-table transparent-paper {TableClass}";
+
+			return RowsClickable
+				? $"{cssClass} table-component-clickable-rows"
+				: cssClass;
+		}
+	}
 
 	private string ToolbarCssClass =>
 		$"table-component-toolbar{(ToolBarLeft is not null ? " has-left-content" : string.Empty)}{(!string.IsNullOrWhiteSpace(Title) ? " has-title" : string.Empty)}";
