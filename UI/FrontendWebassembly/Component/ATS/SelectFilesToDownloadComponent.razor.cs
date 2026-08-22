@@ -5,6 +5,10 @@ public partial class SelectFilesToDownloadComponent
 	[Parameter]
 	public ATSResultDetailsDTO? ReportResult { get; set; }
 
+	/// <summary>The order whose documents these are. Sent instead of storage keys.</summary>
+	[Parameter]
+	public Guid EmailInvitationId { get; set; }
+
 	public DownloadIndividualDocumentsRequestDTO DownloadRequest { get; set; } = new();
 
 	[CascadingParameter]
@@ -49,58 +53,32 @@ public partial class SelectFilesToDownloadComponent
 			return;
 		}
 
-		DownloadRequest.FileDocuments.Clear();
+		// Send which kinds of document we want; the server resolves the storage keys
+		// itself, under the caller's access scope. It used to accept keys from here,
+		// which meant the browser could name any object in the bucket.
+		DownloadRequest.EmailInvitationRequestId = EmailInvitationId;
+		DownloadRequest.DocumentTypes.Clear();
 
 		if (BiometricPhotoSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.BiometricPhotoFileKey!,
-				FileName = ReportResult.BiometricPhotoFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.BiometricPhoto);
 
 		if (ResumeSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.ResumeFileKey!,
-				FileName = ReportResult.ResumeFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.Resume);
 
 		if (GovernmentIdSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.IdUploadedFileKey!,
-				FileName = ReportResult.IdUploadedFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.GovernmentId);
 
 		if (DiplomaSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.DiplomaFileKey!,
-				FileName = ReportResult.DiplomaFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.Diploma);
 
 		if (CoeSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.CoeFileKey!,
-				FileName = ReportResult.CoeFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.Coe);
 
 		if (ConsentSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.ConsentFormFileKey!,
-				FileName = ReportResult.ConsentFormFileName
-			});
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.ConsentForm);
 
 		if (ReportSelected)
-			DownloadRequest.FileDocuments.Add(new DownloadIndividualDocuments
-			{
-				FileKey = ReportResult!.UploadedReportFileKey!,
-				FileName = ReportResult.UploadedReportFileName
-			});
-
-		DownloadRequest.SubjectName = ReportResult!.SubjectName;
+			DownloadRequest.DocumentTypes.Add(AtsDocumentTypes.Report);
 
 		var downloadResponse = await ReportService.DownloadDocumentsAsync(DownloadRequest);
 

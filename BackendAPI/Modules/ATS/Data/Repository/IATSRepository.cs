@@ -10,6 +10,13 @@ public interface IATSRepository
 	Task<bool> AddReferenceDetailsAsync(ReferenceDetails referenceDetails);
 	Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(string hashToken,
 												 CancellationToken cancellationToken);
+	/// <summary>
+	/// Resolves the invitation a hash token refers to. Never cached: this is the
+	/// authorization decision for the anonymous application-form endpoints, so it must
+	/// always observe the current expiry and form status.
+	/// </summary>
+	Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken,
+												 CancellationToken cancellationToken);
 	Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails);
 	Task<bool> AddEmailInvitationRequestAsync(EmailInvitationRequest emailInvitationRequest);
 	Task<bool> AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails);
@@ -61,9 +68,14 @@ public interface IATSRepository
 	Task<bool> UpdateReportDetailsAsync(ReportDetails reportDetails, CancellationToken cancellationToken);
 	Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken);
 	Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken);
+	/// <param name="windowStart">
+	/// Earliest OrderCreatedAt to load. Rows with no order date are always included -
+	/// the candidate-response tiles count them by email status.
+	/// </param>
 	Task<IReadOnlyList<EmailInvitationRequest>> GetDashboardDataAsync(
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
+		DateTime windowStart,
 		CancellationToken cancellationToken);
 	Task<List<ReportRowDTO>> GetReportsPageAsync(
 		int? afterRank,
@@ -95,11 +107,27 @@ public interface IATSRepository
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken);
+	/// <summary>
+	/// Returns null when the order does not exist <em>or</em> falls outside the caller's
+	/// scope - the two cases are deliberately indistinguishable.
+	/// </summary>
+	Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
 	Task<List<EmailInvitationRequest>> GetEmailInvitationRequestsNeedingProjectionAsync(CancellationToken cancellationToken);
 	Task<ApplicantSearchProjection?> GetApplicantSearchProjectionByIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken);
 	Task<bool> AddApplicantSearchProjectionAsync(ApplicantSearchProjection projection, CancellationToken cancellationToken);
 	Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken);
-	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken);
+	/// <summary>
+	/// Resolves the object storage keys for the given orders, filtered to the caller's
+	/// scope. Ids outside the scope contribute no rows.
+	/// </summary>
+	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
+		List<Guid> emailInvitationRequestIds,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
 }

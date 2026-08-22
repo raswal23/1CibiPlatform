@@ -292,7 +292,13 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task GetReportResultByEmailInvitationRequestIdAsync_ShouldMapApplicantGraphAndPreferredReport()
 	{
-		// Arrange
+		// Arrange: this test is about the projection, so give the caller the widest
+		// scope. The scope filtering itself is covered by the tests below.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var invitation = CreateInvitation(
 			"Result",
 			orderStatus: "Completed",
@@ -376,25 +382,45 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task DownloadIndividualReportAsync_ShouldReturnZipWithStoredDocuments()
 	{
-		// Arrange
+		// Arrange: the request names document types, so the order has to exist and
+		// carry the matching file keys - the service resolves them itself now.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var resumeKey = await StoreAsync("documents", "resume.txt", "resume-content");
 		var idKey = await StoreAsync("documents", "id.txt", "id-content");
+
+		var invitation = CreateInvitation("Individual", orderStatus: "Completed");
+		invitation.FirstName = "Integration";
+		invitation.LastName = "Candidate";
+		invitation.PersonalDetails = new PersonalDetails
+		{
+			PersonalID = Guid.CreateVersion7(),
+			EmailInvitationID = invitation.EmailInvitationID,
+			ResumeFileName = "resume.txt",
+			ResumeFileKey = resumeKey,
+			AdditionalGovtIDFileName = "id.txt",
+			AdditionalGovtIDFileKey = idKey,
+			CreatedDate = DateTime.UtcNow
+		};
+		await AddInvitationsAsync(invitation);
+
 		var request = new DownloadIndividualDocumentsRequestDTO
 		{
-			SubjectName = "Integration Candidate",
-			FileDocuments =
-			[
-				new DownloadIndividualDocuments { FileKey = resumeKey, FileName = "resume.txt" },
-				new DownloadIndividualDocuments { FileKey = idKey, FileName = "id.txt" }
-			]
+			EmailInvitationRequestId = invitation.EmailInvitationID,
+			DocumentTypes = [AtsDocumentTypes.Resume, AtsDocumentTypes.GovernmentId]
 		};
 
 		// Act
-		await using var result = await _reportService.DownloadIndividualReportAsync(
+		var (zipStream, subjectName) = await _reportService.DownloadIndividualReportAsync(
 			request,
 			CancellationToken.None);
 
 		// Assert
+		await using var result = zipStream;
+		subjectName.Should().Be("Integration Candidate");
 		using var archive = new ZipArchive(result, ZipArchiveMode.Read);
 		archive.Entries.Select(entry => entry.FullName).Should().Equal("resume.txt", "id.txt");
 		(await ReadZipEntryAsync(archive.GetEntry("resume.txt")!)).Should().Be("resume-content");
@@ -402,9 +428,68 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task DownloadIndividualReportAsync_ShouldThrowNotFound_ForUnknownOrder()
+	{
+		// An id the caller invented resolves to nothing, even for a super admin. Before
+		// the fix this endpoint never looked at the order at all - it fetched whatever
+		// keys it was handed.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
+		var request = new DownloadIndividualDocumentsRequestDTO
+		{
+			EmailInvitationRequestId = Guid.CreateVersion7(),
+			DocumentTypes = [AtsDocumentTypes.Resume]
+		};
+
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_reportService.DownloadIndividualReportAsync(request, CancellationToken.None));
+	}
+
+	[Fact]
+	public async Task DownloadIndividualReportAsync_ShouldThrowNotFound_WhenOrderBelongsToAnotherClient()
+	{
+		// The finding this endpoint had: a caller scoped to one client could name any
+		// order and receive its documents. Now the lookup is scoped, so an order
+		// belonging to client 2 is invisible to a user scoped to client 1.
+		var resumeKey = await StoreAsync("documents", "other-resume.txt", "resume-content");
+
+		var invitation = CreateInvitation("OtherClient", orderStatus: "Completed");
+		invitation.ClientId = 2;
+		invitation.RequestorId = Guid.CreateVersion7();
+		invitation.PersonalDetails = new PersonalDetails
+		{
+			PersonalID = Guid.CreateVersion7(),
+			EmailInvitationID = invitation.EmailInvitationID,
+			ResumeFileName = "other-resume.txt",
+			ResumeFileKey = resumeKey,
+			CreatedDate = DateTime.UtcNow
+		};
+		await AddInvitationsAsync(invitation);
+
+		SetAuthenticatedUser(Guid.CreateVersion7(), AtsRoleIds.User, claimedClientId: 1);
+
+		var request = new DownloadIndividualDocumentsRequestDTO
+		{
+			EmailInvitationRequestId = invitation.EmailInvitationID,
+			DocumentTypes = [AtsDocumentTypes.Resume]
+		};
+
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_reportService.DownloadIndividualReportAsync(request, CancellationToken.None));
+	}
+
+	[Fact]
 	public async Task DownloadMultipleOrderRecordsAsync_ShouldQueryApplicantDocumentsAndMergePdfs()
 	{
 		// Arrange
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var invitation = CreateInvitation("Download", orderStatus: "Completed");
 		invitation.FirstName = "Renzy";
 		invitation.LastName = "Gutierrez";

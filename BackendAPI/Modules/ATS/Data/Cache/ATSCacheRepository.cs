@@ -67,6 +67,14 @@ public class ATSCacheRepository : IATSRepository
 			tags: [CacheTags.WithdrawnApplication]);
 	}
 
+	// Pass-through by design. The claim drives an authorization decision, so caching it
+	// would let a withdrawn or already-submitted invitation keep accepting form posts
+	// until the tag happened to be evicted.
+	public async Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetApplicationFormClaimAsync(hashToken, cancellationToken);
+	}
+
 	public async Task<bool> AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails)
 	{
 		return await _atsRepository.AddBulkUploadFileDetailsAsync(bulkUploadFileDetails);
@@ -314,11 +322,13 @@ public class ATSCacheRepository : IATSRepository
 	public Task<IReadOnlyList<EmailInvitationRequest>> GetDashboardDataAsync(
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
+		DateTime windowStart,
 		CancellationToken cancellationToken)
 	{
 		return _atsRepository.GetDashboardDataAsync(
 			authorizedClientIds,
 			requiredRequestorId,
+			windowStart,
 			cancellationToken);
 	}
 
@@ -357,13 +367,21 @@ public class ATSCacheRepository : IATSRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"report_result_{emailInvitationRequestId}";
+		// The scope is part of the key. Without it the first caller to read an order
+		// would populate an entry that every other caller then shares, which would put
+		// the access check back where it started.
+		var cacheKey = $"report_result_{emailInvitationRequestId}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync(
 			cacheKey,
-			async token => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, token),
+			async token => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(
+				emailInvitationRequestId, authorizedClientIds, requiredRequestorId, token),
 			options: new HybridCacheEntryOptions
 			{
 				Expiration = TimeSpan.FromMinutes(5)
@@ -441,8 +459,13 @@ public class ATSCacheRepository : IATSRepository
 		return await _atsRepository.AddApplicantSearchProjectionAsync(projection, cancellationToken);
 	}
 
-	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken)
+	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
+		List<Guid> emailInvitationRequestIds,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
+		return await _atsRepository.GetDownloadDocumentsAsync(
+			emailInvitationRequestIds, authorizedClientIds, requiredRequestorId, cancellationToken);
 	}
 }

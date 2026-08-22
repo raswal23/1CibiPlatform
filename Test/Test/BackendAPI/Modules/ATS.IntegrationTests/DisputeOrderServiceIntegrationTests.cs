@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using ATS.Services.AccessScope;
 using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Data.Repository.Administration.UserClient;
@@ -521,6 +522,12 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 				.FindAll(AuthClaimTypes.PlatformRoleId)
 				.Any(claim => claim.Value == PlatformRoleIds.SuperAdmin.ToString()) == true);
 
+		// A real resolver over the same claims-backed ICurrentUser, so the integration
+		// test still exercises the role ladder end to end rather than stubbing it out.
+		var accessScopeResolver = new AtsAccessScopeResolver(
+			currentUser.Object,
+			userClientRepository.Object);
+
 		return new DisputeOrderService(
 			NullLogger<DisputeOrderService>.Instance,
 			emailService.Object,
@@ -530,6 +537,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			_httpContextAccessor,
 			orderHistoryService.Object,
 			currentUser.Object,
+			accessScopeResolver,
 			new UnitOfWork(_dbContext));
 	}
 

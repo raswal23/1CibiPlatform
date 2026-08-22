@@ -42,7 +42,7 @@ public class AtsAssistantService : IAtsAssistantService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IPackageManagementService _packageManagementService;
 	private readonly IEndorsementSubmissionService _endorsementSubmissionService;
-	private readonly IUserClientRepository _userClientRepository;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly AtsOrderDraftStore _draftStore;
 	private readonly AtsChatHistoryStore _historyStore;
 	private readonly ICurrentUser _currentUser;
@@ -55,7 +55,7 @@ public class AtsAssistantService : IAtsAssistantService
 		IOrderHistoryService orderHistoryService,
 		IPackageManagementService packageManagementService,
 		IEndorsementSubmissionService endorsementSubmissionService,
-		IUserClientRepository userClientRepository,
+		IAtsAccessScopeResolver accessScopeResolver,
 		AtsOrderDraftStore draftStore,
 		AtsChatHistoryStore historyStore,
 		ICurrentUser currentUser,
@@ -67,7 +67,7 @@ public class AtsAssistantService : IAtsAssistantService
 		_orderHistoryService = orderHistoryService;
 		_packageManagementService = packageManagementService;
 		_endorsementSubmissionService = endorsementSubmissionService;
-		_userClientRepository = userClientRepository;
+		_accessScopeResolver = accessScopeResolver;
 		_draftStore = draftStore;
 		_historyStore = historyStore;
 		_currentUser = currentUser;
@@ -93,7 +93,7 @@ public class AtsAssistantService : IAtsAssistantService
 				_packageManagementService,
 				_draftStore,
 				_currentUser,
-				_userClientRepository);
+				_accessScopeResolver);
 
 			// Clone so ATS plugins never leak onto the kernel shared with other modules,
 			// and so one user's scope is never visible to another.
@@ -192,7 +192,7 @@ public class AtsAssistantService : IAtsAssistantService
 			_packageManagementService,
 			_draftStore,
 			_currentUser,
-			_userClientRepository);
+			_accessScopeResolver);
 
 		return await plugin.SearchOrdersBySubjectAsync(name, cancellationToken);
 	}

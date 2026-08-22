@@ -18,8 +18,7 @@ public sealed class AtsAssistantPlugin
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IPackageManagementService _packageManagementService;
 	private readonly AtsOrderDraftStore _draftStore;
-	private readonly ICurrentUser _currentUser;
-	private readonly IUserClientRepository _userClientRepository;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly Guid _userId;
 	private readonly int? _clientId;
 
@@ -29,14 +28,13 @@ public sealed class AtsAssistantPlugin
 		IPackageManagementService packageManagementService,
 		AtsOrderDraftStore draftStore,
 		ICurrentUser currentUser,
-		IUserClientRepository userClientRepository)
+		IAtsAccessScopeResolver accessScopeResolver)
 	{
 		_atsRepository = atsRepository;
 		_orderHistoryService = orderHistoryService;
 		_packageManagementService = packageManagementService;
 		_draftStore = draftStore;
-		_currentUser = currentUser;
-		_userClientRepository = userClientRepository;
+		_accessScopeResolver = accessScopeResolver;
 		_userId = currentUser.UserId ?? Guid.Empty;
 		_clientId = currentUser.AtsClientId;
 	}
@@ -209,49 +207,17 @@ public sealed class AtsAssistantPlugin
 			+ "or ask the user to press anything.";
 	}
 
-	// Mirrors the authorization block in ReportService.GetReportsAsync: null means the
-	// caller may not read reports at all, (null, null) means unrestricted (super admin).
+	// Delegates to AtsAccessScopeResolver - this used to be a fourth inline copy of the
+	// role ladder. The assistant must never see further than the user it answers for.
 	private async Task<(IReadOnlyCollection<int>? AuthorizedClientIds, Guid? RequiredRequestorId)?>
 		ResolveReportScopeAsync(CancellationToken cancellationToken)
 	{
-		if (!_currentUser.IsAuthenticated
-			|| _currentUser.UserId is not { } userId
-			|| userId == Guid.Empty)
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
 			return null;
 		}
 
-		if (_currentUser.IsPlatformSuperAdmin)
-		{
-			return (null, null);
-		}
-
-		if (_currentUser.AtsRoleId is not { } roleId)
-		{
-			return null;
-		}
-
-		if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
-		{
-			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
-				[userId],
-				cancellationToken);
-
-			var clientIds = assignments
-				.Select(assignment => assignment.ClientId)
-				.Distinct()
-				.ToArray();
-
-			return (clientIds, null);
-		}
-
-		if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			&& _currentUser.AtsClientId is { } clientId)
-		{
-			return (new[] { clientId }, userId);
-		}
-
-		return null;
+		return (scope.AuthorizedClientIds, scope.RequiredOwnerId);
 	}
 
 	private async Task<IReadOnlyList<PackageDetailsDTO>> GetAssignedPackagesAsync(

@@ -17,6 +17,8 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// Anonymous: the candidate reaches this from an emailed link with no account.
+			// Authorized by hash token in the API, rate limited by IP here.
 			new RouteDefinitionDTO(
 				RouteId: "AddApplicationFormDataEntryPoint",
 				MatchPath: "/ats/addapplicationformdata",
@@ -25,6 +27,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/addapplicationformdata" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 
@@ -36,6 +42,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/getemailidandapplicationformpath" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 
@@ -270,6 +280,7 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// Anonymous, same emailed-link flow as AddApplicationFormData.
 			new RouteDefinitionDTO(
 				RouteId: "WithdrawnApplicationForm",
 				MatchPath: "/ats/withdrawnapplicationform",
@@ -278,6 +289,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/withdrawnapplicationform" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 

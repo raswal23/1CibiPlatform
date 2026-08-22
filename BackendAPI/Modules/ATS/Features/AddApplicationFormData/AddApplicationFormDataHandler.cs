@@ -1,6 +1,7 @@
 ﻿namespace ATS.Features.AddApplicationFormData;
 
-public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
+public record AddApplicationFormDataCommand(string HashToken,
+											PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,
@@ -12,6 +13,11 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 {
 	public AddApplicationFormDataCommandValidator()
 	{
+		// Shape only. Whether the token is real, unexpired and unspent is decided
+		// against the database in ApplicationFormService.AuthorizeApplicationFormAsync.
+		RuleFor(x => x.HashToken)
+			.NotEmpty().WithMessage("Application form token is required.");
+
 		//personal
 		RuleFor(x => x.PersonalDetails)
 			.NotNull()
@@ -75,6 +81,21 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				.WithMessage("Only .pdf files are allowed.")
 				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 				.WithMessage("File size exceeds the 25 MB limit.");
+
+			// Optional face photo from the PhilSys liveness flow (photo_url). When present
+			// it must be an image the server can convert to PDF (see
+			// ApplicationFormService -> FilePdfService.ConvertImageToPdfAsync).
+			When(x => x.PersonalDetails.BiometricFile != null, () =>
+			{
+				string[] allowedBiometricExtensions = [".jpg", ".jpeg", ".png", ".webp", ".bmp"];
+
+				RuleFor(x => x.PersonalDetails.BiometricFile)
+					.Must(file => file != null &&
+					 allowedBiometricExtensions.Contains(System.IO.Path.GetExtension(file.FileName), StringComparer.OrdinalIgnoreCase))
+					.WithMessage("Only image files (.jpg, .jpeg, .png, .webp, .bmp) are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+			});
 		});
 
 		//address
@@ -642,7 +663,8 @@ public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormD
 	}
 	public async Task<AddApplicationFormDataResult> Handle(AddApplicationFormDataCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _applicationFormService.AddApplicationFormDataAsync(request.PersonalDetails,
+		var result = await _applicationFormService.AddApplicationFormDataAsync(request.HashToken,
+																			   request.PersonalDetails,
 																			   request.AddressDetails,
 																   request.EducationalBackground,
 																   request.LicensesDetails,
