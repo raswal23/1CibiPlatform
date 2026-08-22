@@ -1,6 +1,6 @@
 namespace FrontendWebassembly.Services.ATS.EndorsementSubmission;
 
-public interface IEndorsementSubmissionService
+public interface IEndorsementSubmissionService : IAsyncDisposable
 {
 	event Action<string> ATSResponseReceived;
 

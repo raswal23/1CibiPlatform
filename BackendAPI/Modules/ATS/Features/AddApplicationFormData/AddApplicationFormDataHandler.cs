@@ -1,6 +1,7 @@
 ﻿namespace ATS.Features.AddApplicationFormData;
 
-public record AddApplicationFormDataCommand(PersonalDetailsDTO PersonalDetails,
+public record AddApplicationFormDataCommand(string HashToken,
+											PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,
@@ -12,6 +13,11 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 {
 	public AddApplicationFormDataCommandValidator()
 	{
+		// Shape only. Whether the token is real, unexpired and unspent is decided
+		// against the database in ApplicationFormService.AuthorizeApplicationFormAsync.
+		RuleFor(x => x.HashToken)
+			.NotEmpty().WithMessage("Application form token is required.");
+
 		//personal
 		RuleFor(x => x.PersonalDetails)
 			.NotNull()
@@ -642,7 +648,8 @@ public class AddApplicationFormDataHandler : ICommandHandler<AddApplicationFormD
 	}
 	public async Task<AddApplicationFormDataResult> Handle(AddApplicationFormDataCommand request, CancellationToken cancellationToken)
 	{
-		var result = await _applicationFormService.AddApplicationFormDataAsync(request.PersonalDetails,
+		var result = await _applicationFormService.AddApplicationFormDataAsync(request.HashToken,
+																			   request.PersonalDetails,
 																			   request.AddressDetails,
 																   request.EducationalBackground,
 																   request.LicensesDetails,

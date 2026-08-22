@@ -2,7 +2,7 @@
 
 public record DownloadIndividualReportHandlerRequest(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest) : ICommand<DownloadIndividualReportResult>;
 
-public record DownloadIndividualReportResult(Stream zipStream);
+public record DownloadIndividualReportResult(Stream zipStream, string SubjectName);
 
 public class DownloadIndividualReportHandlerRequestValidator
 	: AbstractValidator<DownloadIndividualReportHandlerRequest>
@@ -13,31 +13,21 @@ public class DownloadIndividualReportHandlerRequestValidator
 			.NotNull()
 			.WithMessage("Request is required.");
 
-		RuleFor(x => x.downloadInvididualRequest.SubjectName)
+		RuleFor(x => x.downloadInvididualRequest.EmailInvitationRequestId)
 			.NotEmpty()
-			.WithMessage("Subject name is required.")
-			.MaximumLength(200)
-			.WithMessage("Subject name must not exceed 200 characters.");
+			.WithMessage("Email invitation request id is required.");
 
-		RuleFor(x => x.downloadInvididualRequest.FileDocuments)
+		RuleFor(x => x.downloadInvididualRequest.DocumentTypes)
 			.NotNull()
 			.WithMessage("At least one document is required.")
 			.Must(x => x.Any())
 			.WithMessage("At least one document is required.");
 
-		RuleForEach(x => x.downloadInvididualRequest.FileDocuments)
-			.ChildRules(document =>
-			{
-				document.RuleFor(x => x.FileKey)
-					.NotEmpty()
-					.WithMessage("File key is required.");
-
-				document.RuleFor(x => x.FileName)
-					.NotEmpty()
-					.WithMessage("File name is required.")
-					.MaximumLength(255)
-					.WithMessage("File name must not exceed 255 characters.");
-			});
+		// Reject unknown type names outright rather than silently returning a short
+		// zip - a typo in the UI should be loud.
+		RuleForEach(x => x.downloadInvididualRequest.DocumentTypes)
+			.Must(AtsDocumentTypes.All.Contains)
+			.WithMessage("Unknown document type.");
 	}
 }
 
@@ -51,7 +41,7 @@ public class DownloadIndividualReportHandler : ICommandHandler<DownloadIndividua
 
 	public async Task<DownloadIndividualReportResult> Handle(DownloadIndividualReportHandlerRequest request, CancellationToken cancellationToken)
 	{
-		var stream = await _reportService.DownloadIndividualReportAsync(request.downloadInvididualRequest, cancellationToken);
-		return new DownloadIndividualReportResult(stream);
+		var (zipStream, subjectName) = await _reportService.DownloadIndividualReportAsync(request.downloadInvididualRequest, cancellationToken);
+		return new DownloadIndividualReportResult(zipStream, subjectName);
 	}
 }

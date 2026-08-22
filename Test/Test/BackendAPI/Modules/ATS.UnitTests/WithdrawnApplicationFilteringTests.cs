@@ -40,7 +40,11 @@ public class WithdrawnApplicationFilteringTests
 			Mock.Of<IObjectStorageService>(),
 			Mock.Of<IOrderHistoryService>(),
 			_userClientRepository.Object,
-			Mock.Of<IAtsAccessScopeResolver>(),
+			// A real resolver over the same mocks. These tests are specifically about
+			// which clients/requestor a role resolves to, so stubbing the resolver would
+			// remove the thing under test - and Mock.Of<> returns null, which the
+			// service reads as "no access".
+			new AtsAccessScopeResolver(_currentUser.Object, _userClientRepository.Object),
 			Mock.Of<IUnitOfWork>());
 	}
 

@@ -27,9 +27,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			return;
 		}
-		var userId = await _localStorageService.GetItemAsync<string?>(_userIdKey) ?? Guid.CreateVersion7().ToString();
 		var baseUri = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
-		var hubUrl = $"{baseUri}/hubs/atsbulk?userId={userId}";
+
+		// No ?userId= any more. The hub derives the group from the authenticated
+		// principal; the auth cookie rides along on the handshake automatically.
+		var hubUrl = $"{baseUri}/hubs/atsbulk";
 
 		_hubConnection = new HubConnectionBuilder()
 			.WithUrl(hubUrl)
@@ -42,7 +44,12 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			{
 				ATSResponseReceived?.Invoke(message);
 			}
-			catch { }
+			catch (Exception ex)
+			{
+				// A subscriber that throws must not tear down the hub connection, but
+				// swallowing it silently is how duplicate-notification bugs stay hidden.
+				_logger.LogError(ex, "An ATS hub subscriber threw while handling a response.");
+			}
 		});
 
 		_hubConnection.On("SessionCleared", () =>
@@ -51,7 +58,10 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			{
 				ATSResponseReceived?.Invoke(string.Empty);
 			}
-			catch { }
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "An ATS hub subscriber threw while handling SessionCleared.");
+			}
 		});
 
 		_hubConnection.Closed += async (ex) =>
@@ -61,6 +71,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		await _hubConnection.StartAsync();
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (_hubConnection is not null)
+		{
+			await _hubConnection.DisposeAsync();
+			_hubConnection = null;
+		}
 	}
 
 	public async Task<ServiceResponse<string>> DownloadBulkTemplateAsync()

@@ -892,7 +892,7 @@ public partial class ApplicationFormComponent
 		{
 			isSaving = true;
 			await InvokeAsync(StateHasChanged);
-			var response = await ATSService.AddApplicationFormDataAsync(personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
+			var response = await ATSService.AddApplicationFormDataAsync(HashToken!, personalDetails, addressDetails, educationalBackground, licensesDetails, professionalExperiences, referenceDetails, signatureDetails);
 
 			if (!response.IsSuccess)
 			{

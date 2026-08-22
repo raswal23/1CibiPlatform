@@ -8,8 +8,7 @@ public class ReportService : IReportService
 	private readonly IObjectStorageService _objectStorageService;
 	private readonly string _folderName;
 	private readonly IOrderHistoryService _orderHistoryService;
-	private readonly IUserClientRepository _userClientRepository;
-	private readonly ICurrentUser _currentUser;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public ReportService(
@@ -18,8 +17,7 @@ public class ReportService : IReportService
 		IConfiguration configuration,
 		IObjectStorageService objectStorageService,
 		IOrderHistoryService orderHistoryService,
-		IUserClientRepository userClientRepository,
-		ICurrentUser currentUser,
+		IAtsAccessScopeResolver accessScopeResolver,
 		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
@@ -27,8 +25,7 @@ public class ReportService : IReportService
 		_configuration = configuration;
 		_objectStorageService = objectStorageService;
 		_orderHistoryService = orderHistoryService;
-		_userClientRepository = userClientRepository;
-		_currentUser = currentUser;
+		_accessScopeResolver = accessScopeResolver;
 		_unitOfWork = unitOfWork;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
@@ -177,45 +174,16 @@ public class ReportService : IReportService
 		};
 
 		_logger.LogInformation("Fetching reports with pagination: {@Context}", logContext);
-		if (!_currentUser.IsAuthenticated
-			|| _currentUser.UserId is not { } userId
-			|| userId == Guid.Empty)
+
+		// The role ladder lives in AtsAccessScopeResolver now - this used to be an
+		// inline copy of it.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
 			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
 		}
 
-		IReadOnlyCollection<int>? clientIds;
-		Guid? requiredRequestorId;
-		if (_currentUser.IsPlatformSuperAdmin)
-		{
-			clientIds = null;
-			requiredRequestorId = null;
-		}
-		else if (_currentUser.AtsRoleId is not { } roleId)
-		{
-			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
-		}
-		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
-		{
-			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
-				[userId],
-				cancellationToken);
-			clientIds = assignments
-				.Select(assignment => assignment.ClientId)
-				.Distinct()
-				.ToArray();
-			requiredRequestorId = null;
-		}
-		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			&& _currentUser.AtsClientId is { } clientId)
-		{
-			clientIds = [clientId];
-			requiredRequestorId = userId;
-		}
-		else
-		{
-			return new KeysetPaginatedResult<ReportListDTO>(Array.Empty<ReportListDTO>(), null, 0);
-		}
+		var clientIds = scope.AuthorizedClientIds;
+		var requiredRequestorId = scope.RequiredOwnerId;
 
 		var isSearch = !string.IsNullOrWhiteSpace(paginationRequest.SearchTerm)
 			|| paginationRequest.StartDate.HasValue
@@ -289,17 +257,31 @@ public class ReportService : IReportService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, cancellationToken);
-
-		if (string.IsNullOrWhiteSpace(result!.HitStatus))
+		// Any authenticated ATS user could previously read any order's result - subject
+		// name, hit status, and every document key - which was also how a caller
+		// obtained the keys the download endpoint used to accept.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
-			result.HitStatus = "-";
+			throw new NotFoundException($"No report result found for email invitation ID {emailInvitationRequestId}.");
 		}
 
+		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(
+			emailInvitationRequestId,
+			scope.AuthorizedClientIds,
+			scope.RequiredOwnerId,
+			cancellationToken);
+
+		// NotFound rather than Forbidden on purpose: a caller must not be able to probe
+		// which order ids exist outside their scope.
 		if (result is null)
 		{
-			_logger.LogError("Failed to upload report {@Context}", logContext);
+			_logger.LogWarning("No report result in scope for the caller {@Context}", logContext);
 			throw new NotFoundException($"No report result found for email invitation ID {emailInvitationRequestId}.");
+		}
+
+		if (string.IsNullOrWhiteSpace(result.HitStatus))
+		{
+			result.HitStatus = "-";
 		}
 
 		if (!string.IsNullOrEmpty(result.DiplomaFileKey))
@@ -312,43 +294,111 @@ public class ReportService : IReportService
 		return result;
 	}
 
-	public async Task<Stream> DownloadIndividualReportAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken)
+	public async Task<(Stream ZipStream, string SubjectName)> DownloadIndividualReportAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
 			Action = "DownloadIndividualReport",
 			Step = "GetEachFileAndDownload",
-			Pagination = downloadInvididualRequest,
+			EmailInvitationRequestId = downloadInvididualRequest.EmailInvitationRequestId,
+			DocumentTypes = downloadInvididualRequest.DocumentTypes,
 			Timestamp = DateTime.UtcNow
 		};
 
 		_logger.LogInformation("Compiling individual reports for download: {@Context}", logContext);
 
+		// This endpoint used to accept object storage keys straight from the caller and
+		// hand them to the bucket, which made it a general-purpose read primitive for
+		// any authenticated user. Keys are now resolved here, under the caller's scope.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
+		{
+			throw new NotFoundException($"No documents found for email invitation ID {downloadInvididualRequest.EmailInvitationRequestId}.");
+		}
+
+		var result = await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(
+			downloadInvididualRequest.EmailInvitationRequestId,
+			scope.AuthorizedClientIds,
+			scope.RequiredOwnerId,
+			cancellationToken);
+
+		if (result is null)
+		{
+			_logger.LogWarning("No documents in scope for the caller {@Context}", logContext);
+			throw new NotFoundException($"No documents found for email invitation ID {downloadInvididualRequest.EmailInvitationRequestId}.");
+		}
+
+		var requested = new HashSet<string>(
+			downloadInvididualRequest.DocumentTypes ?? [],
+			StringComparer.OrdinalIgnoreCase);
+
+		// Only the types the caller asked for, and only those the order actually has.
+		var files = ResolveRequestedDocuments(result, requested).ToList();
+
+		if (files.Count == 0)
+		{
+			throw new NotFoundException("None of the requested documents are available for this order.");
+		}
+
 		var zipStream = new MemoryStream();
 
 		using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
 		{
-			foreach (var file in downloadInvididualRequest.FileDocuments)
+			foreach (var (fileName, fileKey) in files)
 			{
 				try
 				{
-					var entry = archive.CreateEntry(file.FileName ?? "UnknownFile");
+					var entry = archive.CreateEntry(fileName);
 
 					await using var entryStream = entry.Open();
-					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey!, cancellationToken);
+					await using var ossStream = await _objectStorageService.DownloadAsync(fileKey, cancellationToken);
 
 					await ossStream.CopyToAsync(entryStream, cancellationToken);
 				}
 				catch (Exception ex)
 				{
-					_logger.LogError("Failed to download individual report {@Context}", logContext);
+					_logger.LogError(ex, "Failed to download individual report {@Context}", logContext);
 					throw new InternalServerException($"{ex}");
 				}
 			}
 		}
 
 		zipStream.Position = 0;
-		return zipStream;
+
+		var subjectName = string.IsNullOrWhiteSpace(result.SubjectName)
+			? "ATS_Documents"
+			: result.SubjectName;
+
+		return (zipStream, subjectName);
+	}
+
+	/// <summary>
+	/// Maps the requested document type names onto the (file name, file key) pairs the
+	/// order actually carries. Types with no stored document are skipped.
+	/// </summary>
+	private static IEnumerable<(string FileName, string FileKey)> ResolveRequestedDocuments(
+		ReportResultDTO result,
+		IReadOnlySet<string> requested)
+	{
+		var candidates = new (string Type, string? FileName, string? FileKey)[]
+		{
+			(AtsDocumentTypes.BiometricPhoto, result.BiometricPhotoFileName, result.BiometricPhotoFileKey),
+			(AtsDocumentTypes.Resume, result.ResumeFileName, result.ResumeFileKey),
+			(AtsDocumentTypes.GovernmentId, result.IdUploadedFileName, result.IdUploadedFileKey),
+			(AtsDocumentTypes.Diploma, result.DiplomaFileName, result.DiplomaFileKey),
+			(AtsDocumentTypes.Coe, result.CoeFileName, result.CoeFileKey),
+			(AtsDocumentTypes.ConsentForm, result.ConsentFormFileName, result.ConsentFormFileKey),
+			(AtsDocumentTypes.Report, result.UploadedReportFileName, result.UploadedReportFileKey),
+		};
+
+		foreach (var (type, fileName, fileKey) in candidates)
+		{
+			if (requested.Contains(type)
+				&& !string.IsNullOrWhiteSpace(fileName)
+				&& !string.IsNullOrWhiteSpace(fileKey))
+			{
+				yield return (fileName, fileKey);
+			}
+		}
 	}
 
 	public async Task<Stream> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken)
@@ -364,11 +414,22 @@ public class ReportService : IReportService
 
 		_logger.LogInformation("Compiling multiple order records for download: {@Context}", logContext);
 
+		// Same finding as DownloadIndividualReportAsync: the id list came from the
+		// caller and was never checked against their scope.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
+		{
+			throw new NotFoundException("No order records found.");
+		}
+
 		var zipStream = new MemoryStream();
 
 		try
 		{
-			var documents = await _atsRepository.GetDownloadDocumentsAsync(downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList, cancellationToken);
+			var documents = await _atsRepository.GetDownloadDocumentsAsync(
+				downloadMultipleOrderRecordsRequest.EmailInvitaionRequestList,
+				scope.AuthorizedClientIds,
+				scope.RequiredOwnerId,
+				cancellationToken);
 
 			using var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true);
 

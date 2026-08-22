@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using ATS.Data.Entities;
 using ATS.Constants;
+using ATS.Services.AccessScope;
 using ATS.Data.Repository;
 using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.UnitOfWork;
@@ -33,6 +34,7 @@ public class DisputeOrderServiceTests
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly Mock<ICurrentUser> _currentUser = new();
+	private readonly Mock<IAtsAccessScopeResolver> _accessScopeResolver = new();
 	private readonly Mock<IUnitOfWork> _unitOfWork = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
@@ -60,7 +62,19 @@ public class DisputeOrderServiceTests
 			_httpContextAccessor,
 			_orderHistoryService.Object,
 			_currentUser.Object,
+			_accessScopeResolver.Object,
 			_unitOfWork.Object);
+	}
+
+	/// <summary>
+	/// Sets the scope the service sees. The role ladder itself moved to
+	/// AtsAccessScopeResolver and is tested there.
+	/// </summary>
+	private void SetAccessScope(IReadOnlyCollection<int>? authorizedClientIds, Guid? requiredOwnerId)
+	{
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope(authorizedClientIds, requiredOwnerId));
 	}
 
 	#region Happy Path
@@ -70,6 +84,7 @@ public class DisputeOrderServiceTests
 	{
 		// Arrange
 		var userId = SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
+		SetAccessScope([7], userId);
 		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
 		var cancellationToken = new CancellationTokenSource().Token;
 		var rows = CreateDisputeOrders();
@@ -106,14 +121,9 @@ public class DisputeOrderServiceTests
 	public async Task GetDisputeOrdersAsync_ShouldPassSearchTerm_WhenProvided()
 	{
 		// Arrange
-		var userId = SetAuthenticatedUser(AtsRoleIds.Admin, clientId: 99);
-		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
-			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
-			It.IsAny<CancellationToken>())).ReturnsAsync(
-			[
-				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
-				new UserClientDetailsDTO { UserId = userId, ClientId = 3 }
-			]);
+		// An Admin sees every client assigned to them, with no owner predicate.
+		SetAuthenticatedUser(AtsRoleIds.Admin, clientId: 99);
+		SetAccessScope([1, 3], null);
 		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 5, SearchTerm: "ada");
 		var cancellationToken = new CancellationTokenSource().Token;
 		var rows = CreateDisputeOrders();
@@ -365,9 +375,9 @@ public class DisputeOrderServiceTests
 	{
 		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
 		var rows = CreateDisputeOrders();
+		// (null, null) is the super admin scope: no client and no owner predicate.
 		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		SetAccessScope(null, null);
 		_repository.Setup(repository => repository.GetDisputeOrdersPageAsync(
 			null,
 			null,

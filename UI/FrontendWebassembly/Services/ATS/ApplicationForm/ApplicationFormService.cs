@@ -9,11 +9,12 @@ public class ApplicationFormService : IApplicationFormService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<bool>> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
-														AddressDetailsDTO AddressDetails, 
-														EducationalBackgroundDTO EducationalBackground, 
-														LicensesDetailsDTO LicensesDetails, 
-														ProfessionalExperiencesDTO ProfessionalExperiences, 
+	public async Task<ServiceResponse<bool>> AddApplicationFormDataAsync(string HashToken,
+														PersonalDetailsDTO PersonalDetails,
+														AddressDetailsDTO AddressDetails,
+														EducationalBackgroundDTO EducationalBackground,
+														LicensesDetailsDTO LicensesDetails,
+														ProfessionalExperiencesDTO ProfessionalExperiences,
 														ReferenceDetailsDTO ReferenceDetails,
 														SignatureDetailsDTO SignatureDetails)
 	{
@@ -37,6 +38,10 @@ public class ApplicationFormService : IApplicationFormService
 				content.Add(fileContent, name, name);
 			}
 		}
+
+		// The token the candidate arrived with. This is what the server authorizes
+		// against - the EmailInvitationID fields below are ignored server-side.
+		AddString(HashToken, "HashToken");
 
 		// PersonalDetails
 		AddString(PersonalDetails.EmailInvitationID.ToString(), "PersonalDetails.EmailInvitationID");

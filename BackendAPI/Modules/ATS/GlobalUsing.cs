@@ -55,6 +55,7 @@ global using BuildingBlocks.Behaviors;
 global using BuildingBlocks.Exceptions.Handler;
 global using BuildingBlocks.SharedServices.Interfaces;
 global using BuildingBlocks.Pagination;
+global using BuildingBlocks.SignalR;
 
 global using Microsoft.EntityFrameworkCore.Storage;
 global using Microsoft.EntityFrameworkCore;
@@ -69,6 +70,7 @@ global using Microsoft.AspNetCore.Http;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Caching.Hybrid;
 global using Microsoft.AspNetCore.SignalR;
+global using Microsoft.AspNetCore.Authorization;
 
 global using MediatR;
 global using Carter;

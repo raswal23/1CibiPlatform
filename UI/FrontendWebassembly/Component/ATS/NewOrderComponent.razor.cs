@@ -128,13 +128,38 @@ public partial class NewOrderComponent
 		NavigationManager.NavigateTo(response.Data!);
 	}
 
-	private async void OnATSResponse(string message)
+	// The hub event is a plain Action, so the handler has to be void at the delegate
+	// boundary. Keep the body in an async Task and observe it here rather than letting
+	// an `async void` throw into the SignalR callback, where nothing can catch it.
+	private void OnATSResponse(string message)
 	{
-		await InvokeAsync(() =>
+		_ = OnATSResponseAsync(message);
+	}
+
+	private async Task OnATSResponseAsync(string message)
+	{
+		try
 		{
-			Snackbar.Add(message, Severity.Success);
-			StateHasChanged();
-		});
+			await InvokeAsync(() =>
+			{
+				Snackbar.Add(message, Severity.Success);
+				StateHasChanged();
+			});
+		}
+		catch (ObjectDisposedException)
+		{
+			// The component went away between the notification arriving and the render.
+			// Nothing to show, and nothing worth logging.
+		}
+	}
+
+	public void Dispose()
+	{
+		// EndorsementSubmissionService lives for the lifetime of the app, so without
+		// this every visit to this page left another subscription behind - the user saw
+		// one notification per visit, and eventually none at all once the disposed
+		// components started throwing.
+		EndorsementSubmissionService.ATSResponseReceived -= OnATSResponse;
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
@@ -257,10 +282,7 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
-		var hasData = previewData.Rows.Any(row =>
-					row.Any(cell => !string.IsNullOrWhiteSpace(cell)));
-
-		if (!hasData)
+		if (previewData.Rows.Count == 0)
 		{
 			Snackbar.Add("The CSV file is empty.", Severity.Error);
 			return;
@@ -269,11 +291,17 @@ public partial class NewOrderComponent
 		isPreview = true;
 		StateHasChanged();
 
+		// Say so when the preview is a sample - a silent cap reads as "this is the whole
+		// file", and the operator is approving an import on the strength of it.
+		var previewMessage = previewData.IsTruncated
+			? $"Showing the first {previewData.Rows.Count} of {previewData.TotalRowCount} rows. All rows will be uploaded."
+			: "Upload has been disabled. Blank detail is not allowed.";
+
 		var parameters = new DialogParameters
 		{
 			{ nameof(PreviewComponent.Headers), previewData.Headers },
 			{ nameof(PreviewComponent.Rows), previewData.Rows },
-			{ nameof(PreviewComponent.Message), "Upload has been disabled. Blank detail is not allowed." }
+			{ nameof(PreviewComponent.Message), previewMessage }
 		};
 
 		var options = new DialogOptions
@@ -328,43 +356,20 @@ public partial class NewOrderComponent
 		}
 	}
 
-	public class CSVPreviewData
+	private async Task<CsvPreviewParser.CsvPreviewResult> BuildCsvPreview()
 	{
-		public List<string> Headers { get; set; } = [];
-		public List<List<string>> Rows { get; set; } = [];
-	}
-
-	private async Task<CSVPreviewData> BuildCsvPreview()
-	{
-		var result = new CSVPreviewData();
-
-		using var stream = bulkUploadFileDetailsDTO.BulkFile!.OpenReadStream();
+		// The 25 MB ceiling matches what InsertBulkSubjectAsync uploads. Without an
+		// explicit limit this used Blazor's 512 KB default and threw on any larger
+		// file - so a 600 KB CSV failed at preview while being perfectly uploadable.
+		using var stream = bulkUploadFileDetailsDTO.BulkFile!
+			.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
 
 		using var reader = new StreamReader(stream);
 
 		var csvContent = await reader.ReadToEndAsync();
 
-		var lines = csvContent
-			.Split(new[] { "\r\n", "\n" },
-				StringSplitOptions.RemoveEmptyEntries);
-
-		if (lines.Length == 0)
-			return result;
-
-		result.Headers = lines[0]
-			.Split(',')
-			.Select(x => x.Trim())
-			.ToList();
-
-		foreach (var line in lines.Skip(1))
-		{
-			result.Rows.Add(
-				line.Split(',')
-					.Select(x => x.Trim())
-					.ToList());
-		}
-
-		return result;
+		// Quote-aware, so the preview matches what CsvHelper parses server-side.
+		return CsvPreviewParser.Parse(csvContent);
 	}
 
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)

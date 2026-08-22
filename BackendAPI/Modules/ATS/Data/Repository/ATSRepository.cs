@@ -61,6 +61,27 @@ public class ATSRepository : IATSRepository
 				.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
 
+	// Deliberately not cached and not decorated: this is the authorization decision for
+	// the anonymous application-form endpoints, so a stale expiry or form status would
+	// keep a spent link working.
+	public async Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken,
+						CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(hashToken))
+			return null;
+
+		return await _dbcontext.EmailInvitationRequests
+				.AsNoTracking()
+				.Where(eir => eir.HashToken == hashToken)
+				.Select(eir => new ApplicationFormClaimDTO
+				{
+					EmailInvitationID = eir.EmailInvitationID,
+					HashTokenExpiration = eir.HashTokenExpiration,
+					ApplicationFormStatus = eir.ApplicationFormStatus
+				})
+				.FirstOrDefaultAsync(cancellationToken);
+	}
+
 	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)
 	{
 		await _dbcontext.SignatureDetails.AddAsync(signatureDetails);
@@ -521,9 +542,14 @@ public class ATSRepository : IATSRepository
 		return true;
 	}
 
+	// Bounded by date. DashboardService discards everything outside the current year
+	// (YTD series) and the trailing turnaround window anyway, so pulling the whole
+	// table - which for a platform super admin was every invitation plus every related
+	// ReportDetails row, on every dashboard load - bought nothing.
 	public async Task<IReadOnlyList<EmailInvitationRequest>> GetDashboardDataAsync(
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
+		DateTime windowStart,
 		CancellationToken cancellationToken)
 	{
 		var invitations = _dbcontext.EmailInvitationRequests.AsNoTracking();
@@ -537,6 +563,12 @@ public class ATSRepository : IATSRepository
 			invitations = invitations.Where(invitation =>
 				invitation.RequestorId == requiredRequestorId.Value);
 		}
+
+		// Keep rows with no OrderCreatedAt: the candidate-response tiles count
+		// invitations by EmailSentStatus, which does not depend on the order date.
+		invitations = invitations.Where(invitation =>
+			!invitation.OrderCreatedAt.HasValue
+			|| invitation.OrderCreatedAt.Value >= windowStart);
 
 		return await invitations
 			.Include(invitation => invitation.ReportDetails)
@@ -688,11 +720,19 @@ public class ATSRepository : IATSRepository
 					|| (x.OrderCompletedAt == afterCompletedAt && x.EmailInvitationID.CompareTo(afterId) > 0))));
 	}
 
-	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var result = await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir => eir.EmailInvitationID == emailInvitationRequestId)
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.FirstName,
@@ -761,13 +801,19 @@ public class ATSRepository : IATSRepository
 			})
 			.FirstOrDefaultAsync(cancellationToken);
 
-		string? diplomaFileName = result!.Educational?.DoctorateDiplomaFileName
+		// An unknown id - or one outside the caller's scope - returns null here. The
+		// null-forgiving dereference below used to turn that into a 500 before the
+		// service's own null check could run.
+		if (result is null)
+			return null;
+
+		string? diplomaFileName = result.Educational?.DoctorateDiplomaFileName
 			?? result.Educational?.MastersDiplomaFileName
 			?? result.Educational?.BachelorsDiplomaFileName
 			?? result.Educational?.SeniorHighSchoolDiplomaFileName
 			?? result.Educational?.HighSchoolDiplomaFileName;
 
-		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileKey
+		string? diplomaFileKey = result.Educational?.DoctorateDiplomaFileKey
 			?? result.Educational?.MastersDiplomaFileKey
 			?? result.Educational?.BachelorsDiplomaFileKey
 			?? result.Educational?.SeniorHighSchoolDiplomaFileKey
@@ -809,13 +855,22 @@ public class ATSRepository : IATSRepository
 		};
 	}
 
+	// The scope predicates are applied inside the query rather than checked afterwards,
+	// so an id outside the caller's scope simply yields no rows - the caller cannot tell
+	// an unauthorized order from a non-existent one.
 	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
 	List<Guid> emailInvitationRequestIds,
+	IReadOnlyCollection<int>? authorizedClientIds,
+	Guid? requiredRequestorId,
 	CancellationToken cancellationToken)
 	{
 		var results = await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir => emailInvitationRequestIds.Contains(eir.EmailInvitationID))
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,

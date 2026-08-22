@@ -188,7 +188,9 @@ public partial class Otp
 		}
 	}
 
-	private async void HandleResendOtp()
+	// async Task, not async void: OnClick awaits the returned task, so a throw here is
+	// observed by the framework instead of being lost.
+	private async Task HandleResendOtp()
 	{
 		SetState(true);
 

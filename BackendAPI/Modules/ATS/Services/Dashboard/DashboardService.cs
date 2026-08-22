@@ -2,67 +2,49 @@ namespace ATS.Services.Dashboard;
 
 public class DashboardService : IDashboardService
 {
+	// Everything the dashboard renders lives inside the current year (the YTD series)
+	// or the trailing 7-day turnaround window. Loading a year is generous for both and
+	// keeps the query bounded as the table grows.
+	private static readonly int DashboardWindowMonths = 12;
+
+	/// <summary>How many orders the "recent orders" panel carries.</summary>
+	private const int RecentOrderCount = 25;
+
 	private readonly IATSRepository _atsRepository;
-	private readonly IUserClientRepository _userClientRepository;
-	private readonly ICurrentUser _currentUser;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 
 	public DashboardService(
 		IATSRepository atsRepository,
-		IUserClientRepository userClientRepository,
-		ICurrentUser currentUser)
+		IAtsAccessScopeResolver accessScopeResolver)
 	{
 		_atsRepository = atsRepository;
-		_userClientRepository = userClientRepository;
-		_currentUser = currentUser;
+		_accessScopeResolver = accessScopeResolver;
 	}
 
 	public async Task<ATSDashboardDTO> GetDashboardAsync(
 		string? requester,
 		CancellationToken cancellationToken)
 	{
-		if (!_currentUser.IsAuthenticated
-			|| _currentUser.UserId is not { } userId
-			|| userId == Guid.Empty)
+		// The role ladder lives in AtsAccessScopeResolver now - this used to be an
+		// inline copy of it.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
 			return new ATSDashboardDTO();
 		}
 
-		IReadOnlyCollection<int>? clientIds;
-		Guid? requiredRequestorId;
-		if (_currentUser.IsPlatformSuperAdmin)
-		{
-			clientIds = null;
-			requiredRequestorId = null;
-		}
-		else if (_currentUser.AtsRoleId is not { } roleId)
-		{
-			return new ATSDashboardDTO();
-		}
-		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
-		{
-			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
-				[userId],
-				cancellationToken);
-			clientIds = assignments
-				.Select(assignment => assignment.ClientId)
-				.Distinct()
-				.ToArray();
-			requiredRequestorId = null;
-		}
-		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			&& _currentUser.AtsClientId is { } clientId)
-		{
-			clientIds = [clientId];
-			requiredRequestorId = userId;
-		}
-		else
-		{
-			return new ATSDashboardDTO();
-		}
+		var now = DateTime.UtcNow;
+		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+		// Whichever is earlier: the start of this calendar year, or 12 months back. In
+		// January the rolling window is the wider of the two.
+		var windowStart = yearStart < now.AddMonths(-DashboardWindowMonths)
+			? yearStart
+			: now.AddMonths(-DashboardWindowMonths);
 
 		var invitations = await _atsRepository.GetDashboardDataAsync(
-			clientIds,
-			requiredRequestorId,
+			scope.AuthorizedClientIds,
+			scope.RequiredOwnerId,
+			windowStart,
 			cancellationToken);
 
 		return CreateDashboard(invitations, requester);
@@ -178,9 +160,12 @@ public class DashboardService : IDashboardService
 		var closedReports = reportRows.Count(report => report.ReportStatus == ReportStatus.ClosedFinalReport);
 		var initialReports = reportRows.Count(report => report.ReportStatus == ReportStatus.InitialReport);
 		var supplementaryReports = reportRows.Count(report => report.ReportStatus == ReportStatus.SupplementaryReport);
+		// "Recent" means recent - this used to project and serialise every invitation
+		// in scope on every dashboard load.
 		var recentOrders = invitations
 			.OrderByDescending(invitation => invitation.OrderCreatedAt)
 			.ThenByDescending(invitation => invitation.EmailInvitationID)
+			.Take(RecentOrderCount)
 			.Select(invitation => new DashboardRecentOrderDTO
 			{
 				SubjectName = $"{invitation.FirstName} {invitation.LastName}".Trim(),

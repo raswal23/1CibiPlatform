@@ -105,6 +105,21 @@ public static class GatewayServiceExtensions
 						QueueLimit = 0
 					}),
 
+					// Partitioned by client IP rather than by policy name: these routes are
+					// anonymous, so a single shared bucket would let one caller starve every
+					// candidate filling in a form. A candidate loads the form once and
+					// submits once; 30/min leaves room for retries and shared office NAT
+					// while making EmailInvitationID enumeration impractical.
+					GatewayConstants.RateLimitPolicies.AnonymousApplicationForm => RateLimitPartition.GetFixedWindowLimiter(
+						httpContext.Connection.RemoteIpAddress?.ToString() ?? policyName,
+						_ => new FixedWindowRateLimiterOptions
+						{
+							PermitLimit = 30,
+							Window = TimeSpan.FromMinutes(1),
+							QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+							QueueLimit = 0
+						}),
+
 					_ => RateLimitPartition.GetFixedWindowLimiter(GatewayConstants.RateLimitPolicies.Default, _ => new FixedWindowRateLimiterOptions
 					{
 						PermitLimit = 500,
