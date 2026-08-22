@@ -1,6 +1,5 @@
-using ATS.Constants;
+﻿using ATS.Constants;
 using ATS.Data.Repository;
-using ATS.Data.Repository.Administration.UserClient;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.AccessScope;

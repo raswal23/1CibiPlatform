@@ -1,0 +1,45 @@
+<MudDialog Class="um-dialog asr-dialog ats-scroll-dialog"
+           Style="padding: 0; width: min(640px, calc(100vw - 24px)); max-width: 640px;">
+    <DialogContent>
+        <div class="asr-shell ats-dialog-shell">
+            <header class="asr-header ats-dialog-header">
+                <div class="asr-header-row">
+                    <div class="asr-header-left">
+                        <div class="asr-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <circle cx="9" cy="8" r="3.2" />
+                                <path d="M3.5 20c0-3.4 2.7-6 5.9-6h.2c1 0 1.9.24 2.7.66" />
+                                <path d="M17 14v6M14 17h6" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="asr-header-text">
+                            <h1>@Title</h1>
+                            <p>@Subtitle</p>
+                        </div>
+                    </div>
+                    <button type="button" class="asr-close" aria-label="Close dialog" @onclick="OnClose">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="asr-body ats-dialog-body">
+                @ChildContent
+            </main>
+
+            <footer class="asr-footer ats-dialog-footer">
+                @FooterContent
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Subtitle { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+    [Parameter, EditorRequired] public RenderFragment? FooterContent { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}

@@ -1,0 +1,109 @@
+﻿@namespace FrontendWebassembly.Component.PhilSys
+@inject NavigationManager Navigation
+@inject IPhilSysService PhilSysService
+@inject IJSRuntime JS
+
+<div class="philsys-basic-form-scope">
+    <MudForm @ref="personalForm" Class="philsys-modern philsys-lookup-form">
+    <MudPaper Class="philsys-modern-card philsys-lookup-card" Elevation="0">
+        <h1 class="philsys-modern-title">Personal information</h1>
+        <p class="philsys-modern-sub philsys-form-subtitle">Enter the details exactly as they appear on the registrant's PhilSys record.</p>
+
+        <div class="philsys-basic-fields">
+            <div class="philsys-basic-row-two">
+                <div class="philsys-field">
+                    <label>First name <span class="philsys-required">*</span></label>
+                    <MudTextField @bind-Value="identityData.first_name"
+                                  Placeholder="Juan"
+                                  FullWidth="true"
+                                  Required="true"
+                                  RequiredError="First Name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  MaxLength="100"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                  Class="philsys-basic-input philsys-uppercase-input" />
+                </div>
+
+                <div class="philsys-field philsys-suffix-field">
+                    <label>Suffix</label>
+                    <MudSelect @bind-Value="identityData!.suffix"
+                               FullWidth="true"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               Class="philsys-basic-input">
+                        <MudSelectItem Value=@("")>None</MudSelectItem>
+                        <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
+                        <MudSelectItem Value=@("Sr.")>Sr.</MudSelectItem>
+                        <MudSelectItem Value=@("III.")>III.</MudSelectItem>
+                        <MudSelectItem Value=@("IV.")>IV.</MudSelectItem>
+                        <MudSelectItem Value=@("V.")>V.</MudSelectItem>
+                        <MudSelectItem Value=@("VI.")>VI.</MudSelectItem>
+                        <MudSelectItem Value=@("VII.")>VII.</MudSelectItem>
+                        <MudSelectItem Value=@("VIII.")>VIII.</MudSelectItem>
+                        <MudSelectItem Value=@("IX.")>IX.</MudSelectItem>
+                        <MudSelectItem Value=@("X.")>X.</MudSelectItem>
+                    </MudSelect>
+                </div>
+            </div>
+
+            <div class="philsys-field">
+                <label>Middle name <span class="philsys-optional">- Optional</span></label>
+                <MudTextField @bind-Value="identityData!.middle_name"
+                              Placeholder="Santos"
+                              FullWidth="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              MaxLength="100"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                              Class="philsys-basic-input philsys-uppercase-input" />
+            </div>
+
+            <div class="philsys-field">
+                <label>Last name <span class="philsys-required">*</span></label>
+                <MudTextField @bind-Value="identityData!.last_name"
+                              Placeholder="Dela Cruz"
+                              Required="true"
+                              FullWidth="true"
+                              RequiredError="Last Name is required"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              MaxLength="100"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                              Class="philsys-basic-input philsys-uppercase-input" />
+            </div>
+
+            <div class="philsys-field">
+                <label>Birth date <span class="philsys-required">*</span></label>
+                <div class="philsys-date-input-wrap">
+                    <MudIcon Icon="@Icons.Material.Outlined.CalendarToday" Class="philsys-date-leading-icon" />
+                    <MudDatePicker @bind-Date="BirthDate"
+                                   Adornment="Adornment.End"
+                                   Placeholder="dd/mm/yyyy"
+                                   Required="true"
+                                   RequiredError="Birth Date is required"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   MaxDate="@DateTime.Today.AddDays(-1)"
+                                   DateFormat="dd/MM/yyyy"
+                                   Class="philsys-basic-input philsys-date-input" />
+                </div>
+                <p class="philsys-field-hint">Must match the birth date on the registrant's <strong>ID</strong>.</p>
+            </div>
+        </div>
+
+        <div class="philsys-modern-actions">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       OnClick="SubmitPersonalInfo"
+                       EndIcon="@Icons.Material.Outlined.ArrowForward"
+                       Class="philsys-next-button">
+                Next
+            </MudButton>
+        </div>
+    </MudPaper>
+    </MudForm>
+</div>

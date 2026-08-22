@@ -3,6 +3,7 @@ namespace FrontendWebassembly.Component.Generic;
 public partial class TableComponent<TItem>
 {
 	[Parameter] public string? Title { get; set; }
+	[Parameter] public string? CountLabel { get; set; }
 	[Parameter] public string? TitleId { get; set; }
 	[Parameter] public string? TableAriaLabel { get; set; }
 	[Parameter] public string? ContainerClass { get; set; }
@@ -76,6 +77,9 @@ public partial class TableComponent<TItem>
 		ToolBarLeft is not null || EnableSearch || EnableReload || !string.IsNullOrWhiteSpace(AddButtonText);
 
 	private string ResolvedTitleId => string.IsNullOrWhiteSpace(TitleId) ? _generatedTitleId : TitleId;
+	private string? ResolvedCountSubtitle => string.IsNullOrWhiteSpace(CountLabel)
+		? null
+		: $"{CursorPagerState?.TotalCount ?? Items?.LongCount() ?? 0} {CountLabel}";
 	private bool HasAccessibleName =>
 		!string.IsNullOrWhiteSpace(Title) || !string.IsNullOrWhiteSpace(TableAriaLabel);
 	private string? AccessibleLabel => string.IsNullOrWhiteSpace(Title) ? TableAriaLabel : null;

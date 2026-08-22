@@ -40,6 +40,8 @@ public partial class EditSubMenuComponent
 	}
 	void Cancel() => EditSubMenuDialog!.Cancel();
 
+	private void ToggleStatus() => EditSubMenu.IsActive = !EditSubMenu.IsActive;
+
 	async Task Submit()
 	{
 		await EditSubMenuForm!.ValidateAsync();

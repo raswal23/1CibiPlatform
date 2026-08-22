@@ -63,13 +63,8 @@ public partial class AuthRepository
 				));
 		}
 	
-	public async Task<AuthUserAppRole> GetAppSubRoleAsync(int appSubRoleId)
-		{
-			var appSubRole = await _dbcontext.AuthUserAppRoles
-			.FirstOrDefaultAsync(x => x.AppRoleId == appSubRoleId);
-	
-			return appSubRole!;
-		}
+	public Task<AuthUserAppRole?> GetAppSubRoleAsync(int appSubRoleId) =>
+		_dbcontext.AuthUserAppRoles.FirstOrDefaultAsync(x => x.AppRoleId == appSubRoleId);
 	
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 		{

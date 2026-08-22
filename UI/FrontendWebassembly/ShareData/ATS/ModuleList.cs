@@ -19,7 +19,7 @@ public static class ModuleList
 			{ 10, ("usermanagement", "User Management", Icons.Material.Filled.ManageAccounts) },
 			{ 11, ("clientassigning", "Client Assigning", Icons.Material.Filled.AssignmentInd) },
 			{ 12, ("aiassistant", "AI Assistant", Icons.Material.Filled.SmartToy) },
-			{ 13, ("bulkuploads", "Bulk Uploads", Icons.Material.Filled.CloudUpload) }
+			{ 13, ("bulkuploads", "Bulk Uploads Status", Icons.Material.Filled.CloudUpload) }
 		};
 
 	// Modules that belong in the primary sidebar navigation rather than under Manage.

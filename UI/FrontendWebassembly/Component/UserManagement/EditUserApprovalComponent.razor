@@ -1,34 +1,33 @@
-﻿<MudDialog Class="um-dialog" Style="padding: 0;">
-    <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Review user approval</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Approve or disapprove the selected user</MudText>
+<UserManagementDialogShell Title="Review user approval"
+                           Subtitle="Approve or disapprove the selected user"
+                           SectionTitle="User details"
+                           SectionHelper="Review before making a decision"
+                           SectionClass="approval-dialog-section"
+                           Icon="@Icons.Material.Outlined.HowToReg"
+                           SplitFooter="true"
+                           OnClose="Cancel">
+    <ChildContent>
+        <MudForm @ref="EditUserApprovalForm">
+            <div class="approval-field">
+                <label>Email<span class="approval-required">*</span></label>
+                <div class="approval-field-display">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path d="M3 7l9 6 9-6" />
+                    </svg>
+                    <span class="approval-email">@User.email</span>
+                    <span class="approval-verified">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                        Verified
+                    </span>
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
             </div>
-
-            <MudDivider />
-
-            <MudPaper Elevation="0" Class="um-dialog-body">
-                <MudForm @ref="EditUserApprovalForm">
-                    <MudTextField @bind-Value="User.email"
-                                  Label="Email"
-                                  ReadOnly
-                                  Adornment="Adornment.Start"
-                                  Variant="Variant.Outlined"
-                                  Margin="Margin.Dense"
-                                  MaxLength="100"
-                                  Class="oneplatform-rounded-input philsys-uppercase-input"
-                                  Required="true" />
-                </MudForm>
-            </MudPaper>
-
-            <div class="um-dialog-footer um-dialog-footer-split">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-danger-button">Disapprove</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Approve</MudButton>
-            </div>
-        </div>
-    </DialogContent>
-</MudDialog>
+        </MudForm>
+    </ChildContent>
+    <FooterContent>
+        <button type="button" class="um-button um-button-danger" @onclick="Cancel">Disapprove</button>
+        <button type="button" class="um-button um-button-save" @onclick="Submit">Approve</button>
+    </FooterContent>
+</UserManagementDialogShell>

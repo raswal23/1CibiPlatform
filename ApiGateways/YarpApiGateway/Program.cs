@@ -47,7 +47,7 @@ var app = builder.Build();
 
 app.UseRouting();
 
-// CSP Configuration
+// Security response headers (CSP, X-Frame-Options, HSTS, etc.)
 app.Use(async (context, next) =>
 {
 	context.Response.Headers["Content-Security-Policy"] =
@@ -59,7 +59,20 @@ app.Use(async (context, next) =>
 		"frame-src 'self' https://liveness.everify.gov.ph; " +   
 		"media-src 'self' https://liveness.everify.gov.ph; " +
 		"connect-src 'self' https: wss: https://s.go-mpulse.net; " +
-		"object-src 'none';";
+		"object-src 'none'; " +
+		"frame-ancestors 'self';";
+
+	context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+	context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+	context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+	context.Response.Headers["Permissions-Policy"] =
+		"camera=(self \"https://liveness.everify.gov.ph\"), microphone=(), geolocation=(), payment=()";
+
+	// HSTS only over HTTPS and never in local dev (RFC 6797; avoids poisoning the browser HSTS cache for localhost)
+	if (!app.Environment.IsDevelopment() && context.Request.IsHttps)
+	{
+		context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+	}
 
 	await next();
 });

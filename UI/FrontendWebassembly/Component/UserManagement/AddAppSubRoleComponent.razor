@@ -1,91 +1,147 @@
-﻿@inject LocalStorageService LocalStorageService
-@inject IUserManagementService UserManagementService
-@inject ISnackbar Snackbar
+@inject LocalStorageService LocalStorageService
 
-<MudDialog Class="um-dialog" Style="padding: 0;">
-    <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Assign application role</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Link a user, application, submenu, and role</MudText>
+<AppSubRoleDialogShell Title="Assign application role"
+                       Subtitle="Link a user to one application and submenu"
+                       OnClose="Cancel">
+    <ChildContent>
+        <MudForm @ref="AddAppSubRoleForm">
+            <section class="asr-section" aria-labelledby="asr-add-user-heading">
+                <div class="asr-section-head">
+                    <span class="asr-section-number">1</span>
+                    <h2 id="asr-add-user-heading">User identity</h2>
+                    <span class="asr-section-helper">Who will receive this access</span>
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
-            </div>
+                <div class="asr-section-body">
+                    <div class="asr-avatar-row">
+                        <div class="asr-avatar" aria-label="Selected user initials">@UserInitials</div>
+                        <div class="asr-avatar-copy">
+                            <strong>@DisplayUserName</strong>
+                            <span>@DisplayUserEmail</span>
+                        </div>
+                    </div>
 
-            <MudDivider />
+                    <div class="asr-field">
+                        <label for="asr-add-user">Link existing user <span class="asr-required">*</span></label>
+                        <div class="asr-input-wrap">
+                            <MudAutocomplete T="UsersDTO"
+                                             Value="selectedUser"
+                                             ValueChanged="OnSelectedUserChanged"
+                                             InputId="asr-add-user"
+                                             Placeholder="Search by name or email"
+                                             SearchFunc="SearchUsers"
+                                             ToStringFunc="GetUserText"
+                                             Required="true"
+                                             RequiredError="User is required"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             MaxItems="50"
+                                             Dense="true"
+                                             OpenOnFocus="true"
+                                             Clearable="true"
+                                             ResetValueOnEmptyText="false"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Outlined.PersonOutline"
+                                             OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                             CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            <MudPaper Elevation="0" Class="um-dialog-body">
-                <MudForm @ref="AddAppSubRoleForm">
-                    <MudStack Spacing="2">
-                        <MudAutocomplete T="UsersDTO"
-                                         Label="User"
-                                         @bind-Value="selectedUser"
-                                         SearchFunc="@SearchUsers"
-                                         ToStringFunc="u => u?.email"
-                                         Variant="Variant.Outlined"
-                                         ProgressIndicatorColor="Color.Default"
-                                         ShowProgressIndicator="true"
-                                         Class="oneplatform-rounded-input"
-                                         Required="true" />
-                        @if (showUserError)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">User is required</MudText>
-                        }
+            <section class="asr-section" aria-labelledby="asr-add-access-heading">
+                <div class="asr-section-head">
+                    <span class="asr-section-number">2</span>
+                    <h2 id="asr-add-access-heading">Access assignment</h2>
+                    <span class="asr-section-helper">One application and submenu per record</span>
+                </div>
+                <div class="asr-section-body">
+                    <div class="asr-grid-two">
+                        <div class="asr-field">
+                            <label for="asr-add-application">Application <span class="asr-required">*</span></label>
+                            <div class="asr-input-wrap">
+                                <MudAutocomplete T="ApplicationsDTO"
+                                                 @bind-Value="selectedApp"
+                                                 InputId="asr-add-application"
+                                                 Placeholder="Select an application"
+                                                 SearchFunc="SearchApplications"
+                                                 ToStringFunc="a => a?.applicationName"
+                                                 Required="true"
+                                                 RequiredError="Application is required"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 MaxItems="50"
+                                                 Dense="true"
+                                                 OpenOnFocus="true"
+                                                 Clearable="true"
+                                                 ResetValueOnEmptyText="false"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentIcon="@Icons.Material.Outlined.Apps"
+                                                 OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                 CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                            </div>
+                        </div>
 
-                        <MudAutocomplete T="ApplicationsDTO"
-                                         Label="Application"
-                                         @bind-Value="selectedApp"
-                                         SearchFunc="@SearchApplications"
-                                         ToStringFunc="a => a?.applicationName"
-                                         Variant="Variant.Outlined"
-                                         ProgressIndicatorColor="Color.Default"
-                                         ShowProgressIndicator="true"
-                                         Class="oneplatform-rounded-input"
-                                         Required="true" />
-                        @if (showAppError)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">Application is required</MudText>
-                        }
+                        <div class="asr-field">
+                            <label for="asr-add-submenu">Submenu <span class="asr-required">*</span></label>
+                            <div class="asr-input-wrap">
+                                <MudAutocomplete T="SubMenusDTO"
+                                                 @bind-Value="selectedMenu"
+                                                 InputId="asr-add-submenu"
+                                                 Placeholder="Select a submenu"
+                                                 SearchFunc="SearchSubMenus"
+                                                 ToStringFunc="s => s?.subMenuName"
+                                                 Required="true"
+                                                 RequiredError="Submenu is required"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 MaxItems="50"
+                                                 Dense="true"
+                                                 OpenOnFocus="true"
+                                                 Clearable="true"
+                                                 ResetValueOnEmptyText="false"
+                                                 Adornment="Adornment.Start"
+                                                 AdornmentIcon="@Icons.Material.Outlined.Menu"
+                                                 OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                 CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                            </div>
+                        </div>
+                    </div>
 
-                        <MudAutocomplete T="SubMenusDTO"
-                                         Label="SubMenu"
-                                         @bind-Value="selectedMenu"
-                                         SearchFunc="@SearchSubMenus"
-                                         ToStringFunc="s => s?.subMenuName"
-                                         Variant="Variant.Outlined"
-                                         ProgressIndicatorColor="Color.Default"
-                                         ShowProgressIndicator="true"
-                                         Class="oneplatform-rounded-input"
-                                         Required="true" />
-                        @if (showSubMenuError)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">SubMenu is required</MudText>
-                        }
-
-                        <MudAutocomplete T="RolesDTO"
-                                         Label="Role"
-                                         @bind-Value="selectedRole"
-                                         SearchFunc="@SearchRoles"
-                                         ToStringFunc="r => r?.roleName"
-                                         Variant="Variant.Outlined"
-                                         ProgressIndicatorColor="Color.Default"
-                                         ShowProgressIndicator="true"
-                                         Class="oneplatform-rounded-input"
-                                         Required="true" />
-                        @if (showRoleError)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">Role is required</MudText>
-                        }
-                    </MudStack>
-                </MudForm>
-            </MudPaper>
-
-            <div class="um-dialog-footer">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
-            </div>
-        </div>
-    </DialogContent>
-</MudDialog>
-
+                    <div class="asr-field">
+                        <label for="asr-add-role">Role <span class="asr-required">*</span></label>
+                        <div class="asr-input-wrap">
+                            <MudAutocomplete T="RolesDTO"
+                                             @bind-Value="selectedRole"
+                                             InputId="asr-add-role"
+                                             Placeholder="Select a role"
+                                             SearchFunc="SearchRoles"
+                                             ToStringFunc="r => r?.roleName"
+                                             Required="true"
+                                             RequiredError="Role is required"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             MaxItems="50"
+                                             Dense="true"
+                                             OpenOnFocus="true"
+                                             Clearable="true"
+                                             ResetValueOnEmptyText="false"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings"
+                                             OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                             CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </MudForm>
+    </ChildContent>
+    <FooterContent>
+        <button type="button" class="asr-button asr-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button" class="asr-button asr-button-save" @onclick="Submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+            </svg>
+            Assign access
+        </button>
+    </FooterContent>
+</AppSubRoleDialogShell>

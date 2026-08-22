@@ -84,11 +84,27 @@
     private RenderFragment ToolbarContent => @<div class="@ToolbarCssClass">
         @if (!string.IsNullOrWhiteSpace(Title))
         {
-            <MudText id="@ResolvedTitleId"
-                     Typo="Typo.h6"
-                     Class="table-component-title gradient-text">
-                @Title
-            </MudText>
+            @if (!string.IsNullOrWhiteSpace(ResolvedCountSubtitle))
+            {
+                <div class="table-component-heading">
+                    <MudText id="@ResolvedTitleId"
+                             Typo="Typo.h6"
+                             Class="table-component-title gradient-text">
+                        @Title
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="table-component-subtitle">
+                        @ResolvedCountSubtitle
+                    </MudText>
+                </div>
+            }
+            else
+            {
+                <MudText id="@ResolvedTitleId"
+                         Typo="Typo.h6"
+                         Class="table-component-title gradient-text">
+                    @Title
+                </MudText>
+            }
         }
 
         @if (HasToolbarActions)

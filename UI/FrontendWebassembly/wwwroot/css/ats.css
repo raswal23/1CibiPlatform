@@ -667,6 +667,206 @@
     margin-left: 6px;
 }
 
+/* Bulk upload subjects dialog: the table card carries .ats-management-card inside an
+   .ats-management-page wrapper (PreviewComponent pattern), so the management search
+   and pager treatment above applies. The pager is restated below at dialog scope:
+   .um-dialog.ats-bulk-subjects-dialog outranks the shared TableComponent pagination
+   rules (which load later and win specificity ties), and it also holds when the
+   running build predates the container-class change. Literal colors, since the
+   dialog may render without the management-page variable scope. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination {
+    display: flex;
+    max-width: 100%;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    border-top: 0;
+    justify-content: flex-end;
+
+    /* The stock MudTablePager bar carries .mud-toolbar, whose align-items:center
+       MudBlazor provides. CursorTablePager renders a plain div without it, so the
+       caption, select, and nav buttons scatter vertically unless restated here. */
+    align-items: center;
+    overflow-x: auto;
+    color: #5b6b8c;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+}
+
+/* The toolbar sizing PackageManagement's pager gets from the shared TableComponent
+   styles, restated here so the dialog pager matches even when the shared scoped
+   rules lose specificity or predate the current build. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-toolbar {
+    box-sizing: border-box;
+    width: 100%;
+    height: auto !important;
+    min-height: 3.5rem;
+    min-width: min(100%, 32rem);
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-spacer {
+    min-width: 0;
+}
+
+/* This pager nests the caption and select inside .mud-table-pagination-select
+   (CursorTablePager); without a display rule they stack vertically. */
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-select {
+    display: flex;
+    align-items: center;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-select .mud-input {
+    min-height: 28px;
+    border: 1px solid #c2d2f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #16233f;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 5px;
+    border: 1.5px solid #c2d2f0;
+    border-radius: 7px;
+    color: #5b6b8c;
+}
+
+.um-dialog.ats-bulk-subjects-dialog .mud-table-pagination-actions .mud-icon-button + .mud-icon-button {
+    margin-left: 6px;
+}
+
+/* ---------- Bulk uploads toolbar: Upload date picker + search + reload ---------- */
+
+/* Mirrors the Search Report toolbar treatment (SearchReportComponent.razor.css) for
+   the bulk uploads card. Lives here rather than in the component's scoped CSS because
+   it styles shared TableComponent internals. Every selector is anchored under
+   .ats-management-page: the shared TableComponent scoped rules (e.g. the toolbar
+   row's `align-items: center`, the left slot's `flex: 0 1 20rem; margin-left: auto`)
+   carry class+scope-attribute specificity AND load after this sheet, so two-class
+   selectors here lose to them - the page anchor is what lets these overrides win. */
+.ats-management-page .bulk-uploads-card .table-component-toolbar-row {
+    flex-wrap: wrap;
+    row-gap: 0.75rem;
+
+    /* The date field is taller than its neighbours (label above the input); bottom-
+       align so all three controls share a baseline, like Search Report's grid. */
+    align-items: flex-end;
+}
+
+.ats-management-page .bulk-uploads-card .table-component-toolbar-left {
+    flex: 0 0 auto;
+    /* Same 400px as .search-report-date-field, so the two pickers lay out their
+       inputs and end adornment identically. */
+    width: 400px;
+    max-width: 100%;
+    min-width: 0;
+
+    /* The shared base rule uses `margin-left: auto` to push this right; the date
+       filter reads as the leading control, so anchor it left and push the rest. */
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.ats-management-page .bulk-uploads-date-field {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ats-management-page .bulk-uploads-date-field label {
+    color: var(--management-text-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* The picker must fill the 400px slot; a shrunk picker pulls its end adornment
+   (calendar icon) away from the field's right edge. */
+.ats-management-page .bulk-uploads-date-field .mud-picker,
+.ats-management-page .bulk-uploads-date-field .mud-picker-inline {
+    width: 100% !important;
+    flex: 1 1 auto;
+}
+
+.ats-management-page .bulk-uploads-date-range .mud-input-control {
+    width: 100%;
+    margin: 0;
+}
+
+/* Same input treatment as the Search Report picker. */
+.ats-management-page .bulk-uploads-date-range .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--management-border-strong);
+    border-radius: 10px;
+}
+
+.ats-management-page .bulk-uploads-date-range .mud-input-slot {
+    color: var(--management-text-1);
+    font-size: 13.5px;
+}
+
+.ats-management-page .bulk-uploads-date-range .mud-input-adornment {
+    color: var(--management-blue-600);
+}
+
+.ats-management-page .bulk-uploads-date-range input::placeholder {
+    color: var(--management-text-3);
+    opacity: 1;
+}
+
+/* The management-card search input is 40px while the outlined picker is 56px; pin
+   the search to 56px and nudge the 38px reload up 9px, as Search Report does. */
+.ats-management-page .bulk-uploads-card .table-component-search .mud-input-control,
+.ats-management-page .bulk-uploads-card .table-component-search .table-component-search-input {
+    height: 56px !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+}
+
+.ats-management-page .bulk-uploads-card .table-component-search .mud-input-control-input-container {
+    height: 56px !important;
+    min-height: 56px !important;
+}
+
+.ats-management-page .bulk-uploads-card .table-component-search .mud-input {
+    box-sizing: border-box;
+    height: 56px !important;
+    min-height: 56px !important;
+}
+
+.ats-management-page .bulk-uploads-card .table-component-search .mud-input-slot,
+.ats-management-page .bulk-uploads-card .table-component-search input.mud-input-root {
+    height: 56px !important;
+    min-height: 56px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.ats-management-page .bulk-uploads-card .table-component-reload-button {
+    margin-bottom: 9px;
+}
+
+/* Below the TableComponent breakpoint the toolbar stacks; let the picker go full
+   width like the controls beside it. */
+@media (max-width: 960px) {
+    .ats-management-page .bulk-uploads-card .table-component-toolbar-left {
+        width: 100%;
+        flex: 1 1 100%;
+        margin-right: 0;
+    }
+}
+
 @media (max-width: 900px) {
     .ats-management-card.responsive-table-container {
         padding: 22px 20px 8px;
@@ -1491,7 +1691,7 @@
     height: 100vh;
     max-height: 100vh;
     flex-shrink: 0;
-    background: var(--ats-navy-900);
+    background: linear-gradient(100deg, #071230 0%, #0f2a5c 45%, #2f6fed 100%);
     padding: 22px 14px;
     color: #fff;
     display: flex;

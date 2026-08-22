@@ -1,0 +1,195 @@
+@namespace FrontendWebassembly.Component.ATS
+@inject IBulkUploadService BulkUploadService
+@inject IEndorsementSubmissionService EndorsementSubmissionService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudDialog Class="um-dialog ats-bulk-subjects-dialog ats-scroll-dialog"
+           Gutters="false"
+           ContentClass="ats-bulk-subjects-content">
+
+    <DialogContent>
+      @* Same pattern as PreviewComponent: the management-page wrapper lets the shared
+         ats.css management-card table treatment (headers, cells, search, pager) apply
+         inside the dialog, and the ats-scroll-dialog/shell/header/body classes keep
+         the header fixed while only the body scrolls on small screens. *@
+      <div class="ats-management-page ats-bulk-subjects-shell ats-dialog-shell">
+        @* Header styled after PreviewComponent's gradient dialog header. *@
+        <header class="ats-bulk-subjects-header ats-dialog-header">
+            <div class="ats-bulk-subjects-header-content">
+                <span class="ats-bulk-subjects-header-icon" aria-hidden="true">
+                    <MudIcon Icon="@Icons.Material.Outlined.Description" />
+                </span>
+
+                <div class="ats-bulk-subjects-header-text">
+                    <h2>@FileName</h2>
+                    <p>@HeaderSubtitle</p>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="ats-bulk-subjects-close"
+                    aria-label="Close subject list"
+                    @onclick="Cancel">
+                <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+            </button>
+        </header>
+
+        <div class="ats-bulk-subjects-body ats-dialog-body">
+        <div class="ats-bulk-subjects-filter-row">
+            <div class="ats-segmented ats-bulk-subjects-segmented"
+                 role="group"
+                 aria-label="Filter subjects by email status">
+
+                @foreach (var segment in StatusSegments)
+                {
+                    <button type="button"
+                            class="@GetSegmentClass(segment.Value)"
+                            aria-pressed="@(_activeStatus == segment.Value)"
+                            disabled="@_isLoadingCounts"
+                            @onclick="@(() => SetStatusAsync(segment.Value))">
+
+                        <span class="bulk-status-dot @segment.Modifier" aria-hidden="true"></span>
+
+                        @segment.Label
+
+                        <span class="ats-segment-count ats-bulk-subjects-count">@CountFor(segment.Value)</span>
+                    </button>
+                }
+            </div>
+
+            @* Same control as the Package Management "Add package" button. *@
+            <button type="button"
+                    class="ats-management-button ats-bulk-subjects-export"
+                    disabled="@(_isExporting || _counts.Total == 0)"
+                    @onclick="ExportSubjectsAsync">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16" />
+                </svg>
+                @(_isExporting ? "Exporting..." : "Export CSV")
+            </button>
+        </div>
+
+        <TableComponent TItem="BulkUploadSubjectListDTO"
+                        @ref="_subjectsTable"
+                        EnableSearch="true"
+                        EnableReload="true"
+                        SearchLabel=""
+                        SearchPlaceholder="Search subject, email or mobile"
+                        ContainerClass="ats-management-card ats-bulk-subjects-table-card"
+                        TableClass="ats-bulk-subjects-table"
+                        TableAriaLabel="Subjects created from this bulk upload"
+                        ColumnCount="6"
+                        RowsPerPage="10"
+                        LoadServerData="LoadSubjectsAsync"
+                        CursorPagerState="_subjectsLoader"
+                        SearchString="@_searchString"
+                        SearchStringChanged="@((string value) => _searchString = value)">
+
+            <HeaderTemplate>
+                <MudTh>Subject</MudTh>
+                <MudTh>Contact</MudTh>
+                <MudTh>Invitation email</MudTh>
+                <MudTh>Application form</MudTh>
+                <MudTh>Order</MudTh>
+                <MudTh Class="ats-bulk-subjects-actions-header">Actions</MudTh>
+            </HeaderTemplate>
+
+            <RowTemplate Context="subject">
+                <MudTd DataLabel="Subject">
+                    <div class="ats-bulk-subject">
+                        <span class="ats-bulk-subject-initials" aria-hidden="true">
+                            @GetInitials(subject.FirstName, subject.LastName)
+                        </span>
+                        <span class="ats-bulk-subject-name">@FormatName(subject)</span>
+                    </div>
+                </MudTd>
+
+                <MudTd DataLabel="Contact">
+                    <div class="ats-bulk-subject-contact">
+                        <span class="ats-bulk-subject-email">@subject.EmailAddress</span>
+                        <span class="ats-bulk-subject-mobile">
+                            @(string.IsNullOrWhiteSpace(subject.MobileNumber) ? "—" : subject.MobileNumber)
+                        </span>
+                    </div>
+                </MudTd>
+
+                <MudTd DataLabel="Invitation email">
+                    <div class="ats-bulk-subject-email-state">
+                        <span class="ats-bulk-badge @GetEmailStatusClass(subject.EmailSentStatus)">
+                            @GetEmailStatusLabel(subject.EmailSentStatus)
+                        </span>
+
+                        @if (subject.EmailSentAt.HasValue)
+                        {
+                            <span class="ats-bulk-subject-meta"
+                                  title="@FormatAbsolute(subject.EmailSentAt)">
+                                @FormatRelative(subject.EmailSentAt)
+                            </span>
+                        }
+
+                        @if (subject.EmailSendAttempts > 1)
+                        {
+                            <span class="ats-bulk-subject-attempts"
+                                  title="@($"The email job has tried this invitation {subject.EmailSendAttempts} times")">
+                                @subject.EmailSendAttempts attempts
+                            </span>
+                        }
+                    </div>
+                </MudTd>
+
+                <MudTd DataLabel="Application form">
+                    <div class="ats-bulk-subject-email-state">
+                        <span class="ats-bulk-badge @GetFormStatusClass(subject.ApplicationFormStatus)">
+                            @GetFormStatusLabel(subject.ApplicationFormStatus)
+                        </span>
+
+                        @if (subject.FormCompletedAt.HasValue)
+                        {
+                            <span class="ats-bulk-subject-meta"
+                                  title="@FormatAbsolute(subject.FormCompletedAt)">
+                                @FormatRelative(subject.FormCompletedAt)
+                            </span>
+                        }
+                    </div>
+                </MudTd>
+
+                <MudTd DataLabel="Order">
+                    <span class="ats-bulk-subject-order">
+                        @(string.IsNullOrWhiteSpace(subject.OrderStatus) ? "—" : subject.OrderStatus)
+                    </span>
+                </MudTd>
+
+                <MudTd DataLabel="Actions" Class="ats-bulk-subjects-actions-cell">
+                    @if (CanResend(subject))
+                    {
+                        <MudTooltip Text="@GetResendTooltip(subject)">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Refresh"
+                                           Size="Size.Small"
+                                           Class="ats-bulk-subject-resend"
+                                           aria-label="@($"Resend invitation to {FormatName(subject)}")"
+                                           Disabled="@(_resendingInvitationId == subject.EmailInvitationID)"
+                                           OnClick="@(() => ConfirmResendAsync(subject))" />
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <span class="bulk-muted" title="@GetResendBlockedReason(subject)">—</span>
+                    }
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsTemplate>
+                <div class="ats-console-empty-state">
+                    <div class="ats-console-empty-icon">👤</div>
+                    <div class="ats-console-empty-title">@EmptyTitle</div>
+                    <div class="ats-console-empty-sub">@EmptySubtitle</div>
+                </div>
+            </NoRecordsTemplate>
+
+        </TableComponent>
+        </div>
+      </div>
+    </DialogContent>
+</MudDialog>

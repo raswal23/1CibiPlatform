@@ -54,6 +54,16 @@
     font-weight: 700 !important;
 }
 
+.table-component-heading {
+    min-width: 0;
+}
+
+.responsive-table-container ::deep .table-component-subtitle {
+    display: block;
+    margin-top: 2px;
+    color: var(--mud-palette-text-secondary);
+}
+
 .table-component-toolbar-row {
     display: flex;
     grid-column: 2;

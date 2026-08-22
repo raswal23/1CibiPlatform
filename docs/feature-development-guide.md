@@ -342,10 +342,10 @@ For a page/component, normally keep three colocated files:
 
 Use `public partial class <Feature>` in the `.razor.cs` file. Keep substantial C# out of `@code` blocks. Small markup-only components are acceptable, but new feature screens should follow the separated pattern requested for maintainability.
 
-For current visual direction, inspect modern files under `Component/ATS` immediately before implementation, especially:
+For current visual direction, inspect modern files under the feature folders of `Component/ATS` immediately before implementation, especially:
 
-- `UserManagement.razor` and `UserManagement.razor.css` for page/table/search/action styling;
-- `AddUserComponent.razor`, `.razor.cs`, and `.razor.css` for modern dialogs/forms;
+- `UserManagement/UserManagement.razor` and `UserManagement/UserManagement.razor.css` for page/table/search/action styling;
+- `UserManagement/AddUserComponent.razor`, `.razor.cs`, and `.razor.css` for modern dialogs/forms;
 - the corresponding Add/Edit Client, Role, Module, and Package components for comparable workflows.
 
 Follow their design language: ATS layout, navy/blue palette, Poppins headings, Inter body text, rounded cards/dialogs, restrained shadows, consistent buttons, accessible labels/focus states, responsive layout, and MudBlazor components where already established. Reuse shared generic components and `CrudPageBase`/shared loaders where suitable.

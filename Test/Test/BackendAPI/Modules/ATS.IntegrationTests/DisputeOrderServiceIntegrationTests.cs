@@ -2,7 +2,7 @@
 using ATS.Services.AccessScope;
 using ATS.Constants;
 using ATS.Data.Entities;
-using ATS.Data.Repository.Administration.UserClient;
+using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.DisputeOrder;

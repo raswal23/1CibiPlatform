@@ -1,11 +1,6 @@
-using ATS.Data.Cache.Administration;
+using ATS.Data.Cache;
 using ATS.Data.Context;
-using ATS.Data.Repository.Administration.Clients;
-using ATS.Data.Repository.Administration.Modules;
-using ATS.Data.Repository.Administration.PackageManagement;
-using ATS.Data.Repository.Administration.Roles;
-using ATS.Data.Repository.Administration.UserClient;
-using ATS.Data.Repository.Administration.Users;
+using ATS.Data.Repository;
 using ATS.ServiceConfig;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +11,7 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 public class ATSRepositoryRegistrationTests
 {
 	[Fact]
-	public void AddATSServices_ShouldDecorateEachAdministrationRepository()
+	public void AddATSServices_ShouldDecorateAggregateAndForwardFocusedInterfaces()
 	{
 		var services = new ServiceCollection();
 		services.AddLogging();
@@ -31,26 +26,35 @@ public class ATSRepositoryRegistrationTests
 		});
 		using var scope = provider.CreateScope();
 
-		AssertDecorator<IPackageRepository, PackageCacheRepository, PackageRepository>(scope.ServiceProvider);
-		AssertDecorator<IClientRepository, ClientCacheRepository, ClientRepository>(scope.ServiceProvider);
-		AssertDecorator<IRoleRepository, RoleCacheRepository, RoleRepository>(scope.ServiceProvider);
-		AssertDecorator<IModuleRepository, ModuleCacheRepository, ModuleRepository>(scope.ServiceProvider);
-		AssertDecorator<IATSUserRepository, ATSUserCacheRepository, ATSUserRepository>(scope.ServiceProvider);
-		AssertDecorator<IUserClientRepository, UserClientCacheRepository, UserClientRepository>(scope.ServiceProvider);
-	}
+		var aggregate = scope.ServiceProvider.GetRequiredService<IATSRepository>();
+		aggregate.Should().BeOfType<ATSCacheRepository>();
 
-	private static void AssertDecorator<TService, TDecorator, TImplementation>(IServiceProvider provider)
-		where TService : class
-		where TDecorator : class, TService
-		where TImplementation : class, TService
-	{
-		var service = provider.GetRequiredService<TService>();
-		service.Should().BeOfType<TDecorator>();
-
-		var repositoryField = typeof(TDecorator).GetField(
-			"_repository",
+		var repositoryField = typeof(ATSCacheRepository).GetField(
+			"_atsRepository",
 			System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 		repositoryField.Should().NotBeNull();
-		repositoryField!.GetValue(service).Should().BeOfType<TImplementation>();
+		repositoryField!.GetValue(aggregate).Should().BeOfType<ATSRepository>();
+
+		AssertForwardsToAggregate<IApplicantSearchProjectionRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IApplicationFormRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IATSUserRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IBulkUploadRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IClientRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IDashboardRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IDisputeOrderRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IEmailInvitationRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IModuleRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IOrderHistoryRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IPackageRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IReportRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IRoleRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IUserClientRepository>(scope.ServiceProvider, aggregate);
+		AssertForwardsToAggregate<IWithdrawnApplicationRepository>(scope.ServiceProvider, aggregate);
+	}
+
+	private static void AssertForwardsToAggregate<TService>(IServiceProvider provider, IATSRepository aggregate)
+		where TService : class
+	{
+		provider.GetRequiredService<TService>().Should().BeSameAs(aggregate);
 	}
 }

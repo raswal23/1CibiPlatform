@@ -1,4 +1,4 @@
-﻿namespace FrontendWebassembly.Component.UserManagement;
+namespace FrontendWebassembly.Component.UserManagement;
 
 public partial class EditRoleComponent
 {
@@ -11,15 +11,17 @@ public partial class EditRoleComponent
 	public RolesDTO Role { get; set; } = new();
 
 	private RolesDTO EditRole = new();
+
 	protected override void OnParametersSet()
 	{
-		Role = new RolesDTO
+		EditRole = new RolesDTO
 		{
 			roleId = Role.roleId,
 			roleName = Role.roleName,
 			Description = Role.Description
 		};
 	}
+
 	void Cancel() => EditRoleDialog!.Cancel();
 
 	async Task Submit()
@@ -27,7 +29,7 @@ public partial class EditRoleComponent
 		await EditRoleForm!.ValidateAsync();
 		if (EditRoleForm!.IsValid)
 		{
-			EditRoleDialog!.Close(DialogResult.Ok(EditRoleDialog));
+			EditRoleDialog!.Close(DialogResult.Ok(EditRole));
 		}
 	}
 }

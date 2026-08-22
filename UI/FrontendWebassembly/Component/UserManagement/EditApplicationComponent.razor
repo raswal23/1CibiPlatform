@@ -1,65 +1,84 @@
-﻿<MudDialog Class="um-dialog" Style="padding: 0;">
-    <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Edit application</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Update application details</MudText>
+<UserManagementDialogShell Title="Edit application"
+                           Subtitle="Update application details"
+                           SectionTitle="Application details"
+                           SectionHelper="Review and update this record"
+                           SecondarySectionTitle="Availability"
+                           SecondarySectionHelper="Turn the application on or off"
+                           Icon="@Icons.Material.Outlined.EditNote"
+                           OnClose="Cancel">
+    <ChildContent>
+        <MudForm @ref="EditApplicationForm">
+            <div class="um-field">
+                <label for="um-edit-application-name">Application name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudAutocomplete T="string"
+                                     @bind-Value="EditApplication.applicationName"
+                                     InputId="um-edit-application-name"
+                                     Placeholder="Select an application name"
+                                     Required="true"
+                                     RequiredError="Application Name is required"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     MaxLength="100"
+                                     SearchFunc="SearchApplications"
+                                     ToStringFunc="@(x => x)"
+                                     ResetValueOnEmptyText="false"
+                                     Clearable="true"
+                                     Dense="true"
+                                     OpenOnFocus="true"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Outlined.Apps"
+                                     OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                     CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
             </div>
 
-            <MudDivider />
-
-            <MudPaper Elevation="0" Class="um-dialog-body">
-                <MudForm @ref="EditApplicationForm">
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="EditApplication.applicationId"
-                                      Label="Application Id"
-                                      ReadOnly
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <MudAutocomplete T="string"
-                                         @bind-Value="EditApplication.applicationName"
-                                         Label="Application Name"
-                                         Required="true"
-                                         RequiredError="Application Name is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxLength="100"
-                                         SearchFunc="SearchApplications"
-                                         ToStringFunc="@(x => x)"
-                                         ResetValueOnEmptyText="false"
-                                         Clearable="true"
-                                         Dense="true"
-                                         Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <MudTextField @bind-Value="EditApplication.Description"
-                                      Label="Description"
-                                      Required="true"
-                                      RequiredError="Description is required"
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <div class="um-switch-row">
-                            <MudText Class="um-dialog-label">Is active</MudText>
-                            <MudCheckBox T="bool" @bind-Value="EditApplication.IsActive" />
-                        </div>
-                    </MudStack>
-                </MudForm>
-            </MudPaper>
-
-            <div class="um-dialog-footer">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            <div class="um-field">
+                <label for="um-edit-application-description">Application description <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-description-wrap">
+                    <MudTextField @bind-Value="EditApplication.Description"
+                                  InputId="um-edit-application-description"
+                                  Placeholder="What does this application provide?"
+                                  Required="true"
+                                  RequiredError="Application description is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="4"
+                                  Immediate="true"
+                                  MaxLength="240"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Article" />
+                </div>
+                <div class="um-character-count">@(EditApplication.Description?.Length ?? 0) / 240</div>
+            </div>
+        </MudForm>
+    </ChildContent>
+    <SecondaryContent>
+        <div class="um-field">
+            <label>Status</label>
+            <div class="um-status-row">
+                <div class="um-status-copy">
+                    <p>Application @(EditApplication.IsActive ? "active" : "inactive")</p>
+                    <span>Available to assign to users</span>
+                </div>
+                <div class="um-status-control">
+                    <span class="um-status-badge @(EditApplication.IsActive ? string.Empty : "is-off")">
+                        @(EditApplication.IsActive ? "Active" : "Inactive")
+                    </span>
+                    <button type="button"
+                            class="um-toggle @(EditApplication.IsActive ? string.Empty : "is-off")"
+                            role="switch"
+                            aria-checked="@EditApplication.IsActive.ToString().ToLowerInvariant()"
+                            aria-label="Toggle application status"
+                            @onclick="ToggleStatus">
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </div>
-    </DialogContent>
-</MudDialog>
+    </SecondaryContent>
+    <FooterContent>
+        <button type="button" class="um-button um-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button" class="um-button um-button-save" @onclick="Submit">Save changes</button>
+    </FooterContent>
+</UserManagementDialogShell>

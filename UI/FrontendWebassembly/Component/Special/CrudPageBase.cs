@@ -23,10 +23,11 @@ public abstract class CrudPageBase : SecurePageBase
 
 	protected async Task OpenAddDialogAsync<TComponent, TDto>(
 		string title,
-		Func<TDto, Task> onAdd)
+		Func<TDto, Task> onAdd,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase
 	{
-		var dto = await DialogWorkflowService.OpenAddDialogAsync<TComponent, TDto>(DialogService, title);
+		var dto = await DialogWorkflowService.OpenAddDialogAsync<TComponent, TDto>(DialogService, title, options);
 		if (dto is not null)
 		{
 			await onAdd(dto);
@@ -37,14 +38,16 @@ public abstract class CrudPageBase : SecurePageBase
 		string title,
 		string parameterName,
 		TDto dto,
-		Func<TDto, Task> onEdit)
+		Func<TDto, Task> onEdit,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase
 	{
 		var editedDto = await DialogWorkflowService.OpenEditDialogAsync<TComponent, TDto>(
 			DialogService,
 			title,
 			parameterName,
-			dto);
+			dto,
+			options);
 
 		if (editedDto is not null)
 		{

@@ -3,12 +3,12 @@ namespace ATS.Services.BulkUploadMonitoring;
 public sealed class BulkUploadMonitoringService : IBulkUploadMonitoringService
 {
 	private readonly ILogger<BulkUploadMonitoringService> _logger;
-	private readonly IBulkUploadRepository _bulkUploadRepository;
+	private readonly IBulkUploadDashboardRepository _bulkUploadRepository;
 	private readonly IAtsAccessScopeResolver _scopeResolver;
 
 	public BulkUploadMonitoringService(
 		ILogger<BulkUploadMonitoringService> logger,
-		IBulkUploadRepository bulkUploadRepository,
+		IBulkUploadDashboardRepository bulkUploadRepository,
 		IAtsAccessScopeResolver scopeResolver)
 	{
 		_logger = logger;

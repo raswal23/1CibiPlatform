@@ -1,0 +1,51 @@
+﻿@namespace FrontendWebassembly.Component.PhilSys
+@inject NavigationManager NavigationManager
+
+<div class="philsys-retransact-shell">
+    <MudPaper Class="philsys-retransact-card" Elevation="0">
+        @if (IsCompleted)
+        {
+            <div class="philsys-retransact-badge-wrap">
+                <div class="philsys-retransact-badge is-warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7.5v5.5M12 16.2v.1" />
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="philsys-retransact-title">Session Not Found</h1>
+            <p class="philsys-retransact-subtitle">
+                This liveness verification link has already been completed or is no longer valid.
+            </p>
+        }
+        else
+        {
+            <div class="philsys-retransact-badge-wrap">
+                <div class="philsys-retransact-badge is-expired">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7.2V12l3.2 2" />
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="philsys-retransact-title">Session Expired</h1>
+            <p class="philsys-retransact-subtitle">
+                Your liveness verification session has expired. Please start a new session to continue your PhilSys verification process.
+            </p>
+        }
+
+        <div class="philsys-retransact-action">
+            <MudButton ButtonType="ButtonType.Button"
+                       Variant="Variant.Filled"
+                       FullWidth="true"
+                       OnClick="StartNewSession"
+                       Disabled="@DisableButton()"
+                       StartIcon="@Icons.Material.Outlined.Refresh"
+                       Class="philsys-retransact-button">
+                Start New Session
+            </MudButton>
+        </div>
+    </MudPaper>
+</div>

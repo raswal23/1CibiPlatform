@@ -1,65 +1,85 @@
-﻿<MudDialog Class="um-dialog" Style="padding: 0;">
-    <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Edit submenu</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Update submenu details</MudText>
+<UserManagementDialogShell Title="Edit submenu"
+                           Subtitle="Update submenu details"
+                           SectionTitle="Submenu details"
+                           SectionHelper="Review and update this entry"
+                           SecondarySectionTitle="Availability"
+                           SecondarySectionHelper="Turn the submenu on or off"
+                           Icon="@Icons.Material.Outlined.EditNote"
+                           OnClose="Cancel">
+    <ChildContent>
+        <MudForm @ref="EditSubMenuForm">
+            <div class="um-field">
+                <label for="um-edit-submenu-name">Submenu name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudAutocomplete T="string"
+                                     @bind-Value="EditSubMenu.subMenuName"
+                                     InputId="um-edit-submenu-name"
+                                     Placeholder="Select a submenu name"
+                                     Required="true"
+                                     RequiredError="SubMenu Name is required"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     MaxLength="100"
+                                     MaxItems="50"
+                                     SearchFunc="SearchSubMenus"
+                                     ToStringFunc="@(x => x)"
+                                     ResetValueOnEmptyText="false"
+                                     Clearable="true"
+                                     Dense="true"
+                                     OpenOnFocus="true"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Outlined.Menu"
+                                     OpenIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                     CloseIcon="@Icons.Material.Filled.KeyboardArrowUp" />
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
             </div>
 
-            <MudDivider />
-
-            <MudPaper Elevation="0" Class="um-dialog-body">
-                <MudForm @ref="EditSubMenuForm">
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="EditSubMenu.subMenuId"
-                                      Label="SubMenu Id"
-                                      ReadOnly
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <MudAutocomplete T="string"
-                                         @bind-Value="EditSubMenu.subMenuName"
-                                         Label="SubMenu Name"
-                                         Required="true"
-                                         RequiredError="SubMenu Name is required"
-                                         Variant="Variant.Outlined"
-                                         Margin="Margin.Dense"
-                                         MaxLength="100"
-                                         SearchFunc="SearchSubMenus"
-                                         ToStringFunc="@(x => x)"
-                                         ResetValueOnEmptyText="false"
-                                         Clearable="true"
-                                         Dense="true"
-                                         Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <MudTextField @bind-Value="EditSubMenu.Description"
-                                      Label="Description"
-                                      Required="true"
-                                      RequiredError="Description is required"
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <div class="um-switch-row">
-                            <MudText Class="um-dialog-label">Is active</MudText>
-                            <MudCheckBox T="bool" @bind-Value="EditSubMenu.IsActive" />
-                        </div>
-                    </MudStack>
-                </MudForm>
-            </MudPaper>
-
-            <div class="um-dialog-footer">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            <div class="um-field">
+                <label for="um-edit-submenu-description">Submenu description <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-description-wrap">
+                    <MudTextField @bind-Value="EditSubMenu.Description"
+                                  InputId="um-edit-submenu-description"
+                                  Placeholder="What does this submenu provide?"
+                                  Required="true"
+                                  RequiredError="Description is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="4"
+                                  Immediate="true"
+                                  MaxLength="100"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Article" />
+                </div>
+                <div class="um-character-count" aria-live="polite">@(EditSubMenu.Description?.Length ?? 0) / 100</div>
+            </div>
+        </MudForm>
+    </ChildContent>
+    <SecondaryContent>
+        <div class="um-field">
+            <label>Status</label>
+            <div class="um-status-row">
+                <div class="um-status-copy">
+                    <p>Submenu @(EditSubMenu.IsActive ? "active" : "inactive")</p>
+                    <span>Available to assign to roles</span>
+                </div>
+                <div class="um-status-control">
+                    <span class="um-status-badge @(EditSubMenu.IsActive ? string.Empty : "is-off")">
+                        @(EditSubMenu.IsActive ? "Active" : "Inactive")
+                    </span>
+                    <button type="button"
+                            class="um-toggle @(EditSubMenu.IsActive ? string.Empty : "is-off")"
+                            role="switch"
+                            aria-checked="@EditSubMenu.IsActive.ToString().ToLowerInvariant()"
+                            aria-label="Toggle submenu status"
+                            @onclick="ToggleStatus">
+                        <span></span>
+                    </button>
+                </div>
             </div>
         </div>
-    </DialogContent>
-</MudDialog>
+    </SecondaryContent>
+    <FooterContent>
+        <button type="button" class="um-button um-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button" class="um-button um-button-save" @onclick="Submit">Save changes</button>
+    </FooterContent>
+</UserManagementDialogShell>

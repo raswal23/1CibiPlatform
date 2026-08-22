@@ -136,19 +136,8 @@ public class UserManagementService : IUserManagementService
 		return PatchForAsync<EditRoleDTO>("auth/editrole", new { editRole });
 	}
 
-	public Task<ServiceResponse<EditAppSubRoleDTO>> EditAppSubRoleAsync(AppSubRolesDTO editAppSubRoleDTO)
-	{
-		var editAppSubRole = new EditAppSubRoleDTO
-		{
-			AppSubRoleId = editAppSubRoleDTO.AppRoleId,
-			UserId = editAppSubRoleDTO.UserId,
-			AppId = editAppSubRoleDTO.AppId,
-			SubMenuId = editAppSubRoleDTO.SubMenuId,
-			RoleId = editAppSubRoleDTO.RoleId,
-		};
-
-		return PatchForAsync<EditAppSubRoleDTO>("auth/editappsubrole", new { editAppSubRole });
-	}
+	public Task<ServiceResponse<AppSubRoleDTO>> EditAppSubRoleAsync(EditAppSubRoleDTO editAppSubRole)
+		=> PatchForAsync<AppSubRoleDTO>("auth/editappsubrole", new { editAppSubRole });
 
 	public Task<ServiceResponse<EditUserDTO>> EditUserAsync(UnApprovedUsersDTO editUserDTO)
 	{

@@ -27,6 +27,8 @@ public partial class AddSubMenuComponent
 
 	void Cancel() => MudDialog!.Cancel();
 
+	private void ToggleStatus() => SubMenu.IsActive = !SubMenu.IsActive;
+
 	async Task Submit()
 	{
 		await AddSubMenuForm!.ValidateAsync();

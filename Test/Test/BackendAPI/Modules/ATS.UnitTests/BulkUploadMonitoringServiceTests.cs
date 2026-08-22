@@ -1,6 +1,6 @@
 using ATS.Constants;
 using ATS.Data.DTO;
-using ATS.Data.Repository.BulkUploads;
+using ATS.Data.Repository.BulkUploadDashboard;
 using ATS.Services.AccessScope;
 using ATS.Services.BulkUploadMonitoring;
 using BuildingBlocks.Exceptions;
@@ -18,7 +18,7 @@ public class BulkUploadMonitoringServiceTests
 	private static readonly Guid UploaderId = Guid.CreateVersion7();
 	private static readonly Guid FileId = Guid.CreateVersion7();
 
-	private readonly Mock<IBulkUploadRepository> _repository = new();
+	private readonly Mock<IBulkUploadDashboardRepository> _repository = new();
 	private readonly Mock<IAtsAccessScopeResolver> _scopeResolver = new();
 	private readonly BulkUploadMonitoringService _service;
 

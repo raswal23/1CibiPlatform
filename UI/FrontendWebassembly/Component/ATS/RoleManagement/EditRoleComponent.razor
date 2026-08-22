@@ -1,0 +1,123 @@
+﻿@namespace FrontendWebassembly.Component.ATS
+<MudDialog Class="um-dialog er-dialog ats-scroll-dialog" Style="padding: 0; width: min(520px, calc(100vw - 24px)); max-width: 520px;">
+    <DialogContent>
+        <div class="er-shell ats-dialog-shell">
+            <header class="er-header ats-dialog-header">
+                <div class="er-header-row">
+                    <div class="er-header-left">
+                        <div class="er-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </div>
+                        <div class="er-header-text">
+                            <h1>Edit role</h1>
+                            <p>Update role details</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="er-close" aria-label="Close edit role dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="er-body ats-dialog-body">
+                <MudForm @ref="EditRoleForm">
+                    <section class="er-section" aria-labelledby="edit-role-details-heading">
+                        <div class="er-section-head">
+                            <span class="er-section-number">1</span>
+                            <h2 id="edit-role-details-heading">Role details</h2>
+                            <span class="er-section-helper">Name and describe the role</span>
+                        </div>
+
+                        <div class="er-section-body">
+                            <div class="er-field">
+                                <label for="er-role-name">Role name <span class="er-required">*</span></label>
+                                <div class="er-input-wrap er-name-wrap">
+                                    <MudTextField @bind-Value="EditRole.RoleName"
+                                                  InputId="er-role-name"
+                                                  Placeholder="e.g. Account Manager"
+                                                  Required="true"
+                                                  RequiredError="Role name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="100"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Shield"
+                                                  Class="er-control" />
+                                </div>
+                            </div>
+
+                            <div class="er-field">
+                                <label for="er-role-description">Role description <span class="er-required">*</span></label>
+                                <div class="er-input-wrap er-description-wrap">
+                                    <MudTextField @bind-Value="EditRole.RoleDescription"
+                                                  InputId="er-role-description"
+                                                  Placeholder="What can users with this role do?"
+                                                  Required="true"
+                                                  RequiredError="Role description is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  Lines="4"
+                                                  Immediate="true"
+                                                  MaxLength="240"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
+                                                  Class="er-control er-description-control" />
+                                </div>
+                                <div class="er-character-count" aria-live="polite">@DescriptionLength / 240</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="er-section" aria-labelledby="edit-role-availability-heading">
+                        <div class="er-section-head">
+                            <span class="er-section-number">2</span>
+                            <h2 id="edit-role-availability-heading">Availability</h2>
+                            <span class="er-section-helper">Turn the role on or off</span>
+                        </div>
+
+                        <div class="er-section-body">
+                            <div class="er-field">
+                                <label>Status</label>
+                                <div class="er-status-row">
+                                    <div class="er-status-copy">
+                                        <p>Role @(EditRole.IsActive ? "active" : "inactive")</p>
+                                        <span>Available to assign to users</span>
+                                    </div>
+                                    <div class="er-status-control">
+                                        <span class="er-status-badge @(EditRole.IsActive ? string.Empty : "is-off")">
+                                            @(EditRole.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="er-toggle @(EditRole.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@EditRole.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle role status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="er-footer ats-dialog-footer">
+                <button type="button" class="er-button er-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="er-button er-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>
