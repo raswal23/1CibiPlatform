@@ -2,56 +2,44 @@
 using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.DTO;
+using ATS.Services.AccessScope;
 using ATS.Services.Dashboard;
-using Auth.Shared.Contracts;
 using FluentAssertions;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
+// The role-to-scope ladder moved into AtsAccessScopeResolver, so these tests no longer
+// stub ICurrentUser / IUserClientRepository. They assert what DashboardService does with
+// a scope, not how the scope was derived.
 public class DashboardServiceTests
 {
 	private readonly Mock<IATSRepository> _repository = new();
-	private readonly Mock<IUserClientRepository> _userClientRepository = new();
-	private readonly Mock<ICurrentUser> _currentUser = new();
+	private readonly Mock<IAtsAccessScopeResolver> _accessScopeResolver = new();
 
-	[Theory]
-	[InlineData(AtsRoleIds.PlatformManager)]
-	[InlineData(AtsRoleIds.Admin)]
-	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
-	public async Task GetDashboardAsync_ShouldPassAuthenticatedIdentityToRepository(int roleId)
+	private DashboardService CreateService() =>
+		new(_repository.Object, _accessScopeResolver.Object);
+
+	private void SetAccessScope(IReadOnlyCollection<int>? authorizedClientIds, Guid? requiredOwnerId)
+	{
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope(authorizedClientIds, requiredOwnerId));
+	}
+
+	[Fact]
+	public async Task GetDashboardAsync_ShouldPassResolvedScopeToRepository()
 	{
 		var userId = Guid.CreateVersion7();
-		const int clientId = 5;
-		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
-		_currentUser.SetupGet(user => user.UserId).Returns(userId);
-		_currentUser.SetupGet(user => user.AtsClientId).Returns(clientId);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(roleId);
-		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
-			It.Is<IReadOnlyCollection<Guid>>(userIds => userIds.SequenceEqual(new[] { userId })),
-			CancellationToken.None)).ReturnsAsync(
-			[
-				new UserClientDetailsDTO { UserId = userId, ClientId = 1 },
-				new UserClientDetailsDTO { UserId = userId, ClientId = 3 },
-				new UserClientDetailsDTO { UserId = userId, ClientId = 5 }
-			]);
-		var expectedClientIds = roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin
-			? new[] { 1, 3, 5 }
-			: new[] { clientId };
-		var expectedRequestorId = roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			? userId
-			: (Guid?)null;
+		var expectedClientIds = new[] { 1, 3, 5 };
+		SetAccessScope(expectedClientIds, userId);
 		_repository.Setup(repository => repository.GetDashboardDataAsync(
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(expectedClientIds)),
-			expectedRequestorId,
+			userId,
+			It.IsAny<DateTime>(),
 			CancellationToken.None)).ReturnsAsync(Array.Empty<EmailInvitationRequest>());
-		var service = new DashboardService(
-			_repository.Object,
-			_userClientRepository.Object,
-			_currentUser.Object);
 
-		var result = await service.GetDashboardAsync(
+		var result = await CreateService().GetDashboardAsync(
 			"Selected Requester",
 			CancellationToken.None);
 
@@ -75,68 +63,101 @@ public class DashboardServiceTests
 			category.Count == 0 && category.Percentage == 0);
 		_repository.Verify(repository => repository.GetDashboardDataAsync(
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(expectedClientIds)),
-			expectedRequestorId,
+			userId,
+			It.IsAny<DateTime>(),
 			CancellationToken.None), Times.Once);
 	}
 
 	[Fact]
 	public async Task GetDashboardAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
 	{
-		var userId = Guid.CreateVersion7();
-		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
-		_currentUser.SetupGet(user => user.UserId).Returns(userId);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns((int?)null);
-		_currentUser.SetupGet(user => user.AtsClientId).Returns(5);
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
+		// (null, null) is the super admin scope: no client predicate and no owner
+		// predicate. null is not the same as an empty collection.
+		SetAccessScope(null, null);
 		_repository.Setup(repository => repository.GetDashboardDataAsync(
 			null,
 			null,
+			It.IsAny<DateTime>(),
 			CancellationToken.None)).ReturnsAsync(Array.Empty<EmailInvitationRequest>());
-		var service = new DashboardService(
-			_repository.Object,
-			_userClientRepository.Object,
-			_currentUser.Object);
 
-		await service.GetDashboardAsync(null, CancellationToken.None);
+		await CreateService().GetDashboardAsync(null, CancellationToken.None);
 
 		_repository.Verify(repository => repository.GetDashboardDataAsync(
 			null,
 			null,
+			It.IsAny<DateTime>(),
 			CancellationToken.None), Times.Once);
-		_userClientRepository.Verify(repository => repository.GetUserClientAssignmentsAsync(
-			It.IsAny<IReadOnlyCollection<Guid>>(),
-			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
-	[Theory]
-	[InlineData(false, true, true, true)]
-	[InlineData(true, false, true, true)]
-	[InlineData(true, true, false, true)]
-	[InlineData(true, true, true, false)]
-	public async Task GetDashboardAsync_ShouldReturnEmptyDashboard_WhenIdentityIsUnavailable(
-		bool isAuthenticated,
-		bool hasUserId,
-		bool hasClientId,
-		bool hasRoleId)
+	[Fact]
+	public async Task GetDashboardAsync_ShouldReturnEmptyDashboard_WhenCallerHasNoScope()
 	{
-		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(isAuthenticated);
-		_currentUser.SetupGet(user => user.UserId)
-			.Returns(hasUserId ? Guid.CreateVersion7() : null);
-		_currentUser.SetupGet(user => user.AtsClientId)
-			.Returns(hasClientId ? 5 : null);
-		_currentUser.SetupGet(user => user.AtsRoleId)
-			.Returns(hasRoleId ? AtsRoleIds.User : null);
-		var service = new DashboardService(
-			_repository.Object,
-			_userClientRepository.Object,
-			_currentUser.Object);
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync((AtsAccessScope?)null);
 
-		var result = await service.GetDashboardAsync(null, CancellationToken.None);
+		var result = await CreateService().GetDashboardAsync(null, CancellationToken.None);
 
 		result.Should().BeEquivalentTo(new ATSDashboardDTO());
 		_repository.Verify(repository => repository.GetDashboardDataAsync(
 			It.IsAny<IReadOnlyCollection<int>>(),
 			It.IsAny<Guid?>(),
+			It.IsAny<DateTime>(),
 			It.IsAny<CancellationToken>()), Times.Never);
+	}
+
+	[Fact]
+	public async Task GetDashboardAsync_ShouldBoundTheQueryWindow()
+	{
+		// The window has to reach back at least to the start of the calendar year, or
+		// the YTD series would be missing its earliest months.
+		SetAccessScope(null, null);
+		DateTime? capturedWindowStart = null;
+		_repository.Setup(repository => repository.GetDashboardDataAsync(
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<DateTime>(),
+				It.IsAny<CancellationToken>()))
+			.Callback<IReadOnlyCollection<int>?, Guid?, DateTime, CancellationToken>(
+				(_, _, windowStart, _) => capturedWindowStart = windowStart)
+			.ReturnsAsync(Array.Empty<EmailInvitationRequest>());
+
+		await CreateService().GetDashboardAsync(null, CancellationToken.None);
+
+		var now = DateTime.UtcNow;
+		var yearStart = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		capturedWindowStart.Should().NotBeNull();
+		capturedWindowStart!.Value.Should().BeOnOrBefore(yearStart);
+		capturedWindowStart.Value.Should().BeAfter(now.AddMonths(-13));
+	}
+
+	[Fact]
+	public async Task GetDashboardAsync_ShouldCapRecentOrders()
+	{
+		SetAccessScope(null, null);
+
+		// 40 in scope, well over the 25 the panel carries.
+		var invitations = Enumerable.Range(0, 40)
+			.Select(index => new EmailInvitationRequest
+			{
+				EmailInvitationID = Guid.CreateVersion7(),
+				FirstName = $"Subject{index}",
+				LastName = "Test",
+				OrderStatus = "Completed",
+				OrderCreatedAt = DateTime.UtcNow.AddDays(-index)
+			})
+			.ToArray();
+		_repository.Setup(repository => repository.GetDashboardDataAsync(
+			It.IsAny<IReadOnlyCollection<int>?>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<DateTime>(),
+			It.IsAny<CancellationToken>())).ReturnsAsync(invitations);
+
+		var result = await CreateService().GetDashboardAsync(null, CancellationToken.None);
+
+		result.RecentOrders.Should().HaveCount(25);
+
+		// Newest first, so the most recent order leads.
+		result.RecentOrders[0].SubjectName.Should().Be("Subject0 Test");
 	}
 }

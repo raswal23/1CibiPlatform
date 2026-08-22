@@ -11,21 +11,27 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
-	private string resumeFileKey = "";
-	private string nbiKey = "";
-	private string govtIdKey = "";
-	private string biometricFileKey = "";
-	private string highSchoolDiplomaKey = "";
-	private string seniorHighSchoolDiplomaKey = "";
-	private string bachelorsDiplomaKey = "";
-	private string mastersDiplomaKey = "";
-	private string doctorateDiplomaKey = "";
-	private string emp1COEKey = "";
-	private string emp2COEKey = "";
-	private string emp3COEKey = "";
-	private string licenseKey = "";
-	private string signatureKey = "";
-	private string consentFormKey = "";
+
+	/// <summary>
+	/// Object keys uploaded during a single submission. Local to the call rather than a
+	/// field on the service, so a second submission can never delete or reuse the first
+	/// one's uploads regardless of how the service is scoped.
+	/// </summary>
+	private sealed class UploadedKeys
+	{
+		private readonly List<string> _keys = [];
+
+		/// <summary>Records a key as owned by this submission and returns it.</summary>
+		public string Track(string key)
+		{
+			if (!string.IsNullOrWhiteSpace(key))
+				_keys.Add(key);
+
+			return key;
+		}
+
+		public IReadOnlyList<string> All => _keys;
+	}
 
 	public ApplicationFormService(ILogger<ApplicationFormService> logger,
 					  IATSRepository atsRepository,
@@ -46,7 +52,8 @@ public class ApplicationFormService : IApplicationFormService
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
 
-	public async Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
+	public async Task<bool> AddApplicationFormDataAsync(string hashToken,
+														PersonalDetailsDTO personalDetails,
 														AddressDetailsDTO addressDetails,
 														EducationalBackgroundDTO educationalBackground,
 														LicensesDetailsDTO licensesDetails,
@@ -55,70 +62,66 @@ public class ApplicationFormService : IApplicationFormService
 														SignatureDetailsDTO signatureDetails,
 														CancellationToken ct = default)
 	{
+		// The invitation comes from the emailed token, never from the request body. A
+		// caller who guesses another candidate's EmailInvitationID gets nowhere because
+		// the value they sent is overwritten below.
+		var emailInvitationId = await AuthorizeApplicationFormAsync(hashToken, ct);
+
+		personalDetails.EmailInvitationID = emailInvitationId;
+		addressDetails.EmailInvitationID = emailInvitationId;
+		educationalBackground.EmailInvitationID = emailInvitationId;
+		licensesDetails.EmailInvitationID = emailInvitationId;
+		professionalExperiences.EmailInvitationID = emailInvitationId;
+		referenceDetails.EmailInvitationID = emailInvitationId;
+		signatureDetails.EmailInvitationID = emailInvitationId;
+
 		var logContext = new
 		{
 			Action = "AddingApplicationFormData",
 			Step = "StartAddingApplicationFormData",
-			Identity = personalDetails.EmailInvitationID,
+			Identity = emailInvitationId,
 			Timestamp = DateTime.UtcNow
 		};
+
+		var uploadedKeys = new UploadedKeys();
 
 		await _unitOfWork.BeginTransactionAsync(ct);
 
 		try
 		{
-			await AddPersonalDetailsDataAsync(personalDetails, ct);
+			await AddPersonalDetailsDataAsync(personalDetails, uploadedKeys, ct);
 
 			await AddAddressDataAsync(addressDetails, ct);
 
-			await AddEducationalBackgroundDataAsync(educationalBackground!, ct);
+			await AddEducationalBackgroundDataAsync(educationalBackground!, uploadedKeys, ct);
 
-			await AddLicensesDataAsync(licensesDetails!, ct);
+			await AddLicensesDataAsync(licensesDetails!, uploadedKeys, ct);
 
-			await AddProfessionalExperiencesDataAsync(professionalExperiences!, ct);
+			await AddProfessionalExperiencesDataAsync(professionalExperiences!, uploadedKeys, ct);
 
 			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
 
-			await AddSignatureDetailsDataAsync(signatureDetails!, ct);
+			await AddSignatureDetailsDataAsync(signatureDetails!, uploadedKeys, ct);
 
 			await _unitOfWork.SaveChangesAsync(ct);
 
-			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(personalDetails.EmailInvitationID);
+			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationId);
 
 			await _orderHistoryService.RecordAsync(
-				personalDetails.EmailInvitationID,
+				emailInvitationId,
 				OrderHistoryEventType.ApplicationFormSubmitted,
 				OrderStatus.PendingCandidateInfo,
 				OrderStatus.InProgress, ct);
 
 			await _unitOfWork.CommitAsync(ct);
 
-			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", emailInvitationId, logContext);
 
 			return true;
 		}
 		catch (Exception ex)
 		{
-
-			var keys = new[]
-			{
-				resumeFileKey,
-				nbiKey,
-				govtIdKey,
-				highSchoolDiplomaKey,
-				seniorHighSchoolDiplomaKey,
-				bachelorsDiplomaKey,
-				mastersDiplomaKey,
-				doctorateDiplomaKey,
-				emp1COEKey,
-				emp2COEKey,
-				emp3COEKey,
-				licenseKey,
-				signatureKey,
-				consentFormKey
-			};
-
-			foreach (var key in keys.Where(k => !string.IsNullOrWhiteSpace(k)))
+			foreach (var key in uploadedKeys.All)
 			{
 				try
 				{
@@ -131,30 +134,63 @@ public class ApplicationFormService : IApplicationFormService
 				}
 			}
 			await _unitOfWork.RollbackAsync(ct);
-			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", personalDetails.EmailInvitationID, logContext);
+			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", emailInvitationId, logContext);
+
+			// A rejected token or a spent invitation is the caller's problem, not a
+			// server fault - let those surface as 4xx instead of being flattened to 500.
+			if (ex is NotFoundException or BadRequestException or ConflictException)
+				throw;
+
 			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}");
 		}
 
 	}
 
-	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, CancellationToken cancellationToken)
+	/// <summary>
+	/// Resolves the invitation a hash token refers to, rejecting unknown, expired and
+	/// already-spent tokens. Returns the id every child record must be written against.
+	/// </summary>
+	private async Task<Guid> AuthorizeApplicationFormAsync(string hashToken, CancellationToken ct)
 	{
+		var claim = await _atsRepository.GetApplicationFormClaimAsync(hashToken, ct);
+
+		if (claim is null || claim.EmailInvitationID == Guid.Empty)
+			throw new NotFoundException("No record found for the provided hash token.");
+
+		if (claim.IsExpired)
+			throw new BadRequestException("This application form link has expired. Please request a new one.");
+
+		// Withdrawn and Done are both terminal. Without this the second post would fail
+		// on the PersonalDetails 1:1 unique constraint as an opaque 500.
+		if (!string.Equals(claim.ApplicationFormStatus, ApplicationFormStatus.Pending, StringComparison.OrdinalIgnoreCase))
+			throw new ConflictException($"This application form has already been {claim.ApplicationFormStatus?.ToLowerInvariant() ?? "processed"}.");
+
+		return claim.EmailInvitationID;
+	}
+
+	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, UploadedKeys uploadedKeys, CancellationToken cancellationToken)
+	{
+		var resumeFileKey = "";
+		var nbiKey = "";
+		var govtIdKey = "";
+		var biometricFileKey = "";
+
 		if (personalDetailsDTO.ResumeFile != null)
 		{
 			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
-			resumeFileKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFileName!, resumeStream, cancellationToken);
+			resumeFileKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFileName!, resumeStream, cancellationToken));
 		}
 
 		if (personalDetailsDTO.NBIClearanceFile != null)
 		{
 			await using var nbiStream = personalDetailsDTO.NBIClearanceFile.OpenReadStream();
-			nbiKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFileName!, nbiStream, cancellationToken);
+			nbiKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFileName!, nbiStream, cancellationToken));
 		}
 
 		if (personalDetailsDTO.AdditionalGovtIDFile != null)
 		{
 			await using var govtIdStream = personalDetailsDTO.AdditionalGovtIDFile.OpenReadStream();
-			govtIdKey = await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken);
+			govtIdKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken));
 		}
 
 		if (personalDetailsDTO.BiometricFile != null)
@@ -167,11 +203,11 @@ public class ApplicationFormService : IApplicationFormService
 			personalDetailsDTO.BiometricFileName =
 				System.IO.Path.ChangeExtension(personalDetailsDTO.BiometricFileName, ".pdf");
 
-			biometricFileKey = await _objectStorageService.UploadAsync(
+			biometricFileKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(
 				_folderName,
 				personalDetailsDTO.BiometricFileName!,
 				pdfStream,
-				cancellationToken);
+				cancellationToken));
 		}
 
 		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
@@ -203,32 +239,39 @@ public class ApplicationFormService : IApplicationFormService
 
 	private async Task<bool> AddEducationalBackgroundDataAsync(
 		EducationalBackgroundDTO educationalBackgroundDTO,
+		UploadedKeys uploadedKeys,
 		CancellationToken cancellationToken)
 	{
+		var highSchoolDiplomaKey = "";
+		var seniorHighSchoolDiplomaKey = "";
+		var bachelorsDiplomaKey = "";
+		var mastersDiplomaKey = "";
+		var doctorateDiplomaKey = "";
+
 		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.JuniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
-			highSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken);
+			highSchoolDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken));
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.SeniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
-			seniorHighSchoolDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken);
+			seniorHighSchoolDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken));
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.CollegeGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
-			bachelorsDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken);
+			bachelorsDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken));
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.MastersGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
-			mastersDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken);
+			mastersDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken));
 		}
 		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.DoctorateGraduate, StringComparison.OrdinalIgnoreCase))
 		{
 			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
-			doctorateDiplomaKey = await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken);
+			doctorateDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken));
 		}
 
 		EducationalBackground educationalBackground = educationalBackgroundDTO.Adapt<EducationalBackground>();
@@ -251,12 +294,15 @@ public class ApplicationFormService : IApplicationFormService
 
 	private async Task<bool> AddLicensesDataAsync(
 		LicensesDetailsDTO licensesDetailsDTO,
+		UploadedKeys uploadedKeys,
 		CancellationToken cancellationToken)
 	{
+		var licenseKey = "";
+
 		if (licensesDetailsDTO.LicenseUploadFile != null)
 		{
 			await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
-			licenseKey = await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken);
+			licenseKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken));
 		}
 
 		LicensesDetails licensesDetails = licensesDetailsDTO!.Adapt<LicensesDetails>();
@@ -271,22 +317,27 @@ public class ApplicationFormService : IApplicationFormService
 
 	private async Task<bool> AddProfessionalExperiencesDataAsync(
 		ProfessionalExperiencesDTO professionalExperiencesDTO,
+		UploadedKeys uploadedKeys,
 		CancellationToken cancellationToken)
 	{
+		var emp1COEKey = "";
+		var emp2COEKey = "";
+		var emp3COEKey = "";
+
 		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
 		{
 			await using var emp1COEStream = professionalExperiencesDTO.Emp1COEUploadFile!.OpenReadStream();
-			emp1COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp1COEUploadFileName!, emp1COEStream, cancellationToken);
+			emp1COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp1COEUploadFileName!, emp1COEStream, cancellationToken));
 		}
 		if (professionalExperiencesDTO.Emp2COEUploadFile! != null)
 		{
 			await using var emp2COEStream = professionalExperiencesDTO.Emp2COEUploadFile!.OpenReadStream();
-			emp2COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp2COEUploadFileName!, emp2COEStream, cancellationToken);
+			emp2COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp2COEUploadFileName!, emp2COEStream, cancellationToken));
 		}
 		if (professionalExperiencesDTO.Emp3COEUploadFile! != null)
 		{
 			await using var emp3COEStream = professionalExperiencesDTO.Emp3COEUploadFile!.OpenReadStream();
-			emp3COEKey = await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp3COEUploadFileName!, emp3COEStream, cancellationToken);
+			emp3COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp3COEUploadFileName!, emp3COEStream, cancellationToken));
 		}
 
 		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
@@ -340,6 +391,7 @@ public class ApplicationFormService : IApplicationFormService
 
 	private async Task<bool> AddSignatureDetailsDataAsync(
 		SignatureDetailsDTO signatureDetailsDTO,
+		UploadedKeys uploadedKeys,
 		CancellationToken cancellationToken)
 	{
 		if (signatureDetailsDTO.Signature == null)
@@ -352,9 +404,6 @@ public class ApplicationFormService : IApplicationFormService
 
 		var signatureBytes = memory.ToArray();
 
-		var test =
-	BitConverter.ToString(signatureBytes.Take(16).ToArray());
-
 		var consentFormFileName = $"{signatureDetailsDTO.SignerName}_ConsentForm.pdf";
 		await using var consentPdfStream = await _filePdfService.GenerateConsentFormPdfAsync(
 			signatureDetailsDTO.SignerName ?? string.Empty,
@@ -362,7 +411,7 @@ public class ApplicationFormService : IApplicationFormService
 			signatureBytes,
 			cancellationToken);
 
-		consentFormKey = await _objectStorageService.UploadAsync(_folderName, consentFormFileName, consentPdfStream, cancellationToken);
+		var consentFormKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, consentFormFileName, consentPdfStream, cancellationToken));
 
 		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
 		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
@@ -392,6 +441,15 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			_logger.LogError("Failed Transaction: Failed to fetch EmailId and Application Form Path for {HashToken}: {@Context}", hashToken, logContext);
 			throw new NotFoundException("No record found for the provided hash token.");
+		}
+
+		// The lookup query filters on HashToken alone, so an expired link would otherwise
+		// still hand back a usable EmailInvitationID.
+		if (!emailIdAndApplicationFormPath.ExpiresAt.HasValue
+			|| emailIdAndApplicationFormPath.ExpiresAt.Value <= DateTime.UtcNow)
+		{
+			_logger.LogWarning("Rejected an expired application form link: {@Context}", logContext);
+			throw new BadRequestException("This application form link has expired. Please request a new one.");
 		}
 
 		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);

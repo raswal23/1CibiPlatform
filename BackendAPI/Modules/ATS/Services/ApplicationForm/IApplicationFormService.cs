@@ -2,7 +2,13 @@
 
 public interface IApplicationFormService
 {
-	Task<bool> AddApplicationFormDataAsync(PersonalDetailsDTO personalDetails,
+	/// <summary>
+	/// Persists a candidate's application form. The invitation is resolved from
+	/// <paramref name="hashToken"/>; any EmailInvitationID carried on the DTOs is
+	/// overwritten and never trusted.
+	/// </summary>
+	Task<bool> AddApplicationFormDataAsync(string hashToken,
+										   PersonalDetailsDTO personalDetails,
 										   AddressDetailsDTO addressDetails,
 										   EducationalBackgroundDTO educationalBackground,
 										   LicensesDetailsDTO licensesDetails,

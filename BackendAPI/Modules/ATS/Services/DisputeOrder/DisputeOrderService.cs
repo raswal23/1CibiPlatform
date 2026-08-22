@@ -11,6 +11,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly string _disputeOrderEmailRecipient;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly ICurrentUser _currentUser;
+	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DisputeOrderService(
@@ -22,8 +23,10 @@ public class DisputeOrderService : IDisputeOrderService
 		IHttpContextAccessor httpContextAccessor,
 		IOrderHistoryService orderHistoryService,
 		ICurrentUser currentUser,
+		IAtsAccessScopeResolver accessScopeResolver,
 		IUnitOfWork unitOfWork)
 	{
+		_accessScopeResolver = accessScopeResolver;
 		_logger = logger;
 		_emailService = emailService;
 		_configuration = configuration;
@@ -47,45 +50,16 @@ public class DisputeOrderService : IDisputeOrderService
 		};
 
 		_logger.LogInformation("Fetching dispute orders with pagination: {@Context}", logContext);
-		if (!_currentUser.IsAuthenticated
-			|| _currentUser.UserId is not { } userId
-			|| userId == Guid.Empty)
+
+		// The role ladder lives in AtsAccessScopeResolver now - this used to be an
+		// inline copy of it.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
 			return CreateEmptyResult(paginationRequest);
 		}
 
-		IReadOnlyCollection<int>? clientIds;
-		Guid? requiredRequestorId;
-		if (_currentUser.IsPlatformSuperAdmin)
-		{
-			clientIds = null;
-			requiredRequestorId = null;
-		}
-		else if (_currentUser.AtsRoleId is not { } roleId)
-		{
-			return CreateEmptyResult(paginationRequest);
-		}
-		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
-		{
-			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
-				[userId],
-				cancellationToken);
-			  clientIds = assignments
-				.Select(assignment => assignment.ClientId)
-				.Distinct()
-				.ToArray();
-			requiredRequestorId = null;
-		}
-		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			&& _currentUser.AtsClientId is { } clientId)
-		{
-			clientIds = [clientId];
-			requiredRequestorId = userId;
-		}
-		else
-		{
-			return CreateEmptyResult(paginationRequest);
-		}
+		var clientIds = scope.AuthorizedClientIds;
+		var requiredRequestorId = scope.RequiredOwnerId;
 
 		// An undecodable cursor (malformed, stale) means "first page". All three
 		// anchors are required — if any fails to parse, restart the walk.

@@ -34,9 +34,11 @@ public static class AppConfiguration
 
 		if (app.Environment.IsProduction())
 		{
+			// Swagger stays off here. It publishes a full map of every endpoint, DTO and
+			// parameter - including the anonymous application-form routes - to anyone who
+			// can reach the host. Sandbox and UAT already omit it; Production had
+			// inherited the Development branch by copy.
 			await DatabaseExtensions.IntializeDatabaseAsync(app);
-			app.UseSwagger();
-			app.UseSwaggerUI();
 		}
 
 		return app;

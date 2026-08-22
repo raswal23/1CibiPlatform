@@ -28,9 +28,12 @@ public class GetBulkUploadSubjectsEndpoint : ICarterModule
 				request.EmailStatus,
 				request.SearchTerm);
 
-			var result = await sender.Send(query, cancellationToken);
+			// Named queryResult rather than result: `result.Result` reads like a
+			// sync-over-async block on a Task, and it is not one - the send is awaited
+			// above and Result is just the DTO property.
+			var queryResult = await sender.Send(query, cancellationToken);
 
-			return Results.Ok(new GetBulkUploadSubjectsEndpointResponse(result.Result));
+			return Results.Ok(new GetBulkUploadSubjectsEndpointResponse(queryResult.Result));
 		})
 		.WithName("GetBulkUploadSubjects")
 		.WithTags("ATS")

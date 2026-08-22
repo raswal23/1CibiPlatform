@@ -1,4 +1,5 @@
-﻿using ATS.AI;
+using ATS.Services.AccessScope;
+using ATS.AI;
 using ATS.Constants;
 using ATS.DTO;
 using ATS.Data.Repository;
@@ -361,5 +362,7 @@ public class AtsAssistantPluginTests
 			_packageManagementService.Object,
 			_draftStore,
 			_currentUser.Object,
-			_userClientRepository.Object));
+			// A real resolver over the mocked ICurrentUser, so these tests keep
+			// asserting the scope the assistant actually gets.
+			new AtsAccessScopeResolver(_currentUser.Object, _userClientRepository.Object)));
 }

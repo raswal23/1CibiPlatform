@@ -1,6 +1,7 @@
 ﻿using ATS.Data.Entities;
 using ATS.DTO;
 using ATS.Features.AddApplicationFormData;
+using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,12 @@ namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 {
+	/// <summary>
+	/// The token seeded alongside the invitation. Submissions authorize against this,
+	/// not against the EmailInvitationID carried on the DTOs.
+	/// </summary>
+	private const string SeededHashToken = "Hashtoken";
+
 	private readonly string _atsTestFolder;
 	private readonly Guid EmailId;
 	private readonly byte[] _sampleFileContent;
@@ -83,7 +90,10 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		};
 	}
 
-	private async Task SeedEmailInvitationRequestData()
+	private async Task SeedEmailInvitationRequestData(
+		string hashToken = SeededHashToken,
+		string applicationFormStatus = "Pending",
+		DateTime? hashTokenExpiration = null)
 	{
 		var emailInvitationRequest = new EmailInvitationRequest
 		{
@@ -95,16 +105,131 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			MobileNumber = "09171234567",
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush",
-			HashToken = "Hashtoken",
-			ApplicationFormStatus = "Pending",
+			HashToken = hashToken,
+			ApplicationFormStatus = applicationFormStatus,
 			EmailSentStatus = "Pending",
 			OrderStatus = "Pending Candidate Info",
 			HashTokenCreatedAt = DateTime.UtcNow,
-			HashTokenExpiration = DateTime.UtcNow.AddDays(7)
+			HashTokenExpiration = hashTokenExpiration ?? DateTime.UtcNow.AddDays(7)
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
 		await _dbContext.SaveChangesAsync();
+	}
+
+	/// <summary>
+	/// A minimal but valid command. The authorization tests below only care about the
+	/// token, so the payload just has to survive FluentValidation.
+	/// </summary>
+	private AddApplicationFormDataCommand BuildValidCommand(string hashToken, Guid? claimedEmailId = null)
+	{
+		var emailId = claimedEmailId ?? EmailId;
+		var pdfContent = CreatePdfBytes();
+
+		var personal = new PersonalDetailsDTO
+		{
+			EmailInvitationID = emailId,
+			PositionAppliedFor = "Senior Software Engineer",
+			FirstName = "Juan",
+			LastName = "Dela Cruz",
+			Suffix = "Jr.",
+			Sex = "Male",
+			DOB = _sampleDate,
+			MobileNumber = "09171234567",
+			EmailAlternative = "juan.delacruz@gmail.com",
+			AdditionalGovtIDFile = CreateFakeFormFile(pdfContent, _govermentIdFileName, "application/pdf"),
+			AdditionalGovtIDFileName = _govermentIdFileName,
+			NBIClearanceFile = CreateFakeFormFile(pdfContent, _nbiFileName, "application/pdf"),
+			NBIClearanceFileName = _nbiFileName,
+			ResumeFile = CreateFakeFormFile(pdfContent, _resumeFileName, "application/pdf"),
+			ResumeFileName = _resumeFileName,
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var address = new AddressDetailsDTO
+		{
+			EmailInvitationID = emailId,
+			CurrentAddress = "123 Mabini St., Brgy. San Isidro",
+			CurrentCity = "Makati",
+			CurrentProvince = "Metro Manila",
+			CurrentCountry = "Philippines",
+			CurrentPostalCode = "1200",
+			PermanentAddress = "123 Mabini St., Brgy. San Isidro",
+			PermanentCity = "Makati",
+			PermanentProvince = "Metro Manila",
+			PermanentCountry = "Philippines",
+			PermanentPostalCode = "1200",
+			TypeOfOwnership = "Owned",
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var education = new EducationalBackgroundDTO
+		{
+			EmailInvitationID = emailId,
+			HighestEducationalAttainment = "College Graduate",
+			BachelorsSchoolName = "University of the Philippines",
+			BachelorsDegree = "BS Computer Science",
+			BachelorsGraduationDate = _sampleDate,
+			BachelorsDiplomaFile = CreateFakeFormFile(pdfContent, _bachelorDiplomaFileName, "application/pdf"),
+			BachelorsDiplomaFileName = _bachelorDiplomaFileName,
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var licenses = new LicensesDetailsDTO
+		{
+			EmailInvitationID = emailId,
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var experiences = new ProfessionalExperiencesDTO
+		{
+			EmailInvitationID = emailId,
+			Emp1CompanyName = "Cibi Information Inc.",
+			Emp1CompanyCity = "Makati",
+			Emp1CompanyProvince = "Metro Manila",
+			Emp1CompanyCountry = "Philippines",
+			Emp1CompanyPostalCode = "1200",
+			Emp1DatePermittedToContact = _sampleDate,
+			Emp1JobTitle = "Software Engineer",
+			Emp1StartDate = _sampleDate,
+			Emp1EndDate = _sampleDate,
+			Emp1SupervisorName = "Maria Cruz",
+			Emp1SupervisorContactNumber = "09171234567",
+			Emp1COEUploadFile = CreateFakeFormFile(pdfContent, _emp1COEFileName, "application/pdf"),
+			Emp1COEUploadFileName = _emp1COEFileName,
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var reference = new ReferenceDetailsDTO
+		{
+			EmailInvitationID = emailId,
+			Ref1FullName = "Michael Tan",
+			Ref1ProfessionalRelationship = "Former Team Lead",
+			Ref1AffiliatedCompany = "Accenture Philippines",
+			Ref1Email = "michael.tan@accenture.com",
+			Ref1ContactNumber = "09171234567",
+			Ref1ModeOfContact = "Email",
+			Ref1BestTimeToContact = DateTime.UtcNow,
+			Ref2FullName = "Sarah Lim",
+			Ref2ProfessionalRelationship = "Project Manager",
+			Ref2AffiliatedCompany = "Globe Telecom",
+			Ref2Email = "sarah.lim@globe.com.ph",
+			Ref2ContactNumber = "09171234567",
+			Ref2ModeOfContact = "Phone",
+			Ref2BestTimeToContact = DateTime.UtcNow,
+			CreatedDate = DateTime.UtcNow
+		};
+
+		var signature = new SignatureDetailsDTO
+		{
+			EmailInvitationID = emailId,
+			Signature = CreateFakeFormFile(_sampleFileContent, "signature.png", "image/png"),
+			SignerName = "Juan S. Dela Cruz",
+			SignatureDate = _sampleDate
+		};
+
+		return new AddApplicationFormDataCommand(
+			hashToken, personal, address, education, licenses, experiences, reference, signature);
 	}
 
 	#region Positive Path
@@ -280,7 +405,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			SignatureDate = _sampleDate
 		};
 
-		var command = new AddApplicationFormDataCommand(personal, address, education, licenses, experiences, reference, signature);
+		var command = new AddApplicationFormDataCommand(SeededHashToken, personal, address, education, licenses, experiences, reference, signature);
 
 		// Act
 		var result = await _sender.Send(command);
@@ -463,11 +588,129 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		};
 
 
-		var command = new AddApplicationFormDataCommand(null!, address, education, licenses, experiences, reference, signature);
+		var command = new AddApplicationFormDataCommand(SeededHashToken, null!, address, education, licenses, experiences, reference, signature);
 
 		// Act & Assert
 		await Assert.ThrowsAsync<ValidationException>(() =>
 			_sender.Send(command));
+	}
+	#endregion
+
+	#region Hash Token Authorization
+	// The endpoint is anonymous by design - candidates arrive from an emailed link with
+	// no account - so the hash token is the entire authorization decision. These cover
+	// the ways a caller can try to get around it.
+
+	[Fact]
+	public async Task AddApplicationFormData_WithUnknownHashToken_ShouldThrowNotFound()
+	{
+		await SeedEmailInvitationRequestData();
+
+		var command = BuildValidCommand("not-a-real-token");
+
+		await Assert.ThrowsAsync<NotFoundException>(() => _sender.Send(command));
+
+		// Nothing may be written against the invitation the caller aimed at.
+		_dbContext.PersonalDetails
+			.Any(p => p.EmailInvitationID == EmailId)
+			.Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task AddApplicationFormData_WithEmptyHashToken_ShouldThrowValidation()
+	{
+		await SeedEmailInvitationRequestData();
+
+		var command = BuildValidCommand(string.Empty);
+
+		await Assert.ThrowsAsync<ValidationException>(() => _sender.Send(command));
+	}
+
+	[Fact]
+	public async Task AddApplicationFormData_WithExpiredHashToken_ShouldThrowBadRequest()
+	{
+		await SeedEmailInvitationRequestData(
+			hashTokenExpiration: DateTime.UtcNow.AddDays(-1));
+
+		var command = BuildValidCommand(SeededHashToken);
+
+		await Assert.ThrowsAsync<BadRequestException>(() => _sender.Send(command));
+
+		_dbContext.PersonalDetails
+			.Any(p => p.EmailInvitationID == EmailId)
+			.Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task AddApplicationFormData_WhenFormAlreadySubmitted_ShouldThrowConflict()
+	{
+		await SeedEmailInvitationRequestData(applicationFormStatus: "Done");
+
+		var command = BuildValidCommand(SeededHashToken);
+
+		// Without the status check this surfaced as an opaque 500 from the
+		// PersonalDetails 1:1 unique constraint instead of a 409.
+		await Assert.ThrowsAsync<ConflictException>(() => _sender.Send(command));
+	}
+
+	[Fact]
+	public async Task AddApplicationFormData_WhenFormWithdrawn_ShouldThrowConflict()
+	{
+		await SeedEmailInvitationRequestData(applicationFormStatus: "Withdrawn");
+
+		var command = BuildValidCommand(SeededHashToken);
+
+		await Assert.ThrowsAsync<ConflictException>(() => _sender.Send(command));
+	}
+
+	[Fact]
+	public async Task AddApplicationFormData_WithMismatchedEmailInvitationId_ShouldBindToTokenOwner()
+	{
+		// The heart of the finding: a caller posts a valid token of their own but
+		// substitutes somebody else's EmailInvitationID in the body. The body value must
+		// be ignored entirely.
+		await SeedEmailInvitationRequestData();
+
+		var victimEmailId = Guid.CreateVersion7();
+		var command = BuildValidCommand(SeededHashToken, claimedEmailId: victimEmailId);
+
+		var result = await _sender.Send(command);
+
+		result.IsAdded.Should().BeTrue();
+
+		// Written against the token's own invitation...
+		_dbContext.PersonalDetails
+			.Any(p => p.EmailInvitationID == EmailId)
+			.Should().BeTrue();
+
+		// ...and not against the id the caller asked for.
+		_dbContext.PersonalDetails
+			.Any(p => p.EmailInvitationID == victimEmailId)
+			.Should().BeFalse();
+
+		await CleanUpUploadedTestFilesAsync();
+	}
+
+	private async Task CleanUpUploadedTestFilesAsync()
+	{
+		foreach (var fileName in new[]
+		{
+			_govermentIdFileName,
+			_nbiFileName,
+			_resumeFileName,
+			_bachelorDiplomaFileName,
+			_emp1COEFileName
+		})
+		{
+			try
+			{
+				await _objectStorageService.DeleteAsync($"{_atsTestFolder}/{fileName}");
+			}
+			catch
+			{
+				// Best effort - a leftover test object must not fail the assertion above.
+			}
+		}
 	}
 	#endregion
 

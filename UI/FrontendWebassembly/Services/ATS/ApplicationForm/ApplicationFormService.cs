@@ -9,11 +9,12 @@ public class ApplicationFormService : IApplicationFormService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<bool>> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
-														AddressDetailsDTO AddressDetails, 
-														EducationalBackgroundDTO EducationalBackground, 
-														LicensesDetailsDTO LicensesDetails, 
-														ProfessionalExperiencesDTO ProfessionalExperiences, 
+	public async Task<ServiceResponse<bool>> AddApplicationFormDataAsync(string HashToken,
+														PersonalDetailsDTO PersonalDetails,
+														AddressDetailsDTO AddressDetails,
+														EducationalBackgroundDTO EducationalBackground,
+														LicensesDetailsDTO LicensesDetails,
+														ProfessionalExperiencesDTO ProfessionalExperiences,
 														ReferenceDetailsDTO ReferenceDetails,
 														SignatureDetailsDTO SignatureDetails)
 	{
@@ -27,16 +28,22 @@ public class ApplicationFormService : IApplicationFormService
 			}
 		}
 
-		void AddFile(byte[]? file, string name)
+		// fileName must be the user's real file name (e.g. "resume.pdf") — the server
+		// validates the extension of the multipart filename, not the field name.
+		void AddFile(byte[]? file, string name, string? fileName)
 		{
 			if (file != null)
 			{
 				var stream = new MemoryStream(file);
 				var fileContent = new StreamContent(stream);
 				fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-				content.Add(fileContent, name, name);
+				content.Add(fileContent, name, fileName ?? name);
 			}
 		}
+
+		// The token the candidate arrived with. This is what the server authorizes
+		// against - the EmailInvitationID fields below are ignored server-side.
+		AddString(HashToken, "HashToken");
 
 		// PersonalDetails
 		AddString(PersonalDetails.EmailInvitationID.ToString(), "PersonalDetails.EmailInvitationID");
@@ -49,13 +56,13 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(PersonalDetails.DOB?.ToString("MM-dd-yyyy"), "PersonalDetails.DOB");
 		AddString(PersonalDetails.MobileNumber, "PersonalDetails.MobileNumber");
 		AddString(PersonalDetails.EmailAlternative, "PersonalDetails.EmailAlternative");
-		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile");
+		AddFile(PersonalDetails.AdditionalGovtIDFile, "PersonalDetails.AdditionalGovtIDFile", PersonalDetails.AdditionalGovtIDFileName);
 		AddString(PersonalDetails.AdditionalGovtIDFileName, "PersonalDetails.AdditionalGovtIDFileName");
-		AddFile(PersonalDetails.NBIClearanceFile, "PersonalDetails.NBIClearanceFile");
+		AddFile(PersonalDetails.NBIClearanceFile, "PersonalDetails.NBIClearanceFile", PersonalDetails.NBIClearanceFileName);
 		AddString(PersonalDetails.NBIClearanceFileName, "PersonalDetails.NBIClearanceFileName");
-		AddFile(PersonalDetails.ResumeFile, "PersonalDetails.ResumeFile");
+		AddFile(PersonalDetails.ResumeFile, "PersonalDetails.ResumeFile", PersonalDetails.ResumeFileName);
 		AddString(PersonalDetails.ResumeFileName, "PersonalDetails.ResumeFileName");
-		AddFile(PersonalDetails.BiometricFile, "PersonalDetails.BiometricFile");
+		AddFile(PersonalDetails.BiometricFile, "PersonalDetails.BiometricFile", PersonalDetails.BiometricFileName);
 		AddString(PersonalDetails.BiometricFileName, "PersonalDetails.BiometricFileName");
 
 		// AddressDetails
@@ -77,26 +84,26 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(EducationalBackground.HighestEducationalAttainment, "EducationalBackground.HighestEducationalAttainment");
 		AddString(EducationalBackground.HighSchoolName, "EducationalBackground.HighSchoolName");
 		AddString(EducationalBackground.HighSchoolGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.HighSchoolGraduationDate");
-		AddFile(EducationalBackground.HighSchoolDiplomaFile, "EducationalBackground.HighSchoolDiplomaFile");
+		AddFile(EducationalBackground.HighSchoolDiplomaFile, "EducationalBackground.HighSchoolDiplomaFile", EducationalBackground.HighSchoolDiplomaFileName);
 		AddString(EducationalBackground.HighSchoolDiplomaFileName, "EducationalBackground.HighSchoolDiplomaFileName");
 		AddString(EducationalBackground.SeniorHighSchoolName, "EducationalBackground.SeniorHighSchoolName");
 		AddString(EducationalBackground.SeniorHighSchoolGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.SeniorHighSchoolGraduationDate");
-		AddFile(EducationalBackground.SeniorHighSchoolDiplomaFile, "EducationalBackground.SeniorHighSchoolDiplomaFile");
+		AddFile(EducationalBackground.SeniorHighSchoolDiplomaFile, "EducationalBackground.SeniorHighSchoolDiplomaFile", EducationalBackground.SeniorHighSchoolDiplomaFileName);
 		AddString(EducationalBackground.SeniorHighSchoolDiplomaFileName, "EducationalBackground.SeniorHighSchoolDiplomaFileName");
 		AddString(EducationalBackground.BachelorsSchoolName, "EducationalBackground.BachelorsSchoolName");
 		AddString(EducationalBackground.BachelorsGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.BachelorsGraduationDate");
 		AddString(EducationalBackground.BachelorsDegree, "EducationalBackground.BachelorsDegree");
-		AddFile(EducationalBackground.BachelorsDiplomaFile, "EducationalBackground.BachelorsDiplomaFile");
+		AddFile(EducationalBackground.BachelorsDiplomaFile, "EducationalBackground.BachelorsDiplomaFile", EducationalBackground.BachelorsDiplomaFileName);
 		AddString(EducationalBackground.BachelorsDiplomaFileName, "EducationalBackground.BachelorsDiplomaFileName");
 		AddString(EducationalBackground.MastersSchoolName, "EducationalBackground.MastersSchoolName");
 		AddString(EducationalBackground.MastersGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.MastersGraduationDate");
 		AddString(EducationalBackground.MastersDegree, "EducationalBackground.MastersDegree");
-		AddFile(EducationalBackground.MastersDiplomaFile, "EducationalBackground.MastersDiplomaFile");
+		AddFile(EducationalBackground.MastersDiplomaFile, "EducationalBackground.MastersDiplomaFile", EducationalBackground.MastersDiplomaFileName);
 		AddString(EducationalBackground.MastersDiplomaFileName, "EducationalBackground.MastersDiplomaFileName");
 		AddString(EducationalBackground.PhDSchoolName, "EducationalBackground.PhDSchoolName");
 		AddString(EducationalBackground.DoctorateGraduationDate?.ToString("yyyy-MM-dd"), "EducationalBackground.DoctorateGraduationDate");
 		AddString(EducationalBackground.DoctorateDegree, "EducationalBackground.DoctorateDegree");
-		AddFile(EducationalBackground.DoctorateDiplomaFile, "EducationalBackground.DoctorateDiplomaFile");
+		AddFile(EducationalBackground.DoctorateDiplomaFile, "EducationalBackground.DoctorateDiplomaFile", EducationalBackground.DoctorateDiplomaFileName);
 		AddString(EducationalBackground.DoctorateDiplomaFileName, "EducationalBackground.DoctorateDiplomaFileName");
 
 		// LicensesDetails
@@ -104,7 +111,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(LicensesDetails.LicenseName, "LicensesDetails.LicenseName");
 		AddString(LicensesDetails.LicenseNumber, "LicensesDetails.LicenseNumber");
 		AddString(LicensesDetails.LicenseExpiryDate?.ToString("MM-dd-yyyy"), "LicensesDetails.LicenseExpiryDate");
-		AddFile(LicensesDetails.LicenseUploadFile, "LicensesDetails.LicenseUploadFile");
+		AddFile(LicensesDetails.LicenseUploadFile, "LicensesDetails.LicenseUploadFile", LicensesDetails.LicenseUploadFileName);
 		AddString(LicensesDetails.LicenseUploadFileName, "LicensesDetails.LicenseUploadFileName");
 
 		// ProfessionalExperiences
@@ -122,7 +129,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp1DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp1SupervisorName, "ProfessionalExperiences.Emp1SupervisorName");
 		AddString(ProfessionalExperiences.Emp1SupervisorContactNumber, "ProfessionalExperiences.Emp1SupervisorContactNumber");
-		AddFile(ProfessionalExperiences.Emp1COEUploadFile, "ProfessionalExperiences.Emp1COEUploadFile");
+		AddFile(ProfessionalExperiences.Emp1COEUploadFile, "ProfessionalExperiences.Emp1COEUploadFile", ProfessionalExperiences.Emp1COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp1COEUploadFileName, "ProfessionalExperiences.Emp1COEUploadFileName");
 
 		AddString(ProfessionalExperiences.Emp2CompanyName, "ProfessionalExperiences.Emp2CompanyName");
@@ -138,7 +145,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp2DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp2SupervisorName, "ProfessionalExperiences.Emp2SupervisorName");
 		AddString(ProfessionalExperiences.Emp2SupervisorContactNumber, "ProfessionalExperiences.Emp2SupervisorContactNumber");
-		AddFile(ProfessionalExperiences.Emp2COEUploadFile, "ProfessionalExperiences.Emp2COEUploadFile");
+		AddFile(ProfessionalExperiences.Emp2COEUploadFile, "ProfessionalExperiences.Emp2COEUploadFile", ProfessionalExperiences.Emp2COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp2COEUploadFileName, "ProfessionalExperiences.Emp2COEUploadFileName");
 
 		AddString(ProfessionalExperiences.Emp3CompanyName, "ProfessionalExperiences.Emp3CompanyName");
@@ -154,7 +161,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp3DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp3SupervisorName, "ProfessionalExperiences.Emp3SupervisorName");
 		AddString(ProfessionalExperiences.Emp3SupervisorContactNumber, "ProfessionalExperiences.Emp3SupervisorContactNumber");
-		AddFile(ProfessionalExperiences.Emp3COEUploadFile, "ProfessionalExperiences.Emp3COEUploadFile");
+		AddFile(ProfessionalExperiences.Emp3COEUploadFile, "ProfessionalExperiences.Emp3COEUploadFile", ProfessionalExperiences.Emp3COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp3COEUploadFileName, "ProfessionalExperiences.Emp3COEUploadFileName");
 
 		// ReferenceDetails
@@ -192,7 +199,7 @@ public class ApplicationFormService : IApplicationFormService
 				var base64 = dataUrl[(dataUrl.IndexOf(',') + 1)..];
 				var imageBytes = Convert.FromBase64String(base64);
 
-				AddFile(imageBytes, "SignatureDetails.Signature");
+				AddFile(imageBytes, "SignatureDetails.Signature", "signature.png");
 			}
 		}
 		AddString(SignatureDetails.SignerName, "SignatureDetails.SignerName");

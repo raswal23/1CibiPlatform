@@ -7,27 +7,29 @@ public interface IAIClient
 	Task SessionCleared();
 }
 
+/// <summary>
+/// AI agent chat responses, delivered per user.
+/// </summary>
+/// <remarks>
+/// The group name comes from the authenticated principal, never from the query string -
+/// see <see cref="ATS.Hubs.ATSHub"/> for the same reasoning, including why this is not
+/// [Authorize]. The previous version also dropped the AddToGroupAsync/
+/// RemoveFromGroupAsync tasks without awaiting them, so a client could be sent its
+/// first message before it had finished joining.
+/// </remarks>
 public class AIAgentHub : Hub<IAIClient>
 {
-	public override Task OnConnectedAsync()
+	public override async Task OnConnectedAsync()
 	{
-		var userId = Context.GetHttpContext()?.Request.Query["userId"].ToString();
-		if (!string.IsNullOrEmpty(userId))
+		var userId = Context.GetUserGroupName();
+
+		if (!string.IsNullOrWhiteSpace(userId))
 		{
-			Groups.AddToGroupAsync(Context.ConnectionId, userId);
+			await Groups.AddToGroupAsync(Context.ConnectionId, userId);
 		}
 
-		return base.OnConnectedAsync();
+		await base.OnConnectedAsync();
 	}
 
-	public override Task OnDisconnectedAsync(Exception? exception)
-	{
-		var userId = Context.GetHttpContext()?.Request.Query["userId"].ToString();
-		if (!string.IsNullOrEmpty(userId))
-		{
-			Groups.RemoveFromGroupAsync(Context.ConnectionId, userId);
-		}
-
-		return base.OnDisconnectedAsync(exception);
-	}
+	// SignalR removes a connection from its groups when it disconnects.
 }

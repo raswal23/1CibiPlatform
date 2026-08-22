@@ -2,7 +2,8 @@
 
 public interface IApplicationFormService
 {
-	Task<ServiceResponse<bool>> AddApplicationFormDataAsync(PersonalDetailsDTO PersonalDetails,
+	Task<ServiceResponse<bool>> AddApplicationFormDataAsync(string HashToken,
+											PersonalDetailsDTO PersonalDetails,
 											AddressDetailsDTO AddressDetails,
 											EducationalBackgroundDTO EducationalBackground,
 											LicensesDetailsDTO LicensesDetails,

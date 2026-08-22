@@ -300,45 +300,16 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		_logger.LogInformation("Fetching withdrawn application form with pagination: {@Context}", logContext);
-		if (!_currentUser.IsAuthenticated
-			|| _currentUser.UserId is not { } userId
-			|| userId == Guid.Empty)
+
+		// The role ladder lives in AtsAccessScopeResolver now - this used to be an
+		// inline copy of it.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
 		{
 			return CreateEmptyWithdrawnResult(paginationRequest);
 		}
 
-		IReadOnlyCollection<int>? clientIds;
-		Guid? requiredRequestorId;
-		if (_currentUser.IsPlatformSuperAdmin)
-		{
-			clientIds = null;
-			requiredRequestorId = null;
-		}
-		else if (_currentUser.AtsRoleId is not { } roleId)
-		{
-			return CreateEmptyWithdrawnResult(paginationRequest);
-		}
-		else if (roleId is AtsRoleIds.PlatformManager or AtsRoleIds.Admin)
-		{
-			var assignments = await _userClientRepository.GetUserClientAssignmentsAsync(
-				[userId],
-				cancellationToken);
-			clientIds = assignments
-				.Select(assignment => assignment.ClientId)
-				.Distinct()
-				.ToArray();
-			requiredRequestorId = null;
-		}
-		else if (roleId is AtsRoleIds.User or AtsRoleIds.Uploader
-			&& _currentUser.AtsClientId is { } clientId)
-		{
-			clientIds = [clientId];
-			requiredRequestorId = userId;
-		}
-		else
-		{
-			return CreateEmptyWithdrawnResult(paginationRequest);
-		}
+		var clientIds = scope.AuthorizedClientIds;
+		var requiredRequestorId = scope.RequiredOwnerId;
 
 		// An undecodable cursor (malformed, stale) means "first page".
 		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);

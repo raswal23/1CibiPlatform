@@ -16,11 +16,13 @@ public class WithdrawnApplicationFormEndpoint : ICarterModule
 			return Results.Ok(response.isEdited);
 
 		})
+		.AllowAnonymous()
 		.WithName("WithdrawnApplicationForm")
 		.WithTags("ATS")
 		.Produces<bool>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Withdrawn Application Form")
-		.WithDescription("Handles the withdrawn application form process.");
+		.WithDescription("Handles the withdrawn application form process. Authorized by the emailed hash token.");
 	}
 }

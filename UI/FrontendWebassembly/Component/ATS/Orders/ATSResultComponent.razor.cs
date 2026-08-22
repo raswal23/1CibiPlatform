@@ -71,7 +71,7 @@ public partial class ATSResultComponent
 			var parameters = new DialogParameters
 			{
 				{ nameof(SelectFilesToDownloadComponent.ReportResult), ReportResult },
-
+				{ nameof(SelectFilesToDownloadComponent.EmailInvitationId), EmailInvitationId },
 			};
 
 			await OpenResultDialog<SelectFilesToDownloadComponent>(
