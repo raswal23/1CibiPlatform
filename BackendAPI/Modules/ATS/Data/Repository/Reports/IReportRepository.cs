@@ -37,6 +37,14 @@ public interface IReportRepository
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
-	Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken);
-	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken);
+	Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
+	Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
+		List<Guid> emailInvitationRequestIds,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken);
 }

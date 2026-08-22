@@ -196,11 +196,19 @@ public partial class ATSRepository
 					|| (x.OrderCompletedAt == afterCompletedAt && x.EmailInvitationID.CompareTo(afterId) > 0))));
 	}
 
-	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
 		var result = await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir => eir.EmailInvitationID == emailInvitationRequestId)
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.FirstName,
@@ -269,13 +277,19 @@ public partial class ATSRepository
 			})
 			.FirstOrDefaultAsync(cancellationToken);
 
-		string? diplomaFileName = result!.Educational?.DoctorateDiplomaFileName
+		// An unknown id - or one outside the caller's scope - returns null here. The
+		// null-forgiving dereference below used to turn that into a 500 before the
+		// service's own null check could run.
+		if (result is null)
+			return null;
+
+		string? diplomaFileName = result.Educational?.DoctorateDiplomaFileName
 			?? result.Educational?.MastersDiplomaFileName
 			?? result.Educational?.BachelorsDiplomaFileName
 			?? result.Educational?.SeniorHighSchoolDiplomaFileName
 			?? result.Educational?.HighSchoolDiplomaFileName;
 
-		string? diplomaFileKey = result!.Educational?.DoctorateDiplomaFileKey
+		string? diplomaFileKey = result.Educational?.DoctorateDiplomaFileKey
 			?? result.Educational?.MastersDiplomaFileKey
 			?? result.Educational?.BachelorsDiplomaFileKey
 			?? result.Educational?.SeniorHighSchoolDiplomaFileKey
@@ -317,13 +331,22 @@ public partial class ATSRepository
 		};
 	}
 
+	// The scope predicates are applied inside the query rather than checked afterwards,
+	// so an id outside the caller's scope simply yields no rows - the caller cannot tell
+	// an unauthorized order from a non-existent one.
 	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
 	List<Guid> emailInvitationRequestIds,
+	IReadOnlyCollection<int>? authorizedClientIds,
+	Guid? requiredRequestorId,
 	CancellationToken cancellationToken)
 	{
 		var results = await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.Where(eir => emailInvitationRequestIds.Contains(eir.EmailInvitationID))
+			.Where(eir => (authorizedClientIds == null
+					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
+				&& (!requiredRequestorId.HasValue
+					|| eir.RequestorId == requiredRequestorId.Value))
 			.Select(eir => new
 			{
 				eir.EmailInvitationID,

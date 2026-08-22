@@ -53,6 +53,27 @@ public partial class ATSRepository
 				.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}
 
+	// Deliberately not cached: this is the authorization decision for the anonymous
+	// application-form endpoints, so a stale expiry or form status would keep a spent
+	// link working.
+	public async Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken,
+						CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(hashToken))
+			return null;
+
+		return await _dbcontext.EmailInvitationRequests
+				.AsNoTracking()
+				.Where(eir => eir.HashToken == hashToken)
+				.Select(eir => new ApplicationFormClaimDTO
+				{
+					EmailInvitationID = eir.EmailInvitationID,
+					HashTokenExpiration = eir.HashTokenExpiration,
+					ApplicationFormStatus = eir.ApplicationFormStatus
+				})
+				.FirstOrDefaultAsync(cancellationToken);
+	}
+
 	public async Task<bool> AddSignatureDetailsAsync(SignatureDetails signatureDetails)
 	{
 		await _dbcontext.SignatureDetails.AddAsync(signatureDetails);

@@ -49,6 +49,13 @@ public partial class ATSCacheRepository
 			tags: [CacheTags.WithdrawnApplication]);
 	}
 
+	// Pure passthrough on purpose - see the repository comment: caching this would let a
+	// stale expiry or form status keep a spent link working.
+	public async Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetApplicationFormClaimAsync(hashToken, cancellationToken);
+	}
+
 	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
 	{
 		var cacheKey = $"ATS_ApplicationFormStatus_{hashToken}";

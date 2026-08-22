@@ -83,13 +83,21 @@ public partial class ATSCacheRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
+	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(
+		Guid emailInvitationRequestId,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		var cacheKey = $"report_result_{emailInvitationRequestId}";
+		// The scope is part of the key. Without it the first caller to read an order
+		// would populate an entry that every other caller then shares, which would put
+		// the access check back where it started.
+		var cacheKey = $"report_result_{emailInvitationRequestId}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync(
 			cacheKey,
-			async token => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(emailInvitationRequestId, token),
+			async token => await _atsRepository.GetReportResultByEmailInvitationRequestIdAsync(
+				emailInvitationRequestId, authorizedClientIds, requiredRequestorId, token),
 			options: new HybridCacheEntryOptions
 			{
 				Expiration = TimeSpan.FromMinutes(5)
@@ -152,8 +160,13 @@ public partial class ATSCacheRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(List<Guid> emailInvitationRequestIds, CancellationToken cancellationToken)
+	public async Task<List<DownloadDocumentDTO>> GetDownloadDocumentsAsync(
+		List<Guid> emailInvitationRequestIds,
+		IReadOnlyCollection<int>? authorizedClientIds,
+		Guid? requiredRequestorId,
+		CancellationToken cancellationToken)
 	{
-		return await _atsRepository.GetDownloadDocumentsAsync(emailInvitationRequestIds, cancellationToken);
+		return await _atsRepository.GetDownloadDocumentsAsync(
+			emailInvitationRequestIds, authorizedClientIds, requiredRequestorId, cancellationToken);
 	}
 }
