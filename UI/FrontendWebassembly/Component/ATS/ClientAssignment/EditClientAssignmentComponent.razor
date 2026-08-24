@@ -1,0 +1,66 @@
+﻿@namespace FrontendWebassembly.Component.ATS
+<MudDialog Class="um-dialog auc-dialog ats-scroll-dialog" Style="padding: 0; width: min(560px, calc(100vw - 24px)); max-width: 560px;">
+    <DialogContent>
+        <div class="eca-shell ats-dialog-shell">
+            <header class="eca-header ats-dialog-header">
+                <div>
+                    <h1>Assign client</h1>
+                    <p>Assign or replace this user's current client</p>
+                </div>
+                <button type="button" class="eca-close" aria-label="Close assign client dialog" disabled="@isSubmitting" @onclick="Cancel">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" />
+                </button>
+            </header>
+
+            <main class="eca-body ats-dialog-body">
+                <section class="eca-user-card">
+                    <span class="eca-avatar" aria-hidden="true">@UserInitial</span>
+                    <div>
+                        <strong>@CurrentAssignment.UserName</strong>
+                        <a href="@($"mailto:{CurrentAssignment.UserEmail}")">@CurrentAssignment.UserEmail</a>
+                    </div>
+                </section>
+
+                <MudForm @ref="assignmentForm">
+                    <div class="eca-field">
+                        <label for="eca-client">Client <span>*</span></label>
+                        <MudAutocomplete T="ClientLookupDTO"
+                                         InputId="eca-client"
+                                         Value="selectedClient"
+                                         ValueChanged="OnClientChanged"
+                                         SearchFunc="SearchClients"
+                                         ToStringFunc="GetClientText"
+                                         Placeholder="Search for a client"
+                                         Required="true"
+                                         RequiredError="Client is required"
+                                         Variant="Variant.Outlined"
+                                         Margin="Margin.Dense"
+                                         DebounceInterval="350"
+                                         MaxItems="25"
+                                         ShowProgressIndicator="true"
+                                         Disabled="@isSubmitting"
+                                         Adornment="Adornment.Start"
+                                         AdornmentIcon="@Icons.Material.Outlined.Apartment" />
+                        <p>Type a client name to search. Results are loaded from the server in bounded pages.</p>
+                    </div>
+                </MudForm>
+            </main>
+
+            <footer class="eca-footer ats-dialog-footer">
+                <button type="button" class="eca-button eca-button-cancel" disabled="@isSubmitting" @onclick="Cancel">Cancel</button>
+                <button type="button" class="eca-button eca-button-save" disabled="@(!CanSave)" @onclick="Submit">
+                    @if (isSubmitting)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <span>Savingâ€¦</span>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" />
+                        <span>Save assignment</span>
+                    }
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

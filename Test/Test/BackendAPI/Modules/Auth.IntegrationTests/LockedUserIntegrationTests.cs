@@ -21,7 +21,7 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedLockedUsers();
 
-		var query = new GetLockedUsersQueryRequest(PageNumber: 1, PageSize: 10);
+		var query = new GetLockedUsersQueryRequest(Cursor: null, PageSize: 10);
 
 		// Act
 		var result = await _sender.Send(query);
@@ -29,8 +29,8 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.LockedUsers.Should().NotBeNull();
-		result.LockedUsers.Data.Should().NotBeNull();
-		result.LockedUsers.Data.Count().Should().Be(3);
+		result.LockedUsers.Items.Should().NotBeNull();
+		result.LockedUsers.Items.Count.Should().Be(3);
 	}
 
 	[Fact]
@@ -39,7 +39,7 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedLockedUsers();
 
-		var query = new GetLockedUsersQueryRequest(PageNumber: 1, PageSize: 1, SearchTerm: "a@example.com");
+		var query = new GetLockedUsersQueryRequest(Cursor: null, PageSize: 1, SearchTerm: "a@example.com");
 
 		// Act
 		var result = await _sender.Send(query);
@@ -47,8 +47,8 @@ public class LockedUserIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 
-		result.LockedUsers.Count.Should().Be(1);
-		result.LockedUsers.Data.ElementAt(0).Email.Should().Be("a@example.com");
+		result.LockedUsers.TotalCount.Should().Be(1);
+		result.LockedUsers.Items.ElementAt(0).Email.Should().Be("a@example.com");
 	}
 
 	[Fact]

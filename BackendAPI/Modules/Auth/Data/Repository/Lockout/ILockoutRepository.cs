@@ -1,10 +1,10 @@
-namespace Auth.Data.Repository;
+﻿namespace Auth.Data.Repository;
 
 public interface ILockoutRepository
 {
-	Task<PaginatedResult<AuthAttempts>> GetLockedUsersAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<AuthAttempts>> GetLockedUsersPageAsync(string? searchTerm, Guid? afterUserId, int take, CancellationToken cancellationToken);
+	Task<long> CountLockedUsersAsync(string? searchTerm, CancellationToken cancellationToken);
 	Task<AuthAttempts> GetLockedUserAsync(Guid userId);
-	Task<PaginatedResult<AuthAttempts>> SearchLockedUserAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> DeleteLockedUserAsync(AuthAttempts authAttempts);
 	Task<bool> SaveLockedUserAsync(AuthAttempts userAttempt);
 }

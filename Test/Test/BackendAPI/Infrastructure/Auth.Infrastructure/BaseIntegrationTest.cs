@@ -45,13 +45,21 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 				await _dbContext.Database.ExecuteSqlRawAsync(sql);
 			}
 
-			// Clear HybridCache to avoid cross-test pollution
+			// Clear HybridCache to avoid cross-test pollution. Every tag used by the
+			// Auth cache decorators must be listed — cached first pages and counts
+			// survive the table truncation above otherwise.
 			if (_hybridCache is not null)
 			{
 				await _hybridCache.RemoveByTagAsync("user_attempt");
 				await _hybridCache.RemoveByTagAsync("is_user_login");
 				await _hybridCache.RemoveByTagAsync("lockedusers");
 				await _hybridCache.RemoveByTagAsync("userlockoutdate");
+				await _hybridCache.RemoveByTagAsync("users");
+				await _hybridCache.RemoveByTagAsync("unapprovedusers");
+				await _hybridCache.RemoveByTagAsync("roles");
+				await _hybridCache.RemoveByTagAsync("submenus");
+				await _hybridCache.RemoveByTagAsync("applications");
+				await _hybridCache.RemoveByTagAsync("appsubroles");
 			}
 		}
 		catch (Exception ex)

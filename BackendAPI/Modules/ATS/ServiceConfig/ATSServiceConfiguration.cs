@@ -41,23 +41,29 @@ public static class ATSServiceConfiguration
 		services.AddTransient<ATSInitialData>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<IATSRepository, ATSRepository>();
-		services.AddScoped<IOrderHistoryRepository, OrderHistoryRepository>();
+		services.Decorate<IATSRepository, ATSCacheRepository>();
+		services.AddScoped<IApplicantSearchProjectionRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IApplicationFormRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IATSUserRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IBulkUploadRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IClientRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IDashboardRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IDisputeOrderRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IEmailInvitationRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IModuleRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IOrderHistoryRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IPackageRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IReportRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IUserClientRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IWithdrawnApplicationRepository>(provider => provider.GetRequiredService<IATSRepository>());
+
+		// No cache decorator: bulk upload status changes every Quartz tick, so a cached
+		// first page would defeat the dashboard this repository feeds.
+		services.AddScoped<IBulkUploadDashboardRepository, BulkUploadRepository>();
 		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
 		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
-		services.Decorate<IATSRepository, ATSCacheRepository>();
-		services.AddScoped<IPackageRepository, PackageRepository>();
-		services.Decorate<IPackageRepository, PackageCacheRepository>();
-		services.AddScoped<IClientRepository, ClientRepository>();
-		services.Decorate<IClientRepository, ClientCacheRepository>();
-		services.AddScoped<IRoleRepository, RoleRepository>();
-		services.Decorate<IRoleRepository, RoleCacheRepository>();
-		services.AddScoped<IModuleRepository, ModuleRepository>();
-		services.Decorate<IModuleRepository, ModuleCacheRepository>();
-		services.AddScoped<IATSUserRepository, ATSUserRepository>();
-		services.Decorate<IATSUserRepository, ATSUserCacheRepository>();
-		services.AddScoped<IUserClientRepository, UserClientRepository>();
-		services.Decorate<IUserClientRepository, UserClientCacheRepository>();
-		services.AddScoped<AtsQueryScopeResolver>();
+
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
@@ -72,6 +78,8 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IUserManagementService, UserManagementService>();
 		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 		services.AddScoped<IATSVerificationDataProvider, ATSVerificationDataProvider>();
+		services.AddScoped<IAtsAccessScopeResolver, AtsAccessScopeResolver>();
+		services.AddScoped<IBulkUploadMonitoringService, BulkUploadMonitoringService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();

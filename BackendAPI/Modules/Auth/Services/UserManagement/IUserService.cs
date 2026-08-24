@@ -2,12 +2,12 @@
 
 public interface IUserService
 {
-	Task<PaginatedResult<UsersDTO>> GetUsersAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<UsersDTO>> GetUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
-	Task<PaginatedResult<UsersDTO>> GetUnApprovedUsersAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<UsersDTO>> GetUnApprovedUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<UserDTO> EditUserAsync(EditUserDTO userDTO);

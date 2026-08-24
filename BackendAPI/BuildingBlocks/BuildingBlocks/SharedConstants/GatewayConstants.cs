@@ -13,6 +13,13 @@ public static class GatewayConstants
 		public const string LoginPolicy = "LoginPolicy";
 		public const string DefaultStrict = "DefaultStrict";
 		public const string Default = "default";
+
+		/// <summary>
+		/// The candidate-facing ATS application form: token lookup, submission and
+		/// withdrawal. These accept unauthenticated callers, so they are not bounded by
+		/// the login flow the way the rest of the platform is.
+		/// </summary>
+		public const string AnonymousApplicationForm = "AnonymousApplicationForm";
 	}
 
 	// Http methods

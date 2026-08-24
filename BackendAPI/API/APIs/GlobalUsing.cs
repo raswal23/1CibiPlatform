@@ -33,7 +33,6 @@ global using AIAgent.Data.Extensions;
 global using ATS.Data.Extensions;
 global using ATS.ServiceConfig;
 global using BuildingBlocks.Storage;
-global using StackExchange.Redis;
 global using Microsoft.EntityFrameworkCore.Design;
 global using BackendAPI.Modules.PlatformLogging;
 global using PlatformLogging.ServiceConfig;

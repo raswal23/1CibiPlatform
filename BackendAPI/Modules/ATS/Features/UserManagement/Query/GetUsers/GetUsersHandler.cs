@@ -1,24 +1,21 @@
-namespace ATS.Features.UserManagement.Query.GetUsers;
+﻿namespace ATS.Features.UserManagement.Query.GetUsers;
 
-public record GetUsersQuery(PaginationRequest paginationRequest) : IQuery<GetUsersResult>;
+public record GetUsersQuery(KeysetPaginationRequest KeysetPaginationRequest) : IQuery<GetUsersResult>;
 
 public class GetUsersQueryValidator : AbstractValidator<GetUsersQuery>
 {
 	public GetUsersQueryValidator()
 	{
-		RuleFor(x => x.paginationRequest)
+		RuleFor(x => x.KeysetPaginationRequest)
 			.NotNull().WithMessage("Pagination request is required.");
 
-		RuleFor(x => x.paginationRequest.PageIndex)
-			.GreaterThan(0).WithMessage("PageIndex must be greater than 0.");
-
-		RuleFor(x => x.paginationRequest.PageSize)
+		RuleFor(x => x.KeysetPaginationRequest.PageSize)
 			.GreaterThan(0).WithMessage("PageSize must be greater than 0.")
 			.LessThanOrEqualTo(100).WithMessage("PageSize must be less than or equal to 100.");
 	}
 }
 
-public record GetUsersResult(PaginatedResult<UserDetailsDTO> users);
+public record GetUsersResult(KeysetPaginatedResult<UserDetailsDTO> users);
 
 public class GetUsersHandler : IQueryHandler<GetUsersQuery, GetUsersResult>
 {
@@ -31,7 +28,7 @@ public class GetUsersHandler : IQueryHandler<GetUsersQuery, GetUsersResult>
 
 	public async Task<GetUsersResult> Handle(GetUsersQuery request, CancellationToken cancellationToken)
 	{
-		var users = await _userManagementService.GetUsersAsync(request.paginationRequest, cancellationToken);
+		var users = await _userManagementService.GetUsersAsync(request.KeysetPaginationRequest, cancellationToken);
 		return new GetUsersResult(users);
 	}
 }

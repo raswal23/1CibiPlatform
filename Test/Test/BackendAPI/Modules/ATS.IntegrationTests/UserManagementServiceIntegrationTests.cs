@@ -99,20 +99,20 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 			CancellationToken.None);
 
 		await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 		SetAtsScope(2, firstClientId);
 
 		var candidates = await _userManagementService.GetAuthUsersAsync(CancellationToken.None);
 		var assignments = await _userManagementService.GetUserClientAssignmentsAsync(CancellationToken.None);
 		var users = await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
 		candidates.Select(user => user.UserId).Should().Equal(firstUserId);
 		assignments.Select(item => item.UserId).Should().Equal(firstUserId);
-		users.Count.Should().Be(1);
-		users.Data.Should().OnlyContain(user => user.UserId == firstUserId && user.ClientId == firstClientId);
+		users.TotalCount.Should().Be(1);
+		users.Items.Should().OnlyContain(user => user.UserId == firstUserId && user.ClientId == firstClientId);
 	}
 
 	[Fact]
@@ -142,12 +142,12 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 			CreateAddRequest(secondUserId, roleId, null, "Second Site", true, moduleId),
 			CancellationToken.None);
 		var users = await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
 		candidates.Select(user => user.UserId).Should().BeEquivalentTo([firstUserId, secondUserId]);
 		addResult.Should().BeTrue();
-		users.Data.Select(user => user.UserId).Distinct().Should().BeEquivalentTo([firstUserId, secondUserId]);
+		users.Items.Select(user => user.UserId).Distinct().Should().BeEquivalentTo([firstUserId, secondUserId]);
 	}
 
 	[Fact]
@@ -159,13 +159,13 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 		var candidates = await _userManagementService.GetAuthUsersAsync(CancellationToken.None);
 		var assignments = await _userManagementService.GetUserClientAssignmentsAsync(CancellationToken.None);
 		var users = await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 
 		candidates.Should().BeEmpty();
 		assignments.Should().BeEmpty();
-		users.Count.Should().Be(0);
-		users.Data.Should().BeEmpty();
+		users.TotalCount.Should().Be(0);
+		users.Items.Should().BeEmpty();
 	}
 
 	[Fact]
@@ -212,21 +212,32 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var page = await _clientAssignmentService.GetAssignmentsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 2),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 2),
 			CancellationToken.None);
 		var search = await _clientAssignmentService.GetAssignmentsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "zulu@"),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "zulu@"),
 			CancellationToken.None);
 
 		// Assert
-		page.Count.Should().Be(3);
-		page.Data.Should().HaveCount(2);
-		page.Data.First().UserId.Should().Be(assignedUserId);
-		page.Data.First().ClientId.Should().Be(clientId);
-		page.Data.First().ClientName.Should().Be("Assignment Grid Client");
-		page.Data.Last().ClientId.Should().BeNull();
-		search.Data.Should().ContainSingle();
-		search.Data.Single().UserEmail.Should().Be("unassigned.zulu@example.com");
+		page.TotalCount.Should().Be(3);
+		page.Items.Should().HaveCount(2);
+		page.Items.First().UserId.Should().Be(assignedUserId);
+		page.Items.First().ClientId.Should().Be(clientId);
+		page.Items.First().ClientName.Should().Be("Assignment Grid Client");
+		page.Items.Last().ClientId.Should().BeNull();
+		page.NextCursor.Should().NotBeNull();
+
+		var secondPage = await _clientAssignmentService.GetAssignmentsAsync(
+			new KeysetPaginationRequest(Cursor: page.NextCursor, PageSize: 2),
+			CancellationToken.None);
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Should().ContainSingle();
+		secondPage.Items.Select(item => item.UserId)
+			.Should().NotIntersectWith(page.Items.Select(item => item.UserId));
+		secondPage.NextCursor.Should().BeNull();
+
+		search.Items.Should().ContainSingle();
+		search.Items.Single().UserEmail.Should().Be("unassigned.zulu@example.com");
 	}
 
 	[Fact]
@@ -239,13 +250,13 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var result = await _clientAssignmentService.GetAssignableClientsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "searchable"),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "searchable"),
 			CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(1);
-		result.Data.Should().ContainSingle();
-		result.Data.Single().ClientId.Should().Be(expectedClientId);
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().ContainSingle();
+		result.Items.Single().ClientId.Should().Be(expectedClientId);
 	}
 
 	[Fact]
@@ -418,24 +429,33 @@ public class UserManagementServiceIntegrationTests : BaseIntegrationTest
 
 		// Act
 		var page = await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 2),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 2),
 			CancellationToken.None);
 		var search = await _userManagementService.GetUsersAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "PREMIUM"),
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "PREMIUM"),
 			CancellationToken.None);
 
 		// Assert
-		page.Count.Should().Be(3);
-		page.Data.Should().HaveCount(3);
-		page.Data.Select(user => user.UserName).Distinct()
+		page.TotalCount.Should().Be(3);
+		page.Items.Should().HaveCount(3);
+		page.Items.Select(user => user.UserName).Distinct()
 			.Should().Equal("Alice Alpha", "Mike Middle");
-		page.Data.Where(user => user.UserId == alphaUserId)
+		page.Items.Where(user => user.UserId == alphaUserId)
 			.Select(user => user.ModuleId)
 			.Should().Equal(firstModuleId, secondModuleId);
+		page.NextCursor.Should().NotBeNull();
 
-		search.Count.Should().Be(1);
-		search.Data.Should().ContainSingle();
-		search.Data.Single().UserId.Should().Be(middleUserId);
+		var secondPage = await _userManagementService.GetUsersAsync(
+			new KeysetPaginationRequest(Cursor: page.NextCursor, PageSize: 2),
+			CancellationToken.None);
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(user => user.UserName).Distinct()
+			.Should().Equal("Zed Zulu");
+		secondPage.NextCursor.Should().BeNull();
+
+		search.TotalCount.Should().Be(1);
+		search.Items.Should().ContainSingle();
+		search.Items.Single().UserId.Should().Be(middleUserId);
 	}
 
 	[Fact]

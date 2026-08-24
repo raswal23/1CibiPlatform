@@ -1,0 +1,493 @@
+﻿namespace ATS.Services.ApplicationForm;
+
+public class ApplicationFormService : IApplicationFormService
+{
+	private readonly ILogger<ApplicationFormService> _logger;
+	private readonly IATSRepository _atsRepository;
+	private readonly IUnitOfWork _unitOfWork;
+	private readonly IConfiguration _configuration;
+	private readonly IObjectStorageService _objectStorageService;
+	private readonly IFilePdfService _filePdfService;
+	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly string _applicationFormBaseUrl;
+	private readonly string _folderName;
+
+	/// <summary>
+	/// Object keys uploaded during a single submission. Local to the call rather than a
+	/// field on the service, so a second submission can never delete or reuse the first
+	/// one's uploads regardless of how the service is scoped.
+	/// </summary>
+	private sealed class UploadedKeys
+	{
+		private readonly List<string> _keys = [];
+
+		/// <summary>Records a key as owned by this submission and returns it.</summary>
+		public string Track(string key)
+		{
+			if (!string.IsNullOrWhiteSpace(key))
+				_keys.Add(key);
+
+			return key;
+		}
+
+		public IReadOnlyList<string> All => _keys;
+	}
+
+	public ApplicationFormService(ILogger<ApplicationFormService> logger,
+					  IATSRepository atsRepository,
+					  IUnitOfWork unitOfWork,
+					  IConfiguration configuration,
+					  IObjectStorageService objectStorageService,
+					  IFilePdfService filePdfService,
+					  IOrderHistoryService orderHistoryService)
+	{
+		_logger = logger;
+		_atsRepository = atsRepository;
+		_unitOfWork = unitOfWork;
+		_configuration = configuration;
+		_objectStorageService = objectStorageService;
+		_filePdfService = filePdfService;
+		_orderHistoryService = orderHistoryService;
+		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
+		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
+	}
+
+	public async Task<bool> AddApplicationFormDataAsync(string hashToken,
+														PersonalDetailsDTO personalDetails,
+														AddressDetailsDTO addressDetails,
+														EducationalBackgroundDTO educationalBackground,
+														LicensesDetailsDTO licensesDetails,
+														ProfessionalExperiencesDTO professionalExperiences,
+														ReferenceDetailsDTO referenceDetails,
+														SignatureDetailsDTO signatureDetails,
+														CancellationToken ct = default)
+	{
+		// The invitation comes from the emailed token, never from the request body. A
+		// caller who guesses another candidate's EmailInvitationID gets nowhere because
+		// the value they sent is overwritten below.
+		var emailInvitationId = await AuthorizeApplicationFormAsync(hashToken, ct);
+
+		personalDetails.EmailInvitationID = emailInvitationId;
+		addressDetails.EmailInvitationID = emailInvitationId;
+		educationalBackground.EmailInvitationID = emailInvitationId;
+		licensesDetails.EmailInvitationID = emailInvitationId;
+		professionalExperiences.EmailInvitationID = emailInvitationId;
+		referenceDetails.EmailInvitationID = emailInvitationId;
+		signatureDetails.EmailInvitationID = emailInvitationId;
+
+		var logContext = new
+		{
+			Action = "AddingApplicationFormData",
+			Step = "StartAddingApplicationFormData",
+			Identity = emailInvitationId,
+			Timestamp = DateTime.UtcNow
+		};
+
+		var uploadedKeys = new UploadedKeys();
+
+		await _unitOfWork.BeginTransactionAsync(ct);
+
+		try
+		{
+			await AddPersonalDetailsDataAsync(personalDetails, uploadedKeys, ct);
+
+			await AddAddressDataAsync(addressDetails, ct);
+
+			await AddEducationalBackgroundDataAsync(educationalBackground!, uploadedKeys, ct);
+
+			await AddLicensesDataAsync(licensesDetails!, uploadedKeys, ct);
+
+			await AddProfessionalExperiencesDataAsync(professionalExperiences!, uploadedKeys, ct);
+
+			await AddReferenceDetailsDataAsync(referenceDetails!, ct);
+
+			await AddSignatureDetailsDataAsync(signatureDetails!, uploadedKeys, ct);
+
+			await _unitOfWork.SaveChangesAsync(ct);
+
+			await _atsRepository.UpdateEmailInvitationRequestForFilledUpFormAsync(emailInvitationId);
+
+			await _orderHistoryService.RecordAsync(
+				emailInvitationId,
+				OrderHistoryEventType.ApplicationFormSubmitted,
+				OrderStatus.PendingCandidateInfo,
+				OrderStatus.InProgress, ct);
+
+			await _unitOfWork.CommitAsync(ct);
+
+			_logger.LogInformation("Succcessfully added the Application Form Data for {EmailId}: {@Context}", emailInvitationId, logContext);
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			foreach (var key in uploadedKeys.All)
+			{
+				try
+				{
+					await _objectStorageService.DeleteAsync(key, ct);
+				}
+				catch (Exception deleteEx)
+				{
+					_logger.LogWarning(deleteEx,
+						"Failed to delete file with key {Key}", key);
+				}
+			}
+			await _unitOfWork.RollbackAsync(ct);
+			_logger.LogError("Failed Transaction: Failed to add Application Form Data record for {EmailId}: {@Context}", emailInvitationId, logContext);
+
+			// A rejected token or a spent invitation is the caller's problem, not a
+			// server fault - let those surface as 4xx instead of being flattened to 500.
+			if (ex is NotFoundException or BadRequestException or ConflictException)
+				throw;
+
+			throw new InternalServerException($"Failed to add transaction. {ex.InnerException?.Message ?? ex.Message}");
+		}
+
+	}
+
+	/// <summary>
+	/// Resolves the invitation a hash token refers to, rejecting unknown, expired and
+	/// already-spent tokens. Returns the id every child record must be written against.
+	/// </summary>
+	private async Task<Guid> AuthorizeApplicationFormAsync(string hashToken, CancellationToken ct)
+	{
+		var claim = await _atsRepository.GetApplicationFormClaimAsync(hashToken, ct);
+
+		if (claim is null || claim.EmailInvitationID == Guid.Empty)
+			throw new NotFoundException("No record found for the provided hash token.");
+
+		if (claim.IsExpired)
+			throw new BadRequestException("This application form link has expired. Please request a new one.");
+
+		// Withdrawn and Done are both terminal. Without this the second post would fail
+		// on the PersonalDetails 1:1 unique constraint as an opaque 500.
+		if (!string.Equals(claim.ApplicationFormStatus, ApplicationFormStatus.Pending, StringComparison.OrdinalIgnoreCase))
+			throw new ConflictException($"This application form has already been {claim.ApplicationFormStatus?.ToLowerInvariant() ?? "processed"}.");
+
+		return claim.EmailInvitationID;
+	}
+
+	private async Task<bool> AddPersonalDetailsDataAsync(PersonalDetailsDTO personalDetailsDTO, UploadedKeys uploadedKeys, CancellationToken cancellationToken)
+	{
+		var resumeFileKey = "";
+		var nbiKey = "";
+		var govtIdKey = "";
+		var biometricFileKey = "";
+
+		if (personalDetailsDTO.ResumeFile != null)
+		{
+			await using var resumeStream = personalDetailsDTO.ResumeFile.OpenReadStream();
+			resumeFileKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.ResumeFileName!, resumeStream, cancellationToken));
+		}
+
+		if (personalDetailsDTO.NBIClearanceFile != null)
+		{
+			await using var nbiStream = personalDetailsDTO.NBIClearanceFile.OpenReadStream();
+			nbiKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.NBIClearanceFileName!, nbiStream, cancellationToken));
+		}
+
+		if (personalDetailsDTO.AdditionalGovtIDFile != null)
+		{
+			await using var govtIdStream = personalDetailsDTO.AdditionalGovtIDFile.OpenReadStream();
+			govtIdKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, personalDetailsDTO.AdditionalGovtIDFileName!, govtIdStream, cancellationToken));
+		}
+
+		if (personalDetailsDTO.BiometricFile != null)
+		{
+			await using var pdfStream =
+				await _filePdfService.ConvertImageToPdfAsync(
+					personalDetailsDTO.BiometricFile,
+					cancellationToken);
+
+			personalDetailsDTO.BiometricFileName =
+				System.IO.Path.ChangeExtension(personalDetailsDTO.BiometricFileName, ".pdf");
+
+			biometricFileKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(
+				_folderName,
+				personalDetailsDTO.BiometricFileName!,
+				pdfStream,
+				cancellationToken));
+		}
+
+		PersonalDetails personalDetails = personalDetailsDTO.Adapt<PersonalDetails>();
+		personalDetails.PersonalID = Guid.CreateVersion7();
+		personalDetails.ResumeFileKey = resumeFileKey;
+		personalDetails.NBIClearanceFileKey = nbiKey;
+		personalDetails.AdditionalGovtIDFileKey = govtIdKey;
+		personalDetails.BiometricFileKey = biometricFileKey;
+		personalDetails.CreatedDate = DateTime.UtcNow;
+
+		bool isAdded = await _atsRepository.AddPersonalDetailsAsync(personalDetails);
+
+		return isAdded;
+	}
+
+	private async Task<bool> AddAddressDataAsync(
+		AddressDetailsDTO addressDetailsDTO,
+		CancellationToken cancellationToken)
+	{
+		AddressDetails addressDetails = addressDetailsDTO.Adapt<AddressDetails>();
+		addressDetails.CurrentTypeOfOwnership = addressDetailsDTO.TypeOfOwnership;
+		addressDetails.AddressId = Guid.CreateVersion7();
+		addressDetails.CreatedDate = DateTime.UtcNow;
+
+		bool isAdded = await _atsRepository.AddAddressDetailsAsync(addressDetails);
+
+		return isAdded;
+	}
+
+	private async Task<bool> AddEducationalBackgroundDataAsync(
+		EducationalBackgroundDTO educationalBackgroundDTO,
+		UploadedKeys uploadedKeys,
+		CancellationToken cancellationToken)
+	{
+		var highSchoolDiplomaKey = "";
+		var seniorHighSchoolDiplomaKey = "";
+		var bachelorsDiplomaKey = "";
+		var mastersDiplomaKey = "";
+		var doctorateDiplomaKey = "";
+
+		if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.JuniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
+		{
+			await using var highSchoolDiplomaStream = educationalBackgroundDTO.HighSchoolDiplomaFile!.OpenReadStream();
+			highSchoolDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.HighSchoolDiplomaFileName!, highSchoolDiplomaStream, cancellationToken));
+		}
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.SeniorHighSchoolGraduate, StringComparison.OrdinalIgnoreCase))
+		{
+			await using var seniorHighSchoolDiplomaStream = educationalBackgroundDTO.SeniorHighSchoolDiplomaFile!.OpenReadStream();
+			seniorHighSchoolDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.SeniorHighSchoolDiplomaFileName!, seniorHighSchoolDiplomaStream, cancellationToken));
+		}
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.CollegeGraduate, StringComparison.OrdinalIgnoreCase))
+		{
+			await using var bachelorsDiplomaStream = educationalBackgroundDTO.BachelorsDiplomaFile!.OpenReadStream();
+			bachelorsDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.BachelorsDiplomaFileName!, bachelorsDiplomaStream, cancellationToken));
+		}
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.MastersGraduate, StringComparison.OrdinalIgnoreCase))
+		{
+			await using var mastersDiplomaStream = educationalBackgroundDTO.MastersDiplomaFile!.OpenReadStream();
+			mastersDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.MastersDiplomaFileName!, mastersDiplomaStream, cancellationToken));
+		}
+		else if (educationalBackgroundDTO.HighestEducationalAttainment!.Contains(HighestEducationalAttainment.DoctorateGraduate, StringComparison.OrdinalIgnoreCase))
+		{
+			await using var doctorateDiplomaStream = educationalBackgroundDTO.DoctorateDiplomaFile!.OpenReadStream();
+			doctorateDiplomaKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, educationalBackgroundDTO.DoctorateDiplomaFileName!, doctorateDiplomaStream, cancellationToken));
+		}
+
+		EducationalBackground educationalBackground = educationalBackgroundDTO.Adapt<EducationalBackground>();
+		educationalBackground.EducationalBackgroundID = Guid.CreateVersion7();
+		educationalBackground.HighSchoolDiplomaFileKey = highSchoolDiplomaKey;
+		educationalBackground.SeniorHighSchoolDiplomaFileKey = seniorHighSchoolDiplomaKey;
+		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
+		educationalBackground.CollegeSchoolName = educationalBackgroundDTO.BachelorsSchoolName;
+		educationalBackground.CollegeGraduationDate = educationalBackgroundDTO.BachelorsGraduationDate;
+		educationalBackground.CollegeDegree = educationalBackgroundDTO.BachelorsDegree;
+		educationalBackground.CollegeDiplomaFileKey = bachelorsDiplomaKey;
+		educationalBackground.MastersDiplomaFileKey = mastersDiplomaKey;
+		educationalBackground.DoctorateDiplomaFileKey = doctorateDiplomaKey;
+		educationalBackground.CreatedDate = DateTime.UtcNow;
+
+		bool isAdded = await _atsRepository.AddEducationalBackgroundAsync(educationalBackground);
+
+		return isAdded;
+	}
+
+	private async Task<bool> AddLicensesDataAsync(
+		LicensesDetailsDTO licensesDetailsDTO,
+		UploadedKeys uploadedKeys,
+		CancellationToken cancellationToken)
+	{
+		var licenseKey = "";
+
+		if (licensesDetailsDTO.LicenseUploadFile != null)
+		{
+			await using var licenseStream = licensesDetailsDTO.LicenseUploadFile!.OpenReadStream();
+			licenseKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, licensesDetailsDTO.LicenseUploadFileName!, licenseStream, cancellationToken));
+		}
+
+		LicensesDetails licensesDetails = licensesDetailsDTO!.Adapt<LicensesDetails>();
+		licensesDetails.LicensesDetailsID = Guid.CreateVersion7();
+		licensesDetails.LicenseUploadFileKey = licenseKey;
+		licensesDetails.CreatedDate = DateTime.UtcNow;
+
+		bool isAdded = await _atsRepository.AddLicensesDetailsAsync(licensesDetails);
+
+		return isAdded;
+	}
+
+	private async Task<bool> AddProfessionalExperiencesDataAsync(
+		ProfessionalExperiencesDTO professionalExperiencesDTO,
+		UploadedKeys uploadedKeys,
+		CancellationToken cancellationToken)
+	{
+		var emp1COEKey = "";
+		var emp2COEKey = "";
+		var emp3COEKey = "";
+
+		if (professionalExperiencesDTO.Emp1COEUploadFile! != null)
+		{
+			await using var emp1COEStream = professionalExperiencesDTO.Emp1COEUploadFile!.OpenReadStream();
+			emp1COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp1COEUploadFileName!, emp1COEStream, cancellationToken));
+		}
+		if (professionalExperiencesDTO.Emp2COEUploadFile! != null)
+		{
+			await using var emp2COEStream = professionalExperiencesDTO.Emp2COEUploadFile!.OpenReadStream();
+			emp2COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp2COEUploadFileName!, emp2COEStream, cancellationToken));
+		}
+		if (professionalExperiencesDTO.Emp3COEUploadFile! != null)
+		{
+			await using var emp3COEStream = professionalExperiencesDTO.Emp3COEUploadFile!.OpenReadStream();
+			emp3COEKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, professionalExperiencesDTO.Emp3COEUploadFileName!, emp3COEStream, cancellationToken));
+		}
+
+		ProfessionalExperiences professionalExperiences = professionalExperiencesDTO.Adapt<ProfessionalExperiences>();
+		professionalExperiences.ProfessionalExperiencesID = Guid.CreateVersion7();
+		professionalExperiences.Emp1COEUploadFileKey = emp1COEKey;
+		professionalExperiences.Emp2COEUploadFileKey = emp2COEKey;
+		professionalExperiences.Emp3COEUploadFileKey = emp3COEKey;
+		professionalExperiences.CreatedDate = DateTime.UtcNow;
+
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp1CompanyCity))
+		{
+			professionalExperiences.Emp1CompanyAddress = $"{professionalExperiencesDTO.Emp1CompanyCity}, {professionalExperiencesDTO.Emp1CompanyProvince}, {professionalExperiencesDTO.Emp1CompanyPostalCode}, {professionalExperiencesDTO.Emp1CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp2CompanyCity))
+		{
+			professionalExperiences.Emp2CompanyAddress = $"{professionalExperiencesDTO.Emp2CompanyCity}, {professionalExperiencesDTO.Emp2CompanyProvince}, {professionalExperiencesDTO.Emp2CompanyPostalCode}, {professionalExperiencesDTO.Emp2CompanyCountry}";
+		}
+		if (!string.IsNullOrWhiteSpace(professionalExperiencesDTO.Emp3CompanyCity))
+		{
+			professionalExperiences.Emp3CompanyAddress = $"{professionalExperiencesDTO.Emp3CompanyCity}, {professionalExperiencesDTO.Emp3CompanyProvince}, {professionalExperiencesDTO.Emp3CompanyPostalCode}, {professionalExperiencesDTO.Emp3CompanyCountry}";
+		}
+
+		bool isAdded = await _atsRepository.AddProfessionalExperiencesAsync(professionalExperiences);
+		return isAdded;
+	}
+
+	private async Task<bool> AddReferenceDetailsDataAsync(
+		ReferenceDetailsDTO referenceDetailsDTO,
+		CancellationToken cancellationToken)
+	{
+		ReferenceDetails referenceDetails = referenceDetailsDTO.Adapt<ReferenceDetails>();
+		referenceDetails.ReferenceDetailsID = Guid.CreateVersion7();
+		referenceDetails.CreatedDate = DateTime.UtcNow;
+
+		if (referenceDetails.Ref1BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref1BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref1BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+		if (referenceDetails.Ref2BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref2BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref2BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+		if (referenceDetails.Ref3BestTimeToContact.HasValue)
+		{
+			referenceDetails.Ref3BestTimeToContact = DateTime.SpecifyKind(referenceDetails.Ref3BestTimeToContact.Value, DateTimeKind.Utc);
+		}
+
+		bool isAdded = await _atsRepository.AddReferenceDetailsAsync(referenceDetails);
+		return isAdded;
+	}
+
+	private async Task<bool> AddSignatureDetailsDataAsync(
+		SignatureDetailsDTO signatureDetailsDTO,
+		UploadedKeys uploadedKeys,
+		CancellationToken cancellationToken)
+	{
+		if (signatureDetailsDTO.Signature == null)
+			throw new BadRequestException("Signature is required.");
+
+		await using var stream = signatureDetailsDTO.Signature.OpenReadStream();
+
+		using var memory = new MemoryStream();
+		await stream.CopyToAsync(memory, cancellationToken);
+
+		var signatureBytes = memory.ToArray();
+
+		var consentFormFileName = $"{signatureDetailsDTO.SignerName}_ConsentForm.pdf";
+		await using var consentPdfStream = await _filePdfService.GenerateConsentFormPdfAsync(
+			signatureDetailsDTO.SignerName ?? string.Empty,
+			signatureDetailsDTO.SignatureDate,
+			signatureBytes,
+			cancellationToken);
+
+		var consentFormKey = uploadedKeys.Track(await _objectStorageService.UploadAsync(_folderName, consentFormFileName, consentPdfStream, cancellationToken));
+
+		SignatureDetails signatureDetails = signatureDetailsDTO.Adapt<SignatureDetails>();
+		signatureDetails.SignatureDetailsID = Guid.CreateVersion7();
+		signatureDetails.ConsentFormFileKey = consentFormKey;
+		signatureDetails.ConsentFormFileName = consentFormFileName;
+		signatureDetails.ConsentGeneratedAt = DateTime.UtcNow;
+
+		bool isAdded = await _atsRepository.AddSignatureDetailsAsync(signatureDetails);
+		return isAdded;
+	}
+
+	public async Task<EmailIdAndApplicationFormPathDTO> GetEmailIdAndApplicationFormPathAsync(
+		string hashToken,
+		CancellationToken ct = default)
+	{
+		var logContext = new
+		{
+			Action = "GettingEmailIdAndApplicationFormPath",
+			Step = "StartFetchingEmailIdAndApplicationFormPath",
+			Identity = hashToken,
+			Timestamp = DateTime.UtcNow
+		};
+
+		EmailIdAndApplicationFormPathDTO emailIdAndApplicationFormPath = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
+
+		if (emailIdAndApplicationFormPath.EmailId == Guid.Empty)
+		{
+			_logger.LogError("Failed Transaction: Failed to fetch EmailId and Application Form Path for {HashToken}: {@Context}", hashToken, logContext);
+			throw new NotFoundException("No record found for the provided hash token.");
+		}
+
+		// The lookup query filters on HashToken alone, so an expired link would otherwise
+		// still hand back a usable EmailInvitationID.
+		if (!emailIdAndApplicationFormPath.ExpiresAt.HasValue
+			|| emailIdAndApplicationFormPath.ExpiresAt.Value <= DateTime.UtcNow)
+		{
+			_logger.LogWarning("Rejected an expired application form link: {@Context}", logContext);
+			throw new BadRequestException("This application form link has expired. Please request a new one.");
+		}
+
+		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);
+
+		emailIdAndApplicationFormPath.ApplicationFormPath = _applicationFormBaseUrl;
+		return emailIdAndApplicationFormPath;
+	}
+
+	public async Task<bool> WithdrawnApplicationForm(string hashToken, CancellationToken ct = default)
+	{
+		var invitationInfo = await _atsRepository.GetEmailIdAndApplicationFormPathAsync(hashToken, ct);
+		var invitation = invitationInfo.EmailId == Guid.Empty
+			? new EmailInvitationRequest()
+			: await _atsRepository.GetEmailInvitationRequestByIdAsync(invitationInfo.EmailId, ct);
+
+		await _unitOfWork.BeginTransactionAsync(ct);
+
+		try
+		{
+			var isUpdated = await _atsRepository.WithdrawnApplicationForm(hashToken, ct);
+
+			if (isUpdated == 0)
+			{
+				throw new NotFoundException("No record found for the provided hash token.");
+			}
+
+			await _orderHistoryService.RecordAsync(invitation.EmailInvitationID, OrderHistoryEventType.ApplicationFormWithdrawn, invitation.OrderStatus, OrderStatus.ApplicationWithdrawn, ct);
+
+			await _unitOfWork.SaveChangesAsync(ct);
+
+			await _unitOfWork.CommitAsync(ct);
+
+			return true;
+		}
+		catch
+		{
+			await _unitOfWork.RollbackAsync(ct);
+			throw;
+		}
+	}
+}

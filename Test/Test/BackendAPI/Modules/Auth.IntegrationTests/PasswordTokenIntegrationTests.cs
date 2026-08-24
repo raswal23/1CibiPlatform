@@ -16,15 +16,15 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task IsChangePasswordTokenValid_ShouldReturnTrue_WhenTokenIsValid()
 	{
-		// Arrange
+		// Arrange - the raw token travels in the reset link; only its hash is stored
 		var user = await SeedUserData();
 
-		var tokenHash = Guid.CreateVersion7().ToString();
+		var rawToken = Guid.CreateVersion7().ToString();
 
 		var passwordToken = new PasswordResetToken
 		{
 			UserId = user.Id,
-			TokenHash = tokenHash,
+			TokenHash = _hashService.Hash(rawToken),
 			CreatedAt = DateTime.UtcNow,
 			ExpiresAt = DateTime.UtcNow.AddMinutes(30),
 			IsUsed = false
@@ -33,7 +33,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 		_dbContext.PasswordResetToken.Add(passwordToken);
 		await _dbContext.SaveChangesAsync();
 
-		var requestDto = new ForgotPasswordTokenRequestDTO(user.Id, tokenHash);
+		var requestDto = new ForgotPasswordTokenRequestDTO(user.Id, rawToken);
 
 		var command = new IsChangePasswordTokenValidCommand(requestDto);
 
@@ -48,15 +48,15 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task UpdatePassword_ShouldUpdatePassword_WhenTokenIsValid()
 	{
-		// Arrange
+		// Arrange - the raw token travels in the reset link; only its hash is stored
 		var user = await SeedUserData();
 
-		var tokenHash = Guid.CreateVersion7().ToString();
+		var rawToken = Guid.CreateVersion7().ToString();
 
 		var passwordToken = new PasswordResetToken
 		{
 			UserId = user.Id,
-			TokenHash = tokenHash,
+			TokenHash = _hashService.Hash(rawToken),
 			CreatedAt = DateTime.UtcNow,
 			ExpiresAt = DateTime.UtcNow.AddMinutes(30),
 			IsUsed = false
@@ -67,7 +67,7 @@ public class PasswordTokenIntegrationTests : BaseIntegrationTest
 
 		var newPassword = "NewP@ssw0rd!";
 
-		var requestDto = new UpdatePasswordRequestDTO(tokenHash, newPassword);
+		var requestDto = new UpdatePasswordRequestDTO(rawToken, newPassword);
 
 		var command = new UpdatePasswordCommand(requestDto);
 

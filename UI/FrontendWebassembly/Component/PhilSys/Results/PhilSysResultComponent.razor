@@ -1,0 +1,86 @@
+﻿@namespace FrontendWebassembly.Component.PhilSys
+@layout GenericLayout
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+
+@if (WebHookUrl == "/")
+{
+    <div class="philsys-result-shell">
+        <MudPaper Class="philsys-result-card" Elevation="0">
+
+            <div class="philsys-result-head">
+                <div class="philsys-result-head-text">
+                    <h1 class="philsys-result-title">Verification result</h1>
+                    <p class="philsys-result-subtitle">Details returned by PhilSys for this registrant.</p>
+                </div>
+
+                @if (!string.IsNullOrEmpty(VerificationResult?.data_subject?.digital_id) || VerificationResult!.verified.Equals(true))
+                {
+                    <span class="philsys-result-pill is-verified">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 12l5 5L20 7" />
+                        </svg>
+                        Verified
+                    </span>
+                }
+                else if (VerificationResult!.verified.Equals(false))
+                {
+                    <span class="philsys-result-pill is-not-verified">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6L6 18" />
+                        </svg>
+                        Not Verified
+                    </span>
+                }
+            </div>
+
+            <div class="philsys-result-body">
+                <div class="philsys-result-aside">
+                    <div class="philsys-result-photo">
+                        <MudImage Src="@(string.IsNullOrWhiteSpace(FaceUrl) ? "images/generic/default_picture.jpg" : FaceUrl)"
+                                  Alt="Registrant photo"
+                                  Class="philsys-result-photo-img" />
+                    </div>
+
+                    <MudButton ButtonType="ButtonType.Button"
+                               Variant="Variant.Filled"
+                               FullWidth="true"
+                               OnClick="DownloadApiResponse"
+                               StartIcon="@Icons.Material.Outlined.Download"
+                               Class="philsys-result-button philsys-result-button-secondary">
+                        API Response
+                    </MudButton>
+                </div>
+
+                <div class="philsys-result-details">
+                    <dl class="philsys-result-list">
+                        @foreach (var row in InfoRows!)
+                        {
+                            <div class="philsys-result-row">
+                                <dt>@row.Label</dt>
+                                <dd class="@(string.IsNullOrWhiteSpace(row.Value) || row.Value == "No Data Found" ? "is-empty" : "")">
+                                    @((string.IsNullOrWhiteSpace(row.Value) ? "No Data Found" : row.Value))
+                                </dd>
+                            </div>
+                        }
+                    </dl>
+                </div>
+            </div>
+
+            <div class="philsys-result-actions">
+                <MudButton ButtonType="ButtonType.Button"
+                           Variant="Variant.Filled"
+                           OnClick="SearchAgain"
+                           StartIcon="@Icons.Material.Outlined.Search"
+                           Class="philsys-result-button philsys-result-button-primary">
+                    Search Again
+                </MudButton>
+            </div>
+
+        </MudPaper>
+    </div>
+}
+@if (WebHookUrl != "/")
+{
+    <PhilSysCompleteVerificationComponent></PhilSysCompleteVerificationComponent>
+}

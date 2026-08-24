@@ -2,8 +2,8 @@
 
 public interface ISubMenuService
 {
-	Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(
-		PaginationRequest paginationRequest,
+	Task<KeysetPaginatedResult<SubMenusDTO>> GetSubMenusAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken);
 
 	Task<bool> DeleteSubMenuAsync(int AppId);

@@ -4,34 +4,30 @@
 @inherits CrudPageBase
 @inject IConfiguration Configuration
 @attribute [RequirePermission(3, 3)]
-<MudGrid>
-    <MudItem xs="12" Class="d-flex justify-center">
-        <MudTabs Rounded="false"
-                         ScrollButtons="Auto"
-                         Elevation="0"
-                         AlwaysShowScrollButtons="true"
-                         TabPanelsClass="pt-2 pb-2"
-                         @bind-ActivePanelIndex="_activeIndex"
-                         OnActivePanelIndexChanged="OnTabChanged"
-                         Style="max-width:100%; overflow-x:auto; margin-right: 0 !important; padding: 5px;"
-                         Class="custom-tabs">
-                    <MudTabPanel Text="Locked User" Class="@GetTabClass(0)" Style="text-transform:none; min-width:120px; border: 1px solid gray;"/>
-                    <MudTabPanel Text="Approval" Class="@GetTabClass(1)" Style="text-transform:none; min-width:120px; border: 1px solid gray;" />
-                    <MudTabPanel Text="User" Class="@GetTabClass(2)" Style="text-transform:none; min-width:120px; border: 1px solid gray;"  />
-                    <MudTabPanel Text="Appplication" Class="@GetTabClass(3)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
-                    <MudTabPanel Text="SubMenu" Class="@GetTabClass(4)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
-                    <MudTabPanel Text="Role" Class="@GetTabClass(5)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;" />
-                    <MudTabPanel Text="User's AppSubRole" Class="@GetTabClass(6)" Style="text-transform:none; min-width: 120px; border: 1px solid gray;"/>
-        </MudTabs>
-    </MudItem>
-</MudGrid>
+<div class="user-app-roles-page">
+    <nav class="user-management-tab-shell" aria-label="User management sections">
+        <div class="user-management-tab-strip" role="tablist">
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 0)" class="@GetTabButtonClass(0)" @onclick="@(() => SelectTab(0))">Locked User</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 1)" class="@GetTabButtonClass(1)" @onclick="@(() => SelectTab(1))">Approval</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 2)" class="@GetTabButtonClass(2)" @onclick="@(() => SelectTab(2))">User</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 3)" class="@GetTabButtonClass(3)" @onclick="@(() => SelectTab(3))">Application</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 4)" class="@GetTabButtonClass(4)" @onclick="@(() => SelectTab(4))">SubMenu</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 5)" class="@GetTabButtonClass(5)" @onclick="@(() => SelectTab(5))">Role</button>
+            <button type="button" role="tab" aria-selected="@(_activeIndex == 6)" class="@GetTabButtonClass(6)" @onclick="@(() => SelectTab(6))">User's AppSubRole</button>
+        </div>
+    </nav>
 @if (_activeIndex == 0)
 {
     <TableComponent TItem="LockedUsersDTO"
+                    ContainerClass="user-management-panel"
                     @ref="lockedUsersTable"
                     Title="Locked User/s"
+                    CountLabel="locked users"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search locked users..."
                     LoadServerData="LoadLockedUsersServerData"
+                    CursorPagerState="_lockedUsersLoader"
                     SearchString="@searchStringLockedUser"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringLockedUser = val)">
@@ -39,51 +35,79 @@
             <MudTh>Email</MudTh>
             <MudTh>Locked At</MudTh>
             <MudTh>Lock Release At</MudTh>
-            <MudTh>Unlock</MudTh>
+            <MudTh Class="um-actions-col">Unlock</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="lockeduser">
             <MudTd DataLabel="Email">@lockeduser.Email</MudTd>
             <MudTd DataLabel="Locked At">@lockeduser.CreatedAt</MudTd>
             <MudTd DataLabel="Locked Release At">@lockeduser.LockReleaseAt</MudTd>
-            <MudTd DataLabel="Unlock">
+            <MudTd DataLabel="Unlock" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.LockOpen" Color="Color.Error" Size="Size.Medium"
+                               Class="um-icon-action um-icon-action-danger"
                                OnClick="@(() => ConfirmUnlockAccount(lockeduser.UserId))"></MudIconButton>
             </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.Lock" />
+                <strong>No locked users</strong>
+                <span>Locked accounts will appear here.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 else if (_activeIndex == 1)
 {
     <TableComponent TItem="UnApprovedUsersDTO"
+                    ContainerClass="user-management-panel"
                     @ref="unapprovedUsersTable"
                     Title="User Approval"
+                    CountLabel="users awaiting approval"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search approvals..."
                     LoadServerData="LoadUnApprovedUsersServerData"
+                    CursorPagerState="_unapprovedUsersLoader"
                     SearchString="@searchStringUnApprovedUser"
-                    ColumnCount="4"
+                    ColumnCount="2"
                     SearchStringChanged="@((string val) => searchStringUnApprovedUser = val)">
         <HeaderTemplate>
             <MudTh>Email</MudTh>
-            <MudTh>Action</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="unapproveduser">
             <MudTd DataLabel="Email">@unapproveduser.email</MudTd>
-            <MudTd DataLabel="Action">
+            <MudTd DataLabel="Action" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium"
+                               Class="um-icon-action um-icon-action-edit"
                                OnClick="@(() => OpenEditUserApprovalDialog(unapproveduser))" />
             </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.HowToReg" />
+                <strong>No pending approvals</strong>
+                <span>Users awaiting approval will appear here.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 else if (_activeIndex == 2)
 {
     <TableComponent TItem="UsersDTO"
+                    ContainerClass="user-management-panel"
                     @ref="usersTable"
                     Title="User Management"
+                    CountLabel="registered users"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search users..."
                     LoadServerData="LoadUsersServerData"
+                    CursorPagerState="_usersLoader"
                     SearchString="@searchStringUser"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringUser = val)">
@@ -100,128 +124,186 @@ else if (_activeIndex == 2)
             <MudTd DataLabel="Middle Name">@user.middleName</MudTd>
             <MudTd DataLabel="Last Name">@user.lastName</MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.People" />
+                <strong>No users</strong>
+                <span>Registered users will appear here.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 
 else if (_activeIndex == 3)
 {
     <TableComponent TItem="ApplicationsDTO"
+                    ContainerClass="user-management-panel"
                     @ref="applicationsTable"
                     Title="Application Management"
+                    CountLabel="registered applications"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search applications..."
                     AddButtonText="Add"
                     OnAddClicked="OpenAddApplicationDialog"
                     LoadServerData="LoadApplicationsServerData"
+                    CursorPagerState="_applicationsLoader"
                     SearchString="@searchStringApp"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringApp = val)">
 
         <HeaderTemplate>
-            <MudTh>Id</MudTh>
+            <MudTh Class="um-id-col">Id</MudTh>
             <MudTh>Application</MudTh>
             <MudTh>Description</MudTh>
-            <MudTh>Action</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="app">
-            <MudTd DataLabel="Id">@app.applicationId</MudTd>
+            <MudTd DataLabel="Id" Class="um-id-col">@app.applicationId</MudTd>
             <MudTd DataLabel="Application">@app.applicationName</MudTd>
-            <MudTd DataLabel="Description">@app.Description</MudTd>
-            <MudTd DataLabel="Action">
+            <MudTd DataLabel="Description" Class="um-description-col">@app.Description</MudTd>
+            <MudTd DataLabel="Action" Class="um-actions-col">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium"
+                                   Class="um-icon-action um-icon-action-edit"
                                    OnClick="@(() => OpenEditApplicationDialog(app))" />
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium"
+                                   Class="um-icon-action um-icon-action-danger"
                                    OnClick="@(() => ConfirmDelete(app.applicationId, "application"))" />
-            </MudTd>
+                </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.Apps" />
+                <strong>No applications</strong>
+                <span>Create a new application to get started.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 
 else if (_activeIndex == 4)
 {
     <TableComponent TItem="SubMenusDTO"
+                    ContainerClass="user-management-panel"
                     @ref="subMenusTable"
                     Title="SubMenu Management"
+                    CountLabel="registered submenus"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search submenus..."
                     AddButtonText="Add"
                     OnAddClicked="OpenAddSubMenuDialog"
                     LoadServerData="LoadSubMenusServerData"
+                    CursorPagerState="_subMenusLoader"
                     SearchString="@searchStringSub"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringSub = val)">
               
         <HeaderTemplate>
-            <MudTh>Id</MudTh>
+            <MudTh Class="um-id-col">Id</MudTh>
             <MudTh>SubMenu</MudTh>
             <MudTh>Description</MudTh>
-            <MudTh>Action</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="sub">
-            <MudTd DataLabel="Id">@sub.subMenuId</MudTd>
+            <MudTd DataLabel="Id" Class="um-id-col">@sub.subMenuId</MudTd>
             <MudTd DataLabel="SubMenu">@sub.subMenuName</MudTd>
-            <MudTd DataLabel="Description">@sub.Description</MudTd>
-            <MudTd DataLabel="Action">
+            <MudTd DataLabel="Description" Class="um-description-col">@sub.Description</MudTd>
+            <MudTd DataLabel="Action" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                Color="Color.Primary" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-edit"
                                OnClick="@(() => OpenEditSubMenuDialog(sub))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                Color="Color.Error" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-danger"
                                OnClick="@(() => ConfirmDelete(sub.subMenuId, "submenu"))" />
             </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.Menu" />
+                <strong>No submenus</strong>
+                <span>Create a new submenu to get started.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 
 else if (_activeIndex == 5)
 {
     <TableComponent TItem="RolesDTO"
+                    ContainerClass="user-management-panel"
                     @ref="rolesTable"
                     Title="Role Management"
+                    CountLabel="registered roles"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search roles..."
                     AddButtonText="Add"
                     OnAddClicked="OpenAddRoleDialog"
                     LoadServerData="LoadRolesServerData"
+                    CursorPagerState="_rolesLoader"
                     SearchString="@searchStringRole"
                     ColumnCount="4"
                     SearchStringChanged="@((string val) => searchStringRole = val)">
 
         <HeaderTemplate>
-            <MudTh>Id</MudTh>
+            <MudTh Class="um-id-col">Id</MudTh>
             <MudTh>Role</MudTh>
             <MudTh>Description</MudTh>
-            <MudTh>Action</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="role">
-            <MudTd DataLabel="Id">@role.roleId</MudTd>
+            <MudTd DataLabel="Id" Class="um-id-col">@role.roleId</MudTd>
             <MudTd DataLabel="Role">@role.roleName</MudTd>
-            <MudTd DataLabel="Description">@role.Description</MudTd>
-            <MudTd DataLabel="Action">
+            <MudTd DataLabel="Description" Class="um-description-col">@role.Description</MudTd>
+            <MudTd DataLabel="Action" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                Color="Color.Primary" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-edit"
                                OnClick="@(() => OpenEditRoleDialog(role))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                Color="Color.Error" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-danger"
                                OnClick="@(() => ConfirmDelete(role.roleId, "role"))" />
             </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.AdminPanelSettings" />
+                <strong>No roles</strong>
+                <span>Create a new role to get started.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
 
 else if (_activeIndex == 6)
 {
     <TableComponent TItem="AppSubRolesDTO"
+                    ContainerClass="user-management-panel"
                     @ref="appSubRolesTable"
                     Title="Users' AppSubRole Management"
+                    CountLabel="assigned application roles"
                     EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search application roles..."
                     AddButtonText="Add"
                     OnAddClicked="OpenAddAppSubRoleDialog"
                     LoadServerData="LoadUserAppSubRolesServerData"
+                    CursorPagerState="_appSubRolesLoader"
                     SearchString="@searchStringAppSubRole"
                     ColumnCount="5"
                     SearchStringChanged="@((string val) => searchStringAppSubRole = val)">
@@ -231,7 +313,7 @@ else if (_activeIndex == 6)
             <MudTh>Application</MudTh>
             <MudTh>SubMenu</MudTh>
             <MudTh>Role</MudTh>
-            <MudTh>Action</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="appSubRole">
@@ -239,17 +321,28 @@ else if (_activeIndex == 6)
             <MudTd DataLabel="Application">@appSubRole.AppName</MudTd>
             <MudTd DataLabel="SubMenu">@appSubRole.SubMenuName</MudTd>
             <MudTd DataLabel="Role">@appSubRole.RoleName</MudTd>
-            <MudTd DataLabel="Action">
+            <MudTd DataLabel="Action" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                Color="Color.Primary" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-edit"
                                OnClick="@(() => OpenEditAppSubRoleDialog(appSubRole))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                Color="Color.Error" 
                                Size="Size.Medium" 
+                               Class="um-icon-action um-icon-action-danger"
                                OnClick="@(() => ConfirmDelete(appSubRole.AppRoleId, "appsubrole"))" />
             </MudTd>
         </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="um-empty-state" role="status">
+                <MudIcon Icon="@Icons.Material.Outlined.Security" />
+                <strong>No assigned application roles</strong>
+                <span>Assigned application roles will appear here.</span>
+            </div>
+        </NoRecordsTemplate>
     </TableComponent>
 }
+</div>
 

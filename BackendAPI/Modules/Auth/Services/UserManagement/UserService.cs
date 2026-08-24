@@ -38,8 +38,8 @@ public class UserService : IUserService
 		return user.Adapt<UserDTO>();
 	}
 
-	public Task<PaginatedResult<UsersDTO>> GetUsersAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<UsersDTO>> GetUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -52,13 +52,26 @@ public class UserService : IUserService
 
 		_logger.LogInformation("Fetching users with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_authRepository.GetUserAsync(paginationRequest, cancellationToken) :
-			_authRepository.SearchUserAsync(paginationRequest, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		Guid? afterId = Guid.TryParse(fields?[0], out var userId) ? userId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _authRepository.GetUsersPageAsync(paginationRequest.SearchTerm, afterId, pageSize + 1, cancellationToken);
+		var (users, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(users[^1].userId.ToString("D"))
+			: null;
+		long? totalCount = afterId is null
+			? await _authRepository.CountUsersAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<UsersDTO>(users, nextCursor, totalCount);
 	}
 
-	public Task<PaginatedResult<UsersDTO>> GetUnApprovedUsersAsync(
-		PaginationRequest paginationRequest,
+	public async Task<KeysetPaginatedResult<UsersDTO>> GetUnApprovedUsersAsync(
+		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken)
 	{
 		var logContext = new
@@ -71,9 +84,21 @@ public class UserService : IUserService
 
 		_logger.LogInformation("Fetching unapproved users with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_authRepository.GetUnapprovedUserAsync(paginationRequest, cancellationToken) :
-			_authRepository.SearchUnApprovedUserAsync(paginationRequest, cancellationToken);
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		Guid? afterId = Guid.TryParse(fields?[0], out var userId) ? userId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _authRepository.GetUnapprovedUsersPageAsync(paginationRequest.SearchTerm, afterId, pageSize + 1, cancellationToken);
+		var (users, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(users[^1].userId.ToString("D"))
+			: null;
+		long? totalCount = afterId is null
+			? await _authRepository.CountUnapprovedUsersAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<UsersDTO>(users, nextCursor, totalCount);
 	}
 
 	public async Task<bool> SendApprovalToUserEmailAsync(string Gmail)

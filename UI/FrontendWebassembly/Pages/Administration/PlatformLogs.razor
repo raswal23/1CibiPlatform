@@ -4,20 +4,77 @@
 @attribute [RequirePermission(7, 8)]
 @using FrontendWebassembly.Services.Logging
 @inject IPlatformLogService LogService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Platform Logs</PageTitle>
 
 <main class="platform-logs">
-    <header>
-        <div><span class="eyebrow">Operations</span><h1>Platform logs</h1><p>Search structured events from every 1CibiPlatform module.</p></div>
-        <button class="refresh" @onclick="LoadFirstPageAsync" disabled="@isLoading">Refresh</button>
+    <header class="page-head">
+        <div>
+            <div class="eyebrow">Operations</div>
+            <h1>Platform logs</h1>
+            <p>Search structured events from every 1CibiPlatform module.</p>
+        </div>
+
+        <button type="button" class="btn-refresh" @onclick="LoadFirstPageAsync" disabled="@isLoading">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 4v6h6M20 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M20 10a8 8 0 0 0-14.9-3M4 14a8 8 0 0 0 14.9 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Refresh
+        </button>
     </header>
 
-    <section class="filters" aria-label="Log filters">
-        <label>Application<select @bind="application"><option value="">All</option>@foreach (var item in applications){<option value="@item">@item</option>}</select></label>
-        <label>Level<select @bind="level"><option value="">All</option>@foreach (var item in levels){<option value="@item">@item</option>}</select></label>
-        <label class="search">Message<input @bind="search" placeholder="Search message text" /></label>
-        <button @onclick="LoadFirstPageAsync" disabled="@isLoading">Apply filters</button>
+    <section class="filter-bar" aria-label="Log filters">
+        <div class="field">
+            <label for="platform-log-application">Application</label>
+            <div class="select-wrap">
+                <select id="platform-log-application" @bind="application">
+                    <option value="">All</option>
+                    @foreach (var item in applications)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </select>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="platform-log-level">Level</label>
+            <div class="select-wrap">
+                <select id="platform-log-level" @bind="level">
+                    <option value="">All</option>
+                    @foreach (var item in levels)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                </select>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="field grow">
+            <label for="platform-log-search">Message</label>
+            <div class="text-input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                    <path d="m21 21-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <input id="platform-log-search" type="search" @bind="search" placeholder="Search message text" />
+            </div>
+        </div>
+
+        <button type="button" class="btn-apply" @onclick="LoadFirstPageAsync" disabled="@isLoading">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            Apply filters
+        </button>
     </section>
 
     @if (!string.IsNullOrWhiteSpace(error))
@@ -26,46 +83,132 @@
     }
     else if (isLoading && logs.Count == 0)
     {
-        <div class="state">Loading logs…</div>
+        <div class="state" role="status">Loading logs...</div>
     }
     else if (logs.Count == 0)
     {
-        <div class="state">No log events match these filters.</div>
+        <div class="state" role="status">No log events match these filters.</div>
     }
     else
     {
-        <section class="table-wrap">
-            <table>
-                <thead><tr><th>Time</th><th>Level</th><th>Application</th><th>Source</th><th>Message</th></tr></thead>
-                <tbody>
-                @foreach (var log in logs)
-                {
-                    <tr tabindex="0" @onclick="() => selected = log">
-                        <td>@log.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-                        <td><span class="level @log.Level.ToLowerInvariant()">@log.Level</span></td>
-                        <td>@log.Application</td><td>@ShortSource(log.SourceContext)</td><td>@log.RenderedMessage</td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <section class="panel" aria-label="Platform log events">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Level</th>
+                            <th>Application</th>
+                            <th>Source</th>
+                            <th>Message</th>
+                            <th class="chevron-col" aria-label="Open details"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var log in logs)
+                    {
+                        <tr tabindex="0" @onclick="() => selected = log" @onkeydown="(args) => SelectLogOnKeyDown(args, log)">
+                            <td class="time-col" data-label="Time">@log.OccurredAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td data-label="Level"><span class="level-badge @GetLevelClass(log.Level)">@log.Level</span></td>
+                            <td class="app-col" data-label="Application">@log.Application</td>
+                            <td class="source-col" data-label="Source">@ShortSource(log.SourceContext)</td>
+                            <td class="message-col" data-label="Message">@log.RenderedMessage</td>
+                            <td class="chevron-col" aria-hidden="true">
+                                <span class="row-chevron">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(nextCursor))
+            {
+                <div class="load-more-row">
+                    <button type="button" class="btn-load-more" @onclick="LoadMoreAsync" disabled="@isLoading">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        @(isLoading ? "Loading..." : "Load more")
+                    </button>
+                </div>
+            }
         </section>
-        @if (!string.IsNullOrWhiteSpace(nextCursor))
-        {
-            <button class="load-more" @onclick="LoadMoreAsync" disabled="@isLoading">@(isLoading ? "Loading…" : "Load more")</button>
-        }
     }
 
     @if (selected is not null)
     {
-        <div class="detail-backdrop" @onclick="() => selected = null">
-            <aside class="detail" role="dialog" aria-modal="true" aria-label="Log details" @onclick:stopPropagation>
-                <button class="close" aria-label="Close" @onclick="() => selected = null">×</button>
-                <span class="level @selected.Level.ToLowerInvariant()">@selected.Level</span><h2>@selected.Application log</h2>
-                <dl><dt>Time</dt><dd>@selected.OccurredAt.ToString("O")</dd><dt>Environment</dt><dd>@selected.Environment</dd><dt>Source</dt><dd>@selected.SourceContext</dd><dt>Trace ID</dt><dd>@selected.TraceId</dd><dt>Request ID</dt><dd>@selected.RequestId</dd></dl>
-                <h3>Message</h3><pre>@selected.RenderedMessage</pre>
-                @if (!string.IsNullOrWhiteSpace(selected.Exception)){<h3>Exception</h3><pre>@selected.Exception</pre>}
-                <h3>Properties</h3><pre>@selected.Properties</pre>
+        <div class="drawer-backdrop open" @onclick="CloseSelectedLog"></div>
+        <aside class="drawer open" role="dialog" aria-modal="true" aria-label="Log details" @onclick:stopPropagation>
+            <header class="drawer-head">
+                <div class="drawer-head-top">
+                    <span class="drawer-level-badge @GetLevelClass(selected.Level)">@selected.Level</span>
+                    <button type="button" class="drawer-close" aria-label="Close log details" @onclick="CloseSelectedLog">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <h2 class="drawer-title">@selected.Application log</h2>
+                <div class="drawer-subtitle">@selected.SourceContext</div>
+            </header>
+
+            <div class="drawer-body">
+                <dl class="meta-grid">
+                    <dt>Time</dt>
+                    <dd class="mono">
+                        @SelectedTime
+                        <button type="button" class="copy-btn @(IsCopied(SelectedTime) ? "copied" : string.Empty)" title="Copy time" aria-label="Copy time" @onclick="() => CopyValueAsync(SelectedTime)">
+                            @if (IsCopied(SelectedTime))
+                            {
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m20 6-11 11-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            }
+                            else
+                            {
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8" /><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.8" /></svg>
+                            }
+                        </button>
+                    </dd>
+                    <dt>Environment</dt><dd>@selected.Environment</dd>
+                    <dt>Source</dt><dd class="mono">@selected.SourceContext</dd>
+                    <dt>Trace ID</dt>
+                    <dd class="mono">
+                        @selected.TraceId
+                        <button type="button" class="copy-btn @(IsCopied(selected.TraceId) ? "copied" : string.Empty)" title="Copy trace ID" aria-label="Copy trace ID" @onclick="() => CopyValueAsync(selected.TraceId)">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8" /><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.8" /></svg>
+                        </button>
+                    </dd>
+                    <dt>Request ID</dt>
+                    <dd class="mono">
+                        @selected.RequestId
+                        <button type="button" class="copy-btn @(IsCopied(selected.RequestId) ? "copied" : string.Empty)" title="Copy request ID" aria-label="Copy request ID" @onclick="() => CopyValueAsync(selected.RequestId)">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.8" /><path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" stroke-width="1.8" /></svg>
+                        </button>
+                    </dd>
+                </dl>
+
+                <h3 class="drawer-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7" /></svg>
+                    Message
+                </h3>
+                <div class="code-block"><pre>@FormatMessage(selected.RenderedMessage)</pre></div>
+
+                @if (!string.IsNullOrWhiteSpace(selected.Exception))
+                {
+                    <h3 class="drawer-section-title">Exception</h3>
+                    <div class="code-block"><pre>@selected.Exception</pre></div>
+                }
+
+                <h3 class="drawer-section-title">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7V5a2 2 0 0 1 2-2h2M4 17v2a2 2 0 0 0 2 2h2M20 7V5a2 2 0 0 0-2-2h-2M20 17v2a2 2 0 0 0-2 2h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+                    Properties
+                </h3>
+                <div class="code-block"><pre>@FormatProperties(selected.Properties)</pre></div>
+            </div>
             </aside>
-        </div>
     }
 </main>

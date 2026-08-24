@@ -12,5 +12,5 @@ public record UnApprovedUsersDTO
 
 public record UnApprovedUsersResponseDTO
 {
-	public PaginatedResult<UnApprovedUsersDTO>? users { get; set; }
+	public KeysetPaginatedResult<UnApprovedUsersDTO>? users { get; set; }
 }

@@ -27,6 +27,8 @@ public partial class AddApplicationComponent
 
 	void Cancel() => AddApplicationDialog!.Cancel();
 
+	private void ToggleStatus() => Application.IsActive = !Application.IsActive;
+
 	async Task Submit()
 	{
 		await AddApplicationForm!.ValidateAsync();

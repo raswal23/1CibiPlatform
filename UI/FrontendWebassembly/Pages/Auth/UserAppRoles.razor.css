@@ -1,0 +1,473 @@
+.user-app-roles-page {
+    --um-navy-950: #071230;
+    --um-navy-900: #0a1c3f;
+    --um-navy-800: #0f2a5c;
+    --um-blue-600: #2f6fed;
+    --um-blue-500: #4d8bff;
+    --um-bg: #f4f6fb;
+    --um-card: #ffffff;
+    --um-border: #e2e6f0;
+    --um-border-soft: #eef1f7;
+    --um-text-900: #101828;
+    --um-text-600: #4b5468;
+    --um-text-400: #8992a6;
+    --um-red-600: #e5484d;
+    --um-red-bg: #fdecec;
+    --um-action-blue: #1d5fd1;
+    --um-action-blue-bg: #edf3fc;
+    --um-action-blue-bg-hover: #e3ecfb;
+    --um-action-blue-border: #c2d2f0;
+    --um-brand-gradient: linear-gradient(100deg, var(--um-navy-950) 0%, var(--um-navy-800) 45%, var(--um-blue-600) 100%);
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    gap: 16px;
+    color: var(--um-text-900);
+    font-family: "Inter", sans-serif;
+}
+
+/* Match the ATS Package Management Add button: hover strengthens the shadow
+   without scaling the button. */
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button {
+    height: 40px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(120deg, #132a54, #1d5fd1);
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, .5) !important;
+    font-size: 13px !important;
+    font-weight: 700;
+    letter-spacing: .3px;
+    transition: transform .1s ease, box-shadow .15s ease;
+}
+
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button:hover {
+    transform: none !important;
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, .65) !important;
+}
+
+.user-app-roles-page ::deep .table-component-toolbar-actions .theme-button:active {
+    transform: scale(.97) !important;
+}
+
+.user-management-tab-shell {
+    position: relative;
+    overflow: hidden;
+    padding: 0 6px;
+    border: 1px solid var(--um-border-soft);
+    border-radius: 12px;
+    background: var(--um-card);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 1px rgba(16, 24, 40, .03);
+}
+
+.user-management-tab-strip {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.user-management-tab-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.user-management-tab {
+    position: relative;
+    flex: 1 0 auto;
+    padding: 15px 18px;
+    border: 0;
+    background: transparent;
+    color: var(--um-text-600);
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    transition: color .15s ease;
+}
+
+.user-management-tab:hover {
+    color: var(--um-text-900);
+}
+
+.user-management-tab:focus-visible {
+    z-index: 3;
+    border-radius: 8px;
+    outline: 3px solid rgba(47, 111, 237, .22);
+    outline-offset: -3px;
+}
+
+.user-management-tab.active {
+    color: var(--um-blue-600);
+    font-weight: 700;
+}
+
+.user-management-tab.active::after {
+    position: absolute;
+    right: 14px;
+    bottom: 0;
+    left: 14px;
+    height: 2.5px;
+    border-radius: 2px 2px 0 0;
+    background: var(--um-brand-gradient);
+    content: "";
+}
+
+.user-management-tab-shell::before,
+.user-management-tab-shell::after {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    bottom: 0;
+    width: 28px;
+    content: "";
+    pointer-events: none;
+}
+
+.user-management-tab-shell::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--um-card), rgba(255, 255, 255, 0));
+}
+
+.user-management-tab-shell::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--um-card), rgba(255, 255, 255, 0));
+}
+
+.user-app-roles-page ::deep .user-management-panel.responsive-table-container {
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid var(--um-border-soft);
+    border-radius: 12px;
+    background: var(--um-card);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 1px rgba(16, 24, 40, .03);
+}
+
+.user-app-roles-page ::deep .user-management-panel .generic-responsive-table {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-toolbar {
+    min-height: 0;
+    height: auto;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--um-border-soft);
+    background: var(--um-card);
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-heading {
+    grid-column: 1;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-title {
+    margin: 0;
+    background: none;
+    color: var(--um-navy-900);
+    font-family: "Manrope", sans-serif;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    -webkit-text-fill-color: currentColor;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-subtitle {
+    margin-top: 2px;
+    color: var(--um-text-400);
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-toolbar-row {
+    grid-column: 2;
+    gap: 10px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search {
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-control,
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-control-input-container {
+    margin: 0;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input {
+    min-height: 36px;
+    border-radius: 9px;
+    background: var(--um-card);
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-slot {
+    min-height: 36px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--um-border);
+    border-radius: 9px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input:focus-within .mud-input-outlined-border {
+    border-color: var(--um-blue-600);
+    box-shadow: 0 0 0 4px rgba(47, 111, 237, .14);
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-adornment-start {
+    margin-left: 11px;
+    margin-right: 7px;
+    color: var(--um-text-400);
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-search .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .table-component-toolbar-actions .mud-button-root {
+    min-width: 0;
+    min-height: 36px;
+    padding: 9px 16px;
+    border-radius: 9px;
+    background: var(--um-brand-gradient) !important;
+    box-shadow: 0 6px 14px -4px rgba(15, 42, 92, .35);
+    color: #fff !important;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: none;
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-container {
+    overflow-x: auto;
+}
+
+.user-app-roles-page ::deep .user-management-panel table {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-cell {
+    min-width: 0 !important;
+    white-space: normal !important;
+}
+
+.user-app-roles-page ::deep .user-management-panel thead .mud-table-cell {
+    padding: 12px 22px;
+    border-bottom: 1px solid var(--um-border-soft);
+    background: #fbfcfe;
+    color: var(--um-text-400);
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 700 !important;
+    letter-spacing: .05em;
+    line-height: 1.25;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap !important;
+}
+
+.user-app-roles-page ::deep .user-management-panel tbody .mud-table-cell {
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--um-border-soft);
+    color: var(--um-text-900);
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+}
+
+/* Highlight the primary value in every UserAppRoles table without affecting
+   the single-cell empty-state row. */
+.user-app-roles-page ::deep .user-management-panel tbody .mud-table-row .mud-table-cell:first-child:not(:only-child) {
+    font-weight: 700;
+}
+
+.user-app-roles-page ::deep .user-management-panel tbody .mud-table-row:nth-child(even) {
+    background: #fafbfd;
+}
+
+.user-app-roles-page ::deep .user-management-panel tbody .mud-table-row:hover {
+    background: #eef3fe;
+}
+
+.user-app-roles-page ::deep .user-management-panel tbody .mud-table-row:last-child .mud-table-cell {
+    border-bottom: 0;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-empty-state {
+    display: flex;
+    min-height: 150px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    color: var(--um-text-400);
+    text-align: center;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-empty-state .mud-icon-root {
+    display: block;
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 8px;
+    color: var(--um-blue-500);
+    font-size: 34px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-empty-state strong {
+    color: var(--um-text-900);
+    font-family: "Manrope", sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-empty-state span {
+    margin-top: 3px;
+    font-size: 12px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-id-col {
+    width: 70px;
+    color: var(--um-text-400);
+    font-weight: 600;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-description-col {
+    color: var(--um-text-600);
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-actions-col {
+    text-align: right !important;
+    white-space: nowrap !important;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action.mud-icon-button {
+    width: 30px;
+    height: 30px;
+    margin-left: 6px;
+    padding: 7px;
+    border: 1px solid var(--um-action-blue-border);
+    border-radius: 8px;
+    background: var(--um-action-blue-bg);
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action-edit.mud-icon-button {
+    color: var(--um-action-blue) !important;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action-danger.mud-icon-button {
+    border-color: rgba(229, 72, 77, .28);
+    background: #fff5f5;
+    color: var(--um-red-600) !important;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action .mud-icon-root {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action-edit:hover {
+    border-color: var(--um-action-blue-border);
+    background: var(--um-action-blue-bg-hover);
+}
+
+.user-app-roles-page ::deep .user-management-panel .um-icon-action-danger:hover {
+    border-color: rgba(229, 72, 77, .3);
+    background: var(--um-red-bg);
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-pagination {
+    border-top: 0;
+    background: var(--um-card);
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-pagination-toolbar {
+    min-height: 58px;
+    padding: 14px 22px;
+    color: var(--um-text-600);
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-pagination-select .mud-input {
+    border: 1.5px solid var(--um-border);
+    border-radius: 8px;
+    background: var(--um-card);
+}
+
+.user-app-roles-page ::deep .user-management-panel .mud-table-pagination-actions .mud-icon-button {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--um-border-soft);
+    border-radius: 7px;
+    background: var(--um-card);
+    color: var(--um-text-600);
+}
+
+@media (max-width: 960px) {
+    .user-app-roles-page ::deep .user-management-panel .table-component-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .table-component-heading,
+    .user-app-roles-page ::deep .user-management-panel .table-component-toolbar-row {
+        grid-column: 1;
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .table-component-toolbar-row {
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 600px) {
+    .user-management-tab {
+        min-width: 112px;
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .mud-table-toolbar {
+        padding: 18px 16px;
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .table-component-toolbar-row {
+        align-items: stretch;
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .table-component-search {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .user-app-roles-page ::deep .user-management-panel .mud-table-pagination-toolbar {
+        padding: 12px 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .user-management-tab,
+    .user-app-roles-page ::deep .user-management-panel .um-icon-action {
+        transition: none;
+    }
+}

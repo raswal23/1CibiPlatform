@@ -1,8 +1,8 @@
-namespace ATS.Features.DisputeOrder;
+﻿namespace ATS.Features.DisputeOrder;
 
-public record GetDisputeOrdersEndpointRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null);
+public record GetDisputeOrdersEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null);
 
-public record GetDisputeOrdersEndpointResponse(PaginatedResult<DisputeOrderListDTO> Orders);
+public record GetDisputeOrdersEndpointResponse(KeysetPaginatedResult<DisputeOrderListDTO> Orders);
 
 public class GetDisputeOrdersEndpoint : ICarterModule
 {
@@ -14,7 +14,7 @@ public class GetDisputeOrdersEndpoint : ICarterModule
 			CancellationToken cancellationToken) =>
 		{
 			var query = new GetDisputeOrdersQueryRequest(
-				request.PageNumber,
+				request.Cursor,
 				request.PageSize,
 				request.SearchTerm);
 

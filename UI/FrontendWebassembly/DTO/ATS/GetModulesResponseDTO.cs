@@ -2,5 +2,5 @@ namespace FrontendWebassembly.DTO.ATS;
 
 public class GetModulesResponseDTO
 {
-	public PaginatedResult<ModuleDetailsDTO>? Modules { get; set; }
+	public KeysetPaginatedResult<ModuleDetailsDTO>? Modules { get; set; }
 }

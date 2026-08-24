@@ -1,22 +1,34 @@
-using System.Security.Claims;
-using ATS.Constants;
+﻿using ATS.Constants;
 using ATS.Data.Entities;
+using ATS.Features.ResendApplicationForm;
 using Auth.Constants;
 using BuildingBlocks.Exceptions;
-using ATS.Features.ResendApplicationForm;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 {
-	private readonly Guid _currentUserId = Guid.CreateVersion7();
+	private const int ClientA = 1;
+	private const int ClientB = 2;
+
+	private static readonly Guid UploaderId = Guid.CreateVersion7();
+	private static readonly Guid OtherUploaderId = Guid.CreateVersion7();
+
 	public ResendApplicationFormIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
-		SetDefaultUserScope();
+		// Resend applies the caller's ATS scope, so every test needs an identity. The
+		// happy-path tests use a super admin, which is unrestricted; the scope tests
+		// below narrow it deliberately.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.PlatformManager,
+			ClientA,
+			isPlatformSuperAdmin: true);
 	}
 
 	#region Positive Path
@@ -44,7 +56,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -92,7 +103,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Rush",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -136,7 +146,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -177,7 +186,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -235,7 +243,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -246,6 +253,89 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 
 		// Assert
 		await act.Should().ThrowAsync<Exception>();
+	}
+
+	#endregion
+
+	#region Scope
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldThrowNotFound_WhenInvitationBelongsToAnotherClient()
+	{
+		// Arrange
+		var emailInvitation = NewScopedInvitation(ClientB, OtherUploaderId);
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		// An uploader confined to client A must not be able to resend client B's
+		// invitation just by knowing its id.
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>();
+
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
+
+		untouched.HashToken.Should().Be(emailInvitation.HashToken);
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldThrowNotFound_WhenInvitationBelongsToAnotherRequestor()
+	{
+		// Arrange
+		var emailInvitation = NewScopedInvitation(ClientA, OtherUploaderId);
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		// Same client, different requestor: an Uploader only owns their own orders.
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>();
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldSucceed_WhenInvitationIsWithinCallerScope()
+	{
+		// Arrange
+		var emailInvitation = NewScopedInvitation(ClientA, UploaderId);
+		var originalHashToken = emailInvitation.HashToken;
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		var result = await _sender.Send(command);
+
+		// Assert
+		result.Success.Should().BeTrue();
+
+		var updated = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
+
+		updated.HashToken.Should().NotBe(originalHashToken);
 	}
 
 	#endregion
@@ -271,7 +361,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
-			RequestorId = _currentUserId,
 			OrderStatus = "Application Withdrawn"
 		};
 
@@ -309,60 +398,58 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		afterSecondResend.EmailSentStatus.Should().Be("Done");
 	}
 
-	[Fact]
-	public async Task ResendApplicationForm_ShouldRejectInvitationOutsideAuthenticatedScope()
-	{
-		var invitation = new EmailInvitationRequest
-		{
-			EmailInvitationID = Guid.CreateVersion7(),
-			FirstName = "Unauthorized",
-			LastName = "Candidate",
-			EmailAddress = "unauthorized@example.com",
-			MobileNumber = "09171234567",
-			HashToken = "unauthorized-token",
-			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
-			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
-			SelectPackage = "Standard",
-			RushNormal = "Normal",
-			EmailSentStatus = "Done",
-			ApplicationFormStatus = "Withdrawn",
-			OrderStatus = "Application Withdrawn",
-			ClientId = 2,
-			RequestorId = Guid.CreateVersion7()
-		};
-		await _dbContext.EmailInvitationRequests.AddAsync(invitation);
-		await _dbContext.SaveChangesAsync();
-		SetUserScope(Guid.CreateVersion7(), AtsRoleIds.User, clientId: 1);
+	#endregion
 
-		Func<Task> act = () => _endorsementSubmissionService.ResendApplicationFormAsync(
-			invitation.EmailInvitationID, CancellationToken.None);
+	#region Helpers
 
-		await act.Should().ThrowAsync<ForbiddenException>();
-		_dbContext.ChangeTracker.Clear();
-		var unchanged = await _dbContext.EmailInvitationRequests.AsNoTracking()
-			.SingleAsync(item => item.EmailInvitationID == invitation.EmailInvitationID);
-		unchanged.HashToken.Should().Be("unauthorized-token");
-		unchanged.OrderStatus.Should().Be("Application Withdrawn");
-	}
-
-	private void SetDefaultUserScope()
-	{
-		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity([
-			new Claim(ClaimTypes.NameIdentifier, _currentUserId.ToString()),
-			new Claim(AuthClaimTypes.AtsRoleId, AtsRoleIds.User.ToString())
-		], "TestAuth"));
-	}
-
-	private void SetUserScope(Guid userId, int roleId, int? clientId)
+	private void SetAuthenticatedUser(
+		Guid userId,
+		int roleId,
+		int claimedClientId,
+		bool isPlatformSuperAdmin = false)
 	{
 		var claims = new List<Claim>
 		{
 			new(ClaimTypes.NameIdentifier, userId.ToString()),
-			new(AuthClaimTypes.AtsRoleId, roleId.ToString())
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString()),
+			new(AuthClaimTypes.AtsClientId, claimedClientId.ToString())
 		};
-		if (clientId.HasValue)
-			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
-		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+		if (isPlatformSuperAdmin)
+		{
+			claims.Add(new Claim(
+				AuthClaimTypes.PlatformRoleId,
+				PlatformRoleIds.SuperAdmin.ToString()));
+		}
+
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(
+			new ClaimsIdentity(claims, "TestAuth"));
+	}
+
+	// An invitation that actually carries the client/requestor the scope check reads.
+	private static EmailInvitationRequest NewScopedInvitation(int clientId, Guid requestorId)
+	{
+		var invitationId = Guid.CreateVersion7();
+
+		return new EmailInvitationRequest
+		{
+			EmailInvitationID = invitationId,
+			FirstName = "Integration",
+			LastName = "Tester",
+			MiddleInitial = "A",
+			EmailAddress = "scoped.resend@example.com",
+			MobileNumber = "09171234567",
+			HashToken = invitationId.ToString("N"),
+			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
+			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			ClientId = clientId,
+			RequestorId = requestorId,
+			EmailSentStatus = "Done",
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Application Withdrawn"
+		};
 	}
 
 	#endregion

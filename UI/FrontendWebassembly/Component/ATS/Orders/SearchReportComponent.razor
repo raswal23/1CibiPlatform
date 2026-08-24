@@ -1,0 +1,220 @@
+﻿@page "/s&i/ats/searchreport"
+@namespace FrontendWebassembly.Component.ATS
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(3)]
+@inherits SecurePageBase
+@inject IJSRuntime JS
+@inject IDialogService DialogService
+@inject IReportService ReportService
+@inject ISnackbar Snackbar
+
+<PageTitle>ATS - Search Report</PageTitle>
+
+<div class="ats-management-page">
+    <div class="search-report-warning">
+        <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" />
+        <div>
+            <p class="search-report-warning-title">Select at least one order</p>
+            <p class="search-report-warning-text">Choose one or more orders from the list before downloading the report(s).</p>
+        </div>
+    </div>
+
+    <div class="@($"search-report-legend {(_isStatusLegendExpanded ? string.Empty : "is-collapsed")}")">
+
+        <button type="button"
+                class="search-report-legend-header"
+                style="justify-content: flex-start; gap: 6px;"
+                aria-expanded="@_isStatusLegendExpanded"
+                aria-controls="search-report-legend-track"
+                @onclick="ToggleStatusLegend">
+
+            <span class="search-report-legend-title">Status legend</span>
+
+            <span class="search-report-legend-chevron">
+                <MudIcon Icon="@(_isStatusLegendExpanded
+                                        ? Icons.Material.Filled.KeyboardArrowDown
+                                    : Icons.Material.Filled.KeyboardArrowUp)"
+                         Size="Size.Small" />
+            </span>
+
+        </button>
+
+        <div id="search-report-legend-track"
+             class="search-report-legend-track @(_isStatusLegendExpanded ? "is-expanded" : "is-collapsed")">
+
+            <div class="search-report-legend-item is-pending">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.MailOutline"
+                             Size="Size.Small" />
+                </span>
+
+                <div class="search-report-legend-copy">
+                    <span class="report-status pending" 
+                          style="display: inline-flex; width: fit-content; flex: 0 0 auto;">
+                        Pending</span>
+
+                    <span class="search-report-legend-text">
+                        Candidate information pending — the applicant has not yet responded to the email invitation.
+                    </span>
+                    
+                    <div class="report-status withdrawn2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Replay" Size="Size.Small" />
+                        <span>
+                            Withdrawn applications are marked Withdrawn and can be re-invited
+                        </span>
+                    </div>
+                    
+
+                </div>
+            </div>
+
+            <span class="search-report-legend-arrow" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Outlined.ArrowForward"
+                         Size="Size.Small" />
+            </span>
+
+            <div class="search-report-legend-item is-progress">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.EditNote"
+                             Size="Size.Small" />
+                </span>
+
+                <div class="search-report-legend-copy">
+                    <span class="report-status progress"
+                          style="display: inline-flex; width: fit-content; flex: 0 0 auto;">
+                        In progress
+                    </span>
+
+                    <span class="search-report-legend-text">
+                        The applicant has started or completed the application form, but the screening process is not yet complete.
+                    </span>
+                </div>
+            </div>
+
+            <span class="search-report-legend-arrow" aria-hidden="true">
+                <MudIcon Icon="@Icons.Material.Outlined.ArrowForward"
+                         Size="Size.Small" />
+            </span>
+
+            <div class="search-report-legend-item is-completed">
+                <span class="search-report-legend-icon">
+                    <MudIcon Icon="@Icons.Material.Outlined.CheckCircleOutline"
+                             Size="Size.Small" />
+                </span>
+
+                <div class="search-report-legend-copy">
+                    <span class="report-status completed"
+                          style="display: inline-flex; width: fit-content; flex: 0 0 auto;">
+                        Completed
+                    </span>
+
+                    <span class="search-report-legend-text">
+                        Screening is complete — the final report has been uploaded and the final hit status determined.
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="search-report-results-scope">
+    <TableComponent TItem="ReportListDTO"
+                    @ref="reportsTable"
+                    Title="Query results"
+                    EnableReload="true"
+                    ContainerClass="ats-management-card search-report-results"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search query results"
+                    ColumnCount="@ReportColumnCount"
+                    RowsPerPage="10"
+                    LoadServerData="LoadReportData"
+                    CursorPagerState="_reportsLoader"
+                    SearchString="@searchString"
+                    RowClassFunc="GetRowClass"
+                    SearchStringChanged="@((string val) => searchString = val)">
+        <ToolBarLeft>
+            <div class="search-report-date-field">
+                <label>Date range</label>
+                <MudDateRangePicker Class="search-report-date-range"
+                                    Variant="Variant.Outlined"
+                                    ReadOnly="false"
+                                    Clearable="true"
+                                    SeparatorIcon="@Icons.Material.Filled.ArrowRightAlt"
+                                    AdornmentIcon="@Icons.Material.Outlined.CalendarToday"
+                                    AdornmentColor="Color.Primary"
+                                    DateFormat="MM/dd/yyyy"
+                                    DateRangeChanged="OnDateRangeChanged"
+                                    PlaceholderStart="Start Date"
+                                    PlaceholderEnd="End Date" />
+            </div>
+        </ToolBarLeft>
+        <HeaderTemplate>
+            <MudTh> Action</MudTh>
+            <MudTh>Subject Name</MudTh>
+            <MudTh>Requestor</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Date Completed</MudTh>
+            <MudTh>Selected Package</MudTh>
+            <MudTh>Hit Status</MudTh>
+            @if (_canUploadReport)
+            {
+                <MudTh>Upload Report</MudTh>
+            }
+            <MudTh>Directory</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="r">
+            <MudTd DataLabel="Action">
+                <button type="button" class="report-checkbox @(r.Selected ? "checked" : null)"
+                        role="checkbox" aria-checked="@r.Selected.ToString().ToLowerInvariant()"
+                        aria-label="@($"Select {r.SubjectName}")"
+                        @onclick="@(() => OnCheckboxChanged(r, !r.Selected))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+                </button>
+            </MudTd>
+            <MudTd DataLabel="Subject Name"><div class="report-subject"><span class="report-avatar">@GetInitials(r.SubjectName)</span><span class="report-name">@r.SubjectName</span></div></MudTd>
+            <MudTd DataLabel="Requestor">@r.Requestor</MudTd>
+            <MudTd DataLabel="Status"><button type="button" class="report-status-button" @onclick="@(() => OpenStatusHistoryDialog(r))"><span class="report-status @GetOrderStatusClass(r.OrderStatus)">@GetOrderStatusText(r.OrderStatus)</span></button></MudTd>
+            <MudTd Class="report-date" DataLabel="Date Completed">@(r.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "—")</MudTd>
+            <MudTd DataLabel="Selected Package"><span class="report-package">@r.SelectedPackage</span></MudTd>
+            <MudTd DataLabel="Hit Status"><span class="report-hit @GetHitStatusClass(r.HitStatus)">@GetHitStatusText(r.HitStatus)</span></MudTd>
+            @if (_canUploadReport)
+            {
+                <MudTd DataLabel="Upload Report">
+                    <button type="button" class="report-icon-action" aria-label="@($"Upload report for {r.SubjectName}")" @onclick="@(() => OpenUploadReportDialog(r.EmailInvitationRequestId))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M12 4l-4.5 4.5M12 4l4.5 4.5" /><path d="M4 16v2.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V16" /></svg>
+                    </button>
+                </MudTd>
+            }
+            <MudTd DataLabel="Directory">
+                <button type="button" class="report-icon-action" aria-label="@($"Open directory for {r.SubjectName}")" @onclick="@(() => OpenResultTriggerDialog(r.EmailInvitationRequestId))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 014.5 6h4.4l1.8 2h8.8A1.5 1.5 0 0121 9.5v8A1.5 1.5 0 0119.5 19h-15A1.5 1.5 0 013 17.5v-10z" /></svg>
+                </button>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-console-empty-state">
+                <div class="ats-console-empty-icon">📄</div>
+                <div class="ats-console-empty-title">No reports match these filters</div>
+                <div class="ats-console-empty-sub">Try widening the date range, or clear filters to see everything.</div>
+            </div>
+        </NoRecordsTemplate>
+
+    </TableComponent>
+    </div>
+</div>
+
+    <div class="ats-actions-right mt-3 mb-3" style="justify-content:space-between; align-items:center;">
+        <MudButton Variant="Variant.Filled"
+                   Class="search-report-download-button"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="DownloadSelected">Download selected</MudButton>
+    </div>
+
+    @* <div class="ats-console-notice">
+        <strong>Reports are password protected</strong>
+        Downloaded PDFs require this quarter's password. Please contact your account manager if you do not have it.
+    </div> *@

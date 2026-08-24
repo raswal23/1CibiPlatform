@@ -116,7 +116,10 @@ public class AIChatService : IAIAgentChatService
 
 		// Build hub URL relative to API base. Adjust if different in your hosting setup.
 		var baseUri = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
-		var hubUrl = $"{baseUri}/hubs/aiagent?userId={Uri.EscapeDataString(userId)}";
+
+		// No ?userId=. The hub reads the group from the authenticated principal, which
+		// arrives on the auth cookie during the handshake.
+		var hubUrl = $"{baseUri}/hubs/aiagent";
 
 		_hubConnection = new HubConnectionBuilder()
 			.WithUrl(hubUrl)

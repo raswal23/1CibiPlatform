@@ -26,6 +26,15 @@ public class AuthInitialData
 				new Authusers
 				{
 					Id = Guid.CreateVersion7(),
+					Email = "atsManager@cibi.com",
+					PasswordHash = _passwordHasherService.HashPassword("managerP@ss*"),
+					FirstName = "ATS",
+					LastName = "Platform Manager",
+					IsApproved = true
+				},
+				new Authusers
+				{
+					Id = Guid.CreateVersion7(),
 					Email = "atsAdmin@cibi.com",
 					PasswordHash = _passwordHasherService.HashPassword("adminP@ss*"),
 					FirstName = "ATS",
@@ -35,10 +44,10 @@ public class AuthInitialData
 				new Authusers
 				{
 					Id = Guid.CreateVersion7(),
-					Email = "atsPlatformManager@cibi.com",
-					PasswordHash = _passwordHasherService.HashPassword("managerP@ss*"),
+					Email = "atsService@cibi.com",
+					PasswordHash = _passwordHasherService.HashPassword("serviceP@ss*"),
 					FirstName = "ATS",
-					LastName = "Platform Manager",
+					LastName = "Service Delivery",
 					IsApproved = true
 				},
 				new Authusers
@@ -48,15 +57,6 @@ public class AuthInitialData
 					PasswordHash = _passwordHasherService.HashPassword("userP@ss*"),
 					FirstName = "ATS",
 					LastName = "User",
-					IsApproved = true
-				},
-				new Authusers
-				{
-					Id = Guid.CreateVersion7(),
-					Email = "atsUploader@cibi.com",
-					PasswordHash = _passwordHasherService.HashPassword("uploaderP@ss*"),
-					FirstName = "ATS",
-					LastName = "Uploader",
 					IsApproved = true
 				},
 			};
@@ -70,10 +70,10 @@ public class AuthInitialData
 		(SuperAdminEmail, "S&I", "ATS", "User"),
 
 
+		("atsManager@cibi.com", "S&I", "ATS", "User"),
 		("atsAdmin@cibi.com", "S&I", "ATS", "User"),
-		("atsPlatformManager@cibi.com", "S&I", "ATS", "User"),
-		("atsUser@cibi.com", "S&I", "ATS", "User"),
-		("atsUploader@cibi.com", "S&I", "ATS", "User")
+		("atsService@cibi.com", "S&I", "ATS", "User"),
+		("atsUser@cibi.com", "S&I", "ATS", "User")
 	];
 
 	public IEnumerable<AuthUserAppRole> GetUserAppRoles(

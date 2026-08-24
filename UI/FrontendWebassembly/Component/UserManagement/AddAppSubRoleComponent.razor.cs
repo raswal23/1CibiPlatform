@@ -1,81 +1,101 @@
-﻿namespace FrontendWebassembly.Component.UserManagement;
+namespace FrontendWebassembly.Component.UserManagement;
 
 public partial class AddAppSubRoleComponent
 {
 	private MudForm? AddAppSubRoleForm;
-	private bool showUserError;
-	private bool showAppError;
-	private bool showSubMenuError;
-	private bool showRoleError;
-
 	private UsersDTO? selectedUser;
 	private ApplicationsDTO? selectedApp;
 	private SubMenusDTO? selectedMenu;
 	private RolesDTO? selectedRole;
 
-	[CascadingParameter] IMudDialogInstance? AddAppSubRoleDialog { get; set; }
-	[Parameter] public AddAppSubRoleDTO AppSubRole { get; set; } = new AddAppSubRoleDTO();
+	[CascadingParameter] private IMudDialogInstance? AddAppSubRoleDialog { get; set; }
+	[Parameter] public AddAppSubRoleDTO AppSubRole { get; set; } = new();
+	[Parameter] public IReadOnlyList<UsersDTO> Users { get; set; } = Array.Empty<UsersDTO>();
+	[Parameter] public IReadOnlyList<ApplicationsDTO> Apps { get; set; } = Array.Empty<ApplicationsDTO>();
+	[Parameter] public IReadOnlyList<SubMenusDTO> SubMenus { get; set; } = Array.Empty<SubMenusDTO>();
+	[Parameter] public IReadOnlyList<RolesDTO> Roles { get; set; } = Array.Empty<RolesDTO>();
 
-	private List<UsersDTO>? Users = new();
-	private List<ApplicationsDTO>? Apps = new();
-	private List<SubMenusDTO>? SubMenus = new();
-	private List<RolesDTO>? Roles = new();
-
-	void Cancel() => AddAppSubRoleDialog!.Cancel();
+	private string DisplayUserName => selectedUser is null ? "Select a user" : GetDisplayName(selectedUser);
+	private string DisplayUserEmail => selectedUser?.email ?? "Their email will appear here";
+	private string UserInitials => GetInitials(DisplayUserName);
 
 	protected override async Task OnInitializedAsync()
 	{
 		AppSubRole.AssignedBy = await LocalStorageService.GetItemAsync<Guid>("UserId");
-
-		Users = (await UserManagementService.GetUsersAsync(1, int.MaxValue)).Data.ToList();
-		Apps = (await UserManagementService.GetApplicationsAsync(1, int.MaxValue)).Data.ToList();
-		SubMenus = (await UserManagementService.GetSubMenusAsync(1, int.MaxValue)).Data.ToList();
-		Roles = (await UserManagementService.GetRolesAsync(1, int.MaxValue)).Data.ToList();
 	}
 
-	async Task Submit()
+	private void Cancel() => AddAppSubRoleDialog!.Cancel();
+
+	private async Task Submit()
 	{
+		await AddAppSubRoleForm!.ValidateAsync();
+		if (!AddAppSubRoleForm.IsValid || selectedUser is null || selectedApp is null || selectedMenu is null || selectedRole is null)
+			return;
+
 		var notification = new AssignmentNotificationDTO
 		{
-			Gmail = selectedUser?.email,
-			Application = selectedApp?.applicationName,
-			SubMenu = selectedMenu?.subMenuName,
-			Role = selectedRole?.roleName
+			Gmail = selectedUser.email,
+			Application = selectedApp.applicationName,
+			SubMenu = selectedMenu.subMenuName,
+			Role = selectedRole.roleName
 		};
 
-		AppSubRole.UserId = selectedUser?.userId ?? Guid.Empty;
-		AppSubRole.AppId = selectedApp?.applicationId ?? 0;
-		AppSubRole.SubMenuId = selectedMenu?.subMenuId ?? 0;
-		AppSubRole.RoleId = selectedRole?.roleId ?? 0;
+		AppSubRole.UserId = selectedUser.userId;
+		AppSubRole.AppId = selectedApp.applicationId;
+		AppSubRole.SubMenuId = selectedMenu.subMenuId;
+		AppSubRole.RoleId = selectedRole.roleId;
 
 		AddAppSubRoleDialog!.Close(DialogResult.Ok(new AddAppSubRoleResult(AppSubRole, notification)));
 	}
 
-	private async Task<IEnumerable<T>> Search<T>(
-	string value,
-	IEnumerable<T> source,
-	Func<T, string?> selector,
-	CancellationToken token)
+	private void OnSelectedUserChanged(UsersDTO? user) => selectedUser = user;
+
+	private Task<IEnumerable<T>> Search<T>(
+		string value,
+		IEnumerable<T> source,
+		Func<T, string?> selector,
+		CancellationToken token)
 	{
-		await Task.Delay(300, token);
+		token.ThrowIfCancellationRequested();
 
 		if (string.IsNullOrWhiteSpace(value))
-			return source;
+			return Task.FromResult(source);
 
-		return source.Where(x =>
-			(selector(x) ?? string.Empty)
-			.Contains(value, StringComparison.OrdinalIgnoreCase));
+		return Task.FromResult(source.Where(item =>
+			(selector(item) ?? string.Empty).Contains(value, StringComparison.OrdinalIgnoreCase)));
 	}
 
-	private Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token)
-	=> Search(value, Users!, u => u.email, token);
+	private Task<IEnumerable<UsersDTO>> SearchUsers(string value, CancellationToken token) =>
+		Search(value, Users, user => $"{user.firstName} {user.middleName} {user.lastName} {user.email}", token);
 
-	private Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token)
-	=> Search(value, Apps!, a => a.applicationName, token);
+	private Task<IEnumerable<ApplicationsDTO>> SearchApplications(string value, CancellationToken token) =>
+		Search(value, Apps, app => app.applicationName, token);
 
-	private Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token)
-	=> Search(value, SubMenus!, s => s.subMenuName, token);
+	private Task<IEnumerable<SubMenusDTO>> SearchSubMenus(string value, CancellationToken token) =>
+		Search(value, SubMenus, subMenu => subMenu.subMenuName, token);
 
-	private Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token)
-	=> Search(value, Roles!, r => r.roleName, token);
+	private Task<IEnumerable<RolesDTO>> SearchRoles(string value, CancellationToken token) =>
+		Search(value, Roles, role => role.roleName, token);
+
+	private static string GetUserText(UsersDTO? user) => user is null
+		? string.Empty
+		: $"{GetDisplayName(user)} ({user.email})";
+
+	private static string GetDisplayName(UsersDTO user)
+	{
+		var name = string.Join(" ", new[] { user.firstName, user.middleName, user.lastName }
+			.Where(part => !string.IsNullOrWhiteSpace(part)));
+		return string.IsNullOrWhiteSpace(name) ? user.email ?? "Unknown user" : name;
+	}
+
+	private static string GetInitials(string name)
+	{
+		if (string.IsNullOrWhiteSpace(name) || name == "Select a user")
+			return "?";
+
+		var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		return parts.Length == 1
+			? parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant()
+			: $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant();
+	}
 }

@@ -70,7 +70,6 @@ public static class FrontendServiceConfig
 		services.AddScoped<IUserManagementService, UserManagementService>();
 		services.AddScoped<ISSOService, SSOService>();
 		services.AddScoped<IAIAgentChatService, AIChatService>();
-		services.AddScoped<IServerTableLoader, ServerTableLoader>();
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService, FrontendWebassembly.Services.EmploymentVerification.Implementation.EmploymentVerificationService>();
@@ -78,6 +77,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
+		services.AddScoped<IBulkUploadService, BulkUploadService>();
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();

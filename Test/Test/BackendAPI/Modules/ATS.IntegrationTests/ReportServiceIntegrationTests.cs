@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using ATS.Data.DTO;
 using ATS.Data.Entities;
@@ -139,12 +139,17 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	public async Task GetReportsAsync_ShouldReturnLatestHitStatusAndApplySearchAndDateFilters()
 	{
 		// Arrange
+		var userId = Guid.CreateVersion7();
+		const int clientId = 7;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
 		var ada = CreateInvitation(
 			"Ada",
 			orderStatus: "Completed",
 			orderCompletedAt: new DateTime(2026, 8, 15, 12, 0, 0, DateTimeKind.Utc));
 		ada.FirstName = "Ada";
 		ada.LastName = "Lovelace";
+		ada.ClientId = clientId;
+		ada.RequestorId = userId;
 		ada.ReportDetails =
 		[
 			CreateReport(ada.EmailInvitationID, "Initial Report", "Clear", "ada-initial.pdf", new DateTime(2026, 8, 10, 8, 0, 0, DateTimeKind.Utc)),
@@ -157,42 +162,37 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			orderCompletedAt: new DateTime(2026, 8, 20, 12, 0, 0, DateTimeKind.Utc));
 		grace.FirstName = "Grace";
 		grace.LastName = "Hopper";
+		grace.ClientId = clientId;
+		grace.RequestorId = userId;
 
 		var pending = CreateInvitation("Pending", orderStatus: "In Progress");
-		var requestorId = Guid.CreateVersion7();
-		ada.RequestorId = requestorId;
-		grace.RequestorId = requestorId;
-		pending.RequestorId = requestorId;
+		pending.ClientId = clientId;
+		pending.RequestorId = userId;
 		await AddInvitationsAsync(ada, grace, pending);
-		SetReportScope(AtsRoleIds.User, null, requestorId);
 
 		// Act
 		var unfiltered = await _reportService.GetReportsAsync(
-			new PaginationRequest(PageIndex: 1, PageSize: 10),
-			sortColumn: null,
-			sortDescending: false,
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
 			CancellationToken.None);
 		var filtered = await _reportService.GetReportsAsync(
-			new PaginationRequest(
-				PageIndex: 1,
+			new KeysetPaginationRequest(
+				Cursor: null,
 				PageSize: 10,
 				SearchTerm: "ada lovelace",
 				StartDate: new DateTime(2026, 8, 1),
 				EndDate: new DateTime(2026, 8, 31)),
-			sortColumn: "SubjectName",
-			sortDescending: false,
 			CancellationToken.None);
 
 		// Assert
-		unfiltered.Count.Should().Be(3);
-		unfiltered.Data.Should().HaveCount(3);
-		unfiltered.Data.First().EmailInvitationRequestId.Should().Be(grace.EmailInvitationID);
-		unfiltered.Data.Single(item => item.EmailInvitationRequestId == ada.EmailInvitationID)
+		unfiltered.TotalCount.Should().Be(3);
+		unfiltered.Items.Should().HaveCount(3);
+		unfiltered.Items.First().EmailInvitationRequestId.Should().Be(grace.EmailInvitationID);
+		unfiltered.Items.Single(item => item.EmailInvitationRequestId == ada.EmailInvitationID)
 			.HitStatus.Should().Be("Not Clear");
 
-		filtered.Count.Should().Be(1);
-		filtered.Data.Should().ContainSingle();
-		filtered.Data.Single().Should().BeEquivalentTo(new
+		filtered.TotalCount.Should().Be(1);
+		filtered.Items.Should().ContainSingle();
+		filtered.Items.Single().Should().BeEquivalentTo(new
 		{
 			EmailInvitationRequestId = ada.EmailInvitationID,
 			SubjectName = "Ada Lovelace",
@@ -202,112 +202,103 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		});
 	}
 
-	[Fact]
-	public async Task GetReportsAsync_ShouldIsolateAllClientAndRequestorScopes()
+	[Theory]
+	[InlineData(AtsRoleIds.PlatformManager)]
+	[InlineData(AtsRoleIds.Admin)]
+	public async Task GetReportsAsync_ShouldIncludeAllRequestersForAssignedClients(
+		int roleId)
 	{
-		var firstRequestorId = Guid.CreateVersion7();
-		var secondRequestorId = Guid.CreateVersion7();
-		var thirdRequestorId = Guid.CreateVersion7();
-		var first = CreateInvitation("Scope First", "Completed", DateTime.UtcNow.AddHours(-4));
-		first.ClientId = 101;
-		first.RequestorId = firstRequestorId;
-		var second = CreateInvitation("Scope Second", "Completed", DateTime.UtcNow.AddHours(-3));
-		second.ClientId = 101;
-		second.RequestorId = secondRequestorId;
-		var third = CreateInvitation("Scope Third", "Completed", DateTime.UtcNow.AddHours(-2));
-		third.ClientId = 202;
-		third.RequestorId = thirdRequestorId;
-		var legacy = CreateInvitation("Scope Legacy", "Completed", DateTime.UtcNow.AddHours(-1));
-		await AddInvitationsAsync(first, second, third, legacy);
+		var userId = Guid.CreateVersion7();
+		var assignedRequesterId = Guid.CreateVersion7();
+		var assigned = CreateInvitation("Assigned", orderStatus: "Completed");
+		assigned.ClientId = 3;
+		assigned.RequestorId = assignedRequesterId;
+		var sameClient = CreateInvitation("Same Client", orderStatus: "Completed");
+		sameClient.ClientId = 3;
+		sameClient.RequestorId = Guid.CreateVersion7();
+		var unassigned = CreateInvitation("Unassigned", orderStatus: "Completed");
+		unassigned.ClientId = 4;
+		unassigned.RequestorId = userId;
+		await AddInvitationsAsync(assigned, sameClient, unassigned);
+		await AddAssignmentAsync(userId, clientId: 3);
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 99);
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		SetReportScope(AtsRoleIds.PlatformManager, null, firstRequestorId, isPlatformSuperAdmin: true);
-		var allReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
 
-		await _dbContext.UserClientDetails.AddAsync(new UserClientDetails
-		{
-			UserId = firstRequestorId,
-			ClientId = 101
-		});
-		await _dbContext.SaveChangesAsync();
-		SetReportScope(AtsRoleIds.Admin, 101, firstRequestorId);
-		var clientReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[]
+			{
+				assigned.EmailInvitationID,
+				sameClient.EmailInvitationID
+			});
+	}
 
-		SetReportScope(AtsRoleIds.User, null, firstRequestorId);
-		var requestorReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+	[Theory]
+	[InlineData(AtsRoleIds.User)]
+	[InlineData(AtsRoleIds.Uploader)]
+	public async Task GetReportsAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var matching = CreateInvitation("Matching", orderStatus: "Completed");
+		matching.ClientId = 5;
+		matching.RequestorId = userId;
+		var wrongRequester = CreateInvitation("Wrong Requester", orderStatus: "Completed");
+		wrongRequester.ClientId = 5;
+		wrongRequester.RequestorId = Guid.CreateVersion7();
+		var wrongClient = CreateInvitation("Wrong Client", orderStatus: "Completed");
+		wrongClient.ClientId = 6;
+		wrongClient.RequestorId = userId;
+		await AddInvitationsAsync(matching, wrongRequester, wrongClient);
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 5);
 
-		allReports.Count.Should().Be(4);
-		allReports.Data.Select(report => report.EmailInvitationRequestId)
-			.Should().BeEquivalentTo([first.EmailInvitationID, second.EmailInvitationID, third.EmailInvitationID, legacy.EmailInvitationID]);
-		clientReports.Count.Should().Be(2);
-		clientReports.Data.Select(report => report.EmailInvitationRequestId)
-			.Should().BeEquivalentTo([first.EmailInvitationID, second.EmailInvitationID]);
-		requestorReports.Count.Should().Be(1);
-		requestorReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == first.EmailInvitationID);
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.TotalCount.Should().Be(1);
+		result.Items.Should().ContainSingle()
+			.Which.EmailInvitationRequestId.Should().Be(matching.EmailInvitationID);
 	}
 
 	[Fact]
-	public async Task GetReportsAsync_ShouldEnforceSearchReportRoleScopes()
+	public async Task GetReportsAsync_ShouldIncludeAllClientsAndRequesters_ForPlatformSuperAdmin()
 	{
-		var userId = Guid.CreateVersion7();
-		var uploaderId = Guid.CreateVersion7();
-		var adminId = Guid.CreateVersion7();
-		var platformManagerId = Guid.CreateVersion7();
-		var superAdminId = Guid.CreateVersion7();
-		var userFirstClient = CreateInvitation("User First Client", "Completed", DateTime.UtcNow.AddHours(-6));
-		userFirstClient.ClientId = 1;
-		userFirstClient.RequestorId = userId;
-		var userSecondClient = CreateInvitation("User Second Client", "Completed", DateTime.UtcNow.AddHours(-5));
-		userSecondClient.ClientId = 2;
-		userSecondClient.RequestorId = userId;
-		var uploader = CreateInvitation("Uploader", "Completed", DateTime.UtcNow.AddHours(-4));
-		uploader.ClientId = 2;
-		uploader.RequestorId = uploaderId;
-		var adminClient = CreateInvitation("Admin Client", "Completed", DateTime.UtcNow.AddHours(-3));
-		adminClient.ClientId = 3;
-		adminClient.RequestorId = Guid.CreateVersion7();
-		var managerClient = CreateInvitation("Manager Client", "Completed", DateTime.UtcNow.AddHours(-2));
-		managerClient.ClientId = 4;
-		managerClient.RequestorId = Guid.CreateVersion7();
-		var unauthorized = CreateInvitation("Unauthorized", "Completed", DateTime.UtcNow.AddHours(-1));
-		unauthorized.ClientId = 5;
-		unauthorized.RequestorId = Guid.CreateVersion7();
-		await AddInvitationsAsync(
-			userFirstClient,
-			userSecondClient,
-			uploader,
-			adminClient,
-			managerClient,
-			unauthorized);
-		await _dbContext.UserClientDetails.AddRangeAsync(
-			new UserClientDetails { UserId = adminId, ClientId = 3 },
-			new UserClientDetails { UserId = platformManagerId, ClientId = 4 });
-		await _dbContext.SaveChangesAsync();
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 20);
+		var first = CreateInvitation("First Client", orderStatus: "Completed");
+		first.ClientId = 1;
+		first.RequestorId = Guid.CreateVersion7();
+		var second = CreateInvitation("Second Client", orderStatus: "Completed");
+		second.ClientId = 2;
+		second.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(first, second);
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 
-		SetReportScope(AtsRoleIds.User, 999, userId);
-		var userReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
-		SetReportScope(AtsRoleIds.Uploader, 999, uploaderId);
-		var uploaderReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
-		SetReportScope(AtsRoleIds.Admin, 999, adminId);
-		var adminReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
-		SetReportScope(AtsRoleIds.PlatformManager, 999, platformManagerId);
-		var managerReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
-		SetReportScope(AtsRoleIds.User, null, superAdminId, isPlatformSuperAdmin: true);
-		var allReports = await _reportService.GetReportsAsync(request, null, false, CancellationToken.None);
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
 
-		userReports.Data.Select(report => report.EmailInvitationRequestId).Should().BeEquivalentTo(
-			[userFirstClient.EmailInvitationID, userSecondClient.EmailInvitationID]);
-		uploaderReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == uploader.EmailInvitationID);
-		adminReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == adminClient.EmailInvitationID);
-		managerReports.Data.Should().ContainSingle(report => report.EmailInvitationRequestId == managerClient.EmailInvitationID);
-		allReports.Count.Should().Be(6);
+		result.TotalCount.Should().Be(2);
+		result.Items.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[] { first.EmailInvitationID, second.EmailInvitationID });
 	}
 
 	[Fact]
 	public async Task GetReportResultByEmailInvitationRequestIdAsync_ShouldMapApplicantGraphAndPreferredReport()
 	{
-		// Arrange
+		// Arrange: this test is about the projection, so give the caller the widest
+		// scope. The scope filtering itself is covered by the tests below.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var invitation = CreateInvitation(
 			"Result",
 			orderStatus: "Completed",
@@ -391,25 +382,45 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task DownloadIndividualReportAsync_ShouldReturnZipWithStoredDocuments()
 	{
-		// Arrange
+		// Arrange: the request names document types, so the order has to exist and
+		// carry the matching file keys - the service resolves them itself now.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var resumeKey = await StoreAsync("documents", "resume.txt", "resume-content");
 		var idKey = await StoreAsync("documents", "id.txt", "id-content");
+
+		var invitation = CreateInvitation("Individual", orderStatus: "Completed");
+		invitation.FirstName = "Integration";
+		invitation.LastName = "Candidate";
+		invitation.PersonalDetails = new PersonalDetails
+		{
+			PersonalID = Guid.CreateVersion7(),
+			EmailInvitationID = invitation.EmailInvitationID,
+			ResumeFileName = "resume.txt",
+			ResumeFileKey = resumeKey,
+			AdditionalGovtIDFileName = "id.txt",
+			AdditionalGovtIDFileKey = idKey,
+			CreatedDate = DateTime.UtcNow
+		};
+		await AddInvitationsAsync(invitation);
+
 		var request = new DownloadIndividualDocumentsRequestDTO
 		{
-			SubjectName = "Integration Candidate",
-			FileDocuments =
-			[
-				new DownloadIndividualDocuments { FileKey = resumeKey, FileName = "resume.txt" },
-				new DownloadIndividualDocuments { FileKey = idKey, FileName = "id.txt" }
-			]
+			EmailInvitationRequestId = invitation.EmailInvitationID,
+			DocumentTypes = [AtsDocumentTypes.Resume, AtsDocumentTypes.GovernmentId]
 		};
 
 		// Act
-		await using var result = await _reportService.DownloadIndividualReportAsync(
+		var (zipStream, subjectName) = await _reportService.DownloadIndividualReportAsync(
 			request,
 			CancellationToken.None);
 
 		// Assert
+		await using var result = zipStream;
+		subjectName.Should().Be("Integration Candidate");
 		using var archive = new ZipArchive(result, ZipArchiveMode.Read);
 		archive.Entries.Select(entry => entry.FullName).Should().Equal("resume.txt", "id.txt");
 		(await ReadZipEntryAsync(archive.GetEntry("resume.txt")!)).Should().Be("resume-content");
@@ -417,9 +428,68 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task DownloadIndividualReportAsync_ShouldThrowNotFound_ForUnknownOrder()
+	{
+		// An id the caller invented resolves to nothing, even for a super admin. Before
+		// the fix this endpoint never looked at the order at all - it fetched whatever
+		// keys it was handed.
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
+		var request = new DownloadIndividualDocumentsRequestDTO
+		{
+			EmailInvitationRequestId = Guid.CreateVersion7(),
+			DocumentTypes = [AtsDocumentTypes.Resume]
+		};
+
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_reportService.DownloadIndividualReportAsync(request, CancellationToken.None));
+	}
+
+	[Fact]
+	public async Task DownloadIndividualReportAsync_ShouldThrowNotFound_WhenOrderBelongsToAnotherClient()
+	{
+		// The finding this endpoint had: a caller scoped to one client could name any
+		// order and receive its documents. Now the lookup is scoped, so an order
+		// belonging to client 2 is invisible to a user scoped to client 1.
+		var resumeKey = await StoreAsync("documents", "other-resume.txt", "resume-content");
+
+		var invitation = CreateInvitation("OtherClient", orderStatus: "Completed");
+		invitation.ClientId = 2;
+		invitation.RequestorId = Guid.CreateVersion7();
+		invitation.PersonalDetails = new PersonalDetails
+		{
+			PersonalID = Guid.CreateVersion7(),
+			EmailInvitationID = invitation.EmailInvitationID,
+			ResumeFileName = "other-resume.txt",
+			ResumeFileKey = resumeKey,
+			CreatedDate = DateTime.UtcNow
+		};
+		await AddInvitationsAsync(invitation);
+
+		SetAuthenticatedUser(Guid.CreateVersion7(), AtsRoleIds.User, claimedClientId: 1);
+
+		var request = new DownloadIndividualDocumentsRequestDTO
+		{
+			EmailInvitationRequestId = invitation.EmailInvitationID,
+			DocumentTypes = [AtsDocumentTypes.Resume]
+		};
+
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_reportService.DownloadIndividualReportAsync(request, CancellationToken.None));
+	}
+
+	[Fact]
 	public async Task DownloadMultipleOrderRecordsAsync_ShouldQueryApplicantDocumentsAndMergePdfs()
 	{
 		// Arrange
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 99,
+			isPlatformSuperAdmin: true);
 		var invitation = CreateInvitation("Download", orderStatus: "Completed");
 		invitation.FirstName = "Renzy";
 		invitation.LastName = "Gutierrez";
@@ -571,29 +641,48 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	private string BuildReportFileKey(string fileName) =>
 		$"{_configuration["ATS:ATSReportFileFolderName"] ?? string.Empty}/{fileName}";
 
-	private void SetReportScope(
-		int atsRoleId,
-		int? clientId,
-		Guid? userId,
-		bool isPlatformSuperAdmin = false)
-	{
-		var claims = new List<Claim> { new(AuthClaimTypes.AtsRoleId, atsRoleId.ToString()) };
-		if (clientId.HasValue)
-			claims.Add(new Claim(AuthClaimTypes.AtsClientId, clientId.Value.ToString()));
-		if (userId.HasValue)
-			claims.Add(new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()));
-		if (isPlatformSuperAdmin)
-			claims.Add(new Claim(AuthClaimTypes.PlatformRoleId, PlatformRoleIds.SuperAdmin.ToString()));
-
-		_httpContextAccessor.HttpContext!.User =
-			new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
-	}
-
 	private async Task AddInvitationsAsync(params EmailInvitationRequest[] invitations)
 	{
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(invitations);
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
+	}
+
+	private async Task AddAssignmentAsync(Guid userId, int clientId)
+	{
+		var now = DateTime.UtcNow;
+		await _dbContext.UserClientDetails.AddAsync(new UserClientDetails
+		{
+			UserId = userId,
+			ClientId = clientId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+	}
+
+	private void SetAuthenticatedUser(
+		Guid userId,
+		int roleId,
+		int claimedClientId,
+		bool isPlatformSuperAdmin = false)
+	{
+		var claims = new List<Claim>
+		{
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(AuthClaimTypes.AtsRoleId, roleId.ToString()),
+			new(AuthClaimTypes.AtsClientId, claimedClientId.ToString())
+		};
+		if (isPlatformSuperAdmin)
+		{
+			claims.Add(new Claim(
+				AuthClaimTypes.PlatformRoleId,
+				PlatformRoleIds.SuperAdmin.ToString()));
+		}
+
+		_httpContextAccessor.HttpContext!.User = new ClaimsPrincipal(
+			new ClaimsIdentity(claims, "TestAuth"));
 	}
 
 	private async Task<string> StoreAsync(string folder, string fileName, string content) =>

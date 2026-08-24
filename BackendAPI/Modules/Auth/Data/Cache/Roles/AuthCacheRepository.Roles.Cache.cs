@@ -2,26 +2,27 @@ namespace Auth.Data.Cache;
 
 public partial class AuthCacheRepository
 {
-	public async Task<PaginatedResult<RolesDTO>> GetRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<RolesDTO>> GetRolesPageAsync(string? searchTerm, int? afterRoleId, int take, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"roles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RolesDTO>>(
+			if (afterRoleId.HasValue)
+				return await _authRepository.GetRolesPageAsync(searchTerm, afterRoleId, take, cancellationToken);
+
+			var cacheKey = $"roles_first_take_{take}_search_{searchTerm}";
+
+			return await _hybridCache.GetOrCreateAsync<List<RolesDTO>>(
 				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.GetRolesAsync(req, token),
+				async token => await _authRepository.GetRolesPageAsync(searchTerm, null, take, token),
 				tags: [RolesTag],
 				cancellationToken: cancellationToken);
 		}
-	
-	public async Task<PaginatedResult<RolesDTO>> SearchRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+
+	public async Task<long> CountRolesAsync(string? searchTerm, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"roles_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<RolesDTO>>(
-				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.SearchRoleAsync(req, token),
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"roles_count_search_{searchTerm}",
+				async token => await _authRepository.CountRolesAsync(searchTerm, token),
 				tags: [RolesTag],
 				cancellationToken: cancellationToken);
 		}

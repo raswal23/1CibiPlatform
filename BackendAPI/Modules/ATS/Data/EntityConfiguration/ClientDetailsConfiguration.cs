@@ -34,6 +34,8 @@ public class ClientDetailsConfiguration : IEntityTypeConfiguration<ClientDetails
 			.HasForeignKey(x => x.PackageId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		builder.HasIndex(x => x.ClientName);
+		// Matches the keyset pagination ordering of the client lists (covers plain
+		// ClientName lookups too, superseding the old single-column index).
+		builder.HasIndex(x => new { x.ClientName, x.ClientId });
 	}
 }

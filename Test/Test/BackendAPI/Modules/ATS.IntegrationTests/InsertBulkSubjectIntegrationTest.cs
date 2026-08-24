@@ -133,7 +133,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		var exception = await act.Should()
 			.ThrowAsync<ValidationException>();
 
-		exception.Which.Errors.Should().HaveCount(3);
+		exception.Which.Errors.Should().HaveCount(4);
 	}
 	#endregion
 }

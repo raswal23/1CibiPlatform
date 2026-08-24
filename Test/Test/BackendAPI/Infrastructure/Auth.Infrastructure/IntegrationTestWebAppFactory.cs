@@ -76,6 +76,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 			// Replace email sender
 			services.RemoveAll<IEmailService>();
 			services.AddSingleton<IEmailService, FakeEmailSender>();
+
+			// The real provider queries the ATS database, which is not available here
+			services.RemoveAll<global::Auth.Shared.Contracts.IAtsAccessClaimsProvider>();
+			services.AddScoped<global::Auth.Shared.Contracts.IAtsAccessClaimsProvider, FakeAtsAccessClaimsProvider>();
 		});
 	}
 

@@ -314,9 +314,6 @@ public static class ServiceConfiguration
 			};
 		});
 
-		services.AddSingleton<IConnectionMultiplexer>
-			(ConnectionMultiplexer.Connect(redisConnection!));
-
 		return services;
 	}
 	#endregion

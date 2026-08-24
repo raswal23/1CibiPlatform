@@ -1,5 +1,6 @@
 global using BuildingBlocks.Behaviors;
 global using BuildingBlocks.CQRS;
+global using BuildingBlocks.Pagination;
 global using BuildingBlocks.Exceptions.Handler;
 global using BuildingBlocks.SharedDTO;
 global using BuildingBlocks.SharedInterfaces;

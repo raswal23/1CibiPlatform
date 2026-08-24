@@ -1,8 +1,10 @@
-﻿namespace PhilSys.Data.UnitOfWork;
+namespace PhilSys.Data.UnitOfWork;
 
 public interface IUnitOfWork
 {
 	Task BeginTransactionAsync(CancellationToken ct = default);
+
+	Task SaveChangesAsync(CancellationToken ct = default);
 
 	Task CommitAsync(CancellationToken ct = default);
 

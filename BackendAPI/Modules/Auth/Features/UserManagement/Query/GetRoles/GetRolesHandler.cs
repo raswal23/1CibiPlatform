@@ -1,18 +1,15 @@
 ﻿namespace Auth.Features.UserManagement.Query.GetRoles;
 
-public record GetRolesQueryRequest(int? PageNumber = 1, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetRolesQueryResult>;
+public record GetRolesQueryRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null) : IQuery<GetRolesQueryResult>;
 
-public record GetRolesQueryResult(PaginatedResult<RolesDTO> Roles);
+public record GetRolesQueryResult(KeysetPaginatedResult<RolesDTO> Roles);
 
 public class GetRolesQueryRequestValidator : AbstractValidator<GetRolesQueryRequest>
 {
 	public GetRolesQueryRequestValidator()
 	{
-		RuleFor(x => x.PageNumber).Must(pageIndex => pageIndex >= 0)
-			.WithMessage("PageNumber must be greater than 0.");
-
-		RuleFor(x => x.PageSize).Must(pageSize => pageSize > 0 && pageSize <= 100)
-			.WithMessage("PageSize must be greater than 0.");
+		RuleFor(x => x.PageSize).Must(pageSize => pageSize is null || (pageSize > 0 && pageSize <= 100))
+			.WithMessage("PageSize must be between 1 and 100.");
 	}
 }
 public class GetRolesHandler : IQueryHandler<GetRolesQueryRequest, GetRolesQueryResult>
@@ -25,8 +22,8 @@ public class GetRolesHandler : IQueryHandler<GetRolesQueryRequest, GetRolesQuery
 	}
 	public async Task<GetRolesQueryResult> Handle(GetRolesQueryRequest request, CancellationToken cancellationToken)
 	{
-		var paginationRequest = new PaginationRequest(
-			request.PageNumber ?? 1,
+		var paginationRequest = new KeysetPaginationRequest(
+			request.Cursor,
 			request.PageSize ?? 10,
 			request.SearchTerm);
 

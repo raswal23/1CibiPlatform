@@ -40,5 +40,8 @@ public class AuthusersConfiguration : IEntityTypeConfiguration<Authusers>
 		builder.Property(u => u.CreatedAt)
 			   .IsRequired()
 			   .HasDefaultValueSql("timezone('utc', now())");
+
+		// Matches the keyset pagination ordering of the ATS user directory.
+		builder.HasIndex(u => new { u.LastName, u.FirstName, u.Id });
 	}
 }

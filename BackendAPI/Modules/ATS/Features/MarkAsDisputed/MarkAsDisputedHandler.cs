@@ -1,6 +1,6 @@
 namespace ATS.Features.MarkAsDisputed;
 
-public record MarkAsDisputedCommand(DisputeOrderRequestDTO DisputeRequest) : ICommand<MarkAsDisputedResult>;
+public record MarkAsDisputedCommand(DisputeOrderRequestDTO DisputeRequest, Guid AuthenticatedUserId) : ICommand<MarkAsDisputedResult>;
 
 public record MarkAsDisputedResult(bool Success);
 
@@ -17,6 +17,10 @@ public class MarkAsDisputedCommandValidator : AbstractValidator<MarkAsDisputedCo
 			.WithMessage("Dispute reason is required.")
 			.MaximumLength(255)
 			.WithMessage("Dispute reason must not exceed 255 characters.");
+
+		RuleFor(x => x.AuthenticatedUserId)
+			.NotEmpty()
+			.WithMessage("Authenticated user ID is required.");
 	}
 }
 
@@ -33,6 +37,7 @@ public class MarkAsDisputedCommandHandler : ICommandHandler<MarkAsDisputedComman
 	{
 		var success = await _disputeOrderService.MarkAsDisputedAsync(
 			request.DisputeRequest,
+			request.AuthenticatedUserId,
 			cancellationToken);
 		return new MarkAsDisputedResult(success);
 	}

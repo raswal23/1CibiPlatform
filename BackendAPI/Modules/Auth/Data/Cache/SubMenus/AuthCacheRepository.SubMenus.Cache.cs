@@ -2,26 +2,27 @@ namespace Auth.Data.Cache;
 
 public partial class AuthCacheRepository
 {
-	public async Task<PaginatedResult<SubMenusDTO>> GetSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<SubMenusDTO>> GetSubMenusPageAsync(string? searchTerm, int? afterSubMenuId, int take, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"submenus_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<SubMenusDTO>>(
+			if (afterSubMenuId.HasValue)
+				return await _authRepository.GetSubMenusPageAsync(searchTerm, afterSubMenuId, take, cancellationToken);
+
+			var cacheKey = $"submenus_first_take_{take}_search_{searchTerm}";
+
+			return await _hybridCache.GetOrCreateAsync<List<SubMenusDTO>>(
 				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.GetSubMenusAsync(req, token),
+				async token => await _authRepository.GetSubMenusPageAsync(searchTerm, null, take, token),
 				tags: [SubMenusTag],
 				cancellationToken: cancellationToken);
 		}
-	
-	public async Task<PaginatedResult<SubMenusDTO>> SearchSubMenusAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+
+	public async Task<long> CountSubMenusAsync(string? searchTerm, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"submenus_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<SubMenusDTO>>(
-				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.SearchSubMenusAsync(req, token),
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"submenus_count_search_{searchTerm}",
+				async token => await _authRepository.CountSubMenusAsync(searchTerm, token),
 				tags: [SubMenusTag],
 				cancellationToken: cancellationToken);
 		}

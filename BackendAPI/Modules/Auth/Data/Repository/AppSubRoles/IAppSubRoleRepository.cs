@@ -1,10 +1,10 @@
-namespace Auth.Data.Repository;
+﻿namespace Auth.Data.Repository;
 
 public interface IAppSubRoleRepository
 {
-	Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
-	Task<AuthUserAppRole> GetAppSubRoleAsync(int appSubRoleId);
-	Task<PaginatedResult<AppSubRolesDTO>> SearchAppSubRoleAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken);
+	Task<List<AppSubRolesDTO>> GetAppSubRolesPageAsync(string? searchTerm, int? afterAppRoleId, int take, CancellationToken cancellationToken);
+	Task<long> CountAppSubRolesAsync(string? searchTerm, CancellationToken cancellationToken);
+	Task<AuthUserAppRole?> GetAppSubRoleAsync(int appSubRoleId);
 	Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole);
 	Task<AuthUserAppRole> EditAppSubRoleAsync(AuthUserAppRole appSubRole);
 	Task<bool> DeleteAppSubRoleAsync(AuthUserAppRole appSubRole);

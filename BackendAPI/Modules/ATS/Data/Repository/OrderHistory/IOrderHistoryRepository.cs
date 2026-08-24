@@ -1,4 +1,4 @@
-namespace ATS.Data.Repository.OrderHistory;
+namespace ATS.Data.Repository;
 
 public interface IOrderHistoryRepository
 {

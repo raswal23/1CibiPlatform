@@ -357,6 +357,9 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("FileID")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
 
@@ -383,6 +386,10 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Requestor")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -392,6 +399,14 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("uuid");
 
                     b.HasKey("FileID");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("DateCreated", "FileID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("Status", "DateCreated", "FileID")
+                        .IsDescending(false, true, false);
 
                     b.ToTable("BulkUploadFileDetails", "ats");
                 });
@@ -428,9 +443,9 @@ namespace APIs.Migrations.ATS
 
                     b.HasKey("ClientId", "PackageId");
 
-                    b.HasIndex("ClientName");
-
                     b.HasIndex("PackageId");
+
+                    b.HasIndex("ClientName", "ClientId");
 
                     b.ToTable("ClientDetails", "ats");
                 });
@@ -638,6 +653,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<Guid?>("BulkFileID")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
 
@@ -652,6 +670,14 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("EmailClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EmailSendAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("EmailSentAt")
                         .HasColumnType("timestamp with time zone");
@@ -731,6 +757,20 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.HasKey("EmailInvitationID");
+
+                    b.HasIndex("EmailSentStatus");
+
+                    b.HasIndex("BulkFileID", "EmailInvitationID");
+
+                    b.HasIndex("OrderCompletedAt", "EmailInvitationID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("OrderCreatedAt", "EmailInvitationID")
+                        .IsDescending(true, false);
+
+                    b.HasIndex("OrderStatus", "EmailInvitationID");
+
+                    b.HasIndex("FirstName", "LastName", "EmailInvitationID");
 
                     b.ToTable("EmailInvitationRequest", "ats");
                 });
@@ -1442,6 +1482,8 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("RoleId");
 
                     b.HasIndex("UserEmail");
+
+                    b.HasIndex("UserName", "UserEmail", "UserId");
 
                     b.ToTable("UserDetails", "ats");
                 });

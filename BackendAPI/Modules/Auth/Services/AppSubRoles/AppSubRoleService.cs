@@ -1,4 +1,4 @@
-namespace Auth.Services;
+﻿namespace Auth.Services;
 
 public class AppSubRoleService : IAppSubRoleService
 {
@@ -15,7 +15,7 @@ public class AppSubRoleService : IAppSubRoleService
 		_logger = logger;
 	}
 
-	public Task<PaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	public async Task<KeysetPaginatedResult<AppSubRolesDTO>> GetAppSubRolesAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -27,9 +27,22 @@ public class AppSubRoleService : IAppSubRoleService
 
 		_logger.LogInformation("Fetching appsubrole with pagination: {@Context}", logContext);
 
-		return string.IsNullOrEmpty(paginationRequest.SearchTerm) ?
-			_authRepository.GetAppSubRolesAsync(paginationRequest, cancellationToken) :
-			_authRepository.SearchAppSubRoleAsync(paginationRequest, cancellationToken);
+		// An undecodable cursor (malformed, stale) means "first page".
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
+		int? afterAppRoleId = int.TryParse(fields?[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var appRoleId) ? appRoleId : null;
+		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
+
+		var rows = await _authRepository.GetAppSubRolesPageAsync(paginationRequest.SearchTerm, afterAppRoleId, pageSize + 1, cancellationToken);
+		var (appSubRoles, hasMore) = KeysetPage.Trim(rows, pageSize);
+
+		var nextCursor = hasMore
+			? CursorCodec.Encode(appSubRoles[^1].AppRoleId.ToString(CultureInfo.InvariantCulture))
+			: null;
+		long? totalCount = afterAppRoleId is null
+			? await _authRepository.CountAppSubRolesAsync(paginationRequest.SearchTerm, cancellationToken)
+			: null;
+
+		return new KeysetPaginatedResult<AppSubRolesDTO>(appSubRoles, nextCursor, totalCount);
 	}
 
 	public async Task<bool> DeleteAppSubRoleAsync(int AppSubRoleId)
@@ -70,16 +83,28 @@ public class AppSubRoleService : IAppSubRoleService
 		}
 
 		existingAppSubRole.UserId = appSubRoleDTO.UserId;
-		existingAppSubRole.AppId = appSubRoleDTO.AppId!;
+		existingAppSubRole.AppId = appSubRoleDTO.AppId;
 		existingAppSubRole.Submenu = appSubRoleDTO.SubMenuId;
 		existingAppSubRole.RoleId = appSubRoleDTO.RoleId;
 
-		var application = await _authRepository.EditAppSubRoleAsync(existingAppSubRole);
-		return application.Adapt<AppSubRoleDTO>();
+		var updatedAppSubRole = await _authRepository.EditAppSubRoleAsync(existingAppSubRole);
+		return updatedAppSubRole.Adapt<AppSubRoleDTO>();
 	}
 
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 	{
+		var logContext = new
+		{
+			Action = "AddAppSubRole",
+			Step = "CreatingAppSubRole",
+			UserId = appSubRole.UserId,
+			AppId = appSubRole.AppId,
+			SubMenuId = appSubRole.SubMenuId,
+			RoleId = appSubRole.RoleId,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Adding app sub-role: {@Context}", logContext);
 		var isAdded = await _authRepository.AddAppSubRoleAsync(appSubRole);
 		return isAdded;
 	}

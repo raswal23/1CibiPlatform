@@ -2,26 +2,27 @@ namespace Auth.Data.Cache;
 
 public partial class AuthCacheRepository
 {
-	public async Task<PaginatedResult<ApplicationsDTO>> GetApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+	// Keyset pagination caches only the first page (null seek anchor); cursor pages
+	// are high-cardinality and go straight to the repository.
+	public async Task<List<ApplicationsDTO>> GetApplicationsPageAsync(string? searchTerm, int? afterAppId, int take, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"applications_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ApplicationsDTO>>(
+			if (afterAppId.HasValue)
+				return await _authRepository.GetApplicationsPageAsync(searchTerm, afterAppId, take, cancellationToken);
+
+			var cacheKey = $"applications_first_take_{take}_search_{searchTerm}";
+
+			return await _hybridCache.GetOrCreateAsync<List<ApplicationsDTO>>(
 				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.GetApplicationsAsync(req, token),
+				async token => await _authRepository.GetApplicationsPageAsync(searchTerm, null, take, token),
 				tags: [ApplicationsTag],
 				cancellationToken: cancellationToken);
 		}
-	
-	public async Task<PaginatedResult<ApplicationsDTO>> SearchApplicationsAsync(PaginationRequest paginationRequest, CancellationToken cancellationToken)
+
+	public async Task<long> CountApplicationsAsync(string? searchTerm, CancellationToken cancellationToken)
 		{
-			var cacheKey = $"applications_page_{paginationRequest.PageIndex}_size_{paginationRequest.PageSize}_search_{paginationRequest.SearchTerm}";
-	
-			return await _hybridCache.GetOrCreateAsync<PaginationRequest, PaginatedResult<ApplicationsDTO>>(
-				cacheKey,
-				paginationRequest,
-				async (req, token) => await _authRepository.SearchApplicationsAsync(req, token),
+			return await _hybridCache.GetOrCreateAsync<long>(
+				$"applications_count_search_{searchTerm}",
+				async token => await _authRepository.CountApplicationsAsync(searchTerm, token),
 				tags: [ApplicationsTag],
 				cancellationToken: cancellationToken);
 		}

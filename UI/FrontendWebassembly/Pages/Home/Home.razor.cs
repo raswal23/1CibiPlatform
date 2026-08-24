@@ -43,11 +43,12 @@ public partial class Home
 
 	private List<HomeAppCard> AvailableApps = new();
 	private IReadOnlyList<HomeAppCard> FilteredApps => string.IsNullOrWhiteSpace(ApplicationSearchQuery)
-		? AvailableApps
+		? AvailableApps.Where(app=> app.AppId != 1).ToList()
 		: AvailableApps
 			.Where(app =>
-				app.Name.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase) ||
-				app.Subtitle.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase))
+				(app.Name.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase) ||
+				app.Subtitle.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase)) &&
+				app.AppId != 1)
 			.ToList();
 
 	private readonly List<AnnouncementItem> Announcements =
@@ -96,7 +97,7 @@ public partial class Home
 			.Select((entry, index) =>
 			{
 				var appId = entry.Key;
-				var (path, name, icon) = entry.Value;
+				var (path, name, icon, subtitle) = entry.Value;
 				var openRoute = BuildOpenRoute(path, permissionMap[appId]);
 				var accent = AccentGradients[index % AccentGradients.Count];
 				var resolvedIcon = appId switch
@@ -107,7 +108,6 @@ public partial class Home
 					_ => icon
 				};
 				var displayName = name;
-				var subtitle = GetAppSubtitle(appId);
 
 				return new HomeAppCard(appId, path, displayName, subtitle, resolvedIcon, openRoute, accent);
 			})
@@ -138,17 +138,6 @@ public partial class Home
 
 		return $"/{normalizedPath}/{subPath.ToLowerInvariant()}";
 	}
-
-	private static string GetAppSubtitle(int appId) => appId switch
-	{
-		8 => "Employment verification",
-		7 => "Application logs",
-		6 => "Screening & investigation console — manage candidate orders, reports, and disputes.",
-		4 => "Confirm work history and credentials for candidate records.",
-		3 => "Manage users, roles, permissions, and platform-wide preferences.",
-		2 => "Look up and verify registrants using PSA national ID data.",
-		_ => "Open this application to continue your work."
-	};
 
 	private sealed record HomeAppCard(int AppId, string Path, string Name, string Subtitle, string Icon, string OpenRoute, string AccentGradient);
 	private sealed record AnnouncementItem(string Tag, string Title, string Detail);

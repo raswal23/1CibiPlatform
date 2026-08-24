@@ -15,10 +15,11 @@ public sealed class DialogWorkflowService : IDialogWorkflowService
 
 	public async Task<TDto?> OpenAddDialogAsync<TComponent, TDto>(
 		IDialogService dialogService,
-		string title)
+		string title,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase
 	{
-		var dialog = await dialogService.ShowAsync<TComponent>(title, DefaultOptions);
+		var dialog = await dialogService.ShowAsync<TComponent>(title, options ?? DefaultOptions);
 		var result = await dialog.Result;
 
 		return result?.Data is TDto dto ? dto : default;
@@ -28,7 +29,8 @@ public sealed class DialogWorkflowService : IDialogWorkflowService
 		IDialogService dialogService,
 		string title,
 		string parameterName,
-		TDto dto)
+		TDto dto,
+		DialogOptions? options = null)
 		where TComponent : ComponentBase
 	{
 		var parameters = new DialogParameters
@@ -36,7 +38,7 @@ public sealed class DialogWorkflowService : IDialogWorkflowService
 			{ parameterName, dto }
 		};
 
-		var dialog = await dialogService.ShowAsync<TComponent>(title, parameters, DefaultOptions);
+		var dialog = await dialogService.ShowAsync<TComponent>(title, parameters, options ?? DefaultOptions);
 		var result = await dialog.Result;
 
 		return result?.Data is TDto editedDto ? editedDto : default;

@@ -40,6 +40,12 @@ public static class ATSDatabaseExtensions
 			(initData.GetATSRoles());
 		}
 
+		if (!await context.ModuleDetails.AnyAsync())
+		{
+			await context.ModuleDetails.AddRangeAsync
+			(initData.GetATSModules());
+		}
+
 		if (!await context.UserDetails.AnyAsync())
 		{
 			var userIdsByEmail = await authQueries.GetUserIdsByEmailAsync(
@@ -50,6 +56,79 @@ public static class ATSDatabaseExtensions
 				initData.GetATSUsers(userIdsByEmail));
 		}
 
+		await context.SaveChangesAsync();
+
+		await BackfillBulkUploadsModuleAsync(context, initData);
+	}
+
+	// The seed blocks above only run on an empty table, so a module added after the
+	// first deployment would never reach an existing database. This backfills the Bulk
+	// Uploads module and grants it to everyone who can already reach New Order, which
+	// is the access rule the module follows. Idempotent: a second run adds nothing.
+	private static async Task BackfillBulkUploadsModuleAsync(
+		ATSDBContext context,
+		ATSInitialData initData)
+	{
+		var moduleExists = await context.ModuleDetails
+			.AnyAsync(module => module.ModuleId == AtsModuleIds.BulkUploads);
+
+		if (!moduleExists)
+		{
+			var bulkUploadsModule = initData.GetATSModules()
+				.FirstOrDefault(module => module.ModuleId == AtsModuleIds.BulkUploads);
+
+			if (bulkUploadsModule is null)
+			{
+				return;
+			}
+
+			await context.ModuleDetails.AddAsync(bulkUploadsModule);
+			await context.SaveChangesAsync();
+		}
+
+		// One access row per user per module, so the grant is modelled as a copy of the
+		// user's New Order row with the module id swapped.
+		var newOrderRows = await context.UserDetails
+			.AsNoTracking()
+			.Where(user => user.ModuleId == AtsModuleIds.NewOrder)
+			.ToListAsync();
+
+		if (newOrderRows.Count == 0)
+		{
+			return;
+		}
+
+		var alreadyGranted = await context.UserDetails
+			.AsNoTracking()
+			.Where(user => user.ModuleId == AtsModuleIds.BulkUploads)
+			.Select(user => user.UserId)
+			.ToListAsync();
+
+		var grantedUserIds = alreadyGranted.ToHashSet();
+
+		var newRows = newOrderRows
+			.Where(user => !grantedUserIds.Contains(user.UserId))
+			.Select(user => new UserDetails
+			{
+				UserId = user.UserId,
+				UserEmail = user.UserEmail,
+				UserName = user.UserName,
+				RoleId = user.RoleId,
+				ClientId = user.ClientId,
+				Site = user.Site,
+				IsActive = user.IsActive,
+				ModuleId = AtsModuleIds.BulkUploads,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			})
+			.ToList();
+
+		if (newRows.Count == 0)
+		{
+			return;
+		}
+
+		await context.UserDetails.AddRangeAsync(newRows);
 		await context.SaveChangesAsync();
 	}
 

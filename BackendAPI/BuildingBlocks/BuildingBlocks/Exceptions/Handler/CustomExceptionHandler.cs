@@ -51,6 +51,12 @@ public class CustomExceptionHandler
 				exception.GetType().Name,
 				context.Response.StatusCode = StatusCodes.Status403Forbidden
 			),
+			ConflictException =>
+			(
+				exception.Message,
+				exception.GetType().Name,
+				context.Response.StatusCode = StatusCodes.Status409Conflict
+			),
 			_ =>
 			(
 				exception.Message,

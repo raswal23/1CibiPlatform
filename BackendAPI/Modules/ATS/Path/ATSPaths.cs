@@ -17,6 +17,8 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// Anonymous: the candidate reaches this from an emailed link with no account.
+			// Authorized by hash token in the API, rate limited by IP here.
 			new RouteDefinitionDTO(
 				RouteId: "AddApplicationFormDataEntryPoint",
 				MatchPath: "/ats/addapplicationformdata",
@@ -25,6 +27,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/addapplicationformdata" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 
@@ -36,6 +42,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/getemailidandapplicationformpath" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 
@@ -128,6 +138,61 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploads",
+				MatchPath: "/ats/getbulkuploads",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploads" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploadStatusCounts",
+				MatchPath: "/ats/getbulkuploadstatuscounts",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploadstatuscounts" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploadSubjects",
+				MatchPath: "/ats/getbulkuploadsubjects",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploadsubjects" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "GetBulkUploadSubjectCounts",
+				MatchPath: "/ats/getbulkuploadsubjectcounts",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getbulkuploadsubjectcounts" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "ExportBulkUploadSubjects",
+				MatchPath: "/ats/exportbulkuploadsubjects",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/exportbulkuploadsubjects" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetATSDashboard",
 				MatchPath: "/ats/getdashboard",
 				ClusterId: GatewayConstants.OnePlatformApi,
@@ -215,6 +280,7 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// Anonymous, same emailed-link flow as AddApplicationFormData.
 			new RouteDefinitionDTO(
 				RouteId: "WithdrawnApplicationForm",
 				MatchPath: "/ats/withdrawnapplicationform",
@@ -223,6 +289,10 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/withdrawnapplicationform" }
+				},
+				Metadata: new Dictionary<string,string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.AnonymousApplicationForm }
 				}
 			),
 

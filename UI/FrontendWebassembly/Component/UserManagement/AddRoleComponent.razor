@@ -1,46 +1,49 @@
-﻿<MudDialog Class="um-dialog" Style="padding: 0;">
-    <DialogContent>
-        <div class="um-dialog-shell">
-            <div class="um-dialog-header">
-                <div>
-                    <MudText Typo="Typo.h5" Class="um-dialog-title">Add role</MudText>
-                    <MudText Typo="Typo.body1" Class="um-dialog-subtitle">Create a new role for access control</MudText>
+<UserManagementDialogShell Title="Add role"
+                           Subtitle="Create a new role for access control"
+                           SectionTitle="Role details"
+                           SectionHelper="Name and describe the role"
+                           Icon="@Icons.Material.Outlined.AdminPanelSettings"
+                           OnClose="Cancel">
+    <ChildContent>
+        <MudForm @ref="AddRoleForm">
+            <div class="um-field">
+                <label for="um-role-name">Role name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="Role.RoleName"
+                                  InputId="um-role-name"
+                                  Placeholder="e.g. Branch supervisor"
+                                  Required="true"
+                                  RequiredError="Role Name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  MaxLength="100"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.AdminPanelSettings" />
                 </div>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Class="um-dialog-close" OnClick="Cancel" />
             </div>
 
-            <MudDivider />
-
-            <MudPaper Elevation="0" Class="um-dialog-body">
-                <MudForm @ref="AddRoleForm">
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="Role.RoleName"
-                                      Label="Role Name"
-                                      Required="true"
-                                      RequiredError="Role Name is required"
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-
-                        <MudTextField @bind-Value="Role.Description"
-                                      Label="Description"
-                                      Required="true"
-                                      RequiredError="Description is required"
-                                      Adornment="Adornment.Start"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      MaxLength="100"
-                                      Class="oneplatform-rounded-input philsys-uppercase-input" />
-                    </MudStack>
-                </MudForm>
-            </MudPaper>
-
-            <div class="um-dialog-footer">
-                <MudButton OnClick="Cancel" Variant="Variant.Outlined" Class="um-secondary-button">Cancel</MudButton>
-                <MudButton OnClick="Submit" Class="theme-button theme-button-active um-primary-button">Save</MudButton>
+            <div class="um-field">
+                <label for="um-role-description">Role description <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-description-wrap">
+                    <MudTextField @bind-Value="Role.Description"
+                                  InputId="um-role-description"
+                                  Placeholder="What access does this role grant?"
+                                  Required="true"
+                                  RequiredError="Description is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Lines="4"
+                                  Immediate="true"
+                                  MaxLength="100"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.Article" />
+                </div>
+                <div class="um-character-count" aria-live="polite">@(Role.Description?.Length ?? 0) / 100</div>
             </div>
-        </div>
-    </DialogContent>
-</MudDialog>
+        </MudForm>
+    </ChildContent>
+    <FooterContent>
+        <button type="button" class="um-button um-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button" class="um-button um-button-save" @onclick="Submit">Save</button>
+    </FooterContent>
+</UserManagementDialogShell>

@@ -1,14 +1,13 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using ATS.Data.DTO;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
-using ATS.Data.Repository.Administration.UserClient;
-using ATS.Constants;
+using ATS.Data.UnitOfWork;
 using ATS.DTO;
-using ATS.Services;
+using ATS.Services.AccessScope;
 using ATS.Services.OrderHistory;
-using ATS.Shared.Implementations;
+using ATS.Constants;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
@@ -19,21 +18,21 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using ATS.Services.Report;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
 public class ReportServiceTests
 {
-	private static readonly Guid AuthenticatedUserId = Guid.CreateVersion7();
 	private const string ReportFolder = "ats-reports";
 	private const string UploadedFileKey = "ats-reports/report.pdf";
 
 	private readonly Mock<ILogger<ReportService>> _logger = new();
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IObjectStorageService> _objectStorage = new();
-	private readonly Mock<ICurrentUser> _currentUser = new();
-	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
+	private readonly Mock<IAtsAccessScopeResolver> _accessScopeResolver = new();
+	private readonly Mock<IUnitOfWork> _unitOfWork = new();
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -44,20 +43,21 @@ public class ReportServiceTests
 				["ATS:ATSReportFileFolderName"] = ReportFolder
 			})
 			.Build();
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
-		_currentUser.SetupGet(user => user.IsAuthenticated).Returns(true);
-		_currentUser.SetupGet(user => user.UserId).Returns(AuthenticatedUserId);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.User);
+
+		// Default to the widest scope (platform super admin: no client or owner
+		// predicate). Tests that care about narrower scopes override this.
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope(null, null));
 
 		_service = new ReportService(
 			_logger.Object,
 			_repository.Object,
 			configuration,
 			_objectStorage.Object,
-			new AtsQueryScopeResolver(
-				_currentUser.Object,
-				_userClientRepository.Object),
-			_orderHistoryService.Object);
+			_orderHistoryService.Object,
+			_accessScopeResolver.Object,
+			_unitOfWork.Object);
 	}
 
 	#region Happy Path
@@ -221,163 +221,153 @@ public class ReportServiceTests
 	public async Task GetReportsAsync_ShouldUseUnfilteredQuery_WhenNoSearchOrDateFilterIsProvided()
 	{
 		// Arrange
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		var expected = CreateReportListResult();
+		var userId = Guid.CreateVersion7();
+		SetAccessScope([7], userId);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
+		var rows = CreateReportRows();
 		_repository
-			.Setup(repository => repository.GetReportsAsync(
-				request,
-				AtsQueryScope.ForRequestor(AuthenticatedUserId),
-				"SubjectName",
-				false,
+			.Setup(repository => repository.GetReportsPageAsync(
+				null,
+				null,
+				null,
+				11,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
 				CancellationToken.None))
-			.ReturnsAsync(expected);
+			.ReturnsAsync(rows.ToList());
+		_repository
+			.Setup(repository => repository.CountReportsAsync(
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+				userId,
+				CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
-		var result = await _service.GetReportsAsync(
-			request,
-			"SubjectName",
-			false,
-			CancellationToken.None);
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Should().BeSameAs(expected);
-		_repository.Verify(repository => repository.SearchReportsAsync(
-			It.IsAny<PaginationRequest>(),
-			It.IsAny<AtsQueryScope>(),
+		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
+		result.TotalCount.Should().Be(1);
+		_repository.Verify(repository => repository.SearchReportsPageAsync(
+			It.IsAny<int?>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<int>(),
 			It.IsAny<string?>(),
-			It.IsAny<bool>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<IReadOnlyCollection<int>>(),
+			It.IsAny<Guid?>(),
 			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
 	[Fact]
 	public async Task GetReportsAsync_ShouldUseSearchQuery_WhenAnyFilterIsProvided()
 	{
-		// Arrange
-		var request = new PaginationRequest(
-			PageIndex: 1,
+		// Arrange: an Admin sees every client assigned to them, with no owner predicate.
+		SetAccessScope([1, 3], null);
+		var request = new KeysetPaginationRequest(
+			Cursor: null,
 			PageSize: 10,
 			SearchTerm: "ada",
 			StartDate: new DateTime(2026, 8, 1),
 			EndDate: new DateTime(2026, 8, 31));
-		var expected = CreateReportListResult();
+		var rows = CreateReportRows();
 		_repository
-			.Setup(repository => repository.SearchReportsAsync(
-				request,
-				AtsQueryScope.ForRequestor(AuthenticatedUserId),
-				"OrderCompletedAt",
-				true,
+			.Setup(repository => repository.SearchReportsPageAsync(
+				null,
+				null,
+				null,
+				11,
+				"ada",
+				request.StartDate,
+				request.EndDate,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
 				CancellationToken.None))
-			.ReturnsAsync(expected);
+			.ReturnsAsync(rows.ToList());
+		_repository
+			.Setup(repository => repository.CountSearchReportsAsync(
+				"ada",
+				request.StartDate,
+				request.EndDate,
+				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
+				null,
+				CancellationToken.None))
+			.ReturnsAsync(1);
 
 		// Act
-		var result = await _service.GetReportsAsync(
-			request,
-			"OrderCompletedAt",
-			true,
-			CancellationToken.None);
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Should().BeSameAs(expected);
-		_repository.Verify(repository => repository.GetReportsAsync(
-			It.IsAny<PaginationRequest>(),
-			It.IsAny<AtsQueryScope>(),
-			It.IsAny<string?>(),
-			It.IsAny<bool>(),
+		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
+		_repository.Verify(repository => repository.GetReportsPageAsync(
+			It.IsAny<int?>(),
+			It.IsAny<DateTime?>(),
+			It.IsAny<Guid?>(),
+			It.IsAny<int>(),
+			It.IsAny<IReadOnlyCollection<int>>(),
+			It.IsAny<Guid?>(),
 			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
 	[Fact]
-	public async Task GetReportsAsync_ShouldUseAllScope_ForPlatformSuperAdmin()
+	public async Task GetReportsAsync_ShouldBypassAllDataFilters_ForPlatformSuperAdmin()
 	{
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		var expected = CreateReportListResult();
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
-		_repository
-			.Setup(repository => repository.GetReportsAsync(
-				request,
-				AtsQueryScope.All,
-				null,
-				false,
-				CancellationToken.None))
-			.ReturnsAsync(expected);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
+		var rows = CreateReportRows();
 
-		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+		// A platform super admin resolves to (null, null) - no client and no owner
+		// predicate. null is not the same as an empty collection, which filters
+		// everything out.
+		SetAccessScope(null, null);
+		_repository.Setup(repository => repository.GetReportsPageAsync(
+			null,
+			null,
+			null,
+			11,
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(rows.ToList());
+		_repository.Setup(repository => repository.CountReportsAsync(
+			null,
+			null,
+			CancellationToken.None)).ReturnsAsync(1);
 
-		result.Should().BeSameAs(expected);
-	}
+		var result = await _service.GetReportsAsync(request, CancellationToken.None);
 
-	[Theory]
-	[InlineData(AtsRoleIds.Admin)]
-	[InlineData(AtsRoleIds.PlatformManager)]
-	public async Task GetReportsAsync_ShouldUseAssignedClientScope_ForManagerRoles(int roleId)
-	{
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		var expected = CreateReportListResult();
-		var managerId = Guid.CreateVersion7();
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
-		_currentUser.SetupGet(user => user.UserId).Returns(managerId);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(roleId);
-		_currentUser.SetupGet(user => user.AtsClientId).Returns(42);
-		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
-			It.Is<IReadOnlyCollection<Guid>>(ids => ids.Count == 1 && ids.First() == managerId),
-			CancellationToken.None)).ReturnsAsync(
-		[
-			new UserClientDetailsDTO { UserId = managerId, ClientId = 42 }
-		]);
-		_repository
-			.Setup(repository => repository.GetReportsAsync(
-				request,
-				AtsQueryScope.ForClient(42),
-				null,
-				false,
-				CancellationToken.None))
-			.ReturnsAsync(expected);
-
-		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
-
-		result.Should().BeSameAs(expected);
+		result.Items.Should().ContainSingle();
 	}
 
 	[Fact]
-	public async Task GetReportsAsync_ShouldReturnEmptyPage_WhenManagerHasNoClientAssignment()
+	public async Task GetReportsAsync_ShouldReturnEmpty_WhenCallerHasNoScope()
 	{
-		var managerId = Guid.CreateVersion7();
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10);
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(AtsRoleIds.Admin);
-		_currentUser.SetupGet(user => user.AtsClientId).Returns((int?)null);
-		_currentUser.SetupGet(user => user.UserId).Returns(managerId);
-		_userClientRepository.Setup(repository => repository.GetUserClientAssignmentsAsync(
-			It.IsAny<IReadOnlyCollection<Guid>>(),
-			CancellationToken.None)).ReturnsAsync(Array.Empty<UserClientDetailsDTO>());
+		SetNoAccessScope();
 
-		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
+		var result = await _service.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
 
-		result.Count.Should().Be(0);
-		result.Data.Should().BeEmpty();
+		result.Items.Should().BeEmpty();
+		result.TotalCount.Should().Be(0);
 	}
 
 	[Fact]
-	public async Task GetReportsAsync_ShouldReturnEmptyPage_WhenNoReportScopeCanBeResolved()
+	public async Task GetReportResultByEmailInvitationRequestIdAsync_WhenOutOfScope_ShouldThrowNotFound()
 	{
-		var request = new PaginationRequest(PageIndex: 2, PageSize: 25);
-		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(false);
-		_currentUser.SetupGet(user => user.AtsRoleId).Returns(99);
-		_currentUser.SetupGet(user => user.UserId).Returns((Guid?)null);
+		// The scoped query returns null for an order the caller may not see. This used
+		// to have no scope check at all - any authenticated user could read any order.
+		var invitationId = Guid.CreateVersion7();
+		_repository
+			.Setup(repository => repository.GetReportResultByEmailInvitationRequestIdAsync(
+				invitationId,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
+				CancellationToken.None))
+			.ReturnsAsync((ReportResultDTO?)null);
 
-		var result = await _service.GetReportsAsync(request, null, false, CancellationToken.None);
-
-		result.PageIndex.Should().Be(2);
-		result.PageSize.Should().Be(25);
-		result.Count.Should().Be(0);
-		result.Data.Should().BeEmpty();
-		_repository.Verify(repository => repository.GetReportsAsync(
-			It.IsAny<PaginationRequest>(),
-			It.IsAny<AtsQueryScope>(),
-			It.IsAny<string?>(),
-			It.IsAny<bool>(),
-			It.IsAny<CancellationToken>()), Times.Never);
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_service.GetReportResultByEmailInvitationRequestIdAsync(invitationId, CancellationToken.None));
 	}
 
 	[Fact]
@@ -396,6 +386,8 @@ public class ReportServiceTests
 		_repository
 			.Setup(repository => repository.GetReportResultByEmailInvitationRequestIdAsync(
 				invitationId,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
 				CancellationToken.None))
 			.ReturnsAsync(expected);
 
@@ -415,23 +407,29 @@ public class ReportServiceTests
 	public async Task DownloadIndividualReportAsync_ShouldReturnZipContainingEveryRequestedFile()
 	{
 		// Arrange
+		var invitationId = Guid.CreateVersion7();
+
+		// The caller now names document types; the keys come from the order the server
+		// looked up under the caller's scope.
 		var request = new DownloadIndividualDocumentsRequestDTO
 		{
-			SubjectName = "Ada Lovelace",
-			FileDocuments =
-			[
-				new DownloadIndividualDocuments
-				{
-					FileKey = "documents/resume.pdf",
-					FileName = "resume.pdf"
-				},
-				new DownloadIndividualDocuments
-				{
-					FileKey = "documents/id.pdf",
-					FileName = "id.pdf"
-				}
-			]
+			EmailInvitationRequestId = invitationId,
+			DocumentTypes = [AtsDocumentTypes.Resume, AtsDocumentTypes.GovernmentId]
 		};
+		_repository
+			.Setup(repository => repository.GetReportResultByEmailInvitationRequestIdAsync(
+				invitationId,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
+				CancellationToken.None))
+			.ReturnsAsync(new ReportResultDTO
+			{
+				SubjectName = "Ada Lovelace",
+				ResumeFileName = "resume.pdf",
+				ResumeFileKey = "documents/resume.pdf",
+				IdUploadedFileName = "id.pdf",
+				IdUploadedFileKey = "documents/id.pdf"
+			});
 		_objectStorage
 			.Setup(storage => storage.DownloadAsync("documents/resume.pdf", CancellationToken.None))
 			.ReturnsAsync(new MemoryStream(Encoding.UTF8.GetBytes("resume-content")));
@@ -440,15 +438,46 @@ public class ReportServiceTests
 			.ReturnsAsync(new MemoryStream(Encoding.UTF8.GetBytes("id-content")));
 
 		// Act
-		await using var result = await _service.DownloadIndividualReportAsync(
+		var (zipStream, subjectName) = await _service.DownloadIndividualReportAsync(
 			request,
 			CancellationToken.None);
 
 		// Assert
+		await using var result = zipStream;
+		subjectName.Should().Be("Ada Lovelace");
 		using var archive = new ZipArchive(result, ZipArchiveMode.Read);
 		archive.Entries.Select(entry => entry.FullName).Should().Equal("resume.pdf", "id.pdf");
 		(await ReadEntryAsync(archive.GetEntry("resume.pdf")!)).Should().Be("resume-content");
 		(await ReadEntryAsync(archive.GetEntry("id.pdf")!)).Should().Be("id-content");
+	}
+
+	[Fact]
+	public async Task DownloadIndividualReportAsync_WhenOrderOutOfScope_ShouldThrowNotFound()
+	{
+		// Arrange: the scoped query finds nothing, which is how an out-of-scope order
+		// presents. The old contract took file keys from the caller, so this case could
+		// not arise - any key the caller named was fetched.
+		var invitationId = Guid.CreateVersion7();
+		var request = new DownloadIndividualDocumentsRequestDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			DocumentTypes = [AtsDocumentTypes.Resume]
+		};
+		_repository
+			.Setup(repository => repository.GetReportResultByEmailInvitationRequestIdAsync(
+				invitationId,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
+				CancellationToken.None))
+			.ReturnsAsync((ReportResultDTO?)null);
+
+		// Act & Assert
+		await Assert.ThrowsAsync<NotFoundException>(() =>
+			_service.DownloadIndividualReportAsync(request, CancellationToken.None));
+
+		_objectStorage.Verify(
+			storage => storage.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+			Times.Never);
 	}
 
 	[Fact]
@@ -482,6 +511,8 @@ public class ReportServiceTests
 		_repository
 			.Setup(repository => repository.GetDownloadDocumentsAsync(
 				request.EmailInvitaionRequestList,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
 				CancellationToken.None))
 			.ReturnsAsync(documents);
 		_objectStorage
@@ -607,17 +638,24 @@ public class ReportServiceTests
 	public async Task DownloadIndividualReportAsync_ShouldWrapStorageFailure()
 	{
 		// Arrange
+		var invitationId = Guid.CreateVersion7();
 		var request = new DownloadIndividualDocumentsRequestDTO
 		{
-			FileDocuments =
-			[
-				new DownloadIndividualDocuments
-				{
-					FileKey = "documents/missing.pdf",
-					FileName = "missing.pdf"
-				}
-			]
+			EmailInvitationRequestId = invitationId,
+			DocumentTypes = [AtsDocumentTypes.Resume]
 		};
+		_repository
+			.Setup(repository => repository.GetReportResultByEmailInvitationRequestIdAsync(
+				invitationId,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
+				CancellationToken.None))
+			.ReturnsAsync(new ReportResultDTO
+			{
+				SubjectName = "Ada Lovelace",
+				ResumeFileName = "missing.pdf",
+				ResumeFileKey = "documents/missing.pdf"
+			});
 		_objectStorage
 			.Setup(storage => storage.DownloadAsync(
 				"documents/missing.pdf",
@@ -646,6 +684,8 @@ public class ReportServiceTests
 		_repository
 			.Setup(repository => repository.GetDownloadDocumentsAsync(
 				request.EmailInvitaionRequestList,
+				It.IsAny<IReadOnlyCollection<int>?>(),
+				It.IsAny<Guid?>(),
 				CancellationToken.None))
 			.ThrowsAsync(new InvalidOperationException("Database unavailable."));
 
@@ -661,6 +701,26 @@ public class ReportServiceTests
 	}
 
 	#endregion
+
+	/// <summary>
+	/// Sets the access scope the service will see. The role-to-scope ladder itself now
+	/// lives in AtsAccessScopeResolver and is tested there; these tests only care about
+	/// which predicates reach the repository.
+	/// </summary>
+	private void SetAccessScope(IReadOnlyCollection<int>? authorizedClientIds, Guid? requiredOwnerId)
+	{
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope(authorizedClientIds, requiredOwnerId));
+	}
+
+	/// <summary>A caller who may not read ATS records at all.</summary>
+	private void SetNoAccessScope()
+	{
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync((AtsAccessScope?)null);
+	}
 
 	private static ReportDetailsDTO CreateUploadRequest(
 		string reportStatus,
@@ -705,18 +765,17 @@ public class ReportServiceTests
 		OrderStatus = "In Progress"
 	};
 
-	private static PaginatedResult<ReportListDTO> CreateReportListResult()
-	{
-		var report = new ReportListDTO
+	private static List<ReportRowDTO> CreateReportRows() =>
+	[
+		new ReportRowDTO
 		{
-			EmailInvitationRequestId = Guid.CreateVersion7(),
-			SubjectName = "Ada Lovelace",
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Ada",
+			LastName = "Lovelace",
 			OrderStatus = "Completed",
 			HitStatus = "Clear"
-		};
-
-		return new PaginatedResult<ReportListDTO>(1, 10, 1, [report]);
-	}
+		}
+	];
 
 	private static async Task<string> ReadEntryAsync(ZipArchiveEntry entry)
 	{

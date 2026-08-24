@@ -64,21 +64,29 @@ public class ClientManagementServiceIntegrationTests : BaseIntegrationTest
 		await AddClientAsync("Alpha Client", "First client", basicPackageId, premiumPackageId);
 		await AddClientAsync("Middle Client", "Second client", premiumPackageId);
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 2);
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 2);
 
 		// Act
 		var result = await _clientManagementService.GetClientsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.PageIndex.Should().Be(1);
-		result.PageSize.Should().Be(2);
-		result.Count.Should().Be(3);
-		result.Data.Should().HaveCount(3);
-		result.Data.Select(client => client.ClientName).Distinct()
+		result.TotalCount.Should().Be(3);
+		result.Items.Should().HaveCount(3);
+		result.Items.Select(client => client.ClientName).Distinct()
 			.Should().Equal("Alpha Client", "Middle Client");
-		result.Data.Where(client => client.ClientName == "Alpha Client")
+		result.Items.Where(client => client.ClientName == "Alpha Client")
 			.Select(client => client.PackageId)
 			.Should().Equal(basicPackageId, premiumPackageId);
+		result.NextCursor.Should().NotBeNull();
+
+		var secondPage = await _clientManagementService.GetClientsAsync(
+			new KeysetPaginationRequest(Cursor: result.NextCursor, PageSize: 2),
+			CancellationToken.None);
+
+		secondPage.TotalCount.Should().BeNull();
+		secondPage.Items.Select(client => client.ClientName).Distinct()
+			.Should().Equal("Zulu Client");
+		secondPage.NextCursor.Should().BeNull();
 	}
 
 	[Fact]
@@ -92,19 +100,20 @@ public class ClientManagementServiceIntegrationTests : BaseIntegrationTest
 		await AddClientAsync("Executive Client", "Requires PREMIUM screening", basicPackageId, premiumPackageId);
 		await AddClientAsync("Premium Partner", "Complex checks", premiumPackageId);
 
-		var request = new PaginationRequest(PageIndex: 1, PageSize: 10, SearchTerm: "premium");
+		var request = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: "premium");
 
 		// Act
 		var result = await _clientManagementService.GetClientsAsync(request, CancellationToken.None);
 
 		// Assert
-		result.Count.Should().Be(2);
-		result.Data.Should().HaveCount(3);
-		result.Data.Select(client => client.ClientName).Distinct()
+		result.TotalCount.Should().Be(2);
+		result.Items.Should().HaveCount(3);
+		result.Items.Select(client => client.ClientName).Distinct()
 			.Should().Equal("Executive Client", "Premium Partner");
-		result.Data.Where(client => client.ClientName == "Executive Client")
+		result.Items.Where(client => client.ClientName == "Executive Client")
 			.Select(client => client.PackageId)
 			.Should().Equal(basicPackageId, premiumPackageId);
+		result.NextCursor.Should().BeNull();
 	}
 
 	[Fact]

@@ -1,21 +1,19 @@
-namespace ATS.Features.ClientAssignment.Query.GetClientAssignments;
+﻿namespace ATS.Features.ClientAssignment.Query.GetClientAssignments;
 
-public record GetClientAssignmentsQuery(PaginationRequest PaginationRequest)
+public record GetClientAssignmentsQuery(KeysetPaginationRequest KeysetPaginationRequest)
 	: IQuery<GetClientAssignmentsResult>;
 
 public record GetClientAssignmentsResult(
-	PaginatedResult<ClientAssignmentDetailsDTO> Assignments);
+	KeysetPaginatedResult<ClientAssignmentDetailsDTO> Assignments);
 
 public sealed class GetClientAssignmentsQueryValidator
 	: AbstractValidator<GetClientAssignmentsQuery>
 {
 	public GetClientAssignmentsQueryValidator()
 	{
-		RuleFor(query => query.PaginationRequest.PageIndex)
-			.GreaterThan(0);
-		RuleFor(query => query.PaginationRequest.PageSize)
+		RuleFor(query => query.KeysetPaginationRequest.PageSize)
 			.InclusiveBetween(1, 100);
-		RuleFor(query => query.PaginationRequest.SearchTerm)
+		RuleFor(query => query.KeysetPaginationRequest.SearchTerm)
 			.MaximumLength(200);
 	}
 }
@@ -35,7 +33,7 @@ public sealed class GetClientAssignmentsHandler
 		CancellationToken cancellationToken)
 	{
 		var assignments = await _clientAssignmentService.GetAssignmentsAsync(
-			request.PaginationRequest,
+			request.KeysetPaginationRequest,
 			cancellationToken);
 		return new GetClientAssignmentsResult(assignments);
 	}

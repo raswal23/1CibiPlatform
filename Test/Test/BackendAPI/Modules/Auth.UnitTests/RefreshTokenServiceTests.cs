@@ -84,7 +84,12 @@ public class RefreshTokenServiceTests : IClassFixture<AuthServiceFixture>
 	[Fact]
 	public async Task GetNewAccessTokenAsync_ShouldReturnResponse_WhenSuccessful()
 	{
-		// Arrange
+		// Arrange - fixture mocks are shared across tests in this class, so drop
+		// invocations recorded by other tests before verifying strict call counts
+		_fixture.MockAuthRepository.Invocations.Clear();
+		_fixture.MockJwtService.Invocations.Clear();
+		_fixture.MockAuthSessionValidator.Invocations.Clear();
+
 		var service = _fixture.RefreshTokenService;
 		var userId = Guid.CreateVersion7();
 		var refreshToken = "refreshtoken";

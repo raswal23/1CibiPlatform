@@ -1,0 +1,484 @@
+.dd-shell,
+.dd-shell *,
+.dd-shell *::before,
+.dd-shell *::after {
+    box-sizing: border-box;
+}
+
+.dd-shell {
+    --dd-navy-900: #0b1b3d;
+    --dd-navy-800: #132a54;
+    --dd-navy-700: #1c3a70;
+    --dd-blue-600: #1d5fd1;
+    --dd-blue-500: #2e7ce0;
+    --dd-blue-tint: #edf3fc;
+    --dd-border: #d9e3f5;
+    --dd-border-strong: #c2d2f0;
+    --dd-text-1: #16233f;
+    --dd-text-2: #5b6b8c;
+    --dd-text-3: #8a97b5;
+    --dd-amber: #b5790f;
+    --dd-amber-tint: #fcf1dd;
+    --dd-amber-border: #f0dca8;
+    --dd-orange-600: #d3540e;
+    --dd-orange-500: #ea7317;
+    width: 100%;
+    overflow: hidden;
+    background: #fff;
+    color: var(--dd-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+::deep .dd-dialog {
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px !important;
+    background: #fff;
+}
+
+::deep .dd-dialog > .mud-dialog-content {
+    width: 100%;
+    margin: 0;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.dd-header {
+    position: relative;
+    overflow: hidden;
+    padding: 26px 30px 22px;
+    background: linear-gradient(120deg, var(--dd-navy-900) 0%, var(--dd-navy-700) 55%, var(--dd-blue-600) 130%);
+}
+
+.dd-header::before {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+.dd-header-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.dd-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.dd-icon-badge {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.dd-icon-badge svg {
+    width: 21px;
+    height: 21px;
+}
+
+.dd-header-text h1 {
+    margin: 0;
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.dd-header-text p {
+    margin: 4px 0 0;
+    color: #c6d5f5;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.dd-close {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.dd-close:hover,
+.dd-close:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.dd-close svg {
+    width: 14px;
+    height: 14px;
+}
+
+.dd-close:focus-visible,
+.dd-button:focus-visible {
+    outline: 3px solid rgba(143, 201, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.dd-body {
+    padding: 26px 30px 6px;
+    background: #fff;
+}
+
+.dd-section {
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid var(--dd-border);
+    border-radius: 14px;
+    background: #fcfdff;
+}
+
+.dd-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--dd-border);
+    background: var(--dd-blue-tint);
+}
+
+.dd-section-number {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--dd-navy-900);
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.dd-section-head h2 {
+    margin: 0;
+    color: var(--dd-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dd-section-body {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.dd-field {
+    position: relative;
+    min-width: 0;
+}
+
+.dd-field > label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--dd-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.dd-required {
+    margin-left: 2px;
+    color: #d64545;
+}
+
+.dd-input-wrap ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.dd-input-wrap ::deep .mud-input {
+    min-height: 42px;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--dd-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.dd-input-wrap ::deep .mud-input-slot {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    color: var(--dd-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 42px;
+}
+
+.dd-input-wrap ::deep .mud-input-slot::placeholder {
+    color: var(--dd-text-3);
+    opacity: 1;
+}
+
+.dd-input-wrap ::deep .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--dd-border-strong);
+    border-radius: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dd-input-wrap ::deep .mud-input:focus-within .mud-input-outlined-border {
+    border-color: var(--dd-blue-500);
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.dd-input-wrap ::deep .mud-input-adornment {
+    color: var(--dd-text-3);
+}
+
+.dd-input-wrap ::deep .mud-input-adornment-start {
+    margin-left: 12px;
+    margin-right: 8px;
+}
+
+.dd-input-wrap ::deep .mud-input-adornment-start .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.dd-input-wrap ::deep .mud-input-error .mud-input-outlined-border {
+    border-color: #d64545;
+}
+
+.dd-input-wrap ::deep .mud-input-helper-text {
+    margin-top: 4px;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+}
+
+.dd-pills-wrap ::deep .dd-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dd-pills-wrap ::deep .dd-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    margin: 0 !important;
+    padding: 0 16px;
+    border: 1.5px solid var(--dd-border-strong);
+    border-radius: 20px;
+    background: #fff;
+    color: var(--dd-text-1);
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-input-control-input-container {
+    position: static;
+    width: 100%;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-radio {
+    position: static;
+    width: 100%;
+    justify-content: center;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-radio::after {
+    position: absolute;
+    content: "";
+    inset: 0;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.dd-pills-wrap ::deep .dd-pill:hover {
+    border-color: var(--dd-blue-500);
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-button-root,
+.dd-pills-wrap ::deep .dd-pill .mud-icon-button,
+.dd-pills-wrap ::deep .dd-pill .mud-radio-icon,
+.dd-pills-wrap ::deep .dd-pill .mud-radio-icons,
+.dd-pills-wrap ::deep .dd-pill svg {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.dd-pills-wrap ::deep .dd-pill .mud-radio-label,
+.dd-pills-wrap ::deep .dd-pill .mud-radio-content,
+.dd-pills-wrap ::deep .dd-pill .mud-typography {
+    width: 100%;
+    margin: 0 !important;
+    color: inherit;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+}
+
+.dd-pills-wrap ::deep .dd-pill.is-selected {
+    border-color: transparent;
+    background: linear-gradient(120deg, var(--dd-navy-800), var(--dd-blue-600));
+    box-shadow: 0 6px 14px -6px rgba(29, 95, 209, 0.5);
+    color: #fff;
+}
+
+.dd-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 2px 0 18px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--dd-amber-border);
+    border-left: 3px solid var(--dd-amber);
+    border-radius: 10px;
+    background: var(--dd-amber-tint);
+}
+
+.dd-warning svg {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    color: var(--dd-amber);
+}
+
+.dd-warning p {
+    margin: 0;
+    color: #7a5209;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.dd-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0 30px 26px;
+    background: #fff;
+}
+
+.dd-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.dd-button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.dd-button-cancel {
+    border: 1.5px solid var(--dd-border-strong);
+    background: #eef1f7;
+    color: var(--dd-text-2);
+}
+
+.dd-button-cancel:hover {
+    background: #e4e9f2;
+}
+
+.dd-button-send {
+    border: 0;
+    background: linear-gradient(120deg, var(--dd-orange-600), var(--dd-orange-500));
+    box-shadow: 0 8px 20px -6px rgba(211, 84, 14, 0.55);
+    color: #fff;
+}
+
+.dd-button-send:hover:not(:disabled) {
+    box-shadow: 0 10px 24px -6px rgba(211, 84, 14, 0.7);
+}
+
+.dd-button-send:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.dd-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.dd-button ::deep .dd-progress {
+    color: currentColor;
+}
+
+@media (max-width: 520px) {
+    .dd-header {
+        padding: 22px 20px 20px;
+    }
+
+    .dd-body {
+        padding: 20px 16px 4px;
+    }
+
+    .dd-footer {
+        padding: 0 16px 20px;
+    }
+}
+
+@media (max-width: 390px) {
+    .dd-header-text h1 {
+        font-size: 18px;
+    }
+
+    .dd-header-text p {
+        font-size: 12px;
+    }
+
+    .dd-button {
+        flex: 1;
+        padding: 0 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dd-shell *,
+    .dd-shell *::before,
+    .dd-shell *::after {
+        transition-duration: 0.01ms !important;
+    }
+}
