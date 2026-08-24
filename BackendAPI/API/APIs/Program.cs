@@ -16,6 +16,7 @@ builder.Services
 	.AddAIAgentConfiguration(builder.Configuration)
 	.AddAIAgentSkills(builder.Configuration)
 	.AddAlibabaOssConfiguration(builder.Configuration)
+	.AddObservability(builder.Configuration)
 	.AddEndpointsApiExplorer()
 	.AddSwaggerGen();
 
