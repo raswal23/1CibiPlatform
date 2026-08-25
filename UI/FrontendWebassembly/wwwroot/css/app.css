@@ -841,3 +841,28 @@ code {
     padding: 0 !important;
     overflow: hidden;
 }
+
+/* YesNoDialogComponent root — global because MudDialog teleports to the
+   provider, outside the component's scoped-CSS subtree. */
+.mud-dialog.yes-no-dialog {
+    width: min(420px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px);
+    padding: 0 !important;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px !important;
+    background: #fff;
+    box-shadow:
+        0 0 0 6px rgba(46, 124, 224, 0.10),
+        0 24px 60px -12px rgba(11, 27, 61, 0.35),
+        0 4px 12px rgba(11, 27, 61, 0.08) !important;
+    font-family: "Inter", sans-serif;
+}
+
+.mud-dialog.yes-no-dialog .mud-dialog-content {
+    width: 100%;
+    margin: 0;
+    padding: 0 !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+}

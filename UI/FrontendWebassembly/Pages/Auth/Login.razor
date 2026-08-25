@@ -367,6 +367,7 @@
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
+                                                  Immediate="true"
                                                   Required="true"
                                                   RequiredError="Password is required"
                                                   InputType="@registerPasswordInput"
@@ -409,6 +410,13 @@
                                 </div>
                             </div>
                         </div>
+
+                        @if (!string.IsNullOrEmpty(registerPassword))
+                        {
+                            <div class="auth-strength-slot">
+                                <PasswordStrengthComponent Password="@registerPassword" />
+                            </div>
+                        }
 
                         <ButtonComponent ButtonType="ButtonType.Submit"
                                          OnClick="HandleRegister"

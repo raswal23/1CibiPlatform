@@ -93,7 +93,9 @@ public partial class Login
 	private string GetAuthCardClass()
 	{
 		if (isRegisterMode)
-			return "auth-card active";
+			return string.IsNullOrEmpty(registerPassword)
+				? "auth-card active"
+				: "auth-card active meter-open";
 		if (isForgotPasswordMode)
 			return "auth-card forgot";
 
