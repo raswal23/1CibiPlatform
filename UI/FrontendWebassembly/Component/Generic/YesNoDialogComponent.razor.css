@@ -1,24 +1,6 @@
-::deep .yes-no-dialog {
-    width: 100%;
-    max-width: 420px;
-    padding: 0 !important;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 20px !important;
-    background: #fff;
-    box-shadow:
-        0 0 0 6px rgba(46, 124, 224, 0.10),
-        0 24px 60px -12px rgba(11, 27, 61, 0.35),
-        0 4px 12px rgba(11, 27, 61, 0.08) !important;
-    font-family: "Inter", sans-serif;
-}
-
-::deep .yes-no-dialog > .mud-dialog-content {
-    width: 100%;
-    margin: 0;
-    padding: 0 !important;
-    overflow: hidden;
-}
+/* The .mud-dialog root and .mud-dialog-content are styled globally in
+   wwwroot/css/app.css (.mud-dialog.yes-no-dialog): the dialog teleports to
+   MudDialogProvider, so ::deep scoped rules can never reach it. */
 
 .yes-no-dialog-shell {
     --yes-no-navy-800: #132a54;
@@ -201,6 +183,12 @@
 @media (max-width: 360px) {
     .yes-no-dialog-footer {
         flex-direction: column-reverse;
+    }
+
+    /* flex-basis 0 collapses button height once the footer is a column */
+    .yes-no-dialog-footer ::deep .yes-no-dialog-button {
+        flex: 0 0 auto;
+        width: 100%;
     }
 }
 

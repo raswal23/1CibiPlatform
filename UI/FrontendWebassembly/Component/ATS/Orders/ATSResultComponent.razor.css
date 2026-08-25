@@ -146,6 +146,18 @@
 @media (max-width: 700px) {
     .ats-result-shell { width: 100%; }
     .ats-result-top-header { padding: 20px; }
-    ::deep .ats-result-hero { margin: 0 20px 18px; }
-    .ats-result-body { grid-template-columns: 1fr; padding: 0 20px; }
+    ::deep .ats-result-hero { margin: 0 20px 18px; padding: 16px 18px; flex-wrap: wrap; }
+    /* minmax(0,1fr), not 1fr: the nowrap doc filenames otherwise force the
+       column's min-content width past the dialog edge */
+    .ats-result-body { grid-template-columns: minmax(0, 1fr); padding: 0 20px; }
+}
+
+@media (max-width: 400px) {
+    .ats-result-top-header { padding: 16px; }
+    ::deep .ats-result-hero { margin: 0 16px 14px; }
+    .ats-result-body { gap: 14px; padding: 0 16px; }
+    ::deep .ats-result-summary-card,
+    ::deep .ats-result-docs-card { padding: 16px; }
+    .ats-result-scroll-body { padding-bottom: 20px; }
+    .ats-result-doc-meta-wrap.has-tooltip::after { max-width: min(320px, 78vw); }
 }
