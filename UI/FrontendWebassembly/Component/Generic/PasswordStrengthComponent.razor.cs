@@ -4,39 +4,34 @@ public partial class PasswordStrengthComponent
 {
 	[Parameter] public string? Password { get; set; }
 
-	private int GetScore()
+	// Mirrors RegisterRequestCommandValidator / UpdatePasswordHandler: the meter
+	// must never read as valid while the backend would still reject the password.
+	private (string Hint, bool Met)[] GetRequirements()
 	{
-		if (string.IsNullOrEmpty(Password))
-			return 0;
+		var password = Password ?? string.Empty;
 
-		var score = 0;
-
-		if (Password.Length is >= 6 and <= 100)
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(Password, "[A-Z]")
-			&& System.Text.RegularExpressions.Regex.IsMatch(Password, "[a-z]"))
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(Password, "[0-9]"))
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(Password, @"[\W_]"))
-			score++;
-
-		return score;
+		return
+		[
+			("Use 6–100 characters", password.Length is >= 6 and <= 100),
+			("Add an uppercase letter", System.Text.RegularExpressions.Regex.IsMatch(password, "[A-Z]")),
+			("Add a lowercase letter", System.Text.RegularExpressions.Regex.IsMatch(password, "[a-z]")),
+			("Add a number", System.Text.RegularExpressions.Regex.IsMatch(password, "[0-9]")),
+			("Add a special character", System.Text.RegularExpressions.Regex.IsMatch(password, @"[\W_]"))
+		];
 	}
+
+	private int GetMetCount() => GetRequirements().Count(r => r.Met);
 
 	private string GetContainerClass()
 	{
 		if (string.IsNullOrEmpty(Password))
 			return "password-strength";
 
-		return GetScore() switch
+		return GetMetCount() switch
 		{
-			4 => "password-strength strong",
-			3 => "password-strength good",
-			2 => "password-strength fair",
+			5 => "password-strength strong",
+			4 => "password-strength good",
+			3 => "password-strength fair",
 			_ => "password-strength weak"
 		};
 	}
@@ -46,8 +41,8 @@ public partial class PasswordStrengthComponent
 		if (string.IsNullOrEmpty(Password))
 			return string.Empty;
 
-		var visibleScore = Math.Max(1, GetScore());
-		return barNumber <= visibleScore ? "active" : string.Empty;
+		var activeBars = Math.Clamp(GetMetCount() - 1, 1, 4);
+		return barNumber <= activeBars ? "active" : string.Empty;
 	}
 
 	private string GetLabel()
@@ -55,12 +50,18 @@ public partial class PasswordStrengthComponent
 		if (string.IsNullOrEmpty(Password))
 			return "Use 6+ characters with uppercase, lowercase, a number and a symbol";
 
-		return GetScore() switch
+		var missing = GetRequirements().FirstOrDefault(r => !r.Met);
+
+		if (missing.Hint is null)
+			return "Strong password";
+
+		var strengthWord = GetMetCount() switch
 		{
-			4 => "Strong password",
-			3 => "Good password",
-			2 => "Fair password",
-			_ => "Weak password"
+			4 => "Good",
+			3 => "Fair",
+			_ => "Weak"
 		};
+
+		return $"{strengthWord} — {missing.Hint.ToLowerInvariant()}";
 	}
 }

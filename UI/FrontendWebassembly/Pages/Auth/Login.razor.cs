@@ -159,8 +159,23 @@ public partial class Login
 		if (string.IsNullOrWhiteSpace(password))
 			return "Password is required";
 
-		if (password.Length < 8)
-			return "Password must be at least 8 characters";
+		if (password.Length < 6)
+			return "Password must be at least 6 characters long";
+
+		if (password.Length > 100)
+			return "Password must not exceed 100 characters";
+
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[A-Z]"))
+			return "Password must contain at least one uppercase letter";
+
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[a-z]"))
+			return "Password must contain at least one lowercase letter";
+
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, "[0-9]"))
+			return "Password must contain at least one digit";
+
+		if (!System.Text.RegularExpressions.Regex.IsMatch(password, @"[\W_]"))
+			return "Password must contain at least one special character";
 
 		return null;
 	}
