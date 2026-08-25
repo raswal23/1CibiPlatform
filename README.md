@@ -3,6 +3,7 @@
 ## Development guides
 
 - [End-to-end feature development guide](docs/feature-development-guide.md) — repository-specific API vertical slices, caching, tests, Blazor UI, and a reusable AI feature-brief template.
+- [Platform monitoring](docs/monitoring/README.md) — Prometheus, Grafana and Alertmanager across Production, UAT and Sandbox: server setup, exporters, application instrumentation, alert routing, and an incident runbook.
 
 ### Starting a feature with Codex or Claude
 
