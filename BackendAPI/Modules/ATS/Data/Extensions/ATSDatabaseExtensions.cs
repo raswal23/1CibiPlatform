@@ -40,11 +40,17 @@ public static class ATSDatabaseExtensions
 			(initData.GetATSRoles());
 		}
 
-		if (!await context.ModuleDetails.AnyAsync())
-		{
-			await context.ModuleDetails.AddRangeAsync
-			(initData.GetATSModules());
-		}
+		// Migrations may have pre-seeded part of this table (SeedATSSuperAdminAccess
+		// inserts modules 1-10), so an emptiness check would skip the remaining modules
+		// and the user seed below would then violate FK_UserDetails_ModuleDetails_ModuleId.
+		var existingModuleIds = await context.ModuleDetails
+			.AsNoTracking()
+			.Select(module => module.ModuleId)
+			.ToListAsync();
+
+		await context.ModuleDetails.AddRangeAsync(
+			initData.GetATSModules()
+				.Where(module => !existingModuleIds.Contains(module.ModuleId)));
 
 		if (!await context.UserDetails.AnyAsync())
 		{
