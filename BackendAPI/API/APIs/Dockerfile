@@ -33,6 +33,13 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
+# The legacy OMS database (SQL Server 2008 R2) still presents a SHA-1 signed
+# certificate, which OpenSSL 3.x rejects at its default security level. Point
+# OpenSSL at a relaxed policy instead of editing /etc/ssl/openssl.cnf, so the
+# system default stays intact. See openssl-legacy-oms.cnf for the full analysis.
+COPY BackendAPI/API/APIs/openssl-legacy-oms.cnf /etc/ssl/oms/openssl-legacy-oms.cnf
+ENV OPENSSL_CONF=/etc/ssl/oms/openssl-legacy-oms.cnf
+
 # ? IMPORTANT: Copy Skills directory with .skill.yaml files
 # dotnet publish doesn't include non-compiled files like .yaml by default
 COPY --from=build /src/BackendAPI/Modules/AIAgent/Skills ./Modules/AIAgent/Skills
