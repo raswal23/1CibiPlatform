@@ -136,6 +136,36 @@ public partial class ATSRepository
 			.FirstOrDefaultAsync(eir => eir.EmailInvitationID == emailInvitationId, cancellationToken) ?? new EmailInvitationRequest();
 	}
 
+	public async Task<EmailInvitationOwnerDTO?> GetEmailInvitationOwnerAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		return await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => eir.EmailInvitationID == emailInvitationId)
+			.Select(eir => new EmailInvitationOwnerDTO
+			{
+				EmailInvitationID = eir.EmailInvitationID,
+				ClientId = eir.ClientId,
+				RequestorId = eir.RequestorId
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+	}
+
+	// NeedsProjection is raised so the ApplicantSearchProjectionJob refreshes the
+	// denormalized search row with the corrected name on its next pass.
+	public async Task<bool> UpdateSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)
+	{
+		var affectedRows = await _dbcontext.EmailInvitationRequests
+			.Where(eir => eir.EmailInvitationID == subjectName.EmailInvitationRequestId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(eir => eir.FirstName, subjectName.FirstName)
+				.SetProperty(eir => eir.MiddleInitial, subjectName.MiddleInitial)
+				.SetProperty(eir => eir.LastName, subjectName.LastName)
+				.SetProperty(eir => eir.NeedsProjection, true),
+				cancellationToken);
+
+		return affectedRows > 0;
+	}
+
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
 	{
 		await _dbcontext.EmailInvitationRequests

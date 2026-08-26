@@ -552,9 +552,139 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		mergedDocument.PageCount.Should().Be(2);
 	}
 
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldPersistTheCorrectedNameAndFlagAReprojection()
+	{
+		// Arrange
+		var invitation = CreateInvitation("Typo", orderStatus: "Completed");
+		invitation.ClientId = 11;
+		await AddInvitationsAsync(invitation);
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 11,
+			isPlatformSuperAdmin: true);
+
+		// Act
+		var result = await _reportService.EditSubjectNameAsync(
+			new EditSubjectNameDTO
+			{
+				EmailInvitationRequestId = invitation.EmailInvitationID,
+				FirstName = "  Ada ",
+				MiddleInitial = " Byron ",
+				LastName = " Lovelace  "
+			},
+			CancellationToken.None);
+
+		// Assert
+		result.SubjectName.Should().Be("Ada Lovelace");
+		_dbContext.ChangeTracker.Clear();
+
+		var persisted = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(item => item.EmailInvitationID == invitation.EmailInvitationID);
+		persisted.FirstName.Should().Be("Ada");
+		persisted.MiddleInitial.Should().Be("Byron");
+		persisted.LastName.Should().Be("Lovelace");
+		// The denormalized search row is refreshed by the projection job.
+		persisted.NeedsProjection.Should().BeTrue();
+		// Nothing but the name changed.
+		persisted.OrderStatus.Should().Be("Completed");
+		persisted.SelectPackage.Should().Be(invitation.SelectPackage);
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldSurfaceTheNewNameInTheReportsList()
+	{
+		// Arrange
+		var invitation = CreateInvitation("Stale", orderStatus: "Completed");
+		invitation.ClientId = 12;
+		await AddInvitationsAsync(invitation);
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 12,
+			isPlatformSuperAdmin: true);
+
+		// Act
+		await _reportService.EditSubjectNameAsync(
+			new EditSubjectNameDTO
+			{
+				EmailInvitationRequestId = invitation.EmailInvitationID,
+				FirstName = "Grace",
+				LastName = "Hopper"
+			},
+			CancellationToken.None);
+
+		var reports = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		// Assert: the cached first page was invalidated by the write.
+		var row = reports.Items.Single(report => report.EmailInvitationRequestId == invitation.EmailInvitationID);
+		row.SubjectName.Should().Be("Grace Hopper");
+		row.FirstName.Should().Be("Grace");
+		row.LastName.Should().Be("Hopper");
+	}
+
 	#endregion
 
 	#region Bad Path
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowForbidden_WhenTheOrderIsOutsideTheCallersScope()
+	{
+		// Arrange
+		var invitation = CreateInvitation("Other Client", orderStatus: "Completed");
+		invitation.ClientId = 6;
+		invitation.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(invitation);
+		SetAuthenticatedUser(Guid.CreateVersion7(), AtsRoleIds.User, claimedClientId: 5);
+
+		// Act
+		Func<Task> act = () => _reportService.EditSubjectNameAsync(
+			new EditSubjectNameDTO
+			{
+				EmailInvitationRequestId = invitation.EmailInvitationID,
+				FirstName = "Ada",
+				LastName = "Lovelace"
+			},
+			CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ForbiddenException>();
+		_dbContext.ChangeTracker.Clear();
+
+		var persisted = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(item => item.EmailInvitationID == invitation.EmailInvitationID);
+		persisted.FirstName.Should().Be(invitation.FirstName);
+		persisted.LastName.Should().Be(invitation.LastName);
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowNotFound_WhenTheOrderDoesNotExist()
+	{
+		// Arrange
+		SetAuthenticatedUser(
+			Guid.CreateVersion7(),
+			AtsRoleIds.User,
+			claimedClientId: 1,
+			isPlatformSuperAdmin: true);
+
+		// Act
+		Func<Task> act = () => _reportService.EditSubjectNameAsync(
+			new EditSubjectNameDTO
+			{
+				EmailInvitationRequestId = Guid.CreateVersion7(),
+				FirstName = "Ada",
+				LastName = "Lovelace"
+			},
+			CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>();
+	}
 
 	[Fact]
 	public async Task UploadReportAsync_ShouldThrowBadRequestException_WhenFileIsMissing()

@@ -226,6 +226,17 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "EditSubjectName",
+				MatchPath: "/ats/editsubjectname",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/editsubjectname" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "UploadReport",
 				MatchPath: "/ats/uploadreport",
 				ClusterId: GatewayConstants.OnePlatformApi,

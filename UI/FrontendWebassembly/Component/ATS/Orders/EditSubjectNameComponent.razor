@@ -1,0 +1,100 @@
+@namespace FrontendWebassembly.Component.ATS
+
+<UserManagementDialogShell Title="Edit subject name"
+                           Subtitle="Correct the name on this order"
+                           SectionTitle="Order"
+                           SectionHelper="The order being updated"
+                           SectionClass="esn-order-section"
+                           SecondarySectionTitle="Subject name"
+                           SecondarySectionHelper="First, middle, and last name"
+                           Icon="@Icons.Material.Outlined.DriveFileRenameOutline"
+                           OnClose="Cancel">
+    <ChildContent>
+        <div class="esn-identity">
+            <span class="esn-avatar" aria-hidden="true">@Initials</span>
+            <div class="esn-identity-text">
+                <p>@PreviewName</p>
+                <span>Requested by @(string.IsNullOrWhiteSpace(Report.Requestor) ? "—" : Report.Requestor)</span>
+            </div>
+        </div>
+    </ChildContent>
+    <SecondaryContent>
+        <MudForm @ref="SubjectNameForm">
+            <div class="um-field">
+                <label for="esn-first-name">First name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditSubject.FirstName"
+                                  InputId="esn-first-name"
+                                  Placeholder="Enter the first name"
+                                  Required="true"
+                                  RequiredError="First name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="255"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <div class="um-field">
+                <label for="esn-middle-name">Middle name</label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditSubject.MiddleInitial"
+                                  InputId="esn-middle-name"
+                                  Placeholder="Optional"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="255"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <div class="um-field">
+                <label for="esn-last-name">Last name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditSubject.LastName"
+                                  InputId="esn-last-name"
+                                  Placeholder="Enter the last name"
+                                  Required="true"
+                                  RequiredError="Last name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="255"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <p class="esn-hint">Only the subject's name changes. The order status, package, and uploaded reports stay as they are.</p>
+        </MudForm>
+    </SecondaryContent>
+    <FooterContent>
+        <button type="button"
+                class="um-button um-button-cancel"
+                disabled="@IsSubmitting"
+                @onclick="Cancel">
+            Cancel
+        </button>
+        <button type="button"
+                class="um-button um-button-save"
+                disabled="@(IsSubmitting || !HasChanges)"
+                @onclick="Submit">
+            @if (IsSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="esn-button-spinner" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save changes</span>
+            }
+        </button>
+    </FooterContent>
+</UserManagementDialogShell>
