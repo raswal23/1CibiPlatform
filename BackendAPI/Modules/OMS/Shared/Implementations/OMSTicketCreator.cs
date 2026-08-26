@@ -6,7 +6,8 @@ public sealed class OMSTicketCreator(
 {
 	public async Task<OMSTicketCreated> CreateTicketAsync(
 		CreateOMSTicketRequest request,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		string referenceNumber = "")
 	{
 		request = request with
 		{
@@ -43,7 +44,7 @@ public sealed class OMSTicketCreator(
 
 		var ticket = await repository.CreateTicketAsync(
 			request,
-			referenceNumber: string.Empty,
+			referenceNumber,
 			cancellationToken);
 
 		if (ticket is null)

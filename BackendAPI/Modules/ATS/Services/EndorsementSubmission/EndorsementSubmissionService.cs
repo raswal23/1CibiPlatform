@@ -111,6 +111,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
 		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
+
+		// Queues the order for OMS auto-ticketing. The background job claims it from
+		// here; there is no outbox, the status column is the queue.
+		emailInvitationRequest.TicketStatus = TicketStatus.Pending;
+		emailInvitationRequest.IsTicketed = false;
 		emailInvitationRequest.RequestorId = _currentUser.UserId;
 		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
 		emailInvitationRequest.Requestor = _currentUser.FullName;

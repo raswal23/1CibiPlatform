@@ -33,7 +33,13 @@ public interface IOMSTicketCreator
 	/// database, then creates the ticket via stored procedure. The ticket
 	/// number, delivery date and initial status are produced by the database.
 	/// </summary>
+	/// <param name="referenceNumber">
+	/// Caller-owned key stored against the OMS ticket, letting an automated
+	/// caller tie the ticket back to its originating record and recognise a
+	/// ticket a retry already created. Empty for interactive callers.
+	/// </param>
 	Task<OMSTicketCreated> CreateTicketAsync(
 		CreateOMSTicketRequest request,
-		CancellationToken cancellationToken);
+		CancellationToken cancellationToken,
+		string referenceNumber = "");
 }

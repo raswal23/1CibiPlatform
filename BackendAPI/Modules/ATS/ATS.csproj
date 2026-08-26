@@ -45,6 +45,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\BuildingBlocks\BuildingBlocks\BuildingBlocks.csproj" />
 	  <ProjectReference Include="..\Auth\Auth.csproj" />
+	  <ProjectReference Include="..\OMS\OMS.csproj" />
 	</ItemGroup>
 
 </Project>

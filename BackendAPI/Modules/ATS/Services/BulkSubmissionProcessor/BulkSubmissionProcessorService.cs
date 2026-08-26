@@ -154,7 +154,12 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						ClientId = file.ClientId,
 						RequestorId = file.UploadedByUserId,
 						Requestor = file.Requestor,
-						OrderCreatedAt = DateTime.UtcNow
+						OrderCreatedAt = DateTime.UtcNow,
+
+						// Bulk orders are auto-ticketed on the same terms as single
+						// enrolments; the ticketing job claims them from this status.
+						TicketStatus = TicketStatus.Pending,
+						IsTicketed = false
 					});
 				}
 
