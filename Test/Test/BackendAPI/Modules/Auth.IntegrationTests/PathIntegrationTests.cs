@@ -27,6 +27,8 @@ public class PathIntegrationTests : BaseIntegrationTest
 	[InlineData("/change-password", "POST")]
 	[InlineData("/logout", "POST")]
 	[InlineData("/auth/getusers", "GET")]
+	[InlineData("/auth/getmyprofile", "GET")]
+	[InlineData("/auth/updatemyprofile", "PATCH")]
 	[InlineData("/auth/getapplications", "GET")]
 	[InlineData("/auth/addapplication", "POST")]
 	[InlineData("/auth/editapplication", "PATCH")]

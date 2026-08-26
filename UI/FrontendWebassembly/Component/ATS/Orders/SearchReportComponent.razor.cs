@@ -15,7 +15,10 @@ public partial class SearchReportComponent
 	private List<ReportListDTO> currentPageData = new();
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
-	private int ReportColumnCount => _canUploadReport ? 9 : 8;
+	private bool _canEditSubjectName;
+	private int ReportColumnCount => 8
+		+ (_canUploadReport ? 1 : 0)
+		+ (_canEditSubjectName ? 1 : 0);
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -23,6 +26,11 @@ public partial class SearchReportComponent
 		var atsRoleId = await GetStoredATSRoleIdAsync();
 
 		_canUploadReport = roleIds.Contains(1) || atsRoleId is 1 or 3;
+
+		// Correcting a subject name is an administrative fix, so it follows the
+		// platform super admin / platform manager / admin ladder rather than the
+		// uploader-oriented one above. The API re-checks scope on every call.
+		_canEditSubjectName = roleIds.Contains(1) || atsRoleId is 1 or 2;
 	}
 
 	private async Task<List<int>> GetStoredRoleIdsAsync()
@@ -231,6 +239,42 @@ public partial class SearchReportComponent
 
 		await dialog.Result;
 	}
+	private async Task OpenEditSubjectNameDialog(ReportListDTO report)
+	{
+		var parameters = new DialogParameters<EditSubjectNameComponent>
+		{
+			{ component => component.Report, report }
+		};
+
+		var options = new DialogOptions
+		{
+			CloseButton = false,
+			NoHeader = true,
+			MaxWidth = MaxWidth.Small,
+			FullWidth = true,
+			BackdropClick = false
+		};
+
+		var dialog = await DialogService.ShowAsync<EditSubjectNameComponent>(
+			"Edit subject name",
+			parameters,
+			options);
+
+		var result = await dialog.Result;
+
+		if (result is null || result.Canceled || result.Data is not SubjectNameDTO updated)
+			return;
+
+		// The row is patched in place instead of reloading the page: a reload would
+		// reset the keyset walk and drop any checkboxes the user already ticked.
+		report.SubjectName = updated.SubjectName;
+		report.FirstName = updated.FirstName;
+		report.MiddleInitial = updated.MiddleInitial;
+		report.LastName = updated.LastName;
+
+		await InvokeAsync(StateHasChanged);
+	}
+
 	private async Task OpenStatusHistoryDialog(ReportListDTO report)
 	{
 		var parameters = new DialogParameters { { nameof(OrderStatusHistoryDialog.EmailInvitationRequestId), report.EmailInvitationRequestId }, { nameof(OrderStatusHistoryDialog.SubjectName), report.SubjectName } };

@@ -183,6 +183,28 @@ public class AuthPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetMyProfileEntryPoint",
+				MatchPath: "/auth/getmyprofile",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/auth/getmyprofile" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "UpdateMyProfileEntryPoint",
+				MatchPath: "/auth/updatemyprofile",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/auth/updatemyprofile" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "SendApprovalNotificationEntryPoint",
 				MatchPath: "/account/approvalnotification",
 				ClusterId: GatewayConstants.OnePlatformApi,

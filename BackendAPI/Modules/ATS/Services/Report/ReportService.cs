@@ -237,6 +237,9 @@ public class ReportService : IReportService
 		{
 			EmailInvitationRequestId = x.EmailInvitationID,
 			SubjectName = $"{x.FirstName} {x.LastName}".Trim(),
+			FirstName = x.FirstName,
+			MiddleInitial = x.MiddleInitial,
+			LastName = x.LastName,
 			OrderStatus = x.OrderStatus,
 			OrderCompletedAt = x.OrderCompletedAt,
 			SelectedPackage = x.SelectPackage,
@@ -246,6 +249,88 @@ public class ReportService : IReportService
 
 		return new KeysetPaginatedResult<ReportListDTO>(items, nextCursor, totalCount);
 	}
+
+	public async Task<SubjectNameDTO> EditSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "EditSubjectName",
+			Step = "Start",
+			subjectName.EmailInvitationRequestId,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Editing the subject name on an order: {@Context}", logContext);
+
+		// Same scope gate the reports list applies, so a caller can only rename an
+		// order they were already allowed to see.
+		if (await _accessScopeResolver.ResolveAsync(cancellationToken) is not { } scope)
+		{
+			throw new ForbiddenException("The current user does not have ATS access.");
+		}
+
+		var order = await _atsRepository.GetEmailInvitationOwnerAsync(
+			subjectName.EmailInvitationRequestId,
+			cancellationToken);
+
+		if (order is null)
+		{
+			_logger.LogError("The order was not found during the subject-name update: {@Context}", logContext);
+
+			throw new NotFoundException($"Email invitation with ID {subjectName.EmailInvitationRequestId} not found.");
+		}
+
+		EnsureOrderIsInScope(order, scope);
+
+		var normalized = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = subjectName.EmailInvitationRequestId,
+			FirstName = Normalize(subjectName.FirstName),
+			MiddleInitial = Normalize(subjectName.MiddleInitial),
+			LastName = Normalize(subjectName.LastName)
+		};
+
+		var updated = await _atsRepository.UpdateSubjectNameAsync(normalized, cancellationToken);
+
+		if (!updated)
+		{
+			throw new NotFoundException($"Email invitation with ID {subjectName.EmailInvitationRequestId} not found.");
+		}
+
+		_logger.LogInformation("Subject name updated: {@Context}", logContext);
+
+		return new SubjectNameDTO
+		{
+			EmailInvitationRequestId = normalized.EmailInvitationRequestId,
+			FirstName = normalized.FirstName,
+			MiddleInitial = normalized.MiddleInitial,
+			LastName = normalized.LastName,
+			// Matches how the reports list builds SubjectName, so the edited row
+			// renders identically to a freshly loaded one.
+			SubjectName = $"{normalized.FirstName} {normalized.LastName}".Trim()
+		};
+	}
+
+	// null AuthorizedClientIds means every client; an empty collection means none.
+	// A RequiredOwnerId restricts the caller to orders they personally raised.
+	private static void EnsureOrderIsInScope(EmailInvitationOwnerDTO order, AtsAccessScope scope)
+	{
+		if (scope.AuthorizedClientIds is { } clientIds
+			&& (order.ClientId is not { } clientId || !clientIds.Contains(clientId)))
+		{
+			throw new ForbiddenException("The selected order is outside the current ATS scope.");
+		}
+
+		if (scope.RequiredOwnerId is { } ownerId && order.RequestorId != ownerId)
+		{
+			throw new ForbiddenException("The selected order is outside the current ATS scope.");
+		}
+	}
+
+	// A blank middle initial is stored as null so the column keeps one
+	// representation of "no middle name".
+	private static string? Normalize(string? value) =>
+		string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
 	public async Task<ReportResultDTO> GetReportResultByEmailInvitationRequestIdAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken)
 	{

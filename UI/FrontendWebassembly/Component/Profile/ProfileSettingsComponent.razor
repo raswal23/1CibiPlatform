@@ -1,0 +1,100 @@
+@namespace FrontendWebassembly.Component.Profile
+
+<UserManagementDialogShell Title="Profile settings"
+                           Subtitle="Update how your name appears across One Platform"
+                           SectionTitle="Account"
+                           SectionHelper="The account you are signed in as"
+                           SectionClass="ps-account-section"
+                           SecondarySectionTitle="Your name"
+                           SecondarySectionHelper="First, middle, and last name"
+                           Icon="@Icons.Material.Outlined.ManageAccounts"
+                           OnClose="Cancel">
+    <ChildContent>
+        <div class="ps-identity">
+            <span class="ps-avatar" aria-hidden="true">@Initials</span>
+            <div class="ps-identity-text">
+                <p>@PreviewName</p>
+                <span>@Profile.Email</span>
+            </div>
+        </div>
+    </ChildContent>
+    <SecondaryContent>
+        <MudForm @ref="ProfileForm">
+            <div class="um-field">
+                <label for="ps-first-name">First name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditProfile.FirstName"
+                                  InputId="ps-first-name"
+                                  Placeholder="Enter your first name"
+                                  Required="true"
+                                  RequiredError="First name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="100"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <div class="um-field">
+                <label for="ps-middle-name">Middle name</label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditProfile.MiddleName"
+                                  InputId="ps-middle-name"
+                                  Placeholder="Optional"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="100"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <div class="um-field">
+                <label for="ps-last-name">Last name <span class="um-required">*</span></label>
+                <div class="um-input-wrap um-single-line-wrap">
+                    <MudTextField @bind-Value="EditProfile.LastName"
+                                  InputId="ps-last-name"
+                                  Placeholder="Enter your last name"
+                                  Required="true"
+                                  RequiredError="Last name is required"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  MaxLength="100"
+                                  Disabled="@IsSubmitting"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
+                </div>
+            </div>
+
+            <p class="ps-hint">Your email address and password are managed separately.</p>
+        </MudForm>
+    </SecondaryContent>
+    <FooterContent>
+        <button type="button"
+                class="um-button um-button-cancel"
+                disabled="@IsSubmitting"
+                @onclick="Cancel">
+            Cancel
+        </button>
+        <button type="button"
+                class="um-button um-button-save"
+                disabled="@(IsSubmitting || !HasChanges)"
+                @onclick="Submit">
+            @if (IsSubmitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="ps-button-spinner" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save changes</span>
+            }
+        </button>
+    </FooterContent>
+</UserManagementDialogShell>

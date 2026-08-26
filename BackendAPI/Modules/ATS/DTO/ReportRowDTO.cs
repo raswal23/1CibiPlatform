@@ -9,6 +9,7 @@ public sealed class ReportRowDTO
 {
 	public Guid EmailInvitationID { get; init; }
 	public string? FirstName { get; init; }
+	public string? MiddleInitial { get; init; }
 	public string? LastName { get; init; }
 	public string? Requestor { get; init; }
 	public string? OrderStatus { get; init; }

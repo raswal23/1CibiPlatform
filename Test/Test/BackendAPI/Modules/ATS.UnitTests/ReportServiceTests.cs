@@ -542,9 +542,217 @@ public class ReportServiceTests
 		mergedDocument.PageCount.Should().Be(2);
 	}
 
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldTrimNamesAndReturnConcatenatedSubjectName()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+		EditSubjectNameDTO? persisted = null;
+
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new EmailInvitationOwnerDTO { EmailInvitationID = invitationId, ClientId = 7 });
+		_repository
+			.Setup(repository => repository.UpdateSubjectNameAsync(It.IsAny<EditSubjectNameDTO>(), It.IsAny<CancellationToken>()))
+			.Callback<EditSubjectNameDTO, CancellationToken>((dto, _) => persisted = dto)
+			.ReturnsAsync(true);
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "  Ada  ",
+			MiddleInitial = " Byron ",
+			LastName = "  Lovelace "
+		};
+
+		// Act
+		var result = await _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		result.FirstName.Should().Be("Ada");
+		result.MiddleInitial.Should().Be("Byron");
+		result.LastName.Should().Be("Lovelace");
+		result.SubjectName.Should().Be("Ada Lovelace");
+		persisted!.FirstName.Should().Be("Ada");
+		persisted.LastName.Should().Be("Lovelace");
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldStoreNullMiddleInitial_WhenBlank()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+		EditSubjectNameDTO? persisted = null;
+
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new EmailInvitationOwnerDTO { EmailInvitationID = invitationId, ClientId = 7 });
+		_repository
+			.Setup(repository => repository.UpdateSubjectNameAsync(It.IsAny<EditSubjectNameDTO>(), It.IsAny<CancellationToken>()))
+			.Callback<EditSubjectNameDTO, CancellationToken>((dto, _) => persisted = dto)
+			.ReturnsAsync(true);
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "Ada",
+			MiddleInitial = "   ",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		var result = await _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		persisted!.MiddleInitial.Should().BeNull();
+		result.MiddleInitial.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldAllowClientScopedCaller_ForTheirOwnClientsOrder()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope([7], null));
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new EmailInvitationOwnerDTO { EmailInvitationID = invitationId, ClientId = 7 });
+		_repository
+			.Setup(repository => repository.UpdateSubjectNameAsync(It.IsAny<EditSubjectNameDTO>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(true);
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "Ada",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		var result = await _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		result.SubjectName.Should().Be("Ada Lovelace");
+	}
+
 	#endregion
 
 	#region Bad Path
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowForbidden_WhenTheCallerHasNoAtsScope()
+	{
+		// Arrange
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync((AtsAccessScope?)null);
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = Guid.CreateVersion7(),
+			FirstName = "Ada",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		Func<Task> act = () => _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ForbiddenException>();
+		_repository.Verify(
+			repository => repository.UpdateSubjectNameAsync(It.IsAny<EditSubjectNameDTO>(), It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowForbidden_WhenTheOrderBelongsToAnotherClient()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope([7], null));
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new EmailInvitationOwnerDTO { EmailInvitationID = invitationId, ClientId = 99 });
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "Ada",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		Func<Task> act = () => _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ForbiddenException>();
+		_repository.Verify(
+			repository => repository.UpdateSubjectNameAsync(It.IsAny<EditSubjectNameDTO>(), It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowForbidden_WhenTheOrderWasRaisedByAnotherUser()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+		var callerId = Guid.CreateVersion7();
+
+		_accessScopeResolver
+			.Setup(resolver => resolver.ResolveAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new AtsAccessScope([7], callerId));
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new EmailInvitationOwnerDTO
+			{
+				EmailInvitationID = invitationId,
+				ClientId = 7,
+				RequestorId = Guid.CreateVersion7()
+			});
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "Ada",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		Func<Task> act = () => _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ForbiddenException>();
+	}
+
+	[Fact]
+	public async Task EditSubjectNameAsync_ShouldThrowNotFound_WhenTheOrderDoesNotExist()
+	{
+		// Arrange
+		var invitationId = Guid.CreateVersion7();
+
+		_repository
+			.Setup(repository => repository.GetEmailInvitationOwnerAsync(invitationId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync((EmailInvitationOwnerDTO?)null);
+
+		var request = new EditSubjectNameDTO
+		{
+			EmailInvitationRequestId = invitationId,
+			FirstName = "Ada",
+			LastName = "Lovelace"
+		};
+
+		// Act
+		Func<Task> act = () => _service.EditSubjectNameAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>();
+	}
 
 	[Fact]
 	public async Task UploadReportAsync_ShouldThrowBadRequestException_WhenFileIsMissing()
