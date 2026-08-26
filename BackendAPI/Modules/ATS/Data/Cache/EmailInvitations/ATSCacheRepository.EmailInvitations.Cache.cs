@@ -57,6 +57,29 @@ public partial class ATSCacheRepository
 		return await _atsRepository.GetEmailInvitationRequestByIdAsync(emailInvitationId, cancellationToken);
 	}
 
+	// Single-row lookup used only for an access check on the way into a write — not
+	// worth a cache entry, and stale scope data here would be a correctness problem.
+	public async Task<EmailInvitationOwnerDTO?> GetEmailInvitationOwnerAsync(Guid emailInvitationId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationOwnerAsync(emailInvitationId, cancellationToken);
+	}
+
+	// The subject name is rendered by the cached reports pages and by the dispute
+	// and withdrawn lists, so every one of those tags is invalidated.
+	public async Task<bool> UpdateSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.UpdateSubjectNameAsync(subjectName, cancellationToken);
+
+		if (result)
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
+
+		return result;
+	}
+
 	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
 	{
 		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);

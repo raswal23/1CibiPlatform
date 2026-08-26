@@ -408,3 +408,4 @@ FodyWeavers.xsd
 /monitoring/loki-data
 BackendAPI/API/.env
 .env
+/docs/monitoring

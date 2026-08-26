@@ -62,6 +62,7 @@
                                               InputType="InputType.Email"
                                               Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                               Class="auth-input"
+                                              autocomplete="username"
                                               aria-label="Email" />
                             </div>
                         </div>
@@ -90,6 +91,7 @@
                                               OnAdornmentClick="ToggleLoginPasswordVisibility"
                                               AdornmentAriaLabel="Show password"
                                               Class="auth-input"
+                                              autocomplete="current-password"
                                               aria-label="Password" />
                             </div>
                         </div>
@@ -346,6 +348,7 @@
                                               InputType="InputType.Email"
                                               Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                               Class="auth-input"
+                                              autocomplete="off"
                                               aria-label="Email" />
                             </div>
                         </div>
@@ -367,6 +370,7 @@
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
+                                                  Immediate="true"
                                                   Required="true"
                                                   RequiredError="Password is required"
                                                   InputType="@registerPasswordInput"
@@ -376,6 +380,7 @@
                                                   OnAdornmentClick="ToggleRegisterPasswordVisibility"
                                                   AdornmentAriaLabel="Show password"
                                                   Class="auth-input"
+                                                  autocomplete="new-password"
                                                   aria-label="Password" />
                                 </div>
                             </div>
@@ -405,10 +410,18 @@
                                                   OnAdornmentClick="ToggleConfirmPasswordVisibility"
                                                   AdornmentAriaLabel="Show password"
                                                   Class="auth-input"
+                                                  autocomplete="new-password"
                                                   aria-label="Confirm password" />
                                 </div>
                             </div>
                         </div>
+
+                        @if (!string.IsNullOrEmpty(registerPassword))
+                        {
+                            <div class="auth-strength-slot">
+                                <PasswordStrengthComponent Password="@registerPassword" />
+                            </div>
+                        }
 
                         <ButtonComponent ButtonType="ButtonType.Submit"
                                          OnClick="HandleRegister"

@@ -1,11 +1,22 @@
-﻿namespace FrontendWebassembly.Layout;
+﻿using FrontendWebassembly.Component.Profile;
+
+namespace FrontendWebassembly.Layout;
 
 public partial class MainLayout
 {
 	private bool _isDarkMode = false;
 	private bool _isLoading = true;
+	private bool _isOpeningProfile = false;
 	private string name = "";
 	private string _applicationSearchQuery = string.Empty;
+
+	private static DialogOptions ProfileDialogOptions => new()
+	{
+		NoHeader = true,
+		MaxWidth = MaxWidth.Small,
+		FullWidth = true,
+		BackdropClick = false
+	};
 
 	private bool IsHomeRoute
 	{
@@ -127,6 +138,59 @@ public partial class MainLayout
 		if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
 		{
 			_applicationSearchQuery = string.Empty;
+		}
+	}
+
+	// The profile is fetched on open rather than cached in the layout so the dialog
+	// always edits the current server state, not a stale copy from login time.
+	private async Task OpenProfileSettings()
+	{
+		if (_isOpeningProfile)
+			return;
+
+		_isOpeningProfile = true;
+
+		try
+		{
+			var profileResponse = await UserProfileService.GetMyProfileAsync();
+
+			if (!profileResponse.IsSuccess || profileResponse.Data is null)
+			{
+				Snackbar.Add(
+					string.IsNullOrWhiteSpace(profileResponse.ErrorDetail)
+						? "Your profile could not be loaded."
+						: profileResponse.ErrorDetail,
+					Severity.Error);
+
+				return;
+			}
+
+			var parameters = new DialogParameters<ProfileSettingsComponent>
+			{
+				{ component => component.Profile, profileResponse.Data }
+			};
+
+			var dialog = await DialogService.ShowAsync<ProfileSettingsComponent>(
+				"Profile settings",
+				parameters,
+				ProfileDialogOptions);
+
+			var result = await dialog.Result;
+
+			if (result is null || result.Canceled || result.Data is not UserProfileDTO updatedProfile)
+				return;
+
+			// The service already persisted the new display name to local storage;
+			// this refreshes the greeting without a page reload.
+			if (!string.IsNullOrWhiteSpace(updatedProfile.FullName))
+			{
+				name = updatedProfile.FullName;
+				StateHasChanged();
+			}
+		}
+		finally
+		{
+			_isOpeningProfile = false;
 		}
 	}
 

@@ -15,6 +15,7 @@ public interface IAuthRepository :
 	IRoleRepository,
 	ISubMenuRepository,
 	IUserDirectoryRepository,
+	IUserProfileRepository,
 	IUserRepository
 {
 }

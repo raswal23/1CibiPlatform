@@ -121,6 +121,7 @@ public partial class ATSRepository
 			{
 				EmailInvitationID = eir.EmailInvitationID,
 				FirstName = eir.FirstName,
+				MiddleInitial = eir.MiddleInitial,
 				LastName = eir.LastName,
 				Requestor = eir.Requestor,
 				OrderStatus = eir.OrderStatus,

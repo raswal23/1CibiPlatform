@@ -77,66 +77,6 @@ public partial class ResetPassword
 		return null;
 	}
 
-	private int GetPasswordStrengthScore()
-	{
-		if (string.IsNullOrEmpty(newPassword))
-			return 0;
-
-		var score = 0;
-
-		if (newPassword.Length is >= 6 and <= 100)
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[A-Z]")
-			&& System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[a-z]"))
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, "[0-9]"))
-			score++;
-
-		if (System.Text.RegularExpressions.Regex.IsMatch(newPassword, @"[\W_]"))
-			score++;
-
-		return score;
-	}
-
-	private string GetPasswordStrengthContainerClass()
-	{
-		if (string.IsNullOrEmpty(newPassword))
-			return "reset-password-strength";
-
-		return GetPasswordStrengthScore() switch
-		{
-			4 => "reset-password-strength strong",
-			3 => "reset-password-strength good",
-			2 => "reset-password-strength fair",
-			_ => "reset-password-strength weak"
-		};
-	}
-
-	private string GetPasswordStrengthBarClass(int barNumber)
-	{
-		if (string.IsNullOrEmpty(newPassword))
-			return string.Empty;
-
-		var visibleScore = Math.Max(1, GetPasswordStrengthScore());
-		return barNumber <= visibleScore ? "active" : string.Empty;
-	}
-
-	private string GetPasswordStrengthLabel()
-	{
-		if (string.IsNullOrEmpty(newPassword))
-			return "Use 6+ characters with uppercase, lowercase, a number and a symbol";
-
-		return GetPasswordStrengthScore() switch
-		{
-			4 => "Strong password",
-			3 => "Good password",
-			2 => "Fair password",
-			_ => "Weak password"
-		};
-	}
-
 	private string ValidateConfirmPassword(string confirm)
 	{
 		if (string.IsNullOrWhiteSpace(confirm))

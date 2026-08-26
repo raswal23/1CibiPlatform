@@ -370,3 +370,53 @@
         width: auto;
     }
 }
+
+/* MudTable's stacked mode (Breakpoint.Sm = max-width 600px) renders each cell as
+   label-left / value-right flex, which shoves long emails and names against the
+   dialog edge where they clip. Restack each cell as a centered column instead:
+   the DataLabel becomes a small heading, the value sits centered under it. */
+@media (max-width: 600px) {
+    /* In stacked mode the <table> still uses table auto-layout, so it sizes to its
+       widest nowrap cell content (long emails) and overflows the card, which clips
+       it. Block-level table + rows bound the flex cells to the card width so the
+       spans' ellipsis can engage. Also overrides ats.css's `min-width: 880px` on
+       every .ats-management-card table. */
+    ::deep .ats-bulk-subjects-table-card table,
+    ::deep .ats-bulk-subjects-table-card tbody,
+    ::deep .ats-bulk-subjects-table-card tr {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    ::deep .ats-bulk-subjects-table .mud-table-cell {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-align: center !important; /* MudBlazor sets text-align with !important */
+    }
+
+    ::deep .ats-bulk-subjects-table .mud-table-cell::before {
+        padding: 0;
+        color: var(--text-3, #8a97b5);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+    }
+
+    /* The per-cell wrappers left-align their children for the desktop table. */
+    .ats-bulk-subject,
+    .ats-bulk-subject-contact,
+    .ats-bulk-subject-email-state {
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+    }
+
+    /* Ellipsis needs a bound now that the column no longer constrains min-content. */
+    .ats-bulk-subject-name,
+    .ats-bulk-subject-email {
+        max-width: 100%;
+    }
+}

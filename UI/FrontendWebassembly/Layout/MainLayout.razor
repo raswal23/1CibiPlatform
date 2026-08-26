@@ -5,6 +5,9 @@
 @inject NavigationManager NavigationManager
 
 @inject IJSRuntime JS
+@inject IUserProfileService UserProfileService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 <MudThemeProvider Theme="@_myTheme" @bind-IsDarkMode="@_isDarkMode" />
@@ -62,6 +65,16 @@
                             <span class="main-topbar-greeting-text">Hi, <strong>@name</strong></span>
                             <span class="main-topbar-avatar" aria-hidden="true">@UserInitials</span>
                         </div>
+                        <span class="main-topbar-divider" aria-hidden="true"></span>
+
+                        <MudButton OnClick="OpenProfileSettings"
+                                   StartIcon="@Icons.Material.Filled.ManageAccounts"
+                                   Disabled="@_isOpeningProfile"
+                                   Class="main-topbar-profile"
+                                   aria-label="Open profile settings">
+                            <span class="main-topbar-profile-label">Profile settings</span>
+                        </MudButton>
+
                         <span class="main-topbar-divider" aria-hidden="true"></span>
                         @* <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                                        Color="Color.Inherit"

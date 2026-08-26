@@ -45,6 +45,7 @@ public static class AuthServiceConfiguration
 		services.AddScoped<IRoleService, RoleService>();
 		services.AddScoped<IAppSubRoleService, AppSubRoleService>();
 		services.AddScoped<IUserService, UserService>();
+		services.AddScoped<IUserProfileService, UserProfileService>();
 		services.AddScoped<ILockerUserService, LockedUserService>();
 		services.AddScoped<IAuthQueries, AuthQueries>();
 
@@ -59,6 +60,7 @@ public static class AuthServiceConfiguration
 		services.AddScoped<IRoleRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 		services.AddScoped<ISubMenuRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 		services.AddScoped<IUserDirectoryRepository>(provider => provider.GetRequiredService<IAuthRepository>());
+		services.AddScoped<IUserProfileRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 		services.AddScoped<IUserRepository>(provider => provider.GetRequiredService<IAuthRepository>());
 
 		return services;

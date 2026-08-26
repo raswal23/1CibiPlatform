@@ -1,0 +1,80 @@
+/* Dialog chrome, section cards, field labels, and footer buttons come from
+   UserManagementDialogShell. Only the order-identity block and the inline
+   saving state live here. */
+
+.esn-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1.5px solid #e2e6f0;
+    border-radius: 12px;
+    background: #fafbfd;
+}
+
+.esn-avatar {
+    display: flex;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(120deg, #132a54, #2e7ce0);
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .5px;
+}
+
+.esn-identity-text {
+    min-width: 0;
+}
+
+.esn-identity-text p {
+    margin: 0;
+    overflow: hidden;
+    color: #16233f;
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.esn-identity-text span {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    color: #8a97b5;
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.esn-hint {
+    margin: 14px 0 0;
+    color: #8a97b5;
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+
+.um-button-save ::deep .esn-button-spinner {
+    width: 16px;
+    height: 16px;
+    color: #fff;
+}
+
+@media (max-width: 480px) {
+    .esn-identity {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .esn-avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 14px;
+    }
+}

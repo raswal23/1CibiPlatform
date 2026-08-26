@@ -128,6 +128,39 @@ public class ReportService : IReportService
 		}
 	}
 
+	public async Task<ServiceResponse<SubjectNameDTO>> EditSubjectNameAsync(
+		EditSubjectNameDTO editSubjectName,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var response = await _httpClient.PatchAsJsonAsync(
+				"ats/editsubjectname",
+				new { editSubjectName },
+				cancellationToken);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<SubjectNameDTO>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			var result = await response.Content
+				.ReadFromJsonAsync<EditSubjectNameResponseDTO>(cancellationToken: cancellationToken);
+
+			if (result?.Subject is null)
+			{
+				return ServiceResponse<SubjectNameDTO>.Failure("The server returned an empty response.");
+			}
+
+			return ServiceResponse<SubjectNameDTO>.Success(result.Subject);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<SubjectNameDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
+
 	public async Task<ServiceResponse<HttpResponseMessage>> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken = default)
 	{
 		var request = new { downloadInvididualRequest };
