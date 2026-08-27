@@ -1051,6 +1051,37 @@
     color: var(--management-text-3);
 }
 
+/* Square icon button for a row-level action, matching the treatment the withdrawn
+   list uses. Shared so every board's action column looks the same. */
+.ats-management-page .ats-cell-action {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 8px;
+    background: var(--management-blue-tint);
+    color: var(--management-blue-600);
+    cursor: pointer;
+    transition: background .12s ease;
+}
+
+.ats-management-page .ats-cell-action:hover:not(:disabled) {
+    background: var(--management-blue-tint-2);
+}
+
+.ats-management-page .ats-cell-action:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+.ats-management-page .ats-cell-action:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, .35);
+    outline-offset: 2px;
+}
+
 /* ---------- Status pill ---------- */
 
 .ats-management-page .ats-status-pill {

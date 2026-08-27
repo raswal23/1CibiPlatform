@@ -12,4 +12,13 @@ public interface IOMSTicketingMonitoringService
 		DateTime? startDate,
 		DateTime? endDate,
 		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Puts an order whose automatic OMS retries are exhausted back on the ticketing
+	/// queue. Throws NotFoundException when the order is unknown or outside the
+	/// caller's scope, and ConflictException when it is no longer retryable.
+	/// </summary>
+	Task<bool> RetryTicketAsync(
+		Guid emailInvitationId,
+		CancellationToken cancellationToken);
 }

@@ -124,4 +124,30 @@ public class OMSTicketingService : IOMSTicketingService
 				$"Unable to reach the server. {ex.Message}");
 		}
 	}
+
+	public async Task<ServiceResponse<bool>> RetryTicketAsync(Guid emailInvitationId)
+	{
+		var request = new { emailInvitationId };
+
+		try
+		{
+			var response = await _httpClient.PatchAsJsonAsync("ats/retryticket", request);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				// Carries the server's detail through, so a 409 explains that the row
+				// moved on rather than showing a generic failure.
+				return ServiceResponse<bool>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			var successContent = await response.Content.ReadFromJsonAsync<bool>();
+
+			return ServiceResponse<bool>.Success(successContent);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
 }

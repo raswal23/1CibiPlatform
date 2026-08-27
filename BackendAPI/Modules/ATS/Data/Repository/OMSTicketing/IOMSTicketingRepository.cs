@@ -41,6 +41,25 @@ public interface IOMSTicketingRepository
 		bool isRetryable,
 		CancellationToken cancellationToken);
 
+	/// <summary>
+	/// Reads the scope identity and current order status of one order, for the access
+	/// check and history entry a manual retry needs. Returns null when the order does
+	/// not exist.
+	/// </summary>
+	Task<TicketRetryTargetDTO?> GetRetryTargetAsync(
+		Guid emailInvitationId,
+		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Puts an order whose automatic retries are exhausted back on the queue with a
+	/// fresh attempt budget. Returns false when the order is not in that state - it was
+	/// already requeued, already ticketed, or is still auto-retrying - so a stale button
+	/// cannot resurrect a live claim.
+	/// </summary>
+	Task<bool> RequeueExhaustedTicketAsync(
+		Guid emailInvitationId,
+		CancellationToken cancellationToken);
+
 	Task<List<TicketedOrderListDTO>> GetTicketedOrdersPageAsync(
 		DateTime? afterOrderCreatedAt,
 		Guid? afterInvitationId,

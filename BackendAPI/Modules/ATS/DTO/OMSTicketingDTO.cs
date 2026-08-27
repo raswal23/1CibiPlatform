@@ -75,6 +75,19 @@ public record TicketedOrderListDTO
 	public DateTime? OrderCreatedAt { get; set; }
 }
 
+// What a manual retry needs before it writes: who owns the order, so the access check
+// can run, and the order's current status, so the history entry records it unchanged.
+public record TicketRetryTargetDTO
+{
+	public Guid EmailInvitationID { get; set; }
+
+	public int? ClientId { get; set; }
+
+	public Guid? RequestorId { get; set; }
+
+	public string? OrderStatus { get; set; }
+}
+
 public record TicketStatusCountsDTO
 {
 	public long Pending { get; set; }
