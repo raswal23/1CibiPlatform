@@ -11,6 +11,7 @@ using BuildingBlocks.SharedConstants;
 using AIAgent;
 using BackendAPI.Modules.ATS;
 using BackendAPI.Modules.EmploymentVerification;
+using BackendAPI.Modules.OMS;
 using BackendAPI.Modules.PlatformLogging;
 
 namespace ApiGateways.YarpApiGateway.Extensions;
@@ -150,6 +151,7 @@ public static class GatewayServiceExtensions
 			typeof(AIAgentMarker).Assembly,
 			typeof(ATSMarker).Assembly,
 			typeof(EmploymentVerificationMarker).Assembly,
+			typeof(OMSMarker).Assembly,
 			typeof(PlatformLoggingMarker).Assembly
 		};
 

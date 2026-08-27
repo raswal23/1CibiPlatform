@@ -743,16 +743,16 @@
     margin-left: 6px;
 }
 
-/* ---------- Bulk uploads toolbar: Upload date picker + search + reload ---------- */
+/* ---------- Status board toolbar: Upload date picker + search + reload ---------- */
 
 /* Mirrors the Search Report toolbar treatment (SearchReportComponent.razor.css) for
-   the bulk uploads card. Lives here rather than in the component's scoped CSS because
+   the status board card. Lives here rather than in the component's scoped CSS because
    it styles shared TableComponent internals. Every selector is anchored under
    .ats-management-page: the shared TableComponent scoped rules (e.g. the toolbar
    row's `align-items: center`, the left slot's `flex: 0 1 20rem; margin-left: auto`)
    carry class+scope-attribute specificity AND load after this sheet, so two-class
    selectors here lose to them - the page anchor is what lets these overrides win. */
-.ats-management-page .bulk-uploads-card .table-component-toolbar-row {
+.ats-management-page .ats-status-board-card .table-component-toolbar-row {
     flex-wrap: wrap;
     row-gap: 0.75rem;
 
@@ -761,7 +761,7 @@
     align-items: flex-end;
 }
 
-.ats-management-page .bulk-uploads-card .table-component-toolbar-left {
+.ats-management-page .ats-status-board-card .table-component-toolbar-left {
     flex: 0 0 auto;
     /* Same 400px as .search-report-date-field, so the two pickers lay out their
        inputs and end adornment identically. */
@@ -775,14 +775,14 @@
     margin-right: auto;
 }
 
-.ats-management-page .bulk-uploads-date-field {
+.ats-management-page .ats-status-board-date-field {
     display: flex;
     width: 100%;
     flex-direction: column;
     gap: 4px;
 }
 
-.ats-management-page .bulk-uploads-date-field label {
+.ats-management-page .ats-status-board-date-field label {
     color: var(--management-text-2);
     font-size: 11.5px;
     font-weight: 700;
@@ -793,77 +793,343 @@
 
 /* The picker must fill the 400px slot; a shrunk picker pulls its end adornment
    (calendar icon) away from the field's right edge. */
-.ats-management-page .bulk-uploads-date-field .mud-picker,
-.ats-management-page .bulk-uploads-date-field .mud-picker-inline {
+.ats-management-page .ats-status-board-date-field .mud-picker,
+.ats-management-page .ats-status-board-date-field .mud-picker-inline {
     width: 100% !important;
     flex: 1 1 auto;
 }
 
-.ats-management-page .bulk-uploads-date-range .mud-input-control {
+.ats-management-page .ats-status-board-date-range .mud-input-control {
     width: 100%;
     margin: 0;
 }
 
 /* Same input treatment as the Search Report picker. */
-.ats-management-page .bulk-uploads-date-range .mud-input-outlined-border {
+.ats-management-page .ats-status-board-date-range .mud-input-outlined-border {
     border-width: 1.5px;
     border-color: var(--management-border-strong);
     border-radius: 10px;
 }
 
-.ats-management-page .bulk-uploads-date-range .mud-input-slot {
+.ats-management-page .ats-status-board-date-range .mud-input-slot {
     color: var(--management-text-1);
     font-size: 13.5px;
 }
 
-.ats-management-page .bulk-uploads-date-range .mud-input-adornment {
+.ats-management-page .ats-status-board-date-range .mud-input-adornment {
     color: var(--management-blue-600);
 }
 
-.ats-management-page .bulk-uploads-date-range input::placeholder {
+.ats-management-page .ats-status-board-date-range input::placeholder {
     color: var(--management-text-3);
     opacity: 1;
 }
 
 /* The management-card search input is 40px while the outlined picker is 56px; pin
    the search to 56px and nudge the 38px reload up 9px, as Search Report does. */
-.ats-management-page .bulk-uploads-card .table-component-search .mud-input-control,
-.ats-management-page .bulk-uploads-card .table-component-search .table-component-search-input {
+.ats-management-page .ats-status-board-card .table-component-search .mud-input-control,
+.ats-management-page .ats-status-board-card .table-component-search .table-component-search-input {
     height: 56px !important;
     min-height: 56px !important;
     margin: 0 !important;
 }
 
-.ats-management-page .bulk-uploads-card .table-component-search .mud-input-control-input-container {
+.ats-management-page .ats-status-board-card .table-component-search .mud-input-control-input-container {
     height: 56px !important;
     min-height: 56px !important;
 }
 
-.ats-management-page .bulk-uploads-card .table-component-search .mud-input {
+.ats-management-page .ats-status-board-card .table-component-search .mud-input {
     box-sizing: border-box;
     height: 56px !important;
     min-height: 56px !important;
 }
 
-.ats-management-page .bulk-uploads-card .table-component-search .mud-input-slot,
-.ats-management-page .bulk-uploads-card .table-component-search input.mud-input-root {
+.ats-management-page .ats-status-board-card .table-component-search .mud-input-slot,
+.ats-management-page .ats-status-board-card .table-component-search input.mud-input-root {
     height: 56px !important;
     min-height: 56px !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
 
-.ats-management-page .bulk-uploads-card .table-component-reload-button {
+.ats-management-page .ats-status-board-card .table-component-reload-button {
     margin-bottom: 9px;
 }
 
 /* Below the TableComponent breakpoint the toolbar stacks; let the picker go full
    width like the controls beside it. */
 @media (max-width: 960px) {
-    .ats-management-page .bulk-uploads-card .table-component-toolbar-left {
+    .ats-management-page .ats-status-board-card .table-component-toolbar-left {
         width: 100%;
         flex: 1 1 100%;
         margin-right: 0;
+    }
+}
+
+/* ---------- Status board: shared intro banner, filter chips and status pills ----------
+
+   The bulk uploads and OMS ticketing screens are the same shape: an intro banner, a
+   segmented status filter with live counts, and a table whose last column is a status
+   pill. These rules are the single definition of that shape. A screen adds only what
+   is genuinely its own (extra columns, an extra status colour) in its scoped sheet.
+
+   Not scoped to a component because the filter chips and pills sit inside shared
+   TableComponent markup, which the ::deep boundary makes awkward to reach twice. */
+
+.ats-management-page .ats-status-board-intro {
+    display: flex;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid var(--management-border);
+    border-left: 4px solid var(--management-blue-500);
+    border-radius: 12px;
+    background: var(--management-blue-tint);
+    color: var(--management-text-2);
+}
+
+.ats-management-page .ats-status-board-intro-title {
+    margin: 0 0 2px;
+    color: var(--management-navy-900);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-management-page .ats-status-board-intro-text {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.ats-management-page .ats-status-board-intro-text strong {
+    color: var(--management-navy-900);
+    font-weight: 700;
+}
+
+/* Overrides the compact .ats-segmented pill row for the board layout: a white card
+   with a hairline border rather than the tinted inline group used on New Order. */
+.ats-management-page .ats-status-board-segmented {
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 16px;
+    border: 1px solid var(--management-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.ats-management-page .ats-status-board-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    color: var(--management-text-2);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.ats-management-page .ats-status-board-btn:hover:not(:disabled) {
+    color: var(--management-blue-600);
+    background: var(--management-blue-tint);
+}
+
+.ats-management-page .ats-status-board-btn.active {
+    background: var(--management-blue-tint-2);
+    color: var(--management-navy-900);
+    box-shadow: 0 2px 6px rgba(11, 27, 61, .1);
+}
+
+.ats-management-page .ats-status-board-btn:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+.ats-management-page .ats-status-board-btn:focus-visible {
+    outline: 3px solid rgba(46, 124, 224, .35);
+    outline-offset: 2px;
+}
+
+.ats-management-page .ats-status-board-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f4fa;
+    color: var(--management-text-2);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ats-management-page .ats-status-board-btn.active .ats-status-board-count {
+    background: linear-gradient(120deg, var(--management-navy-900), var(--management-blue-500));
+    color: #fff;
+}
+
+.ats-management-page .ats-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.ats-management-page .ats-status-dot.is-all {
+    background: var(--management-text-3);
+}
+
+.ats-management-page .ats-status-dot.is-pending {
+    background: #7d8aa8;
+}
+
+.ats-management-page .ats-status-dot.is-processing {
+    background: #b5790f;
+}
+
+.ats-management-page .ats-status-dot.is-done {
+    background: var(--management-green);
+}
+
+.ats-management-page .ats-status-dot.is-error {
+    background: #c0453e;
+}
+
+/* ---------- Shared table-cell primitives ---------- */
+
+/* Icon tile + two stacked lines (name over timestamp), used for the leading
+   identity column on both boards. */
+.ats-management-page .ats-cell-lead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.ats-management-page .ats-cell-lead-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: var(--management-blue-tint);
+    color: var(--management-blue-600);
+}
+
+.ats-management-page .ats-cell-lead-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ats-management-page .ats-cell-lead-title {
+    color: var(--management-text-1);
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ats-management-page .ats-cell-lead-sub {
+    color: var(--management-text-3);
+    font-size: 11.5px;
+}
+
+.ats-management-page .ats-cell-tag {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: #f1f4fa;
+    color: var(--management-text-2);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.ats-management-page .ats-cell-muted {
+    color: var(--management-text-3);
+}
+
+/* ---------- Status pill ---------- */
+
+.ats-management-page .ats-status-pill {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ats-management-page .ats-status-pill::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ats-management-page .ats-status-pill.pending {
+    background: #f8f9fc;
+    color: #7d8aa8;
+    border: 1px dashed var(--management-border-strong);
+}
+
+.ats-management-page .ats-status-pill.processing {
+    background: #fcf1dd;
+    color: #b5790f;
+}
+
+/* The only row state that is actively changing, so the dot breathes to say so. */
+.ats-management-page .ats-status-pill.processing::before {
+    animation: ats-status-pulse 1.6s ease-in-out infinite;
+}
+
+.ats-management-page .ats-status-pill.done {
+    background: var(--management-green-tint);
+    color: var(--management-green);
+}
+
+.ats-management-page .ats-status-pill.error {
+    background: #fdeceb;
+    color: #c0453e;
+}
+
+.ats-management-page .ats-status-pill.unknown {
+    background: #eef0f5;
+    color: #6b7690;
+}
+
+@keyframes ats-status-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ats-management-page .ats-status-pill.processing::before {
+        animation: none;
+    }
+}
+
+@media (max-width: 720px) {
+    .ats-management-page .ats-status-board-segmented {
+        display: flex;
+        width: 100%;
+    }
+
+    .ats-management-page .ats-status-board-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 9px 10px;
     }
 }
 

@@ -350,6 +350,25 @@ For current visual direction, inspect modern files under the feature folders of 
 
 Follow their design language: ATS layout, navy/blue palette, Poppins headings, Inter body text, rounded cards/dialogs, restrained shadows, consistent buttons, accessible labels/focus states, responsive layout, and MudBlazor components where already established. Reuse shared generic components and `CrudPageBase`/shared loaders where suitable.
 
+#### Reuse existing styles; do not duplicate a design
+
+A new screen that looks like an existing one must **reuse that screen's CSS, not copy it**. Before writing a `.razor.css`, open the closest existing feature and check `wwwroot/css/ats.css` for a shared class that already produces the look. Copying a block and renaming its classes (`.bulk-*` → `.ticketing-*`) is the failure mode this rule exists to prevent: the two copies drift, and a design fix then has to be made twice.
+
+The order of preference is:
+
+1. **Use the existing shared class as-is** (`.ats-management-page`, `.ats-management-card`, `.ats-segmented`, `.ats-segment-btn`, `.ats-console-empty-state`, and the `.ats-status-board-*` / `.ats-cell-*` / `.ats-status-pill` families).
+2. **Generalize an existing rule** when a second screen needs the same treatment. Rename the feature-specific selector to a neutral shared one, move it to `wwwroot/css/ats.css`, and update the original screen to use it in the same change. The Bulk Uploads and Ticketing Status boards share `.ats-status-board-*` this way.
+3. **Add scoped CSS only for what is genuinely unique** to the new screen, and say in a comment at the top of the file which shared rules it builds on and must not re-declare.
+
+Rules of thumb:
+
+- Never re-declare colour, spacing, radius, or typography that a shared class already sets. Palettes come from the `--management-*` custom properties on `.ats-management-page`; do not introduce a new hue for a new screen.
+- A status list (Pending / Processing / Done / Error) must use the shared board classes so every such screen has identical chips, dots and pills.
+- Styles that target shared `TableComponent` internals belong in the global sheet, not in scoped CSS, because the `::deep` boundary and the scope attribute make those overrides fragile to duplicate.
+- Delete wrapper elements and `TableClass`/`ContainerClass` values that no rule matches; an unused hook reads as intentional styling that is not there.
+
+If a screen's scoped stylesheet is more than roughly a screenful, that is a signal something in it should have been shared instead.
+
 Also include:
 
 - correct `@page`, `@layout`, `PageTitle`, `RequirePermission`, and `RequireATSModule` attributes;
@@ -448,6 +467,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] Backend unit and integration tests pass.
 - [ ] UI DTO and IHttpClientFactory-backed service are complete and registered.
 - [ ] `.razor`, `.razor.cs`, and `.razor.css` follow the modern ATS reference.
+- [ ] Shared CSS was reused or generalized rather than copied; scoped CSS covers only what is unique to the screen.
 - [ ] UI covers loading, empty, validation, success, failure, and responsive states.
 - [ ] Relevant tests and the solution build pass.
 - [ ] API/UI contracts and gateway route were verified end to end.

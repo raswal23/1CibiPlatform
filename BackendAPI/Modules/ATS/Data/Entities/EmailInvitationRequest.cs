@@ -32,6 +32,18 @@ public class EmailInvitationRequest
 	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
 
+	// OMS auto-ticketing. The order is queued at enrolment and the background job
+	// claims it by writing TicketStatus, exactly as the email queue does above.
+	// IsTicketed is the terminal flag: false means still claimable, true means a
+	// ticket number came back from OMS and the row must never be picked up again.
+	public string? TicketStatus { get; set; }
+	public bool IsTicketed { get; set; }
+	public string? TicketNumber { get; set; }
+	public DateTime? TicketDeliveryDate { get; set; }
+	public DateTime? TicketClaimedAt { get; set; }
+	public int TicketAttempts { get; set; }
+	public string? TicketError { get; set; }
+
 	// Navigation properties
 	public PersonalDetails? PersonalDetails { get; set; }
 	public AddressDetails? AddressDetails { get; set; }

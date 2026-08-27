@@ -61,6 +61,10 @@ public static class ATSServiceConfiguration
 		// No cache decorator: bulk upload status changes every Quartz tick, so a cached
 		// first page would defeat the dashboard this repository feeds.
 		services.AddScoped<IBulkUploadDashboardRepository, BulkUploadRepository>();
+
+		// Same reasoning: TicketStatus moves within one Quartz tick, and the claim
+		// query must never be served from a cache.
+		services.AddScoped<IOMSTicketingRepository, OMSTicketingRepository>();
 		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
 		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
 
@@ -84,6 +88,8 @@ public static class ATSServiceConfiguration
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
+		services.AddScoped<IOMSTicketingProcessorService, OMSTicketingProcessorService>();
+		services.AddScoped<IOMSTicketingMonitoringService, OMSTicketingMonitoringService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
 		services.AddScoped<IAtsAssistantService, AtsAssistantService>();
@@ -94,6 +100,7 @@ public static class ATSServiceConfiguration
 		services.ConfigureOptions<BulkSubmissionBackgroundJobSetup>();
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
 		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
+		services.ConfigureOptions<OMSTicketingBackgroundJobSetup>();
 
 		return services;
 	}

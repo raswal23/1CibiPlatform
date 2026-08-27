@@ -53,6 +53,7 @@
 		<ProjectReference Include="..\..\Modules\ATS\ATS.csproj" />
 		<ProjectReference Include="..\..\Modules\PlatformLogging\PlatformLogging.csproj" />
 		<ProjectReference Include="..\..\Modules\EmploymentVerification\EmploymentVerification.csproj" />
+		<ProjectReference Include="..\..\Modules\OMS\OMS.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

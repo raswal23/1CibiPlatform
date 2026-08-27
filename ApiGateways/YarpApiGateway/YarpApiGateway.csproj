@@ -34,6 +34,7 @@
 		<ProjectReference Include="..\..\BackendAPI\Modules\SSO\SSO.csproj" />
 		<ProjectReference Include="..\..\BackendAPI\Modules\ATS\ATS.csproj" />
 		<ProjectReference Include="..\..\BackendAPI\Modules\EmploymentVerification\EmploymentVerification.csproj" />
+		<ProjectReference Include="..\..\BackendAPI\Modules\OMS\OMS.csproj" />
 		<ProjectReference Include="..\..\BackendAPI\Modules\PlatformLogging\PlatformLogging.csproj" />
 	</ItemGroup>
 

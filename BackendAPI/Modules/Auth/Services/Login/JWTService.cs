@@ -49,9 +49,18 @@ public class JWTService : IJWTService
 			new Claim(AuthClaimTypes.Email, loginDTO.Email),
 			new Claim(AuthClaimTypes.FullName, fullName),
 
+			// The parts as well as the join: callers that must address the user by
+			// first/last name separately cannot safely split fullName back apart.
+			new Claim(AuthClaimTypes.FirstName, loginDTO.FirstName),
+			new Claim(AuthClaimTypes.LastName, loginDTO.LastName),
+
 			// standard claims for interoperability
 			new Claim(ClaimTypes.NameIdentifier, loginDTO.Id.ToString()),
 		};
+
+		if (!string.IsNullOrEmpty(middle))
+			claims.Add(new Claim(AuthClaimTypes.MiddleName, middle));
+
 		claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
 		if (sessionId is > 0)
 			claims.Add(new Claim(JwtRegisteredClaimNames.Sid, sessionId.Value.ToString(CultureInfo.InvariantCulture)));

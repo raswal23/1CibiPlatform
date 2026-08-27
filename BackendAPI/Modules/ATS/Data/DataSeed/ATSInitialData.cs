@@ -440,6 +440,15 @@ public class ATSInitialData
 			   IsActive = true,
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.TicketingStatus,
+			   ModuleName = "Ticketing Status",
+			   ModuleDescription = "OMS auto-ticketing monitoring module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
 		   }
 	];
 	#endregion

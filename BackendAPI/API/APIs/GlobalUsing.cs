@@ -41,6 +41,8 @@ global using Auth.Services;
 global using System.IdentityModel.Tokens.Jwt;
 global using EmploymentVerification.ServiceConfig;
 global using BackendAPI.Modules.EmploymentVerification;
+global using OMS.ServiceConfig;
+global using BackendAPI.Modules.OMS;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 global using HealthChecks.UI.Client;

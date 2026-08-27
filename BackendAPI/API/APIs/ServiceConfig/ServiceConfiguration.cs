@@ -11,6 +11,7 @@ public static class ServiceConfiguration
 	private static readonly Assembly _atsAssembly = typeof(ATSMarker).Assembly;
 	private static readonly Assembly _platformLoggingAssembly = typeof(PlatformLoggingMarker).Assembly;
 	private static readonly Assembly _employmentVerificationAssembly = typeof(EmploymentVerificationMarker).Assembly;
+	private static readonly Assembly _omsAssembly = typeof(OMSMarker).Assembly;
 
 
 	#region Logging Config
@@ -277,6 +278,7 @@ public static class ServiceConfiguration
 		services.AddATSInfrastructure(configuration);
 		services.AddEmploymentVerificationInfrastructure(configuration);
 		services.AddPlatformLoggingInfrastructure(configuration);
+		services.AddOMSInfrastructure(configuration);
 		return services;
 	}
 	#endregion
@@ -293,6 +295,7 @@ public static class ServiceConfiguration
 			 _atsAssembly,
 			 _platformLoggingAssembly
 			 ,_employmentVerificationAssembly
+			 ,_omsAssembly
 		 ]));
 
 
@@ -314,6 +317,7 @@ public static class ServiceConfiguration
 		services.AddATSMediaTR(_atsAssembly);
 		services.AddPlatformLoggingMediaTR(_platformLoggingAssembly);
 		services.AddEmploymentVerificationMediaTR(_employmentVerificationAssembly);
+		services.AddOMSMediaTR(_omsAssembly);
 		return services;
 	}
 
@@ -332,6 +336,7 @@ public static class ServiceConfiguration
 			services.AddATSAssistantConfiguration(configuration);
 			services.AddEmploymentVerificationServices();
 		services.AddPlatformLoggingServices(configuration);
+		services.AddOMSServices();
 		return services;
 	}
 	#endregion

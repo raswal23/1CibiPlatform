@@ -1,191 +1,10 @@
-/* Local palette, matching the block SearchReportComponent.razor.css declares. These are
-   the ATS navy/blue values; the module deliberately does not introduce a new hue. */
-.bulk-uploads-intro,
-.bulk-status-segmented,
-::deep .bulk-uploads-card {
-    --navy-900: #0b1b3d;
-    --blue-600: #1d5fd1;
-    --blue-500: #2e7ce0;
-    --blue-tint: #edf3fc;
-    --blue-tint-2: #e3ecfb;
-    --border: #e4eaf6;
-    --border-strong: #c2d2f0;
-    --text-1: #16233f;
-    --text-2: #5b6b8c;
-    --text-3: #8a97b5;
-}
+/* Only what is specific to the bulk uploads board lives here.
 
-/* ---------- Intro banner ---------- */
-
-.bulk-uploads-intro {
-    display: flex;
-    width: 100%;
-    margin: 0 0 18px;
-    padding: 14px 18px;
-    align-items: flex-start;
-    gap: 12px;
-    border: 1.5px solid var(--border);
-    border-left: 4px solid var(--blue-500);
-    border-radius: 12px;
-    background: var(--blue-tint);
-    color: var(--text-2);
-}
-
-.bulk-uploads-intro-title {
-    margin: 0 0 2px;
-    color: var(--navy-900);
-    font-size: 13.5px;
-    font-weight: 700;
-}
-
-.bulk-uploads-intro-text {
-    margin: 0;
-    font-size: 12.5px;
-    line-height: 1.5;
-}
-
-.bulk-uploads-intro-text strong {
-    color: var(--navy-900);
-    font-weight: 700;
-}
-
-/* ---------- Clickable status filters ---------- */
-
-.bulk-status-segmented {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin: 0 0 16px;
-    padding: 4px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: #fff;
-}
-
-::deep .bulk-segment-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-2);
-    font: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
-}
-
-::deep .bulk-segment-btn:hover:not(:disabled) {
-    color: var(--blue-600);
-    background: var(--blue-tint);
-}
-
-::deep .bulk-segment-btn.active {
-    background: var(--blue-tint-2);
-    color: var(--navy-900);
-    box-shadow: 0 2px 6px rgba(11, 27, 61, .1);
-}
-
-::deep .bulk-segment-btn:disabled {
-    opacity: .6;
-    cursor: default;
-}
-
-::deep .bulk-segment-btn:focus-visible {
-    outline: 3px solid rgba(46, 124, 224, .35);
-    outline-offset: 2px;
-}
-
-::deep .bulk-segment-count {
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #f1f4fa;
-    color: var(--text-2);
-    font-size: 11px;
-    font-weight: 800;
-}
-
-::deep .bulk-segment-btn.active .bulk-segment-count {
-    background: linear-gradient(120deg, var(--navy-900), var(--blue-500));
-    color: #fff;
-}
-
-.bulk-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex: 0 0 auto;
-}
-
-.bulk-status-dot.is-all {
-    background: var(--text-3);
-}
-
-.bulk-status-dot.is-pending {
-    background: #7d8aa8;
-}
-
-.bulk-status-dot.is-processing {
-    background: #b5790f;
-}
-
-.bulk-status-dot.is-done {
-    background: #1e9e64;
-}
-
-/* ---------- Table cells ---------- */
-
-::deep .bulk-file {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-::deep .bulk-file-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    flex: 0 0 auto;
-    border-radius: 8px;
-    background: var(--blue-tint);
-    color: var(--blue-600);
-}
-
-::deep .bulk-file-copy {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-::deep .bulk-file-name {
-    color: var(--text-1);
-    font-size: 13px;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-::deep .bulk-file-date {
-    color: var(--text-3);
-    font-size: 11.5px;
-}
-
-::deep .bulk-package {
-    display: inline-flex;
-    padding: 3px 10px;
-    border-radius: 8px;
-    background: #f1f4fa;
-    color: var(--text-2);
-    font-size: 11.5px;
-    font-weight: 600;
-}
+   The intro banner, filter chips, status dots, status pills, lead-identity cell, tag
+   and muted cells all come from the shared .ats-status-board-* / .ats-cell-* /
+   .ats-status-pill rules in wwwroot/css/ats.css, which the OMS ticketing board uses
+   too. Do not re-declare any of those here - change the shared rules instead so both
+   boards stay identical. */
 
 ::deep .bulk-order-type {
     display: inline-flex;
@@ -202,17 +21,13 @@
 
 ::deep .bulk-order-type.is-normal {
     background: #f1f4fa;
-    color: var(--text-2);
+    color: #5b6b8c;
 }
 
 ::deep .bulk-subject-count {
-    color: var(--text-1);
+    color: #16233f;
     font-size: 13px;
     font-weight: 700;
-}
-
-::deep .bulk-muted {
-    color: var(--text-3);
 }
 
 /* ---------- Email send progress ---------- */
@@ -225,13 +40,13 @@
 }
 
 ::deep .bulk-email-figures {
-    color: var(--text-1);
+    color: #16233f;
     font-size: 12.5px;
     font-weight: 700;
 }
 
 ::deep .bulk-email-total {
-    color: var(--text-3);
+    color: #8a97b5;
     font-weight: 600;
 }
 
@@ -248,7 +63,7 @@
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--blue-500), #1e9e64);
+    background: linear-gradient(90deg, #2e7ce0, #1e9e64);
     transition: width .3s ease;
 }
 
@@ -260,99 +75,18 @@
 
 /* Deliberately quieter than the failure note: pending resolves on its own. */
 ::deep .bulk-email-pending {
-    color: var(--text-3);
+    color: #8a97b5;
     font-size: 11px;
     font-weight: 600;
 }
 
-/* ---------- Status chip ---------- */
-
-::deep .bulk-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11.5px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-::deep .bulk-status::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-::deep .bulk-status.pending {
-    background: #f8f9fc;
-    color: #7d8aa8;
-    border: 1px dashed var(--border-strong);
-}
-
-::deep .bulk-status.processing {
-    background: #fcf1dd;
-    color: #b5790f;
-}
-
-/* The only row state that is actively changing, so the dot breathes to say so. */
-::deep .bulk-status.processing::before {
-    animation: bulk-pulse 1.6s ease-in-out infinite;
-}
-
-::deep .bulk-status.done {
-    background: #e4f7ed;
-    color: #1e9e64;
-}
-
-::deep .bulk-status.unknown {
-    background: #eef0f5;
-    color: #6b7690;
-}
-
-@keyframes bulk-pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: .35;
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    ::deep .bulk-status.processing::before {
-        animation: none;
-    }
-
     ::deep .bulk-email-bar-fill {
         transition: none;
     }
 }
 
-/* ---------- Toolbar date range ---------- */
-
-/* The toolbar/date-range treatment lives in wwwroot/css/ats.css (global), beside the
-   management-card search and pager rules it extends. It targets shared TableComponent
-   internals across the ::deep boundary, and the global sheet keeps it independent of
-   the CSS-isolation scope attribute. */
-
-/* ---------- Responsive ---------- */
-
 @media (max-width: 720px) {
-    .bulk-status-segmented {
-        display: flex;
-        width: 100%;
-    }
-
-    ::deep .bulk-segment-btn {
-        flex: 1 1 auto;
-        justify-content: center;
-        padding: 9px 10px;
-    }
-
     ::deep .bulk-email-progress {
         min-width: 0;
         align-items: flex-end;

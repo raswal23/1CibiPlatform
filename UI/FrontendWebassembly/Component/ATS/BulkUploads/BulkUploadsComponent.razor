@@ -10,11 +10,11 @@
 
 <div class="ats-management-page">
 
-    <div class="bulk-uploads-intro">
+    <div class="ats-status-board-intro">
         <MudIcon Icon="@Icons.Material.Outlined.CloudUpload" Size="Size.Small" />
         <div>
-            <p class="bulk-uploads-intro-title">Track every CSV you upload</p>
-            <p class="bulk-uploads-intro-text">
+            <p class="ats-status-board-intro-title">Track every CSV you upload</p>
+            <p class="ats-status-board-intro-text">
                 A file waits as <strong>Pending</strong>, is parsed as <strong>Processing</strong>,
                 then reports <strong>Done</strong> once every subject has been created.
                 Invitation emails continue to send in the background after that.
@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <div class="ats-segmented bulk-status-segmented"
+    <div class="ats-segmented ats-status-board-segmented"
          role="group"
          aria-label="Filter uploads by status">
 
@@ -35,158 +35,155 @@
                     disabled="@_isLoadingCounts"
                     @onclick="@(() => SetStatusAsync(segment.Value))">
 
-                <span class="bulk-status-dot @segment.Modifier" aria-hidden="true"></span>
+                <span class="ats-status-dot @segment.Modifier" aria-hidden="true"></span>
 
                 @segment.Label
 
-                <span class="ats-segment-count bulk-segment-count">@CountFor(segment.Value)</span>
+                <span class="ats-segment-count ats-status-board-count">@CountFor(segment.Value)</span>
             </button>
         }
     </div>
 
-    <div class="bulk-uploads-scope">
-        <TableComponent TItem="BulkUploadListDTO"
-                        @ref="_uploadsTable"
-                        Title="Bulk uploads"
-                        EnableReload="true"
-                        TitleId="ats-bulk-uploads-heading"
-                        ContainerClass="ats-management-card bulk-uploads-card"
-                        TableClass="bulk-uploads-table"
-                        EnableSearch="true"
-                        SearchLabel=""
-                        SearchPlaceholder="Search file, requestor or package"
-                        ColumnCount="7"
-                        RowsPerPage="10"
-                        RowsClickable="true"
-                        OnRowClick="OnUploadRowClickedAsync"
-                        LoadServerData="LoadUploadsAsync"
-                        CursorPagerState="_uploadsLoader"
-                        SearchString="@_searchString"
-                        SearchStringChanged="@((string value) => _searchString = value)">
+    <TableComponent TItem="BulkUploadListDTO"
+                    @ref="_uploadsTable"
+                    Title="Bulk uploads"
+                    EnableReload="true"
+                    TitleId="ats-bulk-uploads-heading"
+                    ContainerClass="ats-management-card ats-status-board-card"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search file, requestor or package"
+                    ColumnCount="7"
+                    RowsPerPage="10"
+                    RowsClickable="true"
+                    OnRowClick="OnUploadRowClickedAsync"
+                    LoadServerData="LoadUploadsAsync"
+                    CursorPagerState="_uploadsLoader"
+                    SearchString="@_searchString"
+                    SearchStringChanged="@((string value) => _searchString = value)">
 
-            <ToolBarLeft>
-                <div class="bulk-uploads-date-field">
-                    <label>Upload date</label>
-                    <MudDateRangePicker Class="bulk-uploads-date-range"
-                                        Variant="Variant.Outlined"
-                                        ReadOnly="false"
-                                        Clearable="true"
-                                        SeparatorIcon="@Icons.Material.Filled.ArrowRightAlt"
-                                        AdornmentIcon="@Icons.Material.Outlined.CalendarToday"
-                                        AdornmentColor="Color.Primary"
-                                        DateFormat="MM/dd/yyyy"
-                                        DateRangeChanged="OnDateRangeChanged"
-                                        PlaceholderStart="Start Date"
-                                        PlaceholderEnd="End Date" />
+        <ToolBarLeft>
+            <div class="ats-status-board-date-field">
+                <label>Upload date</label>
+                <MudDateRangePicker Class="ats-status-board-date-range"
+                                    Variant="Variant.Outlined"
+                                    ReadOnly="false"
+                                    Clearable="true"
+                                    SeparatorIcon="@Icons.Material.Filled.ArrowRightAlt"
+                                    AdornmentIcon="@Icons.Material.Outlined.CalendarToday"
+                                    AdornmentColor="Color.Primary"
+                                    DateFormat="MM/dd/yyyy"
+                                    DateRangeChanged="OnDateRangeChanged"
+                                    PlaceholderStart="Start Date"
+                                    PlaceholderEnd="End Date" />
+            </div>
+        </ToolBarLeft>
+
+        <HeaderTemplate>
+            <MudTh>File</MudTh>
+            <MudTh>Requestor</MudTh>
+            <MudTh>Package</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh>Subjects</MudTh>
+            <MudTh>Emails</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="upload">
+            <MudTd DataLabel="File">
+                <div class="ats-cell-lead">
+                    <span class="ats-cell-lead-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.Description" Size="Size.Small" />
+                    </span>
+                    <span class="ats-cell-lead-copy">
+                        <span class="ats-cell-lead-title">@upload.FileName</span>
+                        <span class="ats-cell-lead-sub" title="@FormatAbsolute(upload.DateCreated)">
+                            @FormatRelative(upload.DateCreated)
+                        </span>
+                    </span>
                 </div>
-            </ToolBarLeft>
+            </MudTd>
 
-            <HeaderTemplate>
-                <MudTh>File</MudTh>
-                <MudTh>Requestor</MudTh>
-                <MudTh>Package</MudTh>
-                <MudTh>Type</MudTh>
-                <MudTh>Subjects</MudTh>
-                <MudTh>Emails</MudTh>
-                <MudTh>Status</MudTh>
-            </HeaderTemplate>
+            <MudTd DataLabel="Requestor">
+                @(string.IsNullOrWhiteSpace(upload.Requestor) ? "—" : upload.Requestor)
+            </MudTd>
 
-            <RowTemplate Context="upload">
-                <MudTd DataLabel="File">
-                    <div class="bulk-file">
-                        <span class="bulk-file-icon" aria-hidden="true">
-                            <MudIcon Icon="@Icons.Material.Outlined.Description" Size="Size.Small" />
+            <MudTd DataLabel="Package">
+                <span class="ats-cell-tag">@upload.PackageType</span>
+            </MudTd>
+
+            <MudTd DataLabel="Type">
+                <span class="bulk-order-type @GetOrderTypeClass(upload.OrderType)">
+                    @(string.IsNullOrWhiteSpace(upload.OrderType) ? "—" : upload.OrderType)
+                </span>
+            </MudTd>
+
+            <MudTd DataLabel="Subjects">
+                @if (HasSubjects(upload))
+                {
+                    <span class="bulk-subject-count">@upload.SubjectCount</span>
+                }
+                else
+                {
+                    <span class="ats-cell-muted" title="No subjects created from this file yet">—</span>
+                }
+            </MudTd>
+
+            <MudTd DataLabel="Emails">
+                @if (HasSubjects(upload))
+                {
+                    <div class="bulk-email-progress">
+                        <span class="bulk-email-figures">
+                            @upload.EmailsSent<span class="bulk-email-total">/@upload.SubjectCount</span>
                         </span>
-                        <span class="bulk-file-copy">
-                            <span class="bulk-file-name">@upload.FileName</span>
-                            <span class="bulk-file-date" title="@FormatAbsolute(upload.DateCreated)">
-                                @FormatRelative(upload.DateCreated)
+
+                        <span class="bulk-email-bar"
+                              role="progressbar"
+                              aria-valuemin="0"
+                              aria-valuemax="@upload.SubjectCount"
+                              aria-valuenow="@upload.EmailsSent"
+                              aria-label="@($"{upload.EmailsSent} of {upload.SubjectCount} invitation emails sent")">
+                            <span class="bulk-email-bar-fill"
+                                  style="@($"width:{SentPercent(upload)}%")"></span>
+                        </span>
+
+                        @if (upload.EmailsFailed > 0)
+                        {
+                            <span class="bulk-email-failed"
+                                  title="@($"{upload.EmailsFailed} email(s) failed to send")">
+                                @upload.EmailsFailed failed
                             </span>
-                        </span>
+                        }
+
+                        @if (upload.EmailsPending > 0)
+                        {
+                            <span class="bulk-email-pending"
+                                  title="@($"{upload.EmailsPending} email(s) have not gone out yet")">
+                                @upload.EmailsPending pending
+                            </span>
+                        }
                     </div>
-                </MudTd>
+                }
+                else
+                {
+                    <span class="ats-cell-muted">—</span>
+                }
+            </MudTd>
 
-                <MudTd DataLabel="Requestor">
-                    @(string.IsNullOrWhiteSpace(upload.Requestor) ? "—" : upload.Requestor)
-                </MudTd>
+            <MudTd DataLabel="Status">
+                <span class="ats-status-pill @GetStatusClass(upload.Status)">
+                    @(string.IsNullOrWhiteSpace(upload.Status) ? "Unknown" : upload.Status)
+                </span>
+            </MudTd>
+        </RowTemplate>
 
-                <MudTd DataLabel="Package">
-                    <span class="bulk-package">@upload.PackageType</span>
-                </MudTd>
+        <NoRecordsTemplate>
+            <div class="ats-console-empty-state">
+                <div class="ats-console-empty-icon">📄</div>
+                <div class="ats-console-empty-title">@EmptyTitle</div>
+                <div class="ats-console-empty-sub">@EmptySubtitle</div>
+            </div>
+        </NoRecordsTemplate>
 
-                <MudTd DataLabel="Type">
-                    <span class="bulk-order-type @GetOrderTypeClass(upload.OrderType)">
-                        @(string.IsNullOrWhiteSpace(upload.OrderType) ? "—" : upload.OrderType)
-                    </span>
-                </MudTd>
-
-                <MudTd DataLabel="Subjects">
-                    @if (HasSubjects(upload))
-                    {
-                        <span class="bulk-subject-count">@upload.SubjectCount</span>
-                    }
-                    else
-                    {
-                        <span class="bulk-muted" title="No subjects created from this file yet">—</span>
-                    }
-                </MudTd>
-
-                <MudTd DataLabel="Emails">
-                    @if (HasSubjects(upload))
-                    {
-                        <div class="bulk-email-progress">
-                            <span class="bulk-email-figures">
-                                @upload.EmailsSent<span class="bulk-email-total">/@upload.SubjectCount</span>
-                            </span>
-
-                            <span class="bulk-email-bar"
-                                  role="progressbar"
-                                  aria-valuemin="0"
-                                  aria-valuemax="@upload.SubjectCount"
-                                  aria-valuenow="@upload.EmailsSent"
-                                  aria-label="@($"{upload.EmailsSent} of {upload.SubjectCount} invitation emails sent")">
-                                <span class="bulk-email-bar-fill"
-                                      style="@($"width:{SentPercent(upload)}%")"></span>
-                            </span>
-
-                            @if (upload.EmailsFailed > 0)
-                            {
-                                <span class="bulk-email-failed"
-                                      title="@($"{upload.EmailsFailed} email(s) failed to send")">
-                                    @upload.EmailsFailed failed
-                                </span>
-                            }
-
-                            @if (upload.EmailsPending > 0)
-                            {
-                                <span class="bulk-email-pending"
-                                      title="@($"{upload.EmailsPending} email(s) have not gone out yet")">
-                                    @upload.EmailsPending pending
-                                </span>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="bulk-muted">—</span>
-                    }
-                </MudTd>
-
-                <MudTd DataLabel="Status">
-                    <span class="bulk-status @GetStatusClass(upload.Status)">
-                        @(string.IsNullOrWhiteSpace(upload.Status) ? "Unknown" : upload.Status)
-                    </span>
-                </MudTd>
-            </RowTemplate>
-
-            <NoRecordsTemplate>
-                <div class="ats-console-empty-state">
-                    <div class="ats-console-empty-icon">📄</div>
-                    <div class="ats-console-empty-title">@EmptyTitle</div>
-                    <div class="ats-console-empty-sub">@EmptySubtitle</div>
-                </div>
-            </NoRecordsTemplate>
-
-        </TableComponent>
-    </div>
+    </TableComponent>
 </div>

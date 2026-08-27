@@ -1,0 +1,161 @@
+@page "/s&i/ats/ticketingstatus"
+@namespace FrontendWebassembly.Component.ATS
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(14)]
+@inherits CrudPageBase
+@inject IOMSTicketingService OMSTicketingService
+
+<PageTitle>ATS - Ticketing Status</PageTitle>
+
+@* Layout, chips and status pills come from the shared .ats-status-board-* rules in
+   wwwroot/css/ats.css, the same ones Bulk Uploads Status uses. Only the ticket-number
+   and failure-reason cells are specific to this screen. *@
+<div class="ats-management-page">
+
+    <div class="ats-status-board-intro">
+        <MudIcon Icon="@Icons.Material.Outlined.ConfirmationNumber" Size="Size.Small" />
+        <div>
+            <p class="ats-status-board-intro-title">Track every order raised in OMS</p>
+            <p class="ats-status-board-intro-text">
+                A new order waits as <strong>Pending</strong>, is sent to OMS as <strong>Processing</strong>,
+                then reports <strong>Done</strong> with its ticket number once OMS accepts it.
+                An order OMS rejected shows as <strong>Error</strong> with the reason.
+            </p>
+        </div>
+    </div>
+
+    <div class="ats-segmented ats-status-board-segmented"
+         role="group"
+         aria-label="Filter orders by ticket status">
+
+        @foreach (var segment in StatusSegments)
+        {
+            <button type="button"
+                    class="@GetSegmentClass(segment.Value)"
+                    aria-pressed="@(_activeStatus == segment.Value)"
+                    disabled="@_isLoadingCounts"
+                    @onclick="@(() => SetStatusAsync(segment.Value))">
+
+                <span class="ats-status-dot @segment.Modifier" aria-hidden="true"></span>
+
+                @segment.Label
+
+                <span class="ats-segment-count ats-status-board-count">@CountFor(segment.Value)</span>
+            </button>
+        }
+    </div>
+
+    <TableComponent TItem="TicketedOrderListDTO"
+                    @ref="_ordersTable"
+                    Title="Ticketing status"
+                    EnableReload="true"
+                    TitleId="ats-ticketing-heading"
+                    ContainerClass="ats-management-card ats-status-board-card"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search subject, requestor, package or ticket no."
+                    ColumnCount="6"
+                    RowsPerPage="10"
+                    LoadServerData="LoadOrdersAsync"
+                    CursorPagerState="_ordersLoader"
+                    SearchString="@_searchString"
+                    SearchStringChanged="@((string value) => _searchString = value)">
+
+        <ToolBarLeft>
+            <div class="ats-status-board-date-field">
+                <label>Order date</label>
+                <MudDateRangePicker Class="ats-status-board-date-range"
+                                    Variant="Variant.Outlined"
+                                    ReadOnly="false"
+                                    Clearable="true"
+                                    SeparatorIcon="@Icons.Material.Filled.ArrowRightAlt"
+                                    AdornmentIcon="@Icons.Material.Outlined.CalendarToday"
+                                    AdornmentColor="Color.Primary"
+                                    DateFormat="MM/dd/yyyy"
+                                    DateRangeChanged="OnDateRangeChanged"
+                                    PlaceholderStart="Start Date"
+                                    PlaceholderEnd="End Date" />
+            </div>
+        </ToolBarLeft>
+
+        <HeaderTemplate>
+            <MudTh>Subject</MudTh>
+            <MudTh>Requestor</MudTh>
+            <MudTh>Package</MudTh>
+            <MudTh>Ticket No.</MudTh>
+            <MudTh>Delivery Date</MudTh>
+            <MudTh>Status</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="order">
+            <MudTd DataLabel="Subject">
+                <div class="ats-cell-lead">
+                    <span class="ats-cell-lead-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.Person" Size="Size.Small" />
+                    </span>
+                    <span class="ats-cell-lead-copy">
+                        <span class="ats-cell-lead-title">@FullName(order)</span>
+                        <span class="ats-cell-lead-sub" title="@FormatAbsolute(order.OrderCreatedAt)">
+                            @FormatRelative(order.OrderCreatedAt)
+                        </span>
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Requestor">
+                @(string.IsNullOrWhiteSpace(order.Requestor) ? "—" : order.Requestor)
+            </MudTd>
+
+            <MudTd DataLabel="Package">
+                <span class="ats-cell-tag">@order.SelectPackage</span>
+            </MudTd>
+
+            <MudTd DataLabel="Ticket No.">
+                @if (!string.IsNullOrWhiteSpace(order.TicketNumber))
+                {
+                    <span class="ticketing-number">@order.TicketNumber</span>
+                }
+                else
+                {
+                    <span class="ats-cell-muted" title="OMS has not issued a ticket for this order yet">—</span>
+                }
+            </MudTd>
+
+            <MudTd DataLabel="Delivery Date">
+                @if (order.TicketDeliveryDate.HasValue)
+                {
+                    @FormatDate(order.TicketDeliveryDate)
+                }
+                else
+                {
+                    <span class="ats-cell-muted">—</span>
+                }
+            </MudTd>
+
+            <MudTd DataLabel="Status">
+                <div class="ticketing-status-cell">
+                    <span class="ats-status-pill @GetStatusClass(order.TicketStatus)">
+                        @(string.IsNullOrWhiteSpace(order.TicketStatus) ? "Unknown" : order.TicketStatus)
+                    </span>
+
+                    @if (IsError(order) && !string.IsNullOrWhiteSpace(order.TicketError))
+                    {
+                        <span class="ticketing-error" title="@order.TicketError">
+                            @order.TicketError
+                        </span>
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-console-empty-state">
+                <div class="ats-console-empty-icon">🎫</div>
+                <div class="ats-console-empty-title">@EmptyTitle</div>
+                <div class="ats-console-empty-sub">@EmptySubtitle</div>
+            </div>
+        </NoRecordsTemplate>
+
+    </TableComponent>
+</div>
