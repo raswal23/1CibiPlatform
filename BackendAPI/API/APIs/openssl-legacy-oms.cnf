@@ -1,0 +1,48 @@
+# OpenSSL policy override required to reach the legacy OMS database.
+#
+# The OMS host (SQL Server 2008 R2 SP3-GDR, 10.50.6560.0) presents a TLS
+# certificate signed with sha1RSA. OpenSSL 3.x rejects SHA-1 signatures at its
+# default security level, so the handshake aborts before login and SqlClient
+# surfaces:
+#
+#   A connection was successfully established with the server, but then an
+#   error occurred during the pre-login handshake.
+#   (provider: SSL Provider, error: 31 - Encryption(ssl/tls) handshake failed)
+#
+# What this is NOT:
+#   * Not a TLS-version problem. The server has TLS 1.2 enabled and the
+#     connection negotiates Tls12 / TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
+#     once the security level is lowered.
+#   * Not a driver-version problem. Microsoft.Data.SqlClient 5.2.3 and 6.1.1
+#     fail identically without this file, so pinning the package does nothing.
+#
+# Only the security level re-admits the SHA-1 certificate signature. Because
+# OPENSSL_CONF is process-wide, the settings below are deliberately scoped so
+# that lowering it does not relax anything else:
+#
+#   MinProtocol  - hard floor at TLS 1.2. TLS 1.0/1.1 and SSLv3 stay refused
+#                  for every connection in the process, including OMS.
+#   MaxProtocol  - TLS 1.3 still available for all other outbound traffic.
+#   CipherString - explicit HIGH-only list with the legacy suites struck out,
+#                  so @SECLEVEL=0 relaxes signature/key-strength policy only
+#                  and does not quietly re-enable NULL/RC4/3DES/MD5/export.
+#
+# Certificate chain trust is unaffected by security level: it is enforced
+# normally. The OMS connection string opts out of chain validation on its own
+# via TrustServerCertificate=True, which is scoped to that connection.
+#
+# Remove this file once the OMS server is issued a SHA-256 certificate.
+
+.include /etc/ssl/openssl.cnf
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+MinProtocol = TLSv1.2
+MaxProtocol = TLSv1.3
+CipherString = HIGH:!aNULL:!eNULL:!EXPORT:!DES:!3DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA@SECLEVEL=0

@@ -33,6 +33,7 @@ global using FrontendWebassembly.Services.ATS.ApplicationForm;
 global using FrontendWebassembly.Services.ATS.ApplicationFormStates;
 global using FrontendWebassembly.Services.ATS.ATSUserManagement;
 global using FrontendWebassembly.Services.ATS.BulkUploads;
+global using FrontendWebassembly.Services.ATS.OMSTicketing;
 global using FrontendWebassembly.Services.ATS.ClientAssignment;
 global using FrontendWebassembly.Services.ATS.ClientManagement;
 global using FrontendWebassembly.Services.ATS.Dashboard;

@@ -2,9 +2,22 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
+
+# The legacy OMS database (SQL Server 2008 R2) still presents a SHA-1 signed
+# certificate, which OpenSSL 3.x rejects at its default security level, failing
+# the handshake with "error: 31 - Encryption(ssl/tls) handshake failed". Point
+# OpenSSL at a relaxed policy instead of editing /etc/ssl/openssl.cnf, so the
+# system default stays intact. See openssl-legacy-oms.cnf for the full analysis.
+#
+# This must live in the "base" stage: VS fast mode builds ONLY this stage and
+# bind-mounts the app, so anything added to "final" is silently absent when
+# debugging from Visual Studio.
+COPY BackendAPI/API/APIs/openssl-legacy-oms.cnf /etc/ssl/oms/openssl-legacy-oms.cnf
+ENV OPENSSL_CONF=/etc/ssl/oms/openssl-legacy-oms.cnf
+
+USER $APP_UID
 
 
 # This stage is used to build the service project

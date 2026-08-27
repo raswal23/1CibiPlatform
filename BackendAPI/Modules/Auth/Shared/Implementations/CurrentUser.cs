@@ -20,6 +20,12 @@ internal sealed class CurrentUser : ICurrentUser
 
 	public string? FullName => GetClaimValue(ClaimTypes.Name, AuthClaimTypes.FullName);
 
+	public string? FirstName => GetClaimValue(ClaimTypes.GivenName, AuthClaimTypes.FirstName);
+
+	public string? MiddleName => GetClaimValue(AuthClaimTypes.MiddleName);
+
+	public string? LastName => GetClaimValue(ClaimTypes.Surname, AuthClaimTypes.LastName);
+
 	public IReadOnlySet<int> PlatformRoleIds => Principal?
 		.FindAll(AuthClaimTypes.PlatformRoleId)
 		.Select(claim => ParsePositiveInt(claim.Value))

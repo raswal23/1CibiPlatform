@@ -706,6 +706,11 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsTicketed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -756,9 +761,34 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<int>("TicketAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("TicketClaimedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("TicketDeliveryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TicketError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TicketNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TicketStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.HasKey("EmailInvitationID");
 
                     b.HasIndex("EmailSentStatus");
+
+                    b.HasIndex("TicketStatus");
 
                     b.HasIndex("BulkFileID", "EmailInvitationID");
 

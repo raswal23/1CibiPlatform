@@ -70,6 +70,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 			"CNX" => "CNX",
 			"SSO" => "SSO",
 			"PlatformLogging" => "PlatformLogging",
+			"OMS" => "OMS",
 			_ => "Unknown"
 		};
 	}

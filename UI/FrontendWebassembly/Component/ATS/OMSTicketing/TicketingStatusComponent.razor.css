@@ -1,0 +1,46 @@
+/* Only what is specific to the ticketing board lives here.
+
+   The intro banner, filter chips, status dots, status pills, lead-identity cell, tag
+   and muted cells all come from the shared .ats-status-board-* / .ats-cell-* /
+   .ats-status-pill rules in wwwroot/css/ats.css, which Bulk Uploads Status uses too.
+   Do not re-declare any of those here - change the shared rules instead so both
+   boards stay identical. */
+
+/* The ticket number is the one value a user copies out of this screen, so it is
+   monospaced to keep digits aligned down the column. */
+::deep .ticketing-number {
+    color: #16233f;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+
+/* The status cell stacks a pill over an optional failure reason, which the bulk
+   board has no equivalent of. */
+::deep .ticketing-status-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* Clamped to two lines so one long provider message cannot stretch the row; the
+   full text stays available as a title tooltip. */
+::deep .ticketing-error {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 260px;
+    color: #c0453e;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+    ::deep .ticketing-error {
+        max-width: 100%;
+    }
+}

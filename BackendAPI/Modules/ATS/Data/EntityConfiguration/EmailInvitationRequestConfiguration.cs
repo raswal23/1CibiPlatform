@@ -113,6 +113,36 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		// Drives the email notification job's claim query and the stale-claim sweeper.
 		builder.HasIndex(e => e.EmailSentStatus);
 
+		builder.Property(e => e.TicketStatus)
+			   .HasMaxLength(50)
+			   .IsRequired(false);
+
+		builder.Property(e => e.IsTicketed)
+			   .IsRequired(true)
+			   .HasDefaultValue(false);
+
+		builder.Property(e => e.TicketNumber)
+			   .HasMaxLength(100)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TicketDeliveryDate)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TicketClaimedAt)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TicketAttempts)
+			   .IsRequired(true)
+			   .HasDefaultValue(0);
+
+		builder.Property(e => e.TicketError)
+			   .HasMaxLength(500)
+			   .IsRequired(false);
+
+		// Drives the OMS ticketing job's claim query and the stale-claim sweeper, the
+		// same role EmailSentStatus plays for the email queue.
+		builder.HasIndex(e => e.TicketStatus);
+
 		// Traces every invitation back to the bulk file it came from, and matches the
 		// drill-down's (BulkFileID, EmailInvitationID ASC) keyset walk. It replaces the
 		// former single-column BulkFileID index rather than sitting beside it: the

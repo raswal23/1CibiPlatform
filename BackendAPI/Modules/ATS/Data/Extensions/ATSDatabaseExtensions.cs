@@ -40,11 +40,17 @@ public static class ATSDatabaseExtensions
 			(initData.GetATSRoles());
 		}
 
-		if (!await context.ModuleDetails.AnyAsync())
-		{
-			await context.ModuleDetails.AddRangeAsync
-			(initData.GetATSModules());
-		}
+		// Migrations may have pre-seeded part of this table (SeedATSSuperAdminAccess
+		// inserts modules 1-10), so an emptiness check would skip the remaining modules
+		// and the user seed below would then violate FK_UserDetails_ModuleDetails_ModuleId.
+		var existingModuleIds = await context.ModuleDetails
+			.AsNoTracking()
+			.Select(module => module.ModuleId)
+			.ToListAsync();
+
+		await context.ModuleDetails.AddRangeAsync(
+			initData.GetATSModules()
+				.Where(module => !existingModuleIds.Contains(module.ModuleId)));
 
 		if (!await context.UserDetails.AnyAsync())
 		{
@@ -58,31 +64,33 @@ public static class ATSDatabaseExtensions
 
 		await context.SaveChangesAsync();
 
-		await BackfillBulkUploadsModuleAsync(context, initData);
+		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);
+		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.TicketingStatus);
 	}
 
 	// The seed blocks above only run on an empty table, so a module added after the
-	// first deployment would never reach an existing database. This backfills the Bulk
-	// Uploads module and grants it to everyone who can already reach New Order, which
-	// is the access rule the module follows. Idempotent: a second run adds nothing.
-	private static async Task BackfillBulkUploadsModuleAsync(
+	// first deployment would never reach an existing database. This backfills one such
+	// module and grants it to everyone who can already reach New Order, which is the
+	// access rule these monitoring modules follow. Idempotent: a second run adds nothing.
+	private static async Task BackfillModuleGrantedWithNewOrderAsync(
 		ATSDBContext context,
-		ATSInitialData initData)
+		ATSInitialData initData,
+		int moduleId)
 	{
 		var moduleExists = await context.ModuleDetails
-			.AnyAsync(module => module.ModuleId == AtsModuleIds.BulkUploads);
+			.AnyAsync(module => module.ModuleId == moduleId);
 
 		if (!moduleExists)
 		{
-			var bulkUploadsModule = initData.GetATSModules()
-				.FirstOrDefault(module => module.ModuleId == AtsModuleIds.BulkUploads);
+			var module = initData.GetATSModules()
+				.FirstOrDefault(candidate => candidate.ModuleId == moduleId);
 
-			if (bulkUploadsModule is null)
+			if (module is null)
 			{
 				return;
 			}
 
-			await context.ModuleDetails.AddAsync(bulkUploadsModule);
+			await context.ModuleDetails.AddAsync(module);
 			await context.SaveChangesAsync();
 		}
 
@@ -100,7 +108,7 @@ public static class ATSDatabaseExtensions
 
 		var alreadyGranted = await context.UserDetails
 			.AsNoTracking()
-			.Where(user => user.ModuleId == AtsModuleIds.BulkUploads)
+			.Where(user => user.ModuleId == moduleId)
 			.Select(user => user.UserId)
 			.ToListAsync();
 
@@ -117,7 +125,7 @@ public static class ATSDatabaseExtensions
 				ClientId = user.ClientId,
 				Site = user.Site,
 				IsActive = user.IsActive,
-				ModuleId = AtsModuleIds.BulkUploads,
+				ModuleId = moduleId,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow
 			})

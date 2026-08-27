@@ -189,8 +189,8 @@ public partial class BulkUploadsComponent
 
 	private string GetSegmentClass(string? status) =>
 		_activeStatus == status
-			? "ats-segment-btn bulk-segment-btn active"
-			: "ats-segment-btn bulk-segment-btn";
+			? "ats-segment-btn ats-status-board-btn active"
+			: "ats-segment-btn ats-status-board-btn";
 
 	private static bool HasSubjects(BulkUploadListDTO upload) => upload.SubjectCount > 0;
 
