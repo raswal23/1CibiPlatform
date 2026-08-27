@@ -182,6 +182,17 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "RetryTicket",
+				MatchPath: "/ats/retryticket",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/retryticket" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetBulkUploadSubjects",
 				MatchPath: "/ats/getbulkuploadsubjects",
 				ClusterId: GatewayConstants.OnePlatformApi,

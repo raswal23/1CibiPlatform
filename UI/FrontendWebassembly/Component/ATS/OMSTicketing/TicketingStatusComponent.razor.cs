@@ -21,6 +21,10 @@ public partial class TicketingStatusComponent
 	private string? _searchString;
 	private bool _isLoadingCounts;
 
+	// Disables the row's button while its retry is in flight, so a double-click cannot
+	// queue the same order twice.
+	private Guid? _retryingOrderId;
+
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
@@ -153,6 +157,104 @@ public partial class TicketingStatusComponent
 
 	private static bool IsError(TicketedOrderListDTO order) =>
 		string.Equals(order.TicketStatus, OrderTicketStatus.Error, StringComparison.OrdinalIgnoreCase);
+
+	// A manual retry is only offered once the job has exhausted its automatic attempts.
+	// Below the cap the order is still queued, so a button would be redundant.
+	private static bool CanRetry(TicketedOrderListDTO order) =>
+		IsError(order) && order.TicketAttempts >= OrderTicketStatus.MaxAttempts;
+
+	private async Task ConfirmRetryTicketAsync(TicketedOrderListDTO order)
+	{
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Retry Ticketing"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				$"This will queue {FullName(order)}'s order to be sent to OMS again."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Retry"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Automatic retries have already been used up for this order. Make sure the "
+					+ "cause has been fixed, otherwise it will fail again."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.Refresh
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)(() => RetryTicketAsync(order.EmailInvitationID))
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon), Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor), Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor), Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor), "#FCF1DD"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor), "theme-button-warning"
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+
+		await dialog.Result;
+	}
+
+	private async Task<bool> RetryTicketAsync(Guid emailInvitationId)
+	{
+		_retryingOrderId = emailInvitationId;
+		await InvokeAsync(StateHasChanged);
+
+		try
+		{
+			var response = await OMSTicketingService.RetryTicketAsync(emailInvitationId);
+
+			if (!response.IsSuccess || !response.Data)
+			{
+				// A 409 means the row moved on since the page was loaded, so the list is
+				// refreshed either way to show its real state.
+				Snackbar.Add(
+					response.IsSuccess ? "Failed to queue the order for ticketing." : response.ErrorDetail,
+					Severity.Error);
+
+				await ReloadTableAsync();
+
+				return false;
+			}
+
+			Snackbar.Add("The order has been queued for ticketing.", Severity.Success);
+
+			// The row moves out of Error and the chip counts change, so both are reloaded.
+			await ReloadTableAsync();
+
+			return true;
+		}
+		finally
+		{
+			_retryingOrderId = null;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
 
 	private static string FullName(TicketedOrderListDTO order)
 	{

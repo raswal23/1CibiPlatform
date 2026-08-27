@@ -66,4 +66,9 @@ public static class OrderTicketStatus
 	public const string Done = "Done";
 
 	public const string Error = "Error";
+
+	// Mirrors OMSTicketingRepository.MaxTicketAttempts. Once an order has used this many
+	// automatic attempts the job stops picking it up, which is when a person may retry
+	// it by hand.
+	public const int MaxAttempts = 5;
 }
