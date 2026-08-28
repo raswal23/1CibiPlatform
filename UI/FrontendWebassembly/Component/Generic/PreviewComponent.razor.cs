@@ -72,10 +72,20 @@ public partial class PreviewComponent
 		return $"{lastNameInitial}{firstNameInitial}".ToUpperInvariant();
 	}
 
+	// A candidate legitimately may have no middle initial, so that column is the one
+	// blank the upload must not block on. The backend stores it as null.
+	private static bool IsOptionalHeader(string header) =>
+		header.Replace(" ", string.Empty)
+			.Equals("MiddleInitial", StringComparison.OrdinalIgnoreCase);
+
+	private bool IsRequiredCellBlank(int columnIndex, string cell) =>
+		string.IsNullOrWhiteSpace(cell)
+		&& (columnIndex >= Headers.Count || !IsOptionalHeader(Headers[columnIndex]));
+
 	private List<int> InvalidRows =>
 	Rows
 		.Select((row, index) => new { row, index })
-		.Where(x => x.row.Any(string.IsNullOrWhiteSpace))
+		.Where(x => x.row.Where((cell, cellIndex) => IsRequiredCellBlank(cellIndex, cell)).Any())
 		.Select(x => x.index + 2)
 		.ToList();
 }

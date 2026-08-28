@@ -143,7 +143,11 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
 						LastName = row.LastName,
 						FirstName = row.FirstName,
-						MiddleInitial = row.MiddleInitial,
+						// Optional column: a candidate may have no middle initial. Blank is
+						// stored as null, matching how EditSubjectName persists it.
+						MiddleInitial = string.IsNullOrWhiteSpace(row.MiddleInitial)
+							? null
+							: row.MiddleInitial.Trim(),
 						EmailAddress = row.EmailAddress,
 						MobileNumber = row.MobileNumber,
 						SelectPackage = file.PackageType,

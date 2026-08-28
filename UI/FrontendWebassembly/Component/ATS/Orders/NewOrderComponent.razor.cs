@@ -295,7 +295,7 @@ public partial class NewOrderComponent
 		// file", and the operator is approving an import on the strength of it.
 		var previewMessage = previewData.IsTruncated
 			? $"Showing the first {previewData.Rows.Count} of {previewData.TotalRowCount} rows. All rows will be uploaded."
-			: "Upload has been disabled. Blank detail is not allowed.";
+			: "Upload has been disabled. Blank details are not allowed (Middle Initial is optional).";
 
 		var parameters = new DialogParameters
 		{
