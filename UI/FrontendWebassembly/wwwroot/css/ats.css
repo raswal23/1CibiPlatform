@@ -345,10 +345,6 @@
     height: 17px;
 }
 
-.ats-client-card table {
-    table-layout: fixed;
-}
-
 .ats-client-card thead .mud-table-cell:nth-child(1) {
     width: 16%;
 }
@@ -357,8 +353,8 @@
     width: 15%;
 }
 
-.ats-client-card thead .mud-table-cell:nth-child(3) {
-    width: 13%;
+.ats-client-card .ats-clients-packages-column {
+    min-width: 280px !important;
 }
 
 .ats-client-card thead .mud-table-cell:nth-child(4) {
