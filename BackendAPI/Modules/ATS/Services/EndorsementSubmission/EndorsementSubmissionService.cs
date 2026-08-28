@@ -143,7 +143,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			await SendApplicationFormToUserEmailAsync(
 				emailInvitationRequestDTO.EmailAddress!,
 				subjectName,
-				applicationFormLink);
+				applicationFormLink,
+				emailInvitationRequest.Requestor,
+				emailInvitationRequest.ClientId);
 		}
 		catch (Exception ex)
 		{
@@ -265,7 +267,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return true;
 	}
 
-	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink)
+	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, int? clientId)
 	{
 		var logContext = new
 		{
@@ -277,7 +279,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		_logger.LogInformation("Sending notification for email: {@Context}", logContext);
 
-		var otpBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink);
+		var clientName = await ResolveClientNameAsync(clientId);
+
+		var otpBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink, requestor, clientName);
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
@@ -292,6 +296,27 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 
 		return isSent;
+	}
+
+	// A missing or unknown client id degrades to null - the email body falls back to
+	// a generic phrasing instead of blocking the send.
+	private async Task<string?> ResolveClientNameAsync(int? clientId)
+	{
+		if (!clientId.HasValue)
+			return null;
+
+		try
+		{
+			var clients = await _atsRepository.GetClientsByIdsAsync(
+				[clientId.Value], searchTerm: null, CancellationToken.None);
+
+			return clients.FirstOrDefault()?.ClientName;
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Failed to resolve client name for client {ClientId}; the email falls back to generic phrasing.", clientId);
+			return null;
+		}
 	}
 
 	public async Task<KeysetPaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -407,7 +432,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			await SendApplicationFormToUserEmailAsync(
 				invitation.EmailAddress!,
 				fullName,
-				applicationFormLink);
+				applicationFormLink,
+				invitation.Requestor,
+				invitation.ClientId);
 
 			await _orderHistoryService.RecordAsync(
 				emailInvitationId,

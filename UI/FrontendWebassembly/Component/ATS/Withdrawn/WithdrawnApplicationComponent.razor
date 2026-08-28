@@ -20,9 +20,10 @@
                 LoadServerData="LoadWithdrawnServerData"
                 CursorPagerState="_withdrawnLoader"
                 SearchString="@searchString"
-                ColumnCount="6"
+                ColumnCount="7"
                 SearchStringChanged="@((string val) => searchString = val)">
     <HeaderTemplate>
+        <MudTh>Ticket No.</MudTh>
         <MudTh>Candidate</MudTh>
         <MudTh>Requestor</MudTh>
         <MudTh>First Name</MudTh>
@@ -34,6 +35,7 @@
     <RowTemplate Context="item">
         @if(_loadingEmailInvitationId == item.EmailInvitationID)
         {
+            <MudTd DataLabel="Ticket No."><MudSkeleton Height="20px" Width="80px" /></MudTd>
             <MudTd DataLabel="Candidate"><MudSkeleton Height="20px" Width="90%" /></MudTd>
             <MudTd DataLabel="Requestor"><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd DataLabel="First Name"><MudSkeleton Height="20px" Width="80%" /></MudTd>
@@ -45,6 +47,16 @@
         }
         else
         {
+            <MudTd DataLabel="Ticket No.">
+                @if (!string.IsNullOrWhiteSpace(item.TicketNumber))
+                {
+                    <span class="withdrawn-ticket-number">@item.TicketNumber</span>
+                }
+                else
+                {
+                    <span class="withdrawn-ticket-empty" title="OMS has not issued a ticket for this order yet">—</span>
+                }
+            </MudTd>
             <MudTd DataLabel="Candidate">
                 <div class="withdrawn-candidate">
                     <span class="withdrawn-avatar">@GetInitials(item.FirstName, item.LastName)</span>

@@ -197,7 +197,7 @@ public class EmailService : IEmailService
 		return body;
 	}
 
-	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink, string? requestor, string? clientName)
 	{
 		throw new NotImplementedException();
 	}

@@ -47,6 +47,7 @@ public partial class ATSRepository
 				FirstName = eir.FirstName,
 				LastName = eir.LastName,
 				Requestor = eir.Requestor,
+				TicketNumber = eir.TicketNumber,
 				DisputeCategory = eir.DisputeCategory,
 				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
@@ -81,6 +82,7 @@ public partial class ATSRepository
 				EF.Functions.ILike(eir.FirstName!, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.TicketNumber ?? string.Empty, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{searchTerm}%"));
 
 		return usersQuery;

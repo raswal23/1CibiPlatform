@@ -130,7 +130,9 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			await _endorsementSubmissionService.SendApplicationFormToUserEmailAsync(
 				request.EmailAddress,
 				subjectName,
-				applicationFormLink);
+				applicationFormLink,
+				request.Requestor,
+				request.ClientId);
 
 			return true;
 		}

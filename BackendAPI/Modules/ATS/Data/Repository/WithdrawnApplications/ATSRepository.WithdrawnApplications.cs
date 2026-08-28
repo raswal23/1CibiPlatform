@@ -26,6 +26,7 @@ public partial class ATSRepository
 						FirstName = eir.FirstName,
 						LastName = eir.LastName,
 						Requestor = eir.Requestor,
+						TicketNumber = eir.TicketNumber,
 						OrderStatus = eir.OrderStatus,
 					})
 					.ToListAsync(cancellationToken);
@@ -57,6 +58,7 @@ public partial class ATSRepository
 				EF.Functions.ILike(eir.MiddleInitial ?? string.Empty, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.LastName!, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.Requestor ?? string.Empty, $"%{searchTerm}%") ||
+				EF.Functions.ILike(eir.TicketNumber ?? string.Empty, $"%{searchTerm}%") ||
 				EF.Functions.ILike(eir.EmailAddress!, $"%{searchTerm}%"));
 
 		return usersQuery;

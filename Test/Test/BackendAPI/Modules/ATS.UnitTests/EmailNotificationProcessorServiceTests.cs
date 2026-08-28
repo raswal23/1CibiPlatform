@@ -1,4 +1,4 @@
-using ATS.Data.Entities;
+﻿using ATS.Data.Entities;
 using FluentAssertions;
 using Moq;
 using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
@@ -47,7 +47,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 		// Assert
 		await act.Should().NotThrowAsync();
 		_fixture.MockEndorsementSubmissionService.Verify(
-			x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+			x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()),
 			Times.Never);
 	}
 
@@ -63,7 +63,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 			.ReturnsAsync(pending);
 
 		_fixture.MockEndorsementSubmissionService
-			.Setup(x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+			.Setup(x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()))
 			.ReturnsAsync(true);
 
 		// Act
@@ -71,7 +71,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 
 		// Assert
 		_fixture.MockEndorsementSubmissionService.Verify(
-			x => x.SendApplicationFormToUserEmailAsync("candidate@example.com", It.IsAny<string>(), It.IsAny<string>()),
+			x => x.SendApplicationFormToUserEmailAsync("candidate@example.com", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()),
 			Times.Once);
 
 		_fixture.MockRepository.Verify(
@@ -118,7 +118,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 			.ReturnsAsync(pending);
 
 		_fixture.MockEndorsementSubmissionService
-			.Setup(x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+			.Setup(x => x.SendApplicationFormToUserEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int?>()))
 			.ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
 
 		// Act

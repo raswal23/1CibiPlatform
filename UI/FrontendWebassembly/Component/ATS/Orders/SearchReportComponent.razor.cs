@@ -16,7 +16,7 @@ public partial class SearchReportComponent
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
 	private bool _canEditSubjectName;
-	private int ReportColumnCount => 8
+	private int ReportColumnCount => 9
 		+ (_canUploadReport ? 1 : 0)
 		+ (_canEditSubjectName ? 1 : 0);
 
