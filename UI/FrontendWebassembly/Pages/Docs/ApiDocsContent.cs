@@ -6,6 +6,12 @@ namespace FrontendWebassembly.Pages.Docs;
 public record ApiFieldDoc(string Name, string Type, bool Required, string Description);
 
 /// <summary>
+/// A failure a caller should expect and handle, rather than the generic status-code
+/// table. Documented per operation because the reasons differ between them.
+/// </summary>
+public record ApiErrorDoc(string Status, string Reason, string Detail);
+
+/// <summary>
 /// One documented operation. Samples are held as literal strings rather than generated
 /// from the DTOs so the page shows exactly what a caller should send, including the
 /// header and the shell quoting.
@@ -33,6 +39,8 @@ public record ApiEndpointDoc
 	public string ResponseSample { get; init; } = string.Empty;
 
 	public IReadOnlyList<string> Notes { get; init; } = [];
+
+	public IReadOnlyList<ApiErrorDoc> Errors { get; init; } = [];
 }
 
 public record ApiSectionDoc(string Title, IReadOnlyList<ApiEndpointDoc> Endpoints);
@@ -69,8 +77,8 @@ public static class ApiDocsContent
 					new ApiFieldDoc("middleInitial", "string", false, "Optional. Leave blank or omit when the subject has no middle name."),
 					new ApiFieldDoc("emailAddress", "string", true, "Where the application form is sent."),
 					new ApiFieldDoc("mobileNumber", "string", true, "Exactly 11 digits, e.g. 09171234567."),
-					new ApiFieldDoc("package", "string", true, "A package name from GET /publicapi/ats/packages."),
-					new ApiFieldDoc("orderType", "string", true, "Normal or Rush.")
+					new ApiFieldDoc("package", "string", true, "Must be a package assigned to your client — call GET /publicapi/ats/packages for the list. Matched case-insensitively; anything else is rejected."),
+					new ApiFieldDoc("orderType", "string", true, "Normal or Rush. Case-insensitive; no other value is accepted.")
 				],
 				CurlSample =
 					"""
@@ -109,7 +117,32 @@ public static class ApiDocsContent
 					response.EnsureSuccessStatusCode();
 					""",
 				ResponseStatus = "200 OK",
-				ResponseSample = "true"
+				ResponseSample =
+					"""
+					{
+					  "isSuccessful": true,
+					  "orderId": "0199a1c4-3b7e-7c21-9f3a-2b8c6d5e4f10",
+					  "package": "CRIMINAL RECORDS CHECK",
+					  "orderType": "Normal",
+					  "message": "The order was created and the application form has been emailed to the subject."
+					}
+					""",
+				Notes =
+				[
+					"Keep the returned orderId — it is how you look the order up later.",
+					"package and orderType are echoed back as stored. Send \"rush\" and you get \"Rush\": matching is case-insensitive but the canonical spelling is what we keep."
+				],
+				Errors =
+				[
+					new ApiErrorDoc("400", "Package is not one of yours",
+						"The package name does not match any package assigned to your client. The message lists the ones that are — or call GET /publicapi/ats/packages."),
+					new ApiErrorDoc("400", "Order type is not Normal or Rush",
+						"Those are the only two accepted values. Case does not matter."),
+					new ApiErrorDoc("400", "A field failed validation",
+						"Mobile number must be 11 digits, email must be a valid address, first and last name are required and capped at 50 characters."),
+					new ApiErrorDoc("401", "Token missing or expired",
+						"Request a new one from /token/generatetoken.")
+				]
 			},
 
 			new ApiEndpointDoc
@@ -125,7 +158,7 @@ public static class ApiDocsContent
 				Fields =
 				[
 					new ApiFieldDoc("file", "file", true, "The CSV. Max 10 MB."),
-					new ApiFieldDoc("package", "string", true, "Applied to every row in the file."),
+					new ApiFieldDoc("package", "string", true, "Applied to every row. Must be a package assigned to your client, or the upload is rejected before the file is stored."),
 					new ApiFieldDoc("orderType", "string", true, "Normal or Rush. Applied to every row.")
 				],
 				CurlSample =
@@ -160,8 +193,19 @@ public static class ApiDocsContent
 				Notes =
 				[
 					"Required columns: LastName, FirstName, MiddleInitial, EmailAddress, MobileNumber.",
-					"MiddleInitial may be left blank — many subjects have no middle name.",
+					"MiddleInitial may be left blank — many subjects have no middle name, and the column is never validated.",
+					"FirstName and LastName are required, max 50 characters. EmailAddress must be a valid address. MobileNumber must resolve to 11 digits — 09171234567, +639171234567, 639171234567 and 9171234567 are all accepted and stored as 09171234567.",
 					"A row that fails validation is skipped, not fatal. The rest of the file still creates orders, and the skipped rows are listed with a reason by the endpoint below."
+				],
+				Errors =
+				[
+					new ApiErrorDoc("400", "Package is not one of yours",
+						"Rejected before the file is stored, since the package applies to every row."),
+					new ApiErrorDoc("400", "Order type is not Normal or Rush", "Those are the only two accepted values."),
+					new ApiErrorDoc("400", "File is empty, over 10 MB, or not a .csv",
+						"The upload is refused outright; nothing is queued."),
+					new ApiErrorDoc("400", "Wrong CSV columns",
+						"The header row must contain exactly the five documented columns. Reported by the status endpoint, since the file is parsed after the response returns.")
 				]
 			},
 

@@ -147,7 +147,79 @@ A client withdrawing their own order by id is a different operation, so
 the `UPDATE` predicate rather than a preceding read, so a concurrent completion or a
 second call updates nothing instead of racing.
 
-### Step 8 — Documentation site
+### Step 8 — Package and order type were never validated
+
+Found during review, and it predates this work: **every order-creation path accepted any
+text as a package or an order type.** Both validators checked string length only, so
+`package: "banana"` and `orderType: "Whenever"` were stored happily. The mistake surfaced
+much later at OMS ticketing, where an unmatched package parks the order as an `Error`
+with an opaque reason — or, for a bogus order type, never surfaced at all.
+
+The AI assistant plugin already did this correctly (`AtsAssistantPlugin`, client-scoped
+package matching plus order-type normalisation); the web and API paths simply skipped it.
+
+Now:
+
+- **`Constants/OrderType.cs`** — `Normal` / `Rush` / `All` plus a `Normalize` helper.
+  Previously these were string literals repeated across the AI plugin, the dashboard and
+  the CSV parser, with nothing rejecting a third value.
+- **`Services/OrderValidation/OrderInputValidator`** — one implementation shared by the
+  web console, the public API and the bulk parser, so all three agree. It checks the
+  order type, then that the package is active and **assigned to the caller's client**,
+  resolved from their token via `ICurrentUser.AtsClientId` — never from a request field.
+- Rejections throw `BadRequestException` **naming the acceptable values**: the client's
+  own package names, which they can already read from `GET /packages`. A rejection the
+  caller can act on beats a correct one they cannot.
+- Both values are **canonicalised on the way in**. `"criminal records check"` is stored
+  as `"CRIMINAL RECORDS CHECK"`, `"rush"` as `"Rush"`. This is not cosmetic: OMS matches
+  the package by exact name, so a casing difference would have parked the ticket.
+
+The order type is additionally checked in the endpoint validators, where it costs no
+database round trip; the package can only be checked against the caller's client, so it
+stays in the service.
+
+**Two consequences worth flagging at review:**
+
+- This changes the **existing web console**, not just the new API. It is the fix, but it
+  is a behaviour change.
+- Two pre-existing integration tests failed immediately, because they created orders
+  against packages that were never assigned to anyone. That is the validation working.
+  They now seed a package via a new `BaseIntegrationTest.SeedAssignedPackageAsync`, and
+  the fake test principal gained the `AtsClientId` claim it had been missing.
+
+**The package is still matched by name, not id** — `EmailInvitationRequest.SelectPackage`
+is free text with no FK, and OMS ticketing joins on it by name. Changing to an id means a
+migration plus reworking that join, so it belongs with the `ReportTypeID` cleanup planned
+for the 1Platform migration. `GET /packages` returns `packageId` alongside the name, so
+integrators already have it.
+
+The cost of staying on names is **not** performance — the client's package list is short
+and loaded once per order, and `PackageName` is indexed. The cost is that **renaming a
+package silently orphans every existing order that referenced it**: those rows keep the
+old string, OMS ticketing stops matching them, and they park as `Error`. An FK would make
+that impossible. Until the id migration, a guard on package rename in Package Management
+would close most of the gap.
+
+### Step 9 — A better create response
+
+`POST /endorsements` returned a bare `true`, which tells a caller nothing. It now returns:
+
+```json
+{
+  "isSuccessful": true,
+  "orderId": "0199a1c4-...",
+  "package": "CRIMINAL RECORDS CHECK",
+  "orderType": "Normal",
+  "message": "The order was created and the application form has been emailed to the subject."
+}
+```
+
+The `orderId` is the point — without it an integrator had to search for the order they
+had just created. Package and order type are echoed as **stored**, so a caller who sent
+`"rush"` can see it became `"Rush"`. Surfacing the id meant writing it back onto the DTO
+rather than changing the service's return type and touching every web caller.
+
+### Step 10 — Documentation site
 
 `/docs/api`, public and unauthenticated. **The auth opt-out is one line:**
 `@layout GenericLayout`. `App.razor` defaults to `MainLayout`, whose `OnInitializedAsync`
@@ -173,8 +245,9 @@ scoped sheet lost 54 lines of now-shared rules. The language switcher reuses
 | Suite | Result |
 |---|---|
 | `BulkSubjectRowValidatorTests` (new) | 31 passed |
+| `OrderInputValidatorTests` (new) | 20 passed |
 | `PublicApiRepositoryIntegrationTests` (new, real Postgres) | 13 passed |
-| Full ATS suite | 418 passed |
+| Full ATS suite | 438 passed |
 | Auth suite | 232 passed |
 | `dotnet build 1CibiPlatform.sln` | succeeded |
 
@@ -208,3 +281,11 @@ out-of-scope order, and two withdraw calls do not both succeed.
    on our schedule.
 6. **Swagger stays Development-only**, as the existing deliberate decision has it. This
    docs site is the public substitute.
+7. **Renaming a package orphans its existing orders.** Because orders reference packages
+   by name with no FK, a rename leaves old orders pointing at a string that no longer
+   matches, and OMS ticketing parks them as `Error`. Visible on the ticketing screen, but
+   nothing prevents it. A guard on rename, or the id migration, closes it.
+8. **The bulk CSV's own columns are unvalidated at upload time.** The package and order
+   type are checked before the file is stored, but a wrong header row is only discovered
+   when the job parses it — reported through the bulk status endpoint rather than the
+   upload response. That is inherent to parsing asynchronously.

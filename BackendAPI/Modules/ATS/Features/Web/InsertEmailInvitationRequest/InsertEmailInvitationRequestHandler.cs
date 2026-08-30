@@ -30,9 +30,12 @@ public class EmailInvitationRequestCommandValidator : AbstractValidator<EmailInv
 			.NotEmpty().WithMessage("Package selection is required.")
 			.MaximumLength(100).WithMessage("Package selection must not exceed 100 characters.");
 
+		// The package is validated in the service, where the caller's assigned packages
+		// are known; only the order type can be checked without a database round trip.
 		RuleFor(x => x.emailInvitationRequestDTO.RushNormal)
 			.NotEmpty().WithMessage("Rush/Normal selection is required.")
-			.MaximumLength(20).WithMessage("Rush/Normal selection must not exceed 20 characters.");
+			.Must(orderType => OrderType.Normalize(orderType) is not null)
+			.WithMessage($"Rush/Normal selection must be one of: {string.Join(", ", OrderType.All)}.");
 
 	}
 }

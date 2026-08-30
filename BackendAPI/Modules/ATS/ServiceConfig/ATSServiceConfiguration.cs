@@ -87,6 +87,10 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 		services.AddScoped<IATSVerificationDataProvider, ATSVerificationDataProvider>();
 		services.AddScoped<IAtsAccessScopeResolver, AtsAccessScopeResolver>();
+
+		// Shared by the web console, the public API and the bulk parser so all three
+		// agree on what a valid package and order type are.
+		services.AddScoped<IOrderInputValidator, OrderInputValidator>();
 		services.AddScoped<IBulkUploadMonitoringService, BulkUploadMonitoringService>();
 
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");

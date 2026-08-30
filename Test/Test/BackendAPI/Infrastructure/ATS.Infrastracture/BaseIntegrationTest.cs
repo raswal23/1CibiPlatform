@@ -1,4 +1,5 @@
 ﻿using ATS.Data.Context;
+using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.Services.AIAssistant;
 using ATS.Services.ApplicantSearchProjections;
@@ -31,6 +32,10 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	private readonly IServiceScope _scope;
 	protected readonly ISender _sender;
 	protected readonly IHashService _hashService;
+	// The client the fake test principal belongs to. Kept in step with the AtsClientId
+	// claim in IntegrationTestWebAppFactory.
+	protected const int TestClientId = 1;
+
 	protected readonly ATSDBContext _dbContext;
 	protected readonly AuthApplicationDbContext _authDbContext;
 	protected readonly IHttpContextAccessor _httpContextAccessor;
@@ -149,6 +154,49 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		{
 			throw new Exception("Error during database cleanup in InitializeAsync: " + ex.Message, ex);
 		}
+	}
+
+	/// <summary>
+	/// Creates a package and assigns it to the caller's client, so an order can be
+	/// placed against it. Orders now validate the package against the client's
+	/// assignments, so any test that creates one has to seed this first.
+	/// Returns the package name to pass as SelectPackage / PackageType.
+	/// </summary>
+	protected async Task<string> SeedAssignedPackageAsync(
+		string packageName = "Standard",
+		int clientId = TestClientId)
+	{
+		var now = DateTime.UtcNow;
+
+		var package = new PackageDetails
+		{
+			PackageName = packageName,
+			PackageDescription = "182",
+			IsActive = true,
+			FollowUpEmail = 0,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+
+		await _dbContext.PackageDetails.AddAsync(package);
+		await _dbContext.SaveChangesAsync();
+
+		// ClientDetails is keyed (ClientId, PackageId): one row per client-package pair
+		// is what "assigned" means.
+		await _dbContext.ClientDetails.AddAsync(new ClientDetails
+		{
+			ClientId = clientId,
+			PackageId = package.PackageId,
+			ClientName = "Integration Test Client",
+			ClientDescription = "Seeded for order-creation tests.",
+			IsActive = true,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+
+		await _dbContext.SaveChangesAsync();
+
+		return packageName;
 	}
 
 	public Task DisposeAsync()

@@ -15,6 +15,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IUserClientRepository _userClientRepository;
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
+	private readonly IOrderInputValidator _orderInputValidator;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
@@ -35,6 +36,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IOrderHistoryService orderHistoryService,
 		IUserClientRepository userClientRepository,
 		IAtsAccessScopeResolver accessScopeResolver,
+		IOrderInputValidator orderInputValidator,
 		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
@@ -50,6 +52,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_orderHistoryService = orderHistoryService;
 		_userClientRepository = userClientRepository;
 		_accessScopeResolver = accessScopeResolver;
+		_orderInputValidator = orderInputValidator;
 		_unitOfWork = unitOfWork;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
@@ -87,6 +90,21 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		_logger.LogInformation("Inserting Email invitaion request {@Context}", logContext);
 
+		// Before anything is created: the package must be one this client is assigned
+		// and the order type must be Rush or Normal. Both used to be length-checked
+		// only, so any text was accepted and the mistake surfaced much later at OMS
+		// ticketing. Throws BadRequestException naming the acceptable values.
+		var validated = await _orderInputValidator.ValidateAsync(
+			emailInvitationRequestDTO.SelectPackage,
+			emailInvitationRequestDTO.RushNormal,
+			ct);
+
+		// Written back so the caller is echoed what was actually stored - a request
+		// sending "rush" gets "Rush" - and so the Adapt below carries the canonical
+		// spelling onto the entity.
+		emailInvitationRequestDTO.SelectPackage = validated.Package;
+		emailInvitationRequestDTO.RushNormal = validated.OrderType;
+
 		var token = _secureToken.GenerateSecureToken();
 
 		if (string.IsNullOrEmpty(token))
@@ -105,6 +123,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		EmailInvitationRequest emailInvitationRequest = emailInvitationRequestDTO.Adapt<EmailInvitationRequest>();
 		emailInvitationRequest.EmailInvitationID = Guid.CreateVersion7();
+
+		// Handed back on the DTO so an API caller can poll the order they just created.
+		emailInvitationRequestDTO.OrderId = emailInvitationRequest.EmailInvitationID;
 		emailInvitationRequest.HashToken = HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
@@ -227,6 +248,17 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		_logger.LogInformation("Starting uploading process for file {FileName}", bulkUploadFileDetailsDTO.FileName);
+
+		// Validated before the file is stored: the package and order type apply to every
+		// row, so an unassigned package would fail the whole upload once parsed. Better
+		// to reject it here than to accept a file that cannot produce a single order.
+		var validated = await _orderInputValidator.ValidateAsync(
+			bulkUploadFileDetailsDTO.PackageType,
+			bulkUploadFileDetailsDTO.OrderType,
+			ct);
+
+		bulkUploadFileDetailsDTO.PackageType = validated.Package;
+		bulkUploadFileDetailsDTO.OrderType = validated.OrderType;
 
 
 		if (bulkUploadFileDetailsDTO.BulkFile != null)

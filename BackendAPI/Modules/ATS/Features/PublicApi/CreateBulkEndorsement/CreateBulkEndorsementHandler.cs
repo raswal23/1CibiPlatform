@@ -35,9 +35,11 @@ public class CreateBulkEndorsementCommandValidator : AbstractValidator<CreateBul
 			.NotEmpty().WithMessage("Package is required.")
 			.MaximumLength(100).WithMessage("Package must not exceed 100 characters.");
 
+		// The package is checked in the service, where the caller's client is known.
 		RuleFor(x => x.OrderType)
 			.NotEmpty().WithMessage("Order type is required.")
-			.MaximumLength(20).WithMessage("Order type must not exceed 20 characters.");
+			.Must(orderType => OrderType.Normalize(orderType) is not null)
+			.WithMessage($"Order type must be one of: {string.Join(", ", OrderType.All)}.");
 	}
 }
 

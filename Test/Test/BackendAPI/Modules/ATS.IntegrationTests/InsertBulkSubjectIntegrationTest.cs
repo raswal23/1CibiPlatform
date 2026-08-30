@@ -37,13 +37,17 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 	public async Task InsertBulkSubject_ShouldReturnCreatedIdAndPersist()
 	{
 		// Arrange
+		// The package applies to every row, so it must be assigned to the caller's
+		// client or the upload is rejected before the file is stored.
+		var package = await SeedAssignedPackageAsync("Air BnB");
+
 		var dto = new BulkUploadFileDetailsDTO
 		{
 			BulkFile = CreateFakeFormFile(sampleFileContent, bulkFileName),
 			FileName = bulkFileName,
 			Status = "Pending",
 			OrderType = "Rush",
-			PackageType = "Air BnB"
+			PackageType = package
 		};
 
 		var command = new InsertBulkSubjectCommand(dto);

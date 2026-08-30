@@ -178,6 +178,25 @@
                         </ul>
                     }
 
+                    @* Per-operation failures, so an integrator can code for them rather
+                       than discovering each one in production. *@
+                    @if (endpoint.Errors.Count > 0)
+                    {
+                        <p class="api-docs-response-label">What can go wrong</p>
+
+                        <div class="api-docs-status-list">
+                            @foreach (var error in endpoint.Errors)
+                            {
+                                <div class="api-docs-status-row">
+                                    <span class="api-docs-status-badge is-warn">@error.Status</span>
+                                    <span class="api-docs-status-meaning">
+                                        <strong>@error.Reason</strong> — @error.Detail
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+
                     <div class="api-docs-samples">
 
                         <div class="api-docs-sample-head">

@@ -10,7 +10,11 @@ public record CreateEndorsementCommand(
 	string OrderType)
 	: ICommand<CreateEndorsementResult>;
 
-public record CreateEndorsementResult(bool Success);
+public record CreateEndorsementResult(
+	bool IsSuccessful,
+	Guid OrderId,
+	string Package,
+	string OrderType);
 
 public class CreateEndorsementCommandValidator : AbstractValidator<CreateEndorsementCommand>
 {
@@ -43,9 +47,13 @@ public class CreateEndorsementCommandValidator : AbstractValidator<CreateEndorse
 			.NotEmpty().WithMessage("Package is required.")
 			.MaximumLength(100).WithMessage("Package must not exceed 100 characters.");
 
+		// Checked here as well as in the service: this needs no database round trip, so
+		// an obviously wrong value fails before one is made. The package can only be
+		// checked against the caller's client, so it stays in the service.
 		RuleFor(x => x.OrderType)
 			.NotEmpty().WithMessage("Order type is required.")
-			.MaximumLength(20).WithMessage("Order type must not exceed 20 characters.");
+			.Must(orderType => OrderType.Normalize(orderType) is not null)
+			.WithMessage($"Order type must be one of: {string.Join(", ", OrderType.All)}.");
 	}
 }
 
@@ -74,12 +82,20 @@ public class CreateEndorsementHandler : ICommandHandler<CreateEndorsementCommand
 		};
 
 		// Identical to the web path apart from the source, which is what makes an order
-		// traceable to the integration that raised it.
-		var success = await _endorsementSubmissionService.InsertEmailInvitationRequestAsync(
+		// traceable to the integration that raised it. The service validates the
+		// package and order type against this client and throws BadRequestException
+		// when either is not theirs.
+		var isSuccessful = await _endorsementSubmissionService.InsertEmailInvitationRequestAsync(
 			dto,
 			cancellationToken,
 			OrderHistorySource.PublicApi);
 
-		return new CreateEndorsementResult(success);
+		// Echoed back in their canonical spelling, so a caller who sent "rush" can see
+		// it was stored as "Rush".
+		return new CreateEndorsementResult(
+			isSuccessful,
+			dto.OrderId,
+			dto.SelectPackage ?? string.Empty,
+			dto.RushNormal ?? string.Empty);
 	}
 }

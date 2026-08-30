@@ -42,6 +42,7 @@ global using ATS.Services.EndorsementSubmission;
 global using ATS.Services.OMSTicketing;
 global using ATS.Services.OMSTicketingMonitoring;
 global using ATS.Services.PublicApi;
+global using ATS.Services.OrderValidation;
 global using ATS.Services.Report;
 global using ATS.Services.ApplicantSearchProjections;
 
