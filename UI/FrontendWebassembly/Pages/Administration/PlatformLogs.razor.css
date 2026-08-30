@@ -669,61 +669,15 @@
     color: var(--blue-600);
 }
 
-.platform-logs .code-block {
+/* The code blocks themselves are the shared .ats-code-block / .ats-json-* rules in
+   wwwroot/css/ats.css, which the API documentation page uses too. Only this drawer's
+   own spacing between them is local. */
+.platform-logs .ats-code-block {
     margin-bottom: 24px;
-    padding: 14px 16px;
-    border: 1px solid var(--border-soft);
-    border-radius: 10px;
-    background: #f8fafc;
 }
 
-.platform-logs .code-block:last-child {
+.platform-logs .ats-code-block:last-child {
     margin-bottom: 0;
-}
-
-.platform-logs .code-block pre {
-    margin: 0;
-    color: var(--text-600);
-    font-family: "JetBrains Mono", Consolas, monospace;
-    font-size: 11.5px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.platform-logs .code-block pre a {
-    color: var(--blue-600);
-}
-
-.platform-logs .code-block pre code {
-    padding: 1px 4px;
-    border-radius: 4px;
-    background: #eef1f7;
-    color: var(--navy-900);
-}
-
-.platform-logs ::deep .code-block pre a {
-    color: var(--blue-600);
-}
-
-.platform-logs ::deep .code-block pre code {
-    padding: 1px 4px;
-    border-radius: 4px;
-    background: #eef1f7;
-    color: var(--navy-900);
-}
-
-.platform-logs ::deep .json-key {
-    color: var(--blue-600);
-    font-weight: 600;
-}
-
-.platform-logs ::deep .json-string {
-    color: #0f7b3e;
-}
-
-.platform-logs ::deep .json-number {
-    color: var(--amber-700);
 }
 
 @media (max-width: 900px) {

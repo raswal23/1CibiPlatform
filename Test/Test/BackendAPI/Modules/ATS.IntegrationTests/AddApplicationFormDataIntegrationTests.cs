@@ -1,6 +1,6 @@
 ﻿using ATS.Data.Entities;
 using ATS.DTO;
-using ATS.Features.AddApplicationFormData;
+using ATS.Features.Web.AddApplicationFormData;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using FluentValidation;

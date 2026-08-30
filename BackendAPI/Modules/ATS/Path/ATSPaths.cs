@@ -159,6 +159,135 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// ---- Public API ----------------------------------------------------
+			// Client integrations, authenticated with a token from
+			// /token/generatetoken. DefaultStrict (20/min) rather than the 500/s
+			// default: these are machine callers, and an integration in a retry loop
+			// must not be able to saturate the platform.
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicCreateEndorsement",
+				MatchPath: "/publicapi/ats/endorsements",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/api/public/ats/endorsements" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicCreateBulkEndorsement",
+				MatchPath: "/publicapi/ats/endorsements/bulk",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/api/public/ats/endorsements/bulk" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			// PathPattern, not PathSet: PathSet would forward the literal "{fileId}".
+			new RouteDefinitionDTO(
+				RouteId: "PublicGetBulkUploadStatus",
+				MatchPath: "/publicapi/ats/endorsements/bulk/{fileId}",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathPattern", "/api/public/ats/endorsements/bulk/{fileId}" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicGetPackages",
+				MatchPath: "/publicapi/ats/packages",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/api/public/ats/packages" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicGetOrders",
+				MatchPath: "/publicapi/ats/orders",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/api/public/ats/orders" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicGetOrder",
+				MatchPath: "/publicapi/ats/orders/{orderId}",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathPattern", "/api/public/ats/orders/{orderId}" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicDownloadReport",
+				MatchPath: "/publicapi/ats/orders/{orderId}/report",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathPattern", "/api/public/ats/orders/{orderId}/report" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "PublicWithdrawOrder",
+				MatchPath: "/publicapi/ats/orders/{orderId}/withdraw",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathPattern", "/api/public/ats/orders/{orderId}/withdraw" }
+				},
+				Metadata: new Dictionary<string, string>
+				{
+					{ "RateLimitPolicy", GatewayConstants.RateLimitPolicies.DefaultStrict }
+				}
+			),
+
+			// ---- Web console ---------------------------------------------------
+
 			new RouteDefinitionDTO(
 				RouteId: "GetTicketedOrders",
 				MatchPath: "/ats/getticketedorders",

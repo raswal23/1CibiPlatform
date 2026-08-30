@@ -1,5 +1,5 @@
 ﻿using ATS.Data.Entities;
-using ATS.Features.WithdrawnApplicationForm;
+using ATS.Features.Web.WithdrawnApplicationForm;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

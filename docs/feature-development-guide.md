@@ -136,6 +136,27 @@ If an area has several commands or queries, each command/query gets its own fold
 
 Use a command for state changes and a query for reads. Follow the local naming style: `<Feature>Command`/`<Feature>Query`, `<Feature>Result`, validator, handler, request, response, and endpoint.
 
+#### Split `Features/` by trust boundary
+
+A module that serves both the web console and external API clients splits its features by who calls them, so the audience of a slice is obvious from its path:
+
+```text
+BackendAPI/Modules/ATS/Features/
+  Web/          console endpoints, called by the Blazor app
+  PublicApi/    client integrations, routed under /publicapi/...
+```
+
+ATS follows this, and EmploymentVerification does the same thing with `VerificationRequests/` (authenticated staff) versus `VerifyEmployment/` (anonymous token holders).
+
+Rules for the `PublicApi/` half:
+
+- **Reuse the service, do not fork it.** A public endpoint is a thin slice over the same application service the web uses. If you find yourself copying service logic, the missing piece belongs in the service as a parameter.
+- **Pass `OrderHistorySource.PublicApi`** on any write, so an order can be traced to the integration that raised it. The web path keeps the `Web` default.
+- **Scope every read and write to the caller's client**, resolved from their token via `IAtsAccessScopeResolver` — never from an id in the request.
+- **Out of scope reads as `404`, never `403`.** A 403 confirms that another client's record exists.
+- **Attach a rate-limit policy** in `Path/<Module>Paths.cs`; machine callers retry in loops, and the 500/s default is not a bound.
+- Public routes are versionless today. If a breaking change becomes necessary, add a new path rather than changing an existing response shape — integrators cannot be redeployed on your schedule.
+
 ### Readability and API error handling
 
 All new feature code must be formatted for vertical readability. Do not compress namespaces, constructors, methods, object initializers, endpoint mappings, DTOs, or Razor markup into one line. Use one declaration/member per line and multiline parameter lists/object initializers when they exceed a short line.

@@ -1,5 +1,5 @@
 using ATS.DTO;
-using ATS.Features.EmailInvitationRequest;
+using ATS.Features.Web.EmailInvitationRequest;
 using FluentAssertions;
 using FluentValidation;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;

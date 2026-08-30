@@ -73,7 +73,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			});
 	}
 
-	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default)
+	public async Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default, string source = OrderHistorySource.Web)
 	{
 		var subjectName = $"{emailInvitationRequestDTO.FirstName} {emailInvitationRequestDTO.LastName}";
 
@@ -170,7 +170,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 				emailInvitationRequest.EmailInvitationID,
 				OrderHistoryEventType.OrderCreated,
 				null,
-				OrderStatus.PendingCandidateInfo, ct);
+				OrderStatus.PendingCandidateInfo, ct, source);
 
 			await _unitOfWork.SaveChangesAsync(ct);
 
@@ -209,7 +209,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 	}
 
-	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default)
+	public async Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default, string source = OrderHistorySource.Web)
 	{
 		string bulkFileKey = "";
 		bulkUploadFileDetailsDTO.UploadedByUserId = Guid.Parse(_httpContextAccessor!.HttpContext!
@@ -241,6 +241,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 		BulkUploadFileDetails bulkUploadFileDetails = bulkUploadFileDetailsDTO.Adapt<BulkUploadFileDetails>();
 		bulkUploadFileDetails.FileID = Guid.CreateVersion7();
+
+		// Handed back on the DTO so an API caller can poll this file's parse outcome.
+		bulkUploadFileDetailsDTO.FileId = bulkUploadFileDetails.FileID;
 		bulkUploadFileDetails.Status = BulkFileStatus.Pending;
 		bulkUploadFileDetails.DateCreated = DateTime.UtcNow;
 		// Captured here, not in the parsing job: that job runs on a Quartz thread with no
@@ -249,6 +252,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		bulkUploadFileDetails.UploadedByUserId = _currentUser.UserId;
 		bulkUploadFileDetails.Requestor = _currentUser.FullName;
 		bulkUploadFileDetails.FileKey = bulkFileKey;
+
+		// Carried on the file so the parsing job can stamp it on every order it creates.
+		bulkUploadFileDetails.Source = source;
 
 		try
 		{

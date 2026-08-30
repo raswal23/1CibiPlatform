@@ -2,6 +2,10 @@
 
 public record BulkUploadFileDetailsDTO
 {
+	// Set by InsertBulkSubjectAsync once the file row is created, so an API caller can
+	// poll the file it just uploaded. The web console ignores it.
+	public Guid FileId { get; set; }
+
 	public Guid UploadedByUserId { get; set; }
 	public string? FileName { get; set; }
 	public string? Status { get; set; }

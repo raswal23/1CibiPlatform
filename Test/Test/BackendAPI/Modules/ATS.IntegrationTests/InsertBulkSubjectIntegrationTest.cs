@@ -1,5 +1,5 @@
 ﻿using ATS.Data.DTO;
-using ATS.Features.InsertBulkSubject;
+using ATS.Features.Web.InsertBulkSubject;
 using FluentAssertions;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;

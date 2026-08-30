@@ -65,6 +65,10 @@ public static class ATSServiceConfiguration
 		// Same reasoning: TicketStatus moves within one Quartz tick, and the claim
 		// query must never be served from a cache.
 		services.AddScoped<IOMSTicketingRepository, OMSTicketingRepository>();
+
+		// An integrating client polls these to watch an order move, so a cached read
+		// would report exactly the staleness they are polling to avoid.
+		services.AddScoped<IPublicApiRepository, PublicApiRepository>();
 		services.AddScoped<IOrderHistoryFactory, OrderHistoryFactory>();
 		services.AddScoped<IOrderHistoryService, OrderHistoryService>();
 
@@ -90,6 +94,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IOMSTicketingProcessorService, OMSTicketingProcessorService>();
 		services.AddScoped<IOMSTicketingMonitoringService, OMSTicketingMonitoringService>();
+		services.AddScoped<IPublicApiService, PublicApiService>();
 		services.AddScoped<IATSQueries, ATSQueries>();
 		services.AddScoped<IAtsAccessClaimsProvider, AtsAccessClaimsProvider>();
 		services.AddScoped<IAtsAssistantService, AtsAssistantService>();

@@ -48,6 +48,23 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 		builder.Property(a => a.DateCreated)
 			   .IsRequired();
 
+		builder.Property(a => a.Source)
+			   .HasMaxLength(40)
+			   .IsRequired(false);
+
+		builder.Property(a => a.AcceptedRowCount)
+			   .IsRequired()
+			   .HasDefaultValue(0);
+
+		builder.Property(a => a.RejectedRowCount)
+			   .IsRequired()
+			   .HasDefaultValue(0);
+
+		// A JSON array of {row, reason}. Unbounded rather than capped: a large file with
+		// many bad rows must still record all of them, and this is read only on demand.
+		builder.Property(a => a.RejectedRows)
+			   .IsRequired(false);
+
 		// Drives the bulk submission job's claim query and the stale-claim sweeper.
 		builder.HasIndex(a => a.Status);
 

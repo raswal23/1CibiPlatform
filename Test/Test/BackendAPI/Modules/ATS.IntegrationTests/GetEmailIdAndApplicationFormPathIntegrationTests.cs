@@ -1,5 +1,5 @@
 using ATS.Data.Entities;
-using ATS.Features.GetEmailIdAndApplicationFormPath;
+using ATS.Features.Web.GetEmailIdAndApplicationFormPath;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;

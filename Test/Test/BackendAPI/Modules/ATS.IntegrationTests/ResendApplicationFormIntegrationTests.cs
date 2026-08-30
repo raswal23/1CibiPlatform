@@ -1,6 +1,6 @@
 ﻿using ATS.Constants;
 using ATS.Data.Entities;
-using ATS.Features.ResendApplicationForm;
+using ATS.Features.Web.ResendApplicationForm;
 using Auth.Constants;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
