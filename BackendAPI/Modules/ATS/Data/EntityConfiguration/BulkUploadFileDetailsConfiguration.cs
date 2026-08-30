@@ -28,6 +28,16 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(255);
 
+		// The relationship; PackageType below is the label. Restrict for the same
+		// reason as on the order: removing a package must not delete upload history.
+		builder.Property(a => a.PackageId)
+			   .IsRequired();
+
+		builder.HasOne<PackageDetails>()
+			   .WithMany()
+			   .HasForeignKey(a => a.PackageId)
+			   .OnDelete(DeleteBehavior.Restrict);
+
 		builder.Property(a => a.PackageType)
 			   .IsRequired()
 			   .HasMaxLength(255);

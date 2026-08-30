@@ -31,6 +31,7 @@ public class GetEmailIdAndApplicationFormPathIntegrationTests : BaseIntegrationT
 			HashTokenCreatedAt = DateTime.UtcNow,
 			ApplicationFormStatus = "Pending",
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			PackageId = DefaultPackageId,
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush",
 			OrderStatus = "Pending Candidate Info"

@@ -36,6 +36,16 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	// claim in IntegrationTestWebAppFactory.
 	protected const int TestClientId = 1;
 
+	// A package created after every truncate, so a test can seed an order without
+	// arranging a package first. The truncate restarts the identity sequence, so this
+	// row is always id 1.
+	//
+	// The name is deliberately last alphabetically: the package list is ordered by name,
+	// and tests that assert on paging should not have their expected order disturbed by
+	// a row they did not create.
+	protected const int DefaultPackageId = 1;
+	protected const string DefaultPackageName = "zzz Default Test Package";
+
 	protected readonly ATSDBContext _dbContext;
 	protected readonly AuthApplicationDbContext _authDbContext;
 	protected readonly IHttpContextAccessor _httpContextAccessor;
@@ -120,6 +130,23 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 								ats.""ModuleDetails""
 						  RESTART IDENTITY CASCADE;";
 				await _dbContext.Database.ExecuteSqlRawAsync(sql);
+
+				// Orders carry a foreign key to their package, so one has to exist
+				// before any test can seed an order. Created here rather than in each
+				// test: most tests do not care which package an order is under, they
+				// just need the row to be insertable. DefaultPackageId is the id it
+				// gets, since the truncate above restarts the identity sequence.
+				//
+				// Inserted with raw SQL and left untracked so it behaves like a row
+				// that was already in the database: a test that adds its own packages
+				// must not collide with a tracked instance of this one.
+				await _dbContext.Database.ExecuteSqlRawAsync(
+					"""
+					INSERT INTO ats."PackageDetails"
+						("PackageName", "PackageDescription", "IsActive", "FollowUpEmail", "CreatedAt", "UpdatedAt")
+					VALUES ({0}, '182', TRUE, 0, NOW(), NOW());
+					""",
+					DefaultPackageName);
 			}
 
 			if (_authDbContext is not null)
@@ -163,23 +190,31 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	/// Returns the package name to pass as SelectPackage / PackageType.
 	/// </summary>
 	protected async Task<string> SeedAssignedPackageAsync(
-		string packageName = "Standard",
+		string packageName = DefaultPackageName,
 		int clientId = TestClientId)
 	{
 		var now = DateTime.UtcNow;
 
-		var package = new PackageDetails
-		{
-			PackageName = packageName,
-			PackageDescription = "182",
-			IsActive = true,
-			FollowUpEmail = 0,
-			CreatedAt = now,
-			UpdatedAt = now
-		};
+		// InitializeAsync already created DefaultPackageName, so reuse it rather than
+		// tripping the unique index on PackageName.
+		var package = await _dbContext.PackageDetails
+			.FirstOrDefaultAsync(existing => existing.PackageName == packageName);
 
-		await _dbContext.PackageDetails.AddAsync(package);
-		await _dbContext.SaveChangesAsync();
+		if (package is null)
+		{
+			package = new PackageDetails
+			{
+				PackageName = packageName,
+				PackageDescription = "182",
+				IsActive = true,
+				FollowUpEmail = 0,
+				CreatedAt = now,
+				UpdatedAt = now
+			};
+
+			await _dbContext.PackageDetails.AddAsync(package);
+			await _dbContext.SaveChangesAsync();
+		}
 
 		// ClientDetails is keyed (ClientId, PackageId): one row per client-package pair
 		// is what "assigned" means.

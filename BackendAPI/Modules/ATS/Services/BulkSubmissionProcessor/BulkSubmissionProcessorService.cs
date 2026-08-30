@@ -185,6 +185,9 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						// The normalised local form, so every stored number reads the
 						// same regardless of how the CSV wrote it.
 						MobileNumber = mobileNumber,
+						// Both carried from the file: the id is the relationship, the
+						// name the label, exactly as on a single order.
+						PackageId = file.PackageId,
 						SelectPackage = file.PackageType,
 						EmailSentStatus = EmailStatus.Pending,
 						ApplicationFormStatus = ApplicationFormStatus.Pending,

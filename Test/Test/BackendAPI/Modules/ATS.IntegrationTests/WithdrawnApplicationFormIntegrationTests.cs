@@ -45,6 +45,7 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			HashToken = "valid-hash-token",
 			HashTokenCreatedAt = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",

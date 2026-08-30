@@ -65,9 +65,10 @@ public sealed class OrderInputValidator : IOrderInputValidator
 				$"'{package}' is not a package available to this client. Use one of: {available}.");
 		}
 
-		// The stored spelling, not the caller's: OMS ticketing matches the package by
-		// name, so a casing difference would stop it resolving.
-		return new ValidatedOrderInput(matched.PackageName, normalizedOrderType);
+		// The id is what the order stores; the stored spelling of the name travels with
+		// it as a label, so a caller who sent "criminal records check" is echoed the
+		// canonical form.
+		return new ValidatedOrderInput(matched.PackageId, matched.PackageName, normalizedOrderType);
 	}
 
 	public async Task<IReadOnlyList<PackageDetailsDTO>> GetAssignedPackagesAsync(

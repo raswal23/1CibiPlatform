@@ -29,6 +29,7 @@ public class OMSTicketingRepositoryIntegrationTests : BaseIntegrationTest
 			LastName = "Dela Cruz",
 			EmailAddress = "juan@example.com",
 			MobileNumber = "09171234567",
+			PackageId = DefaultPackageId,
 			SelectPackage = "CRIMINAL RECORDS CHECK",
 			RushNormal = "Normal",
 			HashToken = Guid.NewGuid().ToString("N"),
@@ -47,6 +48,51 @@ public class OMSTicketingRepositoryIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 
 		return order;
+	}
+
+	// The reason orders reference their package by id. Before that change the ticketing
+	// join matched on the package *name*, so renaming a package silently orphaned every
+	// order that referenced it: the order kept the old string, stopped matching, and
+	// parked as an error nobody could explain.
+	[Fact]
+	public async Task GetTicketPayloadsAsync_ShouldStillResolveThePackage_AfterItHasBeenRenamed()
+	{
+		var order = await SeedQueuedOrderAsync();
+
+		var package = await _dbContext.PackageDetails
+			.FirstAsync(x => x.PackageId == DefaultPackageId);
+
+		package.PackageName = "Renamed After The Order Was Placed";
+		await _dbContext.SaveChangesAsync();
+
+		var payloads = await _repository.GetTicketPayloadsAsync(
+			[order.EmailInvitationID],
+			CancellationToken.None);
+
+		var payload = payloads.Should().ContainSingle().Subject;
+
+		// Resolved through the foreign key, so the report type is still found.
+		payload.PackageDescription.Should().Be("182");
+	}
+
+	[Fact]
+	public async Task GetTicketPayloadsAsync_ShouldReturnTheOrder_EvenWhenItsPackageIsInactive()
+	{
+		var order = await SeedQueuedOrderAsync();
+
+		var package = await _dbContext.PackageDetails
+			.FirstAsync(x => x.PackageId == DefaultPackageId);
+
+		package.IsActive = false;
+		await _dbContext.SaveChangesAsync();
+
+		var payloads = await _repository.GetTicketPayloadsAsync(
+			[order.EmailInvitationID],
+			CancellationToken.None);
+
+		// An order already placed is still ticketed; deactivating a package stops new
+		// orders being created against it, not existing ones from completing.
+		payloads.Should().ContainSingle();
 	}
 
 	// Regression: the OMS delivery date arrives from SQL Server with

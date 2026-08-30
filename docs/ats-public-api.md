@@ -187,18 +187,9 @@ stays in the service.
   They now seed a package via a new `BaseIntegrationTest.SeedAssignedPackageAsync`, and
   the fake test principal gained the `AtsClientId` claim it had been missing.
 
-**The package is still matched by name, not id** — `EmailInvitationRequest.SelectPackage`
-is free text with no FK, and OMS ticketing joins on it by name. Changing to an id means a
-migration plus reworking that join, so it belongs with the `ReportTypeID` cleanup planned
-for the 1Platform migration. `GET /packages` returns `packageId` alongside the name, so
-integrators already have it.
-
-The cost of staying on names is **not** performance — the client's package list is short
-and loaded once per order, and `PackageName` is indexed. The cost is that **renaming a
-package silently orphans every existing order that referenced it**: those rows keep the
-old string, OMS ticketing stops matching them, and they park as `Error`. An FK would make
-that impossible. Until the id migration, a guard on package rename in Package Management
-would close most of the gap.
+**Orders now reference their package by id** — see Step 11 below. The name-based link was
+fixed rather than left for later, because nothing is in production yet and the public API
+contract had not shipped.
 
 ### Step 9 — A better create response
 
@@ -240,14 +231,58 @@ scoped sheet lost 54 lines of now-shared rules. The language switcher reuses
 
 ---
 
+### Step 11 — Orders reference their package by id
+
+The package validation above closed "any text is accepted", but not the other half: the
+order → package link was still a **string comparison**, so renaming a package silently
+orphaned every order that referenced it. Those rows kept the old string,
+`OMSTicketingRepository.GetTicketPayloadsAsync` stopped matching them, and they parked as
+`Error` with a reason nobody could act on. Nothing prevented or warned about it.
+
+Done now rather than deferred to 1Platform for one reason: **the public API contract had
+not shipped.** Once integrators are sending package names, changing the relationship is a
+breaking change on someone else's schedule.
+
+- `EmailInvitationRequest.PackageId` and `BulkUploadFileDetails.PackageId`, both **FK to
+  `PackageDetails` with `ON DELETE RESTRICT`** — removing a package must never delete the
+  orders placed under it.
+- **`SelectPackage` / `PackageType` are kept** as denormalised display labels. Of the ~65
+  references to them, the large majority are reads — report lists, search, exports, the
+  ticketing screen, the AI draft card — and all of those keep working untouched. Only
+  about ten files changed.
+- `OrderInputValidator` already resolved the package to validate it; it was simply
+  discarding the id. `ValidatedOrderInput` now carries `PackageId` alongside the name, and
+  the three write paths store both.
+- **The one real logic change** is the ticketing join, from `PackageName == SelectPackage`
+  to `PackageId == invitation.PackageId`. That is what makes a rename safe.
+- `EditPackageAsync` now **refreshes the label** on every order and bulk file referencing a
+  renamed package, and raises `NeedsProjection` so the denormalised search rows rebuild.
+  A rename went from "orphans orders" to "updates orders".
+
+**The API contract is unchanged** — callers still send `package` by name, and the server
+resolves it to an id. The name is the friendlier contract, and with the FK the
+relationship is sound either way. `GET /packages` returns `packageId` for integrators who
+want to pin to it later.
+
+**Migration and test-harness impact:** the FK made 128 existing integration tests fail
+immediately, because they seeded orders with no package. Rather than patch each,
+`BaseIntegrationTest` now creates one package after every truncate — named so it sorts
+last, and inserted via raw SQL so it is untracked and cannot collide with a test's own
+packages. The seed data was also changed to resolve package ids, skipping any seed row
+whose package does not exist.
+
+The database side is documented separately in **`docs/package-id-migration.md`**, which
+covers the pre-flight count, what to do with existing data, verification queries and
+rollback.
+
 ## 3. Tests
 
 | Suite | Result |
 |---|---|
 | `BulkSubjectRowValidatorTests` (new) | 31 passed |
-| `OrderInputValidatorTests` (new) | 20 passed |
+| `OrderInputValidatorTests` (new) | 21 passed |
 | `PublicApiRepositoryIntegrationTests` (new, real Postgres) | 13 passed |
-| Full ATS suite | 438 passed |
+| Full ATS suite | 442 passed |
 | Auth suite | 232 passed |
 | `dotnet build 1CibiPlatform.sln` | succeeded |
 
@@ -281,10 +316,11 @@ out-of-scope order, and two withdraw calls do not both succeed.
    on our schedule.
 6. **Swagger stays Development-only**, as the existing deliberate decision has it. This
    docs site is the public substitute.
-7. **Renaming a package orphans its existing orders.** Because orders reference packages
-   by name with no FK, a rename leaves old orders pointing at a string that no longer
-   matches, and OMS ticketing parks them as `Error`. Visible on the ticketing screen, but
-   nothing prevents it. A guard on rename, or the id migration, closes it.
+7. **The migration assumes empty order tables.** `PackageId` is added `NOT NULL` with a
+   default of `0`, which no package has — so on a database with existing orders the FK
+   will fail. That is deliberate, agreed while none of this is in production. Anyone
+   applying it elsewhere must read `docs/package-id-migration.md` first, which has the
+   pre-flight count and a backfill variant for a populated database.
 8. **The bulk CSV's own columns are unvalidated at upload time.** The package and order
    type are checked before the file is stored, but a wrong header row is only discovered
    when the job parses it — reported through the bulk status endpoint rather than the

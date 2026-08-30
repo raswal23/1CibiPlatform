@@ -185,6 +185,7 @@ public class AtsAssistantServiceIntegrationTests : BaseIntegrationTest
 			EmailAddress = $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@example.com",
 			MobileNumber = "09171234567",
 			Requestor = "ATS Integration Tests",
+			PackageId = DefaultPackageId,
 			SelectPackage = "Basic Screening",
 			RushNormal = "Normal",
 			HashToken = $"hash-{id}",

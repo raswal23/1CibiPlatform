@@ -47,6 +47,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 			FileName = bulkFileName,
 			Status = "Pending",
 			OrderType = "Rush",
+			PackageId = DefaultPackageId,
 			PackageType = package
 		};
 
@@ -101,6 +102,7 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 			FileName = invalidFileName,
 			Status = "Pending",
 			OrderType = "Rush",
+			PackageId = DefaultPackageId,
 			PackageType = "Air BnB"
 		};
 

@@ -33,8 +33,10 @@ public static class OMSTicketPayloadMapper
 			return (null, "The order has no subject email address.");
 		}
 
-		// The package is matched by name because SelectPackage is free text with no
-		// foreign key, so a renamed or deleted package silently stops matching.
+		// The order references its package by id, so this should not happen - a
+		// foreign key guarantees the package exists. Kept as a guard because the
+		// report type still comes from free-text PackageDescription, which can be
+		// blanked independently.
 		if (string.IsNullOrWhiteSpace(payload.PackageDescription))
 		{
 			return (null, $"No active package matches \"{payload.SelectPackage}\", so the OMS report type is unknown.");

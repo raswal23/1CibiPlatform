@@ -103,6 +103,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			MiddleInitial = "S",
 			EmailAddress = "jsdelacruz@cibi.com.ph",
 			MobileNumber = "09171234567",
+			PackageId = DefaultPackageId,
 			SelectPackage = "Air BnB",
 			RushNormal = "Rush",
 			HashToken = hashToken,

@@ -81,13 +81,38 @@ public class PackageManagementService : IPackageManagementService
 			throw new NotFoundException($"Package with ID {packageDTO.PackageId} was not found.");
 		}
 
-		existingPackage.PackageName = packageDTO.PackageName.Trim();
+		var newName = packageDTO.PackageName.Trim();
+
+		// Orders reference the package by id, so a rename cannot break them - but they
+		// also carry the name as a display label, which would go stale.
+		var wasRenamed = !string.Equals(existingPackage.PackageName, newName, StringComparison.Ordinal);
+
+		existingPackage.PackageName = newName;
 		existingPackage.PackageDescription = packageDTO.PackageDescription.Trim();
 		existingPackage.IsActive = packageDTO.IsActive;
 		existingPackage.FollowUpEmail = packageDTO.FollowUpEmail;
 		existingPackage.UpdatedAt = DateTime.UtcNow;
 
 		var package = await _packageRepository.EditPackageAsync(existingPackage, cancellationToken);
+
+		if (wasRenamed)
+		{
+			// Renames are rare, so this is one statement per table rather than a batched
+			// job. NeedsProjection is raised inside, so the applicant search rows pick
+			// the new name up on the projection job's next pass.
+			var relabelled = await _packageRepository.RelabelPackageOnOrdersAsync(
+				package.PackageId,
+				newName,
+				cancellationToken);
+
+			_logger.LogInformation(
+				"Package {PackageId} renamed; refreshed the label on {OrderCount} order(s) and {FileCount} bulk file(s): {@Context}",
+				package.PackageId,
+				relabelled.Orders,
+				relabelled.BulkFiles,
+				logContext);
+		}
+
 		return package.Adapt<PackageDetailsDTO>();
 	}
 }

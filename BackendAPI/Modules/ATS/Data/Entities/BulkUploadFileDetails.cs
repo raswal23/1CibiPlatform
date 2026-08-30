@@ -10,6 +10,9 @@ public class BulkUploadFileDetails
 	public int? ClientId { get; set; }
 	public string? FileName { get; set; }
 	public string? FileKey { get; set; }
+	// As on EmailInvitationRequest: PackageId is the relationship, PackageType the label.
+	// Both are copied onto every order the parsing job creates from this file.
+	public int PackageId { get; set; }
 	public string? PackageType { get; set; }
 	public string? OrderType { get; set; }
 	public string? Status { get; set; }

@@ -45,6 +45,18 @@ public class OrderInputValidatorTests
 		result.OrderType.Should().Be("Normal");
 	}
 
+	// The id is what the order actually stores; the name goes along as a display label.
+	[Fact]
+	public async Task ValidateAsync_ShouldReturnTheResolvedPackageId()
+	{
+		GivenAssignedPackages(
+			new PackageDetailsDTO { PackageId = 42, PackageName = AssignedPackage, IsActive = true });
+
+		var result = await _validator.ValidateAsync(AssignedPackage, "Normal", CancellationToken.None);
+
+		result.PackageId.Should().Be(42);
+	}
+
 	// The stored spelling is returned, not the caller's: OMS ticketing matches the
 	// package by name, so a casing difference would stop it resolving.
 	[Theory]

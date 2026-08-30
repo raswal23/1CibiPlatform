@@ -100,8 +100,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			ct);
 
 		// Written back so the caller is echoed what was actually stored - a request
-		// sending "rush" gets "Rush" - and so the Adapt below carries the canonical
-		// spelling onto the entity.
+		// sending "rush" gets "Rush" - and so the Adapt below carries the resolved id
+		// and canonical spelling onto the entity.
+		emailInvitationRequestDTO.PackageId = validated.PackageId;
 		emailInvitationRequestDTO.SelectPackage = validated.Package;
 		emailInvitationRequestDTO.RushNormal = validated.OrderType;
 
@@ -257,6 +258,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			bulkUploadFileDetailsDTO.OrderType,
 			ct);
 
+		bulkUploadFileDetailsDTO.PackageId = validated.PackageId;
 		bulkUploadFileDetailsDTO.PackageType = validated.Package;
 		bulkUploadFileDetailsDTO.OrderType = validated.OrderType;
 

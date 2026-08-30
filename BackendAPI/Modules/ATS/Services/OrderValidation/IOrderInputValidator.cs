@@ -2,8 +2,10 @@ namespace ATS.Services.OrderValidation;
 
 /// <summary>
 /// The package and order type an order was placed with, canonicalised.
+/// <c>PackageId</c> is the relationship the order stores; <c>Package</c> is the label
+/// that travels with it for display and search.
 /// </summary>
-public record ValidatedOrderInput(string Package, string OrderType);
+public record ValidatedOrderInput(int PackageId, string Package, string OrderType);
 
 public interface IOrderInputValidator
 {

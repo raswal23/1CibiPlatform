@@ -11,6 +11,9 @@ public record EmailInvitationRequestDTO
 	public string? MiddleInitial { get; set; }
 	public string? EmailAddress { get; set; }
 	public string? MobileNumber { get; set; }
+	// Resolved from SelectPackage by the order validator, not supplied by the caller.
+	public int PackageId { get; set; }
+
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 }

@@ -29,8 +29,15 @@ public static class ATSDatabaseExtensions
 			ATSInitialData.GetATSUserEmails().ToArray(),
 			CancellationToken.None);
 
+			// Orders carry a foreign key to their package. The rows come from the
+			// legacy migration rather than this seed, so the map is read from the
+			// database and a seed row whose package is absent is skipped.
+			var packageIdsByName = await context.PackageDetails
+				.AsNoTracking()
+				.ToDictionaryAsync(package => package.PackageName, package => package.PackageId);
+
 			await context.EmailInvitationRequests.AddRangeAsync(
-				initData.GetEmailInvitationRequests(userIdsByEmail));
+				initData.GetEmailInvitationRequests(userIdsByEmail, packageIdsByName));
 		}
 
 
