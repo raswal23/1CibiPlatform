@@ -1,4 +1,4 @@
-using ATS.Features.DownloadBulkTemplate;
+using ATS.Features.Web.DownloadBulkTemplate;
 using FluentAssertions;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 

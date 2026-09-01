@@ -1,4 +1,4 @@
-using ATS.Features.ResendApplicationForm;
+using ATS.Features.Web.ResendApplicationForm;
 using FluentAssertions;
 using Moq;
 using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;

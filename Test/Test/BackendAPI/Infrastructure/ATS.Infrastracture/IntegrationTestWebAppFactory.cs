@@ -100,7 +100,12 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 				var claims = new List<Claim>
 				{
 					new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-					new Claim(AuthClaimTypes.AtsRoleId, "1")
+					new Claim(AuthClaimTypes.AtsRoleId, "1"),
+
+					// Orders validate their package against the caller's client, so the
+					// test principal needs one. Matches BaseIntegrationTest.TestClientId,
+					// which SeedAssignedPackageAsync assigns packages to.
+					new Claim(AuthClaimTypes.AtsClientId, "1")
 				};
 
 				fakeHttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));

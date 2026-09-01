@@ -1,4 +1,4 @@
-using ATS.Features.UserManagement.Query.GetMyAccess;
+using ATS.Features.Web.UserManagement.Query.GetMyAccess;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;

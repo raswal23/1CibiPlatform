@@ -1,5 +1,5 @@
 using ATS.DTO;
-using ATS.Features.EmailInvitationRequest;
+using ATS.Features.Web.EmailInvitationRequest;
 using FluentAssertions;
 using FluentValidation;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
@@ -18,6 +18,9 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 	public async Task InsertEmailInvitationRequest_ShouldReturnCreatedIdAndPersist()
 	{
 		// Arrange
+		// The package must be assigned to the caller's client, or the order is rejected.
+		var package = await SeedAssignedPackageAsync();
+
 		var dto = new EmailInvitationRequestDTO
 		{
 			FirstName = "Integration",
@@ -25,7 +28,7 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 			MiddleInitial = "A",
 			EmailAddress = "integration.tester@example.com",
 			MobileNumber = "09171234567",
-			SelectPackage = "Standard",
+			SelectPackage = package,
 			RushNormal = "Normal"
 		};
 

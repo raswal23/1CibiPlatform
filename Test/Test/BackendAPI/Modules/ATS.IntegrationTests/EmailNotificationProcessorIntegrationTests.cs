@@ -33,6 +33,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 				HashToken = _hashService.Hash($"token-{i}"),
 				HashTokenCreatedAt = DateTime.UtcNow,
 				HashTokenExpiration = DateTime.UtcNow.AddHours(24),
+				PackageId = DefaultPackageId,
 				SelectPackage = "Standard",
 				RushNormal = "Normal",
 				EmailSentStatus = emailSentStatus,

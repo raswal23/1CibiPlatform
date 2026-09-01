@@ -35,6 +35,19 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 			   .HasMaxLength(255)
 			   .IsRequired(false);
 
+		// The real relationship. Restrict, not Cascade: removing a package must never
+		// delete the orders placed under it.
+		builder.Property(e => e.PackageId)
+			   .IsRequired();
+
+		builder.HasOne<PackageDetails>()
+			   .WithMany()
+			   .HasForeignKey(e => e.PackageId)
+			   .OnDelete(DeleteBehavior.Restrict);
+
+		// Denormalised label. Kept because the report lists, search, exports and the
+		// ticketing screen all read the name directly; PackageId is what OMS ticketing
+		// resolves against, so a rename can no longer orphan an order.
 		builder.Property(e => e.SelectPackage)
 			   .HasMaxLength(255)
 			   .IsRequired(true);

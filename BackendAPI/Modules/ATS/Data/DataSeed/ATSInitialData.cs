@@ -23,7 +23,8 @@ public class ATSInitialData
 		"ATS.Data.DataSeed.IntouchEmailInvitationInitialData.json";
 
 	public IReadOnlyList<EmailInvitationRequest> GetEmailInvitationRequests(
-		IReadOnlyDictionary<string, Guid> userIdsByEmail)
+		IReadOnlyDictionary<string, Guid> userIdsByEmail,
+		IReadOnlyDictionary<string, int> packageIdsByName)
 	{
 		var assembly = typeof(ATSInitialData).Assembly;
 		using var stream = assembly.GetManifestResourceStream(SeedResourceName)
@@ -42,8 +43,11 @@ public class ATSInitialData
 				user => NormalizeRequestor(user.UserName),
 				user => userIdsByEmail[user.UserEmail]);
 
+		// Orders carry a foreign key to their package, so a seed row whose package name
+		// has no matching row cannot be created at all.
 		return rows
-			.Select(row => CreateEmailInvitationRequest(row, requestorIdsByName))
+			.Where(row => packageIdsByName.ContainsKey(row.SelectPackage))
+			.Select(row => CreateEmailInvitationRequest(row, requestorIdsByName, packageIdsByName))
 			.ToArray();
 	}
 
@@ -57,7 +61,8 @@ public class ATSInitialData
 
 	private EmailInvitationRequest CreateEmailInvitationRequest(
 		IntouchEmailInvitationSeedRow row,
-		IReadOnlyDictionary<string, Guid> requestorIdsByName)
+		IReadOnlyDictionary<string, Guid> requestorIdsByName,
+		IReadOnlyDictionary<string, int> packageIdsByName)
 	{
 		var emailAddress = $"intouch.{row.TicketNo.ToLowerInvariant()}@seed.local";
 		var createdAt = row.OrderCreatedAt;
@@ -80,6 +85,8 @@ public class ATSInitialData
 			EmailAddress = emailAddress,
 			MobileNumber = "N/A",
 			Requestor = row.Requestor,
+			// Filtered above, so the lookup always succeeds.
+			PackageId = packageIdsByName[row.SelectPackage],
 			SelectPackage = row.SelectPackage,
 			RushNormal = row.RushNormal,
 			ClientId = row.ClientId,

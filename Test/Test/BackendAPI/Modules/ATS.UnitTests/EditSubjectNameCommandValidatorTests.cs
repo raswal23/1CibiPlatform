@@ -1,5 +1,5 @@
 using ATS.DTO;
-using ATS.Features.Reports.Command.EditSubjectName;
+using ATS.Features.Web.Reports.Command.EditSubjectName;
 using FluentAssertions;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;

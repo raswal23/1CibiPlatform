@@ -64,6 +64,29 @@ public partial class ATSRepository
 				.SetProperty(x => x.ClaimedAt, x => null));
 	}
 
+	public async Task<bool> RecordBulkFileRowOutcomeAsync(
+		Guid fileId,
+		int acceptedRowCount,
+		IReadOnlyCollection<BulkUploadRejectedRowDTO> rejectedRows,
+		CancellationToken cancellationToken)
+	{
+		// Null rather than "[]" when nothing was refused, so the common case reads as
+		// "no rejects" instead of an empty array the UI would have to special-case.
+		var serializedRejects = rejectedRows.Count == 0
+			? null
+			: JsonSerializer.Serialize(rejectedRows);
+
+		var updated = await _dbcontext.BulkUploadFileDetails
+			.Where(x => x.FileID == fileId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.AcceptedRowCount, x => acceptedRowCount)
+				.SetProperty(x => x.RejectedRowCount, x => rejectedRows.Count)
+				.SetProperty(x => x.RejectedRows, x => serializedRejects),
+				cancellationToken);
+
+		return updated > 0;
+	}
+
 	public async Task<int> ReleaseStaleBulkFileClaimsAsync(TimeSpan staleAfter)
 	{
 		// A crash mid-parse leaves files stuck in Processing with no live worker.

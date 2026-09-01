@@ -637,6 +637,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			EmailAddress = email,
 			MobileNumber = "+639171234567",
 			Requestor = "ATS Integration Tests",
+			PackageId = DefaultPackageId,
 			SelectPackage = "Basic Screening",
 			RushNormal = "Normal",
 			HashToken = $"hash-{id}",
