@@ -167,6 +167,12 @@ public class AuthInitialData
 					AppId = 7,
 					AppName = "Administration",
 					Description = "Administration"
+				},
+				new AuthApplication
+				{
+					AppId = 8,
+					AppName = "Employment Verification",
+					Description = "Employment Verification"
 				}
 			};
 	}
@@ -249,6 +255,12 @@ public class AuthInitialData
 					SubMenuId = 8,
 					SubMenuName = "logs",
 					Description = "logs"
+				},
+				new AuthSubMenu
+				{
+					SubMenuId = 9,
+					SubMenuName = "verification",
+					Description = "verification"
 				}
 			};
 	}
