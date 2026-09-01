@@ -31,6 +31,7 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 			FileID = Guid.CreateVersion7(),
 			FileName = fileName,
 			FileKey = $"test/{fileName}",
+			PackageId = DefaultPackageId,
 			PackageType = packageType,
 			OrderType = orderType,
 			UploadedByUserId = Guid.CreateVersion7(),

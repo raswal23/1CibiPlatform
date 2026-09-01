@@ -6,15 +6,22 @@ public class OrderHistoryFactory : IOrderHistoryFactory
 
 	public OrderHistoryFactory(ICurrentUser currentUser) => _currentUser = currentUser;
 
-	public OrderStatusHistory Create(Guid invitationId, string eventType, string? previousStatus, string newStatus, string source = OrderHistorySource.Web) => new()
+	public OrderStatusHistory Create(Guid invitationId, string eventType, string? previousStatus, string newStatus, string source = OrderHistorySource.Web, Guid? changedByUserId = null)
 	{
-		OrderStatusHistoryId = Guid.CreateVersion7(),
-		EmailInvitationRequestId = invitationId,
-		EventType = eventType,
-		PreviousStatus = previousStatus,
-		NewStatus = newStatus,
-		Source = source,
-		OccurredAt = DateTime.UtcNow,
-		ChangedByUserId = _currentUser.UserId == Guid.Empty ? null : _currentUser.UserId
-	};
+		// Background jobs run with no HttpContext, so ICurrentUser resolves to null
+		// there. They pass the originating user explicitly instead.
+		var userId = changedByUserId ?? _currentUser.UserId;
+
+		return new OrderStatusHistory
+		{
+			OrderStatusHistoryId = Guid.CreateVersion7(),
+			EmailInvitationRequestId = invitationId,
+			EventType = eventType,
+			PreviousStatus = previousStatus,
+			NewStatus = newStatus,
+			Source = source,
+			OccurredAt = DateTime.UtcNow,
+			ChangedByUserId = userId == Guid.Empty ? null : userId
+		};
+	}
 }

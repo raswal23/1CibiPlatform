@@ -52,6 +52,15 @@ public record BulkUploadListDTO
 	public int EmailsPending { get; set; }
 }
 
+// One CSV row the parser refused, reported back to the uploader. The file is parsed
+// asynchronously, so these are persisted on the file rather than returned inline.
+public record BulkUploadRejectedRowDTO
+{
+	public int RowNumber { get; set; }
+
+	public string Reason { get; set; } = string.Empty;
+}
+
 public record BulkUploadStatusCountsDTO
 {
 	public long Pending { get; set; }

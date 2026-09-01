@@ -304,13 +304,67 @@ definition-of-done checklist.
 
 ---
 
+### Step 11 — Manual retry for exhausted orders
+
+Auto-retry gives up after 5 attempts and parks the order as `Error`. That park was
+terminal: the claim query's `"TicketAttempts" < 5` clause meant the job would never look
+at the row again. But the causes are usually fixable — a package description corrected, a
+PO topped up, a Site assigned, OMS back after an outage — so exhausted rows now get a
+**Retry** button.
+
+**When it appears:** `TicketStatus = Error` **and** `TicketAttempts >= 5`. Rows still
+auto-retrying show a muted `—`, since the job will reach them on its own tick. Orders
+parked immediately (unresolvable package, missing Site, OMS `BadRequestException`) qualify
+too, because `MarkTicketFailedAsync(isRetryable: false)` writes them straight at the cap.
+
+**What it does:** resets `TicketStatus = Pending`, `TicketAttempts = 0`,
+`TicketError = null`, so the job treats the order as fresh and gives it a full 5
+automatic attempts before parking again.
+
+`OMSTicketingRepository.RequeueExhaustedTicketAsync` — the `WHERE` clause is the
+concurrency guard and carries the correctness of this feature:
+
+```csharp
+.Where(x => x.EmailInvitationID == emailInvitationId
+         && !x.IsTicketed
+         && x.TicketStatus == TicketStatus.Error
+         && x.TicketAttempts >= MaxTicketAttempts)
+```
+
+Matching the exhausted state *inside* the `UPDATE` rather than reading first means a row
+the job has already re-claimed, or that a second operator retried a moment earlier,
+updates 0 rows and the caller is told. `!IsTicketed` is the guard against requeuing a
+ticketed order and raising a duplicate in OMS.
+
+`OMSTicketingMonitoringService.RetryTicketAsync` runs the same scope ladder the read path
+uses. **Out of scope reads as 404, not 403** — the response must not reveal that an order
+the caller cannot see exists. A `false` from the repository becomes a `ConflictException`
+(409), so a stale button gives a clear message rather than a silent no-op.
+
+The action is recorded to the existing `ats."OrderStatusHistory"` as
+`TicketRetryRequested`, stamped with the acting user by `OrderHistoryFactory`. The order's
+own `OrderStatus` is written unchanged on both sides — a ticket retry is not a step in the
+order lifecycle. This service is HTTP-scoped, so `ICurrentUser` resolves normally here,
+unlike the Quartz job.
+
+API: `PATCH retryticket` → gateway `/ats/retryticket`, one slice under
+`Features/OMSTicketing/Command/RetryTicket/`, copied from `Features/ResendApplicationForm/`.
+
+UI: a 7th `Action` column, a `YesNoDialogComponent` confirm with warning styling matching
+the withdrawn-list resend, a `_retryingOrderId` guard so a double-click cannot queue twice,
+and the attempt count (`5/5`) shown inside the Error pill so it is visible *why* the button
+appeared. The button reuses a new shared `.ats-cell-action` class in `ats.css` rather than
+a screen-specific copy.
+
 ## 3. Tests
 
 | Suite | Result |
 |---|---|
-| `OMSTicketPayloadMapperTests` (new) | 29 passed |
-| `OMSTicketingProcessorServiceTests` (new) | 9 passed |
-| Full `ATS.UnitTests` | 174 passed |
+| `OMSTicketPayloadMapperTests` | 29 passed |
+| `OMSTicketingProcessorServiceTests` | 9 passed |
+| `OMSTicketingMonitoringServiceTests` (retry) | 8 passed |
+| `OMSTicketingRepositoryIntegrationTests` (real Postgres) | 17 passed |
+| Full ATS suite (unit + integration) | 374 passed |
 | `Auth.UnitTests` (JWT claims changed) | 99 passed |
 | `dotnet build 1CibiPlatform.sln` | succeeded |
 
@@ -318,6 +372,13 @@ The processor tests pin the behaviour that is easy to regress: the reference num
 the invitation id; a mapping failure parks **without** calling OMS; a `BadRequestException`
 is not retryable while an `InternalServerException` is; one failing order does not stop
 its siblings; and a claimed order with no payload is parked rather than left stranded.
+
+The integration tests run against a real Postgres Testcontainer, which is the only place
+the Npgsql date-kind bug and the `SKIP LOCKED` claim actually reproduce. The load-bearing
+one for manual retry asserts that a requeued order is picked up by the **real claim SQL**
+on the next pass — not merely that its columns changed. Others cover the refusals: still
+auto-retrying, already ticketed, not parked, and a double-click where only the first call
+wins.
 
 > `dotnet format` initially rewrote trailing whitespace in ~70 unrelated Auth and ATS
 > files. Those were reverted, so the diff is scoped to this feature.
@@ -330,10 +391,11 @@ its siblings; and a claimed order with no payload is parked rather than left str
    `IOMSTicketCreator`. The end-to-end check against the OMS UAT database — enrol an
    order, wait a tick, confirm a real `ticket_no` and that the ticket carries the
    `EmailInvitationID` as its reference — still needs to be run.
-2. **No integration test.** The unit tests cover the processor's decision-making, but
-   the `SKIP LOCKED` claim itself is only proven by the pattern it copies. A Testcontainer
-   test asserting that two parallel `ProcessAsync` calls produce exactly one OMS call per
-   row would be the honest proof.
+2. **Claim-under-real-concurrency is still unproven.** `OMSTicketingRepositoryIntegrationTests`
+   now exercises the real claim SQL against Postgres and asserts an order is claimed
+   exactly once across two sequential passes. What is *not* tested is two workers racing
+   the same batch simultaneously — that would need parallel `ProcessAsync` calls on
+   separate connections to prove `SKIP LOCKED` end to end.
 3. **Throughput knobs are constants, not configuration.** This matches the bulk and email
    jobs, which also hardcode theirs. Easy to move to `appsettings` if you want them tuned
    without a deploy.

@@ -64,4 +64,29 @@ public partial class ATSRepository
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return package;
 	}
+
+	public async Task<(int Orders, int BulkFiles)> RelabelPackageOnOrdersAsync(
+		int packageId,
+		string packageName,
+		CancellationToken cancellationToken)
+	{
+		// NeedsProjection is raised alongside the label so ApplicantSearchProjectionService
+		// rebuilds the denormalised search row, which copies SelectPackage into itself.
+		var orders = await _dbcontext.EmailInvitationRequests
+			.Where(invitation => invitation.PackageId == packageId
+				&& invitation.SelectPackage != packageName)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.SelectPackage, x => packageName)
+				.SetProperty(x => x.NeedsProjection, x => true),
+				cancellationToken);
+
+		var bulkFiles = await _dbcontext.BulkUploadFileDetails
+			.Where(file => file.PackageId == packageId
+				&& file.PackageType != packageName)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.PackageType, x => packageName),
+				cancellationToken);
+
+		return (orders, bulkFiles);
+	}
 }

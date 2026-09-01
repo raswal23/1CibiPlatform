@@ -20,7 +20,9 @@
             <p class="ats-status-board-intro-text">
                 A new order waits as <strong>Pending</strong>, is sent to OMS as <strong>Processing</strong>,
                 then reports <strong>Done</strong> with its ticket number once OMS accepts it.
-                An order OMS rejected shows as <strong>Error</strong> with the reason.
+                An order OMS rejected shows as <strong>Error</strong> with the reason, and is
+                retried automatically up to @OrderTicketStatus.MaxAttempts times. Once those
+                are used up, fix the cause and use <strong>Retry</strong> to queue it again.
             </p>
         </div>
     </div>
@@ -55,7 +57,7 @@
                     EnableSearch="true"
                     SearchLabel=""
                     SearchPlaceholder="Search subject, requestor, package or ticket no."
-                    ColumnCount="6"
+                    ColumnCount="7"
                     RowsPerPage="10"
                     LoadServerData="LoadOrdersAsync"
                     CursorPagerState="_ordersLoader"
@@ -86,6 +88,7 @@
             <MudTh>Ticket No.</MudTh>
             <MudTh>Delivery Date</MudTh>
             <MudTh>Status</MudTh>
+            <MudTh>Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="order">
@@ -137,6 +140,15 @@
                 <div class="ticketing-status-cell">
                     <span class="ats-status-pill @GetStatusClass(order.TicketStatus)">
                         @(string.IsNullOrWhiteSpace(order.TicketStatus) ? "Unknown" : order.TicketStatus)
+
+                        @* Makes it visible why a row stopped retrying, and so why the
+                           Retry button appeared next to it. *@
+                        @if (IsError(order))
+                        {
+                            <span class="ticketing-attempts">
+                                @order.TicketAttempts/@OrderTicketStatus.MaxAttempts
+                            </span>
+                        }
                     </span>
 
                     @if (IsError(order) && !string.IsNullOrWhiteSpace(order.TicketError))
@@ -146,6 +158,26 @@
                         </span>
                     }
                 </div>
+            </MudTd>
+
+            <MudTd DataLabel="Action">
+                @* Only an order the job has given up on can be retried by hand; one that
+                   is still auto-retrying will be picked up on the next tick anyway. *@
+                @if (CanRetry(order))
+                {
+                    <button type="button"
+                            class="ats-cell-action"
+                            disabled="@(_retryingOrderId == order.EmailInvitationID)"
+                            title="Queue this order for OMS ticketing again"
+                            aria-label="@($"Retry OMS ticketing for {FullName(order)}")"
+                            @onclick="@(() => ConfirmRetryTicketAsync(order))">
+                        <MudIcon Icon="@Icons.Material.Outlined.Refresh" Size="Size.Small" />
+                    </button>
+                }
+                else
+                {
+                    <span class="ats-cell-muted" aria-hidden="true">—</span>
+                }
             </MudTd>
         </RowTemplate>
 

@@ -39,4 +39,22 @@ public partial class ATSCacheRepository
 		await _hybridCache.RemoveByTagAsync(CacheTags.Client, cancellationToken);
 		return result;
 	}
+
+	// A rename changes the package name shown on every order that references it, so the
+	// report and withdrawn lists have to be invalidated too.
+	public async Task<(int Orders, int BulkFiles)> RelabelPackageOnOrdersAsync(
+		int packageId,
+		string packageName,
+		CancellationToken cancellationToken)
+	{
+		var result = await _atsRepository.RelabelPackageOnOrdersAsync(packageId, packageName, cancellationToken);
+
+		if (result.Orders > 0 || result.BulkFiles > 0)
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
+
+		return result;
+	}
 }
