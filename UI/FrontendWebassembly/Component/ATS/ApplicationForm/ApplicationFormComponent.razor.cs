@@ -142,9 +142,6 @@ public partial class ApplicationFormComponent
 			}
 		}
 
-		EndOfEmployment1 = DateTime.UnixEpoch;
-		EndOfEmployment2 = DateTime.UnixEpoch;
-		EndOfEmployment3 = DateTime.UnixEpoch;
 		SignatureDate = DateTime.UtcNow;
 
 		_activeStep = Math.Clamp(ActiveStep, 0, 5);
@@ -856,6 +853,17 @@ public partial class ApplicationFormComponent
 			licensesDetails.LicenseExpiryDate =
 				DateOnly.FromDateTime(LicenseExpiryDate.Value);
 		}
+
+
+
+		if (EndOfEmployment1 is null)
+			EndOfEmployment1 = DateTime.UnixEpoch;
+
+		if (EndOfEmployment2 is null)
+			EndOfEmployment2 = DateTime.UnixEpoch;
+
+		if (EndOfEmployment3 is null)
+			EndOfEmployment3 = DateTime.UnixEpoch;
 
 		professionalExperiences.Emp1DatePermittedToContact = DateOnly.FromDateTime(DatePermittedToContact1!.Value);
 		professionalExperiences.Emp1StartDate = DateOnly.FromDateTime(StartOfEmployment1!.Value);
