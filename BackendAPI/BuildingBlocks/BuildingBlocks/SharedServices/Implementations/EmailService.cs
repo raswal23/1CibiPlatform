@@ -124,7 +124,7 @@ public class EmailService : IEmailService
 					<div style='padding:34px 36px'>
 						<p style='font-size:16px;line-height:1.7;text-align:center'>Hello {name},</p>
 						<p style='font-size:16px;line-height:1.7;text-align:center'>We received a request to reset your password. Click the button below to reset it:</p>
-						<p style='margin:28px 0 12px;text-align:center'><a href='{resetLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Reset Password</a></p>
+						<p style='margin:28px 0;text-align:center'><a href='{resetLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Reset Password</a></p>
 						<p style='font-size:15px;line-height:1.6;text-align:center'>This link will expire in {expireMins} minutes.</p>
 						<p style='font-size:12px;line-height:1.6;color:#6b7c92;text-align:center'>If you did not request this, please ignore this email.</p>
 					</div>
@@ -161,7 +161,7 @@ public class EmailService : IEmailService
 							<tr><td style='padding:12px 16px;color:#5b6f8f;font-size:13px'>Role</td><td style='padding:12px 16px;font-weight:bold'>{role}</td></tr>
 						</table>
 						<p style='font-size:15px;line-height:1.6'>You can now access the assigned application and perform tasks according to your role.</p>
-						<p style='margin:28px 0 12px;text-align:center'><a href='{_onePlatformLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Go to OnePlatform</a></p>
+						<p style='margin:28px 0;text-align:center'><a href='{_onePlatformLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Go to OnePlatform</a></p>
 						<p style='font-size:12px;line-height:1.6;color:#6b7c92;text-align:center'>If you did not expect this assignment, please contact your administrator immediately.</p>
 					</div>
 					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6;text-align:center'>&copy; 2026 NoSent. All rights reserved.</div>
@@ -187,7 +187,7 @@ public class EmailService : IEmailService
 						<p style='font-size:16px;line-height:1.7;text-align:center'>Hello {gmail},</p>
 						<p style='font-size:16px;line-height:1.7;text-align:center'>Your account has been successfully approved.</p>
 						<p style='font-size:15px;line-height:1.6;text-align:center'>You can now access the approved account.</p>
-						<p style='margin:28px 0 12px;text-align:center'><a href='{_onePlatformLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Go to OnePlatform</a></p>
+						<p style='margin:28px 0;text-align:center'><a href='{_onePlatformLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Go to OnePlatform</a></p>
 					</div>
 					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6;text-align:center'>&copy; 2026 NoSent. All rights reserved.</div>
 				</div>

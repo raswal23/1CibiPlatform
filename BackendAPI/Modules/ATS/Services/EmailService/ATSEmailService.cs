@@ -86,7 +86,7 @@ public class ATSEmailService : IEmailService
 						<p style='font-size:16px;line-height:1.7'>
 							{requestorPhrase}, talent acquisition {clientPhrase} has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up by clicking the button below:
 						</p>
-						<p style='margin:28px 0 12px;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
+						<p style='margin:28px 0;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
 						<p style='font-size:15px;line-height:1.6'>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
 						<p style='font-size:15px;line-height:1.6'><strong>REMINDERS IN ANSWERING THE FORM</strong></p>
 						<ol style='font-size:15px;line-height:1.7;margin:0 0 16px;padding-left:20px'>
