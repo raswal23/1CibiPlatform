@@ -872,6 +872,7 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			EmailAddress = $"{prefix.ToLowerInvariant()}@example.com",
 			MobileNumber = "+639171234567",
 			Requestor = "ATS Integration Tests",
+			PackageId = DefaultPackageId,
 			SelectPackage = "Basic Screening",
 			RushNormal = "Normal",
 			HashToken = $"hash-{id}",

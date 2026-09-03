@@ -8,6 +8,7 @@ global using ATS.Data.DataSeed;
 global using ATS.Data.Repository;
 global using ATS.Data.Repository.BulkUploadDashboard;
 global using ATS.Data.Repository.OMSTicketing;
+global using ATS.Data.Repository.PublicApi;
 global using ATS.Data.Cache;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
@@ -40,6 +41,8 @@ global using ATS.Services.EmailNotificationProcessor;
 global using ATS.Services.EndorsementSubmission;
 global using ATS.Services.OMSTicketing;
 global using ATS.Services.OMSTicketingMonitoring;
+global using ATS.Services.PublicApi;
+global using ATS.Services.OrderValidation;
 global using ATS.Services.Report;
 global using ATS.Services.ApplicantSearchProjections;
 

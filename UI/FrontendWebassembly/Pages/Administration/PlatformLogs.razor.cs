@@ -128,12 +128,12 @@ public partial class PlatformLogs
 			match =>
 			{
 				if (match.Groups[2].Success)
-					return $"<span class=\"json-key\">{match.Groups[1].Value}</span>{match.Groups[2].Value}";
+					return $"<span class=\"ats-json-key\">{match.Groups[1].Value}</span>{match.Groups[2].Value}";
 
 				if (match.Groups[3].Success)
-					return $"<span class=\"json-string\">{match.Groups[3].Value}</span>";
+					return $"<span class=\"ats-json-string\">{match.Groups[3].Value}</span>";
 
-				return $"<span class=\"json-number\">{match.Value}</span>";
+				return $"<span class=\"ats-json-number\">{match.Value}</span>";
 			});
 		return new MarkupString(html);
 	}

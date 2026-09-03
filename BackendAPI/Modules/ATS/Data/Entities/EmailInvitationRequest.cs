@@ -9,6 +9,10 @@ public class EmailInvitationRequest
 	public string? EmailAddress { get; set; }
 	public string? MobileNumber { get; set; }
 	public string? Requestor { get; set; }
+	// The package this order was placed under. PackageId is the relationship;
+	// SelectPackage is a denormalised label kept for reads, search and exports, and
+	// refreshed if the package is ever renamed.
+	public int PackageId { get; set; }
 	public string? SelectPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HashToken { get; set; }

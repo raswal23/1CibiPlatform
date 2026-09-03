@@ -1,5 +1,5 @@
 ﻿using ATS.Data.Entities;
-using ATS.Features.WithdrawnApplicationForm;
+using ATS.Features.Web.WithdrawnApplicationForm;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +45,7 @@ public class WithdrawnApplicationFormIntegrationTests : BaseIntegrationTest
 			HashToken = "valid-hash-token",
 			HashTokenCreatedAt = DateTime.UtcNow,
 			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
 			EmailSentStatus = "Done",

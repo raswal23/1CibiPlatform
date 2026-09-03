@@ -1,0 +1,246 @@
+@page "/docs/api"
+@page "/docs/api/{Section}"
+@layout GenericLayout
+@using FrontendWebassembly.Pages.Docs
+
+@* Public and unauthenticated by design: GenericLayout is the opt-out. App.razor's
+   default is MainLayout, whose OnInitializedAsync is the only redirect-to-login in the
+   app, so declaring GenericLayout bypasses it. Do not add SecurePageBase or
+   RequirePermission here.
+
+   Code blocks and status colours come from the shared .ats-code-block / .ats-json-*
+   rules in wwwroot/css/ats.css. Only the three-column shell is scoped to this page. *@
+
+<PageTitle>API Documentation — CIBI OnePlatform</PageTitle>
+
+<div class="api-docs">
+
+    <button type="button"
+            class="api-docs-nav-toggle"
+            aria-expanded="@_isNavOpen"
+            aria-controls="api-docs-nav"
+            @onclick="ToggleNav">
+        <MudIcon Icon="@Icons.Material.Outlined.Menu" Size="Size.Small" />
+        Contents
+    </button>
+
+    @* The close-on-navigate handler sits here, not on the anchors themselves. *@
+    <nav id="api-docs-nav"
+         class="@NavClass"
+         aria-label="Documentation contents"
+         @onclick="OnNavClicked">
+
+        <a class="api-docs-brand" href="/docs/api">
+            <span class="api-docs-brand-mark" aria-hidden="true">API</span>
+            <span class="api-docs-brand-text">CIBI Screening &amp; Investigation</span>
+        </a>
+
+        @* The href must carry the page path, not a bare "#anchor". index.html declares
+           <base href="/" />, and a bare fragment resolves against the base rather than
+           the current URL - so "#overview" navigates to "/#overview", which is the
+           OnePlatform home page under MainLayout, not this page. *@
+        <a class="@NavLinkClass("overview")" href="@Fragment("overview")">Overview</a>
+        <a class="@NavLinkClass("authentication")" href="@Fragment("authentication")">Authentication</a>
+        <a class="@NavLinkClass("errors")" href="@Fragment("errors")">Errors</a>
+
+        @foreach (var section in ApiDocsContent.Sections)
+        {
+            <p class="api-docs-nav-heading">@section.Title</p>
+
+            foreach (var endpoint in section.Endpoints)
+            {
+                <a class="@NavLinkClass(endpoint.Anchor)"
+                   href="@Fragment(endpoint.Anchor)">
+                    <span class="api-docs-nav-method @MethodClass(endpoint.Method)">@endpoint.Method</span>
+                    @endpoint.Title
+                </a>
+            }
+        }
+    </nav>
+
+    <main class="api-docs-body">
+
+        <section id="overview" class="api-docs-section">
+            <h1>Screening &amp; Investigation API</h1>
+            <p class="api-docs-lead">
+                Place background-check orders directly from your own systems, track them
+                as they progress, and pull the finished report — the same operations the
+                CIBI console performs.
+            </p>
+
+            <div class="api-docs-callout">
+                <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" />
+                <div>
+                    All requests go to <code>@ApiDocsContent.BaseUrl</code> over HTTPS and
+                    return JSON. Every endpoint requires an access token.
+                </div>
+            </div>
+        </section>
+
+        <section id="authentication" class="api-docs-section">
+            <h2>Authentication</h2>
+            <p>
+                Exchange your credentials for an access token, then send it as a bearer
+                token on every request. Tokens expire, so request a new one when you
+                receive a <code>401</code>.
+            </p>
+
+            <div class="ats-code-block">
+                <pre>@AuthSample</pre>
+            </div>
+
+            <p>Then on each call:</p>
+
+            <div class="ats-code-block">
+                <pre>Authorization: Bearer &lt;access token&gt;</pre>
+            </div>
+        </section>
+
+        <section id="errors" class="api-docs-section">
+            <h2>Errors</h2>
+            <p>
+                Failures return a problem document with a <code>detail</code> field
+                explaining what went wrong. The status code tells you whether retrying
+                will help.
+            </p>
+
+            <div class="api-docs-status-list">
+                @* Not named `code`: Razor reads @code as the code-block directive. *@
+                @foreach (var (statusCode, meaning, tone) in ApiDocsContent.StatusCodes)
+                {
+                    <div class="api-docs-status-row">
+                        <span class="api-docs-status-badge @($"is-{tone}")">@statusCode</span>
+                        <span class="api-docs-status-meaning">@meaning</span>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @foreach (var section in ApiDocsContent.Sections)
+        {
+            <h2 class="api-docs-group-heading">@section.Title</h2>
+
+            foreach (var endpoint in section.Endpoints)
+            {
+                <section id="@endpoint.Anchor" class="api-docs-section api-docs-endpoint">
+
+                    <div class="api-docs-endpoint-head">
+                        <h3>@endpoint.Title</h3>
+                        <p class="api-docs-route">
+                            <span class="api-docs-method @MethodClass(endpoint.Method)">@endpoint.Method</span>
+                            <code>@endpoint.Path</code>
+                        </p>
+                    </div>
+
+                    <p>@endpoint.Summary</p>
+
+                    @if (endpoint.Fields.Count > 0)
+                    {
+                        <table class="api-docs-fields">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var field in endpoint.Fields)
+                                {
+                                    <tr>
+                                        <td><code>@field.Name</code></td>
+                                        <td class="api-docs-field-type">@field.Type</td>
+                                        <td>
+                                            @if (field.Required)
+                                            {
+                                                <span class="api-docs-required">Required</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="api-docs-optional">Optional</span>
+                                            }
+                                        </td>
+                                        <td>@field.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+
+                    @if (endpoint.Notes.Count > 0)
+                    {
+                        <ul class="api-docs-notes">
+                            @foreach (var note in endpoint.Notes)
+                            {
+                                <li>@note</li>
+                            }
+                        </ul>
+                    }
+
+                    @* Per-operation failures, so an integrator can code for them rather
+                       than discovering each one in production. *@
+                    @if (endpoint.Errors.Count > 0)
+                    {
+                        <p class="api-docs-response-label">What can go wrong</p>
+
+                        <div class="api-docs-status-list">
+                            @foreach (var error in endpoint.Errors)
+                            {
+                                <div class="api-docs-status-row">
+                                    <span class="api-docs-status-badge is-warn">@error.Status</span>
+                                    <span class="api-docs-status-meaning">
+                                        <strong>@error.Reason</strong> — @error.Detail
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="api-docs-samples">
+
+                        <div class="api-docs-sample-head">
+                            <div class="ats-segmented api-docs-langs" role="group" aria-label="Sample language">
+                                @foreach (var language in Languages)
+                                {
+                                    <button type="button"
+                                            class="@LanguageClass(language)"
+                                            aria-pressed="@(_activeLanguage == language)"
+                                            @onclick="@(() => _activeLanguage = language)">
+                                        @language
+                                    </button>
+                                }
+                            </div>
+
+                            <button type="button"
+                                    class="api-docs-copy"
+                                    title="Copy to clipboard"
+                                    @onclick="@(() => CopyAsync(SampleFor(endpoint)))">
+                                <MudIcon Icon="@CopyIcon(SampleFor(endpoint))" Size="Size.Small" />
+                                @(IsCopied(SampleFor(endpoint)) ? "Copied" : "Copy")
+                            </button>
+                        </div>
+
+                        <div class="ats-code-block">
+                            <pre>@SampleFor(endpoint)</pre>
+                        </div>
+
+                        <p class="api-docs-response-label">
+                            Response
+                            <span class="api-docs-status-badge is-success">@endpoint.ResponseStatus</span>
+                        </p>
+
+                        <div class="ats-code-block">
+                            <pre>@HighlightJson(endpoint.ResponseSample)</pre>
+                        </div>
+                    </div>
+                </section>
+            }
+        }
+
+        <footer class="api-docs-footer">
+            Something unclear or missing? Tell your CIBI account manager — this page is
+            maintained alongside the API itself.
+        </footer>
+    </main>
+</div>

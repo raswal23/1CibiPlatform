@@ -8,8 +8,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 {
 	// An order is retried until this many failed attempts, then it stays Error for a
 	// human to look at. A permanently unticketable order must not consume an OMS
-	// round trip every tick forever.
-	private const int MaxTicketAttempts = 5;
+	// round trip every tick forever. Public so the UI can say "5/5" and explain why a
+	// row stopped retrying, rather than duplicating the number.
+	public const int MaxTicketAttempts = 5;
 
 	// Round-robin: each client may contribute at most this many orders per tick, so one
 	// large bulk upload cannot block every other client behind it.
@@ -105,8 +106,11 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				.Where(p => p.EmailInvitationID == invitation.EmailInvitationID)
 				.DefaultIfEmpty()
 
+			// Joined on the id, not the name. Matching by name meant renaming a package
+			// silently orphaned every order that referenced it - they kept the old
+			// string and parked here as an error nobody could explain.
 			from package in _dbContext.PackageDetails
-				.Where(p => p.PackageName == invitation.SelectPackage)
+				.Where(p => p.PackageId == invitation.PackageId)
 				.DefaultIfEmpty()
 
 				// UserDetails is keyed (UserId, ModuleId): one row per module grant, each
@@ -200,6 +204,49 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 					x => x.TicketAttempts,
 					x => isRetryable ? x.TicketAttempts + 1 : MaxTicketAttempts),
 				cancellationToken);
+	}
+
+	public async Task<TicketRetryTargetDTO?> GetRetryTargetAsync(
+		Guid emailInvitationId,
+		CancellationToken cancellationToken) =>
+		await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => x.EmailInvitationID == emailInvitationId)
+			.Select(x => new TicketRetryTargetDTO
+			{
+				EmailInvitationID = x.EmailInvitationID,
+				ClientId = x.ClientId,
+				RequestorId = x.RequestorId,
+				OrderStatus = x.OrderStatus
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+	public async Task<bool> RequeueExhaustedTicketAsync(
+		Guid emailInvitationId,
+		CancellationToken cancellationToken)
+	{
+		// The predicate is the concurrency guard, not just a lookup: matching on the
+		// exhausted state inside the UPDATE means a row the job has already re-claimed,
+		// or that another operator retried a moment earlier, updates nothing and the
+		// caller is told so. A read-then-write would race and could resurrect a live
+		// claim. IsTicketed is checked too - a ticketed order must never re-enter the
+		// queue and raise a second ticket in OMS.
+		var updated = await _dbContext.EmailInvitationRequests
+			.Where(x => x.EmailInvitationID == emailInvitationId
+					 && !x.IsTicketed
+					 && x.TicketStatus == TicketStatus.Error
+					 && x.TicketAttempts >= MaxTicketAttempts)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.TicketStatus, x => TicketStatus.Pending)
+
+				// The budget resets: whatever blocked the order is expected to have been
+				// fixed, so the job gets a full set of automatic attempts again.
+				.SetProperty(x => x.TicketAttempts, x => 0)
+				.SetProperty(x => x.TicketError, x => (string?)null)
+				.SetProperty(x => x.TicketClaimedAt, x => (DateTime?)null),
+				cancellationToken);
+
+		return updated > 0;
 	}
 
 	public async Task<List<TicketedOrderListDTO>> GetTicketedOrdersPageAsync(

@@ -55,6 +55,15 @@ public record GetTicketStatusCountsResponseDTO
 	public TicketStatusCountsDTO? Counts { get; set; }
 }
 
+// Mirrors ATS.Constants.OrderType. The server rejects anything else, so these are the
+// only two values the UI may submit.
+public static class OrderSpeed
+{
+	public const string Normal = "Normal";
+
+	public const string Rush = "Rush";
+}
+
 // Mirrors ATS.Constants.TicketStatus, which lives in the backend assembly and is not
 // referenced by the UI project.
 public static class OrderTicketStatus
@@ -66,4 +75,9 @@ public static class OrderTicketStatus
 	public const string Done = "Done";
 
 	public const string Error = "Error";
+
+	// Mirrors OMSTicketingRepository.MaxTicketAttempts. Once an order has used this many
+	// automatic attempts the job stops picking it up, which is when a person may retry
+	// it by hand.
+	public const int MaxAttempts = 5;
 }

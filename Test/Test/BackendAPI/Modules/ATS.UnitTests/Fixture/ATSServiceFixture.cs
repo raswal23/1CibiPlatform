@@ -3,6 +3,7 @@ using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.EmailNotificationProcessor;
 using ATS.Services.EndorsementSubmission;
+using ATS.Services.OrderHistory;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -26,6 +27,7 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IATSClient> MockATSClient { get; private set; }
 	public Mock<IServiceScopeFactory> MockServiceScopeFactory { get; private set; }
 	public Mock<ICurrentUser> MockCurrentUser { get; private set; }
+	public Mock<IOrderHistoryService> MockOrderHistoryService { get; private set; }
 
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
@@ -51,6 +53,7 @@ public class ATSServiceFixture : IDisposable
 		MockATSClient = new Mock<IATSClient>();
 		MockServiceScopeFactory = new Mock<IServiceScopeFactory>();
 		MockCurrentUser = new Mock<ICurrentUser>();
+		MockOrderHistoryService = new Mock<IOrderHistoryService>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
 		EmailNotificationProcessoServiceLogger = new();
@@ -105,6 +108,12 @@ public class ATSServiceFixture : IDisposable
 		mockServiceProvider
 			.Setup(x => x.GetService(typeof(IATSRepository)))
 			.Returns(MockRepository.Object);
+
+		// The bulk parsing job resolves this per file to record an OrderCreated entry
+		// for every order it creates.
+		mockServiceProvider
+			.Setup(x => x.GetService(typeof(IOrderHistoryService)))
+			.Returns(MockOrderHistoryService.Object);
 
 		mockServiceScope
 			.Setup(x => x.ServiceProvider)

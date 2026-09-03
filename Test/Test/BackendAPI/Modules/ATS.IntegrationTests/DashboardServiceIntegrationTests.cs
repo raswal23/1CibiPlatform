@@ -126,22 +126,17 @@ public class DashboardServiceIntegrationTests : BaseIntegrationTest
 	private async Task AddClientsAsync(params (int ClientId, bool IsActive)[] clients)
 	{
 		var now = DateTime.UtcNow;
-		await _dbContext.PackageDetails.AddAsync(new PackageDetails
-		{
-			PackageId = 1,
-			PackageName = "Dashboard Package",
-			PackageDescription = "Dashboard test package",
-			IsActive = true,
-			CreatedAt = now,
-			UpdatedAt = now
-		});
+
+		// BaseIntegrationTest already seeds a package at DefaultPackageId after every
+		// truncate, so this links the clients to that one rather than inserting a
+		// second row with the same key.
 		await _dbContext.ClientDetails.AddRangeAsync(clients.Select(client => new ClientDetails
 		{
 			ClientId = client.ClientId,
 			ClientName = $"Client {client.ClientId}",
 			ClientDescription = $"Client {client.ClientId}",
 			IsActive = client.IsActive,
-			PackageId = 1,
+			PackageId = DefaultPackageId,
 			CreatedAt = now,
 			UpdatedAt = now
 		}));
@@ -216,6 +211,7 @@ public class DashboardServiceIntegrationTests : BaseIntegrationTest
 			Requestor = requestor,
 			RequestorId = requestorId,
 			ClientId = clientId,
+			PackageId = DefaultPackageId,
 			SelectPackage = "Dashboard Package",
 			RushNormal = "Normal",
 			HashToken = $"hash-{id}",
