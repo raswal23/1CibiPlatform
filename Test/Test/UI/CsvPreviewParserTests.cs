@@ -120,6 +120,51 @@ public class CsvPreviewParserTests
 	}
 
 	[Fact]
+	public void Parse_ShouldIgnoreColumnsBeyondTheCanonicalSet()
+	{
+		// Spreadsheets pick up spare columns after MobileNumber (notes, helper
+		// formulas). The import never reads them, so the preview must not show them -
+		// and their blank cells must not block the upload.
+		var csv = $"{Header},Notes,Extra\nDela Cruz,Juan,S,juan@example.com,09171234567,some note,";
+
+		var result = CsvPreviewParser.Parse(csv);
+
+		result.Headers.Should().Equal(
+			"LastName", "FirstName", "MiddleInitial", "EmailAddress", "MobileNumber");
+		result.Rows.Should().ContainSingle();
+		result.Rows[0].Should().Equal(
+			"Dela Cruz", "Juan", "S", "juan@example.com", "09171234567");
+		result.MissingHeaders.Should().BeEmpty();
+		result.HasCanonicalHeaderSequence.Should().BeTrue();
+	}
+
+	[Fact]
+	public void Parse_ShouldFlagSwappedColumnsAsOffTemplate()
+	{
+		// The template's sequence is the standard. All five columns are present here,
+		// but the order is wrong - the caller must reject the file, not reorder it.
+		var csv = "FirstName,LastName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,S,juan@example.com,09171234567";
+
+		var result = CsvPreviewParser.Parse(csv);
+
+		result.HasCanonicalHeaderSequence.Should().BeFalse();
+		result.MissingHeaders.Should().BeEmpty();
+	}
+
+	[Fact]
+	public void Parse_ShouldReportMissingCanonicalColumns()
+	{
+		// A file without MobileNumber cannot be imported - the caller blocks on this
+		// before upload instead of letting the background processor stall on it.
+		var csv = "LastName,FirstName,MiddleInitial,EmailAddress\nDela Cruz,Juan,S,juan@example.com";
+
+		var result = CsvPreviewParser.Parse(csv);
+
+		result.HasCanonicalHeaderSequence.Should().BeFalse();
+		result.MissingHeaders.Should().Equal("MobileNumber");
+	}
+
+	[Fact]
 	public void Parse_ShouldTrimUnquotedWhitespace()
 	{
 		var csv = $"{Header}\n  Dela Cruz , Juan ,S,juan@example.com,09171234567";
