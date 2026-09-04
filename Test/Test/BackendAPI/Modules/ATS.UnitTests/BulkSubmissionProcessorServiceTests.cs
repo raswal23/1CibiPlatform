@@ -62,7 +62,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 			DateCreated = DateTime.UtcNow
 		};
 
-		var csvContent = "FirstName,LastName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,B,juan@example.com,09123456789\nMaria,Santos,G,maria@example.com,09987654321";
+		var csvContent = "LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,B,juan@example.com,09123456789\nMaria,Santos,G,maria@example.com,09987654321";
 		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
 		stream.Position = 0;
 
@@ -123,7 +123,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 
 		// Middle initial is optional; blank and whitespace-only cells must not block the
 		// row and must land as null, not empty string.
-		var csvContent = "FirstName,LastName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,,juan@example.com,09123456789\nMaria,Santos, ,maria@example.com,09987654321";
+		var csvContent = "LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,,juan@example.com,09123456789\nMaria,Santos, ,maria@example.com,09987654321";
 		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
 
 		_fixture.MockRepository.Setup(x => x.GetBulkUploadFileDetailsAsync())
