@@ -4,7 +4,6 @@ public interface IDisputeOrderRepository
 {
 	Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
 		string? searchTerm,
-		bool? afterHasDispute,
 		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,

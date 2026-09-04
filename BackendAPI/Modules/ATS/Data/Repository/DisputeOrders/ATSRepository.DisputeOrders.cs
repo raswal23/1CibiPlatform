@@ -2,16 +2,12 @@ namespace ATS.Data.Repository;
 
 public partial class ATSRepository
 {
-	// Keyset over (hasDispute DESC, OrderCreatedAt DESC, EmailInvitationID ASC). The
-	// computed lead key must appear verbatim in the seek predicate so it matches the
-	// ORDER BY expression. OrderCreatedAt is never NULL here — the base filter
-	// requires OrderCreatedAt.HasValue. The 30-day window and dispute flags move
-	// between requests; rows shifting out of (or ahead of) the cursor simply drop
-	// from the walk — keyset never duplicates rows.
+	// Keyset over OrderCreatedAt descending. EmailInvitationID is only a stable
+	// tiebreaker for orders created at the same instant. OrderCreatedAt is never
+	// null here because the base filter requires OrderCreatedAt.HasValue.
 	// Pure query — the service decodes the cursor and mints the next one.
 	public async Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
 		string? searchTerm,
-		bool? afterHasDispute,
 		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
@@ -20,25 +16,17 @@ public partial class ATSRepository
 		CancellationToken cancellationToken)
 	{
 		var pageQuery = BuildDisputeOrdersQuery(searchTerm, authorizedClientIds, requiredRequestorId);
-		if (afterHasDispute.HasValue && afterCreatedAt.HasValue && afterId.HasValue)
+		if (afterCreatedAt.HasValue && afterId.HasValue)
 		{
 			var cCreatedAt = afterCreatedAt.Value;
 			var cId = afterId.Value;
-			pageQuery = afterHasDispute.Value
-				? pageQuery.Where(eir =>
-					string.IsNullOrEmpty(eir.DisputeCategory)
-					|| (!string.IsNullOrEmpty(eir.DisputeCategory)
-						&& (eir.OrderCreatedAt < cCreatedAt
-							|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0))))
-				: pageQuery.Where(eir =>
-					string.IsNullOrEmpty(eir.DisputeCategory)
-					&& (eir.OrderCreatedAt < cCreatedAt
-						|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0)));
+			pageQuery = pageQuery.Where(eir =>
+				eir.OrderCreatedAt < cCreatedAt
+				|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0));
 		}
 
 		return await pageQuery
-			.OrderByDescending(eir => !string.IsNullOrEmpty(eir.DisputeCategory))
-			.ThenByDescending(eir => eir.OrderCreatedAt)
+			.OrderByDescending(eir => eir.OrderCreatedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Take(take)
 			.Select(eir => new DisputeOrderListDTO

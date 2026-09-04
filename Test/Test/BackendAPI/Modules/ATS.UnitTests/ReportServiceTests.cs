@@ -229,7 +229,6 @@ public class ReportServiceTests
 			.Setup(repository => repository.GetReportsPageAsync(
 				null,
 				null,
-				null,
 				11,
 				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
 				userId,
@@ -249,7 +248,6 @@ public class ReportServiceTests
 		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
 		result.TotalCount.Should().Be(1);
 		_repository.Verify(repository => repository.SearchReportsPageAsync(
-			It.IsAny<int?>(),
 			It.IsAny<DateTime?>(),
 			It.IsAny<Guid?>(),
 			It.IsAny<int>(),
@@ -277,7 +275,6 @@ public class ReportServiceTests
 			.Setup(repository => repository.SearchReportsPageAsync(
 				null,
 				null,
-				null,
 				11,
 				"ada",
 				request.StartDate,
@@ -302,7 +299,6 @@ public class ReportServiceTests
 		// Assert
 		result.Items.Should().ContainSingle().Which.SubjectName.Should().Be("Ada Lovelace");
 		_repository.Verify(repository => repository.GetReportsPageAsync(
-			It.IsAny<int?>(),
 			It.IsAny<DateTime?>(),
 			It.IsAny<Guid?>(),
 			It.IsAny<int>(),
@@ -322,7 +318,6 @@ public class ReportServiceTests
 		// everything out.
 		SetAccessScope(null, null);
 		_repository.Setup(repository => repository.GetReportsPageAsync(
-			null,
 			null,
 			null,
 			11,

@@ -93,7 +93,6 @@ public class DisputeOrderServiceTests
 				null,
 				null,
 				null,
-				null,
 				11,
 				It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
 				userId,
@@ -130,7 +129,6 @@ public class DisputeOrderServiceTests
 		_repository
 			.Setup(repository => repository.GetDisputeOrdersPageAsync(
 				"ada",
-				null,
 				null,
 				null,
 				6,
@@ -378,7 +376,6 @@ public class DisputeOrderServiceTests
 		SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
 		SetAccessScope(null, null);
 		_repository.Setup(repository => repository.GetDisputeOrdersPageAsync(
-			null,
 			null,
 			null,
 			null,

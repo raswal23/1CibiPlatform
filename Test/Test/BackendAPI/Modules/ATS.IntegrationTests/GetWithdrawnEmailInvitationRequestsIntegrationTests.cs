@@ -175,6 +175,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		var userId = Guid.CreateVersion7();
 		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId: 7);
 		var withdrawnRecords = new List<EmailInvitationRequest>();
+		var newestOrderCreatedAt = new DateTime(2026, 8, 20, 12, 0, 0, DateTimeKind.Utc);
 		for (int i = 0; i < 15; i++)
 		{
 			withdrawnRecords.Add(new EmailInvitationRequest
@@ -194,6 +195,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 				EmailSentStatus = "Done",
 				ApplicationFormStatus = "Pending",
 				OrderStatus = "Application Withdrawn",
+				OrderCreatedAt = newestOrderCreatedAt.AddMinutes(-i),
 				ClientId = 7,
 				RequestorId = userId
 			});
@@ -210,6 +212,9 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		page1!.Items.Should().HaveCount(10);
 		page1.TotalCount.Should().Be(15);
 		page1.NextCursor.Should().NotBeNull();
+		page1.Items.Select(x => x.EmailInvitationID)
+			.Should().Equal(withdrawnRecords.Take(10).Select(x => x.EmailInvitationID));
+		page1.Items[0].OrderCreatedAt.Should().Be(withdrawnRecords[0].OrderCreatedAt);
 
 		// Act - Get second page via the returned cursor
 		var page2 = await _endorsementSubmissionService.GetWithdrawnEmailInvitationRequestsAsync(new BuildingBlocks.Pagination.KeysetPaginationRequest(page1.NextCursor, 10), CancellationToken.None);
@@ -219,7 +224,7 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		page2!.Items.Should().HaveCount(5);
 		page2.TotalCount.Should().BeNull();
 		page2.Items.Select(x => x.EmailInvitationID)
-			.Should().NotIntersectWith(page1.Items.Select(x => x.EmailInvitationID));
+			.Should().Equal(withdrawnRecords.Skip(10).Select(x => x.EmailInvitationID));
 		page2.NextCursor.Should().BeNull();
 	}
 

@@ -49,8 +49,7 @@ public partial class ATSCacheRepository
 	}
 
 	public async Task<List<ReportRowDTO>> GetReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
@@ -58,13 +57,13 @@ public partial class ATSCacheRepository
 		CancellationToken cancellationToken)
 	{
 		if (afterId.HasValue)
-			return await _atsRepository.GetReportsPageAsync(afterRank, afterCompletedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
+			return await _atsRepository.GetReportsPageAsync(afterCreatedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
 
-		var cacheKey = $"report_first_take_{take}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
+		var cacheKey = $"report_ordercreated_desc_first_take_{take}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync<List<ReportRowDTO>>(
 			cacheKey,
-			async token => await _atsRepository.GetReportsPageAsync(null, null, null, take, authorizedClientIds, requiredRequestorId, token),
+			async token => await _atsRepository.GetReportsPageAsync(null, null, take, authorizedClientIds, requiredRequestorId, token),
 			tags: [CacheTags.Report],
 			cancellationToken: cancellationToken);
 	}
@@ -107,8 +106,7 @@ public partial class ATSCacheRepository
 	}
 
 	public async Task<List<ReportRowDTO>> SearchReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		string? searchTerm,
@@ -119,10 +117,10 @@ public partial class ATSCacheRepository
 		CancellationToken cancellationToken)
 	{
 		if (afterId.HasValue)
-			return await _atsRepository.SearchReportsPageAsync(afterRank, afterCompletedAt, afterId, take, searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId, cancellationToken);
+			return await _atsRepository.SearchReportsPageAsync(afterCreatedAt, afterId, take, searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId, cancellationToken);
 
 		var cacheKey =
-			$"report_first" +
+			$"report_ordercreated_desc_first" +
 			$"_take_{take}" +
 			$"_search_{searchTerm ?? "none"}" +
 			$"_start_{(startDate.HasValue ? startDate.Value.ToString("yyyyMMdd") : "none")}" +
@@ -132,7 +130,7 @@ public partial class ATSCacheRepository
 
 		return await _hybridCache.GetOrCreateAsync<List<ReportRowDTO>>(
 			cacheKey,
-			async token => await _atsRepository.SearchReportsPageAsync(null, null, null, take, searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId, token),
+			async token => await _atsRepository.SearchReportsPageAsync(null, null, take, searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId, token),
 			tags: [CacheTags.Report],
 			cancellationToken: cancellationToken);
 	}

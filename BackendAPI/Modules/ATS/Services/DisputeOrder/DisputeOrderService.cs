@@ -61,17 +61,16 @@ public class DisputeOrderService : IDisputeOrderService
 		var clientIds = scope.AuthorizedClientIds;
 		var requiredRequestorId = scope.RequiredOwnerId;
 
-		// An undecodable cursor (malformed, stale) means "first page". All three
-		// anchors are required — if any fails to parse, restart the walk.
-		var fields = CursorCodec.Decode(paginationRequest.Cursor, 3);
-		DateTime? afterCreatedAt = DateTime.TryParse(fields?[1], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt) ? createdAt : null;
-		Guid? afterId = Guid.TryParse(fields?[2], out var invitationId) ? invitationId : null;
+		// Cursor over the fixed (createdAt, id) ordering. Both anchors are required;
+		// a malformed cursor restarts the walk from the first page.
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
+		DateTime? afterCreatedAt = DateTime.TryParse(fields?[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt) ? createdAt : null;
+		Guid? afterId = Guid.TryParse(fields?[1], out var invitationId) ? invitationId : null;
 		var hasSeek = afterCreatedAt.HasValue && afterId.HasValue;
-		bool? afterHasDispute = hasSeek ? fields![0] == "1" : null;
 		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
 
 		var rows = await _atsRepository.GetDisputeOrdersPageAsync(
-			paginationRequest.SearchTerm, afterHasDispute, hasSeek ? afterCreatedAt : null, hasSeek ? afterId : null,
+			paginationRequest.SearchTerm, hasSeek ? afterCreatedAt : null, hasSeek ? afterId : null,
 			pageSize + 1, clientIds, requiredRequestorId, cancellationToken);
 		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
 
@@ -80,7 +79,6 @@ public class DisputeOrderService : IDisputeOrderService
 		{
 			var last = items[^1];
 			nextCursor = CursorCodec.Encode(
-				string.IsNullOrEmpty(last.DisputeCategory) ? "0" : "1",
 				last.OrderCreatedAt!.Value.ToString("O"),
 				last.EmailInvitationID.ToString("D"));
 		}

@@ -111,8 +111,7 @@ public sealed class AtsAssistantPlugin
 		}
 
 		var reports = await _atsRepository.SearchReportsPageAsync(
-			afterRank: null,
-			afterCompletedAt: null,
+			afterCreatedAt: null,
 			afterId: null,
 			take: MaxSearchResults,
 			searchTerm: name.Trim(),

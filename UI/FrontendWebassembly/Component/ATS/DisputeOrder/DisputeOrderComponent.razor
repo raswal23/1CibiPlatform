@@ -39,7 +39,7 @@
             <MudTh>Subject Name</MudTh>
             <MudTh>Requestor</MudTh>
             <MudTh>Status</MudTh>
-            <MudTh>Order Date</MudTh>
+            <MudTh>Date Created</MudTh>
             <MudTh>Date Completed</MudTh>
             <MudTh>Send Dispute</MudTh>
         </HeaderTemplate>
@@ -63,7 +63,7 @@
                     <MudSkeleton Height="24px" Width="90px" />
                 </MudTd>
 
-                <MudTd DataLabel="Order Date" Class="ats-table-cell-center">
+                <MudTd DataLabel="Date Created" Class="ats-table-cell-center">
                     <MudSkeleton Height="20px" Width="120px" />
                 </MudTd>
 
@@ -108,8 +108,8 @@
                     }
                 </MudTd>
 
-                <MudTd Class="dispute-date" DataLabel="Order Date">
-                    @o.OrderCreatedAt?.ToString("MMMM dd, yyyy")
+                <MudTd Class="dispute-date" DataLabel="Date Created">
+                    @(o.OrderCreatedAt?.ToString("MMMM dd, yyyy") ?? "—")
                 </MudTd>
 
                 <MudTd Class="dispute-date" DataLabel="Date Completed">

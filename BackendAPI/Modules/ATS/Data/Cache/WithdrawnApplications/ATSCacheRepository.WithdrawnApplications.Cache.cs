@@ -6,6 +6,7 @@ public partial class ATSCacheRepository
 	// are high-cardinality and go straight to the repository.
 	public async Task<List<EmailInvitationRequestListDTO>> GetWithdrawnPageAsync(
 		string? searchTerm,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
@@ -13,13 +14,13 @@ public partial class ATSCacheRepository
 		CancellationToken cancellationToken)
 	{
 		if (afterId.HasValue)
-			return await _atsRepository.GetWithdrawnPageAsync(searchTerm, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
+			return await _atsRepository.GetWithdrawnPageAsync(searchTerm, afterCreatedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
 
-		var cacheKey = $"withdrawnapplication_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
+		var cacheKey = $"withdrawnapplication_ordercreated_desc_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync<List<EmailInvitationRequestListDTO>>(
 			cacheKey,
-			async token => await _atsRepository.GetWithdrawnPageAsync(searchTerm, null, take, authorizedClientIds, requiredRequestorId, token),
+			async token => await _atsRepository.GetWithdrawnPageAsync(searchTerm, null, null, take, authorizedClientIds, requiredRequestorId, token),
 			tags: [CacheTags.WithdrawnApplication],
 			cancellationToken: cancellationToken);
 	}

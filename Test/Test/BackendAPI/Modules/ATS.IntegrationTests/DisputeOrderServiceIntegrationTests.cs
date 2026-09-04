@@ -33,7 +33,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	#region Happy Path
 
 	[Fact]
-	public async Task GetDisputeOrdersAsync_ShouldReturnEligibleOrdersInDisputePriorityOrder()
+	public async Task GetDisputeOrdersAsync_ShouldReturnEligibleOrdersByOrderCreatedAtDescending()
 	{
 		// Arrange
 		SetAuthenticatedUser(AuthenticatedUserId, AtsRoleIds.User, clientId: 7);
@@ -90,19 +90,19 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 		var orders = result.Items.ToArray();
 		orders.Select(order => order.EmailInvitationID)
-			.Should().Equal(disputed.EmailInvitationID, newest.EmailInvitationID);
+			.Should().Equal(newest.EmailInvitationID, disputed.EmailInvitationID);
 		orders[0].Should().BeEquivalentTo(new
 		{
-			disputed.EmailInvitationID,
-			disputed.FirstName,
-			disputed.LastName,
-			disputed.DisputeCategory
+			newest.EmailInvitationID,
+			newest.FirstName,
+			newest.LastName,
+			newest.DisputeCategory
 		});
 		orders[0].OrderCreatedAt.Should().BeCloseTo(
-			disputed.OrderCreatedAt!.Value,
+			newest.OrderCreatedAt!.Value,
 			TimeSpan.FromMilliseconds(1));
 		orders[0].OrderCompletedAt.Should().BeCloseTo(
-			disputed.OrderCompletedAt!.Value,
+			newest.OrderCompletedAt!.Value,
 			TimeSpan.FromMilliseconds(1));
 
 		var secondPage = await service.GetDisputeOrdersAsync(
