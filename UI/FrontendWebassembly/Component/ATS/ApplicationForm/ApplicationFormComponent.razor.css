@@ -98,7 +98,7 @@
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field {
-    align-self: end;
+    align-self: start;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input {
