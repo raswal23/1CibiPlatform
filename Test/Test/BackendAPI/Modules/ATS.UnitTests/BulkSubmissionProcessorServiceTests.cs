@@ -62,7 +62,7 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 			DateCreated = DateTime.UtcNow
 		};
 
-		var csvContent = "FirstName,LastName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,B,juan@example.com,09123456789\nMaria,Santos,G,maria@example.com,09987654321";
+		var csvContent = "LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,B,juan@example.com,09123456789\nMaria,Santos,G,maria@example.com,09987654321";
 		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
 		stream.Position = 0;
 
@@ -101,6 +101,59 @@ public class BulkSubmissionProcessorServiceTests : IClassFixture<ATSServiceFixtu
 		_fixture.MockHubContext.Verify(
 			x => x.Clients,
 			Times.Once);
+	}
+
+	[Fact]
+	public async Task ProcessAsync_ShouldStoreNullMiddleInitial_WhenColumnIsBlank()
+	{
+		// Arrange
+		var service = _fixture.BulkSubmissionProcessorService;
+
+		var bulkUploadFile = new BulkUploadFileDetails
+		{
+			FileID = Guid.CreateVersion7(),
+			FileKey = "test-file-key",
+			FileName = "test-file.csv",
+			UploadedByUserId = Guid.CreateVersion7(),
+			PackageType = "Standard",
+			OrderType = "Normal",
+			Status = "Pending",
+			DateCreated = DateTime.UtcNow
+		};
+
+		// Middle initial is optional; blank and whitespace-only cells must not block the
+		// row and must land as null, not empty string.
+		var csvContent = "LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nJuan,Dela Cruz,,juan@example.com,09123456789\nMaria,Santos, ,maria@example.com,09987654321";
+		var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(csvContent));
+
+		_fixture.MockRepository.Setup(x => x.GetBulkUploadFileDetailsAsync())
+			.ReturnsAsync(new List<BulkUploadFileDetails> { bulkUploadFile });
+
+		_fixture.MockObjectStorage.Setup(x => x.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(stream);
+
+		_fixture.MockSecureToken.Setup(x => x.GenerateSecureToken())
+			.Returns("valid-token-123");
+
+		_fixture.MockHashService.Setup(x => x.Hash(It.IsAny<string>()))
+			.Returns((string token) => $"hashed-{token}");
+
+		List<EmailInvitationRequest>? capturedSubjects = null;
+
+		_fixture.MockRepository.Setup(x => x.AddBulkEmailInvitationRequestAsync(It.IsAny<List<EmailInvitationRequest>>()))
+			.Callback<List<EmailInvitationRequest>>(subjects => capturedSubjects = subjects)
+			.ReturnsAsync(true);
+
+		_fixture.MockRepository.Setup(x => x.UpdateBulkFileDetailsStatusAsync(It.IsAny<List<Guid>>(), It.IsAny<string>()))
+			.ReturnsAsync(true);
+
+		// Act
+		await service.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		capturedSubjects.Should().NotBeNull();
+		capturedSubjects!.Should().HaveCount(2);
+		capturedSubjects.Should().AllSatisfy(subject => subject.MiddleInitial.Should().BeNull());
 	}
 	#endregion
 

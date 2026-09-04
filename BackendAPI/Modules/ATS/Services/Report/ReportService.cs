@@ -244,6 +244,7 @@ public class ReportService : IReportService
 			OrderCompletedAt = x.OrderCompletedAt,
 			SelectedPackage = x.SelectPackage,
 			Requestor = x.Requestor,
+			TicketNumber = x.TicketNumber,
 			HitStatus = x.HitStatus
 		}).ToList();
 

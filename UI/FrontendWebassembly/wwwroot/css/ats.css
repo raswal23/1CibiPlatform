@@ -211,10 +211,6 @@
     color: var(--management-text-2);
 }
 
-.ats-module-card table {
-    table-layout: fixed;
-}
-
 .ats-module-card thead .mud-table-cell:nth-child(1) {
     width: 26%;
 }
@@ -276,10 +272,6 @@
 .ats-management-module-icon svg {
     width: 17px;
     height: 17px;
-}
-
-.ats-role-card table {
-    table-layout: fixed;
 }
 
 .ats-role-card thead .mud-table-cell:nth-child(1) {
@@ -345,10 +337,6 @@
     height: 17px;
 }
 
-.ats-client-card table {
-    table-layout: fixed;
-}
-
 .ats-client-card thead .mud-table-cell:nth-child(1) {
     width: 16%;
 }
@@ -357,8 +345,8 @@
     width: 15%;
 }
 
-.ats-client-card thead .mud-table-cell:nth-child(3) {
-    width: 13%;
+.ats-client-card .ats-clients-packages-column {
+    min-width: 280px !important;
 }
 
 .ats-client-card thead .mud-table-cell:nth-child(4) {
@@ -418,7 +406,6 @@
 
 .ats-package-card table {
     min-width: 920px;
-    table-layout: fixed;
 }
 
 .ats-package-card thead .mud-table-cell:nth-child(1),
@@ -3005,8 +2992,8 @@ button.ats-console-brand-text {
     }
 
     .ats-step-one .ats-step-one-button-row {
-        justify-content: center;
-        flex-wrap: wrap;
+        grid-template-columns: 1fr;
+        justify-items: stretch;
     }
 }
 
@@ -3522,6 +3509,12 @@ button.ats-console-brand-text {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .ats-step-five .ats-reference-datetime-wrap {
+        grid-template-columns: 1fr;
+    }
 }
 
 .ats-step-five .ats-reference-date,
@@ -4090,8 +4083,8 @@ button.ats-console-brand-text {
     }
 
     .ats-step-one .ats-step-one-button-row {
-        justify-content: center;
-        flex-wrap: wrap;
+        grid-template-columns: 1fr;
+        justify-items: stretch;
     }
 }
 
@@ -4607,6 +4600,12 @@ button.ats-console-brand-text {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .ats-step-five .ats-reference-datetime-wrap {
+        grid-template-columns: 1fr;
+    }
 }
 
 .ats-step-five .ats-reference-date,

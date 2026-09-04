@@ -20,8 +20,8 @@ public class FakeEmailSender : IEmailService
 	public string SendApprovalNotificationBody(string gmail)
 		=> $"Hello {gmail}, your account has been approved.";
 
-	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink)
-		=> $"Hello {name}/{gmail}, please complete your application form using this link: {applicationFormLink}";
+	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink, string? requestor, string? clientName)
+		=> $"Hello {name}/{gmail}, {requestor ?? "the talent acquisition team"} of {clientName ?? "their company"} has requested a background check. Please complete your application form using this link: {applicationFormLink}";
 
 	public string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName)
 		 => $"{requestor} submitted a dispute for {company} (Customer: {gmail}) with reason '{disputeReason}' for the order placed on {orderedAt:MMMM dd, yyyy} (Subject: {subjectName}).";

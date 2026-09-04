@@ -12,6 +12,7 @@ public sealed class ReportRowDTO
 	public string? MiddleInitial { get; init; }
 	public string? LastName { get; init; }
 	public string? Requestor { get; init; }
+	public string? TicketNumber { get; init; }
 	public string? OrderStatus { get; init; }
 	public DateTime? OrderCompletedAt { get; init; }
 	public string? SelectPackage { get; init; }

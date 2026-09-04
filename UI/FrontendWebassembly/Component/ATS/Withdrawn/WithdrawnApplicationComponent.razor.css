@@ -71,6 +71,19 @@
 
 ::deep .withdrawn-applications .mud-table-row:hover { background: #fafbff !important; }
 
+/* Same monospace treatment as the OMS Ticketing board's ticket numbers, so the
+   number reads as the same identifier on both screens. */
+.withdrawn-ticket-number {
+    color: var(--text-1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+.withdrawn-ticket-empty { color: var(--text-3); }
+
 .withdrawn-candidate { display: flex; align-items: center; gap: 12px; }
 .withdrawn-avatar {
     display: flex;

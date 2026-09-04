@@ -92,6 +92,19 @@
     font-weight: 600;
 }
 
+/* Same monospace treatment as the OMS Ticketing board's ticket numbers, so the
+   number reads as the same identifier on both screens. */
+.dispute-ticket-number {
+    color: var(--text-1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+.dispute-ticket-empty { color: var(--text-3); }
+
 .dispute-name { color: var(--text-1); font-weight: 600; }
 .dispute-chip {
     display: inline-flex;

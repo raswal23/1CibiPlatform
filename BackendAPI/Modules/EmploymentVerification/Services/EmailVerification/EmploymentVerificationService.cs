@@ -126,7 +126,7 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Employment period</td><td style='padding:12px 16px;font-weight:bold'>{entity.EmploymentStartDate:MMM yyyy} – {entity.EmploymentEndDate:MMM yyyy}</td></tr>
 				  </table>
 				  <p style='font-size:15px;line-height:1.6'>Choose one response below. This secure link can be used once and expires in 72 hours.</p>
-				  <p style='margin:28px 0 12px;text-align:center'><a href='{verificationLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(120deg,#a52d91,#e3489f);color:#ffffff;text-decoration:none;font-weight:bold'>Confirm employment details</a></p>
+				  <p style='margin:28px 0;text-align:center'><a href='{verificationLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(120deg,#a52d91,#e3489f);color:#ffffff;text-decoration:none;font-weight:bold'>Confirm employment details</a></p>
 				  <p style='font-size:12px;line-height:1.6;color:#8a7186;text-align:center'>If you cannot confirm this information, open the link and choose the rejection option.</p>
 				</div>
 				<div style='padding:20px 36px;background:#fff8fc;color:#95758f;font-size:12px;line-height:1.6'>This is an automated request from CIBI. If you did not receive this request in your HR capacity, you may disregard this message.</div>

@@ -403,6 +403,19 @@
 .report-checkbox.checked { border-color: var(--blue-600); background: var(--blue-600); }
 .report-checkbox svg { width: 12px; height: 12px; opacity: 0; transform: scale(.5); transition: opacity .15s ease, transform .15s ease; }
 .report-checkbox.checked svg { opacity: 1; transform: scale(1); }
+/* Same monospace treatment as the OMS Ticketing board's ticket numbers, so the
+   number reads as the same identifier on both screens. */
+.report-ticket-number {
+    color: var(--text-1);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    white-space: nowrap;
+}
+
+.report-ticket-empty { color: var(--text-3); }
+
 .report-subject { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
 .report-avatar {
     display: flex;

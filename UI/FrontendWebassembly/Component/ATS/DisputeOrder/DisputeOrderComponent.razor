@@ -27,7 +27,7 @@
                     EnableSearch="true"
                     SearchLabel=""
                     SearchPlaceholder="Search dispute orders"
-                    ColumnCount="6"
+                    ColumnCount="7"
                     RowsPerPage="10"
                     LoadServerData="LoadOrderData"
                     CursorPagerState="_ordersLoader"
@@ -35,6 +35,7 @@
                     SearchStringChanged="@((string val) => searchString = val)">
 
         <HeaderTemplate>
+            <MudTh>Ticket No.</MudTh>
             <MudTh>Subject Name</MudTh>
             <MudTh>Requestor</MudTh>
             <MudTh>Status</MudTh>
@@ -46,6 +47,10 @@
         <RowTemplate Context="o">
             @if(_loadingDisputeId == o.EmailInvitationID)
             {
+                <MudTd DataLabel="Ticket No." Class="ats-table-cell-center">
+                    <MudSkeleton Height="20px" Width="80px" />
+                </MudTd>
+
                 <MudTd DataLabel="Subject Name" Class="ats-table-cell-center">
                     <MudSkeleton Height="20px" Width="80%" />
                 </MudTd>
@@ -72,6 +77,17 @@
             }
             else
             {
+                <MudTd DataLabel="Ticket No.">
+                    @if (!string.IsNullOrWhiteSpace(o.TicketNumber))
+                    {
+                        <span class="dispute-ticket-number">@o.TicketNumber</span>
+                    }
+                    else
+                    {
+                        <span class="dispute-ticket-empty" title="OMS has not issued a ticket for this order yet">—</span>
+                    }
+                </MudTd>
+
                 <MudTd DataLabel="Subject Name">
                     <div class="dispute-subject">
                         <span class="dispute-avatar">@GetInitials(o.FirstName, o.LastName)</span>

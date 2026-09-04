@@ -20,6 +20,21 @@ public static class CsvPreviewParser
 	/// </summary>
 	public const int MaxPreviewRows = 100;
 
+	/// <summary>
+	/// The columns the bulk upload imports, in template order. Spreadsheets often pick
+	/// up spare columns after these (notes, helper formulas, a stray cell), and the
+	/// import ignores them - so the preview must too, or their blank cells block a
+	/// perfectly importable file.
+	/// </summary>
+	public static readonly IReadOnlyList<string> CanonicalHeaders =
+	[
+		"LastName",
+		"FirstName",
+		"MiddleInitial",
+		"EmailAddress",
+		"MobileNumber"
+	];
+
 	public sealed class CsvPreviewResult
 	{
 		public List<string> Headers { get; set; } = [];
@@ -30,6 +45,20 @@ public static class CsvPreviewParser
 		public int TotalRowCount { get; set; }
 
 		public bool IsTruncated => TotalRowCount > Rows.Count;
+
+		/// <summary>
+		/// Canonical columns the file does not contain at all. Extra columns are
+		/// ignorable; missing ones are not - the import cannot map them, so the caller
+		/// should block before upload rather than let the file fail server-side.
+		/// </summary>
+		public List<string> MissingHeaders { get; set; } = [];
+
+		/// <summary>
+		/// True when the file leads with the canonical columns in exactly the template's
+		/// sequence. The template order is the standard: a file with the right columns
+		/// in the wrong order is rejected, not reordered.
+		/// </summary>
+		public bool HasCanonicalHeaderSequence { get; set; }
 	}
 
 	public static CsvPreviewResult Parse(string csvContent)
@@ -44,7 +73,27 @@ public static class CsvPreviewParser
 		if (records.Count == 0)
 			return result;
 
-		result.Headers = records[0].Select(field => field.Trim()).ToList();
+		var fileHeaders = records[0].Select(field => field.Trim()).ToList();
+
+		// The template's order is the standard: the file must LEAD with the canonical
+		// columns in exactly that sequence (trim + ignore-case, as the import applies).
+		// Columns after them are spreadsheet debris (notes, helper formulas) - dropped
+		// here so they can neither show up in the dialog nor block the upload.
+		result.HasCanonicalHeaderSequence =
+			fileHeaders.Count >= CanonicalHeaders.Count
+			&& CanonicalHeaders
+				.Select((canonical, index) =>
+					string.Equals(fileHeaders[index], canonical, StringComparison.OrdinalIgnoreCase))
+				.All(matches => matches);
+
+		var keptCount = Math.Min(CanonicalHeaders.Count, fileHeaders.Count);
+		var keptIndexes = Enumerable.Range(0, keptCount).ToList();
+
+		result.Headers = keptIndexes.Select(index => fileHeaders[index]).ToList();
+
+		result.MissingHeaders = CanonicalHeaders
+			.Where(canonical => !fileHeaders.Contains(canonical, StringComparer.OrdinalIgnoreCase))
+			.ToList();
 
 		// Ignore rows that are entirely blank - a trailing newline is not a record.
 		var dataRows = records
@@ -55,7 +104,9 @@ public static class CsvPreviewParser
 		result.TotalRowCount = dataRows.Count;
 		result.Rows = dataRows
 			.Take(MaxPreviewRows)
-			.Select(fields => fields.Select(field => field.Trim()).ToList())
+			.Select(fields => keptIndexes
+				.Select(index => index < fields.Count ? fields[index].Trim() : string.Empty)
+				.ToList())
 			.ToList();
 
 		return result;

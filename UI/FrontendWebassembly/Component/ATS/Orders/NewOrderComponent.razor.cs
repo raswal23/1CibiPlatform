@@ -282,6 +282,20 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
+		// Extra columns after the template's are filtered out by the parser; the
+		// template columns themselves must lead the file in the standard sequence.
+		// Name the columns actually absent when that is the failure, otherwise call
+		// out the ordering - both before upload, not after the file is accepted.
+		if (!previewData.HasCanonicalHeaderSequence)
+		{
+			Snackbar.Add(
+				previewData.MissingHeaders.Count > 0
+					? $"Missing required column(s): {string.Join(", ", previewData.MissingHeaders)}. Please use the bulk upload template."
+					: $"Columns must appear in the template order: {string.Join(", ", CsvPreviewParser.CanonicalHeaders)}.",
+				Severity.Error);
+			return;
+		}
+
 		if (previewData.Rows.Count == 0)
 		{
 			Snackbar.Add("The CSV file is empty.", Severity.Error);
@@ -295,7 +309,7 @@ public partial class NewOrderComponent
 		// file", and the operator is approving an import on the strength of it.
 		var previewMessage = previewData.IsTruncated
 			? $"Showing the first {previewData.Rows.Count} of {previewData.TotalRowCount} rows. All rows will be uploaded."
-			: "Upload has been disabled. Blank detail is not allowed.";
+			: "Upload has been disabled. Blank details are not allowed (Middle Initial is optional).";
 
 		var parameters = new DialogParameters
 		{

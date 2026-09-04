@@ -152,6 +152,7 @@
         </ToolBarLeft>
         <HeaderTemplate>
             <MudTh> Action</MudTh>
+            <MudTh>Ticket No.</MudTh>
             <MudTh>Subject Name</MudTh>
             <MudTh>Requestor</MudTh>
             <MudTh>Status</MudTh>
@@ -177,6 +178,16 @@
                         @onclick="@(() => OnCheckboxChanged(r, !r.Selected))">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
                 </button>
+            </MudTd>
+            <MudTd DataLabel="Ticket No.">
+                @if (!string.IsNullOrWhiteSpace(r.TicketNumber))
+                {
+                    <span class="report-ticket-number">@r.TicketNumber</span>
+                }
+                else
+                {
+                    <span class="report-ticket-empty" title="OMS has not issued a ticket for this order yet">—</span>
+                }
             </MudTd>
             <MudTd DataLabel="Subject Name"><div class="report-subject"><span class="report-avatar">@GetInitials(r.SubjectName)</span><span class="report-name">@r.SubjectName</span></div></MudTd>
             <MudTd DataLabel="Requestor">@r.Requestor</MudTd>

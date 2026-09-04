@@ -137,17 +137,11 @@ body,
 }
 
 .cibi-brand-loader > svg {
-    width: 64px;
+    /* 52px, not 64: the C's artwork is 44:54, so at 64px height it renders
+       52px wide - a 64px box letterboxes it and de-centers the whole row. */
+    width: 52px;
     height: 64px;
-    margin: 0 5px;
-}
-
-.cibi-brand-loader > svg:nth-child(3) {
-    margin-right: 7px;
-}
-
-.cibi-brand-loader > svg:nth-child(4) {
-    margin-left: 7px;
+    margin: 0 7px;
 }
 
 .cibi-brand-loader > svg.cibi-loader-definitions {
@@ -165,10 +159,6 @@ body,
 .cibi-brand-loader > svg.cibi-loader-letter-b {
     width: 49px;
     height: 64px;
-}
-
-.cibi-loader-spacer {
-    width: 0.5em;
 }
 
 .cibi-loader-dash {

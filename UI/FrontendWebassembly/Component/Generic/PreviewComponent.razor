@@ -50,7 +50,7 @@
                         {
                             var cellColumn = row[i];
                             <MudTd DataLabel="@Headers[i]"
-                                   Class="@(string.IsNullOrWhiteSpace(cellColumn) ? "preview-upload-invalid-cell" : null)">
+                                   Class="@(IsRequiredCellBlank(i, cellColumn) ? "preview-upload-invalid-cell" : null)">
                                 @if (i == 0 && !string.IsNullOrWhiteSpace(cellColumn))
                                 {
                                     <span class="preview-upload-name-cell">
@@ -61,7 +61,9 @@
                                 else
                                 {
                                     <span class="@(i >= 2 ? "preview-upload-muted" : null)">
-                                        @(string.IsNullOrWhiteSpace(cellColumn) ? "(Blank)" : cellColumn)
+                                        @(string.IsNullOrWhiteSpace(cellColumn)
+                                            ? (IsRequiredCellBlank(i, cellColumn) ? "(Blank)" : "—")
+                                            : cellColumn)
                                     </span>
                                 }
                             </MudTd>

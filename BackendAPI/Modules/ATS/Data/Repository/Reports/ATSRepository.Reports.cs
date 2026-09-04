@@ -124,6 +124,7 @@ public partial class ATSRepository
 				MiddleInitial = eir.MiddleInitial,
 				LastName = eir.LastName,
 				Requestor = eir.Requestor,
+				TicketNumber = eir.TicketNumber,
 				OrderStatus = eir.OrderStatus,
 				OrderCompletedAt = eir.OrderCompletedAt,
 				SelectPackage = eir.SelectPackage,
@@ -166,6 +167,7 @@ public partial class ATSRepository
 			var search = $"%{searchTerm}%";
 			usersQuery = usersQuery.Where(x =>
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
+				EF.Functions.ILike(x.TicketNumber ?? string.Empty, search) ||
 				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));

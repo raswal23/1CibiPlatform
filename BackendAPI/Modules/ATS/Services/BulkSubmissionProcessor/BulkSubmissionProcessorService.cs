@@ -106,7 +106,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					throw new InternalServerException("Invalid CSV format. Missing header row.");
 				}
 
-				var expectedHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+				var expectedHeaders = new List<string>
 				{
 					nameof(BulkUploadCsvRecord.LastName),
 					nameof(BulkUploadCsvRecord.FirstName),
@@ -116,13 +116,23 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 				};
 
 				var actualHeaders = csv.HeaderRecord?
-					.Select(header => header?.Trim())
-					.Where(header => !string.IsNullOrWhiteSpace(header))
-					.Select(header => header!)
-					.ToHashSet(StringComparer.OrdinalIgnoreCase)
-					?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+					.Select(header => header?.Trim() ?? string.Empty)
+					.ToList()
+					?? [];
 
-				if (!expectedHeaders.SetEquals(actualHeaders))
+				// The template's sequence is the standard: the file must LEAD with the
+				// expected columns in exactly this order. Columns AFTER them are
+				// spreadsheet debris (notes, helper formulas) - CsvHelper maps by header
+				// name and never reads them, so they are harmless, and the preview
+				// dialog drops them for the same reason.
+				var headersMatchTemplate =
+					actualHeaders.Count >= expectedHeaders.Count
+					&& expectedHeaders
+						.Select((expected, index) =>
+							string.Equals(actualHeaders[index], expected, StringComparison.OrdinalIgnoreCase))
+						.All(matches => matches);
+
+				if (!headersMatchTemplate)
 				{
 					_logger.LogError("Failed Transaction: Invalid CSV columns for identity: {@Context}. Expected: {ExpectedHeaders}. Actual: {ActualHeaders}", logContext, string.Join(",", expectedHeaders), string.Join(",", actualHeaders));
 					throw new InternalServerException("Invalid CSV format. Please use the required column headers.");
@@ -179,7 +189,11 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
 						LastName = row.LastName,
 						FirstName = row.FirstName,
-						MiddleInitial = row.MiddleInitial,
+						// Optional column: a candidate may have no middle initial. Blank is
+						// stored as null, matching how EditSubjectName persists it.
+						MiddleInitial = string.IsNullOrWhiteSpace(row.MiddleInitial)
+							? null
+							: row.MiddleInitial.Trim(),
 						EmailAddress = row.EmailAddress,
 
 						// The normalised local form, so every stored number reads the

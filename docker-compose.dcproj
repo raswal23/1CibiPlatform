@@ -6043,14 +6043,12 @@
     <None Include="UI\FrontendWebassembly\wwwroot\js\ats\atsAssistant.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\ats\chartExport.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\ats\downloadFile.js" />
-    <None Include="UI\FrontendWebassembly\wwwroot\js\generic\downloadExcelFile.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\fileInputInterop.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\html2canvas.min.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\jspdf.umd.min.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\nameFilter.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\navigationLock.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\generic\safeSignaturePad.js" />
-    <None Include="UI\FrontendWebassembly\wwwroot\js\generic\xlsx.full.min.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\philsys\downloadResponse.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\philsys\everify-liveness-sdk.min.js" />
     <None Include="UI\FrontendWebassembly\wwwroot\js\philsys\livenessInterop.js" />
