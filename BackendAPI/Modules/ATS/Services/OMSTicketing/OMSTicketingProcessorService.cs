@@ -13,15 +13,18 @@ public class OMSTicketingProcessorService : IOMSTicketingProcessorService
 	private readonly ILogger<OMSTicketingProcessorService> _logger;
 	private readonly IOMSTicketingRepository _repository;
 	private readonly IServiceScopeFactory _serviceScopeFactory;
+	private readonly HybridCache _hybridCache;
 
 	public OMSTicketingProcessorService(
 		ILogger<OMSTicketingProcessorService> logger,
 		IOMSTicketingRepository repository,
-		IServiceScopeFactory serviceScopeFactory)
+		IServiceScopeFactory serviceScopeFactory,
+		HybridCache hybridCache)
 	{
 		_logger = logger;
 		_repository = repository;
 		_serviceScopeFactory = serviceScopeFactory;
+		_hybridCache = hybridCache;
 	}
 
 	public async Task ProcessAsync(CancellationToken cancellationToken)
@@ -83,6 +86,16 @@ public class OMSTicketingProcessorService : IOMSTicketingProcessorService
 		var results = await Task.WhenAll(tasks);
 
 		var succeeded = results.Count(result => result.Succeeded);
+
+		if (succeeded > 0)
+		{
+			// OMS ticket data is rendered by the cached report, dispute, and
+			// withdrawn keyset lists. Revoke the first-page and count entries once
+			// after all successful ticket writes in this background-service pass.
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.DisputeOrder, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
 
 		_logger.LogInformation(
 			"OMS ticketing processed {SucceededCount} of {ClaimedCount} claimed order(s): {@Context}",
@@ -146,18 +159,21 @@ public class OMSTicketingProcessorService : IOMSTicketingProcessorService
 				cancellationToken,
 				payload.EmailInvitationID.ToString("D"));
 
-			await repository.MarkTicketedAsync(
+			var persisted = await repository.MarkTicketedAsync(
 				payload.EmailInvitationID,
 				ticket.TicketNumber,
 				ticket.DeliveryDate,
 				cancellationToken);
 
-			_logger.LogInformation(
-				"Order {EmailInvitationID} ticketed as {TicketNumber}.",
-				payload.EmailInvitationID,
-				ticket.TicketNumber);
+			if (persisted)
+			{
+				_logger.LogInformation(
+					"Order {EmailInvitationID} ticketed as {TicketNumber}.",
+					payload.EmailInvitationID,
+					ticket.TicketNumber);
+			}
 
-			return (payload.EmailInvitationID, true);
+			return (payload.EmailInvitationID, persisted);
 		}
 		catch (BadRequestException ex)
 		{
