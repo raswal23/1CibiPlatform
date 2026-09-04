@@ -61,16 +61,16 @@ public class DisputeOrderService : IDisputeOrderService
 		var clientIds = scope.AuthorizedClientIds;
 		var requiredRequestorId = scope.RequiredOwnerId;
 
-		// Cursor over the fixed (createdAt, id) ordering. Both anchors are required;
+		// Cursor over the fixed (completedAt, id) ordering. Both anchors are required;
 		// a malformed cursor restarts the walk from the first page.
 		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
-		DateTime? afterCreatedAt = DateTime.TryParse(fields?[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt) ? createdAt : null;
+		DateTime? afterCompletedAt = DateTime.TryParse(fields?[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var completedAt) ? completedAt : null;
 		Guid? afterId = Guid.TryParse(fields?[1], out var invitationId) ? invitationId : null;
-		var hasSeek = afterCreatedAt.HasValue && afterId.HasValue;
+		var hasSeek = afterCompletedAt.HasValue && afterId.HasValue;
 		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
 
 		var rows = await _atsRepository.GetDisputeOrdersPageAsync(
-			paginationRequest.SearchTerm, hasSeek ? afterCreatedAt : null, hasSeek ? afterId : null,
+			paginationRequest.SearchTerm, hasSeek ? afterCompletedAt : null, hasSeek ? afterId : null,
 			pageSize + 1, clientIds, requiredRequestorId, cancellationToken);
 		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
 
@@ -79,7 +79,7 @@ public class DisputeOrderService : IDisputeOrderService
 		{
 			var last = items[^1];
 			nextCursor = CursorCodec.Encode(
-				last.OrderCreatedAt!.Value.ToString("O"),
+				last.OrderCompletedAt!.Value.ToString("O"),
 				last.EmailInvitationID.ToString("D"));
 		}
 

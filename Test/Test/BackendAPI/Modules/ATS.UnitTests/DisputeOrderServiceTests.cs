@@ -154,6 +154,49 @@ public class DisputeOrderServiceTests
 	}
 
 	[Fact]
+	public async Task GetDisputeOrdersAsync_ShouldEncodeCompletedAtInNextCursor_WhenMoreRowsExist()
+	{
+		var userId = SetAuthenticatedUser(AtsRoleIds.User, clientId: 7);
+		SetAccessScope([7], userId);
+		var completedAt = new DateTime(2026, 8, 20, 9, 30, 0, DateTimeKind.Utc);
+		var first = new DisputeOrderListDTO
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			OrderCompletedAt = completedAt
+		};
+		var second = new DisputeOrderListDTO
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			OrderCompletedAt = completedAt.AddMinutes(-1)
+		};
+
+		_repository.Setup(repository => repository.GetDisputeOrdersPageAsync(
+			null,
+			null,
+			null,
+			2,
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+			userId,
+			CancellationToken.None)).ReturnsAsync([first, second]);
+		_repository.Setup(repository => repository.CountDisputeOrdersAsync(
+			null,
+			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
+			userId,
+			CancellationToken.None)).ReturnsAsync(2);
+
+		var result = await _service.GetDisputeOrdersAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 1),
+			CancellationToken.None);
+
+		result.Items.Should().ContainSingle().Which.Should().BeSameAs(first);
+		result.NextCursor.Should().NotBeNull();
+		var fields = CursorCodec.Decode(result.NextCursor, 2);
+		fields.Should().NotBeNull();
+		fields![0].Should().Be(completedAt.ToString("O"));
+		fields[1].Should().Be(first.EmailInvitationID.ToString("D"));
+	}
+
+	[Fact]
 	public async Task MarkAsDisputedAsync_ShouldSendNotificationUpdateRepositoryAndReturnTrue()
 	{
 		// Arrange
@@ -474,7 +517,7 @@ public class DisputeOrderServiceTests
 			EmailInvitationID = Guid.CreateVersion7(),
 			FirstName = "Ada",
 			LastName = "Lovelace",
-			OrderCreatedAt = DateTime.UtcNow.AddDays(-2),
+			DisputedAt = DateTime.UtcNow.AddDays(-2),
 			OrderCompletedAt = DateTime.UtcNow.AddDays(-1)
 		}
 	];

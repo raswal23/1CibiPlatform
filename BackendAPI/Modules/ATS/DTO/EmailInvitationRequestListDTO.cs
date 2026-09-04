@@ -10,4 +10,5 @@ public record EmailInvitationRequestListDTO
 	public string? TicketNumber { get; set; }
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
+	public DateTime? WithdrawnAt { get; set; }
 }

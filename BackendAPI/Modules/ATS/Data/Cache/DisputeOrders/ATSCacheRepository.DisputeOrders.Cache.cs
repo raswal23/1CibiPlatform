@@ -4,7 +4,7 @@ public partial class ATSCacheRepository
 {
 	public async Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
 		string? searchTerm,
-		DateTime? afterCreatedAt,
+		DateTime? afterCompletedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
@@ -12,9 +12,9 @@ public partial class ATSCacheRepository
 		CancellationToken cancellationToken)
 	{
 		if (afterId.HasValue)
-			return await _atsRepository.GetDisputeOrdersPageAsync(searchTerm, afterCreatedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
+			return await _atsRepository.GetDisputeOrdersPageAsync(searchTerm, afterCompletedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
 
-		var cacheKey = $"disputeorder_ordercreated_desc_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
+		var cacheKey = $"disputeorder_ordercompleted_desc_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync<List<DisputeOrderListDTO>>(
 			cacheKey,

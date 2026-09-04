@@ -156,6 +156,27 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		};
 
 		await _dbContext.EmailInvitationRequests.AddRangeAsync(withdrawn1, withdrawn2, active);
+		var olderWithdrawnAt = DateTime.UtcNow.AddHours(-2);
+		var latestWithdrawnAt = DateTime.UtcNow.AddHours(-1);
+		await _dbContext.OrderStatusHistories.AddRangeAsync(
+			new OrderStatusHistory
+			{
+				OrderStatusHistoryId = Guid.CreateVersion7(),
+				EmailInvitationRequestId = withdrawn1.EmailInvitationID,
+				EventType = OrderHistoryEventType.ApplicationFormWithdrawn,
+				NewStatus = "Application Withdrawn",
+				Source = "IntegrationTest",
+				OccurredAt = olderWithdrawnAt
+			},
+			new OrderStatusHistory
+			{
+				OrderStatusHistoryId = Guid.CreateVersion7(),
+				EmailInvitationRequestId = withdrawn1.EmailInvitationID,
+				EventType = OrderHistoryEventType.ApplicationFormWithdrawn,
+				NewStatus = "Application Withdrawn",
+				Source = "IntegrationTest",
+				OccurredAt = latestWithdrawnAt
+			});
 		await _dbContext.SaveChangesAsync();
 
       // Act
@@ -166,6 +187,10 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		result!.Items.Should().HaveCount(2);
 		result.Items.Should().AllSatisfy(x => x.OrderStatus.Should().Be("Application Withdrawn"));
 		result.Items.Select(x => x.EmailAddress).Should().Contain(new[] { "withdrawn1@example.com", "withdrawn2@example.com" });
+		result.Items.Single(x => x.EmailAddress == withdrawn1.EmailAddress).WithdrawnAt.Should().BeCloseTo(
+			latestWithdrawnAt,
+			TimeSpan.FromMilliseconds(1));
+		result.Items.Single(x => x.EmailAddress == withdrawn2.EmailAddress).WithdrawnAt.Should().BeNull();
 	}
 
 	[Fact]

@@ -16,7 +16,7 @@ public partial class ATSCacheRepository
 		if (afterId.HasValue)
 			return await _atsRepository.GetWithdrawnPageAsync(searchTerm, afterCreatedAt, afterId, take, authorizedClientIds, requiredRequestorId, cancellationToken);
 
-		var cacheKey = $"withdrawnapplication_ordercreated_desc_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
+		var cacheKey = $"withdrawnapplication_withdrawnat_ordercreated_desc_first_take_{take}_search_{searchTerm}_clients_{ClientScope(authorizedClientIds)}_requestor_{RequestorScope(requiredRequestorId)}";
 
 		return await _hybridCache.GetOrCreateAsync<List<EmailInvitationRequestListDTO>>(
 			cacheKey,

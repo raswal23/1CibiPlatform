@@ -2,13 +2,13 @@ namespace ATS.Data.Repository;
 
 public partial class ATSRepository
 {
-	// Keyset over OrderCreatedAt descending. EmailInvitationID is only a stable
-	// tiebreaker for orders created at the same instant. OrderCreatedAt is never
-	// null here because the base filter requires OrderCreatedAt.HasValue.
+	// Keyset over OrderCompletedAt descending. EmailInvitationID is only a stable
+	// tiebreaker for orders completed at the same instant. OrderCompletedAt is
+	// non-null here because the eligibility filter requires it to be in-window.
 	// Pure query — the service decodes the cursor and mints the next one.
 	public async Task<List<DisputeOrderListDTO>> GetDisputeOrdersPageAsync(
 		string? searchTerm,
-		DateTime? afterCreatedAt,
+		DateTime? afterCompletedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
@@ -16,17 +16,17 @@ public partial class ATSRepository
 		CancellationToken cancellationToken)
 	{
 		var pageQuery = BuildDisputeOrdersQuery(searchTerm, authorizedClientIds, requiredRequestorId);
-		if (afterCreatedAt.HasValue && afterId.HasValue)
+		if (afterCompletedAt.HasValue && afterId.HasValue)
 		{
-			var cCreatedAt = afterCreatedAt.Value;
+			var cCompletedAt = afterCompletedAt.Value;
 			var cId = afterId.Value;
 			pageQuery = pageQuery.Where(eir =>
-				eir.OrderCreatedAt < cCreatedAt
-				|| (eir.OrderCreatedAt == cCreatedAt && eir.EmailInvitationID.CompareTo(cId) > 0));
+				eir.OrderCompletedAt < cCompletedAt
+				|| (eir.OrderCompletedAt == cCompletedAt && eir.EmailInvitationID.CompareTo(cId) > 0));
 		}
 
 		return await pageQuery
-			.OrderByDescending(eir => eir.OrderCreatedAt)
+			.OrderByDescending(eir => eir.OrderCompletedAt)
 			.ThenBy(eir => eir.EmailInvitationID)
 			.Take(take)
 			.Select(eir => new DisputeOrderListDTO
@@ -37,7 +37,7 @@ public partial class ATSRepository
 				Requestor = eir.Requestor,
 				TicketNumber = eir.TicketNumber,
 				DisputeCategory = eir.DisputeCategory,
-				OrderCreatedAt = eir.OrderCreatedAt,
+				DisputedAt = eir.DisputedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
 			})
 			.ToListAsync(cancellationToken);
@@ -63,7 +63,9 @@ public partial class ATSRepository
 					|| (eir.ClientId.HasValue && authorizedClientIds.Contains(eir.ClientId.Value)))
 				&& (!requiredRequestorId.HasValue
 					|| eir.RequestorId == requiredRequestorId.Value))
-			.Where(eir => eir.OrderStatus == OrderStatus.Completed && eir.OrderCreatedAt.HasValue && eir.OrderCompletedAt!.Value >= disputeWindowStart);
+			.Where(eir => eir.OrderStatus == OrderStatus.Completed
+				&& eir.OrderCompletedAt.HasValue
+				&& eir.OrderCompletedAt.Value >= disputeWindowStart);
 
 		if (!string.IsNullOrEmpty(searchTerm))
 			usersQuery = usersQuery.Where(eir =>

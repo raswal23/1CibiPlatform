@@ -40,6 +40,12 @@ public partial class ATSRepository
 						TicketNumber = eir.TicketNumber,
 						OrderStatus = eir.OrderStatus,
 						OrderCreatedAt = eir.OrderCreatedAt,
+						WithdrawnAt = _dbcontext.OrderStatusHistories
+							.Where(history => history.EmailInvitationRequestId == eir.EmailInvitationID
+								&& history.EventType == OrderHistoryEventType.ApplicationFormWithdrawn)
+							.OrderByDescending(history => history.OccurredAt)
+							.Select(history => (DateTime?)history.OccurredAt)
+							.FirstOrDefault(),
 					})
 					.ToListAsync(cancellationToken);
 	}
