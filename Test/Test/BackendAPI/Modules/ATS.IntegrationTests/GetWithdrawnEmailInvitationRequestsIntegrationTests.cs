@@ -185,7 +185,6 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 		// Assert
 		result.Should().NotBeNull();
 		result!.Items.Should().HaveCount(2);
-		result.Items.Should().AllSatisfy(x => x.OrderStatus.Should().Be("Application Withdrawn"));
 		result.Items.Select(x => x.EmailAddress).Should().Contain(new[] { "withdrawn1@example.com", "withdrawn2@example.com" });
 		result.Items.Single(x => x.EmailAddress == withdrawn1.EmailAddress).WithdrawnAt.Should().BeCloseTo(
 			latestWithdrawnAt,

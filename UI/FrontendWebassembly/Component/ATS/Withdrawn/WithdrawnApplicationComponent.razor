@@ -20,7 +20,7 @@
                 LoadServerData="LoadWithdrawnServerData"
                 CursorPagerState="_withdrawnLoader"
                 SearchString="@searchString"
-                ColumnCount="9"
+                ColumnCount="8"
                 SearchStringChanged="@((string val) => searchString = val)">
     <HeaderTemplate>
         <MudTh>Ticket No.</MudTh>
@@ -30,7 +30,6 @@
         <MudTh>Last Name</MudTh>
         <MudTh>Date Created</MudTh>
         <MudTh>Withdrawn At</MudTh>
-        <MudTh>Ticket Status</MudTh>
         <MudTh>Action</MudTh>
     </HeaderTemplate>
 
@@ -44,7 +43,6 @@
             <MudTd DataLabel="Last Name"><MudSkeleton Height="20px" Width="80%" /></MudTd>
             <MudTd DataLabel="Date Created"><MudSkeleton Height="20px" Width="120px" /></MudTd>
             <MudTd DataLabel="Withdrawn At"><MudSkeleton Height="20px" Width="120px" /></MudTd>
-            <MudTd DataLabel="Ticket Status"><MudSkeleton Height="24px" Width="100px" /></MudTd>
             <MudTd DataLabel="Action">
                 <MudSkeleton Height="36px" Width="36px" />
             </MudTd>
@@ -72,7 +70,6 @@
             <MudTd DataLabel="Last Name" Class="withdrawn-name">@item.LastName</MudTd>
             <MudTd DataLabel="Date Created">@(item.OrderCreatedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")</MudTd>
             <MudTd DataLabel="Withdrawn At">@(item.WithdrawnAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")</MudTd>
-            <MudTd DataLabel="Ticket Status"><span class="withdrawn-status">Application withdrawn</span></MudTd>
             <MudTd DataLabel="Action">
                 <button type="button"
                         class="withdrawn-action"

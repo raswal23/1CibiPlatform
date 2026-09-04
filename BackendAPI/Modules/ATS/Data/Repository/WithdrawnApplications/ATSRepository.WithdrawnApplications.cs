@@ -38,7 +38,6 @@ public partial class ATSRepository
 						LastName = eir.LastName,
 						Requestor = eir.Requestor,
 						TicketNumber = eir.TicketNumber,
-						OrderStatus = eir.OrderStatus,
 						OrderCreatedAt = eir.OrderCreatedAt,
 						WithdrawnAt = _dbcontext.OrderStatusHistories
 							.Where(history => history.EmailInvitationRequestId == eir.EmailInvitationID
