@@ -109,11 +109,11 @@
                 </MudTd>
 
                 <MudTd Class="dispute-date" DataLabel="Date Created">
-                    @(o.OrderCreatedAt?.ToString("MMMM dd, yyyy") ?? "—")
+                    @(o.OrderCreatedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")
                 </MudTd>
 
                 <MudTd Class="dispute-date" DataLabel="Date Completed">
-                    @(o.OrderCompletedAt?.ToString("MMMM dd, yyyy") ?? "-")
+                    @(o.OrderCompletedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")
                 </MudTd>
 
                 <MudTd DataLabel="Send Dispute">

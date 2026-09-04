@@ -68,7 +68,7 @@
             <MudTd DataLabel="Requestor">@item.Requestor</MudTd>
             <MudTd DataLabel="First Name" Class="withdrawn-name">@item.FirstName</MudTd>
             <MudTd DataLabel="Last Name" Class="withdrawn-name">@item.LastName</MudTd>
-            <MudTd DataLabel="Date Created">@(item.OrderCreatedAt?.ToString("MMMM dd, yyyy") ?? "—")</MudTd>
+            <MudTd DataLabel="Date Created">@(item.OrderCreatedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")</MudTd>
             <MudTd DataLabel="Ticket Status"><span class="withdrawn-status">Application withdrawn</span></MudTd>
             <MudTd DataLabel="Action">
                 <button type="button"
