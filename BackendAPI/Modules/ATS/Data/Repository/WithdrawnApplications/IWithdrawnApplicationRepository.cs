@@ -4,6 +4,7 @@ public interface IWithdrawnApplicationRepository
 {
 	Task<List<EmailInvitationRequestListDTO>> GetWithdrawnPageAsync(
 		string? searchTerm,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,

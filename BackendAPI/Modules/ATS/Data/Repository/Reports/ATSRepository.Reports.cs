@@ -51,14 +51,11 @@ public partial class ATSRepository
 		return true;
 	}
 
-	// Keyset over the fixed reports ordering (Rank ASC, OrderCompletedAt DESC,
-	// EmailInvitationID ASC). Pure query — the service decodes the cursor and mints
-	// the next one. The seek applies when afterRank and afterId are present; a NULL
-	// afterCompletedAt legitimately means the last row's sort key was NULL (the
-	// NULLS FIRST branch of the DESC ordering).
+	// Both the unfiltered and searched report lists use the same fixed ordering:
+	// OrderCreatedAt descending. EmailInvitationID is only a deterministic keyset
+	// tiebreaker for orders created at the same instant.
 	public async Task<List<ReportRowDTO>> GetReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
@@ -66,15 +63,14 @@ public partial class ATSRepository
 		CancellationToken cancellationToken)
 	{
 		var pageQuery = BuildReportRowsQuery(authorizedClientIds, requiredRequestorId);
-		if (afterRank.HasValue && afterId.HasValue)
-			pageQuery = ApplyReportsSeek(pageQuery, afterRank.Value, afterCompletedAt, afterId.Value);
+		if (afterId.HasValue)
+			pageQuery = ApplyReportsSeek(pageQuery, afterCreatedAt, afterId.Value);
 
 		return await ApplyReportsOrder(pageQuery).Take(take).ToListAsync(cancellationToken);
 	}
 
 	public async Task<List<ReportRowDTO>> SearchReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		string? searchTerm,
@@ -85,8 +81,8 @@ public partial class ATSRepository
 		CancellationToken cancellationToken)
 	{
 		var pageQuery = BuildSearchReportRowsQuery(searchTerm, startDate, endDate, authorizedClientIds, requiredRequestorId);
-		if (afterRank.HasValue && afterId.HasValue)
-			pageQuery = ApplyReportsSeek(pageQuery, afterRank.Value, afterCompletedAt, afterId.Value);
+		if (afterId.HasValue)
+			pageQuery = ApplyReportsSeek(pageQuery, afterCreatedAt, afterId.Value);
 
 		return await ApplyReportsOrder(pageQuery).Take(take).ToListAsync(cancellationToken);
 	}
@@ -126,18 +122,14 @@ public partial class ATSRepository
 				Requestor = eir.Requestor,
 				TicketNumber = eir.TicketNumber,
 				OrderStatus = eir.OrderStatus,
+				OrderCreatedAt = eir.OrderCreatedAt,
 				OrderCompletedAt = eir.OrderCompletedAt,
 				SelectPackage = eir.SelectPackage,
 				HitStatus = _dbcontext.ReportDetails
 					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
 					.OrderByDescending(rd => rd.ReportUploadedAt)
 					.Select(rd => rd.HitStatus)
-					.FirstOrDefault(),
-				Rank = eir.OrderStatus == OrderStatus.Completed ? 0 :
-					eir.OrderStatus == OrderStatus.InProgress ? 1 :
-					eir.OrderStatus == OrderStatus.ApplicationWithdrawn ? 2 :
-					eir.OrderStatus == OrderStatus.PendingCandidateInfo ? 3 :
-					4
+					.FirstOrDefault()
 			});
 	}
 
@@ -176,27 +168,24 @@ public partial class ATSRepository
 		return usersQuery;
 	}
 
-	// The single reports ordering: status precedence first, newest completions next,
-	// unique id as the tiebreaker. Postgres sorts DESC as NULLS FIRST, which the
-	// seek predicate in ApplyReportsSeek mirrors exactly.
+	// OrderCreatedAt is the only business sort key. The id provides stable paging
+	// when two rows have the same creation timestamp.
 	private static IQueryable<ReportRowDTO> ApplyReportsOrder(IQueryable<ReportRowDTO> pageQuery) => pageQuery
-		.OrderBy(x => x.Rank).ThenByDescending(x => x.OrderCompletedAt).ThenBy(x => x.EmailInvitationID);
+		.OrderByDescending(x => x.OrderCreatedAt).ThenBy(x => x.EmailInvitationID);
 
-	// NULL-aware seek predicate for the fixed (Rank ASC, OrderCompletedAt DESC
-	// NULLS FIRST, Id ASC) ordering. A NULL afterCompletedAt means the last row's
-	// sort key was NULL, selecting the NULLS FIRST branch.
+	// PostgreSQL places nulls first for DESC. Mirror that behavior in the seek so
+	// legacy rows without a creation timestamp remain pageable.
 	private static IQueryable<ReportRowDTO> ApplyReportsSeek(
-		IQueryable<ReportRowDTO> query, int afterRank, DateTime? afterCompletedAt, Guid afterId)
+		IQueryable<ReportRowDTO> query, DateTime? afterCreatedAt, Guid afterId)
 	{
-		if (afterCompletedAt is null)
-			return query.Where(x => x.Rank > afterRank
-				|| (x.Rank == afterRank && ((x.OrderCompletedAt == null && x.EmailInvitationID.CompareTo(afterId) > 0)
-					|| x.OrderCompletedAt != null)));
+		if (afterCreatedAt is null)
+			return query.Where(x =>
+				(x.OrderCreatedAt == null && x.EmailInvitationID.CompareTo(afterId) > 0)
+				|| x.OrderCreatedAt != null);
 
-		return query.Where(x => x.Rank > afterRank
-			|| (x.Rank == afterRank && x.OrderCompletedAt != null
-				&& (x.OrderCompletedAt < afterCompletedAt
-					|| (x.OrderCompletedAt == afterCompletedAt && x.EmailInvitationID.CompareTo(afterId) > 0))));
+		return query.Where(x => x.OrderCreatedAt != null
+			&& (x.OrderCreatedAt < afterCreatedAt
+				|| (x.OrderCreatedAt == afterCreatedAt && x.EmailInvitationID.CompareTo(afterId) > 0)));
 	}
 
 	public async Task<ReportResultDTO?> GetReportResultByEmailInvitationRequestIdAsync(

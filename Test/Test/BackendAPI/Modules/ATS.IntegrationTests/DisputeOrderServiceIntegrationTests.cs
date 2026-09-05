@@ -33,7 +33,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	#region Happy Path
 
 	[Fact]
-	public async Task GetDisputeOrdersAsync_ShouldReturnEligibleOrdersInDisputePriorityOrder()
+	public async Task GetDisputeOrdersAsync_ShouldReturnEligibleOrdersByOrderCompletedAtDescending()
 	{
 		// Arrange
 		SetAuthenticatedUser(AuthenticatedUserId, AtsRoleIds.User, clientId: 7);
@@ -43,8 +43,9 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			"Candidate",
 			"disputed@example.com",
 			now.AddDays(-10),
-			now.AddDays(-9),
+			now.AddHours(-12),
 			"Report");
+		disputed.DisputedAt = now.AddHours(-6);
 		var newest = CreateOrder(
 			"Newest",
 			"Candidate",
@@ -98,8 +99,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			disputed.LastName,
 			disputed.DisputeCategory
 		});
-		orders[0].OrderCreatedAt.Should().BeCloseTo(
-			disputed.OrderCreatedAt!.Value,
+		orders[0].DisputedAt.Should().BeCloseTo(
+			disputed.DisputedAt!.Value,
 			TimeSpan.FromMilliseconds(1));
 		orders[0].OrderCompletedAt.Should().BeCloseTo(
 			disputed.OrderCompletedAt!.Value,
@@ -167,11 +168,10 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 		// Assert
 		result.TotalCount.Should().Be(3);
-		result.Items.Select(order => order.EmailInvitationID).Should().BeEquivalentTo([
-			firstNameMatch.EmailInvitationID,
+		result.Items.Select(order => order.EmailInvitationID).Should().Equal(
+			emailMatch.EmailInvitationID,
 			lastNameMatch.EmailInvitationID,
-			emailMatch.EmailInvitationID
-		]);
+			firstNameMatch.EmailInvitationID);
 	}
 
 	[Theory]
@@ -362,7 +362,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		persisted.DisputedAt.Value.Should().BeOnOrBefore(DateTime.UtcNow);
 
 		var refreshed = await service.GetDisputeOrdersAsync(pagination, CancellationToken.None);
-		refreshed.Items.Should().ContainSingle().Which.DisputeCategory.Should().Be("Report");
+		var refreshedOrder = refreshed.Items.Should().ContainSingle().Subject;
+		refreshedOrder.DisputeCategory.Should().Be("Report");
+		refreshedOrder.DisputedAt.Should().BeCloseTo(
+			persisted.DisputedAt.Value,
+			TimeSpan.FromMilliseconds(1));
 
 		var recipient = _configuration["ATS:DisputeOrderEmailRecipient"] ?? string.Empty;
 		emailService.Verify(serviceMock => serviceMock.SendEmailForDispute(

@@ -8,16 +8,14 @@ public interface IReportRepository
 	Task<bool> UpdateOrderStatusAsync(Guid EmailInvitationRequestId, string orderStatus, DateTime? orderCompletedAt, CancellationToken cancellationToken);
 	Task<bool> AddArchiveReportAsync(ArchiveReport archiveReport, CancellationToken cancellationToken);
 	Task<List<ReportRowDTO>> GetReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		IReadOnlyCollection<int>? authorizedClientIds,
 		Guid? requiredRequestorId,
 		CancellationToken cancellationToken);
 	Task<List<ReportRowDTO>> SearchReportsPageAsync(
-		int? afterRank,
-		DateTime? afterCompletedAt,
+		DateTime? afterCreatedAt,
 		Guid? afterId,
 		int take,
 		string? searchTerm,

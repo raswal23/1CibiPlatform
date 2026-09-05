@@ -381,17 +381,24 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		var clientIds = scope.AuthorizedClientIds;
 		var requiredRequestorId = scope.RequiredOwnerId;
 
-		// An undecodable cursor (malformed, stale) means "first page".
-		var fields = CursorCodec.Decode(paginationRequest.Cursor, 1);
-		Guid? afterId = Guid.TryParse(fields?[0], out var invitationId) ? invitationId : null;
+		// Cursor over the fixed (createdAt?, id) ordering. An empty createdAt keeps
+		// legacy rows with a null timestamp pageable.
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
+		Guid? afterId = Guid.TryParse(fields?[1], out var invitationId) ? invitationId : null;
+		DateTime? afterCreatedAt = afterId.HasValue
+			&& DateTime.TryParse(fields![0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt)
+			? createdAt : null;
 		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
 
 		var rows = await _atsRepository.GetWithdrawnPageAsync(
-			paginationRequest.SearchTerm, afterId, pageSize + 1, clientIds, requiredRequestorId, cancellationToken);
+			paginationRequest.SearchTerm, afterCreatedAt, afterId, pageSize + 1,
+			clientIds, requiredRequestorId, cancellationToken);
 		var (items, hasMore) = KeysetPage.Trim(rows, pageSize);
 
 		var nextCursor = hasMore
-			? CursorCodec.Encode(items[^1].EmailInvitationID.ToString("D"))
+			? CursorCodec.Encode(
+				items[^1].OrderCreatedAt?.ToString("O"),
+				items[^1].EmailInvitationID.ToString("D"))
 			: null;
 		long? totalCount = afterId.HasValue
 			? null

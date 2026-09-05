@@ -189,32 +189,30 @@ public class ReportService : IReportService
 			|| paginationRequest.StartDate.HasValue
 			|| paginationRequest.EndDate.HasValue;
 
-		// Cursor over the fixed (rank, completedAt?, id) ordering. An undecodable
-		// cursor (malformed, stale) means "first page"; rank and id are required —
-		// an empty completedAt legitimately round-trips a NULL sort key.
-		var fields = CursorCodec.Decode(paginationRequest.Cursor, 3);
-		int? afterRank = int.TryParse(fields?[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var rank) ? rank : null;
-		Guid? afterId = Guid.TryParse(fields?[2], out var invitationId) ? invitationId : null;
-		var hasSeek = afterRank.HasValue && afterId.HasValue;
-		DateTime? afterCompletedAt = hasSeek
-			&& DateTime.TryParse(fields![1], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var completedAt)
-			? completedAt : null;
+		// Cursor over the fixed (createdAt?, id) ordering. The id makes equal
+		// creation timestamps deterministic; an empty createdAt preserves legacy
+		// rows whose creation timestamp is null.
+		var fields = CursorCodec.Decode(paginationRequest.Cursor, 2);
+		Guid? afterId = Guid.TryParse(fields?[1], out var invitationId) ? invitationId : null;
+		var hasSeek = afterId.HasValue;
+		DateTime? afterCreatedAt = hasSeek
+			&& DateTime.TryParse(fields![0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt)
+			? createdAt : null;
 		var pageSize = KeysetPage.Clamp(paginationRequest.PageSize);
 
 		var rows = isSearch
 			? await _atsRepository.SearchReportsPageAsync(
-				hasSeek ? afterRank : null, afterCompletedAt, hasSeek ? afterId : null, pageSize + 1,
+				afterCreatedAt, hasSeek ? afterId : null, pageSize + 1,
 				paginationRequest.SearchTerm, paginationRequest.StartDate, paginationRequest.EndDate,
 				clientIds, requiredRequestorId, cancellationToken)
 			: await _atsRepository.GetReportsPageAsync(
-				hasSeek ? afterRank : null, afterCompletedAt, hasSeek ? afterId : null, pageSize + 1,
+				afterCreatedAt, hasSeek ? afterId : null, pageSize + 1,
 				clientIds, requiredRequestorId, cancellationToken);
 
 		var (page, hasMore) = KeysetPage.Trim(rows, pageSize);
 		var nextCursor = hasMore
 			? CursorCodec.Encode(
-				page[^1].Rank.ToString(CultureInfo.InvariantCulture),
-				page[^1].OrderCompletedAt?.ToString("O"),
+				page[^1].OrderCreatedAt?.ToString("O"),
 				page[^1].EmailInvitationID.ToString("D"))
 			: null;
 
@@ -241,6 +239,7 @@ public class ReportService : IReportService
 			MiddleInitial = x.MiddleInitial,
 			LastName = x.LastName,
 			OrderStatus = x.OrderStatus,
+			OrderCreatedAt = x.OrderCreatedAt,
 			OrderCompletedAt = x.OrderCompletedAt,
 			SelectedPackage = x.SelectPackage,
 			Requestor = x.Requestor,

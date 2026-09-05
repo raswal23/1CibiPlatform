@@ -70,6 +70,7 @@ public class WithdrawnApplicationFilteringTests
 		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
 			"withdrawn",
 			null,
+			null,
 			11,
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 1, 3 })),
 			null,
@@ -100,6 +101,7 @@ public class WithdrawnApplicationFilteringTests
 		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
 			null,
 			null,
+			null,
 			11,
 			It.Is<IReadOnlyCollection<int>>(clientIds => clientIds.SequenceEqual(new[] { 7 })),
 			userId,
@@ -126,6 +128,7 @@ public class WithdrawnApplicationFilteringTests
 		_currentUser.SetupGet(user => user.IsPlatformSuperAdmin).Returns(true);
 		var request = new KeysetPaginationRequest(null, 10);
 		_repository.Setup(repository => repository.GetWithdrawnPageAsync(
+			null,
 			null,
 			null,
 			11,

@@ -48,7 +48,6 @@ public class AtsAssistantPluginTests
 			.Setup(repository => repository.SearchReportsPageAsync(
 				null,
 				null,
-				null,
 				It.IsAny<int>(),
 				"Russel Gutierrez",
 				null,
@@ -97,7 +96,6 @@ public class AtsAssistantPluginTests
 
 		_repository.Verify(
 			repository => repository.SearchReportsPageAsync(
-				It.IsAny<int?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<Guid?>(),
 				It.IsAny<int>(),
@@ -126,7 +124,6 @@ public class AtsAssistantPluginTests
 
 		_repository.Verify(
 			repository => repository.SearchReportsPageAsync(
-				It.IsAny<int?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<Guid?>(),
 				It.IsAny<int>(),
@@ -155,7 +152,6 @@ public class AtsAssistantPluginTests
 
 		_repository.Verify(
 			repository => repository.SearchReportsPageAsync(
-				It.IsAny<int?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<Guid?>(),
 				It.IsAny<int>(),
