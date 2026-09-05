@@ -12,6 +12,7 @@ public partial class NewOrderComponent
 	private bool isPreview = false;
 	private bool isBulkMode = false;
 	private bool isLoadingPackages = true;
+	[Inject] private CheckBulkFileName CheckBulkFileName { get; set; } = default!;
 	private IReadOnlyList<PackageDetailsDTO> availablePackages = Array.Empty<PackageDetailsDTO>();
 
 	protected override async Task OnInitializedAsync()
@@ -277,6 +278,13 @@ public partial class NewOrderComponent
 		if (bulkUploadFileDetailsDTO.BulkFile is null)
 		{
 			Snackbar.Add("File is required", Severity.Error);
+			return;
+		}
+
+		var fileNameError = await CheckBulkFileName.ValidateAsync(bulkUploadFileDetailsDTO.FileName);
+		if (fileNameError is not null)
+		{
+			Snackbar.Add(fileNameError, Severity.Error);
 			return;
 		}
 

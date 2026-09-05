@@ -252,6 +252,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		_logger.LogInformation("Starting uploading process for file {FileName}", bulkUploadFileDetailsDTO.FileName);
 
+		if (await BulkUploadFileNameExistsAsync(bulkUploadFileDetailsDTO.FileName!, ct))
+		{
+			throw new BadRequestException("A file with this name has already been uploaded.");
+		}
+
 		// Validated before the file is stored: the package and order type apply to every
 		// row, so an unassigned package would fail the whole upload once parsed. Better
 		// to reject it here than to accept a file that cannot produce a single order.
@@ -305,6 +310,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		}
 
 		return true;
+	}
+
+	public Task<bool> BulkUploadFileNameExistsAsync(string fileName, CancellationToken ct = default) =>
+		_atsRepository.BulkUploadFileNameExistsAsync(
+			fileName,
+			_currentUser.AtsClientId,
+			_currentUser.UserId,
+			ct);
+
+	public async Task<IReadOnlyList<int>> GetInvalidBulkMobileNumberRowsAsync(IFormFile file, CancellationToken ct = default)
+	{
+		return await ATS.Features.Web.InsertBulkSubject.BulkMobileNumberValidation.ValidateMobileNumbersAsync(file, ct);
 	}
 
 	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, int? clientId)

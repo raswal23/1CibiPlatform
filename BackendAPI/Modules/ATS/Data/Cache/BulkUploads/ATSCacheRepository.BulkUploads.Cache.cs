@@ -7,6 +7,9 @@ public partial class ATSCacheRepository
 		return await _atsRepository.AddBulkUploadFileDetailsAsync(bulkUploadFileDetails);
 	}
 
+	public Task<bool> BulkUploadFileNameExistsAsync(string fileName, int? clientId, Guid? uploadedByUserId, CancellationToken cancellationToken) =>
+		_atsRepository.BulkUploadFileNameExistsAsync(fileName, clientId, uploadedByUserId, cancellationToken);
+
 	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync()
 	{
 		return await _atsRepository.GetBulkUploadFileDetailsAsync();
