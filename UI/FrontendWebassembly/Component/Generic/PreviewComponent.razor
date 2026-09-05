@@ -50,7 +50,7 @@
                         {
                             var cellColumn = row[i];
                             <MudTd DataLabel="@Headers[i]"
-                                   Class="@(IsRequiredCellBlank(i, cellColumn) ? "preview-upload-invalid-cell" : null)">
+                                   Class="@(IsInvalidCell(i, cellColumn) ? "preview-upload-invalid-cell" : null)">
                                 @if (i == 0 && !string.IsNullOrWhiteSpace(cellColumn))
                                 {
                                     <span class="preview-upload-name-cell">
@@ -63,7 +63,7 @@
                                     <span class="@(i >= 2 ? "preview-upload-muted" : null)">
                                         @(string.IsNullOrWhiteSpace(cellColumn)
                                             ? (IsRequiredCellBlank(i, cellColumn) ? "(Blank)" : "—")
-                                            : cellColumn)
+                                            : (IsInvalidMobileNumber(i, cellColumn) ? "(Invalid)" : cellColumn))
                                     </span>
                                 }
                             </MudTd>
@@ -75,7 +75,14 @@
             @if (InvalidRows.Any())
             {
                 <MudAlert Severity="Severity.Error" Dense="true" Class="preview-upload-alert">
-                    Blank values found in row(s): @string.Join(", ", InvalidRows) - @Message
+                    @if (InvalidMobileRows.Any())
+                    {
+                        <div>Mobile number must be exactly 11 digits in row(s): @string.Join(", ", InvalidMobileRows).</div>
+                    }
+                    @if (BlankRows.Any())
+                    {
+                        <div>Blank values found in row(s): @string.Join(", ", BlankRows) - @Message</div>
+                    }
                 </MudAlert>
             }
         </main>
@@ -99,3 +106,4 @@
       </div>
     </DialogContent>
 </MudDialog>
+

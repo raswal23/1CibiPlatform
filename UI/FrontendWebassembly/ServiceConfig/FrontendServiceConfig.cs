@@ -79,6 +79,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IDisputeOrderService, DisputeOrderService>();
 		services.AddScoped<IReportService, ReportService>();
 		services.AddScoped<IBulkUploadService, BulkUploadService>();
+		services.AddScoped<CheckBulkFileName>();
 		services.AddScoped<IOMSTicketingService, OMSTicketingService>();
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();

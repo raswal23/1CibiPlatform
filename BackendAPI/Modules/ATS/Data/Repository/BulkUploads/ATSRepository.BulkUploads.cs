@@ -12,6 +12,18 @@ public partial class ATSRepository
 		return true;
 	}
 
+	public Task<bool> BulkUploadFileNameExistsAsync(
+		string fileName,
+		int? clientId,
+		Guid? uploadedByUserId,
+		CancellationToken cancellationToken) =>
+		_dbcontext.BulkUploadFileDetails.AnyAsync(
+			file => file.ClientId == clientId
+				&& file.UploadedByUserId == uploadedByUserId
+				&& file.FileName != null
+				&& file.FileName.ToLower() == fileName.Trim().ToLower(),
+			cancellationToken);
+
 	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync()
 	{
 		// Same claim pattern as the email queue: SKIP LOCKED lets a second worker step

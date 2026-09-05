@@ -8,6 +8,8 @@ public interface IEndorsementSubmissionService
 	// on the order's history entry. It defaults to Web so existing callers are unchanged.
 	Task<bool> InsertEmailInvitationRequestAsync(EmailInvitationRequestDTO emailInvitationRequestDTO, CancellationToken ct = default, string source = OrderHistorySource.Web);
 	Task<bool> InsertBulkSubjectAsync(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO, CancellationToken ct = default, string source = OrderHistorySource.Web);
+	Task<bool> BulkUploadFileNameExistsAsync(string fileName, CancellationToken ct = default);
+	Task<IReadOnlyList<int>> GetInvalidBulkMobileNumberRowsAsync(IFormFile file, CancellationToken ct = default);
 	Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, int? clientId);
 	Task<KeysetPaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken);

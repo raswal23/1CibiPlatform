@@ -1,4 +1,4 @@
-﻿namespace ATS.Features.Web.InsertBulkSubject;
+namespace ATS.Features.Web.InsertBulkSubject;
 
 public record InsertBulkSubjectCommand(BulkUploadFileDetailsDTO bulkUploadFileDetailsDTO) : ICommand<InsertBulkSubjectResult>;
 public record InsertBulkSubjectResult(bool isAdded);
@@ -17,7 +17,8 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			 string.Equals(System.IO.Path.GetExtension(file.FileName), ".csv", StringComparison.OrdinalIgnoreCase))
 			.WithMessage("Only .csv files are allowed.")
 			.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
-			.WithMessage("File size exceeds the 25 MB limit.");
+			.WithMessage("File size exceeds the 25 MB limit.")
+			.CustomAsync(BulkMobileNumberValidation.ValidateMobileNumbersAsync);
 	}
 }
 
@@ -36,3 +37,5 @@ public class InsertBulkSubjectHandler : ICommandHandler<InsertBulkSubjectCommand
 		return new InsertBulkSubjectResult(isAdded);
 	}
 }
+
+
