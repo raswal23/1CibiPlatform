@@ -166,6 +166,7 @@ public partial class ATSRepository
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
 				EF.Functions.ILike(x.TicketNumber ?? string.Empty, search) ||
 				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
+				EF.Functions.ILike(x.OrderStatus ?? string.Empty, search) ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
 		}
