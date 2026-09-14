@@ -444,7 +444,7 @@ public partial class ATSRepository
 
 		foreach (var result in results)
 		{
-			void Add(string? fileName, string? fileKey)
+			void Add(string? fileName, string? fileKey, string documentType)
 			{
 				if (!string.IsNullOrWhiteSpace(fileName) &&
 					!string.IsNullOrWhiteSpace(fileKey))
@@ -454,18 +454,19 @@ public partial class ATSRepository
 						EmailInvitationRequestId = result.EmailInvitationID,
 						SubjectName = result.SubjectName,
 						FileName = fileName,
-						FileKey = fileKey
+						FileKey = fileKey,
+						DocumentType = documentType
 					});
 				}
 			}
 
-			Add(result.Personal?.ResumeFileName, result.Personal?.ResumeFileKey);
+			Add(result.Personal?.ResumeFileName, result.Personal?.ResumeFileKey, AtsDocumentTypes.Resume);
 
-			Add(result.Personal?.BiometricFileName, result.Personal?.BiometricFileKey);
+			Add(result.Personal?.BiometricFileName, result.Personal?.BiometricFileKey, AtsDocumentTypes.BiometricPhoto);
 
-			Add(result.Personal?.AdditionalGovtIDFileName, result.Personal?.AdditionalGovtIDFileKey);
+			Add(result.Personal?.AdditionalGovtIDFileName, result.Personal?.AdditionalGovtIDFileKey, AtsDocumentTypes.GovernmentId);
 
-			Add(result.Personal?.NBIClearanceFileName, result.Personal?.NBIClearanceFileKey);
+			Add(result.Personal?.NBIClearanceFileName, result.Personal?.NBIClearanceFileKey, AtsDocumentTypes.NbiClearance);
 
 			// Only the highest diploma on record goes into the compiled file.
 			Add(
@@ -478,20 +479,21 @@ public partial class ATSRepository
 					?? result.Educational?.MastersDiplomaFileKey
 					?? result.Educational?.BachelorsDiplomaFileKey
 					?? result.Educational?.SeniorHighSchoolDiplomaFileKey
-					?? result.Educational?.HighSchoolDiplomaFileKey);
+					?? result.Educational?.HighSchoolDiplomaFileKey,
+				AtsDocumentTypes.Diploma);
 
 			// The COEs used to share that coalesce shape, which silently dropped
 			// employers 2 and 3 whenever employer 1 had a COE; every COE is included.
-			Add(result.Professional?.Emp1COEUploadFileName, result.Professional?.Emp1COEUploadFileKey);
-			Add(result.Professional?.Emp2COEUploadFileName, result.Professional?.Emp2COEUploadFileKey);
-			Add(result.Professional?.Emp3COEUploadFileName, result.Professional?.Emp3COEUploadFileKey);
-			Add(result.Professional?.COEUploadFileName, result.Professional?.COEUploadFileKey);
+			Add(result.Professional?.Emp1COEUploadFileName, result.Professional?.Emp1COEUploadFileKey, AtsDocumentTypes.Coe1);
+			Add(result.Professional?.Emp2COEUploadFileName, result.Professional?.Emp2COEUploadFileKey, AtsDocumentTypes.Coe2);
+			Add(result.Professional?.Emp3COEUploadFileName, result.Professional?.Emp3COEUploadFileKey, AtsDocumentTypes.Coe3);
+			Add(result.Professional?.COEUploadFileName, result.Professional?.COEUploadFileKey, AtsDocumentTypes.Coe);
 
-			Add(result.License?.LicenseUploadFileName, result.License?.LicenseUploadFileKey);
+			Add(result.License?.LicenseUploadFileName, result.License?.LicenseUploadFileKey, AtsDocumentTypes.License);
 
-			Add(result.Signature?.ConsentFormFileName, result.Signature?.ConsentFormFileKey);
+			Add(result.Signature?.ConsentFormFileName, result.Signature?.ConsentFormFileKey, AtsDocumentTypes.ConsentForm);
 
-			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey);
+			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey, AtsDocumentTypes.Report);
 		}
 
 		return documents;

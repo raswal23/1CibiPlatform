@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\DataSeed\IntouchEmailInvitationInitialData.json" />
+    <EmbeddedResource Include="Services\FilePDFService\cibi-icon.png" />
   </ItemGroup>
 
   <ItemGroup>

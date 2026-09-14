@@ -192,6 +192,30 @@ public class ReportService : IReportService
 		}
 	}
 
+	public async Task<ServiceResponse<HttpResponseMessage>> DownloadApplicationFormPreviewAsync(
+		Guid emailInvitationRequestId,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var response = await _httpClient.GetAsync(
+				$"ats/downloadapplicationformpreview?emailInvitationRequestId={emailInvitationRequestId}",
+				cancellationToken);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<HttpResponseMessage>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			return ServiceResponse<HttpResponseMessage>.Success(response);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<HttpResponseMessage>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
+
 	public async Task<ServiceResponse<HttpResponseMessage>> DownloadDocumentsAsync(DownloadIndividualDocumentsRequestDTO downloadInvididualRequest, CancellationToken cancellationToken = default)
 	{
 		var request = new { downloadInvididualRequest };

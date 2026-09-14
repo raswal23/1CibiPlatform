@@ -242,6 +242,23 @@
                     </section>
                 }
             </main>
+
+            <footer class="ats-download-actions ats-dialog-footer">
+                <MudButton Class="ats-send-button"
+                           Disabled="@isDownloading"
+                           StartIcon="@(isDownloading ? null : Icons.Material.Outlined.Download)"
+                           OnClick="DownloadPdfAsync">
+                    @if (isDownloading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                        <span>Preparing...</span>
+                    }
+                    else
+                    {
+                        <span>Download PDF</span>
+                    }
+                </MudButton>
+            </footer>
         </div>
     </DialogContent>
 </MudDialog>

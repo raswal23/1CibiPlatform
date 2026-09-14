@@ -556,7 +556,11 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 
 		mergedPdfStream.Position = 0;
 		using var mergedDocument = PdfReader.Open(mergedPdfStream, PdfDocumentOpenMode.Import);
-		mergedDocument.PageCount.Should().Be(2);
+
+		// The two stored documents plus the generated application form, which the
+		// compiled record now always carries (appended at the end here, since this
+		// order has no consent form to anchor it before).
+		mergedDocument.PageCount.Should().BeGreaterThan(2);
 	}
 
 	[Fact]

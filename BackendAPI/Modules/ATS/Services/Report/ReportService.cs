@@ -11,6 +11,7 @@ public class ReportService : IReportService
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IAtsNotificationService _notificationService;
+	private readonly IFilePdfService _filePdfService;
 
 	public ReportService(
 		ILogger<ReportService> logger,
@@ -20,7 +21,8 @@ public class ReportService : IReportService
 		IOrderHistoryService orderHistoryService,
 		IAtsAccessScopeResolver accessScopeResolver,
 		IUnitOfWork unitOfWork,
-		IAtsNotificationService notificationService)
+		IAtsNotificationService notificationService,
+		IFilePdfService filePdfService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -30,6 +32,7 @@ public class ReportService : IReportService
 		_accessScopeResolver = accessScopeResolver;
 		_unitOfWork = unitOfWork;
 		_notificationService = notificationService;
+		_filePdfService = filePdfService;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -555,8 +558,41 @@ public class ReportService : IReportService
 
 				using var output = new PdfDocument();
 
-				foreach (var file in files)
+				// The compiled record opens with the generated application form
+				// (the same QuestPDF render as the preview download), placed just
+				// before the consent form the applicant signed. Rendered fresh here
+				// rather than stored, so it always reflects the current answers.
+				var consentFormIndex = files.FindIndex(file =>
+					string.Equals(file.DocumentType, AtsDocumentTypes.ConsentForm, StringComparison.OrdinalIgnoreCase));
+				var formInsertIndex = consentFormIndex >= 0 ? consentFormIndex : files.Count;
+				var appended = false;
+
+				async Task AppendApplicationFormAsync()
 				{
+					var preview = await _atsRepository.GetApplicationFormPreviewAsync(
+						applicant.Key, scope.AuthorizedClientIds, scope.RequiredOwnerId, cancellationToken);
+
+					if (preview is null)
+						return;
+
+					await using var formPdf = await _filePdfService.GenerateApplicationFormPreviewPdfAsync(preview, cancellationToken);
+					using var formInput = PdfReader.Open(formPdf, PdfDocumentOpenMode.Import);
+
+					foreach (var page in formInput.Pages)
+					{
+						output.AddPage(page);
+					}
+				}
+
+				for (var index = 0; index < files.Count; index++)
+				{
+					if (index == formInsertIndex)
+					{
+						await AppendApplicationFormAsync();
+						appended = true;
+					}
+
+					var file = files[index];
 
 					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey, cancellationToken);
 
@@ -572,6 +608,11 @@ public class ReportService : IReportService
 					{
 						output.AddPage(page);
 					}
+				}
+
+				if (!appended)
+				{
+					await AppendApplicationFormAsync();
 				}
 
 				using var mergedPdf = new MemoryStream();
