@@ -302,4 +302,200 @@ public class AtsAuditServiceTests
 		// and silently return nothing.
 		Assert.Null(seenOutcome);
 	}
+
+	#region Assistant reads
+
+	[Fact]
+	public async Task GetRecentEntriesAsync_ShouldReturnNothing_ForAnOrdinaryUser()
+	{
+		// Arrange: this is the boundary that keeps the trail admin-only now that the AI
+		// assistant - available to every ATS role - can reach it.
+		GivenOrdinaryUser();
+
+		// Act
+		var entries = await _service.GetRecentEntriesAsync(
+			outcome: null,
+			action: null,
+			area: null,
+			searchTerm: null,
+			startDate: null,
+			endDate: null,
+			take: 10,
+			CancellationToken.None);
+
+		// Assert
+		Assert.Empty(entries);
+
+		_repository.Verify(
+			repository => repository.GetAuditTrailPageAsync(
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task GetRecentEntriesAsync_ShouldClampTheRequestedPageSize()
+	{
+		// Arrange: the take feeds a chat answer, so a large page would blow out the
+		// model's context for no benefit.
+		GivenSuperAdmin();
+
+		var seenTake = 0;
+
+		_repository
+			.Setup(repository => repository.GetAuditTrailPageAsync(
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<CancellationToken>()))
+			.Callback<DateTime?, Guid?, int, string?, string?, string?, string?, DateTime?, DateTime?, CancellationToken>(
+				(_, _, take, _, _, _, _, _, _, _) => seenTake = take)
+			.ReturnsAsync([]);
+
+		// Act
+		await _service.GetRecentEntriesAsync(
+			outcome: null,
+			action: null,
+			area: null,
+			searchTerm: null,
+			startDate: null,
+			endDate: null,
+			take: 5_000,
+			CancellationToken.None);
+
+		// Assert: bounded, but generous enough that "list all the failures" is not answered
+		// with a handful of rows.
+		Assert.InRange(seenTake, 1, 50);
+	}
+
+	[Fact]
+	public async Task GetRecentEntriesAsync_ShouldTruncateALongFailureReason()
+	{
+		// Arrange: an exception message can run to thousands of characters and is text an
+		// attacker can influence, so it is bounded before it reaches the model.
+		GivenSuperAdmin();
+
+		var entry = Entry(DateTime.UtcNow);
+		entry.Outcome = AuditOutcome.Failure;
+		entry.FailureReason = new string('x', 5_000);
+
+		_repository
+			.Setup(repository => repository.GetAuditTrailPageAsync(
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync([entry]);
+
+		// Act
+		var entries = await _service.GetRecentEntriesAsync(
+			outcome: null,
+			action: null,
+			area: null,
+			searchTerm: null,
+			startDate: null,
+			endDate: null,
+			take: 10,
+			CancellationToken.None);
+
+		// Assert
+		Assert.True(entries[0].FailureReason!.Length <= 200);
+	}
+
+	#endregion
+
+	#region Export
+
+	[Fact]
+	public async Task ExportAuditTrailAsync_ShouldThrowForbidden_ForAnOrdinaryUser()
+	{
+		// Arrange: a download leaves the system, so unlike the reads this refuses outright
+		// rather than handing over a plausible-looking empty workbook.
+		GivenOrdinaryUser();
+
+		// Act
+		var act = async () => await _service.ExportAuditTrailAsync(
+			outcome: null,
+			action: null,
+			area: null,
+			searchTerm: null,
+			startDate: null,
+			endDate: null,
+			CancellationToken.None);
+
+		// Assert
+		await Assert.ThrowsAsync<BuildingBlocks.Exceptions.ForbiddenException>(act);
+	}
+
+	[Fact]
+	public async Task ExportAuditTrailAsync_ShouldProduceAWorkbook_ForASuperAdmin()
+	{
+		// Arrange
+		GivenSuperAdmin();
+
+		var failure = Entry(DateTime.UtcNow);
+		failure.Outcome = AuditOutcome.Failure;
+		failure.FailureReason = "SMTP 454 Too many login attempts";
+
+		_repository
+			.Setup(repository => repository.GetAuditTrailPageAsync(
+				It.IsAny<DateTime?>(),
+				It.IsAny<Guid?>(),
+				It.IsAny<int>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<DateTime?>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync([Entry(DateTime.UtcNow), failure]);
+
+		// Act
+		var export = await _service.ExportAuditTrailAsync(
+			outcome: null,
+			action: null,
+			area: null,
+			searchTerm: null,
+			startDate: null,
+			endDate: null,
+			CancellationToken.None);
+
+		// Assert: a real, non-empty .xlsx positioned at the start, ready to stream.
+		Assert.EndsWith(".xlsx", export.FileName);
+		Assert.Equal(0, export.Content.Position);
+		Assert.True(export.Content.Length > 0);
+
+		// The ZIP magic number - an .xlsx is a zip container, so this proves a workbook
+		// was actually rendered rather than an empty stream returned.
+		var header = new byte[2];
+		export.Content.ReadExactly(header);
+
+		Assert.Equal(0x50, header[0]);
+		Assert.Equal(0x4B, header[1]);
+
+		await export.Content.DisposeAsync();
+	}
+
+	#endregion
 }

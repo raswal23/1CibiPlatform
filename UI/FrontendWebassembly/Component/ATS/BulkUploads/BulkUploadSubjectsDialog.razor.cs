@@ -34,6 +34,29 @@ public partial class BulkUploadSubjectsDialog
 	private bool _isLoadingCounts;
 	private bool _isExporting;
 
+	// Ids rather than rows, so a selection survives the list reloading underneath it. It is
+	// cleared whenever the filter or search changes, because a selection the user can no
+	// longer see is one they cannot reason about.
+	private readonly HashSet<Guid> _selectedInvitationIds = [];
+
+	private bool _isBulkResending;
+
+	// The rows on the page right now. Held here because CursorTableLoader tracks cursors
+	// and counts, not the items themselves, and the select-all checkbox has to know what
+	// "all" currently means.
+	private IReadOnlyList<BulkUploadSubjectListDTO> _pageSubjects = [];
+
+	// The rows currently rendered that a resend actually applies to. Selecting a row the
+	// server would refuse only produces a confusing "0 of N" outcome.
+	private IEnumerable<BulkUploadSubjectListDTO> SelectableSubjects =>
+		_pageSubjects.Where(CanResend);
+
+	private bool HasSelectableSubjects => SelectableSubjects.Any();
+
+	private bool AreAllSelectablesSelected =>
+		HasSelectableSubjects
+		&& SelectableSubjects.All(subject => _selectedInvitationIds.Contains(subject.EmailInvitationID));
+
 	// This dialog is not a page, so it cannot inherit CrudPageBase and its
 	// LoadCursorPagedDataAsync helper; it calls the loader directly with its own error
 	// callback, exactly as SearchReportComponent does.
@@ -70,6 +93,22 @@ public partial class BulkUploadSubjectsDialog
 					.Failure(response.ErrorDetail);
 			},
 			message => Snackbar.Add(message, Severity.Error));
+
+		// Recorded so the select-all checkbox knows what is on screen, and so a selection
+		// can be pruned to it below.
+		_pageSubjects = tableData.Items?.ToList() ?? [];
+
+		// A row that left the page - filtered out, paged past, or no longer resendable
+		// after a reload - drops out of the selection. Keeping it would let an operator
+		// submit ids they can no longer see.
+		if (_selectedInvitationIds.Count > 0)
+		{
+			var stillSelectable = SelectableSubjects
+				.Select(subject => subject.EmailInvitationID)
+				.ToHashSet();
+
+			_selectedInvitationIds.RemoveWhere(id => !stillSelectable.Contains(id));
+		}
 
 		// The chips track the same search filter as the table, so they refresh with it
 		// rather than drifting out of step.
@@ -193,16 +232,19 @@ public partial class BulkUploadSubjectsDialog
 			},
 			{
 				nameof(YesNoDialogComponent.Message),
-				$"This will send a new application form to {FormatName(subject)}."
+				$"This will queue a new application form for {FormatName(subject)}."
 			},
 			{
 				nameof(YesNoDialogComponent.ConfirmText),
 				"Resend"
 			},
 			{
+				// "Queues" rather than "emails": the send now goes through the paced email
+				// job rather than happening during this request, so the message must not
+				// promise delivery that has not happened yet.
 				nameof(YesNoDialogComponent.InformationMessage),
-				$"Clicking \"Resend\" emails a fresh application link to {subject.EmailAddress} "
-					+ "and invalidates the previous one."
+				$"Clicking \"Resend\" queues a fresh application link for {subject.EmailAddress} "
+					+ "and invalidates the previous one. It is normally delivered within a minute."
 			},
 			{
 				nameof(YesNoDialogComponent.ConfirmIcon),
@@ -272,14 +314,171 @@ public partial class BulkUploadSubjectsDialog
 			}
 
 			// The row's statuses have just changed, so reload rather than patch in place.
+			// The row now reads Pending with a cleared attempt count, which is the visible
+			// confirmation that the retry took effect.
 			await ReloadTableAsync();
 
-			Snackbar.Add("Application form resent successfully.", Severity.Success);
+			Snackbar.Add(
+				"Application form queued for resending. It is normally delivered within a minute.",
+				Severity.Success);
+
 			return true;
 		}
 		finally
 		{
 			_resendingInvitationId = null;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	private void ToggleSelection(Guid emailInvitationId, bool isSelected)
+	{
+		if (isSelected)
+		{
+			_selectedInvitationIds.Add(emailInvitationId);
+		}
+		else
+		{
+			_selectedInvitationIds.Remove(emailInvitationId);
+		}
+	}
+
+	// Scoped to the current page on purpose. Selecting rows the operator has not seen -
+	// across pages or the whole filter - is how a click ends up resending far more than
+	// intended.
+	private void ToggleSelectAll(bool isSelected)
+	{
+		foreach (var subject in SelectableSubjects)
+		{
+			ToggleSelection(subject.EmailInvitationID, isSelected);
+		}
+	}
+
+	// The selection bar's own escape hatch. Unchecking rows one at a time is the only
+	// other way out, which is tedious once a whole page is selected.
+	private void ClearSelection() => _selectedInvitationIds.Clear();
+
+	private async Task ConfirmBulkResendAsync()
+	{
+		var selectedCount = _selectedInvitationIds.Count;
+
+		if (selectedCount == 0)
+		{
+			return;
+		}
+
+		var confirmParameters = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Resend Applications"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				$"This will queue new application forms for {selectedCount} subject(s)."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Resend"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Each subject gets a fresh application link, and their previous one stops "
+					+ "working. They are sent at a steady rate, so a large batch can take "
+					+ "several minutes to go out."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon),
+				Icons.Material.Outlined.Refresh
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)BulkResendAsync
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon),
+				Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor),
+				Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor),
+				Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor),
+				"var(--c-warn-bg)"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor),
+				"theme-button-warning"
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(
+			null,
+			confirmParameters,
+			options);
+
+		await dialog.Result;
+	}
+
+	private async Task<bool> BulkResendAsync()
+	{
+		_isBulkResending = true;
+		await InvokeAsync(StateHasChanged);
+
+		try
+		{
+			// Copied before the call: the list is pruned when the table reloads, and the
+			// response has to be compared against what was actually submitted.
+			var requestedIds = _selectedInvitationIds.ToList();
+
+			var response = await EndorsementSubmissionService.ResendApplicationFormsAsync(requestedIds);
+
+			if (!response.IsSuccess || response.Data is null)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return false;
+			}
+
+			var result = response.Data;
+
+			_selectedInvitationIds.Clear();
+
+			await ReloadTableAsync();
+
+			// A shortfall is normal rather than an error: the email job may have picked up
+			// some of the selection between rendering and clicking. Saying so is more use
+			// than a flat "done".
+			if (result.IsComplete)
+			{
+				Snackbar.Add(
+					$"{result.RequeuedCount} application form(s) queued for resending.",
+					Severity.Success);
+			}
+			else
+			{
+				Snackbar.Add(
+					$"{result.RequeuedCount} of {result.RequestedCount} application form(s) queued. "
+						+ "The rest were already being sent.",
+					Severity.Info);
+			}
+
+			return true;
+		}
+		finally
+		{
+			_isBulkResending = false;
 			await InvokeAsync(StateHasChanged);
 		}
 	}

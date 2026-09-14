@@ -1,0 +1,129 @@
+/* Only what is specific to the sender-account board lives here.
+
+   The intro banner, the lead-identity cell, the tag, the muted cell, the action button
+   and the status pill all come from the shared .ats-status-board-* / .ats-cell-* /
+   .ats-status-pill rules in wwwroot/css/ats.css, which every other ATS board uses too.
+   Do not re-declare any of those here - change the shared rules instead, or the boards
+   drift apart one copy at a time. The consumption meter is the only thing on this
+   screen no other board has.
+
+   ::deep throughout: these cells render inside TableComponent, a child component, so a
+   scoped rule without it matches nothing. Same reason the audit board uses it. */
+
+/* The status cell stacks the state pill, the in-use pill and an optional failure
+   reason, mirroring the ticketing and audit boards. */
+::deep .ats-email-status-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* Clamped to two lines so one long SMTP refusal cannot stretch the row; the full text
+   stays available as a title tooltip. */
+::deep .ats-email-failure-reason {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 240px;
+    color: var(--c-danger-strong);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* ---------- Consumption meter ---------- */
+
+::deep .ats-email-consumption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 132px;
+    max-width: 190px;
+}
+
+::deep .ats-email-consumption-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    color: var(--c-fg-strong);
+    font-size: 13px;
+}
+
+::deep .ats-email-consumption-figures strong {
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+::deep .ats-email-consumption-remaining {
+    color: var(--c-fg-subtle);
+    font-size: 11px;
+}
+
+::deep .ats-email-consumption-bar {
+    height: 6px;
+    border-radius: 20px;
+    background-color: var(--c-neutral-bg);
+}
+
+::deep .ats-email-consumption-bar .mud-progress-linear-bar {
+    background-color: var(--c-success);
+}
+
+/* Amber before the cap rather than at it: an account at 80% will hit the ceiling during
+   the pass that is running now, and that is the moment another sender is worth adding. */
+::deep .ats-email-consumption-bar.is-high .mud-progress-linear-bar {
+    background-color: var(--c-warn);
+}
+
+::deep .ats-email-consumption-bar.is-full .mud-progress-linear-bar {
+    background-color: var(--c-danger);
+}
+
+/* ---------- Actions ---------- */
+
+::deep .ats-email-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ---------- Column widths ---------- */
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(1) {
+    width: 24%;
+}
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(2) {
+    width: 8%;
+}
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(3) {
+    width: 18%;
+}
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(4) {
+    width: 16%;
+}
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(5),
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(6) {
+    width: 14%;
+}
+
+::deep .ats-email-account-card thead .mud-table-cell:nth-child(7) {
+    width: 6%;
+}
+
+/* Card mode: the meter has a whole row to itself and should use it. */
+@media (max-width: 960px) {
+    ::deep .ats-email-consumption {
+        max-width: 100%;
+    }
+
+    ::deep .ats-email-failure-reason {
+        max-width: 100%;
+    }
+}

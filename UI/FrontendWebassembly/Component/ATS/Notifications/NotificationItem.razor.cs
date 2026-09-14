@@ -29,6 +29,8 @@ public partial class NotificationItem
 		AtsNotificationTypes.OrderDisputed => Icons.Material.Filled.Gavel,
 		AtsNotificationTypes.TicketingFailed => Icons.Material.Filled.ErrorOutline,
 		AtsNotificationTypes.InvitationEmailFailed => Icons.Material.Filled.MarkEmailUnread,
+		AtsNotificationTypes.EmailAccountsExhausted => Icons.Material.Filled.Unsubscribe,
+		AtsNotificationTypes.EmailAccountNeedsReverification => Icons.Material.Filled.KeyOff,
 
 		// An unknown type is a server that knows about something this build does not.
 		// Render it neutrally rather than dropping it.
@@ -45,6 +47,13 @@ public partial class NotificationItem
 		AtsNotificationTypes.OrderDisputed => "is-warn",
 		AtsNotificationTypes.TicketingFailed => "is-danger",
 		AtsNotificationTypes.InvitationEmailFailed => "is-danger",
+
+		// Warn, not danger: the queue is paused with its rows intact and a daily cap clears
+		// itself. Overstating it as a failure trains people to ignore the red ones.
+		AtsNotificationTypes.EmailAccountsExhausted => "is-warn",
+
+		// Danger, because nothing clears this one except someone re-entering the password.
+		AtsNotificationTypes.EmailAccountNeedsReverification => "is-danger",
 		_ => "is-neutral"
 	};
 

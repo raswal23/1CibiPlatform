@@ -1,7 +1,12 @@
 /* Local palette, matching the block BulkUploadsComponent.razor.css declares. The
-   drill-down is the same module and deliberately does not introduce a new hue. */
+   drill-down is the same module and deliberately does not introduce a new hue.
+
+   Every element that reads one of these aliases must be listed here - they are scoped
+   to these selectors, not inherited from the dialog root, so a new block that uses
+   var(--blue-600) without being added resolves to nothing and renders unstyled. */
 .ats-bulk-subjects-header,
 .ats-bulk-subjects-segmented,
+.ats-bulk-subjects-selection-bar,
 ::deep .ats-bulk-subjects-table-card {
     --navy-900: var(--c-navy-900);
     --blue-600: var(--c-blue-600);
@@ -120,15 +125,96 @@
     margin: 16px 24px 0;
 }
 
-/* The export button is styled by .ats-management-button (ats.css); only the
-   disabled state is local, since the shared class has none. */
-.ats-bulk-subjects-export:disabled {
+/* The selection bar: its own band between the filter row and the table, mirroring
+   .ats-status-board-selection-bar on the Ticketing board. Restated rather than shared
+   because this dialog is not rendered inside .ats-management-page and so cannot match
+   that rule's page anchor - keep the two in step.
+
+   It sits outside the filter row on purpose: sharing that row meant the button had to
+   align with the export control, and it moved the tabs every time a selection changed. */
+.ats-bulk-subjects-selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    /* 24px horizontally to align with the filter row and the table card above and
+       below it. The 16px bottom margin is the breathing room before the table; it
+       collapses against the card's own 16px top margin rather than adding to it, so
+       the gap stays 16px either way. */
+    margin: 12px 24px 16px;
+    padding: 12px 16px;
+
+    /* Follows the list down, matching the Ticketing board. The scroll container here is
+       .ats-dialog-body rather than the page, so `top: 0` pins it to the top of the
+       dialog's own scroll area - just under the gradient header. */
+    position: sticky;
+    top: 0;
+    z-index: 3;
+
+    /* Reads as a live state rather than another filter: tinted with the same accent the
+       checkboxes use, so it is obviously about the selection.
+       Layered over an OPAQUE surface - the tint alone is translucent, and table rows
+       would show through it while scrolling. */
+    border: 1px solid var(--blue-600);
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            color-mix(in srgb, var(--blue-600) 10%, transparent),
+            color-mix(in srgb, var(--blue-600) 10%, transparent)),
+        var(--c-surface);
+
+    /* Lifts it off the rows passing underneath, so the edge stays legible while stuck. */
+    box-shadow: 0 6px 16px -10px rgba(11, 27, 61, .45);
+}
+
+.ats-bulk-subjects-selection-count {
+    color: var(--text-1);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-bulk-subjects-selection-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Quiet secondary action - clearing is a correction, not the thing the bar is for. */
+.ats-bulk-subjects-selection-clear {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ats-bulk-subjects-selection-clear:hover:not(:disabled) {
+    border-color: var(--blue-600);
+    color: var(--text-1);
+}
+
+.ats-bulk-subjects-selection-clear:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+/* Both buttons are styled by .ats-management-button (ats.css); only the disabled
+   state is local, since the shared class has none. */
+.ats-bulk-subjects-export:disabled,
+.ats-bulk-subjects-requeue:disabled {
     opacity: .55;
     cursor: default;
     box-shadow: none;
 }
 
-.ats-bulk-subjects-export:disabled:active {
+.ats-bulk-subjects-export:disabled:active,
+.ats-bulk-subjects-requeue:disabled:active {
     transform: none;
 }
 
@@ -348,6 +434,16 @@
     width: 84px;
 }
 
+/* The same 48px gutter as .ats-status-board-select-* in ats.css, restated because this
+   dialog is not rendered inside .ats-management-page and so cannot match that rule's
+   page anchor. Keep the two in step: they are the same control on two screens. */
+::deep .ats-bulk-subjects-select-header,
+::deep .ats-bulk-subjects-select-cell {
+    padding-right: 0;
+    text-align: center;
+    width: 48px;
+}
+
 ::deep .ats-bulk-subject-resend {
     color: var(--blue-600);
 }
@@ -366,6 +462,27 @@
     .ats-bulk-subjects-export {
         justify-content: center;
         width: 100%;
+    }
+
+    /* Stops being sticky at this width, matching the Ticketing board: stacked it is
+       roughly two rows tall, which on a phone would cover a meaningful share of the
+       visible list for the whole scroll. */
+    .ats-bulk-subjects-selection-bar {
+        position: static;
+        flex-direction: column;
+        align-items: stretch;
+        margin: 12px 16px 16px;
+        box-shadow: none;
+    }
+
+    .ats-bulk-subjects-selection-actions {
+        width: 100%;
+    }
+
+    .ats-bulk-subjects-selection-clear,
+    .ats-bulk-subjects-requeue {
+        flex: 1 1 0;
+        justify-content: center;
     }
 
     ::deep .ats-bulk-subjects-table-card {

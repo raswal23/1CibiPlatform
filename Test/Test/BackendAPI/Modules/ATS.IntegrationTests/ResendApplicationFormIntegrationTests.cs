@@ -1,6 +1,8 @@
 ﻿using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Features.Web.ResendApplicationForm;
+using ATS.Features.Web.ResendApplicationForms;
+using ATS.Services.EndorsementSubmission;
 using Auth.Constants;
 using BuildingBlocks.Exceptions;
 using FluentAssertions;
@@ -84,7 +86,19 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		updated.HashTokenCreatedAt.Should().BeAfter(originalCreatedAt);
 		updated.HashTokenExpiration.Should().BeAfter(originalExpiration);
 		updated.OrderStatus.Should().Be("Pending Candidate Info");
-		updated.EmailSentStatus.Should().Be("Done");
+
+		// Queued, not sent inline. The row goes back on the email job's queue so the send
+		// runs through the pooled, rate-limited path like any other invitation.
+		//
+		// This assertion previously expected "Done" - which was the bug. Resend left the
+		// email status untouched, so a successful retry still displayed as its previous
+		// state, and a row that had exhausted its attempts was never picked up again.
+		updated.EmailSentStatus.Should().Be("Pending");
+
+		// The attempt budget resets, otherwise the claim query skips the row and the
+		// resend silently does nothing.
+		updated.EmailSendAttempts.Should().Be(0);
+		updated.EmailClaimedAt.Should().BeNull();
 	}
 
 	[Fact]
@@ -201,19 +215,108 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
 		await _dbContext.SaveChangesAsync();
 
-      var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
 
 		// Act
 		var result = await _sender.Send(command);
 
 		// Assert
-     result.Success.Should().BeTrue();
+		result.Success.Should().BeTrue();
 
 		var updated = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
 
-		updated!.EmailSentStatus.Should().Be("Done");
+		updated!.EmailSentStatus.Should().Be("Pending");
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldResetAnExhaustedAttemptBudget()
+	{
+		// Arrange: the reported bug. An invitation that used up its retries sat at
+		// Error/5, and because the claim query only re-claims Error rows while attempts
+		// are under the ceiling, resending it changed nothing that made it send again.
+		var emailInvitation = new EmailInvitationRequest
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Exhausted",
+			LastName = "Tester",
+			MiddleInitial = "A",
+			EmailAddress = "exhausted.retry@example.com",
+			MobileNumber = "09171234567",
+			HashToken = "exhausted-hash-token",
+			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
+			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
+			PackageId = DefaultPackageId,
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			EmailSentStatus = "Error",
+			EmailSendAttempts = 5,
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Pending Candidate Info"
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		var result = await _sender.Send(command);
+
+		// Assert
+		result.Success.Should().BeTrue();
+
+		var updated = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
+
+		// Both halves matter: Pending alone would still be skipped if the count stayed at
+		// the ceiling, and a reset count alone would leave the row reading "Error".
+		updated.EmailSentStatus.Should().Be("Pending");
+		updated.EmailSendAttempts.Should().Be(0);
+		updated.HashToken.Should().NotBe("exhausted-hash-token");
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldMakeTheInvitationClaimableAgain()
+	{
+		// Arrange: proves the end-to-end effect of the reset - the email job can actually
+		// pick the row up. Asserting the status alone would not catch a future change that
+		// leaves the row in a state the claim query filters out.
+		var emailInvitation = new EmailInvitationRequest
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Claimable",
+			LastName = "Tester",
+			MiddleInitial = "A",
+			EmailAddress = "claimable.retry@example.com",
+			MobileNumber = "09171234567",
+			HashToken = "claimable-hash-token",
+			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
+			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
+			PackageId = DefaultPackageId,
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			EmailSentStatus = "Error",
+			EmailSendAttempts = 5,
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Pending Candidate Info",
+			OrderCreatedAt = DateTime.UtcNow
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		await _sender.Send(new ResendApplicationFormCommand(emailInvitation.EmailInvitationID));
+
+		// Act
+		var claimed = await _atsRepository.GetPendingEmailInvitationRequestsAsync();
+
+		// Assert
+		claimed.Should().Contain(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
 	}
 
 	#endregion
@@ -495,7 +598,219 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		secondResendToken.Should().NotBe("hash-token-1");
 		secondResendToken.Should().NotBe(firstResendToken);
 		afterSecondResend.OrderStatus.Should().Be("Pending Candidate Info");
-		afterSecondResend.EmailSentStatus.Should().Be("Done");
+		afterSecondResend.EmailSentStatus.Should().Be("Pending");
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldThrowConflict_WhenTheInvitationIsMidSend()
+	{
+		// Arrange: Processing means a worker is holding this row in memory right now and is
+		// about to write its outcome. Re-issuing the token would race that write, and the
+		// message may already be on its way - so this is the one state a resend is refused
+		// in. Pending is deliberately allowed: nothing has been sent yet, so re-queueing
+		// duplicates nothing.
+		var emailInvitation = new EmailInvitationRequest
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "InFlight",
+			LastName = "Tester",
+			MiddleInitial = "A",
+			EmailAddress = "inflight.resend@example.com",
+			MobileNumber = "09171234567",
+			HashToken = "inflight-hash-token",
+			HashTokenCreatedAt = DateTime.UtcNow,
+			HashTokenExpiration = DateTime.UtcNow.AddDays(1),
+			PackageId = DefaultPackageId,
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			EmailSentStatus = "Processing",
+			EmailClaimedAt = DateTime.UtcNow,
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Pending Candidate Info"
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<ConflictException>();
+
+		// The in-flight send keeps the token it is delivering.
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
+
+		untouched.HashToken.Should().Be("inflight-hash-token");
+	}
+
+	#endregion
+
+	#region Bulk
+
+	[Fact]
+	public async Task ResendApplicationForms_ShouldRequeueEveryInvitation_WithItsOwnToken()
+	{
+		// Arrange
+		var first = NewScopedInvitation(ClientA, UploaderId);
+		var second = NewScopedInvitation(ClientA, UploaderId);
+
+		first.EmailSentStatus = "Error";
+		first.EmailSendAttempts = 5;
+		second.EmailSentStatus = "Error";
+		second.EmailSendAttempts = 5;
+
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(first, second);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var command = new ResendApplicationFormsCommand(
+			[first.EmailInvitationID, second.EmailInvitationID]);
+
+		// Act
+		var result = await _sender.Send(command);
+
+		// Assert
+		result.RequestedCount.Should().Be(2);
+		result.RequeuedCount.Should().Be(2);
+		result.IsComplete.Should().BeTrue();
+
+		var saved = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => x.EmailInvitationID == first.EmailInvitationID
+					 || x.EmailInvitationID == second.EmailInvitationID)
+			.ToListAsync();
+
+		saved.Should().OnlyContain(x => x.EmailSentStatus == "Pending");
+		saved.Should().OnlyContain(x => x.EmailSendAttempts == 0);
+
+		// Each invitation gets its OWN token. A shared one would let either candidate open
+		// the other's application form.
+		saved.Select(x => x.HashToken).Should().OnlyHaveUniqueItems();
+	}
+
+	[Fact]
+	public async Task ResendApplicationForms_ShouldSkipInvitationsThatAreMidSend()
+	{
+		// Arrange: one retryable, one the job is actively sending.
+		var retryable = NewScopedInvitation(ClientA, UploaderId);
+		var midSend = NewScopedInvitation(ClientA, UploaderId);
+
+		retryable.EmailSentStatus = "Error";
+		retryable.EmailSendAttempts = 5;
+		midSend.EmailSentStatus = "Processing";
+		midSend.EmailClaimedAt = DateTime.UtcNow;
+
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(retryable, midSend);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var originalMidSendToken = midSend.HashToken;
+
+		var command = new ResendApplicationFormsCommand(
+			[retryable.EmailInvitationID, midSend.EmailInvitationID]);
+
+		// Act
+		var result = await _sender.Send(command);
+
+		// Assert: a partly-stale selection is not a failure. The rest still move, and the
+		// counts tell the operator what happened.
+		result.RequestedCount.Should().Be(2);
+		result.RequeuedCount.Should().Be(1);
+		result.IsComplete.Should().BeFalse();
+
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == midSend.EmailInvitationID);
+
+		// The in-flight send keeps the token it is delivering.
+		untouched.HashToken.Should().Be(originalMidSendToken);
+		untouched.EmailSentStatus.Should().Be("Processing");
+	}
+
+	[Fact]
+	public async Task ResendApplicationForms_ShouldIgnoreInvitationsOutsideTheCallerScope()
+	{
+		// Arrange: posting another client's id alongside your own must not reach it.
+		var mine = NewScopedInvitation(ClientA, UploaderId);
+		var theirs = NewScopedInvitation(ClientB, OtherUploaderId);
+
+		mine.EmailSentStatus = "Error";
+		mine.EmailSendAttempts = 5;
+		theirs.EmailSentStatus = "Error";
+		theirs.EmailSendAttempts = 5;
+
+		await _dbContext.EmailInvitationRequests.AddRangeAsync(mine, theirs);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var theirOriginalToken = theirs.HashToken;
+
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+
+		var command = new ResendApplicationFormsCommand(
+			[mine.EmailInvitationID, theirs.EmailInvitationID]);
+
+		// Act
+		var result = await _sender.Send(command);
+
+		// Assert: only the caller's own invitation moved.
+		result.RequeuedCount.Should().Be(1);
+
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == theirs.EmailInvitationID);
+
+		untouched.HashToken.Should().Be(theirOriginalToken);
+		untouched.EmailSentStatus.Should().Be("Error");
+	}
+
+	[Fact]
+	public async Task ResendApplicationForms_ShouldThrowNotFound_WhenNothingIsInScope()
+	{
+		// Arrange
+		var theirs = NewScopedInvitation(ClientB, OtherUploaderId);
+
+		theirs.EmailSentStatus = "Error";
+		theirs.EmailSendAttempts = 5;
+
+		await _dbContext.EmailInvitationRequests.AddAsync(theirs);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+
+		var command = new ResendApplicationFormsCommand([theirs.EmailInvitationID]);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert: not a 403 - naming the invitation would confirm it exists.
+		await act.Should().ThrowAsync<NotFoundException>();
+	}
+
+	[Fact]
+	public async Task ResendApplicationForms_ShouldRejectABatchOverTheLimit()
+	{
+		// Arrange: every requeued invitation becomes a message on the deliberately-paced
+		// email queue, so an unbounded batch would block every other client behind it.
+		var tooMany = Enumerable
+			.Range(0, EndorsementSubmissionService.MaxBulkResendSize + 1)
+			.Select(_ => Guid.CreateVersion7())
+			.ToList();
+
+		var command = new ResendApplicationFormsCommand(tooMany);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<Exception>();
 	}
 
 	#endregion

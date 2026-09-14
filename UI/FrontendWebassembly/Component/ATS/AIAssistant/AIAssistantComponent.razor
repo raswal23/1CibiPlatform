@@ -4,6 +4,7 @@
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(12)]
 @inject IAtsAssistantService AssistantService
+@inject IAuditTrailService AuditTrailService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 @inherits CrudPageBase
@@ -112,6 +113,83 @@
                                         }
                                     </tbody>
                                 </table>
+                            </div>
+                        }
+
+                        @* Same wrapper and table classes as the orders table above, so the
+                           two read as one component rather than two similar ones. *@
+                        @if (message.AuditEntries is { Count: > 0 })
+                        {
+                            <div class="ats-assistant-orders">
+                                <table class="ats-assistant-table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">When</th>
+                                            <th scope="col">Action</th>
+                                            <th scope="col">Area</th>
+                                            <th scope="col">Outcome</th>
+                                            <th scope="col">Cause</th>
+                                            <th scope="col">User</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var entry in message.AuditEntries)
+                                        {
+                                            <tr>
+                                                <td data-label="When">@FormatDateTime(entry.OccurredAt)</td>
+                                                <td data-label="Action">
+                                                    <span class="ats-assistant-subject">@entry.Action</span>
+                                                </td>
+                                                <td data-label="Area">@entry.Area</td>
+                                                <td data-label="Outcome">
+                                                    <span class="@GetOutcomeClass(entry.Outcome)">
+                                                        @entry.Outcome
+                                                    </span>
+                                                </td>
+                                                @* Its own column rather than a tooltip: why
+                                                   something failed is the reason anyone asks
+                                                   this question, and a tooltip is invisible on
+                                                   touch and to a screen reader. Clamped by CSS
+                                                   with the full text in the title. *@
+                                                <td data-label="Cause">
+                                                    @if (string.IsNullOrWhiteSpace(entry.FailureReason))
+                                                    {
+                                                        <span class="ats-assistant-muted">—</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="ats-assistant-cause"
+                                                              title="@entry.FailureReason">
+                                                            @entry.FailureReason
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td data-label="User">@(entry.UserFullName ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+
+                                @* The assistant cannot push a file to the browser - a
+                                   download has to be a real user gesture. Asking the AI to
+                                   export produces this button, and the click fetches the
+                                   workbook for exactly the rows above. *@
+                                @if (message.AuditQuery is not null)
+                                {
+                                    <div class="ats-assistant-table-actions">
+                                        <button type="button"
+                                                class="ats-assistant-export"
+                                                disabled="@(_exportingMessage == message)"
+                                                @onclick="@(() => ExportAuditEntriesAsync(message))">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16" />
+                                            </svg>
+                                            @(_exportingMessage == message
+                                                ? "Preparing..."
+                                                : "Export to Excel")
+                                        </button>
+                                    </div>
+                                }
                             </div>
                         }
 

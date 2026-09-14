@@ -10,7 +10,11 @@ namespace ATS.Services.EmailService;
 /// after 14 messages. A pooled session sends many messages under one login, which is the
 /// shape an ordinary mail client has.
 ///
-/// Singleton: a pool that does not outlive the request scope is not a pool.
+/// One pool per SENDING ACCOUNT, and it must outlive any request scope - a pool that is rebuilt
+/// per scope is not a pool. It is held for its account's lifetime by
+/// <see cref="ATS.Services.EmailAccounts.SmtpAccountPoolRegistry"/>, which is the singleton;
+/// this object itself is no longer registered in DI, because there is no longer exactly one of
+/// it. Disposed when its account is deleted or its credentials change.
 /// </summary>
 public sealed class SmtpConnectionPool : IAsyncDisposable
 {
@@ -19,10 +23,7 @@ public sealed class SmtpConnectionPool : IAsyncDisposable
 	private readonly SmtpRateLimiter _rateLimiter;
 	private readonly SemaphoreSlim _available;
 	private readonly ConcurrentBag<PooledConnection> _idle = [];
-	private readonly string _host;
-	private readonly int _port;
-	private readonly string _senderEmail;
-	private readonly string _appPassword;
+	private readonly SmtpAccountCredentials _credentials;
 
 	// Diagnostic, and the number that matters most here: it should stay close to
 	// MaxConcurrentConnections over a whole run. If it climbs with the message count, the
@@ -32,7 +33,7 @@ public sealed class SmtpConnectionPool : IAsyncDisposable
 	private bool _disposed;
 
 	public SmtpConnectionPool(
-		IConfiguration configuration,
+		SmtpAccountCredentials credentials,
 		IOptions<AtsEmailDeliveryOptions> options,
 		SmtpRateLimiter rateLimiter,
 		ILogger<SmtpConnectionPool> logger)
@@ -40,22 +41,23 @@ public sealed class SmtpConnectionPool : IAsyncDisposable
 		_logger = logger;
 		_options = options.Value;
 		_rateLimiter = rateLimiter;
-
-		_senderEmail = configuration["Email:ATSGmail:SenderEmail"]
-			?? throw new InvalidOperationException("Email:ATSGmail:SenderEmail not configured");
-		_appPassword = configuration["Email:ATSGmail:AppPassword"]
-			?? throw new InvalidOperationException("Email:ATSGmail:AppPassword not configured");
-		_host = configuration["Email:Gmail:SmtpHost"] ?? "smtp.gmail.com";
-		_port = int.Parse(configuration["Email:Gmail:SmtpPort"] ?? "587");
+		_credentials = credentials;
 
 		var maxConnections = _options.MaxConcurrentConnections > 0
 			? _options.MaxConcurrentConnections
 			: new AtsEmailDeliveryOptions().MaxConcurrentConnections;
 
+		// Per account, not per process. Each registered mailbox gets its own budget of
+		// simultaneous sessions, which is what the provider actually counts - a shared cap
+		// would leave the second account idling behind the first's connections.
 		_available = new SemaphoreSlim(maxConnections, maxConnections);
 	}
 
-	public string SenderEmail => _senderEmail;
+	public int AtsEmailAccountId => _credentials.AtsEmailAccountId;
+
+	public string SenderEmail => _credentials.EmailAddress;
+
+	public string SenderDisplayName => _credentials.DisplayName;
 
 	public long LoginCount => Interlocked.Read(ref _loginCount);
 
@@ -126,12 +128,15 @@ public sealed class SmtpConnectionPool : IAsyncDisposable
 		try
 		{
 			await client.ConnectAsync(
-				_host,
-				_port,
+				_credentials.SmtpHost,
+				_credentials.SmtpPort,
 				MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable,
 				cancellationToken);
 
-			await client.AuthenticateAsync(_senderEmail, _appPassword, cancellationToken);
+			await client.AuthenticateAsync(
+				_credentials.EmailAddress,
+				_credentials.AppPassword,
+				cancellationToken);
 		}
 		catch (Exception exception) when (exception is not OperationCanceledException)
 		{
@@ -166,9 +171,9 @@ public sealed class SmtpConnectionPool : IAsyncDisposable
 
 		_logger.LogInformation(
 			"Opened SMTP session to {Host}:{Port} as {Sender}. Logins this process: {LoginCount}.",
-			_host,
-			_port,
-			_senderEmail,
+			_credentials.SmtpHost,
+			_credentials.SmtpPort,
+			_credentials.EmailAddress,
 			totalLogins);
 
 		return new PooledConnection(client);

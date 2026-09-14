@@ -69,6 +69,22 @@ public static class ATSDatabaseExtensions
 				initData.GetATSUsers(userIdsByEmail));
 		}
 
+		// The sender the queue used before accounts became rows. Seeded so the migration is
+		// deployable on its own: an empty table means the selector finds nothing sendable and
+		// every invitation defers until somebody registers an account by hand.
+		//
+		// Guarded on emptiness rather than on the address, so an operator who deliberately
+		// deletes this account does not get it back on the next restart.
+		if (!await context.EmailAccounts.AsNoTracking().AnyAsync())
+		{
+			var primaryAccount = initData.GetPrimaryEmailAccount();
+
+			if (primaryAccount is not null)
+			{
+				await context.EmailAccounts.AddAsync(primaryAccount);
+			}
+		}
+
 		await context.SaveChangesAsync();
 
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);

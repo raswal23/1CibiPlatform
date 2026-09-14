@@ -5,7 +5,12 @@ public static class ModuleList
 	// 15 (Audit Trail) is restricted for a different reason than the rest: a trail the
 	// audited user can read is a weaker control, so only a platform super admin sees it.
 	// The backend enforces the same rule independently.
-	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11, 15];
+	//
+	// 16 (Email Accounts) is restricted because the accounts it manages are the credentials
+	// every outbound invitation is sent through: deleting one silently shifts that volume onto
+	// the remaining senders, and a wrong daily limit stalls the queue. Same rule as 15 - the
+	// backend enforces it independently.
+	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11, 15, 16];
 
 	public static Dictionary<int, (string path, string Name, string Icon)> List =>
 		new()
@@ -24,7 +29,8 @@ public static class ModuleList
 			{ 12, ("aiassistant", "AI Assistant", Icons.Material.Filled.SmartToy) },
 			{ 13, ("bulkuploads", "Bulk Uploads Status", Icons.Material.Filled.CloudUpload) },
 			{ 14, ("ticketingstatus", "Ticketing Status", Icons.Material.Filled.ConfirmationNumber) },
-			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) }
+			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) },
+			{ 16, ("emailaccounts", "Email Accounts", Icons.Material.Filled.AlternateEmail) }
 
 			// Notifications (/s&i/ats/notifications) is deliberately NOT here. This list
 			// drives both the sidebar and ATSLayout.CanAccessRoute, and every id in it must

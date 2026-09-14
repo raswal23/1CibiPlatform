@@ -248,4 +248,33 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			return ServiceResponse<bool>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
+
+	public async Task<ServiceResponse<BulkRetryResultDTO>> ResendApplicationFormsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds)
+	{
+		var request = new { emailInvitationIds };
+
+		try
+		{
+			var response = await _httpClient.PatchAsJsonAsync("ats/resendapplicationforms", request);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<BulkRetryResultDTO>.Failure(await response.ReadErrorDetailAsync());
+			}
+
+			// The counts, not a bool: some of the selection may already be mid-send, and
+			// the caller has to be able to report "3 of 5".
+			var result = await response.Content.ReadFromJsonAsync<BulkRetryResultDTO>();
+
+			return result is null
+				? ServiceResponse<BulkRetryResultDTO>.Failure("The server returned an empty response.")
+				: ServiceResponse<BulkRetryResultDTO>.Success(result);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<BulkRetryResultDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
 }

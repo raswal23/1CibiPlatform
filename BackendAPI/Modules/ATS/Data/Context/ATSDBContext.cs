@@ -28,6 +28,9 @@ public class ATSDBContext : DbContext
 	public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 	public DbSet<AtsAuditEntry> AuditTrail { get; set; }
 	public DbSet<AtsNotification> Notifications { get; set; }
+	public DbSet<AtsEmailAccount> EmailAccounts { get; set; }
+	public DbSet<AtsEmailSendLog> EmailSendLog { get; set; }
+	public DbSet<AtsEmailAccountOtp> EmailAccountOtp { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

@@ -1,9 +1,9 @@
 namespace ATS.Services.EmailService;
 
 /// <summary>
-/// A token bucket over the whole process: no more than <c>MaxSendsPerSecond</c> messages
-/// leave this application per second, no matter how many connections or Quartz passes are
-/// running.
+/// A token bucket over one SENDING ACCOUNT: no more than <c>MaxSendsPerSecond</c> messages
+/// leave this application through that account per second, no matter how many connections or
+/// Quartz passes are running.
 ///
 /// Why a limiter as well as a connection cap: the two bound different things. The cap
 /// bounds how many SMTP sessions exist; the limiter bounds how fast messages flow through
@@ -12,8 +12,17 @@ namespace ATS.Services.EmailService;
 /// messages. With it, raising the connection count improves latency-hiding without ever
 /// raising the send rate past what the provider tolerates.
 ///
-/// Singleton, because the limit belongs to the SENDING ACCOUNT. A per-scope limiter would
-/// let two concurrent passes each send at the full rate and double the real one.
+/// Held for the lifetime of its account by
+/// <see cref="ATS.Services.EmailAccounts.SmtpAccountPoolRegistry"/>, one instance per account,
+/// and NOT registered in DI. The rule it used to state - "singleton, because a per-scope
+/// limiter would let two concurrent passes each send at the full rate" - still holds exactly
+/// as written; what changed is only that "the sending account" is no longer a synonym for
+/// "the process". Scoping this per request would still double the real rate.
+///
+/// Deliberately unchanged otherwise. Its single <c>_throttledUntilUtc</c> was already correct
+/// WITHIN one account: Gmail throttling one mailbox says nothing about another, and now that
+/// each mailbox owns its own limiter, "stop everything" means "stop this account" - which is
+/// what the switcher needs in order to move on.
 /// </summary>
 public sealed class SmtpRateLimiter : IDisposable
 {

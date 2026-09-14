@@ -2,6 +2,21 @@ namespace ATS.Services.AuditTrail;
 
 public sealed class AtsAuditService : IAtsAuditService
 {
+	// What the AI assistant may read in one turn. Higher than the order search ceiling
+	// because "list all the failures" is a normal audit question and ten rows reads as a
+	// broken answer. Still bounded: the rows are rendered into a chat bubble and summarised
+	// by a model, so anything larger belongs in the Excel export.
+	private const int MaxAssistantEntries = 50;
+
+	// A failure reason is diagnostic prose; the assistant only needs enough to say what
+	// went wrong.
+	private const int MaxFailureReasonLength = 200;
+
+	// The trail is append-only and grows without limit, so an export is capped rather than
+	// building an unbounded workbook in memory. Comfortably above a month of normal
+	// activity, which is all the retention job keeps anyway.
+	private const int MaxExportRows = 10_000;
+
 	private readonly IAtsAuditRepository _auditRepository;
 	private readonly ICurrentUser _currentUser;
 	private readonly ILogger<AtsAuditService> _logger;
@@ -108,6 +123,101 @@ public sealed class AtsAuditService : IAtsAuditService
 			cancellationToken);
 	}
 
+	public async Task<IReadOnlyList<AtsAuditEntrySummaryDTO>> GetRecentEntriesAsync(
+		string? outcome,
+		string? action,
+		string? area,
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
+		int take,
+		CancellationToken cancellationToken)
+	{
+		// The same gate the paged read uses. This method exists for the AI assistant, which
+		// is available to every ATS role - so the check matters more here than anywhere
+		// else in this file.
+		if (!CanRead())
+		{
+			return [];
+		}
+
+		// Bounded regardless of what the caller asks for: this feeds a chat answer, and a
+		// large page would blow out the model's context for no benefit.
+		var clampedTake = Math.Clamp(take, 1, MaxAssistantEntries);
+
+		// Null cursor values: the assistant always reads the newest entries and never
+		// paginates, so it takes the first page of the existing keyset query.
+		var rows = await _auditRepository.GetAuditTrailPageAsync(
+			afterOccurredAt: null,
+			afterEntryId: null,
+			clampedTake,
+			NormalizeOutcome(outcome),
+			action,
+			area,
+			searchTerm,
+			startDate,
+			endDate,
+			cancellationToken);
+
+		return rows
+			.Select(row => new AtsAuditEntrySummaryDTO
+			{
+				OccurredAt = row.OccurredAt,
+				Action = row.Action,
+				Area = row.Area,
+				Outcome = row.Outcome,
+				UserFullName = row.UserFullName,
+
+				// Truncated because an exception message can run to thousands of characters
+				// and is text an attacker can influence; the screen shows it in full.
+				FailureReason = Truncate(row.FailureReason, MaxFailureReasonLength)
+			})
+			.ToArray();
+	}
+
+	public async Task<AtsAuditExportDTO> ExportAuditTrailAsync(
+		string? outcome,
+		string? action,
+		string? area,
+		string? searchTerm,
+		DateTime? startDate,
+		DateTime? endDate,
+		CancellationToken cancellationToken)
+	{
+		// A download is a stronger action than a screen read - the file leaves the system -
+		// so this throws rather than returning an empty workbook. A caller who cannot read
+		// the trail should be told, not handed a plausible-looking empty file.
+		if (!CanRead())
+		{
+			throw new ForbiddenException("The audit trail is available to platform administrators only.");
+		}
+
+		var rows = await _auditRepository.GetAuditTrailPageAsync(
+			afterOccurredAt: null,
+			afterEntryId: null,
+			MaxExportRows,
+			NormalizeOutcome(outcome),
+			action,
+			area,
+			searchTerm,
+			startDate,
+			endDate,
+			cancellationToken);
+
+		var content = AtsAuditWorkbookWriter.Write(rows);
+
+		return new AtsAuditExportDTO
+		{
+			Content = content,
+			FileName = BuildExportFileName()
+		};
+	}
+
+	// Timestamped rather than named from caller input, so a filter value can never reach
+	// the Content-Disposition header.
+	private static string BuildExportFileName() =>
+		$"ats-audit-trail-{DateTime.UtcNow:yyyyMMdd-HHmmss}.xlsx";
+
 	// Super admin only, and deliberately not IAtsAccessScopeResolver: this screen is not
 	// client-scoped, because a trail the audited user can read is a weaker control. A
 	// caller without the right reads an empty list rather than a 403, which is how every
@@ -125,6 +235,11 @@ public sealed class AtsAuditService : IAtsAuditService
 
 		return false;
 	}
+
+	private static string? Truncate(string? value, int maxLength) =>
+		value is not null && value.Length > maxLength
+			? value[..maxLength]
+			: value;
 
 	// An unrecognised outcome would otherwise reach the repository as a literal filter and
 	// silently return nothing; treat it as "no filter" instead.

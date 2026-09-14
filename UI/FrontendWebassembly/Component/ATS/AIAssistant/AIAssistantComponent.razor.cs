@@ -21,12 +21,19 @@ public partial class AIAssistantComponent
 
 	private const string DictationModulePath = "./js/ats/voiceDictation.js";
 
+	private const string ExcelContentType =
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
 	private readonly List<ChatMessage> _messages = new();
 
 	private string _currentMessage = string.Empty;
 	private bool _isSending;
 	private bool _isConfirming;
 	private bool _isTyping;
+
+	// The message whose export is in flight, so only that button shows a busy state - a
+	// single bool would disable every audit table in the transcript.
+	private ChatMessage? _exportingMessage;
 	private bool _shouldScroll;
 	private ElementReference _streamRef;
 	private CancellationTokenSource? _cts;
@@ -326,7 +333,9 @@ public partial class AIAssistantComponent
 			AddMessage(ChatMessage.FromAssistant(
 				ToHtml(answer.Answer),
 				answer.Orders,
-				answer.PendingDraft));
+				answer.PendingDraft,
+				answer.AuditEntries,
+				answer.AuditQuery));
 		}
 		catch (OperationCanceledException)
 		{
@@ -471,6 +480,81 @@ public partial class AIAssistantComponent
 		_ => "ats-assistant-status ats-assistant-status-waiting"
 	};
 
+	/// <summary>
+	/// Downloads the audit rows the assistant just showed, as a styled Excel workbook.
+	/// </summary>
+	/// <remarks>
+	/// The assistant cannot hand the browser a file - a download has to be started by a real
+	/// user gesture on the page, or the browser blocks it. So asking the AI to "export this"
+	/// produces the table plus this button, and the click is what actually fetches the file.
+	///
+	/// The filters come from the message's own AuditQuery rather than any current UI state,
+	/// so the workbook contains exactly the rows above it even after the user has asked
+	/// several more questions.
+	/// </remarks>
+	private async Task ExportAuditEntriesAsync(ChatMessage message)
+	{
+		if (message.AuditQuery is not { } query || _exportingMessage is not null)
+		{
+			return;
+		}
+
+		_exportingMessage = message;
+		await InvokeAsync(StateHasChanged);
+
+		try
+		{
+			// The plugin clamped DaysBack before recording it, so this is the same period
+			// the rows above came from.
+			var startDate = DateTime.UtcNow.Date.AddDays(-(Math.Max(query.DaysBack, 1) - 1));
+
+			var response = await AuditTrailService.ExportAuditTrailAsync(
+				query.Outcome,
+				query.Action,
+				query.Area,
+				searchTerm: null,
+				startDate,
+				DateTime.UtcNow.Date);
+
+			if (!response.IsSuccess || response.Data is null)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			var fileBytes = await response.Data.Content.ReadAsByteArrayAsync();
+
+			var fileName =
+				response.Data.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+				?? "ats-audit-trail.xlsx";
+
+			await JS.InvokeVoidAsync(
+				"downloadFile",
+				fileName,
+				ExcelContentType,
+				fileBytes);
+
+			Snackbar.Add("Audit trail exported.", Severity.Success);
+		}
+		finally
+		{
+			_exportingMessage = null;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	// Reuses the order status pill vocabulary rather than adding a second palette: an audit
+	// outcome is the same idea - a terminal state that is either good or not.
+	private static string GetOutcomeClass(string? outcome) =>
+		string.Equals(outcome, AuditActionOutcome.Failure, StringComparison.OrdinalIgnoreCase)
+			? "ats-assistant-status ats-assistant-status-stopped"
+			: "ats-assistant-status ats-assistant-status-done";
+
+	// Audit rows carry a time of day, unlike orders which are shown by date alone - "which
+	// of these failed first" is the usual follow-up question.
+	private static string FormatDateTime(DateTime value) =>
+		value.ToLocalTime().ToString("dd MMM yyyy HH:mm");
+
 	private static string GetDraftStateClass(OrderDraftState state) =>
 		state == OrderDraftState.Confirmed
 			? "ats-assistant-confirm-result is-confirmed"
@@ -523,6 +607,11 @@ public partial class AIAssistantComponent
 
 		public IReadOnlyList<AtsOrderSummaryDTO>? Orders { get; init; }
 
+		public IReadOnlyList<AtsAuditEntrySummaryDTO>? AuditEntries { get; init; }
+
+		// The filters behind AuditEntries, so the export downloads exactly what was shown.
+		public AtsAuditQueryDTO? AuditQuery { get; init; }
+
 		public AtsOrderDraftDTO? Draft { get; init; }
 
 		public OrderDraftState DraftState { get; set; } = OrderDraftState.Pending;
@@ -538,12 +627,16 @@ public partial class AIAssistantComponent
 		public static ChatMessage FromAssistant(
 			string html,
 			IReadOnlyList<AtsOrderSummaryDTO>? orders = null,
-			AtsOrderDraftDTO? draft = null) => new()
+			AtsOrderDraftDTO? draft = null,
+			IReadOnlyList<AtsAuditEntrySummaryDTO>? auditEntries = null,
+			AtsAuditQueryDTO? auditQuery = null) => new()
 			{
 				IsUser = false,
 				Html = html,
 				Orders = orders,
-				Draft = draft
+				Draft = draft,
+				AuditEntries = auditEntries,
+				AuditQuery = auditQuery
 			};
 	}
 }

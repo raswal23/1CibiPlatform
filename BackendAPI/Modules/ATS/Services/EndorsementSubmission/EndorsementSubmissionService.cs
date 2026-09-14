@@ -2,6 +2,12 @@
 
 public class EndorsementSubmissionService : IEndorsementSubmissionService
 {
+	// A bulk resend is bounded because every requeued invitation becomes a message on the
+	// deliberately-paced email queue. At the default 0.9 sends/second, 500 invitations is
+	// already about nine minutes of sending; releasing thousands at once would block every
+	// other client behind one operator's click.
+	public const int MaxBulkResendSize = 500;
+
 	private readonly ILogger<EndorsementSubmissionService> _logger;
 	private readonly IHashService _hashService;
 	private readonly IEmailService _emailService;
@@ -536,37 +542,169 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
-		// Same shape as the create path above: the new token, the email and the history
-		// entry are one unit, so a failed send does not leave the candidate holding a link
-		// whose token was never issued - or an issued token nobody received.
-		await TransactionRunner.RunAsync(
-			_unitOfWork,
-			async () =>
-			{
-				await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, newExpiration, cancellationToken);
-
-				var applicationFormLink = $"{_applicationformBaseUrl}/{hashToken}";
-				var fullName = $"{invitation.FirstName} {invitation.LastName}";
-
-				await SendApplicationFormToUserEmailAsync(
-					invitation.EmailAddress!,
-					fullName,
-					applicationFormLink,
-					invitation.Requestor,
-					invitation.ClientId);
-
-				await _orderHistoryService.RecordAsync(
-					emailInvitationId,
-					OrderHistoryEventType.ApplicationFormResent,
-					invitation.OrderStatus,
-					OrderStatus.PendingCandidateInfo,
-					cancellationToken);
-			},
+		// Queued, not sent inline - the same strategy the OMS ticketing retry uses.
+		//
+		// Sending here meant the resend bypassed the connection pool and the rate limiter
+		// entirely: it opened its own SMTP session on the request thread, which is exactly
+		// the per-message login that got this sender throttled. It also left the row's
+		// EmailSentStatus and EmailSendAttempts untouched, so a SUCCESSFUL resend still read
+		// "Error, 5 attempts" in the dashboard, and the bulk-completion notification could
+		// never fire for that file.
+		//
+		// The requeue moves the row back to Pending with a fresh token and a reset budget,
+		// and the background job delivers it through the paced, pooled path like any other
+		// invitation.
+		var requeued = await _atsRepository.RequeueEmailInvitationAsync(
+			emailInvitationId,
+			hashToken,
+			newExpiration,
 			cancellationToken);
 
-		_logger.LogInformation("Successfully resent application form for invitation: {@Context}", logContext);
+		// The button was stale: the row is not in a state a retry applies to. Say so rather
+		// than reporting a silent success, matching RetryTicketAsync.
+		if (!requeued)
+		{
+			_logger.LogWarning("Resend rejected, the invitation is no longer retryable: {@Context}", logContext);
+
+			throw new ConflictException(
+				"This invitation is no longer awaiting a resend. Refresh the list to see its current status.");
+		}
+
+		// After the requeue committed, so the history reflects work that is actually
+		// scheduled. The order's own status is unchanged - queueing an email is not a step
+		// in the order lifecycle - so it is written on both sides of the entry.
+		await _orderHistoryService.RecordAsync(
+			emailInvitationId,
+			OrderHistoryEventType.ApplicationFormResent,
+			invitation.OrderStatus,
+			OrderStatus.PendingCandidateInfo,
+			cancellationToken);
+
+		_logger.LogInformation("Queued an application form resend for invitation: {@Context}", logContext);
 
 		return true;
+	}
+
+	public async Task<BulkRetryResultDTO> ResendApplicationFormsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "ResendApplicationForms",
+			Step = "RequeueInvitations",
+			RequestedCount = emailInvitationIds.Count,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation(
+			"Queueing {Count} application form resend(s): {@Context}",
+			emailInvitationIds.Count,
+			logContext);
+
+		// Distinct because a selection can repeat an id, and a duplicate would be counted
+		// twice in the total reported back.
+		var requestedIds = emailInvitationIds.Distinct().ToList();
+
+		if (requestedIds.Count > MaxBulkResendSize)
+		{
+			throw new BadRequestException(
+				$"A bulk resend is limited to {MaxBulkResendSize} invitations at a time. Narrow the selection and try again.");
+		}
+
+		var scope = await _accessScopeResolver.ResolveAsync(cancellationToken);
+
+		if (scope is not { } accessScope)
+		{
+			throw new ForbiddenException("The current user does not have ATS access.");
+		}
+
+		var owners = await _atsRepository.GetEmailInvitationOwnersAsync(requestedIds, cancellationToken);
+
+		// Scope is enforced per row, not once for the request: without this a caller could
+		// touch another client's invitations by posting their ids alongside their own.
+		// Out-of-scope ids are dropped silently, for the same reason the single resend
+		// answers 404 - naming them would confirm the invitations exist.
+		var inScopeIds = owners
+			.Where(owner => IsOwnerWithinScope(owner, accessScope))
+			.Select(owner => owner.EmailInvitationID)
+			.ToList();
+
+		if (inScopeIds.Count == 0)
+		{
+			throw new NotFoundException("None of the selected invitations are available to resend.");
+		}
+
+		// Each invitation gets its OWN token. Reusing one across the batch would let any
+		// candidate in it open another candidate's application form.
+		var requeues = new List<EmailInvitationRequeueDTO>(inScopeIds.Count);
+		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
+
+		foreach (var invitationId in inScopeIds)
+		{
+			var token = _secureToken.GenerateSecureToken();
+
+			if (string.IsNullOrEmpty(token))
+			{
+				_logger.LogError("Failed to generate new token during bulk resend: {@Context}", logContext);
+				throw new InternalServerException("Failed to generate new token.");
+			}
+
+			var hashToken = _hashService.Hash(token);
+
+			if (string.IsNullOrEmpty(hashToken))
+			{
+				_logger.LogError("Failed to hash token during bulk resend: {@Context}", logContext);
+				throw new InternalServerException("Failed to hash token.");
+			}
+
+			requeues.Add(new EmailInvitationRequeueDTO
+			{
+				EmailInvitationId = invitationId,
+				HashToken = hashToken,
+				HashTokenExpiration = newExpiration
+			});
+		}
+
+		var requeued = await _atsRepository.RequeueEmailInvitationsAsync(requeues, cancellationToken);
+
+		// Recorded for the rows the caller was allowed to act on. A row skipped because the
+		// job is mid-send keeps its own history from that send, so no entry is lost.
+		if (requeued > 0)
+		{
+			await _orderHistoryService.RecordManyAsync(
+				inScopeIds,
+				OrderHistoryEventType.ApplicationFormResent,
+				null,
+				OrderStatus.PendingCandidateInfo,
+				cancellationToken);
+		}
+
+		_logger.LogInformation(
+			"Queued {RequeuedCount} of {RequestedCount} application form resend(s): {@Context}",
+			requeued,
+			requestedIds.Count,
+			logContext);
+
+		return new BulkRetryResultDTO
+		{
+			RequestedCount = requestedIds.Count,
+			RequeuedCount = requeued
+		};
+	}
+
+	// The scope rule applied to an identity-only projection, so a bulk action can filter
+	// many rows without loading each whole invitation.
+	private static bool IsOwnerWithinScope(EmailInvitationOwnerDTO owner, AtsAccessScope scope)
+	{
+		if (scope.AuthorizedClientIds is { } clientIds
+			&& !(owner.ClientId.HasValue && clientIds.Contains(owner.ClientId.Value)))
+		{
+			return false;
+		}
+
+		return !scope.RequiredOwnerId.HasValue
+			|| owner.RequestorId == scope.RequiredOwnerId.Value;
 	}
 
 	// Applies the same role ladder the read paths use. A null scope means the caller may

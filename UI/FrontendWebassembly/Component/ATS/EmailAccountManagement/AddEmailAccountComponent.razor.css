@@ -1,0 +1,518 @@
+.ae-shell,
+.ae-shell *,
+.ae-shell *::before,
+.ae-shell *::after {
+    box-sizing: border-box;
+}
+
+.ae-shell {
+    --ae-blue-500: var(--c-blue-500);
+    --ae-blue-tint: var(--c-blue-tint);
+    --ae-border: var(--c-border);
+    --ae-border-strong: var(--c-border-strong);
+    --ae-text-1: var(--c-fg-strong);
+    --ae-text-2: var(--c-fg-muted);
+    --ae-text-3: var(--c-fg-subtle);
+    --ae-green: var(--c-success);
+    --ae-green-tint: var(--c-success-bg);
+    width: 100%;
+    overflow: hidden;
+    background: var(--c-surface);
+    color: var(--ae-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.ae-header {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 32px 24px;
+    background: var(--c-dialog-header-gradient);
+}
+
+.ae-header::before {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+.ae-header-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ae-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.ae-icon-badge {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--c-on-dark-fg);
+}
+
+.ae-icon-badge svg {
+    width: 22px;
+    height: 22px;
+}
+
+.ae-header-text h1 {
+    margin: 0;
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.ae-header-text p {
+    margin: 4px 0 0;
+    color: var(--c-on-dark-fg-muted);
+    font-size: 13.5px;
+    font-weight: 400;
+}
+
+.ae-close {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--c-on-dark-fg);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ae-close:hover,
+.ae-close:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.ae-close svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ae-close:focus-visible,
+.ae-button:focus-visible,
+.ae-toggle:focus-visible {
+    outline: 3px solid rgba(143, 201, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.ae-body {
+    padding: 28px 32px 8px;
+    background: var(--c-surface);
+}
+
+.ae-section {
+    overflow: hidden;
+    margin-bottom: 18px;
+    border: 1px solid var(--ae-border);
+    border-radius: 14px;
+    background: var(--c-surface-sunken);
+}
+
+.ae-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 51px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--ae-border);
+    background: var(--ae-blue-tint);
+}
+
+.ae-section-number {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--c-chip-solid-bg);
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ae-section-head h2 {
+    margin: 0;
+    color: var(--ae-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+}
+
+.ae-section-helper {
+    margin-left: auto;
+    color: var(--ae-text-3);
+    font-size: 11.5px;
+    font-weight: 500;
+    text-align: right;
+}
+
+.ae-section-body {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+}
+
+/* Host and port sit on one row: the port is meaningless without the host beside it. */
+.ae-section-body-split {
+    grid-template-columns: minmax(0, 1fr) 120px;
+}
+
+.ae-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.ae-field {
+    position: relative;
+    min-width: 0;
+}
+
+.ae-field > label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ae-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.ae-required {
+    margin-left: 2px;
+    color: var(--c-danger);
+}
+
+.ae-input-wrap {
+    position: relative;
+}
+
+.ae-input-wrap ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.ae-input-wrap ::deep .mud-input {
+    min-height: 42px;
+    border-radius: 10px;
+    background: var(--c-surface);
+    color: var(--ae-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.ae-input-wrap ::deep .mud-input-slot {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    color: var(--ae-text-1);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 42px;
+}
+
+.ae-input-wrap ::deep .mud-input-slot::placeholder {
+    color: var(--ae-text-3);
+    opacity: 1;
+}
+
+.ae-input-wrap ::deep .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--ae-border-strong);
+    border-radius: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ae-input-wrap ::deep .mud-input:focus-within .mud-input-outlined-border {
+    border-color: var(--ae-blue-500);
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.ae-input-wrap ::deep .mud-input-error .mud-input-outlined-border {
+    border-color: var(--c-danger);
+}
+
+.ae-input-wrap ::deep .mud-input-helper-text {
+    margin-top: 4px;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+}
+
+.ae-input-wrap ::deep .mud-input-adornment {
+    color: var(--ae-text-3);
+}
+
+.ae-input-wrap ::deep .mud-input-adornment-start {
+    margin-left: 0;
+    margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
+}
+
+.ae-input-wrap ::deep .mud-input-adornment-end .mud-icon-button {
+    width: 30px;
+    height: 30px;
+}
+
+.ae-input-wrap ::deep .mud-input-adornment-start .mud-icon-root,
+.ae-input-wrap ::deep .mud-input-adornment-end .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+/* The spinners crowd a three-digit port and a four-digit limit; the fields are typed into. */
+.ae-numeric-wrap ::deep .mud-input-numeric-spin {
+    display: none !important;
+}
+
+.ae-numeric-wrap ::deep input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.ae-numeric-wrap ::deep input[type="number"]::-webkit-inner-spin-button,
+.ae-numeric-wrap ::deep input[type="number"]::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+.ae-hint {
+    margin: 5px 0 0;
+    color: var(--ae-text-3);
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.ae-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--ae-border-strong);
+    border-radius: 10px;
+    background: var(--c-surface);
+}
+
+.ae-status-copy p {
+    margin: 0;
+    color: var(--ae-text-1);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.ae-status-copy span {
+    display: block;
+    margin-top: 2px;
+    color: var(--ae-text-3);
+    font-size: 11.5px;
+}
+
+.ae-status-control {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.ae-status-badge {
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--ae-green-tint);
+    color: var(--ae-green);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.ae-status-badge.is-off {
+    background: var(--c-neutral-bg);
+    color: var(--ae-text-2);
+}
+
+.ae-toggle {
+    position: relative;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: var(--ae-green);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ae-toggle span {
+    position: absolute;
+    top: 3px;
+    left: 21px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--c-surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: left 0.15s ease;
+}
+
+.ae-toggle.is-off {
+    background: var(--c-border-strong);
+}
+
+.ae-toggle.is-off span {
+    left: 3px;
+}
+
+.ae-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 32px 26px;
+    border-top: 1px solid var(--ae-border);
+    background: var(--c-surface);
+}
+
+.ae-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.ae-button:active {
+    transform: scale(0.97);
+}
+
+.ae-button-cancel {
+    border: 1.5px solid var(--ae-border-strong);
+    background: var(--c-surface);
+    color: var(--ae-text-2);
+}
+
+.ae-button-cancel:hover {
+    background: var(--c-surface-sunken);
+}
+
+.ae-button-save {
+    border: 0;
+    background: var(--c-primary-gradient);
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, 0.55);
+    color: var(--c-on-dark-fg);
+}
+
+.ae-button-save:hover {
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, 0.7);
+}
+
+.ae-button-save svg {
+    width: 15px;
+    height: 15px;
+}
+
+@media (max-width: 600px) {
+    .ae-header {
+        padding: 22px 20px 20px;
+    }
+
+    .ae-body {
+        padding: 20px 16px 4px;
+    }
+
+    .ae-section-head,
+    .ae-section-body {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .ae-section-helper {
+        display: none;
+    }
+
+    .ae-section-body-split,
+    .ae-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ae-status-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .ae-status-control {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .ae-footer {
+        padding: 16px 16px 20px;
+    }
+}
+
+@media (max-width: 420px) {
+    .ae-header-text h1 {
+        font-size: 19px;
+    }
+
+    .ae-header-text p {
+        font-size: 12px;
+    }
+
+    .ae-icon-badge {
+        width: 40px;
+        height: 40px;
+    }
+
+    .ae-button {
+        justify-content: center;
+        flex: 1;
+        padding: 0 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ae-shell *,
+    .ae-shell *::before,
+    .ae-shell *::after {
+        transition-duration: 0.01ms !important;
+    }
+}

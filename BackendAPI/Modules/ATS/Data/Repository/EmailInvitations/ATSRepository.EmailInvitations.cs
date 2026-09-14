@@ -67,6 +67,118 @@ public partial class ATSRepository
 			.ToListAsync();
 	}
 
+	public async Task<bool> RequeueEmailInvitationAsync(
+		Guid emailInvitationId,
+		string hashToken,
+		DateTime hashTokenExpiration,
+		CancellationToken cancellationToken)
+	{
+		// Mirrors RequeueExhaustedTicketAsync. The predicate is the concurrency guard, not
+		// just a lookup: matching on the current status inside the UPDATE means a row the
+		// job has already claimed updates nothing, and the caller is told so. A
+		// read-then-write would race and could resurrect a live claim.
+		//
+		// Processing is the one status excluded. That row is mid-send RIGHT NOW - a worker
+		// is holding it in memory and is about to write its outcome, so re-issuing the token
+		// here would both race that write and risk a second delivery.
+		//
+		// Pending is allowed even though the row is already queued: nothing has been sent,
+		// so re-issuing the token duplicates no email, and refusing would give an operator a
+		// confusing error for clicking resend twice.
+		var updated = await _dbcontext.EmailInvitationRequests
+			.Where(x => x.EmailInvitationID == emailInvitationId
+					 && x.EmailSentStatus != EmailStatus.Processing)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Pending)
+
+				// The budget resets: whatever blocked delivery is expected to have been
+				// fixed, so the job gets a full set of automatic attempts again. Without
+				// this a retried row was still at the ceiling and the claim query skipped
+				// it, so the retry silently did nothing.
+				.SetProperty(x => x.EmailSendAttempts, x => 0)
+				.SetProperty(x => x.EmailClaimedAt, x => null)
+				.SetProperty(x => x.EmailSentAt, x => null)
+
+				// The link is reissued in the same statement, so a queued row can never
+				// carry a token the candidate was never told about.
+				.SetProperty(x => x.HashToken, hashToken)
+				.SetProperty(x => x.HashTokenCreatedAt, DateTime.UtcNow)
+				.SetProperty(x => x.HashTokenExpiration, hashTokenExpiration)
+				.SetProperty(x => x.OrderStatus, OrderStatus.PendingCandidateInfo)
+				.SetProperty(x => x.ApplicationFormStatus, ApplicationFormStatus.Pending),
+				cancellationToken);
+
+		return updated > 0;
+	}
+
+	public async Task<int> RequeueEmailInvitationsAsync(
+		IReadOnlyCollection<EmailInvitationRequeueDTO> requeues,
+		CancellationToken cancellationToken)
+	{
+		if (requeues.Count == 0)
+		{
+			return 0;
+		}
+
+		// One UPDATE per row rather than one for the set, because each invitation needs its
+		// OWN freshly generated token - a shared token would let any candidate in the batch
+		// open another candidate's form. They run inside the caller's transaction, so the
+		// batch still commits or rolls back as a unit.
+		//
+		// The predicate matches RequeueEmailInvitationAsync: a row the job is actively
+		// sending (Processing) is skipped rather than raced, and the returned count reflects
+		// what actually moved.
+		var requeued = 0;
+
+		foreach (var requeue in requeues)
+		{
+			var updated = await _dbcontext.EmailInvitationRequests
+				.Where(x => x.EmailInvitationID == requeue.EmailInvitationId
+						 && x.EmailSentStatus != EmailStatus.Processing)
+				.ExecuteUpdateAsync(setters => setters
+					.SetProperty(x => x.EmailSentStatus, x => EmailStatus.Pending)
+					.SetProperty(x => x.EmailSendAttempts, x => 0)
+					.SetProperty(x => x.EmailClaimedAt, x => null)
+					.SetProperty(x => x.EmailSentAt, x => null)
+					.SetProperty(x => x.HashToken, requeue.HashToken)
+					.SetProperty(x => x.HashTokenCreatedAt, DateTime.UtcNow)
+					.SetProperty(x => x.HashTokenExpiration, requeue.HashTokenExpiration)
+					.SetProperty(x => x.OrderStatus, OrderStatus.PendingCandidateInfo)
+					.SetProperty(x => x.ApplicationFormStatus, ApplicationFormStatus.Pending),
+					cancellationToken);
+
+			requeued += updated;
+		}
+
+		return requeued;
+	}
+
+	public async Task<List<EmailInvitationOwnerDTO>> GetEmailInvitationOwnersAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		if (emailInvitationIds.Count == 0)
+		{
+			return [];
+		}
+
+		var ids = emailInvitationIds.ToList();
+
+		// Read before the update so the caller's scope can be enforced per row. A bulk
+		// action must not become a way to touch another client's invitations by posting
+		// their ids alongside your own.
+		return await _dbcontext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(eir => ids.Contains(eir.EmailInvitationID))
+			.Select(eir => new EmailInvitationOwnerDTO
+			{
+				EmailInvitationID = eir.EmailInvitationID,
+				ClientId = eir.ClientId,
+				RequestorId = eir.RequestorId
+			})
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<int> ReleaseEmailInvitationClaimsAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		// Deliberately does NOT touch EmailSendAttempts. These rows were claimed but never

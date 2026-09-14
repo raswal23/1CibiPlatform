@@ -93,7 +93,12 @@
     background: transparent;
 }
 
-.ats-management-card .table-component-toolbar > .mud-typography {
+/* The heading variant applies when the board passes CountLabel (email accounts): TableComponent
+   then wraps the title in a .table-component-heading div alongside the subtitle, which the
+   plain ">" selector below does not reach - so without this the title falls back to the
+   unreadable .gradient-text (a gradient clipped to text, invisible on the dark card). */
+.ats-management-card .table-component-toolbar > .mud-typography,
+.ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
     width: auto !important;
     margin: 0 !important;
     background: none !important;
@@ -783,6 +788,155 @@
     margin-right: auto;
 }
 
+/* The selection gutter, shared by every board that offers a bulk action. Narrow and
+   centred so the checkbox column reads as a gutter rather than a column of data
+   competing with the identity cell beside it.
+
+   Shared rather than per-screen because the Ticketing and Bulk Upload boards must keep
+   identical row geometry - see the note at the top of this section. */
+.ats-management-page .ats-status-board-select-header,
+.ats-management-page .ats-status-board-select-cell {
+    padding-right: 0;
+    text-align: center;
+    width: 48px;
+}
+
+/* Chips on the left, a board-level action on the right, sharing the row above the table.
+   Lives here rather than in a scoped sheet because it is the same arrangement any status
+   board needs the moment it grows an export or similar. */
+.ats-management-page .ats-audit-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    /* Takes over the segmented control's own bottom margin, released below, so the gap
+       to the table is unchanged from before the row existed. */
+    margin-bottom: 16px;
+}
+
+/* The segmented control carries its own 16px bottom margin; the row owns the spacing
+   now, so it is released here rather than being restated on both children. */
+.ats-management-page .ats-audit-filter-row .ats-status-board-segmented {
+    margin-bottom: 0;
+}
+
+.ats-management-page .ats-audit-export:disabled {
+    opacity: .55;
+    cursor: default;
+    box-shadow: none;
+}
+
+.ats-management-page .ats-audit-export:disabled:active {
+    transform: none;
+}
+
+@media (max-width: 600px) {
+    .ats-management-page .ats-audit-export {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* The selection bar: its own band between the filter chips and the table, not a control
+   inside the table toolbar.
+
+   It lives here because sharing the toolbar row forced the button to align with the
+   search box and the reload button, and pushed both out of shape the moment a selection
+   existed. As a separate band it can appear, grow and disappear without moving anything
+   except the table below it. */
+.ats-management-page .ats-status-board-selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    /* 16px below, so the bar never sits flush against the table card. */
+    margin: 12px 0 16px;
+    padding: 12px 16px;
+
+    /* Follows the page down: a selection made at the top of a long list would otherwise
+       scroll out of reach, and the operator would have to scroll back up to act on it.
+       Sticky rather than fixed so it stays inside the page flow and pushes the table
+       down normally when it first appears.
+
+       0 works as the offset because the console topbar is not sticky - nothing overlaps
+       this. Sticky also needs no `overflow` on any ancestor, which holds here:
+       .ats-console, .ats-console-main and .ats-console-content all leave it unset. */
+    position: sticky;
+    top: 0;
+    z-index: 3;
+
+    /* Reads as a live state rather than another filter: tinted with the same accent the
+       checkboxes use, so it is obviously about the selection.
+       Layered over an OPAQUE surface - the tint alone is translucent, and table rows
+       would show through it while scrolling. */
+    border: 1px solid var(--management-blue-600);
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            color-mix(in srgb, var(--management-blue-600) 10%, transparent),
+            color-mix(in srgb, var(--management-blue-600) 10%, transparent)),
+        var(--c-surface);
+
+    /* Lifts it off the rows passing underneath, so the edge stays legible while stuck. */
+    box-shadow: 0 6px 16px -10px rgba(11, 27, 61, .45);
+}
+
+.ats-management-page .ats-status-board-selection-count {
+    color: var(--management-text-1);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-management-page .ats-status-board-selection-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Quiet secondary action - clearing is a correction, not the thing the bar is for. */
+.ats-management-page .ats-status-board-selection-clear {
+    padding: 8px 14px;
+    border: 1px solid var(--management-border-strong);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--management-text-2);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ats-management-page .ats-status-board-selection-clear:hover:not(:disabled) {
+    border-color: var(--management-blue-600);
+    color: var(--management-text-1);
+}
+
+.ats-management-page .ats-status-board-selection-clear:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+/* Sized by its own content now that it no longer has to match the 56px toolbar
+   controls beside it. */
+.ats-management-page .ats-status-board-requeue {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.ats-management-page .ats-status-board-requeue:disabled {
+    opacity: .55;
+    cursor: default;
+    box-shadow: none;
+}
+
+.ats-management-page .ats-status-board-requeue:disabled:active {
+    transform: none;
+}
+
 .ats-management-page .ats-status-board-date-field {
     display: flex;
     width: 100%;
@@ -901,6 +1055,28 @@
     .ats-management-page .ats-status-board-date-field .mud-picker,
     .ats-management-page .ats-status-board-date-field .mud-picker-inline {
         width: 100% !important;
+    }
+
+    /* The selection bar stacks into a column, so its count sits above full-width
+       actions rather than being squeezed beside them.
+
+       Stops being sticky at this width: stacked it is roughly two rows tall, which on a
+       phone would cover a meaningful share of the visible list for the whole scroll. */
+    .ats-management-page .ats-status-board-selection-bar {
+        position: static;
+        flex-direction: column;
+        align-items: stretch;
+        box-shadow: none;
+    }
+
+    .ats-management-page .ats-status-board-selection-actions {
+        width: 100%;
+    }
+
+    .ats-management-page .ats-status-board-selection-clear,
+    .ats-management-page .ats-status-board-requeue {
+        flex: 1 1 0;
+        justify-content: center;
     }
 
     /* Release the 56px pin: stacked, the search box can take its natural height. */
@@ -1186,6 +1362,32 @@
     outline-offset: 2px;
 }
 
+/* Raw inline <svg> icons (edit/delete/retry) have no intrinsic size of their own, unlike
+   MudIcon - without this they render oversized and throw off the button's alignment, as
+   opposed to .ats-management-edit-button's icon which this mirrors. */
+.ats-management-page .ats-cell-action svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Destructive variant of the same button. Lives here rather than in the one screen that
+   currently uses it, because the next board with a delete column needs the identical
+   treatment and a second copy is how two delete buttons end up looking different. */
+.ats-management-page .ats-cell-action.is-danger {
+    border-color: var(--c-danger-bg);
+    background: var(--c-danger-bg);
+    color: var(--c-danger-strong);
+}
+
+.ats-management-page .ats-cell-action.is-danger:hover:not(:disabled) {
+    border-color: var(--c-danger);
+    background: var(--c-danger-bg);
+}
+
+.ats-management-page .ats-cell-action.is-danger:focus-visible {
+    outline-color: rgba(214, 69, 69, .35);
+}
+
 /* ---------- Status pill ---------- */
 
 .ats-management-page .ats-status-pill {
@@ -1337,7 +1539,8 @@
         border-radius: 14px;
     }
 
-    .ats-management-card .table-component-toolbar > .mud-typography {
+    .ats-management-card .table-component-toolbar > .mud-typography,
+    .ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
         font-size: 20px !important;
     }
 

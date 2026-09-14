@@ -86,6 +86,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuditTrailService, AuditTrailService>();
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IAtsEmailAccountService, AtsEmailAccountService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();

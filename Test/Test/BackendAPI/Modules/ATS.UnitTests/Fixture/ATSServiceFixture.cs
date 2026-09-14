@@ -1,7 +1,9 @@
 ﻿using ATS.Configuration;
+using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
+using ATS.Services.EmailAccounts;
 using ATS.Services.EmailNotificationProcessor;
 using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
@@ -41,7 +43,13 @@ public class ATSServiceFixture : IDisposable
 	// Configuration
 	public IConfiguration Configuration { get; private set; }
 	public AtsEmailDeliveryOptions EmailDeliveryOptions { get; private set; }
-	public SmtpRateLimiter RateLimiter { get; private set; }
+
+	/// <summary>
+	/// Stands in for the per-account pools. Defaults to one healthy account, so a test that
+	/// does not care about failover behaves as it did when there was a single hard-coded
+	/// sender; tests that do care re-Setup GetNextSendableAccountAsync themselves.
+	/// </summary>
+	public Mock<ISmtpAccountPoolRegistry> MockPoolRegistry { get; private set; }
 
 	// Service instances
 	public BulkSubmissionProcessorService BulkSubmissionProcessorService { get; private set; }
@@ -106,9 +114,24 @@ public class ATSServiceFixture : IDisposable
 			ThrottleBackoffSeconds = 600
 		};
 
-		RateLimiter = new SmtpRateLimiter(
-			Options.Create(EmailDeliveryOptions),
-			new Mock<ILogger<SmtpRateLimiter>>().Object);
+		// Somebody to address the "every sender account is down" notification to. Without this
+		// the mock returns null, the processor's guard swallows the NullReferenceException, and
+		// the outage notification silently never fires - which is the exact bug the
+		// notification exists to prevent, hidden inside a green test.
+		MockRepository
+			.Setup(x => x.GetAtsAdministratorUserIdsAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new List<Guid> { AdministratorUserId });
+
+		MockPoolRegistry = new Mock<ISmtpAccountPoolRegistry>();
+
+		// One healthy account available by default. The processor now asks before claiming a
+		// slice of rows, so without this every pass would short-circuit as "no account
+		// available" and the existing tests would assert against a pass that never ran.
+		MockPoolRegistry
+			.Setup(x => x.GetNextSendableAccountAsync(
+				It.IsAny<IReadOnlyCollection<int>>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(HealthyAccount);
 
 		// IEndorsementSubmissionService is no longer injected: each send resolves its own
 		// from a scope, because it reaches a DbContext and the sends now run concurrently.
@@ -119,14 +142,34 @@ public class ATSServiceFixture : IDisposable
 			MockNotificationService.Object,
 			MockServiceScopeFactory.Object,
 			Configuration,
-			RateLimiter,
+			MockPoolRegistry.Object,
 			Options.Create(EmailDeliveryOptions)
 			);
 	}
 
+	/// <summary>The admin the exhausted-accounts notification is addressed to.</summary>
+	public static Guid AdministratorUserId { get; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+	/// <summary>A verified, active, uncapped account, for tests that do not exercise failover.</summary>
+	public static AtsEmailAccountSnapshot HealthyAccount { get; } = new(
+		AtsEmailAccountId: 1,
+		DisplayName: "Applicant Tracking System",
+		EmailAddress: "ats@example.com",
+		SmtpHost: "smtp.example.com",
+		SmtpPort: 587,
+		Priority: 1,
+		IsActive: true,
+		DailySendLimit: 450,
+		VerificationStatus: AtsEmailAccountStatus.Verified,
+		VerifiedAt: DateTime.UtcNow.AddDays(-1),
+		ConsecutiveFailureCount: 0,
+		CoolingDownUntil: null,
+		LastFailureReason: null,
+		LastSentAt: null,
+		ConsumedInWindow: 0);
+
 	public void Dispose()
 	{
-		RateLimiter.Dispose();
 	}
 
 	private void SetupServiceScopeFactory()

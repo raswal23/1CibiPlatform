@@ -4,18 +4,38 @@ public class ATSInitialData
 {
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
+	private readonly ISecretProtector _secretProtector;
 	private readonly int _applicationFormExpiryInHours;
+	private readonly string? _primarySenderEmail;
+	private readonly string? _primaryAppPassword;
+	private readonly string _primarySmtpHost;
+	private readonly int _primarySmtpPort;
+	private readonly int _defaultDailySendLimit;
 
 	public ATSInitialData(
 		ISecureToken secureToken,
 		IHashService hashService,
+		ISecretProtector secretProtector,
+		IOptions<AtsEmailDeliveryOptions> emailDeliveryOptions,
 		IConfiguration configuration)
 	{
 		_secureToken = secureToken;
 		_hashService = hashService;
+		_secretProtector = secretProtector;
 		_applicationFormExpiryInHours = configuration
 			.GetSection("ATS")
 			.GetValue<int>("ATSApplicationFormExpiryInHours");
+
+		// The pre-registry sender, read from the same keys SmtpConnectionPool used, so the
+		// seeded row is the account already in production rather than a new one.
+		_primarySenderEmail = configuration["Email:ATSGmail:SenderEmail"];
+		_primaryAppPassword = configuration["Email:ATSGmail:AppPassword"];
+		_primarySmtpHost = configuration["Email:Gmail:SmtpHost"] ?? "smtp.gmail.com";
+		_primarySmtpPort = int.TryParse(configuration["Email:Gmail:SmtpPort"], out var port)
+			? port
+			: 587;
+
+		_defaultDailySendLimit = emailDeliveryOptions.Value.DefaultDailySendLimit;
 	}
 
 	#region Email Invitation Request
@@ -465,7 +485,66 @@ public class ATSInitialData
 			   IsActive = true,
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow
+		   },
+		   new()
+		   {
+			   ModuleId = AtsModuleIds.EmailAccountManagement,
+			   ModuleName = "Email Accounts",
+			   ModuleDescription = "Sender email account management module for ATS system.",
+			   IsActive = true,
+			   CreatedAt = DateTime.UtcNow,
+			   UpdatedAt = DateTime.UtcNow
 		   }
 	];
+	#endregion
+
+	#region Sender email account
+	/// <summary>
+	/// The sender account the queue used before accounts were rows: the one configured in
+	/// <c>Email:ATSGmail</c>. Returns null when that configuration is absent.
+	/// </summary>
+	/// <remarks>
+	/// Seeded so the migration is deployable on its own. Without it the table lands empty, the
+	/// selector finds no sendable account, and every queued invitation defers until somebody
+	/// registers one through the UI - a silent outage caused by shipping the schema.
+	///
+	/// Seeded as <c>Verified</c> without sending a code, which is the one place that status is
+	/// granted unproven. It is justified because these exact credentials are what the queue has
+	/// been sending through in production; requiring a code here would retire a working sender
+	/// to prove something its own delivery history already has.
+	/// </remarks>
+	public AtsEmailAccount? GetPrimaryEmailAccount()
+	{
+		if (string.IsNullOrWhiteSpace(_primarySenderEmail)
+			|| string.IsNullOrWhiteSpace(_primaryAppPassword))
+		{
+			return null;
+		}
+
+		var now = DateTime.UtcNow;
+
+		return new AtsEmailAccount
+		{
+			DisplayName = "CIBI Recruitment",
+			EmailAddress = _primarySenderEmail,
+			SmtpHost = _primarySmtpHost,
+			SmtpPort = _primarySmtpPort,
+			EncryptedPassword = _secretProtector.Protect(
+				_primaryAppPassword,
+				AtsEmailAccountSecrets.PasswordContext(_primarySenderEmail)),
+
+			// Priority 1 so the seeded account keeps carrying the traffic it already carries;
+			// an account registered later takes 2 and only sees messages once this one is
+			// capped or unhealthy.
+			Priority = 1,
+			IsActive = true,
+			DailySendLimit = _defaultDailySendLimit,
+			VerificationStatus = AtsEmailAccountStatus.Verified,
+			VerifiedAt = now,
+			ConsecutiveFailureCount = 0,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+	}
 	#endregion
 }

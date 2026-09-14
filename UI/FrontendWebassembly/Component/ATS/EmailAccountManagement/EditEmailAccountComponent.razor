@@ -1,0 +1,247 @@
+@namespace FrontendWebassembly.Component.ATS
+<MudDialog Class="um-dialog ee-dialog ats-scroll-dialog" Style="padding: 0; width: min(560px, calc(100vw - 24px)); max-width: 560px;">
+    <DialogContent>
+        <div class="ee-shell ats-dialog-shell">
+            <header class="ee-header ats-dialog-header">
+                <div class="ee-header-row">
+                    <div class="ee-header-left">
+                        <div class="ee-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
+                        </div>
+                        <div class="ee-header-text">
+                            <h1>Edit sender email</h1>
+                            <p>@Account.EmailAddress</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ee-close" aria-label="Close edit sender dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="ee-body ats-dialog-body">
+                @if (RequiresVerification)
+                {
+                    <div class="ee-notice" role="status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 8.2v4.4M12 15.8v.1" />
+                        </svg>
+                        <span>
+                            Changing the address, password, host or port needs a fresh code. This
+                            account leaves the rotation until you enter it.
+                        </span>
+                    </div>
+                }
+
+                <MudForm @ref="EditEmailAccountForm">
+                    <section class="ee-section" aria-labelledby="edit-email-identity-heading">
+                        <div class="ee-section-head">
+                            <span class="ee-section-number">1</span>
+                            <h2 id="edit-email-identity-heading">Mailbox</h2>
+                            <span class="ee-section-helper">Who candidates see it from</span>
+                        </div>
+
+                        <div class="ee-section-body">
+                            <div class="ee-field">
+                                <label for="ee-display-name">Display name <span class="ee-required">*</span></label>
+                                <div class="ee-input-wrap">
+                                    <MudTextField @bind-Value="EditAccount.DisplayName"
+                                                  InputId="ee-display-name"
+                                                  Required="true"
+                                                  RequiredError="Display name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="150"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                                  Class="ee-control" />
+                                </div>
+                            </div>
+
+                            <div class="ee-field">
+                                <label for="ee-email-address">Email address <span class="ee-required">*</span></label>
+                                <div class="ee-input-wrap">
+                                    <MudTextField Value="EditAccount.EmailAddress"
+                                                  ValueChanged="@((string value) => OnEmailChanged(value))"
+                                                  T="string"
+                                                  Immediate="true"
+                                                  InputId="ee-email-address"
+                                                  Required="true"
+                                                  RequiredError="Email address is required"
+                                                  Validation="@(new Func<string, string?>(ValidateEmail))"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="320"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.AlternateEmail"
+                                                  Class="ee-control" />
+                                </div>
+                            </div>
+
+                            <div class="ee-field">
+                                <label for="ee-app-password">App password</label>
+                                <div class="ee-input-wrap">
+                                    <MudTextField Value="EditAccount.AppPassword"
+                                                  ValueChanged="@((string? value) => OnPasswordChanged(value))"
+                                                  T="string"
+                                                  Immediate="true"
+                                                  InputId="ee-app-password"
+                                                  Placeholder="@PasswordPlaceholder"
+                                                  InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@(showPassword ? Icons.Material.Outlined.VisibilityOff : Icons.Material.Outlined.Visibility)"
+                                                  AdornmentAriaLabel="@(showPassword ? "Hide app password" : "Show app password")"
+                                                  OnAdornmentClick="TogglePasswordVisibility"
+                                                  Class="ee-control" />
+                                </div>
+                                <p class="ee-hint">
+                                    Leave blank to keep the stored password. We never send it back to
+                                    the browser, so there is nothing here to preserve by typing it again.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ee-section" aria-labelledby="edit-email-server-heading">
+                        <div class="ee-section-head">
+                            <span class="ee-section-number">2</span>
+                            <h2 id="edit-email-server-heading">SMTP server</h2>
+                            <span class="ee-section-helper">Defaults suit Gmail</span>
+                        </div>
+
+                        <div class="ee-section-body ee-section-body-split">
+                            <div class="ee-field">
+                                <label for="ee-smtp-host">Host <span class="ee-required">*</span></label>
+                                <div class="ee-input-wrap">
+                                    <MudTextField Value="EditAccount.SmtpHost"
+                                                  ValueChanged="@((string value) => OnHostChanged(value))"
+                                                  T="string"
+                                                  Immediate="true"
+                                                  InputId="ee-smtp-host"
+                                                  Required="true"
+                                                  RequiredError="SMTP host is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Dns"
+                                                  Class="ee-control" />
+                                </div>
+                            </div>
+
+                            <div class="ee-field">
+                                <label for="ee-smtp-port">Port <span class="ee-required">*</span></label>
+                                <div class="ee-input-wrap ee-numeric-wrap">
+                                    <MudNumericField Value="EditAccount.SmtpPort"
+                                                     ValueChanged="@((int value) => OnPortChanged(value))"
+                                                     T="int"
+                                                     Immediate="true"
+                                                     InputId="ee-smtp-port"
+                                                     Min="1"
+                                                     Max="65535"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Class="ee-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ee-section" aria-labelledby="edit-email-rotation-heading">
+                        <div class="ee-section-head">
+                            <span class="ee-section-number">3</span>
+                            <h2 id="edit-email-rotation-heading">Rotation</h2>
+                            <span class="ee-section-helper">Saves without a code</span>
+                        </div>
+
+                        <div class="ee-section-body">
+                            <div class="ee-split">
+                                <div class="ee-field">
+                                    <label for="ee-priority">Priority <span class="ee-required">*</span></label>
+                                    <div class="ee-input-wrap ee-numeric-wrap">
+                                        <MudNumericField T="int"
+                                                         @bind-Value="EditAccount.Priority"
+                                                         InputId="ee-priority"
+                                                         Min="1"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Class="ee-control" />
+                                    </div>
+                                    <p class="ee-hint">Lower goes first.</p>
+                                </div>
+
+                                <div class="ee-field">
+                                    <label for="ee-daily-limit">Daily send limit <span class="ee-required">*</span></label>
+                                    <div class="ee-input-wrap ee-numeric-wrap">
+                                        <MudNumericField T="int"
+                                                         @bind-Value="EditAccount.DailySendLimit"
+                                                         InputId="ee-daily-limit"
+                                                         Min="1"
+                                                         Max="100000"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Class="ee-control" />
+                                    </div>
+                                    <p class="ee-hint">Recipients per rolling 24 hours.</p>
+                                </div>
+                            </div>
+
+                            <div class="ee-field">
+                                <label>Status</label>
+                                <div class="ee-status-row">
+                                    <div class="ee-status-copy">
+                                        <p>Account @(EditAccount.IsActive ? "active" : "inactive")</p>
+                                        <span>An inactive account is skipped by the sender</span>
+                                    </div>
+                                    <div class="ee-status-control">
+                                        <span class="ee-status-badge @(EditAccount.IsActive ? string.Empty : "is-off")">
+                                            @(EditAccount.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ee-toggle @(EditAccount.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@EditAccount.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle account status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ee-footer ats-dialog-footer">
+                <button type="button" class="ee-button ee-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ee-button ee-button-save" @onclick="Submit">
+                    @if (RequiresVerification)
+                    {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z" />
+                        </svg>
+                        <span>Save and verify</span>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                        <span>Save</span>
+                    }
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

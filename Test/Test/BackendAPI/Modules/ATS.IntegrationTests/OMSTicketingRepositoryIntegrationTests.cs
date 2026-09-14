@@ -320,6 +320,100 @@ public class OMSTicketingRepositoryIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task RequeueExhaustedTicketsAsync_ShouldRequeueEveryExhaustedOrder()
+	{
+		var first = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts);
+
+		var second = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts);
+
+		var requeued = await _repository.RequeueExhaustedTicketsAsync(
+			[first.EmailInvitationID, second.EmailInvitationID],
+			CancellationToken.None);
+
+		requeued.Should().Be(2);
+
+		var saved = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => x.EmailInvitationID == first.EmailInvitationID
+					 || x.EmailInvitationID == second.EmailInvitationID)
+			.ToListAsync();
+
+		saved.Should().OnlyContain(x => x.TicketStatus == TicketStatus.Pending);
+		saved.Should().OnlyContain(x => x.TicketAttempts == 0);
+
+		// The end-to-end effect: the job can actually pick them up again.
+		var claimed = await _repository.ClaimPendingTicketsAsync(CancellationToken.None);
+
+		claimed.Should().Contain(x => x.EmailInvitationID == first.EmailInvitationID);
+		claimed.Should().Contain(x => x.EmailInvitationID == second.EmailInvitationID);
+	}
+
+	[Fact]
+	public async Task RequeueExhaustedTicketsAsync_ShouldSkipIneligibleOrders_WithoutFailingTheBatch()
+	{
+		// A selection made a minute ago can contain orders the job has since picked up.
+		// Those are skipped rather than failing the whole request, so the operator's other
+		// four rows still move.
+		var exhausted = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts);
+
+		var stillRetrying = await SeedQueuedOrderAsync(TicketStatus.Error, ticketAttempts: 2);
+		var alreadyTicketed = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts,
+			isTicketed: true);
+
+		var requeued = await _repository.RequeueExhaustedTicketsAsync(
+			[exhausted.EmailInvitationID, stillRetrying.EmailInvitationID, alreadyTicketed.EmailInvitationID],
+			CancellationToken.None);
+
+		// Only the genuinely exhausted one moved, and the count says so.
+		requeued.Should().Be(1);
+
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.FirstAsync(x => x.EmailInvitationID == stillRetrying.EmailInvitationID);
+
+		untouched.TicketAttempts.Should().Be(2);
+		untouched.TicketStatus.Should().Be(TicketStatus.Error);
+	}
+
+	[Fact]
+	public async Task RequeueExhaustedTicketsAsync_ShouldReturnZero_WhenNoIdsAreGiven()
+	{
+		var requeued = await _repository.RequeueExhaustedTicketsAsync([], CancellationToken.None);
+
+		requeued.Should().Be(0);
+	}
+
+	[Fact]
+	public async Task GetRetryTargetsAsync_ShouldReturnScopeIdentityForEveryKnownOrder()
+	{
+		var first = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts);
+
+		var second = await SeedQueuedOrderAsync(
+			TicketStatus.Error,
+			ticketAttempts: OMSTicketingRepository.MaxTicketAttempts);
+
+		var targets = await _repository.GetRetryTargetsAsync(
+			[first.EmailInvitationID, second.EmailInvitationID, Guid.CreateVersion7()],
+			CancellationToken.None);
+
+		// The unknown id is simply absent rather than throwing - the caller filters by
+		// scope and reports what it could act on.
+		targets.Should().HaveCount(2);
+		targets.Should().Contain(x => x.EmailInvitationID == first.EmailInvitationID);
+		targets.Should().Contain(x => x.EmailInvitationID == second.EmailInvitationID);
+	}
+
+	[Fact]
 	public async Task RequeueExhaustedTicketAsync_ShouldBeIdempotent_WhenCalledTwice()
 	{
 		var order = await SeedQueuedOrderAsync(

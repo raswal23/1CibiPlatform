@@ -429,6 +429,73 @@
     color: var(--text-2);
 }
 
+/* Audit cause column ------------------------------------------------------ */
+
+/* Clamped to two lines so one long provider message cannot stretch the row; the full
+   text stays available as a title tooltip. Same treatment the audit screen gives its
+   failure reason. */
+.ats-assistant-cause {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 260px;
+    color: var(--c-danger-strong);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+/* A successful action has no cause, and the dash should not read as data. */
+.ats-assistant-muted {
+    color: var(--text-3);
+}
+
+/* Export button ----------------------------------------------------------- */
+
+.ats-assistant-table-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 12px 12px;
+}
+
+/* Quieter than the confirm-order button: exporting is a convenience, not the action
+   the conversation is driving towards. */
+.ats-assistant-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--blue-600);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ats-assistant-export svg {
+    width: 15px;
+    height: 15px;
+}
+
+.ats-assistant-export:hover:not(:disabled) {
+    border-color: var(--blue-600);
+    background: var(--blue-tint);
+}
+
+.ats-assistant-export:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+@media (max-width: 720px) {
+    .ats-assistant-cause {
+        max-width: 100%;
+    }
+}
+
 /* Confirm card ----------------------------------------------------------- */
 
 .ats-assistant-confirm {

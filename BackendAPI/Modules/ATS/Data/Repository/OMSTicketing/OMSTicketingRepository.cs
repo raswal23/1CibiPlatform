@@ -274,6 +274,62 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 		return updated > 0;
 	}
 
+	public async Task<int> RequeueExhaustedTicketsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		if (emailInvitationIds.Count == 0)
+		{
+			return 0;
+		}
+
+		var ids = emailInvitationIds.ToList();
+
+		// The set version of RequeueExhaustedTicketAsync, and deliberately the same
+		// predicate: ids the caller sent that are no longer exhausted simply do not match,
+		// so a stale selection requeues the rows that are still valid instead of failing
+		// the whole request. The returned count is what actually changed, which is what the
+		// operator is told.
+		return await _dbContext.EmailInvitationRequests
+			.Where(x => ids.Contains(x.EmailInvitationID)
+					 && !x.IsTicketed
+					 && x.TicketStatus == TicketStatus.Error
+					 && x.TicketAttempts >= MaxTicketAttempts)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.TicketStatus, x => TicketStatus.Pending)
+				.SetProperty(x => x.TicketAttempts, x => 0)
+				.SetProperty(x => x.TicketError, x => (string?)null)
+				.SetProperty(x => x.TicketClaimedAt, x => (DateTime?)null),
+				cancellationToken);
+	}
+
+	public async Task<List<TicketRetryTargetDTO>> GetRetryTargetsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		if (emailInvitationIds.Count == 0)
+		{
+			return [];
+		}
+
+		var ids = emailInvitationIds.ToList();
+
+		// Read before the update so the caller's scope can be enforced per row. A bulk
+		// action must not become a way to touch another client's orders by posting their
+		// ids alongside your own.
+		return await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(x => ids.Contains(x.EmailInvitationID))
+			.Select(x => new TicketRetryTargetDTO
+			{
+				EmailInvitationID = x.EmailInvitationID,
+				ClientId = x.ClientId,
+				RequestorId = x.RequestorId,
+				OrderStatus = x.OrderStatus
+			})
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<List<TicketedOrderListDTO>> GetTicketedOrdersPageAsync(
 		DateTime? afterOrderCreatedAt,
 		Guid? afterInvitationId,

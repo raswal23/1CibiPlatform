@@ -29,4 +29,18 @@ public interface IEndorsementSubmissionService
 		CancellationToken cancellationToken);
 	Task<KeysetPaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// The set form of <see cref="ResendApplicationFormAsync"/>, for the bulk upload
+	/// dialog's multi-select. Each invitation is requeued with its own fresh token and a
+	/// reset attempt budget; the background job delivers them through the paced, pooled
+	/// send path.
+	///
+	/// Ids outside the caller's scope are dropped silently, and ids the job is actively
+	/// sending are skipped rather than raced - so the result reports requested versus
+	/// actually requeued instead of failing a partly-stale selection.
+	/// </summary>
+	Task<BulkRetryResultDTO> ResendApplicationFormsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken);
 }
