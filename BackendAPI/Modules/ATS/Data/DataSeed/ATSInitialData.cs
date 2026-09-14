@@ -5,7 +5,6 @@ public class ATSInitialData
 	private readonly ISecureToken _secureToken;
 	private readonly IHashService _hashService;
 	private readonly ISecretProtector _secretProtector;
-	private readonly int _applicationFormExpiryInHours;
 	private readonly string? _primarySenderEmail;
 	private readonly string? _primaryAppPassword;
 	private readonly string _primarySmtpHost;
@@ -22,9 +21,6 @@ public class ATSInitialData
 		_secureToken = secureToken;
 		_hashService = hashService;
 		_secretProtector = secretProtector;
-		_applicationFormExpiryInHours = configuration
-			.GetSection("ATS")
-			.GetValue<int>("ATSApplicationFormExpiryInHours");
 
 		// The pre-registry sender, read from the same keys SmtpConnectionPool used, so the
 		// seeded row is the account already in production rather than a new one.
@@ -113,7 +109,6 @@ public class ATSInitialData
 			RequestorId = requestorId,
 			HashToken = hashToken,
 			HashTokenCreatedAt = createdAt,
-			HashTokenExpiration = createdAt.AddHours(_applicationFormExpiryInHours),
 
 			ApplicationFormStatus = Constants.ApplicationFormStatus.Done,
 			FormCompletedAt = createdAt,

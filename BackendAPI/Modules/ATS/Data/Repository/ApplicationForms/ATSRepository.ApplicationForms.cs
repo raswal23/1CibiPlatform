@@ -47,7 +47,6 @@ public partial class ATSRepository
 				.Select(af => new EmailIdAndApplicationFormPathDTO
 				{
 					EmailId = af.EmailInvitationID,
-					ExpiresAt = af.HashTokenExpiration,
 					Status = af.ApplicationFormStatus,
 					DateOfBirth = af.DateOfBirth
 				})
@@ -55,8 +54,7 @@ public partial class ATSRepository
 	}
 
 	// Deliberately not cached: this is the authorization decision for the anonymous
-	// application-form endpoints, so a stale expiry or form status would keep a spent
-	// link working.
+	// application-form endpoints, so a stale form status would keep a spent link working.
 	public async Task<ApplicationFormClaimDTO?> GetApplicationFormClaimAsync(string hashToken,
 						CancellationToken cancellationToken)
 	{
@@ -69,7 +67,6 @@ public partial class ATSRepository
 				.Select(eir => new ApplicationFormClaimDTO
 				{
 					EmailInvitationID = eir.EmailInvitationID,
-					HashTokenExpiration = eir.HashTokenExpiration,
 					ApplicationFormStatus = eir.ApplicationFormStatus
 				})
 				.FirstOrDefaultAsync(cancellationToken);
@@ -81,12 +78,18 @@ public partial class ATSRepository
 		return true;
 	}
 
+	// Answers "is this token still usable", which PhilSys asks before accepting an ATS
+	// session. The link no longer expires, so the form's status carries the whole answer -
+	// and it has to carry something: existence alone would make this permanently true the
+	// moment the expiry clause came out, which would hand a submitted or withdrawn form a
+	// live session forever. Pending is the same state AuthorizeApplicationFormAsync
+	// demands, so the two agree by construction.
 	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
 	{
 		return await _dbcontext.EmailInvitationRequests
 			.AsNoTracking()
 			.AnyAsync(eir => eir.HashToken == hashToken &&
-					  eir.HashTokenExpiration > DateTime.UtcNow,
+					  eir.ApplicationFormStatus == ApplicationFormStatus.Pending,
 					  cancellationToken);
 	}
 

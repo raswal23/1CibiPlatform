@@ -85,8 +85,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 	private async Task SeedEmailInvitationRequestData(
 		string hashToken = SeededHashToken,
-		string applicationFormStatus = "Pending",
-		DateTime? hashTokenExpiration = null)
+		string applicationFormStatus = "Pending")
 	{
 		var emailInvitationRequest = new EmailInvitationRequest
 		{
@@ -103,8 +102,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			ApplicationFormStatus = applicationFormStatus,
 			EmailSentStatus = "Pending",
 			OrderStatus = "Pending Candidate Info",
-			HashTokenCreatedAt = DateTime.UtcNow,
-			HashTokenExpiration = hashTokenExpiration ?? DateTime.UtcNow.AddDays(7)
+			HashTokenCreatedAt = DateTime.UtcNow
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
@@ -646,20 +644,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		await Assert.ThrowsAsync<ValidationException>(() => _sender.Send(command));
 	}
 
-	[Fact]
-	public async Task AddApplicationFormData_WithExpiredHashToken_ShouldThrowBadRequest()
-	{
-		await SeedEmailInvitationRequestData(
-			hashTokenExpiration: DateTime.UtcNow.AddDays(-1));
-
-		var command = BuildValidCommand(SeededHashToken);
-
-		await Assert.ThrowsAsync<BadRequestException>(() => _sender.Send(command));
-
-		_dbContext.PersonalDetails
-			.Any(p => p.EmailInvitationID == EmailId)
-			.Should().BeFalse();
-	}
+	// There is no expired-link test any more. A link now stops working when the form stops being
+	// answerable, not when a clock runs out - the case below, "already submitted", is what
+	// replaced it. See docs/ats-application-form-link-expiry-removal.md.
 
 	[Fact]
 	public async Task AddApplicationFormData_WhenFormAlreadySubmitted_ShouldThrowConflict()

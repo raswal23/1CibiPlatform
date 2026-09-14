@@ -7,7 +7,6 @@ public partial class ATSApplicationForm
 	private int _stepActive = 0;
 	private string? _initError;
 	private string? Status;
-	private bool IsExpired = false;
 	private bool hasUnsavedChanges = true;
 	private readonly HashSet<int> allowedSteps = new() { 0, 1, 2, 3, 4, 5 };
 	[Parameter]
@@ -25,7 +24,6 @@ public partial class ATSApplicationForm
 	private DateOnly? _orderDateOfBirth;
 	private bool IsInstructionsVisible =>
 		!_showApplicationForm &&
-		!IsExpired &&
 		!string.Equals(Status, "Done", StringComparison.OrdinalIgnoreCase) &&
 		!string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase);
 	private string RootCssClass =>
@@ -43,7 +41,6 @@ public partial class ATSApplicationForm
 
 		var details = response.Data!;
 		Status = details.Status;
-		IsExpired = details.IsExpired;
 		EmailId = details.EmailId;
 		_orderDateOfBirth = details.DateOfBirth;
 
@@ -64,19 +61,6 @@ public partial class ATSApplicationForm
 		_stepActive = allowedSteps.Contains(stepActive)
 			? stepActive
 			: 1;
-
-		if (details.IsExpired)
-		{
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:firstName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:middleName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:lastName");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:suffix");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:birthDate");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:sex");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:emailAddress");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:phoneNumber");
-			await LocalStorageService.RemoveItemAsync($"ats:applicationForm:profilePicture");
-		}
 	}
 
 	private async Task ConfirmNavigation(LocationChangingContext context)

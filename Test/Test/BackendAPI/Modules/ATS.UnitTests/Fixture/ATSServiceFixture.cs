@@ -78,7 +78,6 @@ public class ATSServiceFixture : IDisposable
 		Configuration = new ConfigurationBuilder()
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
-				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
 				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" }
 			})
 			.Build();
@@ -100,8 +99,7 @@ public class ATSServiceFixture : IDisposable
 			MockSecureToken.Object,
 			MockHashService.Object,
 			MockHubContext.Object,
-			MockBulkSubmissionProcessorServiceLogger.Object,
-			Configuration);
+			MockBulkSubmissionProcessorServiceLogger.Object);
 
 		// Fast on purpose. The production defaults pace sends at 0.9/s to stay under the
 		// provider's limit; a test asserting on three rows must not wait three seconds for

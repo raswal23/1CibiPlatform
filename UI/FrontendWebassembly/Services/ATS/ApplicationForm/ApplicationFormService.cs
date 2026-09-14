@@ -243,11 +243,6 @@ public class ApplicationFormService : IApplicationFormService
 				return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Failure("The server returned an empty response.");
 			}
 
-			if (result.ExpiresAt < DateTime.UtcNow)
-			{
-				result.IsExpired = true;
-			}
-
 			return ServiceResponse<EmailIdAndApplicationFormPathDTO>.Success(result);
 		}
 		catch (OperationCanceledException) { throw; }

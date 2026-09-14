@@ -25,7 +25,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
-	private readonly int _applicationFormExpiryInHours;
 	private readonly string _folderName;
 
 	public EndorsementSubmissionService(
@@ -62,7 +61,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_unitOfWork = unitOfWork;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
-		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkFileFolderName", "");
 	}
 
@@ -169,7 +167,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.RequestorId = _currentUser.UserId;
 		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
 		emailInvitationRequest.Requestor = _currentUser.FullName;
-		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		var applicationFormLink = $"{_applicationformBaseUrl}/{HashToken}";
 
@@ -365,17 +362,21 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return true;
 	}
 
+	private const string InvitationSubject = "CIBI | Background Verification Information Request";
+	private const string ReminderSubject = "CIBI | Reminder: Background Verification Information Request";
+
 	public async Task<EmailDeliveryResult> SendApplicationFormToUserEmailWithResultAsync(
 		string gmail,
 		string name,
 		string applicationFormLink,
 		string? requestor,
 		int? clientId,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		bool isFollowUp = false)
 	{
 		var logContext = new
 		{
-			Action = "SendApplicationFormEmail",
+			Action = isFollowUp ? "SendApplicationFormReminderEmail" : "SendApplicationFormEmail",
 			Step = "SendEmail",
 			Email = gmail,
 			Timestamp = DateTime.UtcNow
@@ -385,23 +386,34 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var clientName = await ResolveClientNameAsync(clientId);
 
-		var emailBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink, requestor, clientName);
-
 		// The keyed "ats" registration is always ATSEmailService, which implements the
 		// result-aware contract. The cast is guarded rather than assumed so a future
 		// re-registration degrades to the bool path instead of throwing at runtime.
-		if (_emailService is IAtsEmailSender resultAwareSender)
+		//
+		// The reminder body lives on IAtsEmailSender rather than the shared IEmailService,
+		// which Auth and the test fakes also implement - see that interface's own note. A
+		// sender that is not the ATS one therefore falls back to the first-invitation body:
+		// the candidate still gets a working link, just without the reminder wording.
+		var resultAwareSender = _emailService as IAtsEmailSender;
+
+		var emailBody = isFollowUp && resultAwareSender is not null
+			? resultAwareSender.BuildApplicationFormReminderNotification(gmail, name, applicationFormLink, requestor, clientName)
+			: _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink, requestor, clientName);
+
+		var subject = isFollowUp ? ReminderSubject : InvitationSubject;
+
+		if (resultAwareSender is not null)
 		{
 			return await resultAwareSender.SendATSEmailWithResultAsync(
 				toEmail: gmail!,
-				subject: "CIBI | Background Verification Information Request",
+				subject: subject,
 				body: emailBody,
 				cancellationToken);
 		}
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
-			subject: "CIBI | Background Verification Information Request",
+			subject: subject,
 			body: emailBody);
 
 		return isSent
@@ -540,8 +552,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new InternalServerException("Failed to hash token.");
 		}
 
-		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
-
 		// Queued, not sent inline - the same strategy the OMS ticketing retry uses.
 		//
 		// Sending here meant the resend bypassed the connection pool and the rate limiter
@@ -557,7 +567,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		var requeued = await _atsRepository.RequeueEmailInvitationAsync(
 			emailInvitationId,
 			hashToken,
-			newExpiration,
 			cancellationToken);
 
 		// The button was stale: the row is not in a state a retry applies to. Say so rather
@@ -638,7 +647,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// Each invitation gets its OWN token. Reusing one across the batch would let any
 		// candidate in it open another candidate's application form.
 		var requeues = new List<EmailInvitationRequeueDTO>(inScopeIds.Count);
-		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		foreach (var invitationId in inScopeIds)
 		{
@@ -661,8 +669,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			requeues.Add(new EmailInvitationRequeueDTO
 			{
 				EmailInvitationId = invitationId,
-				HashToken = hashToken,
-				HashTokenExpiration = newExpiration
+				HashToken = hashToken
 			});
 		}
 
@@ -691,6 +698,43 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			RequestedCount = requestedIds.Count,
 			RequeuedCount = requeued
 		};
+	}
+
+	public async Task<int> ReleaseDueFollowUpEmailsAsync(CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "ReleaseDueFollowUpEmails",
+			Step = "ReleaseInvitations",
+			Timestamp = DateTime.UtcNow
+		};
+
+		// One statement does the whole release: it picks the due rows, moves them back to
+		// Pending and stamps FollowUpQueuedAt together, so a crash cannot leave a row
+		// requeued but unstamped and chase the candidate twice.
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(cancellationToken);
+
+		if (released.Count == 0)
+		{
+			return 0;
+		}
+
+		// After the release committed, so the history reflects work that is actually
+		// scheduled - the same ordering the resend paths use. Queueing an email is not a
+		// step in the order lifecycle, so the status is written unchanged on both sides.
+		await _orderHistoryService.RecordManyAsync(
+			released.Select(r => r.EmailInvitationID).ToList(),
+			OrderHistoryEventType.ApplicationFormFollowUpSent,
+			null,
+			OrderStatus.PendingCandidateInfo,
+			cancellationToken);
+
+		_logger.LogInformation(
+			"Queued {ReleasedCount} application form follow-up reminder(s): {@Context}",
+			released.Count,
+			logContext);
+
+		return released.Count;
 	}
 
 	// The scope rule applied to an identity-only projection, so a bulk action can filter

@@ -3,6 +3,7 @@ global using BuildingBlocks.Data;
 global using ATS.BackgroundJobs.EmailNotification;
 global using ATS.BackgroundJobs.ApplicantSearchProjection;
 global using ATS.BackgroundJobs.OMSTicketing;
+global using ATS.BackgroundJobs.FollowUpEmail;
 global using ATS.BackgroundJobs.AuditTrail;
 global using ATS.BackgroundJobs.Notifications;
 global using ATS.Configuration;

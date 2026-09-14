@@ -40,7 +40,14 @@ public class EmailInvitationRequest
 	// Null means the invitation came from a single inquiry rather than a bulk upload.
 	public Guid? BulkFileID { get; set; }
 	public DateTime? HashTokenCreatedAt { get; set; }
+	// Retained for history only. The application form link no longer expires, so
+	// nothing reads or writes this after the expiry removal; rows created before it
+	// keep the value they were stamped with.
 	public DateTime? HashTokenExpiration { get; set; }
+	// Stamped the moment the package follow-up reminder is queued, in the same UPDATE
+	// that requeues the row. Non-null means this order has already been chased, which
+	// is what makes the reminder fire exactly once.
+	public DateTime? FollowUpQueuedAt { get; set; }
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }

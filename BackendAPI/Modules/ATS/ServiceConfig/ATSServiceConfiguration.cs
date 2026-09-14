@@ -171,6 +171,7 @@ public static class ATSServiceConfiguration
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();
 		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
 		services.ConfigureOptions<OMSTicketingBackgroundJobSetup>();
+		services.ConfigureOptions<FollowUpEmailBackgroundJobSetup>();
 
 		return services;
 	}

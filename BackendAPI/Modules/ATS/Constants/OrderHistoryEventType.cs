@@ -6,6 +6,13 @@ public static class OrderHistoryEventType
 	public const string ApplicationFormSubmitted = "ApplicationFormSubmitted";
 	public const string ApplicationFormWithdrawn = "ApplicationFormWithdrawn";
 	public const string ApplicationFormResent = "ApplicationFormResent";
+
+	// The package's FollowUpEmail interval elapsed with the form still Pending, so the
+	// chaser requeued the invitation. Distinct from ApplicationFormResent because nobody
+	// asked for it - reading the history, "a person resent this" and "the schedule did"
+	// are different facts.
+	public const string ApplicationFormFollowUpSent = "ApplicationFormFollowUpSent";
+
 	public const string ReportUploaded = "ReportUploaded";
 	public const string ReportDisputed = "ReportDisputed";
 

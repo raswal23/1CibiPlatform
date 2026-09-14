@@ -371,7 +371,23 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 				.GetRequiredService<IEndorsementSubmissionService>();
 
 			var subjectName = $"{request.FirstName} {request.LastName}";
+
+			// The token is whatever the row already carries, which is what lets the package
+			// follow-up reuse the candidate's original link: the chaser leaves HashToken
+			// alone, so this rebuilds the same URL they were sent the first time.
 			var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
+
+			// Reminder copy only for a row the chaser released and the sender has not carried
+			// since. FollowUpQueuedAt alone is not enough - it stays set forever once stamped,
+			// so a row that already had its reminder delivered would keep claiming to be one.
+			// EmailSentAt is cleared by the same release UPDATE, so the pair means "queued as a
+			// follow-up, not yet sent".
+			//
+			// Known and accepted: an operator resend AFTER a chaser also reads as a reminder,
+			// because the resend clears EmailSentAt too. Benign - the candidate has had two
+			// emails by then either way - and the alternative, clearing the stamp on resend,
+			// would re-arm the chaser, since OrderCreatedAt never moves.
+			var isFollowUp = request.FollowUpQueuedAt is not null && request.EmailSentAt is null;
 
 			return await submissionService.SendApplicationFormToUserEmailWithResultAsync(
 				request.EmailAddress,
@@ -379,7 +395,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 				applicationFormLink,
 				request.Requestor,
 				request.ClientId,
-				cancellationToken);
+				cancellationToken,
+				isFollowUp);
 		}
 		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 		{

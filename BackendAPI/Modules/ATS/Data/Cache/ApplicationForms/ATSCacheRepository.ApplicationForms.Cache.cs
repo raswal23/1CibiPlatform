@@ -56,13 +56,13 @@ public partial class ATSCacheRepository
 		return await _atsRepository.GetApplicationFormClaimAsync(hashToken, cancellationToken);
 	}
 
+	// Pure passthrough on purpose, for the same reason as GetApplicationFormClaimAsync
+	// above: this is an authorization decision. It used to be cached under the SAME key as
+	// GetEmailIdAndApplicationFormPathAsync - a different type entirely - and with no tag,
+	// so nothing ever evicted it and a cached "true" outlived the form it described.
 	public async Task<bool> IsHashTokenValidAsync(string hashToken, CancellationToken cancellationToken)
 	{
-		var cacheKey = $"ATS_ApplicationFormStatus_{hashToken}";
-
-		return await _hybridCache.GetOrCreateAsync(
-			cacheKey,
-			async id => await _atsRepository.IsHashTokenValidAsync(hashToken, cancellationToken));
+		return await _atsRepository.IsHashTokenValidAsync(hashToken, cancellationToken);
 	}
 
 	public async Task<bool> UpdateEmailInvitationRequestForFilledUpFormAsync(Guid emailInvitationRequestId)

@@ -1,5 +1,4 @@
 @layout GenericLayout
-@inject LocalStorageService LocalStorageService
 @inject IApplicationFormService ATSService
 @inject IJSRuntime JSRuntime
 @page "/s&i/ats/applicationform/{HashToken}"
@@ -21,10 +20,6 @@
     else if (string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase))
     {
         <WithdrawnComponent />
-    }
-    else if (IsExpired)
-    {
-        <ExpiredComponent />
     }
     else if (IsInstructionsVisible)
     {
@@ -101,13 +96,13 @@
                         </div>
                     </section>
 
-                    <aside class="ats-application-notice" aria-label="Important response deadline">
+                    <aside class="ats-application-notice" aria-label="Important response information">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
                             <path d="M12 9v4m0 4h.01" />
                         </svg>
                         <p>
-                            Your prompt response to this request within the next <strong>24 hours</strong> is critical to the success of your job application. Rest assured that all information you provide will be kept confidential in compliance with Philippine laws, including the Data Privacy Act, and will only be used for processing your application. For questions or concerns, reach out via our support chat, or call us at <a href="tel:+639230878757">+63 923 087 8757</a> (Sun) or <a href="tel:+639176320486">+63 917 632 0486</a> (Globe).
+                            Your prompt response to this request is critical to the success of your job application. Rest assured that all information you provide will be kept confidential in compliance with Philippine laws, including the Data Privacy Act, and will only be used for processing your application. For questions or concerns, reach out via our support chat, or call us at <a href="tel:+639230878757">+63 923 087 8757</a> (Sun) or <a href="tel:+639176320486">+63 917 632 0486</a> (Globe).
                         </p>
                     </aside>
 

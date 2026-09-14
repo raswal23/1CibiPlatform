@@ -2,23 +2,21 @@ namespace ATS.Services.EmailService;
 
 public class ATSEmailService : IEmailService, IAtsEmailSender
 {
-	private readonly IConfiguration _configuration;
 	private readonly ILogger<ATSEmailService> _logger;
 	private readonly ISmtpAccountPoolRegistry _poolRegistry;
 	private readonly AtsEmailDeliveryOptions _options;
-	private readonly int _atsApplicationFormExpirationInHours;
 
+	// No IConfiguration here any more. The only thing this service ever read from it was the
+	// application form expiry, and the link no longer expires - see
+	// docs/ats-application-form-link-expiry-removal.md.
 	public ATSEmailService(
-		IConfiguration configuration,
 		ILogger<ATSEmailService> logger,
 		ISmtpAccountPoolRegistry poolRegistry,
 		IOptions<AtsEmailDeliveryOptions> options)
 	{
-		_configuration = configuration;
 		_logger = logger;
 		_poolRegistry = poolRegistry;
 		_options = options.Value;
-		_atsApplicationFormExpirationInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	/// <summary>
@@ -413,7 +411,7 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 				<div style='max-width:600px;margin:24px auto;background:#ffffff;border:1px solid #d9e5f5;border-radius:12px;overflow:hidden'>
 					<div style='padding:24px 36px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-align:center'>
 						<h1 style='margin:0;font-size:20px'>CIBI | Background Verification Information Request</h1>
-						<p style='margin:8px 0 0;font-size:13px;line-height:1.5;color:#dbe7fb'>Pre-employment background check — please complete your application form within {_atsApplicationFormExpirationInHours} hours</p>
+						<p style='margin:8px 0 0;font-size:13px;line-height:1.5;color:#dbe7fb'>Pre-employment background check — please complete your application form</p>
 					</div>
 					<div style='padding:34px 36px'>
 						<p style='font-size:16px;line-height:1.7'>Dear {name},</p>
@@ -421,7 +419,67 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 							{requestorPhrase}, talent acquisition {clientPhrase} has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please sign up by clicking the button below:
 						</p>
 						<p style='margin:28px 0;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
-						<p style='font-size:15px;line-height:1.6'>Please comply <strong>within the next {_atsApplicationFormExpirationInHours} hours upon receipt of this email</strong> so we can move forward with the completion of verification.</p>
+						<p style='font-size:15px;line-height:1.6'>Please comply <strong>at your earliest convenience</strong> so we can move forward with the completion of verification.</p>
+						<p style='font-size:15px;line-height:1.6'><strong>REMINDERS IN ANSWERING THE FORM</strong></p>
+						<ol style='font-size:15px;line-height:1.7;margin:0 0 16px;padding-left:20px'>
+							<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
+							<li>In case you have a portion to input the Email Address of HR POC, kindly input your HR person of contact on the company you are applying to.</li>
+						</ol>
+						<p style='font-size:15px;line-height:1.6'>
+							For any questions or concerns, please do not hesitate to reach out to
+							<a href='mailto:pre-workteam@cibi.com.ph' style='color:#1d5fd1'>pre-workteam@cibi.com.ph</a>
+							and
+							<a href='mailto:ceteam@cibi.com.ph' style='color:#1d5fd1'>ceteam@cibi.com.ph</a>
+							or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
+						</p>
+					</div>
+					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6'>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</div>
+				</div>
+			</body>
+			</html>";
+
+		return body;
+	}
+
+	/// <summary>
+	/// The package follow-up reminder body - see <see cref="IAtsEmailSender"/> for why this
+	/// lives on the ATS-only contract rather than beside the shared invitation body above.
+	/// </summary>
+	/// <remarks>
+	/// Deliberately the same layout, REMINDERS list, contact details and footer as the first
+	/// invitation: a candidate who ignored the original should recognise this as the same
+	/// request, not mistake it for a different one. Only the header and the opening sentences
+	/// change, and they say plainly that nothing has been received yet.
+	///
+	/// The link is the one already in their inbox, so the sentence can honestly tell them the
+	/// original email still works - which is the reason the chaser reuses the token.
+	/// </remarks>
+	public string BuildApplicationFormReminderNotification(string gmail, string name, string applicationFormLink, string? requestor, string? clientName)
+	{
+		// Same degradation as the first invitation: older rows may predate these columns.
+		var requestorPhrase = string.IsNullOrWhiteSpace(requestor)
+			? "The talent acquisition team"
+			: WebUtility.HtmlEncode(requestor.Trim());
+		var clientPhrase = string.IsNullOrWhiteSpace(clientName)
+			? "their company"
+			: $"{WebUtility.HtmlEncode(clientName.Trim())} company";
+
+		string body = $@"
+			<!DOCTYPE html>
+			<html>
+			<body style='margin:0;padding:0;background:#f4f6fb;font-family:Arial, sans-serif'>
+				<div style='max-width:600px;margin:24px auto;background:#ffffff;border:1px solid #d9e5f5;border-radius:12px;overflow:hidden'>
+					<div style='padding:24px 36px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-align:center'>
+						<h1 style='margin:0;font-size:20px'>CIBI | Reminder: Background Verification Information Request</h1>
+						<p style='margin:8px 0 0;font-size:13px;line-height:1.5;color:#dbe7fb'>We have not yet received your application form</p>
+					</div>
+					<div style='padding:34px 36px'>
+						<p style='font-size:16px;line-height:1.7'>Dear {name},</p>
+						<p style='font-size:16px;line-height:1.7'>
+							This is a friendly reminder that we have not yet received your application form. {requestorPhrase}, talent acquisition {clientPhrase} has requested CIBI Information Inc. to perform background checks on you as part of their pre-employment screening process. Please complete the form by clicking the button below:
+						</p>
+						<p style='margin:28px 0;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
+						<p style='font-size:15px;line-height:1.6'>This is the same link we sent you earlier, so the original email still works if you would rather use that one. If you have already submitted your form, please disregard this message.</p>
 						<p style='font-size:15px;line-height:1.6'><strong>REMINDERS IN ANSWERING THE FORM</strong></p>
 						<ol style='font-size:15px;line-height:1.7;margin:0 0 16px;padding-left:20px'>
 							<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>

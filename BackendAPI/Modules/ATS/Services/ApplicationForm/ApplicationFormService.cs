@@ -159,8 +159,8 @@ public class ApplicationFormService : IApplicationFormService
 	}
 
 	/// <summary>
-	/// Resolves the invitation a hash token refers to, rejecting unknown, expired and
-	/// already-spent tokens. Returns the id every child record must be written against.
+	/// Resolves the invitation a hash token refers to, rejecting unknown and already-spent
+	/// tokens. Returns the id every child record must be written against.
 	/// </summary>
 	private async Task<Guid> AuthorizeApplicationFormAsync(string hashToken, CancellationToken ct)
 	{
@@ -168,9 +168,6 @@ public class ApplicationFormService : IApplicationFormService
 
 		if (claim is null || claim.EmailInvitationID == Guid.Empty)
 			throw new NotFoundException("No record found for the provided hash token.");
-
-		if (claim.IsExpired)
-			throw new BadRequestException("This application form link has expired. Please request a new one.");
 
 		// Withdrawn and Done are both terminal. Without this the second post would fail
 		// on the PersonalDetails 1:1 unique constraint as an opaque 500.
@@ -469,15 +466,6 @@ public class ApplicationFormService : IApplicationFormService
 		{
 			_logger.LogError("Failed Transaction: Failed to fetch EmailId and Application Form Path for {HashToken}: {@Context}", hashToken, logContext);
 			throw new NotFoundException("No record found for the provided hash token.");
-		}
-
-		// The lookup query filters on HashToken alone, so an expired link would otherwise
-		// still hand back a usable EmailInvitationID.
-		if (!emailIdAndApplicationFormPath.ExpiresAt.HasValue
-			|| emailIdAndApplicationFormPath.ExpiresAt.Value <= DateTime.UtcNow)
-		{
-			_logger.LogWarning("Rejected an expired application form link: {@Context}", logContext);
-			throw new BadRequestException("This application form link has expired. Please request a new one.");
 		}
 
 		_logger.LogInformation("Succcessfully fetched the EmailId and Application Form Path for {EmailId}: {@Context}", emailIdAndApplicationFormPath.EmailId, logContext);

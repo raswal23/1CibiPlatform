@@ -1004,6 +1004,9 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<DateTime?>("FollowUpQueuedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("FormCompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1015,7 +1018,7 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime>("HashTokenCreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("HashTokenExpiration")
+                    b.Property<DateTime?>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsTicketed")

@@ -62,4 +62,29 @@ public interface IAtsEmailSender
 		string subject,
 		string body,
 		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Composes the package follow-up reminder - the second email a candidate gets when the
+	/// package's FollowUpEmail interval elapses with the form still unanswered.
+	/// </summary>
+	/// <remarks>
+	/// Here rather than on the shared <c>IEmailService</c> for the same reason as the sends
+	/// above: the first-invitation body, <c>SendAppplicationFormNotification</c>, is a
+	/// BuildingBlocks contract that Auth and the test fakes implement too, and none of them
+	/// have a package follow-up to compose. Only ATS chases, so only ATS declares it.
+	///
+	/// Composes, it does not send - the caller pairs the returned body with the reminder
+	/// subject and hands both to <see cref="SendATSEmailWithResultAsync"/>, so a reminder
+	/// travels the same pooled, capped, paced path as every other ATS message.
+	///
+	/// The link is the candidate's EXISTING one. A reminder that pointed somewhere new would
+	/// retire the link in the email they already have, which is exactly what the follow-up is
+	/// meant to avoid.
+	/// </remarks>
+	string BuildApplicationFormReminderNotification(
+		string gmail,
+		string name,
+		string applicationFormLink,
+		string? requestor,
+		string? clientName);
 }

@@ -20,13 +20,18 @@ public interface IEndorsementSubmissionService
 	/// The bool overload cannot express either, so it stays for the single-order paths that
 	/// genuinely only care whether the mail went out.
 	/// </summary>
+	/// <param name="isFollowUp">
+	/// Sends the reminder subject and body instead of the first-invitation ones. The link is
+	/// identical either way - a reminder points at the URL the candidate already has.
+	/// </param>
 	Task<EmailDeliveryResult> SendApplicationFormToUserEmailWithResultAsync(
 		string gmail,
 		string name,
 		string applicationFormLink,
 		string? requestor,
 		int? clientId,
-		CancellationToken cancellationToken);
+		CancellationToken cancellationToken,
+		bool isFollowUp = false);
 	Task<KeysetPaginatedResult<EmailInvitationRequestListDTO>> GetWithdrawnEmailInvitationRequestsAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, CancellationToken cancellationToken);
 
@@ -43,4 +48,17 @@ public interface IEndorsementSubmissionService
 	Task<BulkRetryResultDTO> ResendApplicationFormsAsync(
 		IReadOnlyCollection<Guid> emailInvitationIds,
 		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Queues the package follow-up reminder for every order whose interval has elapsed, and
+	/// returns how many were released. Driven by the background job, not by a user action -
+	/// so there is no scope check here, unlike the resend paths above.
+	/// </summary>
+	/// <remarks>
+	/// The reminder reuses the candidate's EXISTING link, so the email they already have
+	/// keeps working. Nothing is sent from here: the rows go back to Pending and the email
+	/// worker delivers them, which is what keeps reminders inside the per-account daily cap
+	/// and the send pacing.
+	/// </remarks>
+	Task<int> ReleaseDueFollowUpEmailsAsync(CancellationToken cancellationToken);
 }

@@ -4,7 +4,6 @@ public record EmailIdAndApplicationFormPathDTO
 {
 	public Guid EmailId { get; set; }
 	public string? ApplicationFormPath { get; set; }
-	public DateTime? ExpiresAt { get; set; }
 	public string? Status { get; set; }
 
 	// Captured at order entry when the requestor already knows it (data-screening

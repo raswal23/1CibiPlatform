@@ -9,8 +9,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IHashService _hashService;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
-	private readonly IConfiguration _configuration;
-	private readonly int _applicationFormExpiryInHours;
 
 	// Comfortably longer than a full parse pass so a live worker is never robbed of
 	// files it is still processing.
@@ -23,8 +21,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		ISecureToken secureToken,
 		IHashService hashService,
 		IHubContext<ATSHub, IATSClient> hubContext,
-		ILogger<BulkSubmissionProcessorService> logger,
-		IConfiguration configuration)
+		ILogger<BulkSubmissionProcessorService> logger)
 	{
 		_repository = repository;
 		_serviceScopeFactory = serviceScopeFactory;
@@ -33,8 +30,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_hashService = hashService;
 		_hubContext = hubContext;
 		_logger = logger;
-		_configuration = configuration;
-		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	// The uploader is told what actually happened. Silently reporting "received" when
@@ -220,7 +215,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						BulkFileID = file.FileID,
 						HashToken = HashToken,
 						HashTokenCreatedAt = DateTime.UtcNow,
-						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
 						LastName = row.LastName,
 						FirstName = row.FirstName,
 						// Optional column: a candidate may have no middle initial. Blank is

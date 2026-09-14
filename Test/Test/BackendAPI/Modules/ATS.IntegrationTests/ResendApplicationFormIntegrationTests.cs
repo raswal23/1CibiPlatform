@@ -84,7 +84,6 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		updated.Should().NotBeNull();
 		updated!.HashToken.Should().NotBe(originalHashToken);
 		updated.HashTokenCreatedAt.Should().BeAfter(originalCreatedAt);
-		updated.HashTokenExpiration.Should().BeAfter(originalExpiration);
 		updated.OrderStatus.Should().Be("Pending Candidate Info");
 
 		// Queued, not sent inline. The row goes back on the email job's queue so the send
