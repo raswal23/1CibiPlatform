@@ -111,6 +111,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IClientAssignmentService, ClientAssignmentService>();
 		services.AddScoped<IATSVerificationDataProvider, ATSVerificationDataProvider>();
 		services.AddScoped<IAtsAccessScopeResolver, AtsAccessScopeResolver>();
+		services.AddScoped<IAtsActiveUserGuard, AtsActiveUserGuard>();
 
 		// Shared by the web console, the public API and the bulk parser so all three
 		// agree on what a valid package and order type are.

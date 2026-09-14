@@ -33,6 +33,7 @@ public class RetryTicketEndpoint : ICarterModule
 			+ "the queue with a fresh attempt budget. Returns 409 when the order is no "
 			+ "longer awaiting a retry, and 404 when it is unknown or outside the "
 			+ "caller's scope.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

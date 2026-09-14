@@ -22,6 +22,7 @@ public sealed class AssignClientEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Assign or replace an ATS user's client")
 		.WithDescription("Creates the user's first assignment or replaces the existing client. Re-selecting the current client is a no-op.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

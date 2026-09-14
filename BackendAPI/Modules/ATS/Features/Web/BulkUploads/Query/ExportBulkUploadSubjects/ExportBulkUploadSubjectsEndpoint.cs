@@ -31,6 +31,7 @@ public class ExportBulkUploadSubjectsEndpoint : ICarterModule
 		.WithDescription(
 			"Downloads every subject of a single bulk upload file as CSV, including each "
 			+ "invitation's email, application form and order status.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

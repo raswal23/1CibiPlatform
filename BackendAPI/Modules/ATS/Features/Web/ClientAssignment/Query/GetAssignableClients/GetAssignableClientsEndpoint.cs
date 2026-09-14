@@ -24,6 +24,7 @@ public sealed class GetAssignableClientsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Search assignable ATS clients")
 		.WithDescription("Returns a bounded page of active clients for the assignment picker.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

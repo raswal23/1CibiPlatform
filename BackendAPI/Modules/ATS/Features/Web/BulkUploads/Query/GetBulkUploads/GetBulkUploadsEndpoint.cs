@@ -40,6 +40,7 @@ public class GetBulkUploadsEndpoint : ICarterModule
 			"Retrieves the caller's bulk upload files with keyset pagination, optionally "
 			+ "filtered by status, including the subject count and email-send progress of "
 			+ "the invitations each file produced.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

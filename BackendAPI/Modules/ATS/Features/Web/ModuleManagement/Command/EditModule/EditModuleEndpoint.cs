@@ -22,6 +22,7 @@ public class EditModuleEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Module")
 		.WithDescription("Edits an existing ATS module.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

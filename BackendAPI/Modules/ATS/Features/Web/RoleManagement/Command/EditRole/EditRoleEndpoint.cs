@@ -22,6 +22,7 @@ public class EditRoleEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Role")
 		.WithDescription("Edits an existing ATS role.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

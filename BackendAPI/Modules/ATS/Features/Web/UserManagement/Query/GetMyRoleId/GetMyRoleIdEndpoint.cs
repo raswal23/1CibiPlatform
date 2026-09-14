@@ -17,6 +17,7 @@ public class GetMyRoleIdEndpoint : ICarterModule
 		.WithTags("ATS User Management")
 		.Produces<GetMyRoleIdResponse>()
 		.WithSummary("Get the authenticated ATS user's active role")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

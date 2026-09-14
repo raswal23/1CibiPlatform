@@ -28,6 +28,7 @@ public class GetClientsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Clients")
 		.WithDescription("Retrieves a paginated list of clients.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

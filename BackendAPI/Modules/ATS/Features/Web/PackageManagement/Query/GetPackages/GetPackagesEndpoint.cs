@@ -29,6 +29,7 @@ public class GetPackagesEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Packages")
 		.WithDescription("Retrieves a list of packages.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

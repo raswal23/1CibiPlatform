@@ -22,6 +22,7 @@ public class AddUserEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.WithSummary("Add ATS User")
 		.WithDescription("Adds a logical ATS user and all selected module assignments.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

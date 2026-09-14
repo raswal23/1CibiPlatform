@@ -33,6 +33,7 @@ public class GetBulkUploadSubjectCountsEndpoint : ICarterModule
 			"Returns how many of a bulk upload file's subjects are still Pending, Sent "
 			+ "or Failed. Honours the search term but never the selected status, so every "
 			+ "bucket keeps reporting its own size.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

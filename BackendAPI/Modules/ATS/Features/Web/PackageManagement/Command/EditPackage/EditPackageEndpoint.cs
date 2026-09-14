@@ -22,6 +22,7 @@ public class EditPackageEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Package")
 		.WithDescription("Edits an existing package.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

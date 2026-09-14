@@ -29,6 +29,7 @@ public class EditSubjectNameEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Edit Subject Name")
 		.WithDescription("Corrects the first, middle, and last name of an order's subject.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

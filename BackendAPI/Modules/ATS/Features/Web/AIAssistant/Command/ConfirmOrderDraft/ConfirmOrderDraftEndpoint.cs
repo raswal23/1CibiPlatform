@@ -27,6 +27,7 @@ public class ConfirmOrderDraftEndpoint : ICarterModule
 		.WithSummary("Confirm a staged ATS order")
 		.WithDescription("Creates the order that the ATS assistant staged, and sends the email "
 			+ "invitation to the candidate. Drafts are single use and expire.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

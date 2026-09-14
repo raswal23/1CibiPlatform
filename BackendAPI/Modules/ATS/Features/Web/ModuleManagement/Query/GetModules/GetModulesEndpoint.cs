@@ -28,6 +28,7 @@ public class GetModulesEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Modules")
 		.WithDescription("Retrieves a list of ATS modules.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

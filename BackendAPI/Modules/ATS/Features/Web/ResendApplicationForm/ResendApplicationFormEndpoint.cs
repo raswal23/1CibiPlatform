@@ -28,6 +28,7 @@ public class ResendApplicationFormEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Resend Application Form")
 		.WithDescription("Resends an application form to a candidate by generating a new hash token and resetting the ticket status to 'Pending Candidate Info'.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

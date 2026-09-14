@@ -20,6 +20,7 @@ global using ATS.Data.Cache;
 global using ATS.DTO;
 global using ATS.Data.UnitOfWork;
 global using ATS.Data.DTO;
+global using ATS.Shared;
 global using ATS.Shared.Contracts;
 global using ATS.Shared.Implementations;
 global using ATS.Hubs;

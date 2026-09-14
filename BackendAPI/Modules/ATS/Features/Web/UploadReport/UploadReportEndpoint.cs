@@ -26,6 +26,7 @@ public class UploadReportEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Upload Report")
 		.WithDescription("Uploads and stores ATS report details. Replacing an existing report archives the previous record.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

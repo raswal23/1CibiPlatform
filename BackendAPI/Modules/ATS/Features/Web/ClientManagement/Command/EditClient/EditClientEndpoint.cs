@@ -22,6 +22,7 @@ public class EditClientEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Client")
 		.WithDescription("Edits an existing client.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

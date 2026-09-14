@@ -1,6 +1,7 @@
 ﻿using ATS.Data.Context;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
+using ATS.Services.AccessScope;
 using ATS.Services.AIAssistant;
 using ATS.Services.ApplicantSearchProjections;
 using ATS.Services.BulkSubmissionProcessor;
@@ -68,6 +69,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly IBulkUploadMonitoringService _bulkUploadMonitoringService;
+	protected readonly IAtsActiveUserGuard _atsActiveUserGuard;
 	protected readonly HybridCache _hybridCache;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
@@ -98,6 +100,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_dashboardService = _scope.ServiceProvider.GetRequiredService<IDashboardService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();
 		_bulkUploadMonitoringService = _scope.ServiceProvider.GetRequiredService<IBulkUploadMonitoringService>();
+		_atsActiveUserGuard = _scope.ServiceProvider.GetRequiredService<IAtsActiveUserGuard>();
 	}
 
 

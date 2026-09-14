@@ -32,6 +32,7 @@ public class GetUsersEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get ATS Users")
 		.WithDescription("Retrieves a paginated list of ATS users and their module assignments.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -24,6 +24,7 @@ public class GetApplicationFormPreviewEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Get Application Form Preview")
 		.WithDescription("Retrieves the application form answers for one order, for the read-only preview dialog.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

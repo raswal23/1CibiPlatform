@@ -25,6 +25,7 @@ public class AssignUserClientEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.WithSummary("Assign an ATS user to a client")
 		.WithDescription("Creates or updates the client assignment and synchronizes existing access rows.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }
