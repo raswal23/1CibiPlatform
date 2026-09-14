@@ -195,12 +195,14 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	/// </summary>
 	protected async Task<string> SeedAssignedPackageAsync(
 		string packageName = DefaultPackageName,
-		int clientId = TestClientId)
+		int clientId = TestClientId,
+		bool? autoChasing = null)
 	{
 		var now = DateTime.UtcNow;
 
 		// InitializeAsync already created DefaultPackageName, so reuse it rather than
-		// tripping the unique index on PackageName.
+		// tripping the unique index on PackageName. A test that needs a specific
+		// screening type should use a distinct package name.
 		var package = await _dbContext.PackageDetails
 			.FirstOrDefaultAsync(existing => existing.PackageName == packageName);
 
@@ -212,6 +214,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 				PackageDescription = "182",
 				IsActive = true,
 				FollowUpEmail = 0,
+				AutoChasing = autoChasing,
 				CreatedAt = now,
 				UpdatedAt = now
 			};

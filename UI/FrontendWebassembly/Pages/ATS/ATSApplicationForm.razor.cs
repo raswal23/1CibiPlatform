@@ -22,6 +22,7 @@ public partial class ATSApplicationForm
 	[SupplyParameterFromQuery(Name = "showAppForm")]
 	public string? showAppForm { get; set; }
 	public Guid EmailId;
+	private DateOnly? _orderDateOfBirth;
 	private bool IsInstructionsVisible =>
 		!_showApplicationForm &&
 		!IsExpired &&
@@ -44,6 +45,7 @@ public partial class ATSApplicationForm
 		Status = details.Status;
 		IsExpired = details.IsExpired;
 		EmailId = details.EmailId;
+		_orderDateOfBirth = details.DateOfBirth;
 
 		_showApplicationForm = showAppForm?.ToLowerInvariant() switch
 		{

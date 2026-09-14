@@ -46,6 +46,10 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(50);
 
+		// Screening type snapshot; null for legacy files.
+		builder.Property(a => a.AutoChasing)
+			   .IsRequired(false);
+
 		builder.Property(e => e.ClientId);
 
 		builder.Property(a => a.Status)

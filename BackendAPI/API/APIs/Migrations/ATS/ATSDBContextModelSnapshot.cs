@@ -492,6 +492,9 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("ClaimedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -805,11 +808,17 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid?>("BulkFileID")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("DisputeCategory")
                         .HasMaxLength(255)
@@ -911,8 +920,16 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("SSSNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("SelectPackage")
                         .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TINNumber")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 

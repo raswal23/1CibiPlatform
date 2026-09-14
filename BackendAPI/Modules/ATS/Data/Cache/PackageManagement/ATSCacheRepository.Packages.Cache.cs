@@ -4,21 +4,21 @@ public partial class ATSCacheRepository
 {
 	// Keyset pagination caches only the first page (null seek anchor); cursor pages
 	// are high-cardinality and go straight to the repository.
-	public Task<List<PackageDetailsDTO>> GetPackagesPageAsync(string? searchTerm, int? clientId, string? afterPackageName, int take, CancellationToken cancellationToken)
+	public Task<List<PackageDetailsDTO>> GetPackagesPageAsync(string? searchTerm, int? clientId, bool? autoChasing, string? afterPackageName, int take, CancellationToken cancellationToken)
 	{
 		if (afterPackageName is not null)
-			return _atsRepository.GetPackagesPageAsync(searchTerm, clientId, afterPackageName, take, cancellationToken);
+			return _atsRepository.GetPackagesPageAsync(searchTerm, clientId, autoChasing, afterPackageName, take, cancellationToken);
 
-		var key = $"package_v4_client_{clientId?.ToString() ?? "all"}_first_take_{take}_search_{searchTerm}";
+		var key = $"package_v5_client_{clientId?.ToString() ?? "all"}_chasing_{autoChasing?.ToString() ?? "all"}_first_take_{take}_search_{searchTerm}";
 		return _hybridCache.GetOrCreateAsync<List<PackageDetailsDTO>>(
-			key, async token => await _atsRepository.GetPackagesPageAsync(searchTerm, clientId, null, take, token),
+			key, async token => await _atsRepository.GetPackagesPageAsync(searchTerm, clientId, autoChasing, null, take, token),
 			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
 	}
 
-	public Task<long> CountPackagesAsync(string? searchTerm, int? clientId, CancellationToken cancellationToken) =>
+	public Task<long> CountPackagesAsync(string? searchTerm, int? clientId, bool? autoChasing, CancellationToken cancellationToken) =>
 		_hybridCache.GetOrCreateAsync<long>(
-			$"package_v4_client_{clientId?.ToString() ?? "all"}_count_search_{searchTerm}",
-			async token => await _atsRepository.CountPackagesAsync(searchTerm, clientId, token),
+			$"package_v5_client_{clientId?.ToString() ?? "all"}_chasing_{autoChasing?.ToString() ?? "all"}_count_search_{searchTerm}",
+			async token => await _atsRepository.CountPackagesAsync(searchTerm, clientId, autoChasing, token),
 			tags: [CacheTags.Package], cancellationToken: cancellationToken).AsTask();
 
 	public async Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken)

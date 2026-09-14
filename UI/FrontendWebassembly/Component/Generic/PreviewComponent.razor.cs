@@ -31,7 +31,7 @@ public partial class PreviewComponent
 			},
 			{
 				nameof(YesNoDialogComponent.Message),
-				"Please be advised that this action will send an email invitation to your candidates."
+				"Depending on the selected screening type, an email invitation may be sent to the candidate to complete the required information."
 			},
 			{
 				nameof(YesNoDialogComponent.ConfirmText),
@@ -39,7 +39,7 @@ public partial class PreviewComponent
 			},
 			{
 				nameof(YesNoDialogComponent.InformationMessage),
-				"Clicking 'Upload' will  send email invitations."
+				"By clicking ' Proceed ,' you attest and confirm that you have obtained the necessary and valid consent from the concerned individual(s) authorizing CIBI Information, Inc. to collect, process, verify, and validate their personal information for the purpose of conducting the requested background verification. You further confirm that the individual(s) have been appropriately informed of the nature and purpose of the background verification and that such consent was obtained prior to submitting this request."
 			}
 		};
 

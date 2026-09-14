@@ -11,6 +11,10 @@ public partial class ApplicationFormComponent
 	public int ActiveStep { get; set; } = 0;
 	[Parameter]
 	public string? HashToken { get; set; }
+	// Birth date the requestor supplied at order entry (data-screening orders);
+	// pre-fills the form so the candidate need not retype it.
+	[Parameter]
+	public DateOnly? OrderDateOfBirth { get; set; }
 	private string? FaceUrl;
 	private bool IsSuccess = false;
 	private bool hasProfessionalLicense = false;
@@ -144,6 +148,14 @@ public partial class ApplicationFormComponent
 			{
 				DateOfBirth = dob.ToDateTime(TimeOnly.MinValue);
 			}
+		}
+
+		// A birth date captured at order entry pre-fills the picker. The PhilSys
+		// value (above) wins when both exist - it came from a verified identity,
+		// and the candidate can still correct the field either way.
+		if (DateOfBirth is null && OrderDateOfBirth is { } orderDob)
+		{
+			DateOfBirth = orderDob.ToDateTime(TimeOnly.MinValue);
 		}
 
 		SignatureDate = DateTime.UtcNow;

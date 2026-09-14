@@ -1,6 +1,6 @@
 ﻿namespace ATS.Features.Web.PackageManagement.Query.GetPackages;
 
-public record GetPackagesQueryRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null)
+public record GetPackagesQueryRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null, bool? AutoChasing = null)
 	: IQuery<GetPackagesQueryResult>;
 
 public record GetPackagesQueryResult(KeysetPaginatedResult<PackageDetailsDTO> Packages);
@@ -35,7 +35,7 @@ public class GetPackagesHandler : IQueryHandler<GetPackagesQueryRequest, GetPack
 			request.PageSize ?? 10,
 			request.SearchTerm);
 
-		var packages = await _packageManagementService.GetPackagesAsync(KeysetPaginationRequest, cancellationToken, request.ClientId);
+		var packages = await _packageManagementService.GetPackagesAsync(KeysetPaginationRequest, cancellationToken, request.ClientId, request.AutoChasing);
 
 		return new GetPackagesQueryResult(packages);
 	}

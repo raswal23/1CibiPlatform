@@ -9,7 +9,7 @@ public class PackageManagementService : IPackageManagementService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-	public async Task<ServiceResponse<KeysetPaginatedResult<PackageDetailsDTO>>> GetPackagesAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default, int? clientId = null)
+	public async Task<ServiceResponse<KeysetPaginatedResult<PackageDetailsDTO>>> GetPackagesAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, CancellationToken cancellationToken = default, int? clientId = null, bool? autoChasing = null)
 	{
 		var query = $"ats/getpackages?pageSize={pageSize}";
 		if (!string.IsNullOrEmpty(cursor))
@@ -23,6 +23,10 @@ public class PackageManagementService : IPackageManagementService
 		if (clientId is > 0)
 		{
 			query += $"&clientId={clientId.Value}";
+		}
+		if (autoChasing is not null)
+		{
+			query += $"&autoChasing={autoChasing.Value.ToString().ToLowerInvariant()}";
 		}
 
 		try
@@ -50,7 +54,7 @@ public class PackageManagementService : IPackageManagementService
 		}
 	}
 
-	public async Task<ServiceResponse<IReadOnlyList<PackageDetailsDTO>>> GetAllPackagesAsync(CancellationToken cancellationToken = default, int? clientId = null)
+	public async Task<ServiceResponse<IReadOnlyList<PackageDetailsDTO>>> GetAllPackagesAsync(CancellationToken cancellationToken = default, int? clientId = null, bool? autoChasing = null)
 	{
 		const int pageSize = 100;
 		string? cursor = null;
@@ -58,7 +62,7 @@ public class PackageManagementService : IPackageManagementService
 
 		while (true)
 		{
-			var pageResponse = await GetPackagesAsync(cursor, pageSize, cancellationToken: cancellationToken, clientId: clientId);
+			var pageResponse = await GetPackagesAsync(cursor, pageSize, cancellationToken: cancellationToken, clientId: clientId, autoChasing: autoChasing);
 
 			if (!pageResponse.IsSuccess || pageResponse.Data is null)
 			{

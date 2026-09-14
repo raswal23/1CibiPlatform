@@ -15,7 +15,8 @@ public class PackageManagementService : IPackageManagementService
 	public async Task<KeysetPaginatedResult<PackageDetailsDTO>> GetPackagesAsync(
 		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken,
-		int? clientId = null)
+		int? clientId = null,
+		bool? autoChasing = null)
 	{
 		var logContext = new
 		{
@@ -35,6 +36,7 @@ public class PackageManagementService : IPackageManagementService
 		var rows = await _packageRepository.GetPackagesPageAsync(
 			paginationRequest.SearchTerm,
 			clientId,
+			autoChasing,
 			afterPackageName,
 			pageSize + 1,
 			cancellationToken);
@@ -42,7 +44,7 @@ public class PackageManagementService : IPackageManagementService
 
 		var nextCursor = hasMore ? CursorCodec.Encode(items[^1].PackageName) : null;
 		long? totalCount = afterPackageName is null
-			? await _packageRepository.CountPackagesAsync(paginationRequest.SearchTerm, clientId, cancellationToken)
+			? await _packageRepository.CountPackagesAsync(paginationRequest.SearchTerm, clientId, autoChasing, cancellationToken)
 			: null;
 
 		return new KeysetPaginatedResult<PackageDetailsDTO>(items, nextCursor, totalCount);

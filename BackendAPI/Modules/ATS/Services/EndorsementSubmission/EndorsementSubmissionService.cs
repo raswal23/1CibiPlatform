@@ -99,12 +99,25 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			emailInvitationRequestDTO.RushNormal,
 			ct);
 
+		// The web console sends the screening type the user chose, and the package
+		// list it chose from is filtered by that type - so a mismatch means a stale
+		// or tampered request. Public API and assistant callers send null and skip
+		// the check; the package's own classification stands.
+		if (emailInvitationRequestDTO.AutoChasing is not null
+			&& validated.AutoChasing != emailInvitationRequestDTO.AutoChasing)
+		{
+			throw new BadRequestException("The selected package does not match the chosen screening type.");
+		}
+
 		// Written back so the caller is echoed what was actually stored - a request
 		// sending "rush" gets "Rush" - and so the Adapt below carries the resolved id
-		// and canonical spelling onto the entity.
+		// and canonical spelling onto the entity. AutoChasing is snapshotted from the
+		// package (not the caller) so the order keeps the classification it was
+		// placed under even if the package is reclassified later.
 		emailInvitationRequestDTO.PackageId = validated.PackageId;
 		emailInvitationRequestDTO.SelectPackage = validated.Package;
 		emailInvitationRequestDTO.RushNormal = validated.OrderType;
+		emailInvitationRequestDTO.AutoChasing = validated.AutoChasing;
 
 		var token = _secureToken.GenerateSecureToken();
 
@@ -224,9 +237,19 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			bulkUploadFileDetailsDTO.OrderType,
 			ct);
 
+		// Same rule as the single path: the console's chosen screening type must
+		// agree with the package's own classification. Null (public API) skips it.
+		if (bulkUploadFileDetailsDTO.AutoChasing is not null
+			&& validated.AutoChasing != bulkUploadFileDetailsDTO.AutoChasing)
+		{
+			throw new BadRequestException("The selected package does not match the chosen screening type.");
+		}
+
 		bulkUploadFileDetailsDTO.PackageId = validated.PackageId;
 		bulkUploadFileDetailsDTO.PackageType = validated.Package;
 		bulkUploadFileDetailsDTO.OrderType = validated.OrderType;
+		// Snapshotted from the package, not the caller, exactly as on single orders.
+		bulkUploadFileDetailsDTO.AutoChasing = validated.AutoChasing;
 
 
 		if (bulkUploadFileDetailsDTO.BulkFile != null)

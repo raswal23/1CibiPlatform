@@ -100,9 +100,19 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 				using var reader = new StringReader(csvContent);
 
+				// The identity columns (DateOfBirth, SSSNumber, TINNumber) are present
+				// only on data-screening templates, so CsvHelper's own header and
+				// missing-field checks must not reject the standard 5-column file. The
+				// per-screening-type header check below takes their place.
+				var csvConfiguration = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+				{
+					HeaderValidated = null,
+					MissingFieldFound = null
+				};
+
 				using var csv = new CsvReader(
 					reader,
-					CultureInfo.InvariantCulture);
+					csvConfiguration);
 
 				if (!csv.Read() || !csv.ReadHeader())
 				{
@@ -118,6 +128,17 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					nameof(BulkUploadCsvRecord.EmailAddress),
 					nameof(BulkUploadCsvRecord.MobileNumber)
 				};
+
+				// A data-screening file must carry each candidate's identity, because no
+				// application form is sent to collect it later. Demanding the columns up
+				// front fails the file once, instead of accepting it and then rejecting
+				// every row inside it for the same missing columns.
+				if (file.AutoChasing == false)
+				{
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.DateOfBirth));
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.SSSNumber));
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.TINNumber));
+				}
 
 				var actualHeaders = csv.HeaderRecord?
 					.Select(header => header?.Trim() ?? string.Empty)
@@ -157,12 +178,21 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					// inserted to fail later at email send or OMS ticketing.
 					var (rejectionReason, mobileNumber) = BulkSubjectRowValidator.Validate(row);
 
-					if (rejectionReason is not null)
+					// Data-screening files must carry each candidate's identity, because
+					// no application form is sent to collect it later.
+					string? identityRejection = null;
+					DateOnly? dateOfBirth = null;
+					if (rejectionReason is null && file.AutoChasing == false)
+					{
+						(identityRejection, dateOfBirth) = BulkSubjectRowValidator.ValidateIdentity(row);
+					}
+
+					if ((rejectionReason ?? identityRejection) is { } reason)
 					{
 						rejectedRows.Add(new BulkUploadRejectedRowDTO
 						{
 							RowNumber = rowNumber,
-							Reason = rejectionReason
+							Reason = reason
 						});
 
 						continue;
@@ -207,6 +237,15 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						// name the label, exactly as on a single order.
 						PackageId = file.PackageId,
 						SelectPackage = file.PackageType,
+						// The screening-type snapshot travels with each order; the
+						// email worker only invites manual (AutoChasing) orders.
+						AutoChasing = file.AutoChasing,
+
+						// Only populated for data-screening files, whose rows carry
+						// the identity columns the candidate cannot supply later.
+						DateOfBirth = dateOfBirth,
+						SSSNumber = string.IsNullOrWhiteSpace(row.SSSNumber) ? null : row.SSSNumber.Trim(),
+						TINNumber = string.IsNullOrWhiteSpace(row.TINNumber) ? null : row.TINNumber.Trim(),
 						EmailSentStatus = EmailStatus.Pending,
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,

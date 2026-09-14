@@ -35,7 +35,7 @@
 
     <HeaderTemplate>
         <MudTh Class="ats-table-cell-center">Package Name</MudTh>
-        <MudTh Class="ats-table-cell-center">Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Report Type ID</MudTh>
         <MudTh Class="ats-table-cell-center">Screening Type</MudTh>
         <MudTh Class="ats-table-cell-center">Follow Up Email</MudTh>
         <MudTh Class="ats-table-cell-center">Status</MudTh>
@@ -57,10 +57,10 @@
             </div>
         </MudTd>
 
-        <MudTd Class="ats-management-description" DataLabel="Description">
+        <MudTd Class="ats-management-description" DataLabel="Report Type ID">
             @if (string.IsNullOrWhiteSpace(p.PackageDescription))
             {
-                <span class="ats-management-package-empty">No description</span>
+                <span class="ats-management-package-empty">No Report Type Id</span>
             }
             else
             {

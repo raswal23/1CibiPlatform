@@ -15,6 +15,11 @@ public class BulkUploadFileDetails
 	public int PackageId { get; set; }
 	public string? PackageType { get; set; }
 	public string? OrderType { get; set; }
+
+	// Screening type snapshotted from the package at upload (true = manual,
+	// false = data, null = legacy/unclassified); copied onto every order the
+	// parsing job creates from this file.
+	public bool? AutoChasing { get; set; }
 	public string? Status { get; set; }
 	public DateTime? ClaimedAt { get; set; }
 	public DateTime DateCreated { get; set; }

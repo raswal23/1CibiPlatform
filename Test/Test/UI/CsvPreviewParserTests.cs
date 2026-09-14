@@ -190,4 +190,50 @@ public class CsvPreviewParserTests
 		result.Rows[0][0].Should().Be("Dela Cruz");
 		result.Rows[0][1].Should().Be("Juan");
 	}
+
+	private const string DataHeader = Header + ",DateOfBirth,SSSNumber,TINNumber";
+
+	[Fact]
+	public void Parse_ShouldKeepTheIdentityColumns_ForADataScreeningUpload()
+	{
+		var csv = $"{DataHeader}\nDela Cruz,Juan,S,juan@example.com,09171234567,03/15/1990,1234567890,123456789012";
+
+		var result = CsvPreviewParser.Parse(csv, requiresIdentity: true);
+
+		result.Headers.Should().Equal(
+			"LastName", "FirstName", "MiddleInitial", "EmailAddress", "MobileNumber",
+			"DateOfBirth", "SSSNumber", "TINNumber");
+		result.Rows.Should().ContainSingle();
+		result.Rows[0].Should().HaveCount(8);
+		result.Rows[0][5].Should().Be("03/15/1990");
+		result.HasCanonicalHeaderSequence.Should().BeTrue();
+		result.MissingHeaders.Should().BeEmpty();
+	}
+
+	[Fact]
+	public void Parse_ShouldReportTheIdentityColumnsMissing_ForADataScreeningUpload()
+	{
+		// The manual template chosen for a data package. Naming the absent columns here
+		// is what turns an upload whose every row fails into one snackbar before upload.
+		var csv = $"{Header}\nDela Cruz,Juan,S,juan@example.com,09171234567";
+
+		var result = CsvPreviewParser.Parse(csv, requiresIdentity: true);
+
+		result.HasCanonicalHeaderSequence.Should().BeFalse();
+		result.MissingHeaders.Should().Equal("DateOfBirth", "SSSNumber", "TINNumber");
+	}
+
+	[Fact]
+	public void Parse_ShouldDropTheIdentityColumns_ForAManualUpload()
+	{
+		// A data file uploaded against a manual package: the extra columns are debris to
+		// the manual import, which maps by header name and never reads them.
+		var csv = $"{DataHeader}\nDela Cruz,Juan,S,juan@example.com,09171234567,03/15/1990,1234567890,123456789012";
+
+		var result = CsvPreviewParser.Parse(csv);
+
+		result.Headers.Should().HaveCount(5);
+		result.Rows[0].Should().HaveCount(5);
+		result.HasCanonicalHeaderSequence.Should().BeTrue();
+	}
 }

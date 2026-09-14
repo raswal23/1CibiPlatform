@@ -18,6 +18,19 @@ public class EmailInvitationRequest
 	public string? HashToken { get; set; }
 	public int? ClientId { get; set; }
 	public Guid? RequestorId { get; set; }
+
+	// Screening type snapshotted from the package at order time (true = manual,
+	// false = data, null = unknown/legacy). Stored on the order because the
+	// package's own classification can be edited later.
+	public bool? AutoChasing { get; set; }
+
+	// Candidate identity captured at order entry. Required for data-screening web
+	// orders (no application form is sent, so the candidate cannot supply them);
+	// null for manual orders, bulk rows and public API orders.
+	public DateOnly? DateOfBirth { get; set; }
+	public string? SSSNumber { get; set; }
+	public string? TINNumber { get; set; }
+
 	public string? ApplicationFormStatus { get; set; }
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }

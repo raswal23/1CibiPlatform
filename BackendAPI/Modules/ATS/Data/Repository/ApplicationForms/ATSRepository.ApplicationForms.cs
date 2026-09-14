@@ -48,7 +48,8 @@ public partial class ATSRepository
 				{
 					EmailId = af.EmailInvitationID,
 					ExpiresAt = af.HashTokenExpiration,
-					Status = af.ApplicationFormStatus
+					Status = af.ApplicationFormStatus,
+					DateOfBirth = af.DateOfBirth
 				})
 				.FirstOrDefaultAsync(cancellationToken) ?? new EmailIdAndApplicationFormPathDTO();
 	}

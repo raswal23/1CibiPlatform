@@ -2,7 +2,7 @@
 
 public interface IPackageManagementService
 {
-	Task<KeysetPaginatedResult<PackageDetailsDTO>> GetPackagesAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken, int? clientId = null);
+	Task<KeysetPaginatedResult<PackageDetailsDTO>> GetPackagesAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken, int? clientId = null, bool? autoChasing = null);
 	Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken);
 	Task<PackageDetailsDTO> EditPackageAsync(EditPackageDTO packageDTO, CancellationToken cancellationToken);
 }

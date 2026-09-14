@@ -24,6 +24,11 @@ public partial class ATSRepository
 		// worker step over rows another worker is already claiming instead of blocking,
 		// and the Processing write is what keeps the claim after this transaction ends.
 		// EF cannot express SKIP LOCKED, so this is raw SQL.
+		//
+		// "AutoChasing" IS TRUE: only manual-screening orders receive an application
+		// form invitation. Data orders carry their identity fields from order entry
+		// and must never be emailed; NULL (legacy rows) is deliberately excluded too,
+		// because an unclassified order cannot prove it is manual.
 		return await _dbcontext.EmailInvitationRequests
 			.FromSqlRaw(
 				"""
@@ -33,7 +38,8 @@ public partial class ATSRepository
 							   PARTITION BY "ClientId"
 							   ORDER BY "OrderCreatedAt") AS rn
 					FROM ats."EmailInvitationRequest"
-					WHERE ("EmailSentStatus" = {2}
+					WHERE "AutoChasing" IS TRUE
+					  AND ("EmailSentStatus" = {2}
 						OR ("EmailSentStatus" = {3} AND "EmailSendAttempts" < {4}))
 				)
 				UPDATE ats."EmailInvitationRequest" t

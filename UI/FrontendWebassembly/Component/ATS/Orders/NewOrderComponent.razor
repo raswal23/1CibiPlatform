@@ -36,7 +36,67 @@
 
             <MudForm @ref="candidateForm" Disabled="@isSavingCandidate">
                 <section class="ats-form-section">
-                    <div class="ats-section-title"><span>1</span><h2>Personal information</h2></div>
+                    <div class="ats-section-title"><span>1</span><h2>Package</h2></div>
+                    <div class="ats-contact-grid">
+                    <div class="ats-field">
+                        <label>Screening type <b>*</b></label>
+                        <MudSelect T="bool?"
+                                   Value="subject.AutoChasing"
+                                   ValueChanged="OnScreeningTypeChanged"
+                                   Placeholder="Select a screening type"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   Class="ats-input ats-select"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
+                                   Required="true"
+                                   RequiredError="Screening type is required">
+                            <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                            <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
+                        </MudSelect>
+                    </div>
+
+                    <div class="ats-field">
+                        <label>Select package <b>*</b></label>
+                        @* A disabled select swallows clicks entirely, so the wrapper
+                           takes them and blinks the note below while the package field
+                           is still locked behind the screening type choice. *@
+                        <div class="ats-package-wrap @(subject.AutoChasing is null ? "is-locked" : string.Empty)"
+                             @onclick="OnPackageFieldClickedAsync">
+                            <MudSelect @bind-Value="subject.SelectPackage"
+                                       Placeholder="@(subject.AutoChasing is null ? "Select a screening type first" : "Choose a screening package")"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Class="ats-input ats-select"
+                                       Adornment="Adornment.Start"
+                                       AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                       Disabled="@(isLoadingPackages || subject.AutoChasing is null)"
+                                       Required="true"
+                                       RequiredError="Package is required">
+                                @foreach (var package in FilteredPackages)
+                                {
+                                    <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                        @if (!isLoadingPackages && subject.AutoChasing is not null && FilteredPackages.Count == 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">No @(subject.AutoChasing == true ? "manual" : "data") screening package is assigned to your client.</MudText>
+                        }
+                    </div>
+                    </div>
+
+                    <div class="ats-screening-note @(isScreeningNoteBlinking ? "is-blinking" : string.Empty)">
+                        <MudIcon Icon="@ScreeningNoteIcon" Size="Size.Small" />
+                        <div>
+                            <p class="ats-screening-note-title">@ScreeningNoteTitle</p>
+                            <p class="ats-screening-note-text">@ScreeningNoteText</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ats-form-section">
+                    <div class="ats-section-title"><span>2</span><h2>Personal information</h2></div>
                     <div class="ats-personal-grid">
                     <div class="ats-field">
                         <label>Last name <b>*</b></label>
@@ -75,10 +135,54 @@
                                       AdornmentIcon="@Icons.Material.Outlined.PersonOutline" />
                     </div>
                     </div>
+
+                    <div class="ats-identity-grid">
+                    <div class="ats-field">
+                        <label>Date of birth @(IsDataScreening ? (MarkupString)"<b>*</b>" : (MarkupString)string.Empty)</label>
+                        <MudDatePicker @bind-Date="CandidateDateOfBirth"
+                                       Placeholder="Date"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Class="ats-input"
+                                       DateFormat="MM/dd/yyyy"
+                                       MaxDate="@DateTime.Today.AddDays(-1)"
+                                       Adornment="Adornment.End"
+                                       Required="@IsDataScreening"
+                                       RequiredError="Date of birth is required for data screening" />
+                    </div>
+
+                    <div class="ats-field">
+                        <label>SSS number @(IsDataScreening ? (MarkupString)"<b>*</b>" : (MarkupString)string.Empty)</label>
+                        <MudTextField @bind-Value="subject.SSSNumber"
+                                      Placeholder="10 digits"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                      Mask="@(new PatternMask("0000000000"))"
+                                      Required="@IsDataScreening"
+                                      RequiredError="SSS number is required for data screening" />
+                    </div>
+
+                    <div class="ats-field">
+                        <label>TIN number @(IsDataScreening ? (MarkupString)"<b>*</b>" : (MarkupString)string.Empty)</label>
+                        <MudTextField @bind-Value="subject.TINNumber"
+                                      Placeholder="9 to 12 digits"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Class="ats-input"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                      Mask="@(new PatternMask("000000000000"))"
+                                      Required="@IsDataScreening"
+                                      RequiredError="TIN number is required for data screening" />
+                    </div>
+                    </div>
                 </section>
 
                 <section class="ats-form-section">
-                    <div class="ats-section-title"><span>2</span><h2>Contact details</h2></div>
+                    <div class="ats-section-title"><span>3</span><h2>Contact details</h2></div>
                     <div class="ats-contact-grid">
                     <div class="ats-field">
                         <label>Email address <b>*</b></label>
@@ -111,32 +215,6 @@
                     </div>
                 </section>
 
-                <section class="ats-form-section">
-                    <div class="ats-section-title"><span>3</span><h2>Package</h2></div>
-                    <div class="ats-field">
-                        <label>Select package <b>*</b></label>
-                        <MudSelect @bind-Value="subject.SelectPackage"
-                                   Placeholder="Choose a screening package"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense"
-                                   Class="ats-input ats-select"
-                                   Adornment="Adornment.Start"
-                                   AdornmentIcon="@Icons.Material.Outlined.Inventory2"
-                                   Disabled="@isLoadingPackages"
-                                   Required="true"
-                                   RequiredError="Package is required">
-                            @foreach (var package in availablePackages)
-                            {
-                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
-                            }
-                        </MudSelect>
-                        @if (!isLoadingPackages && availablePackages.Count == 0)
-                        {
-                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
-                        }
-                    </div>
-                </section>
-
                 <section class="ats-form-section ats-speed-section">
                         <div class="ats-section-title"><span>4</span><h2>Processing speed</h2></div>
                         <div class="ats-speed-row">
@@ -146,7 +224,7 @@
                                     <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" /></span><span class="ats-speed-name">Normal</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-standard">Standard</span>
                                 </div>
-                                <div class="ats-speed-sub">Results in 3–5 business days</div>
+                                <div class="ats-speed-sub">Standard processing and regular rates apply</div>
                             </div>
                             <div class="@GetCandidateRushCardClass()" @onclick="SelectCandidateRush">
                                 <span class="ats-radio-dot"></span>
@@ -154,7 +232,7 @@
                                     <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Bolt" Size="Size.Small" /></span><span class="ats-speed-name">Rush</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-fee">+ fee</span>
                                 </div>
-                                <div class="ats-speed-sub">Results in 24 hours</div>
+                                <div class="ats-speed-sub">Expedited processing and additional rates apply</div>
                             </div>
                         </div>
                         <MudRadioGroup @bind-Value="subject.RushNormal" Class="ats-hidden-radio-group">
@@ -188,27 +266,61 @@
             <MudForm @ref="bulkForm" Disabled="@isUploadingBulk">
                 <section class="ats-form-section">
                     <div class="ats-section-title"><span>1</span><h2>Package</h2></div>
+                    <div class="ats-contact-grid">
                     <div class="ats-field">
-                        <label>Select package <b>*</b></label>
-                        <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
-                                   Placeholder="Choose a screening package"
+                        <label>Screening type <b>*</b></label>
+                        <MudSelect T="bool?"
+                                   Value="bulkUploadFileDetailsDTO.AutoChasing"
+                                   ValueChanged="OnBulkScreeningTypeChanged"
+                                   Placeholder="Select a screening type"
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    Class="ats-input ats-select"
                                    Adornment="Adornment.Start"
-                                   AdornmentIcon="@Icons.Material.Outlined.Inventory2"
-                                   Disabled="@isLoadingPackages"
+                                   AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
                                    Required="true"
-                                   RequiredError="Package is required">
-                            @foreach (var package in availablePackages)
-                            {
-                                <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
-                            }
+                                   RequiredError="Screening type is required">
+                            <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                            <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
                         </MudSelect>
-                        @if (!isLoadingPackages && availablePackages.Count == 0)
+                    </div>
+
+                    <div class="ats-field">
+                        <label>Select package <b>*</b></label>
+                        @* A disabled select swallows clicks entirely, so the wrapper
+                           takes them and blinks the note below while the package field
+                           is still locked behind the screening type choice. *@
+                        <div class="ats-package-wrap @(bulkUploadFileDetailsDTO.AutoChasing is null ? "is-locked" : string.Empty)"
+                             @onclick="OnPackageFieldClickedAsync">
+                            <MudSelect @bind-Value="bulkUploadFileDetailsDTO.PackageType"
+                                       Placeholder="@(bulkUploadFileDetailsDTO.AutoChasing is null ? "Select a screening type first" : "Choose a screening package")"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       Class="ats-input ats-select"
+                                       Adornment="Adornment.Start"
+                                       AdornmentIcon="@Icons.Material.Outlined.Inventory2"
+                                       Disabled="@(isLoadingPackages || bulkUploadFileDetailsDTO.AutoChasing is null)"
+                                       Required="true"
+                                       RequiredError="Package is required">
+                                @foreach (var package in FilteredBulkPackages)
+                                {
+                                    <MudSelectItem Value="@package.PackageName">@package.PackageName</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                        @if (!isLoadingPackages && bulkUploadFileDetailsDTO.AutoChasing is not null && FilteredBulkPackages.Count == 0)
                         {
-                            <MudText Typo="Typo.caption" Color="Color.Error">No package is assigned to your client.</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Error">No @(bulkUploadFileDetailsDTO.AutoChasing == true ? "manual" : "data") screening package is assigned to your client.</MudText>
                         }
+                    </div>
+                    </div>
+
+                    <div class="ats-screening-note @(isScreeningNoteBlinking ? "is-blinking" : string.Empty)">
+                        <MudIcon Icon="@BulkScreeningNoteIcon" Size="Size.Small" />
+                        <div>
+                            <p class="ats-screening-note-title">@BulkScreeningNoteTitle</p>
+                            <p class="ats-screening-note-text">@BulkScreeningNoteText</p>
+                        </div>
                     </div>
                 </section>
 
@@ -221,7 +333,7 @@
                                     <div class="ats-speed-heading"><span class="ats-speed-icon"><MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" /></span><span class="ats-speed-name">Normal</span></div>
                                     <span class="ats-speed-tag ats-speed-tag-standard">Standard</span>
                                 </div>
-                                <div class="ats-speed-sub">Standard processing and regular rates apply</div>
+                                <div class="ats-speed-sub">Expedited processing and additional rates apply</div>
                             </div>
                             <div class="@GetBulkRushCardClass()" @onclick="SelectBulkRush">
                                 <span class="ats-radio-dot"></span>

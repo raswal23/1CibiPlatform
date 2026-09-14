@@ -26,6 +26,28 @@ public static class CsvPreviewParser
 		"MobileNumber"
 	];
 
+	/// <summary>
+	/// The extra columns a data-screening file must carry, appended to the canonical
+	/// set in template order. A data candidate is never sent an application form, so
+	/// these values cannot be collected later - a file without them would upload and
+	/// then have every single row rejected by the background processor.
+	/// </summary>
+	public static readonly IReadOnlyList<string> IdentityHeaders =
+	[
+		"DateOfBirth",
+		"SSSNumber",
+		"TINNumber"
+	];
+
+	/// <summary>
+	/// The columns the file must lead with for the chosen screening type. Manual files
+	/// stop at MobileNumber; anything they carry past it is debris and is dropped.
+	/// </summary>
+	public static IReadOnlyList<string> HeadersFor(bool requiresIdentity) =>
+		requiresIdentity
+			? [.. CanonicalHeaders, .. IdentityHeaders]
+			: CanonicalHeaders;
+
 	public sealed class CsvPreviewResult
 	{
 		public List<string> Headers { get; set; } = [];
@@ -38,23 +60,29 @@ public static class CsvPreviewParser
 		public bool IsTruncated => TotalRowCount > Rows.Count;
 
 		/// <summary>
-		/// Canonical columns the file does not contain at all. Extra columns are
-		/// ignorable; missing ones are not - the import cannot map them, so the caller
-		/// should block before upload rather than let the file fail server-side.
+		/// Expected columns the file does not contain at all, for the screening type it
+		/// was parsed against. Extra columns are ignorable; missing ones are not - the
+		/// import cannot map them, so the caller should block before upload rather than
+		/// let the file fail server-side.
 		/// </summary>
 		public List<string> MissingHeaders { get; set; } = [];
 
 		/// <summary>
-		/// True when the file leads with the canonical columns in exactly the template's
+		/// True when the file leads with the expected columns in exactly the template's
 		/// sequence. The template order is the standard: a file with the right columns
 		/// in the wrong order is rejected, not reordered.
 		/// </summary>
 		public bool HasCanonicalHeaderSequence { get; set; }
 	}
 
-	public static CsvPreviewResult Parse(string csvContent)
+	/// <param name="requiresIdentity">
+	/// True for a data-screening upload, whose rows must also carry DateOfBirth,
+	/// SSSNumber and TINNumber. Defaults to false, the manual template.
+	/// </param>
+	public static CsvPreviewResult Parse(string csvContent, bool requiresIdentity = false)
 	{
 		var result = new CsvPreviewResult();
+		var expectedHeaders = HeadersFor(requiresIdentity);
 
 		if (string.IsNullOrWhiteSpace(csvContent))
 			return result;
@@ -66,24 +94,24 @@ public static class CsvPreviewParser
 
 		var fileHeaders = records[0].Select(field => field.Trim()).ToList();
 
-		// The template's order is the standard: the file must LEAD with the canonical
+		// The template's order is the standard: the file must LEAD with the expected
 		// columns in exactly that sequence (trim + ignore-case, as the import applies).
 		// Columns after them are spreadsheet debris (notes, helper formulas) - dropped
 		// here so they can neither show up in the dialog nor block the upload.
 		result.HasCanonicalHeaderSequence =
-			fileHeaders.Count >= CanonicalHeaders.Count
-			&& CanonicalHeaders
-				.Select((canonical, index) =>
-					string.Equals(fileHeaders[index], canonical, StringComparison.OrdinalIgnoreCase))
+			fileHeaders.Count >= expectedHeaders.Count
+			&& expectedHeaders
+				.Select((expected, index) =>
+					string.Equals(fileHeaders[index], expected, StringComparison.OrdinalIgnoreCase))
 				.All(matches => matches);
 
-		var keptCount = Math.Min(CanonicalHeaders.Count, fileHeaders.Count);
+		var keptCount = Math.Min(expectedHeaders.Count, fileHeaders.Count);
 		var keptIndexes = Enumerable.Range(0, keptCount).ToList();
 
 		result.Headers = keptIndexes.Select(index => fileHeaders[index]).ToList();
 
-		result.MissingHeaders = CanonicalHeaders
-			.Where(canonical => !fileHeaders.Contains(canonical, StringComparer.OrdinalIgnoreCase))
+		result.MissingHeaders = expectedHeaders
+			.Where(expected => !fileHeaders.Contains(expected, StringComparer.OrdinalIgnoreCase))
 			.ToList();
 
 		// Ignore rows that are blank in the kept columns - a trailing newline is not a

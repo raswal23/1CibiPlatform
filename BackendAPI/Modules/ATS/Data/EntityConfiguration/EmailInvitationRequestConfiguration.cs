@@ -68,6 +68,23 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.RequestorId)
 			   .IsRequired(false);
 
+		// Screening type snapshot; null for legacy rows and unclassified packages.
+		builder.Property(e => e.AutoChasing)
+			   .IsRequired(false);
+
+		// Candidate identity for data-screening orders; other order sources leave
+		// them null, so all three stay optional at the schema level.
+		builder.Property(e => e.DateOfBirth)
+			   .IsRequired(false);
+
+		builder.Property(e => e.SSSNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TINNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
 		builder.Property(e => e.HashTokenCreatedAt)
 			   .IsRequired(true);
 
