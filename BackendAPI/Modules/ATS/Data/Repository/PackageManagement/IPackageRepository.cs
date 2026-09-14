@@ -7,6 +7,7 @@ public interface IPackageRepository
 	Task<bool> AddPackageAsync(AddPackageDTO packageDTO, CancellationToken cancellationToken);
 	Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken);
 	Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken);
+	Task<int> CountActiveClientsUsingPackageAsync(int packageId, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Refreshes the denormalised package name carried by every order and bulk file that

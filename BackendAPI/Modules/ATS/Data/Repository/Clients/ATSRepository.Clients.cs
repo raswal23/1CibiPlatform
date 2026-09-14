@@ -101,6 +101,12 @@ public partial class ATSRepository
 		_dbcontext.PackageDetails.AsNoTracking()
 			.CountAsync(package => packageIds.Contains(package.PackageId) && package.IsActive, cancellationToken);
 
+	// UserDetails holds one row per (UserId, ModuleId), so count distinct users.
+	public Task<int> CountActiveUsersAssignedToClientAsync(int clientId, CancellationToken cancellationToken) =>
+		_dbcontext.UserDetails.AsNoTracking()
+			.Where(user => user.ClientId == clientId && user.IsActive)
+			.Select(user => user.UserId).Distinct().CountAsync(cancellationToken);
+
 	public async Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken)
 	{
 		var clients = clientDTOs.ToArray();

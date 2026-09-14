@@ -32,6 +32,10 @@ public partial class ATSCacheRepository
 	public Task<PackageDetails?> GetPackageAsync(int packageId, CancellationToken cancellationToken) =>
 		_atsRepository.GetPackageAsync(packageId, cancellationToken);
 
+	// Deactivation guard — must always see the current assignments, never a cached count.
+	public Task<int> CountActiveClientsUsingPackageAsync(int packageId, CancellationToken cancellationToken) =>
+		_atsRepository.CountActiveClientsUsingPackageAsync(packageId, cancellationToken);
+
 	public async Task<PackageDetails> EditPackageAsync(PackageDetails packageDetails, CancellationToken cancellationToken)
 	{
 		var result = await _atsRepository.EditPackageAsync(packageDetails, cancellationToken);

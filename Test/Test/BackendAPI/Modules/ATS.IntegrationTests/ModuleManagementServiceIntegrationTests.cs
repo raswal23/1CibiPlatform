@@ -1,3 +1,4 @@
+using ATS.Data.Entities;
 using ATS.DTO;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
@@ -120,7 +121,7 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 		};
 
 		// Act
-		var result = await _moduleManagementService.EditModuleAsync(request);
+		var result = await _moduleManagementService.EditModuleAsync(request, CancellationToken.None);
 
 		// Assert
 		result.ModuleId.Should().Be(existing.ModuleId);
@@ -138,9 +139,94 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.IsActive.Should().BeFalse();
 	}
 
+	[Fact]
+	public async Task EditModuleAsync_ShouldDeactivateModule_WhenOnlyInactiveUsersHaveIt()
+	{
+		// Arrange
+		var moduleId = await AddModuleReturningIdAsync("Dormant Module");
+		await SeedUserWithModuleAsync(moduleId, isActive: false);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditModuleDTO
+		{
+			ModuleId = moduleId,
+			ModuleName = "Dormant Module",
+			ModuleDescription = "Held only by an inactive user",
+			IsActive = false
+		};
+
+		// Act
+		var result = await _moduleManagementService.EditModuleAsync(request, CancellationToken.None);
+
+		// Assert
+		result.IsActive.Should().BeFalse();
+
+		var persisted = await _dbContext.ModuleDetails
+			.AsNoTracking()
+			.SingleAsync(x => x.ModuleId == moduleId);
+		persisted.IsActive.Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task EditModuleAsync_ShouldSkipUsageGuard_WhenModuleStaysActive()
+	{
+		// Arrange
+		var moduleId = await AddModuleReturningIdAsync("Busy Module");
+		await SeedUserWithModuleAsync(moduleId, isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditModuleDTO
+		{
+			ModuleId = moduleId,
+			ModuleName = "Busy Module Renamed",
+			ModuleDescription = "Renamed while in use",
+			IsActive = true
+		};
+
+		// Act
+		var result = await _moduleManagementService.EditModuleAsync(request, CancellationToken.None);
+
+		// Assert
+		result.ModuleName.Should().Be("Busy Module Renamed");
+		result.IsActive.Should().BeTrue();
+	}
+
 	#endregion
 
 	#region Bad Path
+
+	[Fact]
+	public async Task EditModuleAsync_ShouldThrowConflictException_WhenDeactivatingModuleHeldByActiveUsers()
+	{
+		// Arrange
+		var moduleId = await AddModuleReturningIdAsync("Occupied Module");
+		await SeedUserWithModuleAsync(moduleId, isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditModuleDTO
+		{
+			ModuleId = moduleId,
+			ModuleName = "Occupied Module",
+			ModuleDescription = "Still held by an active user",
+			IsActive = false
+		};
+
+		// Act
+		Func<Task> act = () => _moduleManagementService.EditModuleAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<ConflictException>()
+			.WithMessage("Cannot disable this module: 1 active user currently has it.");
+
+		var persisted = await _dbContext.ModuleDetails
+			.AsNoTracking()
+			.SingleAsync(x => x.ModuleId == moduleId);
+		persisted.IsActive.Should().BeTrue();
+	}
 
 	[Fact]
 	public async Task EditModuleAsync_ShouldThrowNotFoundException_WhenModuleDoesNotExist()
@@ -155,7 +241,7 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 		};
 
 		// Act
-		Func<Task> act = () => _moduleManagementService.EditModuleAsync(request);
+		Func<Task> act = () => _moduleManagementService.EditModuleAsync(request, CancellationToken.None);
 
 		// Assert
 		await act.Should()
@@ -209,5 +295,52 @@ public class ModuleManagementServiceIntegrationTests : BaseIntegrationTest
 				IsActive = true
 			});
 		}
+	}
+
+	private async Task<int> AddModuleReturningIdAsync(string moduleName)
+	{
+		await _moduleManagementService.AddModuleAsync(new AddModuleDTO
+		{
+			ModuleName = moduleName,
+			ModuleDescription = $"Description for {moduleName}",
+			IsActive = true
+		});
+
+		return await _dbContext.ModuleDetails
+			.AsNoTracking()
+			.Where(module => module.ModuleName == moduleName)
+			.Select(module => module.ModuleId)
+			.SingleAsync();
+	}
+
+	// UserDetails carries FKs to both role and module, so having a module needs a
+	// role row too.
+	private async Task SeedUserWithModuleAsync(int moduleId, bool isActive)
+	{
+		var now = DateTime.UtcNow;
+		var role = new RoleDetails
+		{
+			RoleName = $"Module Guard Role {Guid.CreateVersion7()}",
+			RoleDescription = "Seeded for the module deactivation guard",
+			IsActive = true,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+		_dbContext.RoleDetails.Add(role);
+		await _dbContext.SaveChangesAsync();
+
+		_dbContext.UserDetails.Add(new UserDetails
+		{
+			UserId = Guid.CreateVersion7(),
+			UserName = "Module Guard User",
+			UserEmail = "module.guard@cibi.com.ph",
+			IsActive = isActive,
+			Site = "Integration Test Site",
+			RoleId = role.RoleId,
+			ModuleId = moduleId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+		await _dbContext.SaveChangesAsync();
 	}
 }

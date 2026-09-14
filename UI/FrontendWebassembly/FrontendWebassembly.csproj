@@ -56,6 +56,15 @@
 	  <Folder Include="wwwroot\images\mfa\" />
 	</ItemGroup>
 
+	<!-- Dead files from an abandoned error-popup dialog; another process holds a
+	     delete lock on them. Excluded so the build ignores them - delete the two
+	     files and this block once nothing has them open. -->
+	<ItemGroup>
+		<Compile Remove="Component\Generic\ErrorPromptDialogComponent.razor.cs" />
+		<Content Remove="Component\Generic\ErrorPromptDialogComponent.razor.css" />
+		<None Remove="Component\Generic\ErrorPromptDialogComponent.razor.css" />
+	</ItemGroup>
+
 	<!-- Keep Blazor partial classes and scoped styles nested under their Razor component
 	     in Visual Studio Solution Explorer. -->
 	<ItemGroup>

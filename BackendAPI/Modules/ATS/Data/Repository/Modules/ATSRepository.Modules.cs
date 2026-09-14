@@ -65,4 +65,10 @@ public partial class ATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return module;
 	}
+
+	// UserDetails is keyed by (UserId, ModuleId), so a plain count over one
+	// ModuleId is already a count of distinct users.
+	public Task<int> CountActiveUsersWithModuleAsync(int moduleId, CancellationToken cancellationToken) =>
+		_dbcontext.UserDetails.AsNoTracking()
+			.CountAsync(user => user.ModuleId == moduleId && user.IsActive, cancellationToken);
 }

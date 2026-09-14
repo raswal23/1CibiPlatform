@@ -61,7 +61,7 @@ public class ModuleManagementService : IModuleManagementService
 		return await _moduleRepository.AddModuleAsync(moduleDTO);
 	}
 
-	public async Task<ModuleDetailsDTO> EditModuleAsync(EditModuleDTO moduleDTO)
+	public async Task<ModuleDetailsDTO> EditModuleAsync(EditModuleDTO moduleDTO, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -76,6 +76,17 @@ public class ModuleManagementService : IModuleManagementService
 		{
 			_logger.LogError("{ModuleId} was not found during update operation: {@Context}", moduleDTO.ModuleId, logContext);
 			throw new NotFoundException($"Module with ID {moduleDTO.ModuleId} was not found.");
+		}
+
+		// Check-then-write: acceptable for an admin screen; a racing assignment merely
+		// produces a module disabled a moment too late.
+		if (existingModule.IsActive && !moduleDTO.IsActive)
+		{
+			var activeUsers = await _moduleRepository.CountActiveUsersWithModuleAsync(moduleDTO.ModuleId, cancellationToken);
+			if (activeUsers > 0)
+				throw new ConflictException(activeUsers == 1
+					? "Cannot disable this module: 1 active user currently has it."
+					: $"Cannot disable this module: {activeUsers} active users currently have it.");
 		}
 
 		existingModule.ModuleName = moduleDTO.ModuleName!;

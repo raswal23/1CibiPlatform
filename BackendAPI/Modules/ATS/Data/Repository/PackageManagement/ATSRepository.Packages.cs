@@ -65,6 +65,12 @@ public partial class ATSRepository
 		return package;
 	}
 
+	// ClientDetails holds one row per (ClientId, PackageId), so a plain count over
+	// one PackageId is already a count of logical clients.
+	public Task<int> CountActiveClientsUsingPackageAsync(int packageId, CancellationToken cancellationToken) =>
+		_dbcontext.ClientDetails.AsNoTracking()
+			.CountAsync(client => client.PackageId == packageId && client.IsActive, cancellationToken);
+
 	public async Task<(int Orders, int BulkFiles)> RelabelPackageOnOrdersAsync(
 		int packageId,
 		string packageName,

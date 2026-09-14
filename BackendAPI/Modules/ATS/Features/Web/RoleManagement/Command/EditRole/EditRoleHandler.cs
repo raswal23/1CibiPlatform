@@ -36,7 +36,7 @@ public class EditRoleHandler : ICommandHandler<EditRoleCommand, EditRoleResult>
 
 	public async Task<EditRoleResult> Handle(EditRoleCommand request, CancellationToken cancellationToken)
 	{
-		var editedRole = await _roleManagementService.EditRoleAsync(request.editRole);
+		var editedRole = await _roleManagementService.EditRoleAsync(request.editRole, cancellationToken);
 		return new EditRoleResult(editedRole);
 	}
 }

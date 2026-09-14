@@ -1,0 +1,3 @@
+/* Obsolete: the in-use deactivation error is shown via the existing snackbar
+   instead of a popup dialog. Safe to delete; a process lock prevented automatic
+   removal. */

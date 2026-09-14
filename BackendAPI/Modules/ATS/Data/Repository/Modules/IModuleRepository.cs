@@ -8,4 +8,5 @@ public interface IModuleRepository
 	Task<bool> ModuleNameExistsAsync(string moduleName);
 	Task<ModuleDetails?> GetModuleAsync(int moduleId);
 	Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails);
+	Task<int> CountActiveUsersWithModuleAsync(int moduleId, CancellationToken cancellationToken);
 }

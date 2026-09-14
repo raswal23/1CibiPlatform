@@ -81,6 +81,17 @@ public class PackageManagementService : IPackageManagementService
 			throw new NotFoundException($"Package with ID {packageDTO.PackageId} was not found.");
 		}
 
+		// Check-then-write: acceptable for an admin screen; a racing assignment merely
+		// produces a package disabled a moment too late.
+		if (existingPackage.IsActive && !packageDTO.IsActive)
+		{
+			var activeClients = await _packageRepository.CountActiveClientsUsingPackageAsync(packageDTO.PackageId, cancellationToken);
+			if (activeClients > 0)
+				throw new ConflictException(activeClients == 1
+					? "Cannot disable this package: 1 active client currently has it assigned."
+					: $"Cannot disable this package: {activeClients} active clients currently have it assigned.");
+		}
+
 		var newName = packageDTO.PackageName.Trim();
 
 		// Orders reference the package by id, so a rename cannot break them - but they

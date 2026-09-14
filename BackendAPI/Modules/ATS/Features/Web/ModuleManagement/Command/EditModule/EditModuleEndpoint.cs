@@ -19,6 +19,7 @@ public class EditModuleEndpoint : ICarterModule
 		.WithTags("Module Management")
 		.Produces<ModuleDetailsDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Module")
 		.WithDescription("Edits an existing ATS module.")
 		.RequireAuthorization();

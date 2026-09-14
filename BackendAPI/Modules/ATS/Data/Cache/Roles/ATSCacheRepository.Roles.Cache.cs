@@ -30,6 +30,10 @@ public partial class ATSCacheRepository
 
 	public Task<RoleDetails?> GetRoleAsync(int roleId) => _atsRepository.GetRoleAsync(roleId);
 
+	// Deactivation guard — must always see the current assignments, never a cached count.
+	public Task<int> CountActiveUsersInRoleAsync(int roleId, CancellationToken cancellationToken) =>
+		_atsRepository.CountActiveUsersInRoleAsync(roleId, cancellationToken);
+
 	public async Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails)
 	{
 		var result = await _atsRepository.EditRoleAsync(roleDetails);

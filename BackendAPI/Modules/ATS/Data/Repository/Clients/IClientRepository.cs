@@ -10,4 +10,5 @@ public interface IClientRepository
 	Task<int> CountActivePackagesAsync(IReadOnlyCollection<int> packageIds, CancellationToken cancellationToken);
 	Task<IReadOnlyList<ClientDetails>> GetClientAsync(int clientId, CancellationToken cancellationToken);
 	Task<IReadOnlyList<ClientDetails>> EditClientAsync(IReadOnlyCollection<EditClientDTO> clientDTOs, CancellationToken cancellationToken);
+	Task<int> CountActiveUsersAssignedToClientAsync(int clientId, CancellationToken cancellationToken);
 }
