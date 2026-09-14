@@ -1,4 +1,5 @@
 using ATS.Data.Entities;
+using ATS.Data.Extensions;
 using ATS.DTO;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
@@ -280,6 +281,112 @@ public class RoleManagementServiceIntegrationTests : BaseIntegrationTest
 			.CountAsync(x => x.RoleName == "Duplicate Role");
 
 		persistedCount.Should().Be(1);
+	}
+
+	#endregion
+
+	#region Seeded Identity Sequences
+
+	[Fact]
+	public async Task AddRoleAsync_ShouldPersistRole_WhenSeededRolesHoldExplicitIds()
+	{
+		// The seed inserts RoleId 1-4 explicitly, and an explicit id does not advance
+		// the identity sequence. Every deployed database therefore had a sequence still
+		// pointing at 1, so the first role an admin created collided with the seeded
+		// "Platform Manager" and surfaced as the generic "error saving entity" popup.
+		//
+		// The tests never saw it: InitializeAsync truncates with RESTART IDENTITY, which
+		// leaves the sequence agreeing with the (empty) table. So reproduce a seeded
+		// database explicitly rather than trusting the clean one.
+		await SeedRolesWithExplicitIdsAsync();
+
+		// Act
+		var result = await _roleManagementService.AddRoleAsync(new AddRoleDTO
+		{
+			RoleName = "Screening Specialist",
+			RoleDescription = "Reviews and completes screening orders",
+			IsActive = true
+		});
+
+		// Assert
+		result.Should().BeTrue();
+
+		var persisted = await _dbContext.RoleDetails
+			.AsNoTracking()
+			.SingleAsync(role => role.RoleName == "Screening Specialist");
+
+		// Past the seeded block, so nothing was overwritten and no id was reused.
+		persisted.RoleId.Should().BeGreaterThan(4);
+
+		var seededNames = await _dbContext.RoleDetails
+			.AsNoTracking()
+			.Where(role => role.RoleId <= 4)
+			.CountAsync();
+
+		seededNames.Should().Be(4);
+	}
+
+	[Fact]
+	public async Task AddModuleAsync_ShouldPersistModule_WhenSeededModulesHoldExplicitIds()
+	{
+		// ModuleDetails is seeded the same way (the AtsModuleIds constants), so it has
+		// the same fault. SeedATSSuperAdminAccess already set the sequence past module
+		// 10, but the seeder then adds 11-15 without touching it again.
+		await SeedModulesWithExplicitIdsAsync();
+
+		// Act
+		var result = await _moduleManagementService.AddModuleAsync(new AddModuleDTO
+		{
+			ModuleName = "Screening Console",
+			ModuleDescription = "Added after the seeded modules",
+			IsActive = true
+		});
+
+		// Assert
+		result.Should().BeTrue();
+
+		var persisted = await _dbContext.ModuleDetails
+			.AsNoTracking()
+			.SingleAsync(module => module.ModuleName == "Screening Console");
+
+		persisted.ModuleId.Should().BeGreaterThan(15);
+	}
+
+	// Writes the rows the way the seeder does - explicit ids, so the identity sequence
+	// is left behind - then runs the production sync, which is what the fix relies on.
+	private async Task SeedRolesWithExplicitIdsAsync()
+	{
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""
+			INSERT INTO ats."RoleDetails"
+				("RoleId", "RoleName", "RoleDescription", "IsActive", "CreatedAt", "UpdatedAt")
+			VALUES
+				(1, 'Platform Manager', 'Platform manager role for ATS system.', TRUE, NOW(), NOW()),
+				(2, 'Client Admin', 'Administrator role for ATS system.', TRUE, NOW(), NOW()),
+				(3, 'Service Delivery', 'Service Delivery role for ATS system.', TRUE, NOW(), NOW()),
+				(4, 'User', 'Basic user role for ATS system.', TRUE, NOW(), NOW());
+			""");
+
+		await ATSDatabaseExtensions.SyncIdentitySequencesAsync(_dbContext);
+	}
+
+	private async Task SeedModulesWithExplicitIdsAsync()
+	{
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""
+			INSERT INTO ats."ModuleDetails"
+				("ModuleId", "ModuleName", "ModuleDescription", "IsActive", "CreatedAt", "UpdatedAt")
+			SELECT
+				seeded_id,
+				CONCAT('Seeded Module ', seeded_id),
+				'Seeded with an explicit id',
+				TRUE,
+				NOW(),
+				NOW()
+			FROM generate_series(1, 15) AS seeded_id;
+			""");
+
+		await ATSDatabaseExtensions.SyncIdentitySequencesAsync(_dbContext);
 	}
 
 	#endregion

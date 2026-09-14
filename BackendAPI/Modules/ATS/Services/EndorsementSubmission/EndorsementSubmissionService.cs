@@ -143,7 +143,16 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.HashToken = HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
-		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
+
+		// Manual screening is the only type that gets an application form. A data order
+		// already carries the candidate's identity from order entry, so there is nothing
+		// to ask them for - and every email column stays NULL rather than Pending.
+		// Pending would be a lie in two directions: it tells a requestor an invitation is
+		// on its way, and it describes a queue position this row does not hold, since the
+		// worker claims "AutoChasing" IS TRUE and would never advance it.
+		var sendsApplicationForm = emailInvitationRequest.AutoChasing is true;
+
+		emailInvitationRequest.EmailSentStatus = sendsApplicationForm ? EmailStatus.Pending : null;
 		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
 
@@ -172,6 +181,10 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// no longer exists. That window is the price of sending inline; the alternative is
 		// queueing it for EmailNotificationProcessor, which is how bulk orders work.
 		//
+		// A data order skips the send and the status update entirely, so its transaction is
+		// just the insert and the history entry. It is still queued for OMS ticketing - only
+		// the candidate-facing email is suppressed, not the order itself.
+		//
 		// TransactionRunner owns the begin / SaveChanges / commit / rollback, and rethrows
 		// untouched so CustomExceptionHandler still decides the status code.
 		await TransactionRunner.RunAsync(
@@ -180,15 +193,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			{
 				await _atsRepository.AddEmailInvitationRequestAsync(emailInvitationRequest);
 
-				await SendApplicationFormToUserEmailAsync(
-					emailInvitationRequestDTO.EmailAddress!,
-					subjectName,
-					applicationFormLink,
-					emailInvitationRequest.Requestor,
-					emailInvitationRequest.ClientId);
+				if (sendsApplicationForm)
+				{
+					await SendApplicationFormToUserEmailAsync(
+						emailInvitationRequestDTO.EmailAddress!,
+						subjectName,
+						applicationFormLink,
+						emailInvitationRequest.Requestor,
+						emailInvitationRequest.ClientId);
 
-				await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
-					emailInvitationRequest.EmailInvitationID);
+					await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
+						emailInvitationRequest.EmailInvitationID);
+				}
 
 				await _orderHistoryService.RecordAsync(
 					emailInvitationRequest.EmailInvitationID,
@@ -491,6 +507,17 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		{
 			_logger.LogWarning("Resend denied for out-of-scope invitation: {@Context}", logContext);
 			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
+		}
+
+		// A data order was deliberately never emailed, so there is nothing to resend -
+		// and doing it would deliver the application form the screening type exists to
+		// avoid. The dialog already hides the button; this takes a caller-supplied id, so
+		// the rule is enforced where it cannot be skipped by calling the endpoint directly.
+		if (invitation.AutoChasing is not true)
+		{
+			_logger.LogWarning("Resend denied for a non-manual invitation: {@Context}", logContext);
+			throw new BadRequestException(
+				"This order does not use manual screening, so no application form is sent to the candidate.");
 		}
 
 		var token = _secureToken.GenerateSecureToken();

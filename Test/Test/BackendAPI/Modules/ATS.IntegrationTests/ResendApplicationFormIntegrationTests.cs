@@ -55,6 +55,8 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			// Manual screening: the only type that has an application form to resend.
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"
@@ -103,6 +105,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Premium",
 			RushNormal = "Rush",
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"
@@ -147,6 +150,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"
@@ -188,6 +192,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"
@@ -258,6 +263,94 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 
 		// Assert
 		await act.Should().ThrowAsync<Exception>();
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldThrowBadRequest_WhenOrderUsesDataScreening()
+	{
+		// Arrange
+		// A data order is never emailed, so there is nothing to resend - and resending
+		// would deliver the very application form this screening type exists to avoid.
+		// The dialog hides the button, but the endpoint takes a caller-supplied id.
+		var emailInvitation = new EmailInvitationRequest
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Data",
+			LastName = "Tester",
+			EmailAddress = "data.resend@example.com",
+			MobileNumber = "09171234567",
+			HashToken = "data-hash-token",
+			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
+			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
+			PackageId = DefaultPackageId,
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			AutoChasing = false,
+			// Exactly how the create path leaves a data order: no email state at all.
+			EmailSentStatus = null,
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Pending Candidate Info"
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<BadRequestException>()
+			.WithMessage("This order does not use manual screening, so no application form is sent to the candidate.");
+
+		// The rejection must leave no trace: no reissued token, and no email queued.
+		var untouched = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.SingleAsync(x => x.EmailInvitationID == emailInvitation.EmailInvitationID);
+
+		untouched.HashToken.Should().Be("data-hash-token");
+		untouched.EmailSentStatus.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task ResendApplicationForm_ShouldThrowBadRequest_WhenScreeningTypeIsUnknown()
+	{
+		// Arrange
+		// Null is neither Manual nor Data, and an unclassified order cannot prove it is
+		// manual - the same reasoning the email worker's "AutoChasing" IS TRUE claim uses.
+		var emailInvitation = new EmailInvitationRequest
+		{
+			EmailInvitationID = Guid.CreateVersion7(),
+			FirstName = "Unclassified",
+			LastName = "Tester",
+			EmailAddress = "unclassified.resend@example.com",
+			MobileNumber = "09171234567",
+			HashToken = "unclassified-hash-token",
+			HashTokenCreatedAt = DateTime.UtcNow.AddDays(-5),
+			HashTokenExpiration = DateTime.UtcNow.AddDays(-4),
+			PackageId = DefaultPackageId,
+			SelectPackage = "Standard",
+			RushNormal = "Normal",
+			AutoChasing = null,
+			EmailSentStatus = "Done",
+			ApplicationFormStatus = "Pending",
+			OrderStatus = "Application Withdrawn"
+		};
+
+		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitation);
+		await _dbContext.SaveChangesAsync();
+		_dbContext.ChangeTracker.Clear();
+
+		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<BadRequestException>();
 	}
 
 	#endregion
@@ -365,6 +458,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"
@@ -453,6 +547,10 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			RushNormal = "Normal",
 			ClientId = clientId,
 			RequestorId = requestorId,
+			// The scope tests are about who may resend, not about screening type, so
+			// these are manual orders: the resend itself must be otherwise allowed for
+			// a NotFound to prove the scope check is what rejected it.
+			AutoChasing = true,
 			EmailSentStatus = "Done",
 			ApplicationFormStatus = "Pending",
 			OrderStatus = "Application Withdrawn"

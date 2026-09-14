@@ -269,7 +269,11 @@ public sealed class BulkUploadMonitoringService : IBulkUploadMonitoringService
 		csvWriter.WriteField(subject.MiddleInitial);
 		csvWriter.WriteField(subject.EmailAddress);
 		csvWriter.WriteField(subject.MobileNumber);
-		csvWriter.WriteField(subject.EmailSentStatus);
+
+		// A data-screening order has no email status at all. An empty cell would read as
+		// missing data in a spreadsheet, so it is spelled out.
+		csvWriter.WriteField(
+			string.IsNullOrEmpty(subject.EmailSentStatus) ? "Not Applicable" : subject.EmailSentStatus);
 		csvWriter.WriteField(FormatTimestamp(subject.EmailSentAt));
 		csvWriter.WriteField(subject.EmailSendAttempts);
 		csvWriter.WriteField(subject.ApplicationFormStatus);
@@ -365,6 +369,7 @@ public sealed class BulkUploadMonitoringService : IBulkUploadMonitoringService
 					Status = row.Status,
 					DateCreated = row.DateCreated,
 					ClaimedAt = row.ClaimedAt,
+					AutoChasing = row.AutoChasing,
 					SubjectCount = rollup?.SubjectCount ?? 0,
 					EmailsSent = rollup?.EmailsSent ?? 0,
 					EmailsFailed = rollup?.EmailsFailed ?? 0,

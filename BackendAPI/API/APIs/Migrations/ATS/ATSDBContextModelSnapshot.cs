@@ -844,7 +844,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmailSentStatus")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 

@@ -25,7 +25,10 @@ order captures the candidate's identity when no application form will be sent:
    stored on `ats.BulkUploadFileDetails.AutoChasing`, and stamped onto every order
    the file creates. A data file's CSV must carry three extra columns.
 6. **Only manual orders are emailed an application form** — the invitation worker
-   claims `AutoChasing IS TRUE` rows and nothing else.
+   claims `AutoChasing IS TRUE` rows and nothing else, the single-order path skips
+   its inline send, and resend is refused for anything that is not manual.
+7. A data order's **email columns are all `NULL`** — it holds no position in the
+   send queue, so it has no status in it either.
 
 ## Value mapping
 
@@ -130,6 +133,80 @@ cannot prove it is manual, and emailing a data candidate an application form is 
 worse of the two mistakes. Legacy rows predating the column would therefore never be
 emailed, which is exactly what `20260914160000_BackfillLegacyAutoChasing` prevents.
 
+## No email means no email status
+
+The worker's claim filter was necessary but not sufficient. **The single-order path
+never went through the worker at all** — `InsertEmailInvitationRequestAsync` sent the
+application form inline, inside the create transaction, unconditionally. A data order
+placed through New Order was emailed a form the screening type exists to avoid, and
+came out of the transaction stamped `EmailSentStatus = Done`. Migration
+`20260914170000` clears those rows.
+
+The send is now guarded by the **snapshotted** `AutoChasing` (the package's value, not
+the caller's claim), and a data order is written with **every email column unset**:
+
+| Column | Manual | Data |
+|---|---|---|
+| `EmailSentStatus` | `Pending` → `Done` after the inline send | `NULL` |
+| `EmailSentAt` | set by the send | `NULL` |
+| `EmailClaimedAt` | set when the worker claims it | `NULL` |
+| `EmailSendAttempts` | incremented per attempt | `0` |
+
+`NULL`, not `Pending`. `Pending` is a claim about queue position — "sent shortly" —
+and it would be false in both directions: it tells a requestor an invitation is on its
+way, and it describes a place in a queue the row does not hold, because the worker's
+`AutoChasing IS TRUE` filter would never advance it. It would sit at `Pending`
+forever and be counted as in-flight on every dashboard. `NULL` says "not applicable",
+which is what is actually true.
+
+`EmailSendAttempts` is the one exception: it is a non-nullable `int` on the entity, so
+it stays `0` rather than `NULL`. Zero attempts is already the honest value.
+
+`20260914170000_ClearEmailColumnsForDataScreening` makes `EmailSentStatus` nullable
+(it was `NOT NULL`, which is why data orders had no choice but `Pending`) and clears
+all four columns together on `AutoChasing IS FALSE` rows — a `NULL` status beside a
+populated `EmailSentAt` would read as corruption. It excludes `NULL` deliberately:
+`20260914160000` classified every legacy row as manual, so anything still `NULL`
+arrived after that and cannot prove it is a data order.
+
+**Bulk was already correct about the send** — its rows go through the worker, which
+filters them out — but it too wrote `Pending`, so `BulkSubmissionProcessorService`
+now writes `EmailSentStatus = file.AutoChasing is true ? Pending : null`. Both paths
+write the same table and must agree.
+
+### Resend
+
+`ResendApplicationFormAsync` takes a caller-supplied id and is reachable from more
+than one screen, so hiding the dialog button is not enough — it rejects anything that
+is not manual with a `BadRequestException`, after the scope check. `AutoChasing is
+not true` covers `NULL` as well as `false`, matching the worker's claim: an
+unclassified order cannot prove it is manual.
+
+### Reading a NULL status
+
+Four surfaces render the status, and an unhandled `NULL` is misleading on each:
+
+- **Subjects dialog badge** — `null or ""` maps to "Not sent" with a dashed, muted
+  `is-none` style. Without it the `_` arm catches `NULL` and shows "Unknown", which
+  means "a status outside the vocabulary" and reads as an anomaly.
+- **Resend button** — hidden for a blank status, with
+  `GetResendBlockedReason` explaining it is a data screening order.
+- **Bulk dashboard email column** — a data file shows an em dash instead of a
+  progress bar. `AutoChasing` is plumbed through `BulkUploadRowDTO` →
+  `BulkUploadListDTO` → the UI DTO for this; the bar's permanent `0/N` would read as
+  a stalled queue.
+- **Bulk dashboard Screening column** — the dash needs an explanation on the same
+  row, so the board carries a **Screening** column (Manual / Data / Not set) beside
+  Type. Same vocabulary and null handling as the package management board, so a file
+  and the package it was placed under read identically. `Not set` is dashed like the
+  "Not sent" badge: both mean "no value applies", and neither resolves on its own.
+- **Subjects dialog subtitle** — appends "Manual screening" / "Data screening" after
+  package and order type. Without it, a data file opens onto a list where every badge
+  reads "Not sent" and nothing on screen says why. Omitted when unknown; the board's
+  Screening column already reports that case.
+- **CSV export** — writes `"Not Applicable"`, because an empty cell in a spreadsheet
+  reads as missing data.
+
 ## A migration that grew after it shipped
 
 `20260914150000` originally added only the four `EmailInvitationRequest` columns; the
@@ -167,8 +244,29 @@ name and cannot fall back to a default.
    — orders are created carrying the identity values, and **no invitation email is
    sent**. The same file against a Manual package sends invitations and leaves the
    identity columns null.
-6. Tests: `dotnet test Test/Test/Test.csproj --filter
-   "FullyQualifiedName~InsertEmailInvitationRequest|FullyQualifiedName~OrderInputValidator|FullyQualifiedName~Bulk|FullyQualifiedName~EmailNotification|FullyQualifiedName~CsvPreviewParser"`.
+6. Place a single Data order and check the row: all of `EmailSentStatus`,
+   `EmailSentAt` and `EmailClaimedAt` are `NULL`, `EmailSendAttempts` is `0`, and
+   **no email arrives**. `OrderStatus` is still `Pending Candidate Info` and
+   `TicketStatus` is `Pending` — only the candidate-facing email is suppressed, not
+   the order or its OMS ticket.
+   ```sql
+   SELECT "AutoChasing", "EmailSentStatus", "EmailSentAt", "EmailClaimedAt",
+          "EmailSendAttempts", "TicketStatus"
+   FROM ats."EmailInvitationRequest" ORDER BY "OrderCreatedAt" DESC LIMIT 1;
+   ```
+7. Open that order's file in the subjects dialog: the badge reads **Not sent**
+   (dashed/muted, not "Unknown"), and the Resend button is absent with the tooltip
+   naming data screening. The dialog subtitle names the screening type. The bulk
+   dashboard shows **Data** in the Screening column and an em dash in Emails, not a
+   `0/N` bar. Export the file — the Email Sent Status column reads `Not Applicable`.
+8. On the bulk board, a manual file reads **Manual** with a progress bar, and a file
+   uploaded before screening types existed reads **Not set** in a dashed pill. Check
+   the loading skeleton and the "no uploads" empty state still span the full table —
+   both are driven by `ColumnCount`, which must match the header count (8).
+9. Resend against a data order id via the endpoint directly → 400, and the row's
+   `HashToken` is unchanged.
+10. Tests: `dotnet test Test/Test/Test.csproj --filter
+   "FullyQualifiedName~InsertEmailInvitationRequest|FullyQualifiedName~OrderInputValidator|FullyQualifiedName~Bulk|FullyQualifiedName~EmailNotification|FullyQualifiedName~CsvPreviewParser|FullyQualifiedName~ResendApplicationForm"`.
 
 ## What not to do
 
@@ -194,3 +292,21 @@ name and cannot fall back to a default.
 - Do not re-enable CsvHelper's `HeaderValidated`/`MissingFieldFound` in
   `BulkSubmissionProcessorService` — they cannot express a column set that depends on
   the file's screening type, and turning them on rejects every manual file.
+- Do not give a data order `EmailSentStatus = Pending` to avoid the `NULL`. Nothing
+  ever advances it: the worker claims `AutoChasing IS TRUE`, so the row would sit at
+  `Pending` permanently and be counted as an invitation still in flight.
+- Do not restore `EmailSentStatus` to `NOT NULL`. That constraint is the reason data
+  orders were mislabelled in the first place.
+- Do not rely on the worker's claim filter alone to suppress the send. The single
+  order path emails inline inside the create transaction and never reaches the
+  worker — that is the bug `20260914170000` cleaned up after.
+- Do not guard the send on `emailInvitationRequestDTO.AutoChasing`. Use the value
+  snapshotted from the package; the caller's claim is the thing being validated, not
+  the authority.
+- Do not treat a blank `EmailSentStatus` as "Unknown" in the UI. Unknown means a
+  status outside the vocabulary and signals an anomaly; blank means no email applies.
+- Do not add or remove a column on the bulk board without updating `ColumnCount` on
+  its `TableComponent`. It drives the loading skeleton and the empty-state colspan,
+  and a stale value only shows up as a short skeleton row while data is loading.
+- Do not render an unclassified file as "Manual" on the board. The label follows the
+  same rule as everything else here: `NULL` is neither type.

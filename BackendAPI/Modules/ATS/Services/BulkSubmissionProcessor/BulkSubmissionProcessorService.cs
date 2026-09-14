@@ -246,7 +246,13 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						DateOfBirth = dateOfBirth,
 						SSSNumber = string.IsNullOrWhiteSpace(row.SSSNumber) ? null : row.SSSNumber.Trim(),
 						TINNumber = string.IsNullOrWhiteSpace(row.TINNumber) ? null : row.TINNumber.Trim(),
-						EmailSentStatus = EmailStatus.Pending,
+
+						// Only a manual order joins the email queue. A data row is never
+						// emailed, so NULL says "not applicable" rather than parking it at
+						// Pending, which the worker's "AutoChasing" IS TRUE claim would
+						// never advance - and which the dashboard would count as an
+						// invitation still on its way.
+						EmailSentStatus = file.AutoChasing is true ? EmailStatus.Pending : null,
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,

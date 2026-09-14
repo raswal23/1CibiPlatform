@@ -54,7 +54,7 @@
                     EnableSearch="true"
                     SearchLabel=""
                     SearchPlaceholder="Search file, requestor or package"
-                    ColumnCount="7"
+                    ColumnCount="8"
                     RowsPerPage="10"
                     RowsClickable="true"
                     OnRowClick="OnUploadRowClickedAsync"
@@ -85,6 +85,7 @@
             <MudTh>Requestor</MudTh>
             <MudTh>Package</MudTh>
             <MudTh>Type</MudTh>
+            <MudTh>Screening</MudTh>
             <MudTh>Subjects</MudTh>
             <MudTh>Emails</MudTh>
             <MudTh>Status</MudTh>
@@ -119,6 +120,15 @@
                 </span>
             </MudTd>
 
+            @* Sits beside Type because both classify the file, and it explains the
+               Emails cell to its right: a Data file shows a dash there by design. *@
+            <MudTd DataLabel="Screening">
+                <span class="bulk-screening-type @GetScreeningTypeClass(upload.AutoChasing)"
+                      title="@GetScreeningTypeHint(upload.AutoChasing)">
+                    @GetScreeningTypeLabel(upload.AutoChasing)
+                </span>
+            </MudTd>
+
             <MudTd DataLabel="Subjects">
                 @if (HasSubjects(upload))
                 {
@@ -131,7 +141,7 @@
             </MudTd>
 
             <MudTd DataLabel="Emails">
-                @if (HasSubjects(upload))
+                @if (SendsInvitations(upload))
                 {
                     <div class="bulk-email-progress">
                         <span class="bulk-email-figures">
@@ -164,6 +174,11 @@
                             </span>
                         }
                     </div>
+                }
+                else if (HasSubjects(upload) && upload.AutoChasing == false)
+                {
+                    <span class="ats-cell-muted"
+                          title="Data screening: no application form is emailed to these candidates">—</span>
                 }
                 else
                 {

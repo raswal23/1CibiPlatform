@@ -44,6 +44,11 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 		result.Should().NotBeNull();
 		result.isAdded.Should().BeTrue();
 
+		// The sent-status update is an ExecuteUpdateAsync, which writes straight to the
+		// database and leaves the tracked instance behind. Read fresh or this asserts
+		// against the pre-send snapshot.
+		_dbContext.ChangeTracker.Clear();
+
 		var persisted = _dbContext.EmailInvitationRequests
 			.SingleOrDefault(x => x.EmailAddress == dto.EmailAddress);
 		persisted.Should().NotBeNull();
@@ -54,6 +59,11 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 		persisted.DateOfBirth.Should().BeNull();
 		persisted.SSSNumber.Should().BeNull();
 		persisted.TINNumber.Should().BeNull();
+
+		// Manual screening sends the application form inline, so the order is already
+		// marked sent by the time the transaction commits.
+		persisted.EmailSentStatus.Should().Be("Done");
+		persisted.EmailSentAt.Should().NotBeNull();
 	}
 
 	[Fact]
@@ -91,6 +101,88 @@ public class InsertEmailInvitationRequestIntegrationTests : BaseIntegrationTest
 		persisted.DateOfBirth.Should().Be(new DateOnly(1990, 1, 15));
 		persisted.SSSNumber.Should().Be("0123456789");
 		persisted.TINNumber.Should().Be("123456789012");
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldNotSendTheApplicationForm_ForDataScreening()
+	{
+		// The candidate's identity was captured at order entry, so there is no form to
+		// ask them to fill in. This used to email one anyway: the send was inline and
+		// unconditional, and the order came out of the transaction marked "Done".
+		var package = await SeedAssignedPackageAsync("No Email Data Package", autoChasing: false);
+
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "Silent",
+			LastName = "Tester",
+			EmailAddress = "silent.tester@example.com",
+			MobileNumber = "09171234567",
+			SelectPackage = package,
+			RushNormal = "Normal",
+			AutoChasing = false,
+			DateOfBirth = new DateOnly(1988, 6, 2),
+			SSSNumber = "0123456789",
+			TINNumber = "123456789012"
+		};
+
+		// Act
+		var result = await _sender.Send(new EmailInvitationRequestCommand(dto));
+
+		// Assert
+		result.isAdded.Should().BeTrue();
+
+		// Read past the change tracker: the assertion is that the column itself holds
+		// NULL, which it could not before this feature made it nullable.
+		_dbContext.ChangeTracker.Clear();
+
+		var persisted = _dbContext.EmailInvitationRequests
+			.SingleOrDefault(x => x.EmailAddress == dto.EmailAddress);
+		persisted.Should().NotBeNull();
+
+		// Every email column stays unset. Null rather than Pending: the order holds no
+		// position in the queue the email worker claims from.
+		persisted!.EmailSentStatus.Should().BeNull();
+		persisted.EmailSentAt.Should().BeNull();
+		persisted.EmailClaimedAt.Should().BeNull();
+		persisted.EmailSendAttempts.Should().Be(0);
+
+		// The order itself is unaffected - only the candidate-facing email is suppressed.
+		persisted.OrderStatus.Should().Be("Pending Candidate Info");
+		persisted.ApplicationFormStatus.Should().Be("Pending");
+
+		// Still queued for OMS ticketing, which has no screening-type filter.
+		persisted.TicketStatus.Should().Be("Pending");
+		persisted.IsTicketed.Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task InsertEmailInvitationRequest_ShouldLeaveADataOrderUnclaimableByTheEmailWorker()
+	{
+		// Belt and braces on the rule above: even if a data order somehow reached the
+		// queue, the worker's "AutoChasing" IS TRUE claim must step over it.
+		var package = await SeedAssignedPackageAsync("Unclaimable Data Package", autoChasing: false);
+
+		var dto = new EmailInvitationRequestDTO
+		{
+			FirstName = "Unclaimed",
+			LastName = "Tester",
+			EmailAddress = "unclaimed.tester@example.com",
+			MobileNumber = "09171234567",
+			SelectPackage = package,
+			RushNormal = "Normal",
+			AutoChasing = false,
+			DateOfBirth = new DateOnly(1991, 4, 9),
+			SSSNumber = "0123456789",
+			TINNumber = "123456789012"
+		};
+
+		await _sender.Send(new EmailInvitationRequestCommand(dto));
+
+		// Act
+		var claimed = await _atsRepository.GetPendingEmailInvitationRequestsAsync();
+
+		// Assert
+		claimed.Should().NotContain(invitation => invitation.EmailAddress == dto.EmailAddress);
 	}
 	#endregion
 

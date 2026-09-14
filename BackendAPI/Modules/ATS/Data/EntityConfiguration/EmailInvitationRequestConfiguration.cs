@@ -91,9 +91,13 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.HashTokenExpiration)
 			   .IsRequired(true);
 
+		// Nullable because a data-screening order is never emailed: there is no
+		// application form to send, so it has no place in the email queue at all.
+		// NULL is "not applicable", which is not the same as Pending - the worker
+		// would never advance a Pending data row, leaving it queued forever.
 		builder.Property(e => e.EmailSentStatus)
 			   .HasMaxLength(255)
-			   .IsRequired(true);
+			   .IsRequired(false);
 
 		builder.Property(e => e.ApplicationFormStatus)
 			   .HasMaxLength(255)

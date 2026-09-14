@@ -180,6 +180,12 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		emailInvitations[0].DateOfBirth.Should().Be(new DateOnly(1990, 3, 15));
 		emailInvitations[0].SSSNumber.Should().Be("1234567890");
 		emailInvitations[0].TINNumber.Should().Be("123456789012");
+
+		// Null, not "Pending": this row never joins the email queue, and Pending would
+		// count it as an invitation still on its way on every dashboard.
+		emailInvitations[0].EmailSentStatus.Should().BeNull();
+		emailInvitations[0].EmailSentAt.Should().BeNull();
+		emailInvitations[0].EmailClaimedAt.Should().BeNull();
 	}
 
 	[Fact]

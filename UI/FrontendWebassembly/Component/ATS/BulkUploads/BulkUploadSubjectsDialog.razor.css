@@ -334,6 +334,14 @@
         color: var(--text-3);
     }
 
+    /* Data screening: no email applies. Deliberately quieter than is-pending, which
+       promises an invitation that is still coming. */
+    .ats-bulk-badge.is-none {
+        background: transparent;
+        color: var(--c-fg-muted);
+        border: 1px dashed var(--c-border);
+    }
+
 ::deep .ats-bulk-subjects-actions-header,
 ::deep .ats-bulk-subjects-actions-cell {
     text-align: right;
