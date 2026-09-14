@@ -187,6 +187,12 @@ public class AtsEmailAccountManagementService : IAtsEmailAccountManagementServic
 
 			await _repository.UpdateAsync(entity, cancellationToken);
 
+			// The cached SMTP context carries its own copy of DisplayName (see BuildContextAsync),
+			// read once and reused on every send. Without this, a display-name-only edit writes
+			// the new value to the row but every message keeps going out under the old name until
+			// the process restarts or a later credential change happens to invalidate it.
+			await _poolRegistry.InvalidateAsync(entity.AtsEmailAccountId);
+
 			_logger.LogInformation(
 				"Updated sender account {AccountId} ({Email}) without re-verification: no credential field changed.",
 				entity.AtsEmailAccountId,
