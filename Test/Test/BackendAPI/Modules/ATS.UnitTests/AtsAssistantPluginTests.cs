@@ -456,6 +456,7 @@ public class AtsAssistantPluginTests
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<string>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<int>(),
@@ -506,6 +507,7 @@ public class AtsAssistantPluginTests
 				"Failure",
 				null,
 				null,
+				It.IsAny<string>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<int>(),
@@ -557,12 +559,13 @@ public class AtsAssistantPluginTests
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<string>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<int>(),
 				It.IsAny<CancellationToken>()))
-			.Callback<string?, string?, string?, DateTime?, DateTime?, int, CancellationToken>(
-				(_, _, _, start, end, _, _) =>
+			.Callback<string?, string?, string?, string?, DateTime?, DateTime?, int, CancellationToken>(
+				(_, _, _, _, start, end, _, _) =>
 				{
 					capturedStart = start;
 					capturedEnd = end;
@@ -595,6 +598,7 @@ public class AtsAssistantPluginTests
 				It.IsAny<string>(),
 				null,
 				null,
+				It.IsAny<string>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<int>(),
@@ -616,6 +620,7 @@ public class AtsAssistantPluginTests
 				It.IsAny<string>(),
 				null,
 				null,
+				It.IsAny<string>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<DateTime?>(),
 				It.IsAny<int>(),

@@ -3,8 +3,9 @@
 How invitation emails reach candidates without tripping the provider's rate limits, and why
 the design looks the way it does.
 
-Related: `docs/ats-notifications.md` (what raises the notifications this job completes),
-`docs/feature-development-guide.md`.
+Related: `docs/ats-email-accounts.md` (the registry of sender accounts this page sends
+through, and how one is registered), `docs/ats-notifications.md` (what raises the
+notifications this job completes), `docs/feature-development-guide.md`.
 
 ---
 
@@ -63,39 +64,58 @@ for a login throttle.
 ```text
 EmailNotificationBackgroundJob (Quartz, every 5s, DisallowConcurrentExecution)
   -> EmailNotificationProcessorService.ProcessForPendingStatusAsync
-       -> [skip entirely if SmtpRateLimiter.IsThrottled]
+       -> [skip entirely if NO registered account is sendable]
        -> claim slice from PostgreSQL (FOR UPDATE SKIP LOCKED)
        -> per row: SendApplicationFormToUserEmailWithResultAsync
-            -> ATSEmailService.SendATSEmailWithResultAsync
-                 -> SmtpRateLimiter.WaitForSlotAsync        (paces MESSAGES)
-                 -> SmtpConnectionPool.AcquireAsync
-                      -> reuse an idle session, or:
-                      -> refuse if IsLoginThrottled
-                      -> SmtpRateLimiter.WaitForLoginSlotAsync  (paces LOGINS)
-                      -> connect + authenticate, classified on failure
-                 -> MailKit SmtpClient.SendAsync
-                 -> classify: outcome + whether the SESSION survives
+            -> ATSEmailService.SendATSEmailWithResultAsync   <- the switcher loop
+                 -> registry.GetNextSendableAccountAsync(already tried)
+                 -> [no account left? return Throttled, defer the row]
+                 -> SendThroughAccountAsync(accountId)
+                      -> registry.GetContextAsync  (that account's pool + limiter)
+                      -> registry.Lease(accountId) (blocks edit/delete mid-send)
+                      -> SmtpRateLimiter.WaitForSlotAsync        (paces MESSAGES)
+                      -> SmtpConnectionPool.AcquireAsync
+                           -> reuse an idle session, or:
+                           -> refuse if IsLoginThrottled
+                           -> SmtpRateLimiter.WaitForLoginSlotAsync  (paces LOGINS)
+                           -> connect + authenticate, classified on failure
+                      -> MailKit SmtpClient.SendAsync
+                      -> classify: outcome + SCOPE + whether the SESSION survives
+                      -> registry.ReportSuccessAsync / ReportFailureAsync
+                 -> [CanRetryOnAnotherAccount? loop to the next account]
        -> write Sent / Error, release Deferred
 ```
 
-### Three bounds, deliberately separate
+### Three bounds, deliberately separate — now per account
 
-| Component | Bounds | Default |
-|---|---|---|
-| `SmtpConnectionPool` | Concurrent SMTP **sessions** | 2 |
-| `SmtpRateLimiter.WaitForSlotAsync` | **Messages** per second | 0.9 |
-| `SmtpRateLimiter.WaitForLoginSlotAsync` | Seconds between **logins** | 5 |
+| Component | Bounds | Default | Scope |
+|---|---|---|---|
+| `SmtpConnectionPool` | Concurrent SMTP **sessions** | 2 | one per account |
+| `SmtpRateLimiter.WaitForSlotAsync` | **Messages** per second | 0.9 | one per account |
+| `SmtpRateLimiter.WaitForLoginSlotAsync` | Seconds between **logins** | 5 | one per account |
 
 Keeping these apart is the central decision. The pool hides latency. The send limiter keeps
 you under the volume ceiling. The login limiter keeps you under the *authentication* ceiling
 — a budget the other two cannot see.
 
-Because the limiters are global, **raising the connection count cannot raise either rate**,
-so tuning for speed can never re-create either incident.
+Because a limiter cannot be outrun by concurrency, **raising the connection count cannot
+raise either rate**, so tuning for speed can never re-create either incident.
 
-All are **singletons**: they bound resources belonging to the *sending account*, not to a
-request. A per-scope pool is not a pool; a per-scope limiter would let two concurrent passes
-each run at full rate.
+**They are still singletons, but the sender is no longer the process.** All three bound
+resources belonging to *one sending mailbox*, and there are now several registered mailboxes
+(see `docs/ats-email-accounts.md`). `SmtpAccountPoolRegistry` — itself a singleton — holds one
+`(pool, limiter)` pair per account id, built on first use and disposed when that account is
+edited or deleted. Every rule below still holds *within* an account; only the word "sender"
+narrowed from "this process" to "this mailbox".
+
+The limits are deliberately **not** shared across accounts. A provider budgets per mailbox, so
+one shared 0.9/s across two Gmails would halve the throughput that registering a second Gmail
+exists to buy.
+
+A per-scope pool is still not a pool, and a per-scope limiter would still let two concurrent
+passes each run at full rate. That is why the registry is a singleton and takes
+`IServiceScopeFactory` rather than injecting `ATSDBContext` — a singleton cannot hold a scoped,
+non-thread-safe `DbContext`.
 
 ### A failed send does not discard the session
 
@@ -123,22 +143,67 @@ surfaces as `SmtpConnectFailedException` (already classified) or
 | `Sent` | Server accepted | Row marked `Done` |
 | `Permanent` | 5xx, bad credentials | Fails on the **first attempt** — no retries |
 | `Transient` | 4xx, socket drop, timeout | Retried with exponential back-off |
-| `Throttled` | 421, 454, "try again later" | **The whole pass stops** |
+| `Throttled` | 421, 454, "try again later" | **This account stops**; the message moves on |
 
-### A throttle stops everything
+### Every result also carries a *scope*
 
-When any send or login comes back `Throttled`:
+The outcome says what the server decided. `EmailFailureScope` says **who it was about**, and
+that second axis is what makes multi-account sending possible at all.
 
-1. `SmtpRateLimiter.ReportThrottled` parks the sender — `ThrottleBackoffSeconds` (10 min)
-   for a send throttle, `LoginThrottleBackoffSeconds` (30 min) for a login throttle, because
-   auth limits are enforced over a wider window.
-2. A `CancellationTokenSource` signals every queued task in the pass to stand down.
-3. Those rows go back to `Pending` via `ReleaseEmailInvitationClaimsAsync`, which
-   deliberately **does not increment `EmailSendAttempts`**. They were never offered to the
+| Scope | Meaning | Example |
+|---|---|---|
+| `Message` | About this recipient. The account is fine. | `550 no such mailbox` |
+| `Account` | About the sending mailbox. Says nothing about the recipient. | `454`, `421`, `535 bad credentials` |
+
+Only `Account`-scoped failures reach the breaker. Counting a `550` would let one bulk upload
+of typo'd addresses retire every registered sender in minutes — the queue would have nowhere
+left to send, with nothing actually wrong. That rule lives in
+`SmtpAccountPoolRegistry.ReportFailureAsync` and is the one most likely to be "simplified"
+wrongly later; `docs/ats-email-accounts.md` has the full breaker table.
+
+### A throttle stops one account, not the pass
+
+When a send or login comes back `Throttled`:
+
+1. That account's `SmtpRateLimiter.ReportThrottled` parks **it** —
+   `ThrottleBackoffSeconds` (10 min) for a send throttle, `LoginThrottleBackoffSeconds`
+   (30 min) for a login throttle, because auth limits are enforced over a wider window. The
+   same cooldown is written through to `CoolingDownUntil` on the row, so a restart cannot
+   readmit an account the provider is still throttling.
+2. The switcher asks the registry for the next account that has not already refused **this
+   message** and sends it there, inside the same call. A throttle is refused before the body
+   is accepted, so re-sending delivers the invitation exactly once.
+3. Only when *every* registered account has refused does `SendATSEmailWithResultAsync` return
+   `Throttled`. At that point a `CancellationTokenSource` signals every queued task in the
+   pass to stand down — the remaining rows would walk the same empty list to the same answer.
+4. Those rows go back to `Pending` via `ReleaseEmailInvitationClaimsAsync`, which
+   deliberately **does not increment `EmailSendAttempts`**. They were never accepted by a
    server, so charging them an attempt would retire a valid address after five throttles
    without a single real delivery failure.
-4. Subsequent ticks return immediately while `IsThrottled` is true, without claiming
-   anything.
+5. `RaiseAccountsExhaustedAsync` notifies the ATS administrators once per pass, not once per
+   row. Otherwise a single outage buries the bell under hundreds of identical entries.
+6. Subsequent ticks call `HasSendableAccountAsync` **before claiming anything** and return
+   immediately while the answer is no.
+
+**A transient is the exception, and it is deliberate.** A socket drop or a timeout counts
+against the account's breaker, but the *message* does not move to another account — it is
+deferred to a later pass instead. A timeout can fire after the provider already accepted the
+message (that is how a candidate received the same invitation twice, in incident 1), so
+resending it elsewhere in the same breath would turn a rare duplicate into a reliable one.
+The predicate is `EmailDeliveryResult.CanRetryOnAnotherAccount`, which is narrower than
+`IsAccountFault` for exactly this reason.
+
+### Exhaustion is reported as `Throttled`, never as the last real failure
+
+When the switcher runs out of accounts it returns `Throttled` with the last account's message
+text — it does **not** return that account's own outcome.
+
+This looks like lost information and is the opposite. `Throttled` is the only outcome meaning
+"defer this row without charging an attempt". Three accounts whose app passwords have expired
+each answer `Permanent`; returning that verbatim would have the processor retire perfectly
+valid candidate addresses on the strength of our own misconfiguration. The provider's wording
+still travels in the message, because "raise the daily limit" and "the password is wrong" need
+very different responses from whoever reads the log.
 
 ## 4. Configuration
 
@@ -156,11 +221,20 @@ absent section is valid — the same convention as `AtsNotifications` and `AtsAu
 | `RetryBaseDelaySeconds` | 2 | First back-off; doubles per attempt |
 | `ThrottleBackoffSeconds` | 600 | Pause after a send throttle |
 | `LoginThrottleBackoffSeconds` | 1800 | Pause after a login throttle |
+| `ConsecutiveFailureThreshold` | 3 | Transients in a row before an account leaves rotation |
+| `TransientFailureCooldownSeconds` | 900 | How long a tripped breaker keeps it out |
+| `DefaultDailySendLimit` | 450 | Applied to a new account when none is given |
+| `QuotaWindowHours` | 24 | Window the consumption figure is counted over |
+| `SendLogRetentionHours` | 48 | How long a send-log row is kept |
 
-The defaults come from the incidents: the provider accepted ~1.75 messages/second before
-refusing, so 0.9 is about half the observed ceiling. That clears 200 invitations in roughly
-**3.7 minutes** — slower per message than the old burst, but it finishes, which the burst
-did not.
+The last five belong to the account registry; they are documented in full, with the reasoning
+for each number, in `docs/ats-email-accounts.md`.
+
+The first group's defaults come from the incidents: the provider accepted ~1.75
+messages/second before refusing, so 0.9 is about half the observed ceiling. That clears 200
+invitations in roughly **3.7 minutes** — slower per message than the old burst, but it
+finishes, which the burst did not. Each registered account gets that rate of its own, so two
+accounts clear the same 200 in about half the time.
 
 ### Tuning for a faster provider
 
@@ -169,6 +243,12 @@ did not.
 transactional provider (SES, SendGrid, Postmark) is the real answer for volume. Raise
 `MaxSendsPerSecond` first and `MaxConcurrentConnections` second, in steps, watching for
 `421`s.
+
+Note the difference between the two ceilings. `MaxSendsPerSecond` is a **rate** — how fast one
+mailbox may send — and no number of accounts raises it for any single account. `DailySendLimit`
+is a **volume**, and that one *does* scale with the number of registered accounts: two verified
+Gmails give the queue roughly 900 recipients a day instead of 450. Registering another account
+is the cheap fix for volume; it is not a fix for rate.
 
 ## 5. How to verify it
 
@@ -193,8 +273,21 @@ The per-pass summary is the first thing to read:
 Email processing completed in 12.4s. Success: 11, Failed: 0, Deferred: 0
 ```
 
-`Deferred > 0` means a throttle was hit and the pass stood down — expected behaviour, not an
-error. Sustained `Deferred` means `MaxSendsPerSecond` is still too high.
+`Deferred > 0` now means something stronger than it used to: **every registered account
+refused**, not just one. A single throttled Gmail no longer defers anything — the switcher
+moves the message and the count stays at zero. Sustained `Deferred` means either
+`MaxSendsPerSecond` is still too high on every account, or the accounts are genuinely capped
+and another one needs registering.
+
+The switch itself is logged one line above it:
+
+```text
+Sender account 1 (ats@cibi.com) could not carry a message to x@y.com: 454 Too many
+login attempts. Trying the next account.
+```
+
+A steady trickle of these is the feature working. A flood of them for one account id means
+that account needs attention — read `LastFailureReason` in the Email Accounts table.
 
 **The login count is the leading indicator:**
 
@@ -221,10 +314,21 @@ should no longer appear from throttling alone.
 - **Do not discard a session because a send failed.** Only `421` and transport faults end a
   connection. This is the single most important invariant here — breaking it re-creates the
   `454` loop, where each recovery attempt causes the next failure.
-- **Do not add concurrency to go faster.** Both limiters are global; more connections send
-  no more messages per second. Raise `MaxSendsPerSecond` instead.
-- **Do not make the pool or the limiter scoped.** Both bound an account-wide resource. A
-  scoped pool re-authenticates per operation, which is the original bug.
+- **Do not add concurrency to go faster.** Each account's limiter bounds that account
+  globally; more connections send no more messages per second. Raise `MaxSendsPerSecond`, or
+  register another account.
+- **Do not make the pool or the limiter scoped, and do not share one set across accounts.**
+  They bound an account-wide resource. A scoped pool re-authenticates per operation, which is
+  the original bug; a shared limiter makes two mailboxes split one mailbox's budget.
+- **Do not resolve `SmtpConnectionPool` or `SmtpRateLimiter` from DI.** They are no longer
+  registered, because there is no longer exactly one of each. Ask
+  `ISmtpAccountPoolRegistry.GetContextAsync` for an account's pair.
+- **Do not count a `Message`-scoped failure against an account.** A `550` is about the
+  candidate's address. Counting it burns every registered sender on one batch of typos and
+  leaves the queue with nowhere to go.
+- **Do not widen `CanRetryOnAnotherAccount` to cover transients.** It looks like a missed
+  opportunity to keep the message moving. It is the duplicate-invitation bug: a transient can
+  fire after the provider accepted the message.
 - **Do not classify SMTP failures anywhere but `SmtpFailureClassifier`.** A throttle raised
   during authentication has to be recognised at the point the login happens; that is exactly
   what the first version missed.
@@ -236,6 +340,9 @@ should no longer appear from throttling alone.
 - **Do not retry a permanent rejection.** A 5xx is the server stating a fact.
 - **Do not shorten the Quartz interval to increase throughput.** It is a poll interval; the
   rate limiter is the real bound.
+- **Do not cache the account list or its health.** `AtsEmailAccountRepository` is uncached on
+  purpose: a cached view of which account is healthy routes messages to a mailbox that is
+  already cooling down.
 
 ## 7. Known limitations
 
@@ -246,10 +353,15 @@ clustering expects a **unique instance id per node** (`AUTO`); a fixed id means 
 container claims the same identity, so `qrtz_scheduler_state` holds one row no matter how
 many run.
 
-Both limiters are also per-process, so **N containers send at N × the configured rate**.
-With one deployment per environment this is correct today. Before running replicas, either
-set `SchedulerId = "AUTO"` and divide the rates by the replica count, or move the limiters
-behind a shared store.
+The limiters are per-process *per account*, so **N containers send at N × the configured rate
+for each account**. With one deployment per environment this is correct today. Before running
+replicas, either set `SchedulerId = "AUTO"` and divide the rates by the replica count, or move
+the limiters behind a shared store.
+
+The quota counter does not have this problem: it is a `SUM` over `ats."EmailSendLog"` in
+PostgreSQL, so every replica reads the same consumption figure. Only the in-memory halves — the
+rate buckets and the live cooldown — are per process, and the cooldown is written through to the
+row, so a second replica learns about it on its next selection rather than never.
 
 ### A permanent rejection still costs five passes
 

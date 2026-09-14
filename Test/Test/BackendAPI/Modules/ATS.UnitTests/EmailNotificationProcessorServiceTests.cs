@@ -1,4 +1,6 @@
-﻿using ATS.Data.Entities;
+﻿using ATS.Constants;
+using ATS.Data.Entities;
+using ATS.Services.EmailAccounts;
 using ATS.Services.EmailService;
 using FluentAssertions;
 using Moq;
@@ -261,7 +263,19 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 					It.IsAny<List<EmailInvitationRequest>>()),
 				Times.Never);
 
-			service.RateLimiter.IsThrottled.Should().BeTrue();
+			// And somebody is told. A capped sender defers rows silently and correctly - the
+			// queue looks calm and invitations simply stop - so the notification is the only
+			// thing that makes the outage visible.
+			service.MockNotificationService.Verify(
+				x => x.RaiseAsync(
+					It.IsAny<Guid>(),
+					AtsNotificationType.EmailAccountsExhausted,
+					It.IsAny<string>(),
+					It.IsAny<string>(),
+					It.IsAny<string>(),
+					It.IsAny<Guid?>(),
+					It.IsAny<CancellationToken>()),
+				Times.AtLeastOnce);
 		}
 		finally
 		{
@@ -270,14 +284,20 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	}
 
 	[Fact]
-	public async Task ProcessForPendingStatusAsync_ShouldSkipTheWholePass_WhileStillThrottled()
+	public async Task ProcessForPendingStatusAsync_ShouldSkipTheWholePass_WhenEveryAccountIsUnavailable()
 	{
-		// Arrange: a throttle raised by an earlier pass is still in force.
+		// Arrange: every registered account is capped, cooling down or unverified. Note this
+		// now takes ALL of them - one throttled account no longer stops the pass, because the
+		// switcher moves to the next one.
 		var fixture = new ATSServiceFixture();
 
 		try
 		{
-			fixture.RateLimiter.ReportThrottled(TimeSpan.FromMinutes(10));
+			fixture.MockPoolRegistry
+				.Setup(x => x.GetNextSendableAccountAsync(
+					It.IsAny<IReadOnlyCollection<int>>(),
+					It.IsAny<CancellationToken>()))
+				.ReturnsAsync((AtsEmailAccountSnapshot?)null);
 
 			// Act
 			await fixture.EmailNotificationProcessorService
@@ -288,6 +308,63 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 			fixture.MockRepository.Verify(
 				x => x.GetPendingEmailInvitationRequestsAsync(),
 				Times.Never);
+		}
+		finally
+		{
+			fixture.Dispose();
+		}
+	}
+
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldStillRunThePass_WhenOnlySomeAccountsAreUnavailable()
+	{
+		// Arrange: this is the whole point of the feature. The highest-priority account is
+		// capped, but a lower-priority one is healthy - so the pass must go ahead rather than
+		// standing down as it did when there was a single sender.
+		var fixture = new ATSServiceFixture();
+
+		try
+		{
+			var secondary = ATSServiceFixture.HealthyAccount with
+			{
+				AtsEmailAccountId = 2,
+				EmailAddress = "ats-secondary@example.com",
+				Priority = 2
+			};
+
+			fixture.MockPoolRegistry
+				.Setup(x => x.GetNextSendableAccountAsync(
+					It.IsAny<IReadOnlyCollection<int>>(),
+					It.IsAny<CancellationToken>()))
+				.ReturnsAsync(secondary);
+
+			fixture.MockRepository
+				.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+				.ReturnsAsync(new List<EmailInvitationRequest> { PendingRequest("first@example.com") });
+
+			fixture.MockEndorsementSubmissionService
+				.Setup(x => x.SendApplicationFormToUserEmailWithResultAsync(
+					It.IsAny<string>(),
+					It.IsAny<string>(),
+					It.IsAny<string>(),
+					It.IsAny<string>(),
+					It.IsAny<int?>(),
+					It.IsAny<CancellationToken>()))
+				.ReturnsAsync(EmailDeliveryResult.Sent);
+
+			// Act
+			await fixture.EmailNotificationProcessorService
+				.ProcessForPendingStatusAsync(CancellationToken.None);
+
+			// Assert: rows were claimed and sent through the surviving account.
+			fixture.MockRepository.Verify(
+				x => x.GetPendingEmailInvitationRequestsAsync(),
+				Times.Once);
+
+			fixture.MockRepository.Verify(
+				x => x.UpdateBulkEmailInvitationRequestForSentEmailAsync(
+					It.Is<List<EmailInvitationRequest>>(list => list.Count == 1)),
+				Times.Once);
 		}
 		finally
 		{

@@ -1,7 +1,9 @@
-﻿using ATS.Data.Context;
+﻿using ATS.Constants;
+using ATS.Data.Context;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.Services.AIAssistant;
+using ATS.Services.EmailAccounts;
 using ATS.Services.ApplicantSearchProjections;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.BulkUploadMonitoring;
@@ -108,8 +110,11 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 			if (_dbContext is not null)
 			{
 				// Table is in the ats schema
-				var sql = @"TRUNCATE TABLE 
-								ats.""AddressDetails"", 
+				var sql = @"TRUNCATE TABLE
+								ats.""EmailAccountOtp"",
+								ats.""EmailSendLog"",
+								ats.""EmailAccounts"",
+								ats.""AddressDetails"",
 								ats.""DocumentDetails"", 
 								ats.""EducationalBackground"", 
 								ats.""ReportDetails"",
@@ -148,6 +153,12 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 					VALUES ({0}, '182', TRUE, 0, NOW(), NOW());
 					""",
 					DefaultPackageName);
+
+				// One verified sender account, because the email pass now asks "is there
+				// anywhere to send" before it claims a single row. Without this every email
+				// test would exercise the exhausted-accounts path instead of the send path
+				// it means to test.
+				await SeedPrimaryEmailAccountAsync();
 			}
 
 			if (_authDbContext is not null)
@@ -182,6 +193,40 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		{
 			throw new Exception("Error during database cleanup in InitializeAsync: " + ex.Message, ex);
 		}
+	}
+
+	/// <summary>
+	/// Inserts the one verified sender account every email test needs to exist.
+	/// </summary>
+	/// <remarks>
+	/// The password is protected with the configured key rather than written as plaintext,
+	/// because the registry decrypts it while building the account's pool and a raw value
+	/// throws before the test reaches what it is actually asserting. It never has to
+	/// authenticate: IEmailService is faked in IntegrationTestWebAppFactory, so no SMTP session
+	/// is ever opened.
+	/// </remarks>
+	private async Task SeedPrimaryEmailAccountAsync()
+	{
+		var protector = _scope.ServiceProvider.GetRequiredService<ISecretProtector>();
+
+		const string emailAddress = "ats-integration@example.com";
+
+		var encryptedPassword = protector.Protect(
+			"integration-test-app-password",
+			AtsEmailAccountSecrets.PasswordContext(emailAddress));
+
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""
+			INSERT INTO ats."EmailAccounts"
+				("DisplayName", "EmailAddress", "SmtpHost", "SmtpPort", "EncryptedPassword",
+				 "Priority", "IsActive", "DailySendLimit", "VerificationStatus", "VerifiedAt",
+				 "ConsecutiveFailureCount", "CreatedAt", "UpdatedAt")
+			VALUES ('Applicant Tracking System', {0}, 'smtp.example.com', 587, {1},
+				 1, TRUE, 450, {2}, NOW(), 0, NOW(), NOW());
+			""",
+			emailAddress,
+			encryptedPassword,
+			AtsEmailAccountStatus.Verified);
 	}
 
 	/// <summary>

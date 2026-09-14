@@ -464,7 +464,36 @@ Prefer prose and short tables over bullet soup, and link related documents rathe
 repeating them. If a document contradicts the code, the code is the source of truth and
 the document is a bug — fix it.
 
-### 13. Verify the complete feature
+### 13. Also ship a code-level companion document
+
+**Alongside the doc from step 12, add a second file: `docs/<area>-<feature>_code_explanation.md`.**
+The step-12 doc is for someone deciding *whether* and *why*; this one is for someone about
+to *change the code* and needs to know what calls what before they touch it. Do not merge
+the two — a reader who wants the wiring shouldn't have to skim past decision narrative to
+find it, and vice versa.
+
+Write it as a literal call-chain walkthrough, not a summary:
+
+1. **Trace at least one full request end to end** — endpoint → validator → handler →
+   service → repository/registry → entity/DB, and the frontend equivalent: `.razor` →
+   `.razor.cs` → UI service → HTTP client → gateway route. Name the real file and the real
+   method at each hop, in the order they actually run.
+2. **For every other slice/endpoint in the feature, note only the diff** from the one you
+   traced in full — same shape, different route/DTO, plus whatever is genuinely different
+   (an extra guard, a different persistence step). Don't re-walk identical plumbing.
+2. **Quote the code that matters** — a locking pattern, a query shape, a DI registration —
+   rather than paraphrasing it, so the reader can compare it against the live file.
+3. **Call out the wiring that isn't visible from reading one file alone**: DI registrations
+   (`ServiceConfig`), gateway routes (`Path/ATSPaths.cs`), keyed services, and any place the
+   same string (a route, a wrapper property name) has to independently agree across two
+   files with nothing enforcing it at compile time.
+4. **End with a "change X, also check Y" table** — the fast lookup a developer reaches for
+   mid-edit, so they don't discover the second call site by breaking it.
+
+Reference example: `docs/ats-email-accounts_code_explanation.md`, the companion to
+`docs/ats-email-accounts.md`.
+
+### 14. Verify the complete feature
 
 Run the smallest relevant tests first, then the full build:
 
@@ -557,6 +586,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] Screen was checked at 390px and in both light and dark mode.
 - [ ] UI covers loading, empty, validation, success, failure, and responsive states.
 - [ ] **A `docs/*.md` was added or updated for this change.**
+- [ ] **A `docs/*_code_explanation.md` companion was added or updated, tracing the real call chain.**
 - [ ] No hand-rolled `try/catch` in feature code — throw and let `CustomExceptionHandler` answer, or use `SideEffectGuard` / `ApiRequestExtensions`.
 - [ ] Relevant tests and the solution build pass.
 - [ ] API/UI contracts and gateway route were verified end to end.
@@ -567,7 +597,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 Copy this into a new Codex/Claude discussion:
 
 ```markdown
-Read `docs/feature-development-guide.md` first and follow it. If the change touches the UI, also read `docs/ui-theming-and-responsiveness.md`. Implement this feature end to end. Use ATS components as the latest UI/theme reference. Inspect existing neighboring code before editing, preserve unrelated changes, and run relevant tests plus the solution build. Finish by adding or updating a `docs/*.md` describing what you built and why.
+Read `docs/feature-development-guide.md` first and follow it. If the change touches the UI, also read `docs/ui-theming-and-responsiveness.md`. Implement this feature end to end. Use ATS components as the latest UI/theme reference. Inspect existing neighboring code before editing, preserve unrelated changes, and run relevant tests plus the solution build. Finish by adding or updating a `docs/*.md` describing what you built and why, and a `docs/*_code_explanation.md` tracing the actual call chain file by file.
 
 Feature name:
 Module and area:

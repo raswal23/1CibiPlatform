@@ -93,7 +93,12 @@
     background: transparent;
 }
 
-.ats-management-card .table-component-toolbar > .mud-typography {
+/* The heading variant applies when the board passes CountLabel (email accounts): TableComponent
+   then wraps the title in a .table-component-heading div alongside the subtitle, which the
+   plain ">" selector below does not reach - so without this the title falls back to the
+   unreadable .gradient-text (a gradient clipped to text, invisible on the dark card). */
+.ats-management-card .table-component-toolbar > .mud-typography,
+.ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
     width: auto !important;
     margin: 0 !important;
     background: none !important;
@@ -1350,6 +1355,32 @@
     outline-offset: 2px;
 }
 
+/* Raw inline <svg> icons (edit/delete/retry) have no intrinsic size of their own, unlike
+   MudIcon - without this they render oversized and throw off the button's alignment, as
+   opposed to .ats-management-edit-button's icon which this mirrors. */
+.ats-management-page .ats-cell-action svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Destructive variant of the same button. Lives here rather than in the one screen that
+   currently uses it, because the next board with a delete column needs the identical
+   treatment and a second copy is how two delete buttons end up looking different. */
+.ats-management-page .ats-cell-action.is-danger {
+    border-color: var(--c-danger-bg);
+    background: var(--c-danger-bg);
+    color: var(--c-danger-strong);
+}
+
+.ats-management-page .ats-cell-action.is-danger:hover:not(:disabled) {
+    border-color: var(--c-danger);
+    background: var(--c-danger-bg);
+}
+
+.ats-management-page .ats-cell-action.is-danger:focus-visible {
+    outline-color: rgba(214, 69, 69, .35);
+}
+
 /* ---------- Status pill ---------- */
 
 .ats-management-page .ats-status-pill {
@@ -1501,7 +1532,8 @@
         border-radius: 14px;
     }
 
-    .ats-management-card .table-component-toolbar > .mud-typography {
+    .ats-management-card .table-component-toolbar > .mud-typography,
+    .ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
         font-size: 20px !important;
     }
 

@@ -44,4 +44,27 @@ public static class AtsNotificationType
 
 	/// <summary>The invitation email could not be delivered after the configured attempts.</summary>
 	public const string InvitationEmailFailed = "InvitationEmailFailed";
+
+	/// <summary>
+	/// Every registered sender account is capped, cooling down or disabled, so the invitation
+	/// pass stopped with rows still queued.
+	/// </summary>
+	/// <remarks>
+	/// Raised to administrators rather than to the requestor: nothing the requestor can do
+	/// fixes it, and the fix - register another sender, or wait out a daily cap - belongs to
+	/// whoever manages the accounts. The queued rows are left Pending with their attempt count
+	/// unchanged, so this is a pause rather than a failure, but it is silent without this.
+	/// </remarks>
+	public const string EmailAccountsExhausted = "EmailAccountsExhausted";
+
+	/// <summary>
+	/// A sender account's credentials were rejected by the provider, so it was removed from
+	/// rotation and needs its password re-entered and re-verified.
+	/// </summary>
+	/// <remarks>
+	/// Separate from <see cref="EmailAccountsExhausted"/> because it is not self-clearing: a
+	/// cap lifts on its own after 24 hours, a revoked app password never does. Sending both
+	/// under one type would let the actionable one hide behind the transient one.
+	/// </remarks>
+	public const string EmailAccountNeedsReverification = "EmailAccountNeedsReverification";
 }

@@ -7,9 +7,14 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly IAtsNotificationService _notificationService;
 	private readonly IServiceScopeFactory _serviceScopeFactory;
 	private readonly IConfiguration _configuration;
-	private readonly SmtpRateLimiter _rateLimiter;
+	private readonly ISmtpAccountPoolRegistry _poolRegistry;
 	private readonly AtsEmailDeliveryOptions _options;
 	private readonly string _applicationformBaseUrl;
+
+	// No account is available for THIS pass. Distinct from the per-account throttle state that
+	// used to live on the single process-wide limiter: one capped Gmail must no longer stop the
+	// queue, because the switcher's whole job is to carry on through the next account.
+	private static readonly IReadOnlyCollection<int> NoExcludedAccounts = [];
 
 	// Comfortably longer than a full send pass so a live worker is never robbed of rows it
 	// is still processing. A pass is now bounded by the send RATE rather than by
@@ -23,7 +28,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		IAtsNotificationService notificationService,
 		IServiceScopeFactory serviceScopeFactory,
 		IConfiguration configuration,
-		SmtpRateLimiter rateLimiter,
+		ISmtpAccountPoolRegistry poolRegistry,
 		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
@@ -31,7 +36,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		_notificationService = notificationService;
 		_serviceScopeFactory = serviceScopeFactory;
 		_configuration = configuration;
-		_rateLimiter = rateLimiter;
+		_poolRegistry = poolRegistry;
 		_options = options.Value;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 	}
@@ -49,13 +54,19 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 				released);
 		}
 
-		// A throttle from an earlier pass is still in force. Claiming rows now would only
-		// park them behind the back-off while holding them out of every other worker's
-		// reach; leaving them Pending costs one idle tick and nothing else.
-		if (_rateLimiter.IsThrottled)
+		// EVERY registered account is capped, cooling down, unverified or disabled - not just
+		// one. A single throttled account no longer stops the pass; the send moves to the next
+		// account by priority and the queue keeps draining.
+		//
+		// Claiming rows when there is genuinely nowhere to send would only park them behind the
+		// back-off while holding them out of every other worker's reach; leaving them Pending
+		// costs one idle tick and nothing else.
+		if (!await HasSendableAccountAsync(cancellationToken))
 		{
 			_logger.LogWarning(
-				"Skipping email pass: the SMTP provider is still rate limiting this sender.");
+				"Skipping email pass: every registered sender account is capped, cooling down, unverified or disabled.");
+
+			await RaiseAccountsExhaustedAsync(cancellationToken);
 
 			return;
 		}
@@ -85,8 +96,13 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		using var semaphore = new SemaphoreSlim(inFlightLimit);
 
-		// Trips the moment the provider says "slow down". Every task still queued checks it
-		// before sending and leaves its row untouched instead of knocking again.
+		// Trips only when EVERY account has refused. Every task still queued checks it before
+		// sending and leaves its row untouched instead of knocking again.
+		//
+		// It no longer trips on the first throttle. That was correct with one sender - there
+		// was nowhere else to go - and is wrong with several: standing the pass down because
+		// the highest-priority Gmail hit its cap would leave the remaining accounts idle, which
+		// is precisely the failure the switcher exists to prevent.
 		using var throttleSignal = new CancellationTokenSource();
 
 		using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
@@ -158,16 +174,20 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			await _repository.UpdateBulkEmailInvitationRequestForNotSentEmailAsync(errorList);
 		}
 
-		// Straight back to Pending with the attempt count untouched. These were never
-		// offered to the provider, so charging them an attempt would retire a valid address
-		// after five throttles without a single real delivery failure.
+		// Straight back to Pending with the attempt count untouched. No account would carry
+		// them, so charging them an attempt would retire a valid address after five exhausted
+		// passes without a single real delivery failure.
 		if (abandonedList.Count > 0)
 		{
 			await _repository.ReleaseEmailInvitationClaimsAsync(abandonedList);
 
 			_logger.LogWarning(
-				"Deferred {DeferredCount} invitation(s) to a later pass because the provider is rate limiting.",
+				"Deferred {DeferredCount} invitation(s) to a later pass: no sender account could carry them.",
 				abandonedList.Count);
+
+			// Raised here rather than inside the send, where it would fire once per abandoned
+			// row and bury the bell under hundreds of identical entries for one outage.
+			await RaiseAccountsExhaustedAsync(cancellationToken);
 		}
 
 		// After the statuses are written, so the completeness check reads the outcome of
@@ -186,9 +206,15 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	///
 	/// The three outcomes are the point. A permanent rejection returns immediately rather
 	/// than spending three attempts on an address the server has already refused; a
-	/// throttle stops the entire pass; only a genuine transient fault backs off and tries
-	/// again.
+	/// throttle means every account has already been tried and stands the pass down; only a
+	/// genuine transient fault backs off and tries again.
 	/// </summary>
+	/// <remarks>
+	/// Account failover happens one level down, inside the send: by the time a Throttled
+	/// reaches here, the switcher has already walked every registered account for this message
+	/// and none would take it. That is why this branch still stops the pass - not because one
+	/// provider said "slow down", but because there is nowhere left to send.
+	/// </remarks>
 	private async Task<EmailDeliveryOutcome> SendWithRetryAsync(
 		EmailInvitationRequest request,
 		CancellationToken cancellationToken,
@@ -215,10 +241,13 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 					return EmailDeliveryOutcome.Permanent;
 
 				case EmailDeliveryOutcome.Throttled:
-					// Park the whole sender, then tell every queued task to stand down.
-					_rateLimiter.ReportThrottled(
-						TimeSpan.FromSeconds(_options.ThrottleBackoffSeconds));
-
+					// Every account refused this message - the switcher already tried them all,
+					// and each one's own cooldown was recorded against it as it did. Nothing to
+					// park here; the accounts are already out of rotation and will readmit
+					// themselves when their cooldowns lapse.
+					//
+					// Tell every queued task to stand down. The remaining rows would each walk
+					// the same empty account list and reach the same answer.
 					await throttleSignal.CancelAsync();
 
 					return EmailDeliveryOutcome.Throttled;
@@ -237,6 +266,70 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		}
 
 		return EmailDeliveryOutcome.Transient;
+	}
+
+	/// <summary>
+	/// Whether any registered account could carry a message right now.
+	/// </summary>
+	/// <remarks>
+	/// Asks for an account and throws the answer away. Deliberate: "is one available" and
+	/// "which one is next" must never be two pieces of logic that can disagree, because a
+	/// selector that says yes and a send that then finds nothing would claim a slice of rows
+	/// only to defer every one of them.
+	/// </remarks>
+	private async Task<bool> HasSendableAccountAsync(CancellationToken cancellationToken)
+	{
+		var account = await _poolRegistry.GetNextSendableAccountAsync(
+			NoExcludedAccounts,
+			cancellationToken);
+
+		return account is not null;
+	}
+
+	/// <summary>
+	/// Tells the administrators that nothing can be sent until an account recovers or a new one
+	/// is registered.
+	/// </summary>
+	/// <remarks>
+	/// The one failure mode of this feature that is invisible from the outside. A capped
+	/// account defers rows silently and correctly - the queue looks calm, the logs look normal,
+	/// and invitations simply stop going out. Somebody has to be told.
+	///
+	/// Never throws, matching <c>IAtsNotificationService.RaiseAsync</c>: failing to announce an
+	/// email outage must not also break the pass that detected it.
+	/// </remarks>
+	private async Task RaiseAccountsExhaustedAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			var recipients = await _repository.GetAtsAdministratorUserIdsAsync(cancellationToken);
+
+			if (recipients.Count == 0)
+			{
+				_logger.LogWarning(
+					"Every sender account is unavailable, but no ATS administrator could be found to notify.");
+
+				return;
+			}
+
+			foreach (var recipient in recipients)
+			{
+				await _notificationService.RaiseAsync(
+					recipient,
+					AtsNotificationType.EmailAccountsExhausted,
+					"Invitation emails have stopped",
+					"Every registered sender account is capped, cooling down or unverified. Invitations are being held and will resume automatically once an account recovers.",
+					"/s&i/ats/emailaccounts",
+					null,
+					cancellationToken);
+			}
+		}
+		catch (Exception exception)
+		{
+			_logger.LogError(
+				exception,
+				"Could not raise the exhausted sender accounts notification.");
+		}
 	}
 
 	private async Task<EmailDeliveryResult> TrySendEmailAsync(

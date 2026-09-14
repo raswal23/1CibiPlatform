@@ -431,6 +431,158 @@ namespace APIs.Migrations.ATS
                     b.ToTable("AuditTrail", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccount", b =>
+                {
+                    b.Property<int>("AtsEmailAccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AtsEmailAccountId"));
+
+                    b.Property<int>("ConsecutiveFailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CoolingDownUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DailySendLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EncryptedPassword")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastFailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("LastSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SmtpHost")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("SmtpPort")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailAccountId");
+
+                    b.HasIndex("EmailAddress")
+                        .IsUnique();
+
+                    b.HasIndex("Priority")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "VerificationStatus", "Priority");
+
+                    b.ToTable("EmailAccounts", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccountOtp", b =>
+                {
+                    b.Property<long>("AtsEmailAccountOtpId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("AtsEmailAccountOtpId"));
+
+                    b.Property<int>("AtsEmailAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpCodeHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PendingChangesJson")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailAccountOtpId");
+
+                    b.HasIndex("AtsEmailAccountId", "Purpose", "IsUsed", "CreatedAt")
+                        .IsDescending(false, false, false, true);
+
+                    b.ToTable("EmailAccountOtp", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailSendLog", b =>
+                {
+                    b.Property<long>("AtsEmailSendLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("AtsEmailSendLogId"));
+
+                    b.Property<int>("AtsEmailAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailSendLogId");
+
+                    b.HasIndex("AtsEmailAccountId", "SentAt");
+
+                    b.ToTable("EmailSendLog", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.AtsNotification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -1704,6 +1856,24 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
 
                     b.Navigation("EmailInvitationRequest");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccountOtp", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.AtsEmailAccount", null)
+                        .WithMany()
+                        .HasForeignKey("AtsEmailAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailSendLog", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.AtsEmailAccount", null)
+                        .WithMany()
+                        .HasForeignKey("AtsEmailAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.BulkUploadFileDetails", b =>

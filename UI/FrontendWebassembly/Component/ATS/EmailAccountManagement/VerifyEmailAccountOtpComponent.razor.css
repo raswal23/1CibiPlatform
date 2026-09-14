@@ -1,0 +1,363 @@
+.eo-shell,
+.eo-shell *,
+.eo-shell *::before,
+.eo-shell *::after {
+    box-sizing: border-box;
+}
+
+.eo-shell {
+    --eo-border: var(--c-border);
+    --eo-border-strong: var(--c-border-strong);
+    --eo-text-1: var(--c-fg-strong);
+    --eo-text-2: var(--c-fg-muted);
+    --eo-text-3: var(--c-fg-subtle);
+    --eo-blue-500: var(--c-blue-500);
+    --eo-green: var(--c-success);
+    --eo-green-tint: var(--c-success-bg);
+    --eo-red: var(--c-danger);
+    --eo-red-tint: var(--c-danger-bg);
+    width: 100%;
+    overflow: hidden;
+    background: var(--c-surface);
+    color: var(--eo-text-1);
+    font-family: "Inter", sans-serif;
+}
+
+.eo-header {
+    position: relative;
+    overflow: hidden;
+    padding: 26px 30px 22px;
+    background: var(--c-dialog-header-gradient);
+}
+
+.eo-header::before {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    content: "";
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    mask-image: linear-gradient(to bottom right, #000, transparent 70%);
+    pointer-events: none;
+}
+
+.eo-header-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.eo-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.eo-icon-badge {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--c-on-dark-fg);
+}
+
+.eo-icon-badge svg {
+    width: 21px;
+    height: 21px;
+}
+
+.eo-header-text h1 {
+    margin: 0;
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.eo-header-text p {
+    margin: 4px 0 0;
+    color: var(--c-on-dark-fg-muted);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.eo-close {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--c-on-dark-fg);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.eo-close:hover,
+.eo-close:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.eo-close svg {
+    width: 15px;
+    height: 15px;
+}
+
+.eo-close:focus-visible,
+.eo-button:focus-visible,
+.eo-resend-button:focus-visible {
+    outline: 3px solid rgba(143, 201, 255, 0.6);
+    outline-offset: 2px;
+}
+
+.eo-body {
+    padding: 26px 30px 10px;
+    background: var(--c-surface);
+}
+
+.eo-lead {
+    margin: 0 0 16px;
+    color: var(--eo-text-2);
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+.eo-lead strong {
+    color: var(--eo-text-1);
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.eo-banner {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 14px;
+    padding: 10px 13px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.eo-banner svg {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+}
+
+.eo-banner.error {
+    border: 1.5px solid var(--eo-border-strong);
+    background: var(--eo-red-tint);
+    color: var(--eo-red);
+}
+
+.eo-banner.success {
+    border: 1.5px solid var(--eo-border-strong);
+    background: var(--eo-green-tint);
+    color: var(--eo-green);
+}
+
+.eo-field-label {
+    margin-bottom: 8px;
+    color: var(--eo-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.eo-field-label span {
+    color: var(--eo-red);
+}
+
+.eo-boxes {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.eo-box {
+    width: 44px;
+    height: 52px;
+    padding: 0;
+    border: 1.5px solid var(--eo-border-strong);
+    border-radius: 10px;
+    background: var(--c-surface);
+    color: var(--eo-text-1);
+    font-family: "Poppins", sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.eo-box:focus {
+    border-color: var(--eo-blue-500);
+    box-shadow: 0 0 0 3px rgba(46, 124, 224, 0.15);
+}
+
+.eo-boxes.error .eo-box {
+    border-color: var(--eo-red);
+}
+
+.eo-box:disabled {
+    background: var(--c-surface-sunken);
+    opacity: 0.7;
+}
+
+.eo-attempts {
+    margin: 0 0 4px;
+    color: var(--eo-red);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.eo-resend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+    color: var(--eo-text-3);
+    font-size: 12.5px;
+}
+
+.eo-resend-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--eo-blue-500);
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.eo-resend-button:disabled {
+    color: var(--eo-text-3);
+    cursor: default;
+    text-decoration: none;
+}
+
+.eo-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 18px 30px 24px;
+    border-top: 1px solid var(--eo-border);
+    background: var(--c-surface);
+}
+
+.eo-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.eo-button:active {
+    transform: scale(0.97);
+}
+
+.eo-button:disabled {
+    cursor: default;
+    opacity: 0.6;
+    transform: none;
+}
+
+.eo-button-cancel {
+    border: 1.5px solid var(--eo-border-strong);
+    background: var(--c-surface);
+    color: var(--eo-text-2);
+}
+
+.eo-button-cancel:hover:not(:disabled) {
+    background: var(--c-surface-sunken);
+}
+
+.eo-button-verify {
+    border: 0;
+    background: var(--c-primary-gradient);
+    box-shadow: 0 8px 20px -6px rgba(29, 95, 209, 0.55);
+    color: var(--c-on-dark-fg);
+}
+
+.eo-button-verify:hover:not(:disabled) {
+    box-shadow: 0 10px 24px -6px rgba(29, 95, 209, 0.7);
+}
+
+.eo-button-verify svg {
+    width: 15px;
+    height: 15px;
+}
+
+.eo-button-verify ::deep .eo-spinner {
+    width: 16px;
+    height: 16px;
+    color: var(--c-on-dark-fg);
+}
+
+@media (max-width: 600px) {
+    .eo-header {
+        padding: 20px 18px 18px;
+    }
+
+    .eo-body {
+        padding: 20px 16px 6px;
+    }
+
+    .eo-boxes {
+        gap: 6px;
+    }
+
+    .eo-box {
+        width: 40px;
+        height: 48px;
+        font-size: 17px;
+    }
+
+    .eo-footer {
+        padding: 16px 16px 20px;
+    }
+
+    .eo-button {
+        justify-content: center;
+        flex: 1;
+        padding: 0 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eo-shell *,
+    .eo-shell *::before,
+    .eo-shell *::after {
+        transition-duration: 0.01ms !important;
+    }
+}

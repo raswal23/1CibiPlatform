@@ -1,0 +1,179 @@
+@page "/s&i/ats/emailaccounts"
+@namespace FrontendWebassembly.Component.ATS
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(16)]
+@inherits CrudPageBase
+@inject IAtsEmailAccountService EmailAccountService
+
+<PageTitle>ATS - Email Accounts</PageTitle>
+
+@* Not cursor-paginated, unlike the other management boards. The service returns the whole
+   list because the columns show live health and consumption: paging them would let the
+   figures on page one drift out of date against page two, and there are only ever a handful
+   of sender mailboxes. TableComponent's Items parameter renders the same shell without the
+   keyset walk. *@
+<div class="ats-management-page ats-email-accounts-page">
+
+    <div class="ats-status-board-intro">
+        <MudIcon Icon="@Icons.Material.Outlined.AlternateEmail" Size="Size.Small" />
+        <div>
+            <p class="ats-status-board-intro-title">The mailboxes ATS sends candidate invitations through</p>
+            <p class="ats-status-board-intro-text">
+                Messages go out through the highest-priority account that is active, verified and
+                still under its daily limit. When one is capped, throttled or failing, the sender
+                moves to the next one and keeps going - so adding accounts here is what raises
+                throughput. An account is only trusted after a code sent <strong>through its own
+                credentials, to its own mailbox</strong> has been confirmed, which is why a
+                mistyped app password fails on this screen rather than stalling the queue later.
+            </p>
+        </div>
+    </div>
+
+    <div class="ats-management-actions">
+        <button type="button" class="ats-management-button" @onclick="AddEmailAccountAsync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+            Register email
+        </button>
+    </div>
+
+    <TableComponent TItem="EmailAccountDTO"
+                    @ref="_accountsTable"
+                    Title="Sender accounts"
+                    CountLabel="registered"
+                    TitleId="ats-email-accounts-heading"
+                    TableAriaLabel="Registered sender email accounts"
+                    ContainerClass="ats-management-card ats-email-account-card"
+                    EnableReload="true"
+                    OnReloadClicked="LoadAccountsAsync"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search name or address"
+                    SearchImmediate="true"
+                    ColumnCount="7"
+                    RowsPerPage="10"
+                    Items="FilteredAccounts"
+                    SearchString="@_searchString"
+                    SearchStringChanged="OnSearchChanged">
+
+        <HeaderTemplate>
+            <MudTh>Account</MudTh>
+            <MudTh>Priority</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Consumed (24h)</MudTh>
+            <MudTh>Last sent</MudTh>
+            <MudTh>Verified</MudTh>
+            <MudTh Class="ats-table-cell-center">Actions</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="account">
+            <MudTd DataLabel="Account">
+                <div class="ats-cell-lead">
+                    <span class="ats-cell-lead-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.MarkEmailRead" Size="Size.Small" />
+                    </span>
+                    <span class="ats-cell-lead-copy">
+                        <span class="ats-cell-lead-title">@account.DisplayName</span>
+                        <span class="ats-cell-lead-sub" title="@account.EmailAddress">
+                            @account.EmailAddress
+                        </span>
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Priority">
+                <span class="ats-cell-tag" title="Lower goes first">#@account.Priority</span>
+            </MudTd>
+
+            <MudTd DataLabel="Status">
+                <div class="ats-email-status-cell">
+                    <span class="ats-status-pill @StatusModifier(account)">@StatusLabel(account)</span>
+
+                    @if (account.IsInUse)
+                    {
+                        <span class="ats-status-pill processing" title="A send is in flight through this account right now">
+                            In use
+                        </span>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(account.LastFailureReason) && !account.IsSendable)
+                    {
+                        <span class="ats-email-failure-reason" title="@account.LastFailureReason">
+                            @account.LastFailureReason
+                        </span>
+                    }
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Consumed (24h)">
+                <div class="ats-email-consumption">
+                    <span class="ats-email-consumption-figures">
+                        <strong>@account.ConsumedInWindow</strong>
+                        <span class="ats-cell-muted">/ @account.DailySendLimit</span>
+                    </span>
+                    <MudProgressLinear Value="@ConsumptionPercent(account)"
+                                       Class="@ConsumptionCssClass(account)"
+                                       Rounded="true"
+                                       Size="Size.Small"
+                                       Min="0"
+                                       Max="100" />
+                    <span class="ats-email-consumption-remaining">
+                        @account.RemainingInWindow left before the cap
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Last sent">
+                <span class="@(account.LastSentAt.HasValue ? null : "ats-cell-muted")">
+                    @FormatTimestamp(account.LastSentAt)
+                </span>
+            </MudTd>
+
+            <MudTd DataLabel="Verified">
+                <span class="@(account.VerifiedAt.HasValue ? null : "ats-cell-muted")">
+                    @FormatTimestamp(account.VerifiedAt)
+                </span>
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+                <div class="ats-email-actions">
+                    @* Both actions are blocked only while a send is actually in flight, which
+                       is a window of seconds. The backend refuses it independently; disabling
+                       here explains the refusal before it happens rather than replacing it. *@
+                    <button type="button"
+                            class="ats-cell-action"
+                            aria-label="Edit @account.DisplayName"
+                            title="@EditTooltip(account)"
+                            disabled="@(account.IsInUse || _isBusy)"
+                            @onclick="@(() => EditEmailAccountAsync(account))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                    </button>
+
+                    <button type="button"
+                            class="ats-cell-action is-danger"
+                            aria-label="Delete @account.DisplayName"
+                            title="@DeleteTooltip(account)"
+                            disabled="@(account.IsInUse || _isBusy)"
+                            @onclick="@(() => DeleteEmailAccountAsync(account))">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" />
+                        </svg>
+                    </button>
+                </div>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-management-empty">
+                <MudIcon Icon="@Icons.Material.Filled.AlternateEmail" />
+                <strong>@EmptyTitle</strong>
+                <span>@EmptyMessage</span>
+            </div>
+        </NoRecordsTemplate>
+    </TableComponent>
+</div>
