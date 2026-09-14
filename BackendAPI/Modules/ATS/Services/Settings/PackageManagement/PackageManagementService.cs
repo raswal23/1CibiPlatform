@@ -102,6 +102,7 @@ public class PackageManagementService : IPackageManagementService
 		existingPackage.PackageDescription = packageDTO.PackageDescription.Trim();
 		existingPackage.IsActive = packageDTO.IsActive;
 		existingPackage.FollowUpEmail = packageDTO.FollowUpEmail;
+		existingPackage.AutoChasing = packageDTO.AutoChasing;
 		existingPackage.UpdatedAt = DateTime.UtcNow;
 
 		var package = await _packageRepository.EditPackageAsync(existingPackage, cancellationToken);

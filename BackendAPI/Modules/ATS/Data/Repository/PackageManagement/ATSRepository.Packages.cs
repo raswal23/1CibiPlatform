@@ -18,6 +18,7 @@ public partial class ATSRepository
 				PackageDescription = package.PackageDescription,
 				IsActive = package.IsActive,
 				FollowUpEmail = package.FollowUpEmail,
+				AutoChasing = package.AutoChasing,
 				CreatedAt = package.CreatedAt,
 				UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
@@ -48,6 +49,7 @@ public partial class ATSRepository
 			PackageDescription = dto.PackageDescription.Trim(),
 			IsActive = dto.IsActive,
 			FollowUpEmail = dto.FollowUpEmail,
+			AutoChasing = dto.AutoChasing,
 			CreatedAt = now,
 			UpdatedAt = now
 		}, cancellationToken);

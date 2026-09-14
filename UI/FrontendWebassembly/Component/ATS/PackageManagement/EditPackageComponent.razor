@@ -83,6 +83,25 @@
 
                         <div class="ep-section-body">
                             <div class="ep-field">
+                                <label for="ep-screening-type">Screening type</label>
+                                <div class="ep-input-wrap ep-screening-type-wrap">
+                                    <MudSelect T="bool?"
+                                               @bind-Value="EditPackage.AutoChasing"
+                                               InputId="ep-screening-type"
+                                               Placeholder="Select a screening type"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
+                                               Class="ep-control">
+                                        <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                                        <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                                <p class="ep-hint">Manual packages are chased by the screening team; data packages are processed automatically.</p>
+                            </div>
+
+                            <div class="ep-field">
                                 <label for="ep-follow-up-email">Follow up email</label>
                                 <div class="ep-input-wrap ep-follow-up-wrap">
                                     <MudNumericField T="int"

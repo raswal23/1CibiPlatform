@@ -1082,6 +1082,9 @@ namespace APIs.Migrations.ATS
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 

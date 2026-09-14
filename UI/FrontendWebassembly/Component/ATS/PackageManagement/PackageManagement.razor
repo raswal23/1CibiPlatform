@@ -26,7 +26,7 @@
                 EnableSearch="true"
                 SearchLabel=""
                 SearchPlaceholder="Search packages"
-                ColumnCount="7"
+                ColumnCount="8"
                 RowsPerPage="10"
                 LoadServerData="LoadPackageData"
                 CursorPagerState="_packagesLoader"
@@ -36,6 +36,7 @@
     <HeaderTemplate>
         <MudTh Class="ats-table-cell-center">Package Name</MudTh>
         <MudTh Class="ats-table-cell-center">Description</MudTh>
+        <MudTh Class="ats-table-cell-center">Screening Type</MudTh>
         <MudTh Class="ats-table-cell-center">Follow Up Email</MudTh>
         <MudTh Class="ats-table-cell-center">Status</MudTh>
         <MudTh Class="ats-table-cell-center">Created Date</MudTh>
@@ -65,6 +66,30 @@
             {
                 @p.PackageDescription
             }
+        </MudTd>
+
+        <MudTd Class="ats-table-cell-center" DataLabel="Screening Type">
+            <span class="ats-management-email-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    @if (p.AutoChasing == true)
+                    {
+                        <path d="M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15Z" />
+                        <path d="M12 8v4l2.5 2.5" />
+                    }
+                    else if (p.AutoChasing == false)
+                    {
+                        <ellipse cx="12" cy="6" rx="7" ry="3" />
+                        <path d="M5 6v12c0 1.66 3.13 3 7 3s7-1.34 7-3V6" />
+                        <path d="M5 12c0 1.66 3.13 3 7 3s7-1.34 7-3" />
+                    }
+                    else
+                    {
+                        <circle cx="12" cy="12" r="8.5" />
+                        <path d="M9.6 9.4a2.4 2.4 0 0 1 4.7.6c0 1.6-2.3 2-2.3 3.2M12 16.4h.01" />
+                    }
+                </svg>
+                @(p.AutoChasing switch { true => "Manual", false => "Data", null => "Not set" })
+            </span>
         </MudTd>
 
         <MudTd DataLabel="Follow Up Email">

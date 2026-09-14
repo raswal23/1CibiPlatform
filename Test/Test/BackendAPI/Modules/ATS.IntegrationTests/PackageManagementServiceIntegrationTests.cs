@@ -26,7 +26,8 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			PackageName = "  Standard Screening  ",
 			PackageDescription = "  Standard background screening package  ",
 			IsActive = true,
-			FollowUpEmail = 3
+			FollowUpEmail = 3,
+			AutoChasing = true
 		};
 
 		// Act
@@ -42,6 +43,7 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.PackageDescription.Should().Be("Standard background screening package");
 		persisted.IsActive.Should().BeTrue();
 		persisted.FollowUpEmail.Should().Be(3);
+		persisted.AutoChasing.Should().BeTrue();
 		persisted.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 		persisted.UpdatedAt.Should().BeCloseTo(persisted.CreatedAt, TimeSpan.FromSeconds(1));
 	}
@@ -125,7 +127,8 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			PackageName = "  Updated Package  ",
 			PackageDescription = "  Updated description  ",
 			IsActive = false,
-			FollowUpEmail = 7
+			FollowUpEmail = 7,
+			AutoChasing = true
 		};
 
 		// Act
@@ -137,6 +140,7 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		result.PackageDescription.Should().Be("Updated description");
 		result.IsActive.Should().BeFalse();
 		result.FollowUpEmail.Should().Be(7);
+		result.AutoChasing.Should().BeTrue();
 		result.UpdatedAt.Should().BeOnOrAfter(existing.UpdatedAt);
 
 		var persisted = await _dbContext.PackageDetails
@@ -147,6 +151,7 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.PackageDescription.Should().Be("Updated description");
 		persisted.IsActive.Should().BeFalse();
 		persisted.FollowUpEmail.Should().Be(7);
+		persisted.AutoChasing.Should().BeTrue();
 	}
 
 	[Fact]
