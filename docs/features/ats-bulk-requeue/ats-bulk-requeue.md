@@ -2,8 +2,8 @@
 
 Retrying failed work in bulk, on the Bulk Uploads and Ticketing Status boards.
 
-Related: `docs/ats-email-delivery.md` (how requeued invitations are actually sent),
-`docs/ats-notifications.md`, `docs/feature-development-guide.md`.
+Related: `docs/features/ats-email-delivery/ats-email-delivery.md` (how requeued invitations are actually sent),
+`docs/features/ats-notifications/ats-notifications.md`, `docs/feature-development-guide.md`.
 
 ---
 

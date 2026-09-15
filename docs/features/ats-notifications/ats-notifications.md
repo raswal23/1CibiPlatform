@@ -218,7 +218,7 @@ services.Configure<AtsNotificationOptions>(configuration.GetSection(AtsNotificat
 ### Email sending throughput
 
 Throughput is governed by a **process-wide send rate** rather than by a concurrency number,
-and the details live in **`docs/ats-email-delivery.md`** — read that before changing
+and the details live in **`docs/features/ats-email-delivery/ats-email-delivery.md`** — read that before changing
 anything about how invitations are sent.
 
 The short version, because it changes how this job behaves:
