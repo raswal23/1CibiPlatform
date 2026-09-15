@@ -201,10 +201,16 @@ public sealed class AtsEmailAccountManagementFixture
 	}
 
 	/// <summary>A hasher that is not one, so a test can assert on which code was stored.</summary>
+	/// <remarks>
+	/// <see cref="Verify"/> must match the real <c>HashService</c> contract: it receives an
+	/// ALREADY-hashed value and compares it against the stored hash. It must not re-hash.
+	/// Callers hash the submitted code themselves before comparing, so re-applying the
+	/// prefix here would double it and make every correct code fail verification.
+	/// </remarks>
 	private sealed class PrefixHasher : IHashService
 	{
 		public string Hash(string input) => $"hashed:{input}";
 
-		public bool Verify(string input, string hash) => hash == $"hashed:{input}";
+		public bool Verify(string inputHash, string hash) => inputHash == hash;
 	}
 }

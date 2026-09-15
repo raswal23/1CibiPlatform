@@ -6,7 +6,7 @@ Use this playbook when adding an end-to-end feature to 1CibiPlatform. It follows
 
 At the beginning of every feature discussion, say:
 
-> Read `docs/feature-development-guide.md` and follow it. Use `BackendAPI/Modules/ATS/Features/UserManagement` as the API vertical-slice reference and `UI/FrontendWebassembly/Component/ATS` as the current UI/theme reference. Preserve existing conventions and implement the feature end to end, including tests.
+> Read `docs/feature-development-guide.md` and follow it. Use `BackendAPI/Modules/ATS/Features/Web/UserManagement` as the API vertical-slice reference and `UI/FrontendWebassembly/Component/ATS` as the current UI/theme reference. Preserve existing conventions and implement the feature end to end, including tests.
 
 Then provide the feature brief from the template near the end of this document. The assistant should inspect the named reference files before editing because the codebase remains the source of truth.
 
@@ -31,7 +31,7 @@ Blazor .razor
 
 Important existing references:
 
-- API slice: `BackendAPI/Modules/ATS/Features/UserManagement/`
+- API slice: `BackendAPI/Modules/ATS/Features/Web/UserManagement/`
 - Carter/MediatR/service registration: `BackendAPI/Modules/ATS/ServiceConfig/ATSServiceConfiguration.cs`
 - Service layer: `BackendAPI/Modules/ATS/Services/`
 - Repository contract and implementation: `BackendAPI/Modules/ATS/Data/Repository/`
@@ -48,11 +48,11 @@ Important existing references:
 
 Auth follows the same business-area segregation used by the focused ATS repositories. Keep a feature's repository contract, EF implementation, cache behavior, and service pair in matching folders rather than adding unrelated code to one large file.
 
-For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
+For the current Auth session lifecycle, security decisions, and review checklist, also read `docs/features/authentication-session-security/authentication-session-security.md` before changing login, logout, JWT claims, refresh rotation, cookies, password recovery, or OTP behavior.
 
 ### AI features
 
-ATS AI features use Semantic Kernel plugins: a plain class whose methods carry `[KernelFunction]` and `[Description]`, registered on a cloned kernel with `AddFromObject` and invoked through `FunctionChoiceBehavior.Auto()`. This is intentionally different from the older `AIAgent` module, which discovers `*.skill.yaml` manifests through a reflection registry and requires the user to pick a skill. Prefer the ATS pattern for new work, and read `docs/ats-ai-assistant.md` before adding a function, changing the system prompt, or letting a model reach a write path.
+ATS AI features use Semantic Kernel plugins: a plain class whose methods carry `[KernelFunction]` and `[Description]`, registered on a cloned kernel with `AddFromObject` and invoked through `FunctionChoiceBehavior.Auto()`. This is intentionally different from the older `AIAgent` module, which discovers `*.skill.yaml` manifests through a reflection registry and requires the user to pick a skill. Prefer the ATS pattern for new work, and read `docs/features/ats-ai-assistant/ats-ai-assistant.md` before adding a function, changing the system prompt, or letting a model reach a write path.
 
 ```text
 BackendAPI/Modules/Auth/
@@ -108,10 +108,10 @@ Prefer one use case per vertical-slice folder. Do not create a generic controlle
 
 ### 2. Decide the API folder and names
 
-For ATS, use this shape:
+For ATS, use this shape. Note the `Web/` level — ATS splits `Features/` by trust boundary, so a console slice lives under `Web/` and a client-integration slice under `PublicApi/` (see *Split `Features/` by trust boundary* below):
 
 ```text
-BackendAPI/Modules/ATS/Features/<Area>/
+BackendAPI/Modules/ATS/Features/Web/<Area>/
   Command/<FeatureName>/
     <FeatureName>Endpoint.cs
     <FeatureName>Handler.cs
@@ -192,7 +192,7 @@ Use the shared helpers instead of hand-rolling a block:
 | A best-effort side effect after the real work has committed | `SideEffectGuard.RunAsync(...)` |
 | A UI service calling the API | `ApiRequestExtensions.SendAsync<T>(...)` |
 
-`TransactionRunner` (`BuildingBlocks/Data/`) owns begin → work → `SaveChanges` → commit, and rolls back if the work throws. Its `catch` is **not** error handling — it releases the transaction and rethrows untouched, so a `NotFoundException` thrown inside still produces a 404 rather than a 500. Pass any module's `IUnitOfWork`; ATS's implements `ITransactionScope` (PhilSys has the same shape but has not adopted it yet). **See `docs/transaction-runner.md`** for the full API, the multi-compensation overload, and the migration checklist.
+`TransactionRunner` (`BuildingBlocks/Data/`) owns begin → work → `SaveChanges` → commit, and rolls back if the work throws. Its `catch` is **not** error handling — it releases the transaction and rethrows untouched, so a `NotFoundException` thrown inside still produces a 404 rather than a 500. Pass any module's `IUnitOfWork`; ATS's implements `ITransactionScope` (PhilSys has the same shape but has not adopted it yet). **See `docs/features/transaction-runner/transaction-runner.md`** for the full API, the multi-compensation overload, and the migration checklist.
 
 Two rules this exists to enforce. **A repository method that calls `SaveChangesAsync` itself commits immediately** — if it runs before the transaction is opened, its write survives a later rollback. That is exactly how a failed application-form email once left a saved order whose candidate never received a link. And **anything the database cannot undo** — an uploaded blob, a created remote record — needs `RunWithCompensationAsync`, which deletes it on failure and still surfaces the original error.
 
@@ -443,11 +443,46 @@ writing a `.razor.css`.** The short version:
 **Every feature or fix ships with a Markdown document under `docs/`.** This is part of
 the work, not a follow-up — a change is not complete until it is written down.
 
-- New feature or subsystem → add `docs/<area>-<feature>.md`.
-- Change to something already documented → update that file in the same commit rather
-  than adding a second, competing description.
-- Name the file after the thing it explains (`ats-audit-trail.md`,
-  `ui-theming-and-responsiveness.md`), not after the ticket.
+- New feature or subsystem → **give it its own folder** named after the feature, and put
+  both documents from steps 12 and 13 inside it:
+
+  ```text
+  docs/features/<area>-<feature>/
+    <area>-<feature>.md                    # step 12 - high level: what it does and why
+    <area>-<feature>_code_explanation.md   # step 13 - code level: what calls what
+  ```
+
+  For example, `docs/features/oms-auto-ticketing/oms-auto-ticketing.md` and
+  `docs/features/oms-auto-ticketing/oms-auto-ticketing_code_explanation.md`.
+- **Refactoring or changing a feature that is already documented → update its documents in
+  the same commit.** This is the rule that actually gets forgotten. A rename, a moved call,
+  a changed query shape or a new guard silently invalidates the walkthrough, and a stale
+  `_code_explanation.md` is worse than no document at all, because a developer trusts it and
+  then edits the wrong call site. Both files in the feature folder are in scope: the
+  high-level doc when behaviour or decisions changed, the code explanation when the call
+  chain, file names, routes, DI registrations or column names changed. If only one of the
+  two is still accurate, say so in the commit rather than leaving the other silently wrong.
+- Change to something already documented → update that file rather than adding a second,
+  competing description of the same feature.
+- Name the folder after the thing it explains (`ats-audit-trail`,
+  `oms-auto-ticketing`), not after the ticket. The two files inside take the folder's
+  name, so the pair sorts together and stays greppable.
+- Use hyphens inside the feature name, and the `_code_explanation` suffix exactly as
+  shown.
+- **Documents that are not features do not go under `features/`.** The whole `docs/` tree:
+
+  ```text
+  docs/
+    feature-development-guide.md      this playbook - always at the root
+    ui-theming-and-responsiveness.md  cross-cutting UI conventions - always at the root
+    features/<area>-<feature>/        one folder per feature, holding its two documents
+    architecture/                     system overview, infrastructure and server specs
+    operations/                       upgrade and migration runbooks, one-off fixes, plans
+    reviews/                          code-review findings and their remediation records
+  ```
+
+  A folder under `features/` that holds only one file is a sign the companion is missing —
+  write it, do not leave the pair half-finished.
 
 Write it for the next developer who has to change this code. Cover:
 
@@ -466,7 +501,8 @@ the document is a bug — fix it.
 
 ### 13. Also ship a code-level companion document
 
-**Alongside the doc from step 12, add a second file: `docs/<area>-<feature>_code_explanation.md`.**
+**Alongside the doc from step 12, add a second file in the same feature folder:
+`docs/features/<area>-<feature>/<area>-<feature>_code_explanation.md`.**
 The step-12 doc is for someone deciding *whether* and *why*; this one is for someone about
 to *change the code* and needs to know what calls what before they touch it. Do not merge
 the two — a reader who wants the wiring shouldn't have to skim past decision narrative to
@@ -481,17 +517,19 @@ Write it as a literal call-chain walkthrough, not a summary:
 2. **For every other slice/endpoint in the feature, note only the diff** from the one you
    traced in full — same shape, different route/DTO, plus whatever is genuinely different
    (an extra guard, a different persistence step). Don't re-walk identical plumbing.
-2. **Quote the code that matters** — a locking pattern, a query shape, a DI registration —
-   rather than paraphrasing it, so the reader can compare it against the live file.
-3. **Call out the wiring that isn't visible from reading one file alone**: DI registrations
+3. **Quote the code that matters** — a locking pattern, a query shape, a DI registration —
+   rather than paraphrasing it, so the reader can compare it against the live file. Quote
+   only what you actually read in the file; never reconstruct a snippet from memory or from
+   the high-level doc.
+4. **Call out the wiring that isn't visible from reading one file alone**: DI registrations
    (`ServiceConfig`), gateway routes (`Path/ATSPaths.cs`), keyed services, and any place the
    same string (a route, a wrapper property name) has to independently agree across two
    files with nothing enforcing it at compile time.
-4. **End with a "change X, also check Y" table** — the fast lookup a developer reaches for
+5. **End with a "change X, also check Y" table** — the fast lookup a developer reaches for
    mid-edit, so they don't discover the second call site by breaking it.
 
-Reference example: `docs/ats-email-accounts_code_explanation.md`, the companion to
-`docs/ats-email-accounts.md`.
+Reference example: `docs/features/ats-email-accounts/ats-email-accounts_code_explanation.md`, the companion to
+`docs/features/ats-email-accounts/ats-email-accounts.md`.
 
 ### 14. Verify the complete feature
 
@@ -585,8 +623,8 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] Colours use the shared `--c-*` tokens; no hex literals outside `wwwroot/css/theme.css`.
 - [ ] Screen was checked at 390px and in both light and dark mode.
 - [ ] UI covers loading, empty, validation, success, failure, and responsive states.
-- [ ] **A `docs/*.md` was added or updated for this change.**
-- [ ] **A `docs/*_code_explanation.md` companion was added or updated, tracing the real call chain.**
+- [ ] **Both documents exist in `docs/features/<area>-<feature>/` — the high-level `.md` and its `_code_explanation.md` companion tracing the real call chain.**
+- [ ] **If this change refactored or renamed anything in an already-documented feature, that feature's two documents were updated in the same commit and no longer describe the old shape.**
 - [ ] No hand-rolled `try/catch` in feature code — throw and let `CustomExceptionHandler` answer, or use `SideEffectGuard` / `ApiRequestExtensions`.
 - [ ] Relevant tests and the solution build pass.
 - [ ] API/UI contracts and gateway route were verified end to end.
@@ -597,7 +635,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 Copy this into a new Codex/Claude discussion:
 
 ```markdown
-Read `docs/feature-development-guide.md` first and follow it. If the change touches the UI, also read `docs/ui-theming-and-responsiveness.md`. Implement this feature end to end. Use ATS components as the latest UI/theme reference. Inspect existing neighboring code before editing, preserve unrelated changes, and run relevant tests plus the solution build. Finish by adding or updating a `docs/*.md` describing what you built and why, and a `docs/*_code_explanation.md` tracing the actual call chain file by file.
+Read `docs/feature-development-guide.md` first and follow it. If the change touches the UI, also read `docs/ui-theming-and-responsiveness.md`. Implement this feature end to end. Use ATS components as the latest UI/theme reference. Inspect existing neighboring code before editing, preserve unrelated changes, and run relevant tests plus the solution build. Finish by adding or updating **both** documents in `docs/features/<area>-<feature>/`: `<area>-<feature>.md` describing what you built and why, and `<area>-<feature>_code_explanation.md` tracing the actual call chain file by file. If you refactored or renamed anything inside a feature that is already documented, update that feature's two documents in the same commit so they describe the code as it now is.
 
 Feature name:
 Module and area:

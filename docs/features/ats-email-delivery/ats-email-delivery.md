@@ -3,8 +3,8 @@
 How invitation emails reach candidates without tripping the provider's rate limits, and why
 the design looks the way it does.
 
-Related: `docs/ats-email-accounts.md` (the registry of sender accounts this page sends
-through, and how one is registered), `docs/ats-notifications.md` (what raises the
+Related: `docs/features/ats-email-accounts/ats-email-accounts.md` (the registry of sender accounts this page sends
+through, and how one is registered), `docs/features/ats-notifications/ats-notifications.md` (what raises the
 notifications this job completes), `docs/feature-development-guide.md`.
 
 ---
@@ -115,7 +115,7 @@ raise either rate**, so tuning for speed can never re-create either incident.
 
 **They are still singletons, but the sender is no longer the process.** All three bound
 resources belonging to *one sending mailbox*, and there are now several registered mailboxes
-(see `docs/ats-email-accounts.md`). `SmtpAccountPoolRegistry` — itself a singleton — holds one
+(see `docs/features/ats-email-accounts/ats-email-accounts.md`). `SmtpAccountPoolRegistry` — itself a singleton — holds one
 `(pool, limiter)` pair per account id, built on first use and disposed when that account is
 edited or deleted. Every rule below still holds *within* an account; only the word "sender"
 narrowed from "this process" to "this mailbox".
@@ -171,7 +171,7 @@ Only `Account`-scoped failures reach the breaker. Counting a `550` would let one
 of typo'd addresses retire every registered sender in minutes — the queue would have nowhere
 left to send, with nothing actually wrong. That rule lives in
 `SmtpAccountPoolRegistry.ReportFailureAsync` and is the one most likely to be "simplified"
-wrongly later; `docs/ats-email-accounts.md` has the full breaker table.
+wrongly later; `docs/features/ats-email-accounts/ats-email-accounts.md` has the full breaker table.
 
 ### A throttle stops one account, not the pass
 
@@ -240,7 +240,7 @@ absent section is valid — the same convention as `AtsNotifications` and `AtsAu
 | `SendLogRetentionHours` | 48 | How long a send-log row is kept |
 
 The last five belong to the account registry; they are documented in full, with the reasoning
-for each number, in `docs/ats-email-accounts.md`.
+for each number, in `docs/features/ats-email-accounts/ats-email-accounts.md`.
 
 The first group's defaults come from the incidents: the provider accepted ~1.75
 messages/second before refusing, so 0.9 is about half the observed ceiling. That clears 200
@@ -428,7 +428,7 @@ Zero rows updated means the button was stale, and the service raises `ConflictEx
 rather than reporting a silent success.
 
 Both boards also offer a **bulk** requeue over a multi-select, sharing this same statement
-and its guarantees. See `docs/ats-bulk-requeue.md` for the batch cap, per-row scope
+and its guarantees. See `docs/features/ats-bulk-requeue/ats-bulk-requeue.md` for the batch cap, per-row scope
 enforcement, and why a partly-stale selection is reported rather than rejected.
 
 ### The resend rotates the token; the follow-up chaser does not
