@@ -155,6 +155,10 @@ public static class ATSServiceConfiguration
 		// this just gives the container an answer for the unkeyed one too.
 		services.AddScoped<IAtsEmailSender>(provider =>
 			(IAtsEmailSender)provider.GetRequiredKeyedService<IEmailService>("ats"));
+
+		// The withdrawal notice needs the result-aware sender above, so it is registered after it
+		// and depends on the unkeyed contract rather than resolving the keyed one itself.
+		services.AddScoped<IWithdrawnEmailNotification, WithdrawnEmailNotification>();
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IOMSTicketingProcessorService, OMSTicketingProcessorService>();

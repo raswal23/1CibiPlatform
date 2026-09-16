@@ -125,7 +125,7 @@ the registry yet.
 
 ### 1.5 `SendOverContextAsync` — the actual SMTP conversation
 
-This private method in `ATSEmailService.cs` (lines ~233-367) is shared by every send path in the
+This private method in `ATSEmailService.cs` (lines ~240-385) is shared by every send path in the
 feature: `SendWithCredentialsAsync` (register/edit/delete/resend OTP) and
 `SendThroughAccountAsync` (real candidate invitations, §4) both funnel into it. One place decides
 what an SMTP exception means, which is what `docs/features/ats-email-delivery/ats-email-delivery.md` §6 calls out as an
@@ -136,7 +136,9 @@ invariant to preserve.
   `EmailDeliveryResult`s before a message is ever built.
 - `BuildMessage` sets `From` from `context.DisplayName`/`context.EmailAddress` — never from a
   configured constant — because the From header must match whatever mailbox actually
-  authenticated the session, or the receiving server treats it as spoofed.
+  authenticated the session, or the receiving server treats it as spoofed. It also takes an
+  optional copy list and adds each address to `message.Cc`; only the withdrawal notice passes one
+  (`docs/features/ats-withdrawn-application-email/`).
 - Exception → outcome mapping happens via `SmtpFailureClassifier.ClassifySendFailure` for
   `SmtpCommandException` (the server answered with a status code), and by catch-block shape for
   `SmtpProtocolException` (session broken) / `IOException`, `SocketException`, `TimeoutException`
@@ -270,7 +272,7 @@ from here.
 
 ```
 EmailNotificationProcessorService (unchanged orchestration, not detailed here)
-  → IAtsEmailSender.SendATSEmailWithResultAsync(toEmail, subject, body, ct)   [ATSEmailService.cs]
+  → IAtsEmailSender.SendATSEmailWithResultAsync(toEmail, subject, body, ct, cc?)   [ATSEmailService.cs]
       loop:
         → _poolRegistry.GetNextSendableAccountAsync(attemptedAccountIds, ct)  [4.1]
         → SendThroughAccountAsync(account.AtsEmailAccountId, ...)             [4.2]

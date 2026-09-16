@@ -88,7 +88,11 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 				services.Remove(atsEmailDescriptor);
 			}
 
-			services.AddKeyedSingleton<IEmailService, Test.BackendAPI.Infrastructure.Auth.Infrastructure.FakeEmailSender>("ats");
+			// FakeAtsEmailSender rather than the shared FakeEmailSender: ATSServiceConfiguration
+			// resolves IAtsEmailSender by CASTING this registration, and the plain fake does not
+			// implement that contract. The cast throws while resolving, which would take down every
+			// test whose graph reaches a service that injects IAtsEmailSender directly.
+			services.AddKeyedSingleton<IEmailService, FakeAtsEmailSender>("ats");
 
 			// Register HttpContextAccessor (scoped, not singleton)
 			services.RemoveAll<IHttpContextAccessor>();

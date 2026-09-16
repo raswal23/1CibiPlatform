@@ -10,6 +10,7 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IFilePdfService _filePdfService;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IAtsNotificationService _notificationService;
+	private readonly IWithdrawnEmailNotification _withdrawnEmailNotification;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 
@@ -41,7 +42,8 @@ public class ApplicationFormService : IApplicationFormService
 					  IObjectStorageService objectStorageService,
 					  IFilePdfService filePdfService,
 					  IOrderHistoryService orderHistoryService,
-					  IAtsNotificationService notificationService)
+					  IAtsNotificationService notificationService,
+					  IWithdrawnEmailNotification withdrawnEmailNotification)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -51,6 +53,7 @@ public class ApplicationFormService : IApplicationFormService
 		_filePdfService = filePdfService;
 		_orderHistoryService = orderHistoryService;
 		_notificationService = notificationService;
+		_withdrawnEmailNotification = withdrawnEmailNotification;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
@@ -497,6 +500,13 @@ public class ApplicationFormService : IApplicationFormService
 			await _unitOfWork.SaveChangesAsync(ct);
 
 			await _unitOfWork.CommitAsync(ct);
+
+			// After the commit, deliberately - the same reasoning as the submission path above.
+			// The withdrawal is the thing that matters and it is now durable; telling the requestor
+			// is a best-effort follow-up that must not be able to roll it back. The notifier guards
+			// itself, exactly as RaiseForOrderAsync does, so a delivery failure is logged there and
+			// the candidate still sees their withdrawal succeed.
+			await _withdrawnEmailNotification.SendAsync(invitation, ct);
 
 			return true;
 		}

@@ -572,7 +572,7 @@ The application-form link is `$"{_applicationformBaseUrl}/{request.HashToken}"`,
 `_applicationformBaseUrl` read once in the constructor from `ATS:ApplicationFormBaseUrl`. The token
 on the row is the **hash**, and it is what the candidate's URL carries.
 
-### 1.7 The switcher — `ATSEmailService.SendATSEmailWithResultAsync` (`ATSEmailService.cs:63`)
+### 1.7 The switcher — `ATSEmailService.SendATSEmailWithResultAsync` (`ATSEmailService.cs:61`)
 
 The signature:
 
@@ -581,8 +581,15 @@ The signature:
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null)
 ```
+
+`cc` is optional and last — C# requires optional parameters to trail required ones, and that
+ordering is load-bearing rather than cosmetic: it is what let the withdrawal notice add a copy list
+without touching any existing caller. `SendATSEmailAsync` below and
+`EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync` both still compile
+unchanged. See `docs/features/ats-withdrawn-application-email/`.
 
 Its XML `<remarks>` is the authoritative statement of the three ways out, and is worth reading in
 place of any summary:
@@ -652,7 +659,8 @@ The loop itself:
 				toEmail,
 				subject,
 				body,
-				cancellationToken);
+				cancellationToken,
+				cc);
 
 			if (result.IsSent || !result.CanRetryOnAnotherAccount)
 			{
@@ -698,8 +706,13 @@ account's `LastFailureReason` waiting to be read.
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null)
 	{
+		// Normalised once here rather than inside the message builder, so the recipient count
+		// charged to this account's daily cap is provably the same list that goes on the wire.
+		var copied = NormalizeRecipients(cc);
+
 		SmtpAccountContext context;
 
 		try
@@ -730,13 +743,15 @@ account's `LastFailureReason` waiting to be read.
 			toEmail,
 			subject,
 			body,
-			cancellationToken);
+			cancellationToken,
+			copied);
 
 		if (result.IsSent)
 		{
-			// One recipient per invitation today. Counted as recipients rather than messages
-			// because that is what the provider counts against the daily cap.
-			await _poolRegistry.ReportSuccessAsync(accountId, 1, cancellationToken);
+			// Recipients, not messages: the TO address plus everyone copied. The provider counts
+			// recipients against the daily cap, so a copied message has to consume more of it -
+			// see AtsEmailSendLog.RecipientCount, which is summed rather than counted.
+			await _poolRegistry.ReportSuccessAsync(accountId, 1 + copied.Count, cancellationToken);
 		}
 		else
 		{
@@ -757,10 +772,12 @@ attempt, then the send, then the report. The `Permanent` returned for an unbuild
 A vanished account therefore does not trip its own breaker; the `Permanent` branch of
 `ReportFailureAsync` (which sets `NeedsReverification`) is only reached for a provider rejection.
 
-`ReportSuccessAsync(accountId, 1, ...)` — the `1` is recipients, not messages, matching
-`AtsEmailSendLog.RecipientCount` (§8). This call is inside no try/catch; §10.2.
+`ReportSuccessAsync(accountId, 1 + copied.Count, ...)` — the count is recipients, not messages,
+matching `AtsEmailSendLog.RecipientCount` (§8). An invitation still reports `1`; the withdrawal
+notice reports `3`, because it copies two addresses and the provider charges for all of them. This
+call is inside no try/catch; §10.2.
 
-### 1.9 `SendOverContextAsync` — the SMTP conversation (`ATSEmailService.cs:233`)
+### 1.9 `SendOverContextAsync` — the SMTP conversation (`ATSEmailService.cs:240`)
 
 This private method is shared by every send path in the module: the switcher's
 `SendThroughAccountAsync` and the throwaway `SendWithCredentialsAsync` (§5) both funnel into it, so
@@ -810,7 +827,7 @@ The send and its classification:
 ```csharp
 		await using (lease)
 		{
-			var message = BuildMessage(context, toEmail, subject, body);
+			var message = BuildMessage(context, toEmail, subject, body, cc);
 
 			try
 			{
@@ -892,6 +909,9 @@ And `BuildMessage`, which is why the context travels this far down:
 	/// reading a configured sender.
 	/// </remarks>
 ```
+
+`BuildMessage` also takes an optional copy list and adds each address to `message.Cc`. Only the
+withdrawal notice passes one — every other path sends to a single recipient, exactly as before.
 
 ### 1.10 Writing the outcome back
 
@@ -1693,11 +1713,11 @@ status column being right (§10.1, §10.2).
 
 | Method | Where | Caller | Diff from §1 |
 |---|---|---|---|
-| `SendATSEmailWithResultAsync` | `ATSEmailService.cs:63` | `EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync` | The traced path. The switcher. |
-| `SendATSEmailAsync` → `bool` | `:29` | `SendEmailAsync` (`:558`), `DisputeOrderService.cs:210` | Wraps the switcher and **discards the outcome**: `var result = await SendATSEmailWithResultAsync(toEmail, subject, body, CancellationToken.None); return result.IsSent;` — note `CancellationToken.None`, so this path cannot be cancelled at all |
-| `SendThroughAccountAsync` | `:134` | **only** `SendATSEmailWithResultAsync:106` | One named account, no failover, reports to the breaker. Its interface doc claims registration uses it (C8); nothing outside the switcher does |
-| `SendWithCredentialsAsync` | `:189` | `AtsEmailAccountManagementService.SendOtpThroughCredentialsAsync` (`:425`, calling it at `:431`) | Throwaway limiter + pool + context, all disposed at the end of the call. **No registry, no lease, no breaker, no quota check** |
-| `SendOverContextAsync` (private) | `:233` | both of the above two real paths | The shared SMTP conversation, §1.9 |
+| `SendATSEmailWithResultAsync` | `ATSEmailService.cs:61` | `EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync`; `WithdrawnEmailNotification.SendNoticeAsync` | The traced path. The switcher. The withdrawal notice is the only caller that passes `cc` |
+| `SendATSEmailAsync` → `bool` | `:27` | `SendEmailAsync` (`:558`), `DisputeOrderService.cs:210` | Wraps the switcher and **discards the outcome**: `var result = await SendATSEmailWithResultAsync(toEmail, subject, body, CancellationToken.None); return result.IsSent;` — note `CancellationToken.None`, so this path cannot be cancelled at all |
+| `SendThroughAccountAsync` | `:134` | **only** `SendATSEmailWithResultAsync:105` | One named account, no failover, reports to the breaker. Its interface doc claims registration uses it (C8); nothing outside the switcher does |
+| `SendWithCredentialsAsync` | `:196` | `AtsEmailAccountManagementService.SendOtpThroughCredentialsAsync` (`:425`, calling it at `:431`) | Throwaway limiter + pool + context, all disposed at the end of the call. **No registry, no lease, no breaker, no quota check** |
+| `SendOverContextAsync` (private) | `:240` | both of the above two real paths | The shared SMTP conversation, §1.9 |
 
 `SendWithCredentialsAsync` in full, because its disposals are the interesting part:
 
@@ -2065,8 +2085,10 @@ shape: SUM(RecipientCount) for one account over the last 24 hours". Accounts §4
 	public int RecipientCount { get; set; }
 ```
 
-which is why `SendThroughAccountAsync` passes the literal `1` and why a future CC has to change
-that call site, not the schema.
+The CC that comment anticipated has arrived: the withdrawal notice copies the candidate and
+`ccteam@cibi.com.ph`, so `SendThroughAccountAsync` now passes `1 + copied.Count` rather than the
+literal `1`. The schema did not have to change — which is exactly what that comment predicted. See
+`docs/features/ats-withdrawn-application-email/`.
 
 Configuration, `Data/EntityConfiguration/AtsEmailSendLogConfiguration.cs`: table `ats."EmailSendLog"`,
 `ValueGeneratedOnAdd` identity, cascade on the account FK, and one index:
@@ -2361,15 +2383,16 @@ The shape of a fix is either to catch `OperationCanceledException` around the de
 
 ### 10.2 A failed bookkeeping write turns a delivered message into a retry
 
-**Double-send.** `ATSEmailService.cs:177` awaits `ReportSuccessAsync` *after* the send returned
+**Double-send.** `ATSEmailService.cs:184` awaits `ReportSuccessAsync` *after* the send returned
 `Sent`, outside any `try`:
 
 ```csharp
 		if (result.IsSent)
 		{
-			// One recipient per invitation today. Counted as recipients rather than messages
-			// because that is what the provider counts against the daily cap.
-			await _poolRegistry.ReportSuccessAsync(accountId, 1, cancellationToken);
+			// Recipients, not messages: the TO address plus everyone copied. The provider counts
+			// recipients against the daily cap, so a copied message has to consume more of it -
+			// see AtsEmailSendLog.RecipientCount, which is summed rather than counted.
+			await _poolRegistry.ReportSuccessAsync(accountId, 1 + copied.Count, cancellationToken);
 		}
 ```
 

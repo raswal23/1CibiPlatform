@@ -193,8 +193,10 @@ WHERE "AtsEmailAccountId" = $1 AND "SentAt" >= now() - interval '24 hours';
 
 Three properties follow from that, all of them load-bearing:
 
-- **It sums recipients, not rows.** Google counts recipients. One invitation is one recipient
-  today, but a future CC would consume more quota than a row count reports.
+- **It sums recipients, not rows.** Google counts recipients. An invitation is one recipient and
+  reports `1`; the withdrawal notice copies two more addresses and reports `3`. Summing is what
+  keeps the cap honest now that a message can carry more than one recipient — see
+  `docs/features/ats-withdrawn-application-email/`.
 - **Only successful sends are logged.** A refused message consumed no quota, and logging it
   would make the account look more consumed than it is and retire it early.
 - **The table and the routing decision read the same number.** The `312 / 450` in the UI is the

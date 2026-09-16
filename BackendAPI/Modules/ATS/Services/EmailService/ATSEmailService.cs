@@ -62,7 +62,8 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null)
 	{
 		var attemptedAccountIds = new List<int>();
 
@@ -106,7 +107,8 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 				toEmail,
 				subject,
 				body,
-				cancellationToken);
+				cancellationToken,
+				cc);
 
 			if (result.IsSent || !result.CanRetryOnAnotherAccount)
 			{
@@ -134,8 +136,13 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null)
 	{
+		// Normalised once here rather than inside the message builder, so the recipient count
+		// charged to this account's daily cap is provably the same list that goes on the wire.
+		var copied = NormalizeRecipients(cc);
+
 		SmtpAccountContext context;
 
 		try
@@ -166,13 +173,15 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 			toEmail,
 			subject,
 			body,
-			cancellationToken);
+			cancellationToken,
+			copied);
 
 		if (result.IsSent)
 		{
-			// One recipient per invitation today. Counted as recipients rather than messages
-			// because that is what the provider counts against the daily cap.
-			await _poolRegistry.ReportSuccessAsync(accountId, 1, cancellationToken);
+			// Recipients, not messages: the TO address plus everyone copied. The provider counts
+			// recipients against the daily cap, so a copied message has to consume more of it -
+			// see AtsEmailSendLog.RecipientCount, which is summed rather than counted.
+			await _poolRegistry.ReportSuccessAsync(accountId, 1 + copied.Count, cancellationToken);
 		}
 		else
 		{
@@ -233,7 +242,8 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null)
 	{
 		// Paced before the connection is leased. Waiting while holding a session would idle
 		// a scarce resource for no reason.
@@ -268,7 +278,7 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 
 		await using (lease)
 		{
-			var message = BuildMessage(context, toEmail, subject, body);
+			var message = BuildMessage(context, toEmail, subject, body, cc);
 
 			try
 			{
@@ -377,12 +387,22 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 		SmtpAccountContext context,
 		string toEmail,
 		string subject,
-		string body)
+		string body,
+		IReadOnlyCollection<string>? cc = null)
 	{
 		var message = new MimeKit.MimeMessage();
 
 		message.From.Add(new MimeKit.MailboxAddress(context.DisplayName, context.EmailAddress));
 		message.To.Add(MimeKit.MailboxAddress.Parse(toEmail));
+
+		if (cc is not null)
+		{
+			foreach (var copied in cc)
+			{
+				message.Cc.Add(MimeKit.MailboxAddress.Parse(copied));
+			}
+		}
+
 		message.Subject = subject;
 
 		message.Body = new MimeKit.BodyBuilder
@@ -392,6 +412,19 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 
 		return message;
 	}
+
+	/// <summary>
+	/// Drops empty entries so a caller can hand over a list with a missing address - an order
+	/// whose candidate row has no email - without putting an unparseable mailbox on the message
+	/// or charging the account's daily cap for a recipient that was never added.
+	/// </summary>
+	private static IReadOnlyCollection<string> NormalizeRecipients(IReadOnlyCollection<string>? recipients) =>
+		recipients is null
+			? []
+			: recipients
+				.Where(address => !string.IsNullOrWhiteSpace(address))
+				.Select(address => address.Trim())
+				.ToList();
 
 	public string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink, string? requestor, string? clientName)
 	{
@@ -491,6 +524,60 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 							and
 							<a href='mailto:ceteam@cibi.com.ph' style='color:#1d5fd1'>ceteam@cibi.com.ph</a>
 							or call us at +63 923 087 8757 (Sun), or +63 917 632 0486 (Globe).
+						</p>
+					</div>
+					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6'>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</div>
+				</div>
+			</body>
+			</html>";
+
+		return body;
+	}
+
+	/// <summary>
+	/// The withdrawal notice body - see <see cref="IAtsEmailSender"/> for why this lives on the
+	/// ATS-only contract rather than beside the shared invitation body above.
+	/// </summary>
+	/// <remarks>
+	/// Same card, contact treatment and confidentiality footer as the invitation and the reminder,
+	/// so the requestor recognises it as coming from the same process rather than from a different
+	/// system. The header reads <see cref="WithdrawnEmail.Subject"/> - the same constant the caller
+	/// sends as the subject line - because the two are read together in a client preview, and a
+	/// header that disagreed with the subject would look like a mis-send.
+	///
+	/// There is no button here. Every other candidate-facing body links to the application form,
+	/// but the whole point of this message is that the form is gone - a link would invite the
+	/// requestor to reopen something the candidate just closed.
+	/// </remarks>
+	public string BuildWithdrawnApplicationNotification(
+		string requestorName,
+		string candidateName)
+	{
+		// Both names come from stored data - the requestor from the Auth directory, the candidate
+		// from the invitation row - and land inside markup, so both are encoded rather than
+		// trusted. Same reasoning as AtsEmailAccountOtpBody below.
+		var encodedRequestor = WebUtility.HtmlEncode(requestorName.Trim());
+		var encodedCandidate = WebUtility.HtmlEncode(candidateName.Trim());
+
+		string body = $@"
+			<!DOCTYPE html>
+			<html>
+			<body style='margin:0;padding:0;background:#f4f6fb;font-family:Arial, sans-serif'>
+				<div style='max-width:600px;margin:24px auto;background:#ffffff;border:1px solid #d9e5f5;border-radius:12px;overflow:hidden'>
+					<div style='padding:24px 36px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-align:center'>
+						<h1 style='margin:0;font-size:20px'>{WithdrawnEmail.Subject}</h1>
+						<p style='margin:8px 0 0;font-size:13px;line-height:1.5;color:#dbe7fb'>The candidate has withdrawn their application form</p>
+					</div>
+					<div style='padding:34px 36px'>
+						<p style='font-size:16px;line-height:1.7'>Dear {encodedRequestor},</p>
+						<p style='font-size:16px;line-height:1.7'>
+							Your candidate, {encodedCandidate}, has withdrawn their Application Form. The background verification should not proceed without the completed Application Form.
+						</p>
+						<p style='font-size:15px;line-height:1.6'>
+							For any questions or concerns, please do not hesitate to reach out to
+							<a href='mailto:ccteam@cibi.com.ph' style='color:#1d5fd1'>ccteam@cibi.com.ph</a>
+							and
+							<a href='mailto:clientsupport@cibi.com.ph' style='color:#1d5fd1'>clientsupport@cibi.com.ph</a>.
 						</p>
 					</div>
 					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6'>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</div>
