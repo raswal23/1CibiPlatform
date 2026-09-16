@@ -143,4 +143,28 @@ public interface IAtsEmailSender
 		string candidateName,
 		string disputeCategory,
 		string? disputeDetails);
+
+	/// <summary>
+	/// Composes the completed-form notice - the email sent when a candidate finishes their
+	/// application form and the order moves to In Progress.
+	/// </summary>
+	/// <remarks>
+	/// On this contract for the same reason as the three above: only ATS has a completed form to
+	/// announce, so the shared <c>IEmailService</c> that Auth and the test fakes implement stays
+	/// unaware of it.
+	///
+	/// Addressed to the REQUESTOR, like the withdrawal notice and the dispute acknowledgement - all
+	/// three tell the person who raised the order what their candidate just did. The candidate is
+	/// copied rather than addressed.
+	///
+	/// The candidate name comes from the form they just submitted, not from the order row: this is
+	/// the first message about the form's contents, and the name they signed it with is the one that
+	/// matters. The requestor name still comes from the directory, as everywhere else.
+	///
+	/// Composes, it does not send - the caller pairs the body with <c>SubmittedFormEmail.Subject</c>
+	/// and hands both to <see cref="SendATSEmailWithResultAsync"/>.
+	/// </remarks>
+	string BuildSubmittedFormNotification(
+		string requestorName,
+		string candidateName);
 }

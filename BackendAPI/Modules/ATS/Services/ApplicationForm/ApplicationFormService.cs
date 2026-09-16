@@ -11,6 +11,7 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IAtsNotificationService _notificationService;
 	private readonly IWithdrawnEmailNotification _withdrawnEmailNotification;
+	private readonly ISubmittedFormEmailNotification _submittedFormEmailNotification;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 
@@ -43,7 +44,8 @@ public class ApplicationFormService : IApplicationFormService
 					  IFilePdfService filePdfService,
 					  IOrderHistoryService orderHistoryService,
 					  IAtsNotificationService notificationService,
-					  IWithdrawnEmailNotification withdrawnEmailNotification)
+					  IWithdrawnEmailNotification withdrawnEmailNotification,
+					  ISubmittedFormEmailNotification submittedFormEmailNotification)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -54,6 +56,7 @@ public class ApplicationFormService : IApplicationFormService
 		_orderHistoryService = orderHistoryService;
 		_notificationService = notificationService;
 		_withdrawnEmailNotification = withdrawnEmailNotification;
+		_submittedFormEmailNotification = submittedFormEmailNotification;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
@@ -130,6 +133,21 @@ public class ApplicationFormService : IApplicationFormService
 			await _notificationService.RaiseForOrderAsync(
 				emailInvitationId,
 				AtsNotificationType.ApplicationFormSubmitted,
+				ct);
+
+			// The email counterpart of the in-app notification above, and guarded for one reason
+			// beyond the usual "the work is already durable": the catch below deletes every file
+			// this submission uploaded as compensation, so an exception escaping from here would
+			// tear the attachments out from under a form that is already saved.
+			//
+			// The candidate is named from the form they just submitted rather than from the order
+			// row - this is the first message about the form's contents. The notifier reads the row
+			// anyway, for the requestor and for the candidate's mailbox, which the form does not
+			// carry.
+			await _submittedFormEmailNotification.SendAsync(
+				new SubmittedFormEmailDetails(
+					emailInvitationId,
+					$"{personalDetails.FirstName} {personalDetails.LastName}".Trim()),
 				ct);
 
 			return true;

@@ -72,4 +72,9 @@ public sealed class FakeAtsEmailSender : FakeEmailSender, IAtsEmailSender
 		string disputeCategory,
 		string? disputeDetails)
 		=> $"Dear {requestorName}, a dispute has been submitted for {candidateName}. Category: {disputeCategory}. Details: {disputeDetails ?? "(none)"}";
+
+	public string BuildSubmittedFormNotification(
+		string requestorName,
+		string candidateName)
+		=> $"Dear {requestorName}, your candidate {candidateName} has successfully completed the Application Form.";
 }

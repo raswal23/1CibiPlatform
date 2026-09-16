@@ -40,6 +40,7 @@ public class ApplicationFormServiceWithdrawnEmailTests
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly Mock<IAtsNotificationService> _notificationService = new();
 	private readonly Mock<IWithdrawnEmailNotification> _withdrawnEmail = new();
+	private readonly Mock<ISubmittedFormEmailNotification> _submittedFormEmail = new();
 
 	private readonly ApplicationFormService _service;
 
@@ -62,7 +63,8 @@ public class ApplicationFormServiceWithdrawnEmailTests
 			_filePdfService.Object,
 			_orderHistoryService.Object,
 			_notificationService.Object,
-			_withdrawnEmail.Object);
+			_withdrawnEmail.Object,
+			_submittedFormEmail.Object);
 	}
 
 	/// <summary>
