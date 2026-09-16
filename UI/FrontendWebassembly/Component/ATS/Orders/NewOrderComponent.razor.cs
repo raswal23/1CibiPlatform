@@ -463,17 +463,26 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
-		// Extra columns after the template's are filtered out by the parser; the
-		// template columns themselves must lead the file in the standard sequence.
+		// Check for required headers based on screening type
+		var expectedHeaders = CsvPreviewParser.HeadersFor(bulkUploadFileDetailsDTO.AutoChasing == false);
+		var missingHeaders = expectedHeaders
+			.Where(expected => !previewData.Headers.Contains(expected, StringComparer.OrdinalIgnoreCase))
+			.ToList();
+
+		// The template columns themselves must lead the file in the standard sequence.
 		// Name the columns actually absent when that is the failure, otherwise call
 		// out the ordering - both before upload, not after the file is accepted.
-		if (!previewData.HasCanonicalHeaderSequence)
-		{
-			var expectedHeaders = CsvPreviewParser.HeadersFor(bulkUploadFileDetailsDTO.AutoChasing == false);
+		var hasCanonicalHeaderSequence = previewData.Headers.Count >= expectedHeaders.Count
+			&& expectedHeaders
+				.Select((expected, index) =>
+					string.Equals(previewData.Headers[index], expected, StringComparison.OrdinalIgnoreCase))
+				.All(matches => matches);
 
+		if (!hasCanonicalHeaderSequence)
+		{
 			Snackbar.Add(
-				previewData.MissingHeaders.Count > 0
-					? $"Missing required column(s): {string.Join(", ", previewData.MissingHeaders)}. Please use the bulk upload template."
+				missingHeaders.Count > 0
+					? $"Missing required column(s): {string.Join(", ", missingHeaders)}. Please use the bulk upload template."
 					: $"Columns must appear in the template order: {string.Join(", ", expectedHeaders)}.",
 				Severity.Error);
 			return;
@@ -498,7 +507,8 @@ public partial class NewOrderComponent
 		{
 			{ nameof(PreviewComponent.Headers), previewData.Headers },
 			{ nameof(PreviewComponent.Rows), previewData.Rows },
-			{ nameof(PreviewComponent.Message), previewMessage }
+			{ nameof(PreviewComponent.Message), previewMessage },
+			{ nameof(PreviewComponent.IsDataScreening), bulkUploadFileDetailsDTO.AutoChasing == false }
 		};
 
 		var options = new DialogOptions
@@ -566,11 +576,9 @@ public partial class NewOrderComponent
 		// decoder buffers the bytes before choosing an encoding.
 		var csvContent = await CsvTextDecoder.DecodeAsync(stream);
 
-		// Quote-aware, so the preview matches what CsvHelper parses server-side. A data
-		// upload must also carry the identity columns: catching their absence here costs
-		// the operator one snackbar, while letting the file through costs them an upload
-		// whose every row the background processor then rejects.
-		return CsvPreviewParser.Parse(csvContent, bulkUploadFileDetailsDTO.AutoChasing == false);
+		// For preview purposes, show ALL columns in the CSV regardless of screening type
+		// The actual validation still happens based on screening type in the backend
+		return CsvPreviewParser.ParseForPreview(csvContent);
 	}
 
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)

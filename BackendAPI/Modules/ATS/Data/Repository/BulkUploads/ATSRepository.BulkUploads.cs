@@ -63,6 +63,13 @@ public partial class ATSRepository
 			.ToListAsync();
 	}
 
+	public async Task<BulkUploadFileDetails?> GetBulkUploadFileDetailByIdAsync(Guid fileId)
+	{
+		return await _dbcontext.BulkUploadFileDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.FileID == fileId);
+	}
+
 	public async Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
 	{
 		// A file that failed to process goes straight back to Pending so the next tick

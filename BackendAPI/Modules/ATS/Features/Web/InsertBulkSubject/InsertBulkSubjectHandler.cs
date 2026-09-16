@@ -19,7 +19,8 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 			.WithMessage("File size exceeds the 25 MB limit.")
 			.CustomAsync(BulkMobileNumberValidation.ValidateMobileNumbersAsync)
-			.CustomAsync(BulkEmailValidation.ValidateEmailAddressesAsync);
+			.CustomAsync(BulkEmailValidation.ValidateEmailAddressesAsync)
+			.CustomAsync(BulkIdentityFieldsValidation.ValidateIdentityFieldsAsync);
 	}
 }
 

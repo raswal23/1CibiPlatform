@@ -29,6 +29,36 @@
         </header>
 
         <main class="preview-upload-body ats-dialog-body">
+            @if (InvalidRows.Any())
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="preview-upload-alert mb-4">
+                    @if (InvalidMobileRows.Any())
+                    {
+                        <div>Mobile number must be exactly 11 digits in row(s): @string.Join(", ", InvalidMobileRows).</div>
+                    }
+                    @if (InvalidEmailRows.Any())
+                    {
+                        <div>Email address is not a valid email in row(s): @string.Join(", ", InvalidEmailRows).</div>
+                    }
+                    @if (InvalidDateOfBirthRows.Any())
+                    {
+                        <div>Date of birth must be in MM/dd/yyyy format in row(s): @string.Join(", ", InvalidDateOfBirthRows).</div>
+                    }
+                    @if (InvalidSSSNumberRows.Any())
+                    {
+                        <div>SSS number must be 10 digits in row(s): @string.Join(", ", InvalidSSSNumberRows).</div>
+                    }
+                    @if (InvalidTINNumberRows.Any())
+                    {
+                        <div>TIN number must be 9-12 digits in row(s): @string.Join(", ", InvalidTINNumberRows).</div>
+                    }
+                    @if (BlankRows.Any())
+                    {
+                        <div>Blank values found in row(s): @string.Join(", ", BlankRows) - @Message</div>
+                    }
+                </MudAlert>
+            }
+            
             <div class="preview-upload-table-panel">
                 @* Uses the default Breakpoint.Sm so the preview stacks into cards on a
                    phone. It previously passed Breakpoint.None, which suppressed card
@@ -76,24 +106,6 @@
                     </RowTemplate>
                 </TableComponent>
             </div>
-
-            @if (InvalidRows.Any())
-            {
-                <MudAlert Severity="Severity.Error" Dense="true" Class="preview-upload-alert">
-                    @if (InvalidMobileRows.Any())
-                    {
-                        <div>Mobile number must be exactly 11 digits in row(s): @string.Join(", ", InvalidMobileRows).</div>
-                    }
-                    @if (InvalidEmailRows.Any())
-                    {
-                        <div>Email address is not a valid email in row(s): @string.Join(", ", InvalidEmailRows).</div>
-                    }
-                    @if (BlankRows.Any())
-                    {
-                        <div>Blank values found in row(s): @string.Join(", ", BlankRows) - @Message</div>
-                    }
-                </MudAlert>
-            }
         </main>
 
         <footer class="preview-upload-footer ats-dialog-footer">

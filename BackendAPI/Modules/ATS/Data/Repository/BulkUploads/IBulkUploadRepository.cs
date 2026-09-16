@@ -5,6 +5,7 @@ public interface IBulkUploadRepository
 	Task<bool> AddBulkUploadFileDetailsAsync(BulkUploadFileDetails bulkUploadFileDetails);
 	Task<bool> BulkUploadFileNameExistsAsync(string fileName, int? clientId, Guid? uploadedByUserId, CancellationToken cancellationToken);
 	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsAsync();
+	Task<BulkUploadFileDetails?> GetBulkUploadFileDetailByIdAsync(Guid fileId);
 	Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails);
 	Task<int> ReleaseStaleBulkFileClaimsAsync(TimeSpan staleAfter);
 	Task<bool> UpdateBulkFileDetailsStatusAsync(List<Guid> bulkUploadFileDetailIds, string orderStatus);

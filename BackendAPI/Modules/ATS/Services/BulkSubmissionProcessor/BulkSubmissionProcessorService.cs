@@ -370,6 +370,28 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			var processedFileIds = processedFiles.Select(file => file.FileID).ToList();
 
 			await _repository.UpdateBulkFileDetailsStatusAsync(processedFileIds, BulkFileStatus.Done);
+
+			// Log rejected rows for each processed file that has them
+			foreach (var file in processedFiles)
+			{
+				// Fetch the updated file details to check for rejected rows after status update
+				var updatedFileDetails = await _repository.GetBulkUploadFileDetailByIdAsync(file.FileID);
+				
+				if (updatedFileDetails != null && 
+					updatedFileDetails.Status == BulkFileStatus.Done && 
+					!string.IsNullOrEmpty(updatedFileDetails.RejectedRows))
+				{
+					// Deserialize the rejected rows to log them in a more readable format
+					var rejectedRows = JsonSerializer.Deserialize<List<BulkUploadRejectedRowDTO>>(updatedFileDetails.RejectedRows);
+					
+					_logger.LogError(
+						"Bulk upload completed with rejected rows - Requestor: {Requestor}, Filename: {FileName}, Rejected Rows Count: {RejectedRowCount}, Rejected Rows Details: {RejectedRowsDetails}",
+						updatedFileDetails.Requestor,
+						updatedFileDetails.FileName,
+						rejectedRows?.Count ?? 0,
+						updatedFileDetails.RejectedRows);
+				}
+			}
 		}
 
 		if (failedFiles.Count > 0)

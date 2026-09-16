@@ -38,7 +38,7 @@ public partial class ATSRepository
 							   PARTITION BY "ClientId"
 							   ORDER BY "OrderCreatedAt") AS rn
 					FROM ats."EmailInvitationRequest"
-					WHERE "AutoChasing" IS TRUE
+					WHERE ("AutoChasing" IS TRUE)
 					  AND ("EmailSentStatus" = {2}
 						OR ("EmailSentStatus" = {3} AND "EmailSendAttempts" < {4}))
 				)

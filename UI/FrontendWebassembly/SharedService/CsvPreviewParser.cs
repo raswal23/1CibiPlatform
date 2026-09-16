@@ -127,8 +127,51 @@ public static class CsvPreviewParser
 
 		result.TotalRowCount = dataRows.Count;
 		result.Rows = dataRows
-			
+
 			.Select(fields => keptIndexes
+				.Select(index => index < fields.Count ? fields[index].Trim() : string.Empty)
+				.ToList())
+			.ToList();
+
+		return result;
+	}
+
+	/// <summary>
+	/// Parses CSV text for preview purposes, showing ALL columns in the file regardless of screening type.
+	/// </summary>
+	public static CsvPreviewResult ParseForPreview(string csvContent)
+	{
+		var result = new CsvPreviewResult();
+
+		if (string.IsNullOrWhiteSpace(csvContent))
+			return result;
+
+		var records = ParseRecords(csvContent);
+
+		if (records.Count == 0)
+			return result;
+
+		var fileHeaders = records[0].Select(field => field.Trim()).ToList();
+		result.Headers = fileHeaders;
+
+		// Show ALL columns in the preview, regardless of screening type
+		var allIndexes = Enumerable.Range(0, fileHeaders.Count).ToList();
+
+		// Ignore rows that are blank in any of the columns - a trailing newline is not a
+		// record, and neither is a row whose only content sits in the dropped debris
+		// columns (a note or helper formula past MobileNumber). Judging blankness on
+		// the whole record used to surface those as all-"(Blank)" rows that blocked
+		// an otherwise importable file.
+		var dataRows = records
+			.Skip(1)
+			.Where(fields => allIndexes.Any(index =>
+				index < fields.Count && !string.IsNullOrWhiteSpace(fields[index])))
+			.ToList();
+
+		result.TotalRowCount = dataRows.Count;
+		result.Rows = dataRows
+
+			.Select(fields => allIndexes
 				.Select(index => index < fields.Count ? fields[index].Trim() : string.Empty)
 				.ToList())
 			.ToList();
