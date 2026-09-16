@@ -118,9 +118,15 @@ public static class BulkIdentityFieldsValidation
 				
 				if (!string.IsNullOrWhiteSpace(sssValue))
 				{
-					if (sssValue.Length != 10 || !sssValue.All(char.IsDigit))
+					// First check if it contains only digits
+					if (!sssValue.All(char.IsDigit))
 					{
-						results.SssNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "SSS number must be 10 digits" });
+						results.SssNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "SSS number must contain only numeric digits, no special characters allowed" });
+					}
+					// Then check if it's exactly 10 digits (only if it contains only digits)
+					else if (sssValue.Length != 10)
+					{
+						results.SssNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "SSS number must be exactly 10 digits" });
 					}
 				}
 				else if (screeningType == false) // For data screening, SSS Number is required
@@ -138,9 +144,15 @@ public static class BulkIdentityFieldsValidation
 				
 				if (!string.IsNullOrWhiteSpace(tinValue))
 				{
-					if (tinValue.Length is < 9 or > 12 || !tinValue.All(char.IsDigit))
+					// First check if it contains only digits
+					if (!tinValue.All(char.IsDigit))
 					{
-						results.TinNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "TIN number must be 9 to 12 digits" });
+						results.TinNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "TIN number must contain only numeric digits, no special characters allowed" });
+					}
+					// Then check if it's between 9-12 digits (only if it contains only digits)
+					else if (tinValue.Length is < 9 or > 12)
+					{
+						results.TinNumberErrors.Add(new ValidationError { RowNumber = rowNumber, Error = "TIN number must be between 9 to 12 digits" });
 					}
 				}
 				else if (screeningType == false) // For data screening, TIN Number is required

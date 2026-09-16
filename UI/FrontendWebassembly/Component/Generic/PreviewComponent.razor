@@ -46,11 +46,11 @@
                     }
                     @if (InvalidSSSNumberRows.Any())
                     {
-                        <div>SSS number must be 10 digits in row(s): @string.Join(", ", InvalidSSSNumberRows).</div>
+                        <div>SSS number must contain only numeric digits, no special characters allowed and must be exactly 10 digits in row(s): @string.Join(", ", InvalidSSSNumberRows).</div>
                     }
                     @if (InvalidTINNumberRows.Any())
                     {
-                        <div>TIN number must be 9-12 digits in row(s): @string.Join(", ", InvalidTINNumberRows).</div>
+                        <div>TIN number must contain only numeric digits, no special characters allowed and must be 9-12 digits in row(s): @string.Join(", ", InvalidTINNumberRows).</div>
                     }
                     @if (BlankRows.Any())
                     {

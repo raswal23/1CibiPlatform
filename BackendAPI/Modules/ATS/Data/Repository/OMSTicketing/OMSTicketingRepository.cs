@@ -102,10 +102,6 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 			from invitation in _dbContext.EmailInvitationRequests.AsNoTracking()
 			where emailInvitationIds.Contains(invitation.EmailInvitationID)
 
-			from personal in _dbContext.PersonalDetails
-				.Where(p => p.EmailInvitationID == invitation.EmailInvitationID)
-				.DefaultIfEmpty()
-
 				// Joined on the id, not the name. Matching by name meant renaming a package
 				// silently orphaned every order that referenced it - they kept the old
 				// string and parked here as an error nobody could explain.
@@ -131,10 +127,10 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				SelectPackage = invitation.SelectPackage,
 				RequestorId = invitation.RequestorId,
 				RushNormal = invitation.RushNormal,
-				DOB = personal != null ? personal.DOB : null,
-				PersonalMobileNumber = personal != null ? personal.MobileNumber : null,
-				SSS = personal != null ? personal.SSS : null,
-				TIN = personal != null ? personal.TIN : null,
+				DOB = invitation.DateOfBirth ?? null,
+				PersonalMobileNumber = invitation.MobileNumber ?? null,
+				SSS = invitation.SSSNumber ?? null,
+				TIN = invitation.TINNumber ?? null,
 				PackageDescription = package != null ? package.PackageDescription : null,
 
 				// Site is ATS-owned. The requestor's name parts are not: UserDetails

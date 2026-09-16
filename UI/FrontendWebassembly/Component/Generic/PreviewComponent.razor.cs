@@ -152,13 +152,13 @@ public partial class PreviewComponent
 		DateOnly.TryParseExact(dateStr, "MM/dd/yyyy", out var date) && 
 		date < DateOnly.FromDateTime(DateTime.Now);
 
-	// SSS number must be exactly 10 digits
+	// SSS number must contain only digits and be exactly 10 digits
 	private bool IsValidSSSNumber(string sssNum) =>
-		sssNum.Length == 10 && sssNum.All(char.IsDigit);
+		sssNum.All(char.IsDigit) && sssNum.Length == 10;
 
-	// TIN number must be 9 to 12 digits
+	// TIN number must contain only digits and be 9 to 12 digits
 	private bool IsValidTINNumber(string tinNum) =>
-		tinNum.Length >= 9 && tinNum.Length <= 12 && tinNum.All(char.IsDigit);
+		tinNum.All(char.IsDigit) && tinNum.Length >= 9 && tinNum.Length <= 12;
 
 	private bool IsInvalidCell(int columnIndex, string cell) =>
 		IsRequiredCellBlank(columnIndex, cell)
