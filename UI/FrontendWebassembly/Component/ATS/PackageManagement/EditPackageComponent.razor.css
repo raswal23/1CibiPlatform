@@ -236,8 +236,10 @@
     line-height: 42px;
 }
 
+/* Reserves the width of .ep-unit-suffix, which is absolutely positioned over the field.
+   Without it a two-digit value runs underneath "days after order". */
 .ep-follow-up-wrap ::deep .mud-input-slot {
-    padding-right: 82px !important;
+    padding-right: 122px !important;
 }
 
 .ep-follow-up-wrap ::deep .mud-input-numeric-spin {
