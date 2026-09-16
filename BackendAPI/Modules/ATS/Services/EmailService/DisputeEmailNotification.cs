@@ -10,13 +10,16 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 {
 	private readonly ILogger<DisputeEmailNotification> _logger;
 	private readonly IAtsEmailSender _emailSender;
+	private readonly IOrderHistoryService _orderHistoryService;
 
 	public DisputeEmailNotification(
 		ILogger<DisputeEmailNotification> logger,
-		IAtsEmailSender emailSender)
+		IAtsEmailSender emailSender,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
+		_orderHistoryService = orderHistoryService;
 	}
 
 	public async Task SendAsync(
@@ -86,6 +89,17 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 			body: body,
 			cancellationToken: cancellationToken,
 			cc: [DisputeEmail.CopyTeam]);
+
+		// Records the ATTEMPT rather than the delivery, so a failed send still leaves a row and the
+		// outcome stays in the log below. Status written unchanged - a dispute does not move the
+		// order - and Completed matches the fallback the ReportDisputed row beside it uses, since a
+		// report can only be disputed once it exists.
+		await _orderHistoryService.RecordAsync(
+			details.EmailInvitationId,
+			OrderHistoryEventType.DisputeAcknowledgementEmail,
+			null,
+			OrderStatus.Completed,
+			cancellationToken);
 
 		if (!result.IsSent)
 		{

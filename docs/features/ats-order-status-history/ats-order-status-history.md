@@ -15,6 +15,21 @@ ATS now keeps an append-only business lifecycle timeline in `ats.OrderStatusHist
 
 Dispute is an event without an `OrderStatus` transition because ATS currently stores it in `DisputeCategory` and `DisputedAt`. Initial report uploads do not record completion; only an upload that actually moves the order to `Completed` does.
 
+## Notification events
+
+Some rows record that an email went out rather than that the order moved. They carry `null` on the previous side and the status the order is already in on the new side, so the timeline never implies movement that did not happen.
+
+| Trigger | Event | New status | Records |
+|---|---|---|---|
+| Package follow-up interval elapsed, form still pending | `ApplicationFormFollowUpSent` | Pending Candidate Info | the chaser requeued the reminder |
+| Subject withdrew and the requestor was emailed | `WithdrawalNoticeEmail` | Application Withdrawn | the **attempt** to send |
+| Report disputed and the filer was emailed | `DisputeAcknowledgementEmail` | Completed | the **attempt** to send |
+| Form completed and the requestor was emailed | `CompletionNoticeEmail` | In Progress | the **attempt** to send |
+
+Each of the last three sits beside a lifecycle event that already fired — a withdrawal produces an `ApplicationFormWithdrawn` row *and* a `WithdrawalNoticeEmail` row. That is deliberate: "the subject withdrew" and "we told the requestor" are different facts, and the second can fail while the first already happened.
+
+The three notice rows record the **attempt**, not the delivery. A row means the send was made; whether it landed is in the application log. Support reading the timeline can answer "did we try to tell them?" without leaving it. If a notice is skipped because there is nobody to address — no requestor id, or the requestor is no longer in the ATS directory — no row is written, because no send was attempted.
+
 ## Architecture
 
 - Repositories must contain only database transaction and persistence logic. They must not contain business processes or business logic; that logic belongs in the service layer.

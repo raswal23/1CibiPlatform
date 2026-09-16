@@ -425,13 +425,15 @@ public class DisputeOrderServiceTests
 		var result = await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
 
 		// Assert: the acknowledgement goes to whoever FILED the dispute, named from the token, and
-		// carries the candidate the dispute is about. It is a separate message from the operations
-		// notification asserted in the happy-path tests above.
+		// carries the candidate the dispute is about plus the order it belongs to - the id is what
+		// the notice records itself against in that order's history. It is a separate message from
+		// the operations notification asserted in the happy-path tests above.
 		result.Should().BeTrue();
 		_disputeEmailNotification.Verify(
 			notifier => notifier.SendAsync(
 				It.Is<DisputeEmailDetails>(details =>
-					details.RequestorEmail == RequestorEmail
+					details.EmailInvitationId == request.EmailInvitationId
+					&& details.RequestorEmail == RequestorEmail
 					&& details.RequestorName == "Ana Reyes"
 					&& details.CandidateName == "Ada Lovelace"
 					&& details.DisputeCategory == "Report"

@@ -42,8 +42,13 @@ public interface IDisputeEmailNotification
 /// <paramref name="DisputeReason"/> is non-nullable because
 /// <c>MarkAsDisputedCommandValidator</c> rejects an empty one before the service is reached, and the
 /// notifier leans on that: it is the fallback label when no category was sent.
+///
+/// <paramref name="EmailInvitationId"/> is not used by the email itself. It identifies the order the
+/// acknowledgement belongs to, so the send can be recorded against that order's history - the
+/// timeline is per order, and without the id there would be nothing to hang the row on.
 /// </remarks>
 public record DisputeEmailDetails(
+	Guid EmailInvitationId,
 	string? RequestorEmail,
 	string? RequestorName,
 	string CandidateName,

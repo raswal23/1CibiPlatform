@@ -1,6 +1,8 @@
+using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.Services.EmailService;
+using ATS.Services.OrderHistory;
 using Auth.DTO;
 using Auth.Shared.Contracts;
 using FluentAssertions;
@@ -39,6 +41,7 @@ public class SubmittedFormEmailNotificationTests
 	private readonly Mock<IAtsEmailSender> _emailSender = new();
 	private readonly Mock<IAuthQueries> _authQueries = new();
 	private readonly Mock<IATSRepository> _repository = new();
+	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
 	private readonly SubmittedFormEmailNotification _notifier;
 
@@ -48,7 +51,8 @@ public class SubmittedFormEmailNotificationTests
 			_logger.Object,
 			_emailSender.Object,
 			_authQueries.Object,
-			_repository.Object);
+			_repository.Object,
+			_orderHistoryService.Object);
 	}
 
 	/// <summary>
@@ -352,4 +356,81 @@ public class SubmittedFormEmailNotificationTests
 		await act.Should().NotThrowAsync();
 		VerifySend(Times.Once(), [CcTeam, PreWorkTeam, CandidateEmail]);
 	}
+
+	[Fact]
+	public async Task SendAsync_ShouldRecordTheNoticeInTheOrderHistory_WhenTheSendIsAttempted()
+	{
+		// Arrange
+		SetupOrder();
+		SetupRequestorDirectoryEntry();
+		SetupComposedBody();
+		SetupSuccessfulSend();
+
+		// Act
+		await _notifier.SendAsync(
+			new SubmittedFormEmailDetails(InvitationId, SubmittedCandidateName),
+			CancellationToken.None);
+
+		// Assert: a second row beside the ApplicationFormSubmitted one the submission itself writes.
+		// "The subject completed the form" and "we told the requestor" are different facts, and the
+		// second can fail while the first already happened.
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldStillRecordTheNotice_WhenDeliveryFails()
+	{
+		// Arrange: the row records the ATTEMPT, so support can answer "did we try to tell them?"
+		// from the timeline alone. Whether it landed is in the log.
+		SetupOrder();
+		SetupRequestorDirectoryEntry();
+		SetupComposedBody();
+		_emailSender
+			.Setup(sender => sender.SendATSEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<CancellationToken>(),
+				It.IsAny<IReadOnlyCollection<string>?>()))
+			.ReturnsAsync(EmailDeliveryResult.Throttled(null, "Every registered sender account is capped."));
+
+		// Act
+		await _notifier.SendAsync(
+			new SubmittedFormEmailDetails(InvitationId, SubmittedCandidateName),
+			CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldNotRecordTheNotice_WhenThereIsNobodyToSendTo()
+	{
+		// Arrange: no send was attempted, so the timeline must not claim one was.
+		var invitation = SetupOrder();
+		invitation.RequestorId = null;
+
+		// Act
+		await _notifier.SendAsync(
+			new SubmittedFormEmailDetails(InvitationId, SubmittedCandidateName),
+			CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Never());
+		VerifySend(Times.Never());
+	}
+
+	// Literals rather than OrderStatus.InProgress, because that class is internal to the ATS
+	// assembly and no InternalsVisibleTo reaches the test project. Pinning the stored string is the
+	// stronger assertion anyway - it is exactly what the history API returns to the dialog.
+	private void VerifyHistoryRecorded(Times times) =>
+		_orderHistoryService.Verify(
+			history => history.RecordAsync(
+				InvitationId,
+				OrderHistoryEventType.CompletionNoticeEmail,
+				null,
+				"In Progress",
+				It.IsAny<CancellationToken>(),
+				OrderHistorySource.Web),
+			times);
 }

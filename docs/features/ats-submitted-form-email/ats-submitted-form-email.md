@@ -49,6 +49,22 @@ other ATS message.
 
 `ats-submitted-form-email_code_explanation.md` walks the chain file by file.
 
+## Order history
+
+The notice writes its own row, `CompletionNoticeEmail`, beside the `ApplicationFormSubmitted` row the
+submission itself already wrote. Two rows for one action is deliberate: "the subject completed the
+form" and "we told the requestor" are different facts, and the second can fail while the first
+already happened.
+
+It records the **attempt**, so the row is written whether or not the email was delivered — a failed
+send still appears on the timeline and the reason is in the log. It is *not* written when no send was
+attempted at all (no requestor id, the order cannot be found, or the requestor is no longer in the
+ATS directory). The status pair is `null → In Progress`; the previous side is null because nothing
+moved.
+
+It renders in `OrderStatusHistoryDialog` as "Completion notice", neutral tone. Detail in
+`docs/features/ats-order-status-history/`.
+
 ## Why it is shaped this way
 
 **It cannot fire twice.** `AuthorizeApplicationFormAsync` (`ApplicationFormService.cs:186`) rejects

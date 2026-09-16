@@ -48,6 +48,22 @@ path as every other ATS message.
 
 `ats-dispute-order-email_code_explanation.md` walks the chain file by file.
 
+## Order history
+
+The acknowledgement writes its own row, `DisputeAcknowledgementEmail`, beside the `ReportDisputed` row
+the filing itself already wrote. Two rows for one action is deliberate: "the report was disputed" and
+"we acknowledged it to the filer" are different facts, and the second can fail while the first
+already happened.
+
+It records the **attempt**, so the row is written whether or not the email was delivered — a failed
+send still appears on the timeline and the reason is in the log. It is *not* written when no send was
+attempted at all (the filer's token carries no email claim). The status pair is `null → Completed`;
+the previous side is null because a dispute does not move the order, and `Completed` matches the
+fallback the `ReportDisputed` row beside it uses.
+
+It renders in `OrderStatusHistoryDialog` as "Dispute acknowledgement", neutral tone. Detail in
+`docs/features/ats-order-status-history/`.
+
 ## Why it is shaped this way
 
 **The two emails fail differently, and that asymmetry is deliberate.** The operations notification

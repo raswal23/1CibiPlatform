@@ -49,6 +49,21 @@ every other ATS message rather than opening its own SMTP session.
 `docs/features/ats-withdrawn-application-email/ats-withdrawn-application-email_code_explanation.md`
 walks the chain file by file.
 
+## Order history
+
+The notice writes its own row, `WithdrawalNoticeEmail`, beside the `ApplicationFormWithdrawn` row the
+withdrawal itself already wrote. Two rows for one action is deliberate: "the subject withdrew" and
+"we told the requestor" are different facts, and the second can fail while the first already
+happened.
+
+It records the **attempt**, so the row is written whether or not the email was delivered — a failed
+send still appears on the timeline and the reason is in the log. It is *not* written when no send was
+attempted at all (no requestor id, or the requestor is no longer in the ATS directory). The status
+pair is `null → Application Withdrawn`; the previous side is null because nothing moved.
+
+It renders in `OrderStatusHistoryDialog` as "Withdrawal notice", neutral tone, send icon. Detail in
+`docs/features/ats-order-status-history/`.
+
 ## Why it is shaped this way
 
 **After the commit, and it cannot throw.** The withdrawal is the thing that matters. If the notice

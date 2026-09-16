@@ -187,6 +187,7 @@ public class DisputeOrderService : IDisputeOrderService
 
 			await _disputeEmailNotification.SendAsync(
 				new DisputeEmailDetails(
+					order.EmailInvitationID,
 					requestor,
 					_currentUser.FullName,
 					candidateName,

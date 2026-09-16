@@ -1,4 +1,6 @@
+using ATS.Constants;
 using ATS.Services.EmailService;
+using ATS.Services.OrderHistory;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -26,8 +28,11 @@ public class DisputeEmailNotificationTests
 	private const string CandidateName = "Ada Lovelace";
 	private const string EmailBody = "dispute-email-body";
 
+	private static readonly Guid InvitationId = Guid.CreateVersion7();
+
 	private readonly Mock<ILogger<DisputeEmailNotification>> _logger = new();
 	private readonly Mock<IAtsEmailSender> _emailSender = new();
+	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
 	private readonly DisputeEmailNotification _notifier;
 
@@ -35,7 +40,8 @@ public class DisputeEmailNotificationTests
 	{
 		_notifier = new DisputeEmailNotification(
 			_logger.Object,
-			_emailSender.Object);
+			_emailSender.Object,
+			_orderHistoryService.Object);
 	}
 
 	private static DisputeEmailDetails CreateDetails(
@@ -43,6 +49,7 @@ public class DisputeEmailNotificationTests
 		string? requestorName = FilerName,
 		string? disputeCategory = "Report",
 		string? disputeReason = "Report") => new(
+			InvitationId,
 			requestorEmail,
 			requestorName,
 			CandidateName,
@@ -252,4 +259,70 @@ public class DisputeEmailNotificationTests
 		await act.Should().NotThrowAsync();
 		VerifySendTo(Times.Once(), [CopyTeam]);
 	}
+
+	[Fact]
+	public async Task SendAsync_ShouldRecordTheAcknowledgementInTheOrderHistory_WhenTheSendIsAttempted()
+	{
+		// Arrange
+		SetupComposedBody();
+		SetupSuccessfulSend();
+
+		// Act
+		await _notifier.SendAsync(CreateDetails(), CancellationToken.None);
+
+		// Assert: a second row beside the ReportDisputed one the filing itself writes. "The report
+		// was disputed" and "we acknowledged it to the filer" are different facts, and the second
+		// can fail while the first already happened.
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldStillRecordTheAcknowledgement_WhenDeliveryFails()
+	{
+		// Arrange: the row records the ATTEMPT, so support can answer "did we try to tell them?"
+		// from the timeline alone. Whether it landed is in the log.
+		SetupComposedBody();
+		_emailSender
+			.Setup(sender => sender.SendATSEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<CancellationToken>(),
+				It.IsAny<IReadOnlyCollection<string>?>()))
+			.ReturnsAsync(EmailDeliveryResult.Throttled(null, "Every registered sender account is capped."));
+
+		// Act
+		await _notifier.SendAsync(CreateDetails(), CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldNotRecordTheAcknowledgement_WhenThereIsNobodyToSendTo()
+	{
+		// Arrange: no send was attempted, so the timeline must not claim one was.
+		SetupComposedBody();
+
+		// Act
+		await _notifier.SendAsync(CreateDetails(requestorEmail: null), CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Never());
+		VerifySend(Times.Never());
+	}
+
+	// Literals rather than OrderStatus.Completed, because that class is internal to the ATS assembly
+	// and no InternalsVisibleTo reaches the test project. Pinning the stored string is the stronger
+	// assertion anyway - it is exactly what the history API returns to the dialog.
+	private void VerifyHistoryRecorded(Times times) =>
+		_orderHistoryService.Verify(
+			history => history.RecordAsync(
+				InvitationId,
+				OrderHistoryEventType.DisputeAcknowledgementEmail,
+				null,
+				"Completed",
+				It.IsAny<CancellationToken>(),
+				OrderHistorySource.Web),
+			times);
 }

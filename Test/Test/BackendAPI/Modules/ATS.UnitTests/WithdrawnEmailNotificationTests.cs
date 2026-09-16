@@ -1,5 +1,7 @@
+using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Services.EmailService;
+using ATS.Services.OrderHistory;
 using Auth.DTO;
 using Auth.Shared.Contracts;
 using FluentAssertions;
@@ -38,6 +40,7 @@ public class WithdrawnEmailNotificationTests
 	private readonly Mock<ILogger<WithdrawnEmailNotification>> _logger = new();
 	private readonly Mock<IAtsEmailSender> _emailSender = new();
 	private readonly Mock<IAuthQueries> _authQueries = new();
+	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
 	private readonly WithdrawnEmailNotification _notifier;
 
@@ -46,7 +49,8 @@ public class WithdrawnEmailNotificationTests
 		_notifier = new WithdrawnEmailNotification(
 			_logger.Object,
 			_emailSender.Object,
-			_authQueries.Object);
+			_authQueries.Object,
+			_orderHistoryService.Object);
 	}
 
 	private static EmailInvitationRequest CreateInvitation() => new()
@@ -306,4 +310,72 @@ public class WithdrawnEmailNotificationTests
 		await act.Should().NotThrowAsync();
 		VerifySend(Times.Once(), [CcTeam, CandidateEmail]);
 	}
+
+	[Fact]
+	public async Task SendAsync_ShouldRecordTheNoticeInTheOrderHistory_WhenTheSendIsAttempted()
+	{
+		// Arrange
+		SetupRequestorDirectoryEntry();
+		SetupComposedBody();
+		SetupSuccessfulSend();
+
+		// Act
+		await _notifier.SendAsync(CreateInvitation(), CancellationToken.None);
+
+		// Assert: a second row beside the ApplicationFormWithdrawn one the withdrawal itself writes.
+		// "The subject withdrew" and "we told the requestor" are different facts, and the second can
+		// fail while the first already happened.
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldStillRecordTheNotice_WhenDeliveryFails()
+	{
+		// Arrange: the row records the ATTEMPT, so support can answer "did we try to tell them?"
+		// from the timeline alone. Whether it landed is in the log.
+		SetupRequestorDirectoryEntry();
+		SetupComposedBody();
+		_emailSender
+			.Setup(sender => sender.SendATSEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<CancellationToken>(),
+				It.IsAny<IReadOnlyCollection<string>?>()))
+			.ReturnsAsync(EmailDeliveryResult.Throttled(null, "Every registered sender account is capped."));
+
+		// Act
+		await _notifier.SendAsync(CreateInvitation(), CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Once());
+	}
+
+	[Fact]
+	public async Task SendAsync_ShouldNotRecordTheNotice_WhenThereIsNobodyToSendTo()
+	{
+		// Arrange: no send was attempted, so the timeline must not claim one was.
+		SetupRequestorDirectoryEntry(userEmail: null);
+
+		// Act
+		await _notifier.SendAsync(CreateInvitation(), CancellationToken.None);
+
+		// Assert
+		VerifyHistoryRecorded(Times.Never());
+		VerifySend(Times.Never());
+	}
+
+	// Literals rather than OrderStatus.ApplicationWithdrawn, because that class is internal to the
+	// ATS assembly and no InternalsVisibleTo reaches the test project. Pinning the stored string is
+	// the stronger assertion anyway - it is exactly what the history API returns to the dialog.
+	private void VerifyHistoryRecorded(Times times) =>
+		_orderHistoryService.Verify(
+			history => history.RecordAsync(
+				InvitationId,
+				OrderHistoryEventType.WithdrawalNoticeEmail,
+				null,
+				"Application Withdrawn",
+				It.IsAny<CancellationToken>(),
+				OrderHistorySource.Web),
+			times);
 }

@@ -11,15 +11,18 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 	private readonly ILogger<WithdrawnEmailNotification> _logger;
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IAuthQueries _authQueries;
+	private readonly IOrderHistoryService _orderHistoryService;
 
 	public WithdrawnEmailNotification(
 		ILogger<WithdrawnEmailNotification> logger,
 		IAtsEmailSender emailSender,
-		IAuthQueries authQueries)
+		IAuthQueries authQueries,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_authQueries = authQueries;
+		_orderHistoryService = orderHistoryService;
 	}
 
 	public async Task SendAsync(
@@ -105,6 +108,19 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 			body: body,
 			cancellationToken: cancellationToken,
 			cc: cc);
+
+		// Records the ATTEMPT, before the outcome is inspected, so a failed delivery still leaves a
+		// row. "Did we try to tell the requestor?" and "did they get it?" are different questions,
+		// and only the first belongs in the lifecycle view - the second is in the log below.
+		//
+		// The status is written unchanged, because emailing is not a step in the order's lifecycle;
+		// that is the same convention ApplicationFormFollowUpSent follows.
+		await _orderHistoryService.RecordAsync(
+			invitation.EmailInvitationID,
+			OrderHistoryEventType.WithdrawalNoticeEmail,
+			null,
+			OrderStatus.ApplicationWithdrawn,
+			cancellationToken);
 
 		if (!result.IsSent)
 		{

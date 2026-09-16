@@ -12,17 +12,20 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IAuthQueries _authQueries;
 	private readonly IATSRepository _atsRepository;
+	private readonly IOrderHistoryService _orderHistoryService;
 
 	public SubmittedFormEmailNotification(
 		ILogger<SubmittedFormEmailNotification> logger,
 		IAtsEmailSender emailSender,
 		IAuthQueries authQueries,
-		IATSRepository atsRepository)
+		IATSRepository atsRepository,
+		IOrderHistoryService orderHistoryService)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_authQueries = authQueries;
 		_atsRepository = atsRepository;
+		_orderHistoryService = orderHistoryService;
 	}
 
 	public async Task SendAsync(
@@ -107,6 +110,17 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 			body: body,
 			cancellationToken: cancellationToken,
 			cc: cc);
+
+		// Records the ATTEMPT rather than the delivery, so a failed send still leaves a row and the
+		// outcome stays in the log below. Status written unchanged, because emailing is not a step
+		// in the order's lifecycle; see OrderHistoryEventType for why this is its own event type
+		// rather than folded into ApplicationFormSubmitted.
+		await _orderHistoryService.RecordAsync(
+			details.EmailInvitationId,
+			OrderHistoryEventType.CompletionNoticeEmail,
+			null,
+			OrderStatus.InProgress,
+			cancellationToken);
 
 		if (!result.IsSent)
 		{
