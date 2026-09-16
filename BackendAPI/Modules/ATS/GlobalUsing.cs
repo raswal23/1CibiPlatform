@@ -57,6 +57,7 @@ global using ATS.Services.PublicApi;
 global using ATS.Services.OrderValidation;
 global using ATS.Services.Report;
 global using ATS.Services.ApplicantSearchProjections;
+global using ATS.BackgroundJobs.BulkUploadFileCleanup;
 global using ATS.Services.AuditTrail;
 global using ATS.Services.Notifications;
 

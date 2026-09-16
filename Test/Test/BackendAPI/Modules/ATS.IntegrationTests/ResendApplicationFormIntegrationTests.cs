@@ -249,6 +249,8 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			// Manual screening: the only type that has an application form to resend.
+			AutoChasing = true,
 			EmailSentStatus = "Error",
 			EmailSendAttempts = 5,
 			ApplicationFormStatus = "Pending",
@@ -298,6 +300,8 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			// Manual screening: the only type that has an application form to resend.
+			AutoChasing = true,
 			EmailSentStatus = "Error",
 			EmailSendAttempts = 5,
 			ApplicationFormStatus = "Pending",
@@ -622,6 +626,8 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			SelectPackage = "Standard",
 			RushNormal = "Normal",
+			// Manual screening: the only type that has an application form to resend.
+			AutoChasing = true,
 			EmailSentStatus = "Processing",
 			EmailClaimedAt = DateTime.UtcNow,
 			ApplicationFormStatus = "Pending",

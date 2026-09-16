@@ -172,6 +172,7 @@ public static class ATSServiceConfiguration
 		services.ConfigureOptions<ApplicantSearchProjectionJobSetup>();
 		services.ConfigureOptions<OMSTicketingBackgroundJobSetup>();
 		services.ConfigureOptions<FollowUpEmailBackgroundJobSetup>();
+		services.ConfigureOptions<BulkUploadFileCleanupServiceSetup>();
 
 		return services;
 	}

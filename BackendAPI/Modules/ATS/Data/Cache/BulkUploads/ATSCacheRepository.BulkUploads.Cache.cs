@@ -20,6 +20,16 @@ public partial class ATSCacheRepository
 		return await _atsRepository.GetBulkUploadFileDetailByIdAsync(fileId);
 	}
 
+	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsForCleanupAsync(CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetBulkUploadFileDetailsForCleanupAsync(cancellationToken);
+	}
+
+	public async Task<bool> ClearBulkUploadFileKeyAsync(Guid fileId, CancellationToken cancellationToken)
+	{
+		return await _atsRepository.ClearBulkUploadFileKeyAsync(fileId, cancellationToken);
+	}
+
 	public async Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
 	{
 		return await _atsRepository.ReleaseBulkFileClaimsAsync(bulkUploadFileDetails);

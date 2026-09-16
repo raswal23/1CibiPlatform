@@ -235,7 +235,8 @@ Only add the pieces the use case needs:
 5. Implement them in the matching focused/partial repository implementation; pass `CancellationToken` through async calls.
 6. Keep query projection/filtering/paging in the data layer rather than loading entire tables.
 7. Use `IUnitOfWork` or the established transaction pattern for multi-write operations.
-8. Generate an EF migration only when the database model changed; place ATS migrations with the existing ATS migrations in the API project.
+8. **If adding or modifying columns in an entity that already exists in the database, generate a migration to update the database schema.** Run `dotnet ef migrations add <DescriptiveName> --context <DbContextName> --project BackendAPI/API/APIs/APIs.csproj --startup-project BackendAPI/API/APIs/APIs.csproj --output-dir Migrations/<Module>` to create the migration file that adds the new column to the database table. Replace `<DbContextName>` with the appropriate DbContext name (e.g., ATSDBContext, AuthDBContext) and `<Module>` with the appropriate module name (e.g., ATS, Auth). The migration must be applied for the integration tests and for deployment to work properly.
+9. Generate an EF migration only when the database model changed; place ATS migrations with the existing ATS migrations in the API project.
 
 Before generating a migration, build the solution. A typical command is:
 
@@ -533,14 +534,28 @@ Reference example: `docs/features/ats-email-accounts/ats-email-accounts_code_exp
 
 ### 14. Verify the complete feature
 
-Run the smallest relevant tests first, then the full build:
+**Tests are part of the change, not a report you file afterwards.** Every time you edit code — including a "small" fix, a rename, or a migration — run the module's unit **and** integration tests before calling the work done. A red suite is a blocker: investigate and fix it in the same change. Never hand back a failing run with a note that the failures "look unrelated"; that is a hypothesis you must prove, and the proof is usually a two-line fix in a test you did not know you had broken.
+
+Run the slice you touched first, then widen to the whole module, then build the solution:
 
 ```powershell
-dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~ATS"
-dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.UnitTests"
-dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Auth.IntegrationTests"
+# 1. The slice you just touched
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~<YourFeatureOrClass>"
+
+# 2. The module's unit AND integration suites - both, every time
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~<Module>.UnitTests"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~<Module>.IntegrationTests"
+
+# 3. The solution
 dotnet build 1CibiPlatform.sln
 ```
+
+Replace `<Module>` with `ATS`, `Auth`, `PhilSys`, `OMS`, and so on. Both suites matter because they fail differently: unit tests catch logic and validation regressions in milliseconds, while integration tests are the only place a real PostgreSQL Testcontainer reproduces migrations, `FromSqlRaw` column mapping, `SKIP LOCKED` claiming, and nullability. **Green unit tests tell you nothing about whether your migration actually created the column.**
+
+**Fix the cause; never delete, skip, or `[Fact(Skip = ...)]` a test to make the run green.** Read the assertion and the stack trace before editing anything. Two failure classes are worth naming, because both look like "the test is wrong" and usually are not:
+
+- **A test you never touched starts failing.** Your change altered shared behaviour — a new required column, a stricter validator, a changed default — and an older test still seeds data that no longer satisfies it. Fix that test's *arrange block* to match the new contract. Grep the file for how its passing siblings set the field in question and copy them; consistency with the neighbours is the answer, not invention.
+- **Integration tests fail with `42703: column "X" does not exist` while the build is green.** The entity has the property but the database never received it. The usual cause is a hand-written migration missing its `[DbContext(typeof(<Module>DBContext))]` and `[Migration("<timestamp>_<Name>")]` attributes — without them EF Core cannot discover the migration at all, so `Database.MigrateAsync()` silently skips it and the table is built without the column. Copy the attribute block from a neighbouring hand-written migration, and confirm the model snapshot carries the property in the exact form EF generates: a column with a database default also needs `.ValueGeneratedOnAdd()`, and omitting it makes the snapshot disagree with the model and trip `PendingModelChangesWarning`.
 
 Also manually verify:
 
@@ -616,7 +631,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] Service interface/implementation and DI are complete.
 - [ ] Command/query, validator, handler, and Carter endpoint are complete.
 - [ ] Route metadata, cancellation, errors, and authorization are complete.
-- [ ] Backend unit and integration tests pass.
+- [ ] **Backend unit AND integration tests were both run after the last code edit, and every failure was fixed at its cause — no test deleted, skipped, or weakened to force a green run.**
 - [ ] UI DTO and IHttpClientFactory-backed service are complete and registered.
 - [ ] `.razor`, `.razor.cs`, and `.razor.css` follow the modern ATS reference.
 - [ ] Shared CSS was reused or generalized rather than copied; scoped CSS covers only what is unique to the screen.
@@ -626,7 +641,7 @@ Register that initializer in `BackendAPI/API/APIs/Data/Extensions/DatabaseExtens
 - [ ] **Both documents exist in `docs/features/<area>-<feature>/` — the high-level `.md` and its `_code_explanation.md` companion tracing the real call chain.**
 - [ ] **If this change refactored or renamed anything in an already-documented feature, that feature's two documents were updated in the same commit and no longer describe the old shape.**
 - [ ] No hand-rolled `try/catch` in feature code — throw and let `CustomExceptionHandler` answer, or use `SideEffectGuard` / `ApiRequestExtensions`.
-- [ ] Relevant tests and the solution build pass.
+- [ ] Relevant tests and the solution build pass, and were re-run *after* the final edit rather than reporting a stale run from before the last change.
 - [ ] API/UI contracts and gateway route were verified end to end.
 - [ ] Every endpoint is registered in the module's typed `Path/<Module>Paths.cs` and appears in `GET /__routes`.
 

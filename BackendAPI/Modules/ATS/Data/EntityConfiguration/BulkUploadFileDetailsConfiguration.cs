@@ -79,6 +79,11 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 		builder.Property(a => a.RejectedRows)
 			   .IsRequired(false);
 
+		// Flag to track if the file key has been deleted from object storage
+		builder.Property(a => a.IsFileKeyDeleted)
+			   .IsRequired()
+			   .HasDefaultValue(false);
+
 		// Drives the bulk submission job's claim query and the stale-claim sweeper.
 		builder.HasIndex(a => a.Status);
 

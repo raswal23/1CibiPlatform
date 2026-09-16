@@ -11,6 +11,16 @@ public interface IBulkUploadRepository
 	Task<bool> UpdateBulkFileDetailsStatusAsync(List<Guid> bulkUploadFileDetailIds, string orderStatus);
 
 	/// <summary>
+	/// Retrieves bulk upload file details for cleanup where status is "Done" and RejectedRows is not null.
+	/// </summary>
+	Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsForCleanupAsync(CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Clears the FileKey for a specific bulk upload file.
+	/// </summary>
+	Task<bool> ClearBulkUploadFileKeyAsync(Guid fileId, CancellationToken cancellationToken);
+
+	/// <summary>
 	/// Records how many rows of a parsed file became orders and which were refused.
 	/// The file is parsed long after its upload response returned, so this is how the
 	/// uploader finds out that rows were dropped.

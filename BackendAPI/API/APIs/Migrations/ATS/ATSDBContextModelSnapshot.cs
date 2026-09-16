@@ -703,6 +703,11 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("UploadedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("IsFileKeyDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.HasKey("FileID");
 
                     b.HasIndex("PackageId");
