@@ -25,6 +25,7 @@ public class GetUnreadNotificationCountEndpoint : ICarterModule
 			"Returns how many unread in-app notifications the authenticated caller has. "
 			+ "Read once on load to seed the bell badge; afterwards the count is kept "
 			+ "current over SignalR rather than by polling.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

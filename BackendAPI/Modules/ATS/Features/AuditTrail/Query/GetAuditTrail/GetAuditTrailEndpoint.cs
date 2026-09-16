@@ -44,6 +44,7 @@ public class GetAuditTrailEndpoint : ICarterModule
 			"Retrieves ATS state-changing actions with keyset pagination, optionally "
 			+ "filtered by outcome, action, area, user and date range. Restricted to "
 			+ "platform super admins; any other caller reads an empty page.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

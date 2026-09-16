@@ -3,8 +3,8 @@
 How invitation emails reach candidates without tripping the provider's rate limits, and why
 the design looks the way it does.
 
-Related: `docs/ats-email-accounts.md` (the registry of sender accounts this page sends
-through, and how one is registered), `docs/ats-notifications.md` (what raises the
+Related: `docs/features/ats-email-accounts/ats-email-accounts.md` (the registry of sender accounts this page sends
+through, and how one is registered), `docs/features/ats-notifications/ats-notifications.md` (what raises the
 notifications this job completes), `docs/feature-development-guide.md`.
 
 ---
@@ -86,6 +86,18 @@ EmailNotificationBackgroundJob (Quartz, every 5s, DisallowConcurrentExecution)
        -> write Sent / Error, release Deferred
 ```
 
+Rows reach `Pending` — the state that job claims — from three places:
+
+1. **A new order**, web or bulk, when the invitation row is created.
+2. **An operator resend** (§8), which rotates the token and requeues.
+3. **The package follow-up chaser**, hourly, which requeues without touching the token —
+   see `ats-package-follow-up-email.md`.
+
+All three only ever *queue*. None of them opens an SMTP connection, which is what keeps every
+message — including reminders — inside the same per-account pool, caps and pacing described
+below. A source that sent inline would be invisible to `DailySendLimit` and to the rate
+limiters, and would blow through both.
+
 ### Three bounds, deliberately separate — now per account
 
 | Component | Bounds | Default | Scope |
@@ -103,7 +115,7 @@ raise either rate**, so tuning for speed can never re-create either incident.
 
 **They are still singletons, but the sender is no longer the process.** All three bound
 resources belonging to *one sending mailbox*, and there are now several registered mailboxes
-(see `docs/ats-email-accounts.md`). `SmtpAccountPoolRegistry` — itself a singleton — holds one
+(see `docs/features/ats-email-accounts/ats-email-accounts.md`). `SmtpAccountPoolRegistry` — itself a singleton — holds one
 `(pool, limiter)` pair per account id, built on first use and disposed when that account is
 edited or deleted. Every rule below still holds *within* an account; only the word "sender"
 narrowed from "this process" to "this mailbox".
@@ -159,7 +171,7 @@ Only `Account`-scoped failures reach the breaker. Counting a `550` would let one
 of typo'd addresses retire every registered sender in minutes — the queue would have nowhere
 left to send, with nothing actually wrong. That rule lives in
 `SmtpAccountPoolRegistry.ReportFailureAsync` and is the one most likely to be "simplified"
-wrongly later; `docs/ats-email-accounts.md` has the full breaker table.
+wrongly later; `docs/features/ats-email-accounts/ats-email-accounts.md` has the full breaker table.
 
 ### A throttle stops one account, not the pass
 
@@ -228,7 +240,7 @@ absent section is valid — the same convention as `AtsNotifications` and `AtsAu
 | `SendLogRetentionHours` | 48 | How long a send-log row is kept |
 
 The last five belong to the account registry; they are documented in full, with the reasoning
-for each number, in `docs/ats-email-accounts.md`.
+for each number, in `docs/features/ats-email-accounts/ats-email-accounts.md`.
 
 The first group's defaults come from the incidents: the provider accepted ~1.75
 messages/second before refusing, so 0.9 is about half the observed ceiling. That clears 200
@@ -403,7 +415,7 @@ did not (when the inline send failed), and either way the status never moved.
 | `EmailSentStatus` | `Pending` | Back on the queue; the job delivers it |
 | `EmailSendAttempts` | `0` | Otherwise the claim query skips it — **this was the bug** |
 | `EmailClaimedAt`, `EmailSentAt` | `null` | No stale claim or send timestamp |
-| `HashToken` + expiry | reissued | A queued row never carries an unannounced token |
+| `HashToken` | reissued | A queued row never carries an unannounced token |
 | `OrderStatus`, `ApplicationFormStatus` | `Pending` | The candidate has something to do again |
 
 **The status predicate is the concurrency guard.** It lives inside the `UPDATE`, so a
@@ -416,8 +428,24 @@ Zero rows updated means the button was stale, and the service raises `ConflictEx
 rather than reporting a silent success.
 
 Both boards also offer a **bulk** requeue over a multi-select, sharing this same statement
-and its guarantees. See `docs/ats-bulk-requeue.md` for the batch cap, per-row scope
+and its guarantees. See `docs/features/ats-bulk-requeue/ats-bulk-requeue.md` for the batch cap, per-row scope
 enforcement, and why a partly-stale selection is reported rather than rejected.
+
+### The resend rotates the token; the follow-up chaser does not
+
+These are the two requeue paths, and they want opposite things from `HashToken`.
+
+An **operator resend** reissues it. Someone clicking resend usually means the old link is lost,
+stale, or in the wrong inbox, so the previous link is deliberately retired — a queued row never
+carries a token the candidate has not been told about.
+
+The **package follow-up** (`ReleaseDueFollowUpInvitationsAsync`) leaves it alone. The whole point
+of a reminder is that the email already in the candidate's inbox still works; rotating the token
+would break the link they were about to click. That is why it is a separate statement rather than
+a flag on the requeue — one method cannot both retire and preserve the same token.
+
+Everything else the two do is identical: back to `Pending`, attempts to `0`, timestamps cleared,
+status predicate inside the `UPDATE` as the concurrency guard.
 
 ### What not to do here
 

@@ -38,6 +38,10 @@ public static class AtsDocumentTypes
 	public const string ConsentForm = "ConsentForm";
 	public const string Report = "Report";
 
+	// Not individually requestable (absent from All); used only to label documents
+	// in the compiled multi-order download.
+	public const string License = "License";
+
 	public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 	{
 		BiometricPhoto, Resume, GovernmentId, NbiClearance, Diploma, Coe, Coe1, Coe2, Coe3, ConsentForm, Report

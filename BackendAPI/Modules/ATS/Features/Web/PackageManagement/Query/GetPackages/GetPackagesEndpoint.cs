@@ -1,6 +1,6 @@
 ﻿namespace ATS.Features.Web.PackageManagement.Query.GetPackages;
 
-public record GetPackagesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null);
+public record GetPackagesEndpointRequest(string? Cursor = null, int? PageSize = 10, string? SearchTerm = null, int? ClientId = null, bool? AutoChasing = null);
 
 public record GetPackagesEndpointResponse(KeysetPaginatedResult<PackageDetailsDTO> Packages);
 
@@ -17,7 +17,8 @@ public class GetPackagesEndpoint : ICarterModule
 				request.Cursor,
 				request.PageSize,
 				request.SearchTerm,
-				request.ClientId);
+				request.ClientId,
+				request.AutoChasing);
 
 			var result = await sender.Send(query, cancellationToken);
 
@@ -29,6 +30,7 @@ public class GetPackagesEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Packages")
 		.WithDescription("Retrieves a list of packages.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

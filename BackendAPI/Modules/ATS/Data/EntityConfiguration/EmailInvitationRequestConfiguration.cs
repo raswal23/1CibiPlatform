@@ -68,15 +68,45 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.RequestorId)
 			   .IsRequired(false);
 
+		// Screening type snapshot; null for legacy rows and unclassified packages.
+		builder.Property(e => e.AutoChasing)
+			   .IsRequired(false);
+
+		// Candidate identity for data-screening orders; other order sources leave
+		// them null, so all three stay optional at the schema level.
+		builder.Property(e => e.DateOfBirth)
+			   .IsRequired(false);
+
+		builder.Property(e => e.SSSNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TINNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
 		builder.Property(e => e.HashTokenCreatedAt)
 			   .IsRequired(true);
 
+		// Nullable because the link no longer expires. The column is kept so existing
+		// rows keep their history, but nothing writes it any more - new rows are NULL.
 		builder.Property(e => e.HashTokenExpiration)
-			   .IsRequired(true);
+			   .IsRequired(false);
 
+		// The fire-once stamp for the package follow-up reminder. Deliberately not
+		// indexed: the release query already narrows on EmailSentStatus, which is
+		// indexed, and this table is write-hot enough that a redundant index is pure
+		// cost - the same reasoning as the BulkFileID note at the bottom of this file.
+		builder.Property(e => e.FollowUpQueuedAt)
+			   .IsRequired(false);
+
+		// Nullable because a data-screening order is never emailed: there is no
+		// application form to send, so it has no place in the email queue at all.
+		// NULL is "not applicable", which is not the same as Pending - the worker
+		// would never advance a Pending data row, leaving it queued forever.
 		builder.Property(e => e.EmailSentStatus)
 			   .HasMaxLength(255)
-			   .IsRequired(true);
+			   .IsRequired(false);
 
 		builder.Property(e => e.ApplicationFormStatus)
 			   .HasMaxLength(255)

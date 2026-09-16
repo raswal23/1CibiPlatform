@@ -19,8 +19,10 @@ public class EditPackageEndpoint : ICarterModule
 		.WithTags("ATS")
 		.Produces<PackageDetailsDTO>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Package")
 		.WithDescription("Edits an existing package.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

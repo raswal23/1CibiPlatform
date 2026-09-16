@@ -63,6 +63,13 @@ public partial class ATSRepository
 			.ToListAsync();
 	}
 
+	public async Task<BulkUploadFileDetails?> GetBulkUploadFileDetailByIdAsync(Guid fileId)
+	{
+		return await _dbcontext.BulkUploadFileDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.FileID == fileId);
+	}
+
 	public async Task<int> ReleaseBulkFileClaimsAsync(List<BulkUploadFileDetails> bulkUploadFileDetails)
 	{
 		// A file that failed to process goes straight back to Pending so the next tick
@@ -122,5 +129,28 @@ public partial class ATSRepository
 				.SetProperty(x => x.ClaimedAt, x => null));
 
 		return true;
+	}
+
+	public async Task<List<BulkUploadFileDetails>> GetBulkUploadFileDetailsForCleanupAsync(CancellationToken cancellationToken)
+	{
+		return await _dbcontext.BulkUploadFileDetails
+			.AsNoTracking()
+			.Where(x => x.Status == BulkFileStatus.Done
+					 && x.RejectedRows != null
+					 && !string.IsNullOrEmpty(x.FileKey)
+					 && x.IsFileKeyDeleted == false)
+			.Take(50) // Take up to 50 records
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<bool> ClearBulkUploadFileKeyAsync(Guid fileId, CancellationToken cancellationToken)
+	{
+		var updated = await _dbcontext.BulkUploadFileDetails
+			.Where(x => x.FileID == fileId)
+			.ExecuteUpdateAsync(setters => setters
+				.SetProperty(x => x.IsFileKeyDeleted, x => true),
+				cancellationToken);
+
+		return updated > 0;
 	}
 }

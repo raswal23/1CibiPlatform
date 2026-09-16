@@ -4,5 +4,5 @@ public interface IModuleManagementService
 {
 	Task<KeysetPaginatedResult<ModuleDetailsDTO>> GetModulesAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddModuleAsync(AddModuleDTO moduleDTO);
-	Task<ModuleDetailsDTO> EditModuleAsync(EditModuleDTO moduleDTO);
+	Task<ModuleDetailsDTO> EditModuleAsync(EditModuleDTO moduleDTO, CancellationToken cancellationToken);
 }

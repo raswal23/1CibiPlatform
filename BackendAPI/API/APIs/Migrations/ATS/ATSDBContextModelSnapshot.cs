@@ -644,6 +644,9 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("ClaimedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -699,6 +702,11 @@ namespace APIs.Migrations.ATS
 
                     b.Property<Guid>("UploadedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsFileKeyDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.HasKey("FileID");
 
@@ -957,11 +965,17 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid?>("BulkFileID")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("DisputeCategory")
                         .HasMaxLength(255)
@@ -987,7 +1001,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmailSentStatus")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -995,6 +1008,9 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("FollowUpQueuedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("FormCompletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1007,7 +1023,7 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime>("HashTokenCreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("HashTokenExpiration")
+                    b.Property<DateTime?>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsTicketed")
@@ -1063,8 +1079,16 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("SSSNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("SelectPackage")
                         .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TINNumber")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1233,6 +1257,9 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
+
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");

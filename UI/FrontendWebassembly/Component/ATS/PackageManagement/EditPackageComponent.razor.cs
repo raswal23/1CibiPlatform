@@ -21,7 +21,8 @@ public partial class EditPackageComponent
 			PackageName = Package.PackageName,
 			PackageDescription = Package.PackageDescription,
 			IsActive = Package.IsActive,
-			FollowUpEmail = Package.FollowUpEmail
+			FollowUpEmail = Package.FollowUpEmail,
+			AutoChasing = Package.AutoChasing
 		};
 	}
 

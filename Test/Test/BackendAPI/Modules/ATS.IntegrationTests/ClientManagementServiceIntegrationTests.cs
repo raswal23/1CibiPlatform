@@ -1,3 +1,4 @@
+using ATS.Data.Entities;
 using ATS.DTO;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
@@ -171,9 +172,99 @@ public class ClientManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.Should().NotContain(client => client.PackageId == removedPackageId);
 	}
 
+	[Fact]
+	public async Task EditClientAsync_ShouldDeactivateClient_WhenOnlyInactiveUsersAreAssigned()
+	{
+		// Arrange
+		var packageId = await AddPackageAsync("Dormant Client Package");
+		await AddClientAsync("Dormant Client", "Original description", packageId);
+		var clientId = await GetClientIdAsync("Dormant Client");
+		await SeedUserOnClientAsync(clientId, isActive: false);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = CreateEditRequest(
+			clientId,
+			"Dormant Client",
+			"Original description",
+			false,
+			packageId);
+
+		// Act
+		var result = await _clientManagementService.EditClientAsync(request, CancellationToken.None);
+
+		// Assert
+		result.Should().OnlyContain(client => !client.IsActive);
+
+		var persisted = await _dbContext.ClientDetails
+			.AsNoTracking()
+			.Where(client => client.ClientId == clientId)
+			.ToListAsync();
+		persisted.Should().OnlyContain(client => !client.IsActive);
+	}
+
+	[Fact]
+	public async Task EditClientAsync_ShouldSkipUsageGuard_WhenClientStaysActive()
+	{
+		// Arrange
+		var packageId = await AddPackageAsync("Busy Client Package");
+		await AddClientAsync("Busy Client", "Original description", packageId);
+		var clientId = await GetClientIdAsync("Busy Client");
+		await SeedUserOnClientAsync(clientId, isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = CreateEditRequest(
+			clientId,
+			"Busy Client Renamed",
+			"Renamed while in use",
+			true,
+			packageId);
+
+		// Act
+		var result = await _clientManagementService.EditClientAsync(request, CancellationToken.None);
+
+		// Assert
+		result.Should().OnlyContain(client =>
+			client.ClientName == "Busy Client Renamed" && client.IsActive);
+	}
+
 	#endregion
 
 	#region Bad Path
+
+	[Fact]
+	public async Task EditClientAsync_ShouldThrowConflictException_WhenDeactivatingClientWithActiveUsers()
+	{
+		// Arrange
+		var packageId = await AddPackageAsync("Occupied Client Package");
+		await AddClientAsync("Occupied Client", "Original description", packageId);
+		var clientId = await GetClientIdAsync("Occupied Client");
+		await SeedUserOnClientAsync(clientId, isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = CreateEditRequest(
+			clientId,
+			"Occupied Client",
+			"Original description",
+			false,
+			packageId);
+
+		// Act
+		Func<Task> act = () => _clientManagementService.EditClientAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<ConflictException>()
+			.WithMessage("Cannot disable this client: 1 active user is assigned to it.");
+
+		var persisted = await _dbContext.ClientDetails
+			.AsNoTracking()
+			.Where(client => client.ClientId == clientId)
+			.ToListAsync();
+		persisted.Should().OnlyContain(client => client.IsActive);
+	}
 
 	[Fact]
 	public async Task AddClientAsync_ShouldThrowBadRequestException_WhenClientNameAlreadyExists()
@@ -314,6 +405,55 @@ public class ClientManagementServiceIntegrationTests : BaseIntegrationTest
 		_clientManagementService.AddClientAsync(
 			CreateAddRequest(name, description, true, packageIds),
 			CancellationToken.None);
+
+	private Task<int> GetClientIdAsync(string clientName) =>
+		_dbContext.ClientDetails
+			.AsNoTracking()
+			.Where(client => client.ClientName == clientName)
+			.Select(client => client.ClientId)
+			.Distinct()
+			.SingleAsync();
+
+	// UserDetails carries FKs to role and module, so an assigned user needs both
+	// seeded first. ClientId itself is a loose reference (no FK).
+	private async Task SeedUserOnClientAsync(int clientId, bool isActive)
+	{
+		var now = DateTime.UtcNow;
+		var role = new RoleDetails
+		{
+			RoleName = $"Client Guard Role {Guid.CreateVersion7()}",
+			RoleDescription = "Seeded for the client deactivation guard",
+			IsActive = true,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+		var module = new ModuleDetails
+		{
+			ModuleName = $"Client Guard Module {Guid.CreateVersion7()}",
+			ModuleDescription = "Seeded for the client deactivation guard",
+			IsActive = true,
+			CreatedAt = now,
+			UpdatedAt = now
+		};
+		_dbContext.RoleDetails.Add(role);
+		_dbContext.ModuleDetails.Add(module);
+		await _dbContext.SaveChangesAsync();
+
+		_dbContext.UserDetails.Add(new UserDetails
+		{
+			UserId = Guid.CreateVersion7(),
+			UserName = "Client Guard User",
+			UserEmail = "client.guard@cibi.com.ph",
+			IsActive = isActive,
+			ClientId = clientId,
+			Site = "Integration Test Site",
+			RoleId = role.RoleId,
+			ModuleId = module.ModuleId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+		await _dbContext.SaveChangesAsync();
+	}
 
 	private static AddClientDTO[] CreateAddRequest(
 		string name,

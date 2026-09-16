@@ -152,6 +152,37 @@ public sealed class AtsNotificationRepository : IAtsNotificationRepository
 
 		var completedFileIds = progress.Select(file => file.FileId).ToList();
 
+		// Files already announced. Without this, a file completes more than once: the package
+		// follow-up chaser puts a delivered row back to Pending, and when it reaches Done a
+		// second time the file is "complete" again and the uploader is told again, days after
+		// they stopped caring. An operator resend on a bulk row does the same thing.
+		//
+		// The check lives here rather than in the service because the service has no reason to
+		// know that EntityId carries the file id - and doing it in SQL means one round trip
+		// instead of one per file.
+		var alreadyAnnouncedFileIds = await _dbContext.Notifications
+			.AsNoTracking()
+			.Where(notification => notification.Type == AtsNotificationType.BulkEmailsCompleted
+				&& notification.EntityId != null
+				&& completedFileIds.Contains(notification.EntityId.Value))
+			.Select(notification => notification.EntityId!.Value)
+			.Distinct()
+			.ToListAsync(cancellationToken);
+
+		if (alreadyAnnouncedFileIds.Count > 0)
+		{
+			progress = progress
+				.Where(file => !alreadyAnnouncedFileIds.Contains(file.FileId))
+				.ToList();
+
+			if (progress.Count == 0)
+			{
+				return [];
+			}
+
+			completedFileIds = progress.Select(file => file.FileId).ToList();
+		}
+
 		var files = await _dbContext.BulkUploadFileDetails
 			.AsNoTracking()
 			.Where(file => completedFileIds.Contains(file.FileID))

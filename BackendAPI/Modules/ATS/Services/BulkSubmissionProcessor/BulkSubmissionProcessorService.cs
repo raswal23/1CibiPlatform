@@ -9,8 +9,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 	private readonly IHashService _hashService;
 	private readonly IHubContext<ATSHub, IATSClient> _hubContext;
 	private readonly ILogger<BulkSubmissionProcessorService> _logger;
-	private readonly IConfiguration _configuration;
-	private readonly int _applicationFormExpiryInHours;
 
 	// Comfortably longer than a full parse pass so a live worker is never robbed of
 	// files it is still processing.
@@ -23,8 +21,7 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		ISecureToken secureToken,
 		IHashService hashService,
 		IHubContext<ATSHub, IATSClient> hubContext,
-		ILogger<BulkSubmissionProcessorService> logger,
-		IConfiguration configuration)
+		ILogger<BulkSubmissionProcessorService> logger)
 	{
 		_repository = repository;
 		_serviceScopeFactory = serviceScopeFactory;
@@ -33,8 +30,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 		_hashService = hashService;
 		_hubContext = hubContext;
 		_logger = logger;
-		_configuration = configuration;
-		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 	}
 
 	// The uploader is told what actually happened. Silently reporting "received" when
@@ -100,9 +95,19 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 
 				using var reader = new StringReader(csvContent);
 
+				// The identity columns (DateOfBirth, SSSNumber, TINNumber) are present
+				// only on data-screening templates, so CsvHelper's own header and
+				// missing-field checks must not reject the standard 5-column file. The
+				// per-screening-type header check below takes their place.
+				var csvConfiguration = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+				{
+					HeaderValidated = null,
+					MissingFieldFound = null
+				};
+
 				using var csv = new CsvReader(
 					reader,
-					CultureInfo.InvariantCulture);
+					csvConfiguration);
 
 				if (!csv.Read() || !csv.ReadHeader())
 				{
@@ -118,6 +123,17 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					nameof(BulkUploadCsvRecord.EmailAddress),
 					nameof(BulkUploadCsvRecord.MobileNumber)
 				};
+
+				// A data-screening file must carry each candidate's identity, because no
+				// application form is sent to collect it later. Demanding the columns up
+				// front fails the file once, instead of accepting it and then rejecting
+				// every row inside it for the same missing columns.
+				if (file.AutoChasing == false)
+				{
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.DateOfBirth));
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.SSSNumber));
+					expectedHeaders.Add(nameof(BulkUploadCsvRecord.TINNumber));
+				}
 
 				var actualHeaders = csv.HeaderRecord?
 					.Select(header => header?.Trim() ?? string.Empty)
@@ -157,12 +173,21 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 					// inserted to fail later at email send or OMS ticketing.
 					var (rejectionReason, mobileNumber) = BulkSubjectRowValidator.Validate(row);
 
-					if (rejectionReason is not null)
+					// Data-screening files must carry each candidate's identity, because
+					// no application form is sent to collect it later.
+					string? identityRejection = null;
+					DateOnly? dateOfBirth = null;
+					if (rejectionReason is null && file.AutoChasing == false)
+					{
+						(identityRejection, dateOfBirth) = BulkSubjectRowValidator.ValidateIdentity(row);
+					}
+
+					if ((rejectionReason ?? identityRejection) is { } reason)
 					{
 						rejectedRows.Add(new BulkUploadRejectedRowDTO
 						{
 							RowNumber = rowNumber,
-							Reason = rejectionReason
+							Reason = reason
 						});
 
 						continue;
@@ -190,7 +215,6 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						BulkFileID = file.FileID,
 						HashToken = HashToken,
 						HashTokenCreatedAt = DateTime.UtcNow,
-						HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours),
 						LastName = row.LastName,
 						FirstName = row.FirstName,
 						// Optional column: a candidate may have no middle initial. Blank is
@@ -207,7 +231,22 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 						// name the label, exactly as on a single order.
 						PackageId = file.PackageId,
 						SelectPackage = file.PackageType,
-						EmailSentStatus = EmailStatus.Pending,
+						// The screening-type snapshot travels with each order; the
+						// email worker only invites manual (AutoChasing) orders.
+						AutoChasing = file.AutoChasing,
+
+						// Only populated for data-screening files, whose rows carry
+						// the identity columns the candidate cannot supply later.
+						DateOfBirth = dateOfBirth,
+						SSSNumber = string.IsNullOrWhiteSpace(row.SSSNumber) ? null : row.SSSNumber.Trim(),
+						TINNumber = string.IsNullOrWhiteSpace(row.TINNumber) ? null : row.TINNumber.Trim(),
+
+						// Only a manual order joins the email queue. A data row is never
+						// emailed, so NULL says "not applicable" rather than parking it at
+						// Pending, which the worker's "AutoChasing" IS TRUE claim would
+						// never advance - and which the dashboard would count as an
+						// invitation still on its way.
+						EmailSentStatus = file.AutoChasing is true ? EmailStatus.Pending : null,
 						ApplicationFormStatus = ApplicationFormStatus.Pending,
 						OrderStatus = OrderStatus.PendingCandidateInfo,
 						RushNormal = file.OrderType,
@@ -331,6 +370,28 @@ public class BulkSubmissionProcessorService : IBulkSubmissionProcessorService
 			var processedFileIds = processedFiles.Select(file => file.FileID).ToList();
 
 			await _repository.UpdateBulkFileDetailsStatusAsync(processedFileIds, BulkFileStatus.Done);
+
+			// Log rejected rows for each processed file that has them
+			foreach (var file in processedFiles)
+			{
+				// Fetch the updated file details to check for rejected rows after status update
+				var updatedFileDetails = await _repository.GetBulkUploadFileDetailByIdAsync(file.FileID);
+				
+				if (updatedFileDetails != null && 
+					updatedFileDetails.Status == BulkFileStatus.Done && 
+					!string.IsNullOrEmpty(updatedFileDetails.RejectedRows))
+				{
+					// Deserialize the rejected rows to log them in a more readable format
+					var rejectedRows = JsonSerializer.Deserialize<List<BulkUploadRejectedRowDTO>>(updatedFileDetails.RejectedRows);
+					
+					_logger.LogError(
+						"Bulk upload completed with rejected rows - Requestor: {Requestor}, Filename: {FileName}, Rejected Rows Count: {RejectedRowCount}, Rejected Rows Details: {RejectedRowsDetails}",
+						updatedFileDetails.Requestor,
+						updatedFileDetails.FileName,
+						rejectedRows?.Count ?? 0,
+						updatedFileDetails.RejectedRows);
+				}
+			}
 		}
 
 		if (failedFiles.Count > 0)

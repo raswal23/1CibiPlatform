@@ -4,8 +4,8 @@ How ATS registers the mailboxes it sends invitations from, proves their credenti
 trusting them, and automatically moves to the next one when a mailbox is capped, throttled or
 failing.
 
-Related: `docs/ats-email-delivery.md` (how a single message is paced, pooled and classified —
-read that first if you have not), `docs/ats-notifications.md`,
+Related: `docs/features/ats-email-delivery/ats-email-delivery.md` (how a single message is paced, pooled and classified —
+read that first if you have not), `docs/features/ats-notifications/ats-notifications.md`,
 `docs/feature-development-guide.md`.
 
 ---
@@ -553,7 +553,7 @@ Registering a second mailbox roughly doubles the **daily volume** the queue can 
 not make any single account send faster; `MaxSendsPerSecond` is a per-mailbox rate and each
 account gets its own budget of it. If invitations are going out too slowly rather than stopping
 outright, the answer is a transactional provider, not another Gmail. See
-`docs/ats-email-delivery.md` §4.
+`docs/features/ats-email-delivery/ats-email-delivery.md` §4.
 
 ### Replicas multiply the rate, not the quota
 

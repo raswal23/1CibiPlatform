@@ -89,6 +89,44 @@ public static class ATSDatabaseExtensions
 
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.TicketingStatus);
+
+		// Last, because the backfill above inserts ModuleDetails rows with explicit ids
+		// too. Syncing before it would leave the sequence stranded again.
+		await SyncIdentitySequencesAsync(context);
+	}
+
+	/// <summary>
+	/// Advances the identity sequences of the tables this seed fills with explicit ids,
+	/// so the next admin-created row does not collide with a seeded one.
+	/// </summary>
+	/// <remarks>
+	/// RoleDetails and ModuleDetails are seeded with explicit ids (RoleId 1-4, the
+	/// AtsModuleIds constants), and an explicit id does not advance the identity
+	/// sequence behind the column. The sequence therefore still points at 1, so the
+	/// first role or module added through the admin screens is handed an id that is
+	/// already taken and the insert dies on the primary key - which the UI reports as
+	/// the generic "error saving entity". Mirrors AuthDatabaseExtensions, which hit
+	/// this first. Runs unconditionally, not only when the seed inserted something:
+	/// databases seeded before this existed are already wrong and heal on next start.
+	/// Public so the integration tests can reproduce a seeded database, which they
+	/// otherwise never see - they truncate with RESTART IDENTITY.
+	/// </remarks>
+	public static async Task SyncIdentitySequencesAsync(ATSDBContext context)
+	{
+		// GREATEST guards an empty table, where MAX is NULL and setval would fail.
+		// TRUE marks the value as used, so the next id is MAX + 1.
+		await context.Database.ExecuteSqlRawAsync(
+			"""
+			SELECT setval(
+				pg_get_serial_sequence('ats."RoleDetails"', 'RoleId'),
+				GREATEST((SELECT MAX("RoleId") FROM ats."RoleDetails"), 1),
+				TRUE);
+
+			SELECT setval(
+				pg_get_serial_sequence('ats."ModuleDetails"', 'ModuleId'),
+				GREATEST((SELECT MAX("ModuleId") FROM ats."ModuleDetails"), 1),
+				TRUE);
+			""");
 	}
 
 	// The seed blocks above only run on an empty table, so a module added after the

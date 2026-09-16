@@ -14,6 +14,4 @@ public sealed class EmailInvitationRequeueDTO
 	public Guid EmailInvitationId { get; set; }
 
 	public string HashToken { get; set; } = string.Empty;
-
-	public DateTime HashTokenExpiration { get; set; }
 }

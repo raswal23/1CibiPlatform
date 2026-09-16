@@ -15,6 +15,156 @@ public partial class NewOrderComponent
 	[Inject] private CheckBulkFileName CheckBulkFileName { get; set; } = default!;
 	private IReadOnlyList<PackageDetailsDTO> availablePackages = Array.Empty<PackageDetailsDTO>();
 
+	private bool IsDataScreening => subject.AutoChasing == false;
+
+	// Unclassified (null AutoChasing) packages match neither type on purpose:
+	// "not set" must never pass for Data (or Manual).
+	private IReadOnlyList<PackageDetailsDTO> FilteredPackages =>
+		subject.AutoChasing is null
+			? Array.Empty<PackageDetailsDTO>()
+			: availablePackages.Where(package => package.AutoChasing == subject.AutoChasing).ToArray();
+
+	private IReadOnlyList<PackageDetailsDTO> FilteredBulkPackages =>
+		bulkUploadFileDetailsDTO.AutoChasing is null
+			? Array.Empty<PackageDetailsDTO>()
+			: availablePackages.Where(package => package.AutoChasing == bulkUploadFileDetailsDTO.AutoChasing).ToArray();
+
+	private void OnBulkScreeningTypeChanged(bool? screeningType)
+	{
+		bulkUploadFileDetailsDTO.AutoChasing = screeningType;
+
+		if (screeningType is not null)
+		{
+			// The field just unlocked; a blink telling the user it is locked
+			// would now be lying.
+			screeningNoteBlinkCts?.Cancel();
+			isScreeningNoteBlinking = false;
+		}
+
+		// The previously chosen package may not belong to the new type.
+		if (bulkUploadFileDetailsDTO.PackageType is not null
+			&& !FilteredBulkPackages.Any(package => package.PackageName == bulkUploadFileDetailsDTO.PackageType))
+		{
+			bulkUploadFileDetailsDTO.PackageType = null;
+		}
+	}
+
+	// MudDatePicker works in DateTime?; the DTO stores DateOnly?.
+	private DateTime? CandidateDateOfBirth
+	{
+		get => subject.DateOfBirth?.ToDateTime(TimeOnly.MinValue);
+		set => subject.DateOfBirth = value is { } date ? DateOnly.FromDateTime(date) : null;
+	}
+
+	// Both tabs show the same note in the same three states; only the copy differs,
+	// because what the choice changes is per-candidate fields on one tab and CSV
+	// columns on the other.
+	private static string ScreeningNoteIconFor(bool? screeningType) => screeningType switch
+	{
+		true => Icons.Material.Outlined.MarkEmailRead,
+		false => Icons.Material.Outlined.Storage,
+		null => Icons.Material.Outlined.Info
+	};
+
+	private static string ScreeningNoteTitleFor(bool? screeningType) => screeningType switch
+	{
+		true => "Manual screening",
+		false => "Data screening",
+		null => "Screening type"
+	};
+
+	private string ScreeningNoteIcon => ScreeningNoteIconFor(subject.AutoChasing);
+
+	private string ScreeningNoteTitle => ScreeningNoteTitleFor(subject.AutoChasing);
+
+	private string ScreeningNoteText => subject.AutoChasing switch
+	{
+		true => "An application form invitation will be emailed to the candidate to fill out their details.",
+		false => "No application form is sent to the candidate — only the Date of birth, SSS number and TIN number in Personal information are required.",
+		null => "Select a screening type first: Manual sends an application form to the candidate, while Data does not and instead requires the Date of birth, SSS number and TIN number fields."
+	};
+
+	private string BulkScreeningNoteIcon => ScreeningNoteIconFor(bulkUploadFileDetailsDTO.AutoChasing);
+
+	private string BulkScreeningNoteTitle => ScreeningNoteTitleFor(bulkUploadFileDetailsDTO.AutoChasing);
+
+	// Named after the CSV headers rather than the form labels: this is what the
+	// operator has to type into a spreadsheet, and the upload is rejected on the
+	// header text itself.
+	private string BulkScreeningNoteText => bulkUploadFileDetailsDTO.AutoChasing switch
+	{
+		true => "An application form invitation will be emailed to every candidate in the file to fill out their details.",
+		false => "No application form is sent to the candidates — every CSV row must include the DateOfBirth (MM/dd/yyyy), SSSNumber and TINNumber columns.",
+		null => "Select a screening type first: Manual emails an application form to every candidate in the file, while Data does not and instead requires DateOfBirth, SSSNumber and TINNumber columns in the CSV."
+	};
+
+	// Blinks the screening note when the package select is clicked while it is
+	// still locked. The token restarts the blink on every click instead of letting
+	// an earlier click's delay switch a newer blink off early.
+	private bool isScreeningNoteBlinking;
+	private CancellationTokenSource? screeningNoteBlinkCts;
+
+	private void OnScreeningTypeChanged(bool? screeningType)
+	{
+		subject.AutoChasing = screeningType;
+
+		if (screeningType is not null)
+		{
+			// The field just unlocked; a blink telling the user it is locked
+			// would now be lying.
+			screeningNoteBlinkCts?.Cancel();
+			isScreeningNoteBlinking = false;
+		}
+
+		// The previously chosen package may not belong to the new type.
+		if (subject.SelectPackage is not null
+			&& !FilteredPackages.Any(package => package.PackageName == subject.SelectPackage))
+		{
+			subject.SelectPackage = null;
+		}
+	}
+
+	// The wrapper around the disabled select receives the click (a disabled input
+	// never raises one itself) and blinks the note for a moment. Re-clicking
+	// restarts the animation from the first flash. Shared by both tabs - only one
+	// is rendered at a time, so one blink flag is enough.
+	private async Task OnPackageFieldClickedAsync()
+	{
+		var screeningType = isBulkMode
+			? bulkUploadFileDetailsDTO.AutoChasing
+			: subject.AutoChasing;
+
+		if (screeningType is not null)
+			return;
+
+		screeningNoteBlinkCts?.Cancel();
+		screeningNoteBlinkCts?.Dispose();
+		screeningNoteBlinkCts = new CancellationTokenSource();
+
+		var token = screeningNoteBlinkCts.Token;
+
+		// Drop the class for one render so a click mid-blink restarts the CSS
+		// animation instead of being ignored.
+		isScreeningNoteBlinking = false;
+		await InvokeAsync(StateHasChanged);
+
+		isScreeningNoteBlinking = true;
+		await InvokeAsync(StateHasChanged);
+
+		try
+		{
+			// Matches the CSS: 3 blinks x 0.5s.
+			await Task.Delay(1500, token);
+		}
+		catch (TaskCanceledException)
+		{
+			return;
+		}
+
+		isScreeningNoteBlinking = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
 	protected override async Task OnInitializedAsync()
 	{
 		await base.OnInitializedAsync();
@@ -71,6 +221,11 @@ public partial class NewOrderComponent
 	private void SetOrderMode(bool bulk)
 	{
 		isBulkMode = bulk;
+
+		// The blink belongs to the tab it started on; carrying it across would flash
+		// the other tab's note for no reason the user can connect to a click.
+		screeningNoteBlinkCts?.Cancel();
+		isScreeningNoteBlinking = false;
 	}
 
 	private string GetSegmentClass(bool bulk)
@@ -112,6 +267,7 @@ public partial class NewOrderComponent
 		bulkUploadFileDetailsDTO.FileName = null;
 		bulkUploadFileDetailsDTO.OrderType = "Normal";
 		bulkUploadFileDetailsDTO.PackageType = null;
+		bulkUploadFileDetailsDTO.AutoChasing = null;
 
 		if (bulkForm is not null)
 			await bulkForm.ResetAsync();
@@ -161,6 +317,9 @@ public partial class NewOrderComponent
 		// one notification per visit, and eventually none at all once the disposed
 		// components started throwing.
 		EndorsementSubmissionService.ATSResponseReceived -= OnATSResponse;
+
+		screeningNoteBlinkCts?.Cancel();
+		screeningNoteBlinkCts?.Dispose();
 	}
 
 	private async Task OnBulkFileUpload(InputFileChangeEventArgs e)
@@ -196,6 +355,8 @@ public partial class NewOrderComponent
 			return;
 		}
 
+		// Data screening sends no application form, so the confirmation copy
+		// must not promise an email the candidate will never receive.
 		var confirmParam = new DialogParameters
 		{
 			{
@@ -204,7 +365,7 @@ public partial class NewOrderComponent
 			},
 			{
 				nameof(YesNoDialogComponent.Message),
-				"Please be advised that this action will send an email invitation to your candidate."
+				"Depending on the selected screening type, an email invitation may be sent to the candidate to complete the required information."
 			},
 			{
 				nameof(YesNoDialogComponent.ConfirmText),
@@ -212,7 +373,7 @@ public partial class NewOrderComponent
 			},
 			{
 				nameof(YesNoDialogComponent.InformationMessage),
-				"Clicking 'Proceed' will  send an email invitation. Would you like to proceed?"
+				"By clicking ' Proceed ,' you attest and confirm that you have obtained the necessary and valid consent from the concerned individual(s) authorizing CIBI Information, Inc. to collect, process, verify, and validate their personal information for the purpose of conducting the requested background verification. You further confirm that the individual(s) have been appropriately informed of the nature and purpose of the background verification and that such consent was obtained prior to submitting this request."
 			}
 		};
 
@@ -249,9 +410,13 @@ public partial class NewOrderComponent
 
 			if (sendResponse.Data)
 			{
-				Snackbar.Add("An email invitation will be sent to your candidate.", Severity.Success);
+				Snackbar.Add(
+					IsDataScreening
+						? "The data screening order has been created."
+						: "An email invitation will be sent to your candidate.",
+					Severity.Success);
 
-				subject.RushNormal = "Normal";
+				subject = new EmailInvitationRequestDTO { RushNormal = "Normal" };
 
 				await candidateForm.ResetAsync();
 			}
@@ -268,6 +433,14 @@ public partial class NewOrderComponent
 
 		if (!bulkForm.IsValid)
 			return;
+
+		// The screening type decides which columns the file must carry, so it is checked
+		// before the preview rather than alongside the rest of the form.
+		if (bulkUploadFileDetailsDTO.AutoChasing is null)
+		{
+			Snackbar.Add("Screening type is required", Severity.Error);
+			return;
+		}
 
 		if (string.IsNullOrWhiteSpace(bulkUploadFileDetailsDTO.OrderType))
 		{
@@ -290,16 +463,27 @@ public partial class NewOrderComponent
 
 		var previewData = await BuildCsvPreview();
 
-		// Extra columns after the template's are filtered out by the parser; the
-		// template columns themselves must lead the file in the standard sequence.
+		// Check for required headers based on screening type
+		var expectedHeaders = CsvPreviewParser.HeadersFor(bulkUploadFileDetailsDTO.AutoChasing == false);
+		var missingHeaders = expectedHeaders
+			.Where(expected => !previewData.Headers.Contains(expected, StringComparer.OrdinalIgnoreCase))
+			.ToList();
+
+		// The template columns themselves must lead the file in the standard sequence.
 		// Name the columns actually absent when that is the failure, otherwise call
 		// out the ordering - both before upload, not after the file is accepted.
-		if (!previewData.HasCanonicalHeaderSequence)
+		var hasCanonicalHeaderSequence = previewData.Headers.Count >= expectedHeaders.Count
+			&& expectedHeaders
+				.Select((expected, index) =>
+					string.Equals(previewData.Headers[index], expected, StringComparison.OrdinalIgnoreCase))
+				.All(matches => matches);
+
+		if (!hasCanonicalHeaderSequence)
 		{
 			Snackbar.Add(
-				previewData.MissingHeaders.Count > 0
-					? $"Missing required column(s): {string.Join(", ", previewData.MissingHeaders)}. Please use the bulk upload template."
-					: $"Columns must appear in the template order: {string.Join(", ", CsvPreviewParser.CanonicalHeaders)}.",
+				missingHeaders.Count > 0
+					? $"Missing required column(s): {string.Join(", ", missingHeaders)}. Please use the bulk upload template."
+					: $"Columns must appear in the template order: {string.Join(", ", expectedHeaders)}.",
 				Severity.Error);
 			return;
 		}
@@ -323,7 +507,8 @@ public partial class NewOrderComponent
 		{
 			{ nameof(PreviewComponent.Headers), previewData.Headers },
 			{ nameof(PreviewComponent.Rows), previewData.Rows },
-			{ nameof(PreviewComponent.Message), previewMessage }
+			{ nameof(PreviewComponent.Message), previewMessage },
+			{ nameof(PreviewComponent.IsDataScreening), bulkUploadFileDetailsDTO.AutoChasing == false }
 		};
 
 		var options = new DialogOptions
@@ -391,8 +576,9 @@ public partial class NewOrderComponent
 		// decoder buffers the bytes before choosing an encoding.
 		var csvContent = await CsvTextDecoder.DecodeAsync(stream);
 
-		// Quote-aware, so the preview matches what CsvHelper parses server-side.
-		return CsvPreviewParser.Parse(csvContent);
+		// For preview purposes, show ALL columns in the CSV regardless of screening type
+		// The actual validation still happens based on screening type in the backend
+		return CsvPreviewParser.ParseForPreview(csvContent);
 	}
 
 	private async Task RemoveFileFromUploadsAsync(IBrowserFile file)

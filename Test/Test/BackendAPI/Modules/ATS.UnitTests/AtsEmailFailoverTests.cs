@@ -31,15 +31,7 @@ public class AtsEmailFailoverTests
 
 	private static ATSEmailService Service(Mock<ISmtpAccountPoolRegistry> registry)
 	{
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
-			{
-				{ "ATS:ATSApplicationFormExpiryInHours", "72" }
-			})
-			.Build();
-
 		return new ATSEmailService(
-			configuration,
 			NullLogger<ATSEmailService>.Instance,
 			registry.Object,
 			Options.Create(new AtsEmailDeliveryOptions()));

@@ -25,7 +25,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
-	private readonly int _applicationFormExpiryInHours;
 	private readonly string _folderName;
 
 	public EndorsementSubmissionService(
@@ -62,7 +61,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_unitOfWork = unitOfWork;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
-		_applicationFormExpiryInHours = _configuration.GetSection("ATS").GetValue<int>("ATSApplicationFormExpiryInHours");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkFileFolderName", "");
 	}
 
@@ -105,12 +103,25 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			emailInvitationRequestDTO.RushNormal,
 			ct);
 
+		// The web console sends the screening type the user chose, and the package
+		// list it chose from is filtered by that type - so a mismatch means a stale
+		// or tampered request. Public API and assistant callers send null and skip
+		// the check; the package's own classification stands.
+		if (emailInvitationRequestDTO.AutoChasing is not null
+			&& validated.AutoChasing != emailInvitationRequestDTO.AutoChasing)
+		{
+			throw new BadRequestException("The selected package does not match the chosen screening type.");
+		}
+
 		// Written back so the caller is echoed what was actually stored - a request
 		// sending "rush" gets "Rush" - and so the Adapt below carries the resolved id
-		// and canonical spelling onto the entity.
+		// and canonical spelling onto the entity. AutoChasing is snapshotted from the
+		// package (not the caller) so the order keeps the classification it was
+		// placed under even if the package is reclassified later.
 		emailInvitationRequestDTO.PackageId = validated.PackageId;
 		emailInvitationRequestDTO.SelectPackage = validated.Package;
 		emailInvitationRequestDTO.RushNormal = validated.OrderType;
+		emailInvitationRequestDTO.AutoChasing = validated.AutoChasing;
 
 		var token = _secureToken.GenerateSecureToken();
 
@@ -136,7 +147,16 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.HashToken = HashToken;
 		emailInvitationRequest.HashTokenCreatedAt = DateTime.UtcNow;
 		emailInvitationRequest.OrderCreatedAt = DateTime.UtcNow;
-		emailInvitationRequest.EmailSentStatus = EmailStatus.Pending;
+
+		// Manual screening is the only type that gets an application form. A data order
+		// already carries the candidate's identity from order entry, so there is nothing
+		// to ask them for - and every email column stays NULL rather than Pending.
+		// Pending would be a lie in two directions: it tells a requestor an invitation is
+		// on its way, and it describes a queue position this row does not hold, since the
+		// worker claims "AutoChasing" IS TRUE and would never advance it.
+		var sendsApplicationForm = emailInvitationRequest.AutoChasing is true;
+
+		emailInvitationRequest.EmailSentStatus = sendsApplicationForm ? EmailStatus.Pending : null;
 		emailInvitationRequest.ApplicationFormStatus = ApplicationFormStatus.Pending;
 		emailInvitationRequest.OrderStatus = OrderStatus.PendingCandidateInfo;
 
@@ -147,7 +167,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		emailInvitationRequest.RequestorId = _currentUser.UserId;
 		emailInvitationRequest.ClientId = _currentUser.AtsClientId;
 		emailInvitationRequest.Requestor = _currentUser.FullName;
-		emailInvitationRequest.HashTokenExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		var applicationFormLink = $"{_applicationformBaseUrl}/{HashToken}";
 
@@ -165,6 +184,10 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// no longer exists. That window is the price of sending inline; the alternative is
 		// queueing it for EmailNotificationProcessor, which is how bulk orders work.
 		//
+		// A data order skips the send and the status update entirely, so its transaction is
+		// just the insert and the history entry. It is still queued for OMS ticketing - only
+		// the candidate-facing email is suppressed, not the order itself.
+		//
 		// TransactionRunner owns the begin / SaveChanges / commit / rollback, and rethrows
 		// untouched so CustomExceptionHandler still decides the status code.
 		await TransactionRunner.RunAsync(
@@ -173,15 +196,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			{
 				await _atsRepository.AddEmailInvitationRequestAsync(emailInvitationRequest);
 
-				await SendApplicationFormToUserEmailAsync(
-					emailInvitationRequestDTO.EmailAddress!,
-					subjectName,
-					applicationFormLink,
-					emailInvitationRequest.Requestor,
-					emailInvitationRequest.ClientId);
+				if (sendsApplicationForm)
+				{
+					await SendApplicationFormToUserEmailAsync(
+						emailInvitationRequestDTO.EmailAddress!,
+						subjectName,
+						applicationFormLink,
+						emailInvitationRequest.Requestor,
+						emailInvitationRequest.ClientId);
 
-				await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
-					emailInvitationRequest.EmailInvitationID);
+					await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
+						emailInvitationRequest.EmailInvitationID);
+				}
 
 				await _orderHistoryService.RecordAsync(
 					emailInvitationRequest.EmailInvitationID,
@@ -230,9 +256,19 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			bulkUploadFileDetailsDTO.OrderType,
 			ct);
 
+		// Same rule as the single path: the console's chosen screening type must
+		// agree with the package's own classification. Null (public API) skips it.
+		if (bulkUploadFileDetailsDTO.AutoChasing is not null
+			&& validated.AutoChasing != bulkUploadFileDetailsDTO.AutoChasing)
+		{
+			throw new BadRequestException("The selected package does not match the chosen screening type.");
+		}
+
 		bulkUploadFileDetailsDTO.PackageId = validated.PackageId;
 		bulkUploadFileDetailsDTO.PackageType = validated.Package;
 		bulkUploadFileDetailsDTO.OrderType = validated.OrderType;
+		// Snapshotted from the package, not the caller, exactly as on single orders.
+		bulkUploadFileDetailsDTO.AutoChasing = validated.AutoChasing;
 
 
 		if (bulkUploadFileDetailsDTO.BulkFile != null)
@@ -326,17 +362,21 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return true;
 	}
 
+	private const string InvitationSubject = "CIBI | Background Verification Information Request";
+	private const string ReminderSubject = "CIBI | Reminder: Background Verification Information Request";
+
 	public async Task<EmailDeliveryResult> SendApplicationFormToUserEmailWithResultAsync(
 		string gmail,
 		string name,
 		string applicationFormLink,
 		string? requestor,
 		int? clientId,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		bool isFollowUp = false)
 	{
 		var logContext = new
 		{
-			Action = "SendApplicationFormEmail",
+			Action = isFollowUp ? "SendApplicationFormReminderEmail" : "SendApplicationFormEmail",
 			Step = "SendEmail",
 			Email = gmail,
 			Timestamp = DateTime.UtcNow
@@ -346,23 +386,34 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		var clientName = await ResolveClientNameAsync(clientId);
 
-		var emailBody = _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink, requestor, clientName);
-
 		// The keyed "ats" registration is always ATSEmailService, which implements the
 		// result-aware contract. The cast is guarded rather than assumed so a future
 		// re-registration degrades to the bool path instead of throwing at runtime.
-		if (_emailService is IAtsEmailSender resultAwareSender)
+		//
+		// The reminder body lives on IAtsEmailSender rather than the shared IEmailService,
+		// which Auth and the test fakes also implement - see that interface's own note. A
+		// sender that is not the ATS one therefore falls back to the first-invitation body:
+		// the candidate still gets a working link, just without the reminder wording.
+		var resultAwareSender = _emailService as IAtsEmailSender;
+
+		var emailBody = isFollowUp && resultAwareSender is not null
+			? resultAwareSender.BuildApplicationFormReminderNotification(gmail, name, applicationFormLink, requestor, clientName)
+			: _emailService.SendAppplicationFormNotification(gmail, name, applicationFormLink, requestor, clientName);
+
+		var subject = isFollowUp ? ReminderSubject : InvitationSubject;
+
+		if (resultAwareSender is not null)
 		{
 			return await resultAwareSender.SendATSEmailWithResultAsync(
 				toEmail: gmail!,
-				subject: "CIBI | Background Verification Information Request",
+				subject: subject,
 				body: emailBody,
 				cancellationToken);
 		}
 
 		var isSent = await _emailService.SendATSEmailAsync(
 			toEmail: gmail!,
-			subject: "CIBI | Background Verification Information Request",
+			subject: subject,
 			body: emailBody);
 
 		return isSent
@@ -476,6 +527,17 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			throw new NotFoundException($"Email invitation with ID {emailInvitationId} not found.");
 		}
 
+		// A data order was deliberately never emailed, so there is nothing to resend -
+		// and doing it would deliver the application form the screening type exists to
+		// avoid. The dialog already hides the button; this takes a caller-supplied id, so
+		// the rule is enforced where it cannot be skipped by calling the endpoint directly.
+		if (invitation.AutoChasing is not true)
+		{
+			_logger.LogWarning("Resend denied for a non-manual invitation: {@Context}", logContext);
+			throw new BadRequestException(
+				"This order does not use manual screening, so no application form is sent to the candidate.");
+		}
+
 		var token = _secureToken.GenerateSecureToken();
 		if (string.IsNullOrEmpty(token))
 		{
@@ -489,8 +551,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			_logger.LogError("Failed to hash token: {@Context}", logContext);
 			throw new InternalServerException("Failed to hash token.");
 		}
-
-		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		// Queued, not sent inline - the same strategy the OMS ticketing retry uses.
 		//
@@ -507,7 +567,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		var requeued = await _atsRepository.RequeueEmailInvitationAsync(
 			emailInvitationId,
 			hashToken,
-			newExpiration,
 			cancellationToken);
 
 		// The button was stale: the row is not in a state a retry applies to. Say so rather
@@ -588,7 +647,6 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// Each invitation gets its OWN token. Reusing one across the batch would let any
 		// candidate in it open another candidate's application form.
 		var requeues = new List<EmailInvitationRequeueDTO>(inScopeIds.Count);
-		var newExpiration = DateTime.UtcNow.AddHours(_applicationFormExpiryInHours);
 
 		foreach (var invitationId in inScopeIds)
 		{
@@ -611,8 +669,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			requeues.Add(new EmailInvitationRequeueDTO
 			{
 				EmailInvitationId = invitationId,
-				HashToken = hashToken,
-				HashTokenExpiration = newExpiration
+				HashToken = hashToken
 			});
 		}
 
@@ -641,6 +698,43 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			RequestedCount = requestedIds.Count,
 			RequeuedCount = requeued
 		};
+	}
+
+	public async Task<int> ReleaseDueFollowUpEmailsAsync(CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "ReleaseDueFollowUpEmails",
+			Step = "ReleaseInvitations",
+			Timestamp = DateTime.UtcNow
+		};
+
+		// One statement does the whole release: it picks the due rows, moves them back to
+		// Pending and stamps FollowUpQueuedAt together, so a crash cannot leave a row
+		// requeued but unstamped and chase the candidate twice.
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(cancellationToken);
+
+		if (released.Count == 0)
+		{
+			return 0;
+		}
+
+		// After the release committed, so the history reflects work that is actually
+		// scheduled - the same ordering the resend paths use. Queueing an email is not a
+		// step in the order lifecycle, so the status is written unchanged on both sides.
+		await _orderHistoryService.RecordManyAsync(
+			released.Select(r => r.EmailInvitationID).ToList(),
+			OrderHistoryEventType.ApplicationFormFollowUpSent,
+			null,
+			OrderStatus.PendingCandidateInfo,
+			cancellationToken);
+
+		_logger.LogInformation(
+			"Queued {ReleasedCount} application form follow-up reminder(s): {@Context}",
+			released.Count,
+			logContext);
+
+		return released.Count;
 	}
 
 	// The scope rule applied to an identity-only projection, so a bulk action can filter

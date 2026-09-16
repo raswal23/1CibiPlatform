@@ -83,12 +83,32 @@
 
                         <div class="ap-section-body">
                             <div class="ap-field">
+                                <label for="ap-screening-type">Screening type</label>
+                                <div class="ap-input-wrap ap-screening-type-wrap">
+                                    <MudSelect T="bool?"
+                                               @bind-Value="Package.AutoChasing"
+                                               InputId="ap-screening-type"
+                                               Placeholder="Select a screening type"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
+                                               Class="ap-control">
+                                        <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                                        <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                                <p class="ap-hint">Manual packages are chased by the screening team; data packages are processed automatically.</p>
+                            </div>
+
+                            <div class="ap-field">
                                 <label for="ap-follow-up-email">Follow up email</label>
                                 <div class="ap-input-wrap ap-follow-up-wrap">
                                     <MudNumericField T="int"
                                                      @bind-Value="Package.FollowUpEmail"
                                                      InputId="ap-follow-up-email"
                                                      Min="0"
+                                                     Max="90"
                                                      Variant="Variant.Outlined"
                                                      Margin="Margin.Dense"
                                                      Adornment="Adornment.Start"

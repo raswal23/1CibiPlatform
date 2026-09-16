@@ -85,28 +85,16 @@ public partial class ATSCacheRepository
 		return result;
 	}
 
-	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
-	{
-		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);
-
-		if (result)
-			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication);
-
-		return result;
-	}
-
 	// A requeue moves the row's email status, which the bulk dashboard rollups and the
 	// report lists both render - so both are invalidated rather than only the withdrawn tag.
 	public async Task<bool> RequeueEmailInvitationAsync(
 		Guid emailInvitationId,
 		string hashToken,
-		DateTime hashTokenExpiration,
 		CancellationToken cancellationToken)
 	{
 		var result = await _atsRepository.RequeueEmailInvitationAsync(
 			emailInvitationId,
 			hashToken,
-			hashTokenExpiration,
 			cancellationToken);
 
 		if (result)
@@ -116,6 +104,21 @@ public partial class ATSCacheRepository
 		}
 
 		return result;
+	}
+
+	// Same reasoning as the requeue above: the released rows go back to Pending, which
+	// both the bulk rollups and the report lists render.
+	public async Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken)
+	{
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(cancellationToken);
+
+		if (released.Count > 0)
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
+
+		return released;
 	}
 
 	public async Task<int> RequeueEmailInvitationsAsync(

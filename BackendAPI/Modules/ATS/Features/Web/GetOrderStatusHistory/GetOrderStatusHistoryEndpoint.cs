@@ -25,6 +25,7 @@ public class GetOrderStatusHistoryEndpoint : ICarterModule
 			})
 		.WithName("GetOrderStatusHistory")
 		.WithTags("ATS")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

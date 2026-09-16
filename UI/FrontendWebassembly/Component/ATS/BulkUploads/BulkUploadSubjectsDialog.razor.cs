@@ -490,6 +490,13 @@ public partial class BulkUploadSubjectsDialog
 	// form has nothing left to fill in.
 	private static bool CanResend(BulkUploadSubjectListDTO subject)
 	{
+		// A data-screening order was never emailed and has no email status at all.
+		// Resending would send the application form this screening type exists to avoid.
+		if (string.IsNullOrEmpty(subject.EmailSentStatus))
+		{
+			return false;
+		}
+
 		if (string.Equals(
 			subject.ApplicationFormStatus,
 			SubjectApplicationFormStatus.Done,
@@ -521,13 +528,20 @@ public partial class BulkUploadSubjectsDialog
 			? "The invitation email failed. Resend it."
 			: "Resend the application form to this subject.";
 
-	private static string GetResendBlockedReason(BulkUploadSubjectListDTO subject) =>
-		string.Equals(
+	private static string GetResendBlockedReason(BulkUploadSubjectListDTO subject)
+	{
+		if (string.IsNullOrEmpty(subject.EmailSentStatus))
+		{
+			return "This is a data screening order. No application form is sent to the candidate.";
+		}
+
+		return string.Equals(
 			subject.ApplicationFormStatus,
 			SubjectApplicationFormStatus.Done,
 			StringComparison.OrdinalIgnoreCase)
 			? "This subject already completed their application form."
 			: "The invitation email has not been sent yet. Resending would send it twice.";
+	}
 
 	private long CountFor(string? emailStatus) => emailStatus switch
 	{
@@ -565,6 +579,15 @@ public partial class BulkUploadSubjectsDialog
 			if (!string.IsNullOrWhiteSpace(orderType))
 			{
 				parts.Add(orderType);
+			}
+
+			// Named here because it explains the badges below: a Data file's subjects
+			// all read "Not sent", which without this looks like a stalled queue.
+			// Only when known - "Not set" in a subtitle is noise, and the board's own
+			// Screening column already reports it.
+			if (Upload?.AutoChasing is { } autoChasing)
+			{
+				parts.Add(autoChasing ? "Manual screening" : "Data screening");
 			}
 
 			if (dateCreated.HasValue)
@@ -605,12 +628,15 @@ public partial class BulkUploadSubjectsDialog
 	}
 
 	// Processing is the email job's internal claim state; a requestor only needs to
-	// know the invitation has not gone out yet.
+	// know the invitation has not gone out yet. Null is a data-screening order, which
+	// is never emailed at all - distinct from "Unknown", which means a status outside
+	// the vocabulary and is a genuine anomaly.
 	private static string GetEmailStatusLabel(string? emailSentStatus) => emailSentStatus switch
 	{
 		SubjectEmailSentStatus.Done => "Sent",
 		SubjectEmailSentStatus.Error => "Failed",
 		SubjectEmailSentStatus.Pending or SubjectEmailSentStatus.Processing => "Pending",
+		null or "" => "Not sent",
 		_ => "Unknown"
 	};
 
@@ -619,6 +645,7 @@ public partial class BulkUploadSubjectsDialog
 		SubjectEmailSentStatus.Done => "is-done",
 		SubjectEmailSentStatus.Error => "is-failed",
 		SubjectEmailSentStatus.Pending or SubjectEmailSentStatus.Processing => "is-pending",
+		null or "" => "is-none",
 		_ => "is-unknown"
 	};
 

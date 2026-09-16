@@ -13,10 +13,14 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 	{
 	}
 
+	// AutoChasing defaults to true because only manual-screening orders are ever
+	// emailed an application form; a null or false row is deliberately invisible to
+	// the processor, which the exclusion tests below assert directly.
 	private async Task<List<EmailInvitationRequest>> SeedEmailInvitationRequestsAsync(
 		int count,
 		string emailSentStatus = "Pending",
-		DateTime? emailClaimedAt = null)
+		DateTime? emailClaimedAt = null,
+		bool? autoChasing = true)
 	{
 		var invitations = new List<EmailInvitationRequest>();
 
@@ -35,6 +39,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 				HashTokenExpiration = DateTime.UtcNow.AddHours(24),
 				PackageId = DefaultPackageId,
 				SelectPackage = "Standard",
+				AutoChasing = autoChasing,
 				RushNormal = "Normal",
 				EmailSentStatus = emailSentStatus,
 				EmailClaimedAt = emailClaimedAt,
@@ -144,6 +149,42 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		untouched.Should().ContainSingle();
 		untouched[0].EmailSentStatus.Should().Be("Processing");
 		untouched[0].EmailClaimedAt.Should().NotBeNull();
+	}
+
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_WithDataScreeningInvitation_ShouldLeaveItPending()
+	{
+		// Arrange - a data-screening order already carries the candidate's identity, so
+		// there is nothing to ask them for and no application form to send.
+		var dataScreening = await SeedEmailInvitationRequestsAsync(1, autoChasing: false);
+
+		// Act
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert - never claimed, so it cannot be emailed
+		var skipped = await ReloadAsync(dataScreening);
+
+		skipped.Should().ContainSingle();
+		skipped[0].EmailSentStatus.Should().Be("Pending");
+		skipped[0].EmailClaimedAt.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_WithUnclassifiedInvitation_ShouldLeaveItPending()
+	{
+		// Arrange - a row predating the screening type. It cannot prove it is manual, and
+		// emailing a data candidate an application form is the worse of the two mistakes.
+		var unclassified = await SeedEmailInvitationRequestsAsync(1, autoChasing: null);
+
+		// Act
+		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		var skipped = await ReloadAsync(unclassified);
+
+		skipped.Should().ContainSingle();
+		skipped[0].EmailSentStatus.Should().Be("Pending");
+		skipped[0].EmailClaimedAt.Should().BeNull();
 	}
 	#endregion
 

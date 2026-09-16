@@ -15,7 +15,8 @@ public class PackageManagementService : IPackageManagementService
 	public async Task<KeysetPaginatedResult<PackageDetailsDTO>> GetPackagesAsync(
 		KeysetPaginationRequest paginationRequest,
 		CancellationToken cancellationToken,
-		int? clientId = null)
+		int? clientId = null,
+		bool? autoChasing = null)
 	{
 		var logContext = new
 		{
@@ -35,6 +36,7 @@ public class PackageManagementService : IPackageManagementService
 		var rows = await _packageRepository.GetPackagesPageAsync(
 			paginationRequest.SearchTerm,
 			clientId,
+			autoChasing,
 			afterPackageName,
 			pageSize + 1,
 			cancellationToken);
@@ -42,7 +44,7 @@ public class PackageManagementService : IPackageManagementService
 
 		var nextCursor = hasMore ? CursorCodec.Encode(items[^1].PackageName) : null;
 		long? totalCount = afterPackageName is null
-			? await _packageRepository.CountPackagesAsync(paginationRequest.SearchTerm, clientId, cancellationToken)
+			? await _packageRepository.CountPackagesAsync(paginationRequest.SearchTerm, clientId, autoChasing, cancellationToken)
 			: null;
 
 		return new KeysetPaginatedResult<PackageDetailsDTO>(items, nextCursor, totalCount);
@@ -81,6 +83,17 @@ public class PackageManagementService : IPackageManagementService
 			throw new NotFoundException($"Package with ID {packageDTO.PackageId} was not found.");
 		}
 
+		// Check-then-write: acceptable for an admin screen; a racing assignment merely
+		// produces a package disabled a moment too late.
+		if (existingPackage.IsActive && !packageDTO.IsActive)
+		{
+			var activeClients = await _packageRepository.CountActiveClientsUsingPackageAsync(packageDTO.PackageId, cancellationToken);
+			if (activeClients > 0)
+				throw new ConflictException(activeClients == 1
+					? "Cannot disable this package: 1 active client currently has it assigned."
+					: $"Cannot disable this package: {activeClients} active clients currently have it assigned.");
+		}
+
 		var newName = packageDTO.PackageName.Trim();
 
 		// Orders reference the package by id, so a rename cannot break them - but they
@@ -91,6 +104,7 @@ public class PackageManagementService : IPackageManagementService
 		existingPackage.PackageDescription = packageDTO.PackageDescription.Trim();
 		existingPackage.IsActive = packageDTO.IsActive;
 		existingPackage.FollowUpEmail = packageDTO.FollowUpEmail;
+		existingPackage.AutoChasing = packageDTO.AutoChasing;
 		existingPackage.UpdatedAt = DateTime.UtcNow;
 
 		var package = await _packageRepository.EditPackageAsync(existingPackage, cancellationToken);

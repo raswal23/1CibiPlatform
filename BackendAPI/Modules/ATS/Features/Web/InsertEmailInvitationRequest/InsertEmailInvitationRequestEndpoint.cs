@@ -22,6 +22,7 @@ public class InsertEmailInvitationRequestEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Insert Subject")
 		.WithDescription("Inserts a new subject entry to the database.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

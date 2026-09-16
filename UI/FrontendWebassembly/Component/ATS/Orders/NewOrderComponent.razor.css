@@ -93,9 +93,11 @@
     font-weight: 700;
 }
 
+/* Equal thirds, matching .ats-identity-grid so the name row's columns align
+   vertically with Date of birth / SSS number / TIN number below it. */
 .ats-personal-grid {
     display: grid;
-    grid-template-columns: 1.3fr 1.3fr .8fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 14px;
 }
 
@@ -103,6 +105,78 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+}
+
+.ats-identity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+/* How the chosen screening type is processed. Same amber panel as
+   SearchReportComponent's .search-report-warning note. */
+.ats-screening-note {
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin: 14px 0 0;
+    padding: 14px 18px;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1.5px solid var(--c-warn-bg);
+    border-left: 4px solid var(--c-warn);
+    border-radius: 12px;
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+}
+
+.ats-screening-note-title {
+    margin: 0;
+    color: var(--c-warn);
+    font-size: 13.5px;
+    font-weight: 700;
+}
+
+.ats-screening-note-text {
+    margin: 4px 0 0;
+    color: var(--c-warn);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+/* The locked select swallows clicks, so its wrapper takes them. */
+.ats-package-wrap.is-locked {
+    cursor: pointer;
+}
+
+.ats-package-wrap.is-locked ::deep .mud-input-control {
+    pointer-events: none;
+}
+
+/* Three quick flashes when the package field is clicked while it is still
+   locked behind the screening type choice - same cue as
+   DisputeDialogOrderComponent's locked-field note. */
+.ats-screening-note.is-blinking {
+    animation: ats-screening-note-blink 0.5s ease-in-out 3;
+}
+
+@keyframes ats-screening-note-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.15;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* No flashing; the amber note alone carries the "locked" cue. */
+    .ats-screening-note.is-blinking {
+        animation: none;
+    }
 }
 
 .ats-field > label {
@@ -116,7 +190,11 @@
 
 .ats-field > label b { color: var(--c-danger); }
 
+/* MudDatePicker puts the class on a .mud-picker wrapper rather than the
+   .mud-input-control itself, so the nested descendant form is needed too or the
+   picker keeps its default top margin and sits lower than its row siblings. */
 ::deep .ats-input.mud-input-control,
+::deep .ats-input .mud-input-control,
 ::deep .ats-input .mud-input-control-input-container {
     margin: 0 !important;
     border-radius: 10px;
@@ -458,7 +536,7 @@
 
 @media (max-width: 768px) {
     ::deep .ats-order-card { padding: 22px 18px; }
-    .ats-personal-grid, .ats-contact-grid, .ats-speed-row { grid-template-columns: 1fr; }
+    .ats-personal-grid, .ats-contact-grid, .ats-identity-grid, .ats-speed-row { grid-template-columns: 1fr; }
     .ats-segmented { display: flex; }
     .ats-segment-btn { flex: 1; justify-content: center; padding-inline: 12px; }
     .ats-actions-right { justify-content: stretch; }

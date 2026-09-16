@@ -24,6 +24,7 @@ public class DownloadMultipleOrderRecordsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Download Multiple Order Records")
 		.WithDescription("Downloads the selected order records as a ZIP archive.")
-		.RequireAuthorization(); ;
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

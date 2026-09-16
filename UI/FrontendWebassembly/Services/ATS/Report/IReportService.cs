@@ -10,4 +10,5 @@ public interface IReportService
 	Task<ServiceResponse<HttpResponseMessage>> DownloadMultipleOrderRecordsAsync(DownloadMultipleOrderRecordsRequestDTO downloadMultipleOrderRecordsRequest, CancellationToken cancellationToken = default);
 	Task<ServiceResponse<IReadOnlyList<OrderStatusHistoryDTO>>> GetOrderStatusHistoryAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken = default);
 	Task<ServiceResponse<ApplicationFormPreviewDTO>> GetApplicationFormPreviewAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken = default);
+	Task<ServiceResponse<HttpResponseMessage>> DownloadApplicationFormPreviewAsync(Guid emailInvitationRequestId, CancellationToken cancellationToken = default);
 }

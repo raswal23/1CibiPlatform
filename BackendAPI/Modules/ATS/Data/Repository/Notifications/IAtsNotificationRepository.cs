@@ -64,6 +64,11 @@ public interface IAtsNotificationRepository
 	/// passes. This asks the database which files are actually complete, so the "all
 	/// invitations sent" notification fires once per file rather than once per batch.
 	///
+	/// Files that have ALREADY been announced are excluded, which is what makes it once per
+	/// file for the life of the file and not merely once per completion. A file can complete
+	/// more than once: the package follow-up chaser and the operator resend both put a
+	/// delivered row back to Pending, and it completes again when that row lands.
+	///
 	/// Returns the sent/failed/total counts so the caller can word the message without a
 	/// second query.
 	/// </remarks>

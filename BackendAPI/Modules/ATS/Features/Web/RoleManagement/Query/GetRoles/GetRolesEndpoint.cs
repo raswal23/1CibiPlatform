@@ -28,6 +28,7 @@ public class GetRolesEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Roles")
 		.WithDescription("Retrieves a list of ATS roles.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

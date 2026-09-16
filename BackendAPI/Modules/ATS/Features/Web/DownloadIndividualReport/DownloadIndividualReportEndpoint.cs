@@ -27,6 +27,7 @@ public class DownloadIndividualReportEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Download Individual Report")
 		.WithDescription("Downloads the selected documents as a ZIP archive.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

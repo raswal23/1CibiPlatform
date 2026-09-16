@@ -25,8 +25,20 @@ public interface IEmailInvitationRepository
 	Task<bool> RequeueEmailInvitationAsync(
 		Guid emailInvitationId,
 		string hashToken,
-		DateTime hashTokenExpiration,
 		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Releases every order whose package follow-up interval has elapsed back onto the email
+	/// queue as a reminder, and stamps each one so it can never be chased again. Returns the
+	/// rows that actually moved.
+	/// </summary>
+	/// <remarks>
+	/// Deliberately NOT a variant of <see cref="RequeueEmailInvitationAsync"/>: this one
+	/// leaves the hash token alone, so the link already sitting in the candidate's inbox
+	/// keeps working. It only queues - the existing email worker does the sending, which is
+	/// what keeps reminders inside the per-account daily cap and send pacing.
+	/// </remarks>
+	Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken);
 
 	/// <summary>
 	/// The set form of <see cref="RequeueEmailInvitationAsync"/>. Each entry carries its own
@@ -49,7 +61,6 @@ public interface IEmailInvitationRepository
 	Task<bool> UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(Guid emailInvitationId);
 	Task<bool> UpdateSingleEmailInvitationRequestStatusForNotSentEmailAsync(Guid emailInvitationId);
 	Task<EmailInvitationRequest> GetEmailInvitationRequestByIdAsync(Guid emailInvitationId, CancellationToken cancellationToken);
-	Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken);
 	/// <summary>
 	/// Reads one order's identity for an access check, without loading the whole row.
 	/// Returns null when the order does not exist.

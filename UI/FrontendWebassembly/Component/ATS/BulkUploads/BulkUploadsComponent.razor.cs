@@ -210,6 +210,11 @@ public partial class BulkUploadsComponent
 
 	private static bool HasSubjects(BulkUploadListDTO upload) => upload.SubjectCount > 0;
 
+	// The email progress bar only means something for a file that sends invitations.
+	// A data file never does, so its permanent 0/N would read as a stalled queue.
+	private static bool SendsInvitations(BulkUploadListDTO upload) =>
+		HasSubjects(upload) && upload.AutoChasing != false;
+
 	private static int SentPercent(BulkUploadListDTO upload) =>
 		upload.SubjectCount == 0
 			? 0
@@ -224,6 +229,31 @@ public partial class BulkUploadsComponent
 	};
 
 	private static string GetOrderTypeClass(string? orderType) => OrderTypeDisplay.GetClass(orderType);
+
+	// Same vocabulary as package management, so a file and the package it was placed
+	// under read identically. Null is "Not set" rather than defaulting to either type:
+	// an unclassified file is a genuine gap, not a quiet Manual.
+	private static string GetScreeningTypeLabel(bool? autoChasing) => autoChasing switch
+	{
+		true => "Manual",
+		false => "Data",
+		_ => "Not set"
+	};
+
+	private static string GetScreeningTypeClass(bool? autoChasing) => autoChasing switch
+	{
+		true => "is-manual",
+		false => "is-data",
+		_ => "is-unset"
+	};
+
+	// The column answers "why is the Emails cell empty?", so the tooltip says it outright.
+	private static string GetScreeningTypeHint(bool? autoChasing) => autoChasing switch
+	{
+		true => "Manual screening: an application form is emailed to every candidate in this file",
+		false => "Data screening: no application form is emailed to these candidates",
+		_ => "This file predates screening types, or was uploaded without one"
+	};
 
 	private static string FormatAbsolute(DateTime dateCreated) =>
 		dateCreated.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt");

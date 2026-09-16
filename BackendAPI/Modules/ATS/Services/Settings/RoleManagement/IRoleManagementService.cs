@@ -4,5 +4,5 @@ public interface IRoleManagementService
 {
 	Task<KeysetPaginatedResult<RoleDetailsDTO>> GetRolesAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken);
 	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
-	Task<RoleDetailsDTO> EditRoleAsync(EditRoleDTO roleDTO);
+	Task<RoleDetailsDTO> EditRoleAsync(EditRoleDTO roleDTO, CancellationToken cancellationToken);
 }

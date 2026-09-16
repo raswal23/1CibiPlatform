@@ -4,9 +4,9 @@ public partial class ATSRepository
 {
 	// Keyset ordered by PackageName (unique index) — pure query; the service decodes
 	// the cursor and mints the next one.
-	public async Task<List<PackageDetailsDTO>> GetPackagesPageAsync(string? searchTerm, int? clientId, string? afterPackageName, int take, CancellationToken cancellationToken)
+	public async Task<List<PackageDetailsDTO>> GetPackagesPageAsync(string? searchTerm, int? clientId, bool? autoChasing, string? afterPackageName, int take, CancellationToken cancellationToken)
 	{
-		var query = BuildPackagesQuery(searchTerm, clientId);
+		var query = BuildPackagesQuery(searchTerm, clientId, autoChasing);
 		if (afterPackageName is not null)
 			query = query.Where(package => string.Compare(package.PackageName, afterPackageName) > 0);
 
@@ -18,20 +18,25 @@ public partial class ATSRepository
 				PackageDescription = package.PackageDescription,
 				IsActive = package.IsActive,
 				FollowUpEmail = package.FollowUpEmail,
+				AutoChasing = package.AutoChasing,
 				CreatedAt = package.CreatedAt,
 				UpdatedAt = package.UpdatedAt
 			}).ToListAsync(cancellationToken);
 	}
 
-	public Task<long> CountPackagesAsync(string? searchTerm, int? clientId, CancellationToken cancellationToken) =>
-		BuildPackagesQuery(searchTerm, clientId).LongCountAsync(cancellationToken);
+	public Task<long> CountPackagesAsync(string? searchTerm, int? clientId, bool? autoChasing, CancellationToken cancellationToken) =>
+		BuildPackagesQuery(searchTerm, clientId, autoChasing).LongCountAsync(cancellationToken);
 
-	private IQueryable<PackageDetails> BuildPackagesQuery(string? searchTerm, int? clientId)
+	private IQueryable<PackageDetails> BuildPackagesQuery(string? searchTerm, int? clientId, bool? autoChasing)
 	{
 		var query = _dbcontext.PackageDetails.AsNoTracking();
 		if (clientId is > 0)
 			query = query.Where(package => _dbcontext.ClientDetails.Any(client =>
 				client.ClientId == clientId.Value && client.PackageId == package.PackageId));
+		// Filters to one screening type. Unclassified (null) packages match neither
+		// Manual nor Data on purpose - null must never pass for Data.
+		if (autoChasing is not null)
+			query = query.Where(package => package.AutoChasing == autoChasing);
 		if (!string.IsNullOrEmpty(searchTerm))
 			query = query.Where(package =>
 				EF.Functions.ILike(package.PackageName, $"%{searchTerm}%") ||
@@ -48,6 +53,7 @@ public partial class ATSRepository
 			PackageDescription = dto.PackageDescription.Trim(),
 			IsActive = dto.IsActive,
 			FollowUpEmail = dto.FollowUpEmail,
+			AutoChasing = dto.AutoChasing,
 			CreatedAt = now,
 			UpdatedAt = now
 		}, cancellationToken);
@@ -64,6 +70,12 @@ public partial class ATSRepository
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return package;
 	}
+
+	// ClientDetails holds one row per (ClientId, PackageId), so a plain count over
+	// one PackageId is already a count of logical clients.
+	public Task<int> CountActiveClientsUsingPackageAsync(int packageId, CancellationToken cancellationToken) =>
+		_dbcontext.ClientDetails.AsNoTracking()
+			.CountAsync(client => client.PackageId == packageId && client.IsActive, cancellationToken);
 
 	public async Task<(int Orders, int BulkFiles)> RelabelPackageOnOrdersAsync(
 		int packageId,

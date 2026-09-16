@@ -24,6 +24,7 @@ public class GetReportResultEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Get Report Result")
 		.WithDescription("Retrieves ATS result details for a specific email invitation request.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

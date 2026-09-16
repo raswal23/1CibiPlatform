@@ -24,6 +24,11 @@ public partial class ATSRepository
 		// worker step over rows another worker is already claiming instead of blocking,
 		// and the Processing write is what keeps the claim after this transaction ends.
 		// EF cannot express SKIP LOCKED, so this is raw SQL.
+		//
+		// "AutoChasing" IS TRUE: only manual-screening orders receive an application
+		// form invitation. Data orders carry their identity fields from order entry
+		// and must never be emailed; NULL (legacy rows) is deliberately excluded too,
+		// because an unclassified order cannot prove it is manual.
 		return await _dbcontext.EmailInvitationRequests
 			.FromSqlRaw(
 				"""
@@ -33,7 +38,8 @@ public partial class ATSRepository
 							   PARTITION BY "ClientId"
 							   ORDER BY "OrderCreatedAt") AS rn
 					FROM ats."EmailInvitationRequest"
-					WHERE ("EmailSentStatus" = {2}
+					WHERE ("AutoChasing" IS TRUE)
+					  AND ("EmailSentStatus" = {2}
 						OR ("EmailSentStatus" = {3} AND "EmailSendAttempts" < {4}))
 				)
 				UPDATE ats."EmailInvitationRequest" t
@@ -64,7 +70,6 @@ public partial class ATSRepository
 	public async Task<bool> RequeueEmailInvitationAsync(
 		Guid emailInvitationId,
 		string hashToken,
-		DateTime hashTokenExpiration,
 		CancellationToken cancellationToken)
 	{
 		// Mirrors RequeueExhaustedTicketAsync. The predicate is the concurrency guard, not
@@ -94,15 +99,88 @@ public partial class ATSRepository
 				.SetProperty(x => x.EmailSentAt, x => null)
 
 				// The link is reissued in the same statement, so a queued row can never
-				// carry a token the candidate was never told about.
+				// carry a token the candidate was never told about. Note that rotating it
+				// RETIRES the link in the candidate's earlier email - the operator-forced
+				// resend intends that. The follow-up reminder does not; see
+				// ReleaseDueFollowUpInvitationsAsync.
 				.SetProperty(x => x.HashToken, hashToken)
 				.SetProperty(x => x.HashTokenCreatedAt, DateTime.UtcNow)
-				.SetProperty(x => x.HashTokenExpiration, hashTokenExpiration)
 				.SetProperty(x => x.OrderStatus, OrderStatus.PendingCandidateInfo)
 				.SetProperty(x => x.ApplicationFormStatus, ApplicationFormStatus.Pending),
 				cancellationToken);
 
 		return updated > 0;
+	}
+
+	// Each pass releases at most this many reminders, the same ceiling the claim query
+	// uses. The unit is days, so a backlog draining over a few hourly passes is fine -
+	// and it keeps one enormous client from filling the send queue in a single tick.
+	private const int MaxFollowUpReleasePerPass = 200;
+
+	public async Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken)
+	{
+		// Puts an already-sent invitation back on the email queue as the package's
+		// follow-up reminder, and stamps FollowUpQueuedAt in the SAME statement. That is
+		// what makes it fire exactly once: a crash between the requeue and the stamp
+		// cannot happen, so a restarted pass can never chase the same order twice.
+		//
+		// Unlike RequeueEmailInvitationAsync this leaves "HashToken" and
+		// "HashTokenCreatedAt" ALONE, deliberately. The reminder points the candidate at
+		// the link they were already sent; rotating the token would silently kill the URL
+		// sitting in their inbox, which is the opposite of what a chaser is for.
+		//
+		// Raw SQL because the join to PackageDetails (for FollowUpEmail, which is the
+		// per-package interval) and FOR UPDATE SKIP LOCKED are both outside what
+		// ExecuteUpdateAsync can express.
+		//
+		// The predicate, clause by clause:
+		//   AutoChasing IS TRUE  - the same rule the claim query applies. Data orders are
+		//                          never emailed at all, and NULL cannot prove it is manual.
+		//   FollowUpEmail > 0    - 0 is the package's "off" switch, per the form's own hint.
+		//   ApplicationFormStatus Pending - never chase a form already submitted or withdrawn.
+		//   EmailSentStatus Done - only chase someone who actually received the first email;
+		//                          a row still queued or erroring is the sender's problem.
+		//   FollowUpQueuedAt IS NULL - fire once.
+		//   OrderCreatedAt <= now() - N days - the interval is measured from the order, which
+		//                          is the anchor the package form describes.
+		// FromSqlRaw with RETURNING t.*, matching GetPendingEmailInvitationRequestsAsync:
+		// the caller needs the released rows' OrderStatus to write order history, and
+		// reading them back separately would race the very rows this just moved.
+		return await _dbcontext.EmailInvitationRequests
+			.FromSqlRaw(
+				"""
+				WITH due AS (
+					SELECT eir."EmailInvitationID"
+					FROM ats."EmailInvitationRequest" eir
+					JOIN ats."PackageDetails" pd ON pd."PackageId" = eir."PackageId"
+					WHERE eir."AutoChasing" IS TRUE
+					  AND pd."FollowUpEmail" > 0
+					  AND eir."ApplicationFormStatus" = {0}
+					  AND eir."EmailSentStatus" = {1}
+					  AND eir."FollowUpQueuedAt" IS NULL
+					  AND eir."HashToken" IS NOT NULL
+					  AND eir."OrderCreatedAt" IS NOT NULL
+					  AND eir."OrderCreatedAt" <= now() - make_interval(days => pd."FollowUpEmail")
+					ORDER BY eir."OrderCreatedAt"
+					LIMIT {2}
+					FOR UPDATE OF eir SKIP LOCKED
+				)
+				UPDATE ats."EmailInvitationRequest" t
+				SET "EmailSentStatus" = {3},
+					"EmailSendAttempts" = 0,
+					"EmailClaimedAt" = NULL,
+					"EmailSentAt" = NULL,
+					"FollowUpQueuedAt" = {4}
+				WHERE t."EmailInvitationID" IN (SELECT "EmailInvitationID" FROM due)
+				RETURNING t.*;
+				""",
+				ApplicationFormStatus.Pending,
+				EmailStatus.Done,
+				MaxFollowUpReleasePerPass,
+				EmailStatus.Pending,
+				DateTime.UtcNow)
+			.AsNoTracking()
+			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<int> RequeueEmailInvitationsAsync(
@@ -136,7 +214,6 @@ public partial class ATSRepository
 					.SetProperty(x => x.EmailSentAt, x => null)
 					.SetProperty(x => x.HashToken, requeue.HashToken)
 					.SetProperty(x => x.HashTokenCreatedAt, DateTime.UtcNow)
-					.SetProperty(x => x.HashTokenExpiration, requeue.HashTokenExpiration)
 					.SetProperty(x => x.OrderStatus, OrderStatus.PendingCandidateInfo)
 					.SetProperty(x => x.ApplicationFormStatus, ApplicationFormStatus.Pending),
 					cancellationToken);
@@ -293,18 +370,4 @@ public partial class ATSRepository
 		return affectedRows > 0;
 	}
 
-	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
-	{
-		await _dbcontext.EmailInvitationRequests
-			.Where(eir => eir.EmailInvitationID == emailInvitationId)
-			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(eir => eir.HashToken, hashToken)
-				.SetProperty(eir => eir.HashTokenCreatedAt, DateTime.UtcNow)
-				.SetProperty(eir => eir.HashTokenExpiration, hashTokenExpiration)
-				.SetProperty(eir => eir.OrderStatus, OrderStatus.PendingCandidateInfo)
-				.SetProperty(eir => eir.ApplicationFormStatus, ApplicationFormStatus.Pending),
-				cancellationToken);
-
-		return true;
-	}
 }

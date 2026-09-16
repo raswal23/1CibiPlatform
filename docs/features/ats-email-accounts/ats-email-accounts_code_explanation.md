@@ -1,6 +1,6 @@
 # ATS Email Accounts — Code Explanation
 
-Companion to `docs/ats-email-accounts.md`. That document explains *what* the feature does and
+Companion to `docs/features/ats-email-accounts/ats-email-accounts.md`. That document explains *what* the feature does and
 *why* the rules exist. This one exists so a developer can review the actual implementation
 without opening every file cold — it walks the real call chains, file by file, naming the exact
 method that calls the next one and what data crosses the boundary. Where a rule's reasoning
@@ -128,7 +128,7 @@ the registry yet.
 This private method in `ATSEmailService.cs` (lines ~233-367) is shared by every send path in the
 feature: `SendWithCredentialsAsync` (register/edit/delete/resend OTP) and
 `SendThroughAccountAsync` (real candidate invitations, §4) both funnel into it. One place decides
-what an SMTP exception means, which is what `docs/ats-email-delivery.md` §6 calls out as an
+what an SMTP exception means, which is what `docs/features/ats-email-delivery/ats-email-delivery.md` §6 calls out as an
 invariant to preserve.
 
 - Rate-limits first (`context.RateLimiter.WaitForSlotAsync`), then acquires a pooled connection

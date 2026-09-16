@@ -19,6 +19,11 @@ public record BulkUploadRowDTO
 	public DateTime DateCreated { get; set; }
 
 	public DateTime? ClaimedAt { get; set; }
+
+	// Screening type of the file (true = manual, false = data, null = legacy). Carried
+	// so the dashboard can tell "no invitation has been sent yet" from "this file never
+	// sends one" - both are zero emails out of a non-zero subject count.
+	public bool? AutoChasing { get; set; }
 }
 
 // The wire shape: the upload file plus the rolled-up progress of the invitations the
@@ -50,6 +55,10 @@ public record BulkUploadListDTO
 	// Still queued or claimed by the email job. Without this the UI cannot tell
 	// "16/17 because one failed" from "16/17 because one has not been sent yet".
 	public int EmailsPending { get; set; }
+
+	// Screening type of the file. A data file sends no invitations at all, so its zero
+	// counts are the expected outcome rather than a stalled queue.
+	public bool? AutoChasing { get; set; }
 }
 
 // One CSV row the parser refused, reported back to the uploader. The file is parsed

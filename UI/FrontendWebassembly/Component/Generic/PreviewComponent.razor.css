@@ -90,7 +90,10 @@
     box-shadow: 0 12px 32px -12px rgba(11, 27, 61, 0.12);
 }
 
-.preview-upload-alert { margin-top: 16px; }
+.preview-upload-alert {
+    margin-top: 16px;
+}
+
 .preview-upload-row-index {
     display: inline-grid;
     width: 24px;
