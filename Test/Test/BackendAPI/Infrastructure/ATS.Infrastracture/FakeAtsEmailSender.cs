@@ -65,4 +65,11 @@ public sealed class FakeAtsEmailSender : FakeEmailSender, IAtsEmailSender
 		string requestorName,
 		string candidateName)
 		=> $"Dear {requestorName}, your candidate {candidateName} has withdrawn their Application Form.";
+
+	public string BuildDisputeNotification(
+		string requestorName,
+		string candidateName,
+		string disputeCategory,
+		string? disputeDetails)
+		=> $"Dear {requestorName}, a dispute has been submitted for {candidateName}. Category: {disputeCategory}. Details: {disputeDetails ?? "(none)"}";
 }

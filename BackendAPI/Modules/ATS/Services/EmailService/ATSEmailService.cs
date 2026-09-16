@@ -589,6 +589,75 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 	}
 
 	/// <summary>
+	/// The dispute acknowledgement body - see <see cref="IAtsEmailSender"/> for how this differs
+	/// from the internal <see cref="SendEmailForDispute"/> notification sent alongside it.
+	/// </summary>
+	/// <remarks>
+	/// Same card, contact treatment and confidentiality footer as the invitation, the reminder and
+	/// the withdrawal notice, so every message a requestor receives from this process looks like it
+	/// came from the same place. The header reads <see cref="DisputeEmail.Subject"/> - the same
+	/// constant the caller sends as the subject line.
+	///
+	/// No link, for the same reason as the withdrawal notice: there is nothing here for the
+	/// recipient to act on, and a button would imply there is.
+	/// </remarks>
+	public string BuildDisputeNotification(
+		string requestorName,
+		string candidateName,
+		string disputeCategory,
+		string? disputeDetails)
+	{
+		// Every value here is user- or store-supplied and lands inside markup: the requestor name
+		// from a JWT claim, the candidate name from the order row, and the dispute text typed into
+		// the console. All encoded rather than trusted.
+		var encodedRequestor = WebUtility.HtmlEncode(requestorName.Trim());
+		var encodedCandidate = WebUtility.HtmlEncode(candidateName.Trim());
+		var encodedCategory = WebUtility.HtmlEncode(disputeCategory.Trim());
+
+		// The console only captures free text for the "Others" category, so a Billing or Report
+		// dispute has a category and nothing else. The bullet is dropped rather than rendered
+		// empty: "- Dispute Details:" with nothing after it reads like a value failed to load.
+		var detailsBullet = string.IsNullOrWhiteSpace(disputeDetails)
+			? string.Empty
+			: $"<li style='margin:6px 0;font-size:15px;line-height:1.6'><span style='color:#5b6f8f'>Dispute Details:</span> {WebUtility.HtmlEncode(disputeDetails.Trim())}</li>";
+
+		string body = $@"
+			<!DOCTYPE html>
+			<html>
+			<body style='margin:0;padding:0;background:#f4f6fb;font-family:Arial, sans-serif'>
+				<div style='max-width:600px;margin:24px auto;background:#ffffff;border:1px solid #d9e5f5;border-radius:12px;overflow:hidden'>
+					<div style='padding:24px 36px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-align:center'>
+						<h1 style='margin:0;font-size:20px'>{DisputeEmail.Subject}</h1>
+						<p style='margin:8px 0 0;font-size:13px;line-height:1.5;color:#dbe7fb'>A dispute has been submitted and will be reviewed</p>
+					</div>
+					<div style='padding:34px 36px'>
+						<p style='font-size:16px;line-height:1.7'>Dear {encodedRequestor},</p>
+						<p style='font-size:16px;line-height:1.7'>
+							A dispute has been submitted for {encodedCandidate}. Please see the dispute details below:
+						</p>
+						<ul style='margin:0 0 24px;padding-left:20px'>
+							<li style='margin:6px 0;font-size:15px;line-height:1.6'><span style='color:#5b6f8f'>Dispute Category:</span> <strong>{encodedCategory}</strong></li>
+							{detailsBullet}
+						</ul>
+						<p style='font-size:15px;line-height:1.6'>
+							The dispute will be reviewed and processed accordingly through the Applicant Tracking System (ATS).
+						</p>
+						<p style='font-size:15px;line-height:1.6'>
+							For any questions or concerns, please do not hesitate to reach out to
+							<a href='mailto:ccteam@cibi.com.ph' style='color:#1d5fd1'>ccteam@cibi.com.ph</a>
+							and
+							<a href='mailto:clientsupport@cibi.com.ph' style='color:#1d5fd1'>clientsupport@cibi.com.ph</a>.
+						</p>
+					</div>
+					<div style='padding:20px 36px;background:#f4f8fd;color:#66788f;font-size:12px;line-height:1.6'>This e-mail and its attachments may contain sensitive and confidential information. Do not resend, copy, or use this email if you are not the intended recipient. Please contact the sender immediately and delete this entire email. The privilege is not waived because it was delivered to you mistakenly. CIBI Information Inc. and its affiliates accept no liability for any loss or harm resulting from this e-mail and reserve the right to monitor, retain, and/or review email. The opinions stated in this email are solely those of the author and may not reflect the views of CIBI Information Inc. or its affiliates.</div>
+				</div>
+			</body>
+			</html>";
+
+		return body;
+	}
+
+	/// <summary>
 	/// The verification code for a sender account, in the ATS message format.
 	/// </summary>
 	/// <remarks>

@@ -910,8 +910,10 @@ And `BuildMessage`, which is why the context travels this far down:
 	/// </remarks>
 ```
 
-`BuildMessage` also takes an optional copy list and adds each address to `message.Cc`. Only the
-withdrawal notice passes one — every other path sends to a single recipient, exactly as before.
+`BuildMessage` also takes an optional copy list and adds each address to `message.Cc`. Only the two
+order notices pass one — the withdrawal notice and the dispute acknowledgement, in
+`docs/features/ats-withdrawn-application-email/` and `docs/features/ats-dispute-order-email/`. Every
+other path sends to a single recipient, exactly as before.
 
 ### 1.10 Writing the outcome back
 
@@ -1713,8 +1715,8 @@ status column being right (§10.1, §10.2).
 
 | Method | Where | Caller | Diff from §1 |
 |---|---|---|---|
-| `SendATSEmailWithResultAsync` | `ATSEmailService.cs:61` | `EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync`; `WithdrawnEmailNotification.SendNoticeAsync` | The traced path. The switcher. The withdrawal notice is the only caller that passes `cc` |
-| `SendATSEmailAsync` → `bool` | `:27` | `SendEmailAsync` (`:558`), `DisputeOrderService.cs:210` | Wraps the switcher and **discards the outcome**: `var result = await SendATSEmailWithResultAsync(toEmail, subject, body, CancellationToken.None); return result.IsSent;` — note `CancellationToken.None`, so this path cannot be cancelled at all |
+| `SendATSEmailWithResultAsync` | `ATSEmailService.cs:61` | `EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync`; `WithdrawnEmailNotification.SendNoticeAsync`; `DisputeEmailNotification.SendNoticeAsync` | The traced path. The switcher. The two order notices are the only callers that pass `cc` |
+| `SendATSEmailAsync` → `bool` | `:27` | `SendEmailAsync` (`:558`), `DisputeOrderService.cs:238` | Wraps the switcher and **discards the outcome**: `var result = await SendATSEmailWithResultAsync(toEmail, subject, body, CancellationToken.None); return result.IsSent;` — note `CancellationToken.None`, so this path cannot be cancelled at all |
 | `SendThroughAccountAsync` | `:134` | **only** `SendATSEmailWithResultAsync:105` | One named account, no failover, reports to the breaker. Its interface doc claims registration uses it (C8); nothing outside the switcher does |
 | `SendWithCredentialsAsync` | `:196` | `AtsEmailAccountManagementService.SendOtpThroughCredentialsAsync` (`:425`, calling it at `:431`) | Throwaway limiter + pool + context, all disposed at the end of the call. **No registry, no lease, no breaker, no quota check** |
 | `SendOverContextAsync` (private) | `:240` | both of the above two real paths | The shared SMTP conversation, §1.9 |

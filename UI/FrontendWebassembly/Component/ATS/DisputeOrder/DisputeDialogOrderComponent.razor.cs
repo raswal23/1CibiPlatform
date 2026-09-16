@@ -115,9 +115,15 @@ public partial class DisputeDialogOrderComponent : IDisposable
 		var requestToSend = new DisputeOrderRequestDTO
 		{
 			EmailInvitationId = EmailInvitationId,
+
+			// DisputeReason keeps the meaning it has always had - it is what gets persisted, and
+			// for Billing/Report that has always been the category label rather than free text.
+			// DisputeCategory travels alongside it only so the acknowledgement email can show the
+			// category and the "Others" free text as two separate lines.
 			DisputeReason = IsOtherDisputeSelected
 				? otherReason.Trim()
-				: SelectedDisputeCategory
+				: SelectedDisputeCategory,
+			DisputeCategory = SelectedDisputeCategory
 		};
 		var submissionSucceeded = false;
 

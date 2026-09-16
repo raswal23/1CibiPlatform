@@ -156,9 +156,10 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IAtsEmailSender>(provider =>
 			(IAtsEmailSender)provider.GetRequiredKeyedService<IEmailService>("ats"));
 
-		// The withdrawal notice needs the result-aware sender above, so it is registered after it
-		// and depends on the unkeyed contract rather than resolving the keyed one itself.
+		// Both order notices need the result-aware sender above, so they are registered after it
+		// and depend on the unkeyed contract rather than resolving the keyed one themselves.
 		services.AddScoped<IWithdrawnEmailNotification, WithdrawnEmailNotification>();
+		services.AddScoped<IDisputeEmailNotification, DisputeEmailNotification>();
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
 		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
 		services.AddScoped<IOMSTicketingProcessorService, OMSTicketingProcessorService>();

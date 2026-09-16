@@ -117,4 +117,30 @@ public interface IAtsEmailSender
 	string BuildWithdrawnApplicationNotification(
 		string requestorName,
 		string candidateName);
+
+	/// <summary>
+	/// Composes the dispute acknowledgement - the email the person who FILED a dispute gets,
+	/// confirming it was received and restating what they submitted.
+	/// </summary>
+	/// <remarks>
+	/// Not to be confused with <c>IEmailService.SendEmailForDispute</c>, which composes the
+	/// INTERNAL operations notification (a table of requestor email, company, order date and
+	/// reason) sent to <c>ATS:DisputeOrderEmailRecipient</c>. Both are sent for one dispute and
+	/// they have different audiences, subjects and bodies; this one is the requestor-facing copy.
+	///
+	/// On this contract for the same reason as the two above: only ATS files disputes, so the
+	/// shared <c>IEmailService</c> that Auth and the test fakes implement stays unaware of it.
+	///
+	/// <paramref name="disputeDetails"/> is nullable because the console only captures free text
+	/// for the "Others" category - a Billing or Report dispute has a category and nothing else.
+	/// The details bullet is omitted rather than rendered empty or padded with a placeholder.
+	///
+	/// Composes, it does not send - the caller pairs the body with <c>DisputeEmail.Subject</c> and
+	/// hands both to <see cref="SendATSEmailWithResultAsync"/>.
+	/// </remarks>
+	string BuildDisputeNotification(
+		string requestorName,
+		string candidateName,
+		string disputeCategory,
+		string? disputeDetails);
 }

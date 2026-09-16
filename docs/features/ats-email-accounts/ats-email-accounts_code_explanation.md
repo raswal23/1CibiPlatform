@@ -137,8 +137,9 @@ invariant to preserve.
 - `BuildMessage` sets `From` from `context.DisplayName`/`context.EmailAddress` — never from a
   configured constant — because the From header must match whatever mailbox actually
   authenticated the session, or the receiving server treats it as spoofed. It also takes an
-  optional copy list and adds each address to `message.Cc`; only the withdrawal notice passes one
-  (`docs/features/ats-withdrawn-application-email/`).
+  optional copy list and adds each address to `message.Cc`; only the two order notices pass one
+  (`docs/features/ats-withdrawn-application-email/`,
+  `docs/features/ats-dispute-order-email/`).
 - Exception → outcome mapping happens via `SmtpFailureClassifier.ClassifySendFailure` for
   `SmtpCommandException` (the server answered with a status code), and by catch-block shape for
   `SmtpProtocolException` (session broken) / `IOException`, `SocketException`, `TimeoutException`
