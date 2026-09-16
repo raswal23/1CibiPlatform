@@ -13,11 +13,15 @@ public partial class SearchReportComponent
 	/// filtered to one subject (see AtsNotificationService.BuildOrderLink).
 	/// </summary>
 	/// <remarks>
-	/// Only seeds the initial value - after first load the box is the user's to change, and
-	/// the query string is not rewritten as they type.
+	/// Seeds the box on arrival and re-applies whenever the term changes - after that the
+	/// box is the user's to change, and the query string is not rewritten as they type.
 	/// </remarks>
 	[SupplyParameterFromQuery(Name = "search")]
 	private string? SearchFromQuery { get; set; }
+
+	// The ?search= value this board has already acted on. Only a change to it counts as a
+	// new deep link - see OnParametersSetAsync.
+	private string? _appliedSearchFromQuery;
 
 	private readonly CursorTableLoader<ReportListDTO> _reportsLoader = new();
 	private TableComponent<ReportListDTO>? reportsTable;
@@ -42,6 +46,11 @@ public partial class SearchReportComponent
 			_searchString = SearchFromQuery;
 		}
 
+		// Claimed here so the OnParametersSetAsync pass that follows this first render does
+		// not treat the value it just seeded as an arriving deep link and reload on top of
+		// the table's own first load.
+		_appliedSearchFromQuery = SearchFromQuery;
+
 		var roleIds = await GetStoredRoleIdsAsync();
 		var atsRoleId = await GetStoredATSRoleIdAsync();
 
@@ -51,6 +60,45 @@ public partial class SearchReportComponent
 		// platform super admin / platform manager / admin ladder rather than the
 		// uploader-oriented one above. The API re-checks scope on every call.
 		_canEditSubjectName = roleIds.Contains(1) || atsRoleId is 1 or 2;
+	}
+
+	/// <summary>
+	/// Applies a ?search= that arrives while this board is already on screen.
+	/// </summary>
+	/// <remarks>
+	/// OnInitializedAsync only runs when the notification is clicked from another page,
+	/// because that builds the component. Clicking one while already here just rewrites the
+	/// URL and re-supplies the query parameter, so this is the only place the new subject
+	/// name is seen. See TicketingStatusComponent for the full note.
+	/// </remarks>
+	protected override async Task OnParametersSetAsync()
+	{
+		await base.OnParametersSetAsync();
+
+		if (SearchFromQuery == _appliedSearchFromQuery)
+		{
+			return;
+		}
+
+		_appliedSearchFromQuery = SearchFromQuery;
+
+		// A link with no ?search= leaves the current filter alone rather than silently
+		// clearing what the user typed.
+		if (string.IsNullOrWhiteSpace(SearchFromQuery))
+		{
+			return;
+		}
+
+		_searchString = SearchFromQuery;
+
+		// A changed filter starts a new keyset walk; keep MudTable's page in sync with the
+		// loader's reset-to-first-page.
+		if (reportsTable?.TableRef is not null)
+		{
+			reportsTable.TableRef.CurrentPage = 0;
+		}
+
+		await ReloadTable();
 	}
 
 	private async Task<List<int>> GetStoredRoleIdsAsync()
