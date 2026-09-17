@@ -12,11 +12,21 @@ public class MarkAsDisputedCommandValidator : AbstractValidator<MarkAsDisputedCo
 			.NotEmpty()
 			.WithMessage("Email Invitation ID is required.");
 
+		// Required for every category now, not just "Others" - the console asks all three to
+		// describe themselves. 255 matches the DisputeCategory column it may still fall back into
+		// for a client that predates the split.
 		RuleFor(x => x.DisputeRequest.DisputeReason)
 			.NotEmpty()
 			.WithMessage("Dispute reason is required.")
 			.MaximumLength(255)
 			.WithMessage("Dispute reason must not exceed 255 characters.");
+
+		// Not NotEmpty: an older client sends the label in DisputeReason instead, and the repository
+		// falls back to it. The length rule matches EmailInvitationRequest.DisputeCategory, which is
+		// where this value is written.
+		RuleFor(x => x.DisputeRequest.DisputeCategory)
+			.MaximumLength(255)
+			.WithMessage("Dispute category must not exceed 255 characters.");
 
 		RuleFor(x => x.AuthenticatedUserId)
 			.NotEmpty()

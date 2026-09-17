@@ -413,11 +413,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		if (resultAwareSender is not null)
 		{
+			// The CIBI teams are copied on both the invitation and the reminder, so a team mailbox
+			// holds the same thread the candidate does. Only the result-aware path can carry them:
+			// the bool contract in BuildingBlocks has no cc parameter, and widening it would force
+			// Auth and the test fakes to reason about a copy list they have no teams for. A sender
+			// that is not the ATS one therefore sends to the candidate alone - the same degradation
+			// the reminder body already accepts above.
 			return await resultAwareSender.SendATSEmailWithResultAsync(
 				toEmail: gmail!,
 				subject: subject,
 				body: emailBody,
-				cancellationToken);
+				cancellationToken: cancellationToken,
+				cc: ApplicationFormEmail.CopyTeams);
 		}
 
 		var isSent = await _emailService.SendATSEmailAsync(

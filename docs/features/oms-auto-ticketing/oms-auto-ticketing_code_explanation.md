@@ -595,8 +595,9 @@ public static (CreateOMSTicketRequest? Request, string? Failure) TryMap(
 retryable: none of these inputs change on their own."* That is why §2.8 passes
 `isRetryable: false`.
 
-**Phone normalisation** — the subject's own number is preferred, then the order's:
-`NormalizePhoneNumber(payload.PersonalMobileNumber) ?? NormalizePhoneNumber(payload.MobileNumber)`.
+**Phone normalisation** — the number captured on the order: `NormalizePhoneNumber(payload.MobileNumber)`.
+An earlier design preferred a form-supplied number over it, but once candidate identity moved onto
+`EmailInvitationRequest` both sides of that fallback read the same column.
 
 ```csharp
 public static string? NormalizePhoneNumber(string? value)
@@ -630,11 +631,11 @@ public static string? NormalizePhoneNumber(string? value)
 Stripping non-digits first is what makes `+63` collapse to `63`. Returning `null` parks the order
 locally rather than letting OMS reject it remotely.
 
-**Government ids** — kept only at exactly the right length, otherwise sent blank (the fields are
+**Government ids** — kept only at an accepted length, otherwise sent blank (the fields are
 optional, so a malformed value must not fail the whole ticket):
 
 ```csharp
-public static string? NormalizeGovernmentId(string? value, int requiredLength)
+public static string? NormalizeGovernmentId(string? value, int minLength, int maxLength)
 {
 	if (string.IsNullOrWhiteSpace(value))
 	{
@@ -643,13 +644,21 @@ public static string? NormalizeGovernmentId(string? value, int requiredLength)
 
 	var digits = new string(value.Where(char.IsDigit).ToArray());
 
-	return digits.Length == requiredLength
+	return digits.Length >= minLength && digits.Length <= maxLength
 		? digits
 		: null;
 }
 ```
 
-Called as `NormalizeGovernmentId(payload.SSS, 10)` and `NormalizeGovernmentId(payload.TIN, 12)`.
+Called as `NormalizeGovernmentId(payload.SSS, SssLength, SssLength)` — 10 exactly — and
+`NormalizeGovernmentId(payload.TIN, MinTinLength, MaxTinLength)` — 9 to 12.
+
+A range, not one length: a TIN is 9 digits for an individual and 12 with a branch code, and both
+are issued. This took a range only after an exact-12 rule had been silently blanking every 9-digit
+TIN — the ticket went through with no TIN rather than parking, which is the failure mode the
+send-blank policy hides. The bounds mirror `EmailInvitationRequestCommandValidator` and
+`BulkIdentityFieldsValidation`, which decide what reaches an order in the first place; if those
+move, this has to move with them.
 
 **`ReportTypeID`** — the leading digit run of a free-text column:
 

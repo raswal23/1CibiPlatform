@@ -86,9 +86,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				cancellationToken);
 	}
 
-	// Left joins throughout: an order claimed at enrolment has no PersonalDetails yet,
-	// and a package whose name no longer matches must still come back so the service
-	// can park it with a reason rather than silently dropping it from the batch.
+	// Left joins throughout: a package whose name no longer matches, or a requestor
+	// with no UserDetails row, must still come back so the service can park the order
+	// with a reason rather than silently dropping it from the batch.
 	public async Task<List<TicketablePayloadDTO>> GetTicketPayloadsAsync(
 		IReadOnlyCollection<Guid> emailInvitationIds,
 		CancellationToken cancellationToken)
@@ -127,10 +127,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				SelectPackage = invitation.SelectPackage,
 				RequestorId = invitation.RequestorId,
 				RushNormal = invitation.RushNormal,
-				DOB = invitation.DateOfBirth ?? null,
-				PersonalMobileNumber = invitation.MobileNumber ?? null,
-				SSS = invitation.SSSNumber ?? null,
-				TIN = invitation.TINNumber ?? null,
+				DOB = invitation.DateOfBirth,
+				SSS = invitation.SSSNumber,
+				TIN = invitation.TINNumber,
 				PackageDescription = package != null ? package.PackageDescription : null,
 
 				// Site is ATS-owned. The requestor's name parts are not: UserDetails

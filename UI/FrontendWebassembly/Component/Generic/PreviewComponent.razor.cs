@@ -13,10 +13,10 @@ public partial class PreviewComponent
 
 	[Parameter]
 	public string Message { get; set; } = string.Empty;
-	
+
 	[Parameter]
 	public bool? IsDataScreening { get; set; } = null;
-	
+
 	private async Task Confirm()
 	{
 		if (InvalidRows.Any())
@@ -113,9 +113,9 @@ public partial class PreviewComponent
 
 	private bool IsRequiredCellBlank(int columnIndex, string cell) =>
 		string.IsNullOrWhiteSpace(cell)
-		&& (columnIndex >= Headers.Count || 
-		    (!IsOptionalHeader(Headers[columnIndex]) && 
-		     !(IsDataScreening == false && IsIdentityHeader(Headers[columnIndex]))));
+		&& (columnIndex >= Headers.Count ||
+			(!IsOptionalHeader(Headers[columnIndex]) &&
+			 !(IsDataScreening == false && IsIdentityHeader(Headers[columnIndex]))));
 
 	private bool IsDateOfBirthColumn(int columnIndex) =>
 		columnIndex < Headers.Count
@@ -149,7 +149,7 @@ public partial class PreviewComponent
 
 	// Parse date in MM/dd/yyyy format
 	private bool TryParseDateOfBirth(string dateStr) =>
-		DateOnly.TryParseExact(dateStr, "MM/dd/yyyy", out var date) && 
+		DateOnly.TryParseExact(dateStr, "MM/dd/yyyy", out var date) &&
 		date < DateOnly.FromDateTime(DateTime.Now);
 
 	// SSS number must contain only digits and be exactly 10 digits

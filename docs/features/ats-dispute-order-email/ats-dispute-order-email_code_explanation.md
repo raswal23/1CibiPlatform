@@ -7,50 +7,73 @@ stand. Read that document first for the *why*; this one is for changing the code
 
 | # | Hop | File | Member |
 |---|---|---|---|
-| 1 | Category radios + "Please specify" | `UI/FrontendWebassembly/Component/ATS/DisputeOrder/DisputeDialogOrderComponent.razor:44`, `:66` | `MudRadioGroup` → `SelectedDisputeCategory` |
-| 2 | Send Dispute | `…/DisputeDialogOrderComponent.razor.cs:101` | `SendDisputeAsync()`, request built at `:115` |
+| 1 | Category radios + "Please specify" | `UI/FrontendWebassembly/Component/ATS/DisputeOrder/DisputeDialogOrderComponent.razor` | `MudRadioGroup` → `SelectedDisputeCategory`, `specifyReason` |
+| 2 | Send Dispute | `…/DisputeDialogOrderComponent.razor.cs` | `SendDisputeAsync()` |
 | 3 | UI HTTP service | `UI/FrontendWebassembly/Services/ATS/DisputeOrder/DisputeOrderService.cs:51` | `MarkAsDisputedAsync` → `PATCH ats/markasdisputed` (`:57`) |
 | 4 | Gateway route | `BackendAPI/Modules/ATS/Path/ATSPaths.cs:559` | `RouteId: "MarkAsDisputed"` |
 | 5 | Carter endpoint | `…/Features/Web/MarkAsDisputed/MarkAsDisputedEndpoint.cs:11` | `MapPatch("markasdisputed")` |
 | 6 | Validator + handler | `…/MarkAsDisputedHandler.cs:7`, `:36` | `MarkAsDisputedCommandValidator`, `Handle` |
-| 7 | Dispute write | `…/Services/DisputeOrder/DisputeOrderService.cs:102` | `MarkAsDisputedAsync` |
-| 7a | *Internal* ops email (pre-existing) | `…/DisputeOrderService.cs:139` → `:212` | `SendDisputeOrderEmailAsync` |
-| 8 | **The acknowledgement** | `…/DisputeOrderService.cs:188` → `Services/EmailService/DisputeEmailNotification.cs:22` | `SendAsync` → `SendNoticeAsync:41` |
+| 7 | Dispute write | `…/Services/DisputeOrder/DisputeOrderService.cs:94` | `MarkAsDisputedAsync` |
+| 8 | **The acknowledgement** | `…/DisputeOrderService.cs:162` → `Services/EmailService/DisputeEmailNotification.cs:24` | `SendAsync` → `SendNoticeAsync:43` |
 | 9 | Body | `…/Services/EmailService/ATSEmailService.cs:604` | `BuildDisputeNotification` |
 | 10 | Send | `…/ATSEmailService.cs:61` | `SendATSEmailWithResultAsync` → `SendThroughAccountAsync:134` → `SendOverContextAsync:240` → `BuildMessage:386` |
 
-Everything except step 8 existed before. Steps 1–3 gained one field; 9–10 gained one composer. The
-`cc` parameter at step 10 was added by the withdrawal notice
-(`docs/features/ats-withdrawn-application-email/`) and is reused unchanged here.
+Steps 1–7 existed before this feature; steps 1–3 gained one field. Steps 8–9 are the feature, and
+step 10 is reused unchanged — its `cc` parameter came with the withdrawal notice
+(`docs/features/ats-withdrawn-application-email/`).
 
-## 2. The dialog collapses two values into one
+There used to be a step between 7 and 8: an internal operations email composed by
+`IEmailService.SendEmailForDispute` and sent to `ATS:DisputeOrderEmailRecipient` **before** the
+transaction, throwing on failure. It has been removed, along with the interface member, its two other
+implementations, the `SendDisputeOrderEmailAsync` helper, the `_disputeOrderEmailRecipient` field and
+the config key in all five `appsettings` files. `DisputeOrderService` no longer depends on
+`IEmailService` or `IConfiguration` at all.
 
-`DisputeDialogOrderComponent.razor:44` offers three radios — `Billing`, `Report`, and
-`OtherDisputeCategory` (`"Others"`, a private const at `.razor.cs:5`). The "Please specify" field at
-`:66` is always rendered but `Disabled="@(!IsOtherDisputeSelected)"`, so free text exists only for
-Others.
+## 2. The dialog sends two distinct values
 
-What gets sent (`.razor.cs:115`):
+`DisputeDialogOrderComponent.razor` offers three radios — `Billing`, `Report`, `Others` — each an
+inline literal; the `OtherDisputeCategory` const that used to back the third one is gone, because
+nothing singles it out any more.
+
+The "Please specify" field (`id="dd-specify-reason"`) is always rendered, unconditionally
+`Required="true"`, and gated only on having a category to describe:
+
+```razor
+	<div class="dd-input-wrap @(IsCategorySelected ? string.Empty : "is-locked")"
+		 @onclick="OnSpecifyFieldClickedAsync">
+		<MudTextField @bind-Value="specifyReason"
+					  Disabled="@(!IsCategorySelected)"
+					  Required="true"
+					  RequiredError="Please specify a reason"
+					  MaxLength="255"
+```
+
+`IsCategorySelected` is `!string.IsNullOrWhiteSpace(SelectedDisputeCategory)` — so the field unlocks
+on the **first** selection and never re-locks. The `SelectedDisputeCategory` setter cancels the blink
+instead of clearing the text: switching Billing to Report does not invalidate the sentence already
+typed. `OnSpecifyFieldClickedAsync` returns immediately when `IsCategorySelected`, so the blink only
+fires while genuinely locked.
+
+What gets sent (`.razor.cs`, `SendDisputeAsync`):
 
 ```csharp
 		var requestToSend = new DisputeOrderRequestDTO
 		{
 			EmailInvitationId = EmailInvitationId,
-
-			// DisputeReason keeps the meaning it has always had - it is what gets persisted, and
-			// for Billing/Report that has always been the category label rather than free text.
-			// DisputeCategory travels alongside it only so the acknowledgement email can show the
-			// category and the "Others" free text as two separate lines.
-			DisputeReason = IsOtherDisputeSelected
-				? otherReason.Trim()
-				: SelectedDisputeCategory,
+			// Every category now carries its own free text, so the two fields no longer collapse:
+			// DisputeCategory is always the label and DisputeReason is always what the filer typed.
+			DisputeReason = specifyReason.Trim(),
 			DisputeCategory = SelectedDisputeCategory
 		};
 ```
 
-`DisputeReason` is unchanged — same expression, same value, same meaning. `DisputeCategory` is purely
-additive. The UI serializes the whole DTO (`var request = new { disputeRequest };`), so no
-mapping code needed touching.
+Ahead of that there is a belt-and-braces guard: while no category is selected the text field is
+`Disabled`, and a disabled MudBlazor control is not guaranteed to carry its `Required` rule into
+`MudForm`'s verdict. So `SendDisputeAsync` re-checks `specifyReason` itself, normalizes it to
+`string.Empty`, re-runs `ValidateAsync()` to surface the error, and returns.
+
+The UI serializes the whole DTO (`var request = new { disputeRequest };`), so no mapping code needed
+touching.
 
 ## 3. Two DTOs that must agree by name alone
 
@@ -62,23 +85,24 @@ mapping code needed touching.
 ```
 
 They are bound by JSON property name. Nothing checks that they match, and a rename on one side
-silently delivers `null` to the other — which degrades to the fallback in §5 rather than failing
-loudly.
+silently delivers `null` to the other — which degrades to the fallback in §5 and §8 rather than
+failing loudly. Their XML docs now state which is which: `DisputeReason` is the filer's free text and
+is **not** persisted; `DisputeCategory` is the label and **is**.
 
-The validator (`MarkAsDisputedHandler.cs:7`) was deliberately **not** extended. It requires
-`EmailInvitationId` and a non-empty `DisputeReason` under 255 characters; `DisputeCategory` is
-optional, so a client that does not send it still files a dispute and still gets an acknowledgement.
+The validator (`MarkAsDisputedHandler.cs:7`) requires `EmailInvitationId` and a non-empty
+`DisputeReason` under 255 characters — now required for every category, since the console asks all
+three to describe themselves. `DisputeCategory` has a `MaximumLength(255)` rule matching the column
+it is written into, but deliberately **no** `NotEmpty`: a client that predates the split sends the
+label in `DisputeReason` instead, and the repository falls back to it (§8). Such a client still files
+a dispute and still gets an acknowledgement.
 
-## 4. The service: two sends, asymmetric on purpose
+## 4. The service: one send, after the commit
 
-`DisputeOrderService.MarkAsDisputedAsync` (`:102`). Before the transaction it gathers what both
-emails need — `requestor` from the token at `:129` (`ClaimTypes.Email`, falling back to the short
-`"email"` claim), and `subjectName` from the order's name parts at `:131`.
+`DisputeOrderService.MarkAsDisputedAsync` (`:94`). Before the transaction it gathers what the notice
+needs — `requestor` from the token at `:121` (`ClaimTypes.Email`, falling back to the short `"email"`
+claim), and `subjectName` from the order's name parts at `:123`.
 
-The internal notification is unchanged, at `:139`: send first, and on failure log and throw
-`InternalServerException`, so the write never happens.
-
-Then the transaction, and after `CommitAsync` (`:170`):
+Then the transaction, and after `CommitAsync` (`:142`):
 
 ```csharp
 			var candidateName = string.IsNullOrWhiteSpace(subjectName)
@@ -87,6 +111,7 @@ Then the transaction, and after `CommitAsync` (`:170`):
 
 			await _disputeEmailNotification.SendAsync(
 				new DisputeEmailDetails(
+					order.EmailInvitationID,
 					requestor,
 					_currentUser.FullName,
 					candidateName,
@@ -98,15 +123,19 @@ Then the transaction, and after `CommitAsync` (`:170`):
 Three things to notice:
 
 - It is **inside** the `try` whose `catch` rolls back and rethrows. Safe only because `SendAsync`
-  cannot throw (§5).
-- `requestor` is reused rather than re-read, so both messages name the same address even on the
-  fallback claim path that `MarkAsDisputedAsync_ShouldUseFallbackEmailClaim_WhenStandardEmailClaimIsMissing`
-  pins.
-- `DisputeReason!` — the null-forgiving is the same one the pre-existing internal send uses at
-  `:139`; `MarkAsDisputedCommandValidator` has already rejected an empty reason.
+  cannot throw (§5). Remove the guard and a delivery failure would roll back a committed dispute and
+  then surface as a 500.
+- `order.EmailInvitationID` travels with the details even though the email body never uses it — the
+  acknowledgement records itself against that order's history (§8 of the high-level document), and
+  the timeline is per order.
+- `DisputeReason!` — the null-forgiving is safe because `MarkAsDisputedCommandValidator` has already
+  rejected an empty reason. It is the only place in this method that leans on the validator.
 
 `candidateName` falls back to the order's email address because the copy reads "A dispute has been
 submitted for \<candidate\>", and an order with no name parts still has to identify someone.
+
+The method no longer injects `IEmailService` or `IConfiguration`; both existed solely for the removed
+operations alert.
 
 ## 5. `DisputeEmailNotification`
 
@@ -148,9 +177,11 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 			&& !string.Equals(details.DisputeReason, category, StringComparison.Ordinal);
 ```
 
-   Comparing the two values rather than testing for `"Others"` is the point: that literal is a
-   private const in the Blazor component and this service has no business knowing it. If the console
-   ever adds a fourth category with free text, this keeps working.
+   Comparing the two values rather than testing for `"Others"` is the point: this service has no
+   business knowing which categories exist. Since every category now carries its own free text, the
+   usual path renders **both** lines. Two cases still collapse to one: a client that predates the
+   split and sent only the label in `DisputeReason`, and a filer who typed the category's own name
+   into "Please specify". Both would otherwise read `Category: Report / Details: Report`.
 3. **Greeting name.** `RequestorName` (the token's `FullName`), falling back to the address.
 4. **Compose** via `_emailSender.BuildDisputeNotification(...)`, passing `null` for the details when
    `hasSeparateDetails` is false.
@@ -193,28 +224,42 @@ composer, so one change moves both.
 | Subject vs. body header | `Constants/DisputeEmail.cs` `Subject`, read by `DisputeEmailNotification.SendNoticeAsync` and by `BuildDisputeNotification` | The shared constant only |
 | CC address vs. body copy | `DisputeEmail.CopyTeam` = `clientsupport@cibi.com.ph`, but the closing sentence names `ccteam@cibi.com.ph` **and** `clientsupport@cibi.com.ph` as prose | **Nothing** — separate literals in separate files |
 | `DisputeCategory` | `UI/…/DTO/ATS/DisputeOrderRequestDTO.cs` vs. `BackendAPI/Modules/ATS/DTO/DisputeOrderRequestDTO.cs` | JSON property name only |
-| `DisputeReason`'s double meaning | The dialog, the notifier's derivation (§5 step 2), and `ATSRepository.DisputeOrders.cs:86` which writes it into `EmailInvitationRequest.DisputeCategory` | Nothing — see §8 |
+| Which field reaches the column | The dialog sends both; `ATSRepository.DisputeOrders.cs:87` writes `DisputeCategory` into `EmailInvitationRequest.DisputeCategory` and falls back to `DisputeReason` | Nothing — see §8 |
 | Route `/ats/markasdisputed` | `ATSPaths.cs:559` `MatchPath` vs. the UI's `PatchAsJsonAsync` vs. Carter's `MapPatch` + `PathSet` | Nothing at compile time |
 | `IDisputeEmailNotification` | `ATSServiceConfiguration.cs:162`, registered beside the sender it depends on | DI |
 | `IAtsEmailSender` in tests | The ATS integration host must register a fake implementing it — `FakeAtsEmailSender`, which gained `BuildDisputeNotification` | Nothing; see the withdrawal feature's `_code_explanation.md` §7.1 |
 
-## 8. The column name lies, and that is pre-existing
+## 8. Only the label is persisted
 
-`ATSRepository.DisputeOrders.cs:81` persists the request like this:
+`ATSRepository.DisputeOrders.cs:81`:
 
 ```csharp
+		var category = string.IsNullOrWhiteSpace(disputeRequest.DisputeCategory)
+			? disputeRequest.DisputeReason
+			: disputeRequest.DisputeCategory;
+
+		var affectedRows = await _dbcontext.EmailInvitationRequests
+			.Where(eir => eir.EmailInvitationID == disputeRequest.EmailInvitationId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(eir => eir.DisputeCategory, disputeRequest.DisputeReason)
+				.SetProperty(eir => eir.DisputeCategory, category)
 				.SetProperty(eir => eir.DisputedAt, DateTime.UtcNow),
 				cancellationToken);
 ```
 
-`DisputeReason` goes into the column named `DisputeCategory`. For Billing and Report the two are the
-same string, so it reads correctly; for Others the column holds free text, not a category. This
-predates the feature and was deliberately left alone — the disputes grid projects that column
-(`ATSRepository.DisputeOrders.cs:39` → `DisputeOrderListDTO.DisputeCategory`) and changing what it
-stores would change what the console shows. The new `DisputeCategory` request field is **not**
-persisted, so none of this moved.
+The column receives the **category label**, and the fallback to `DisputeReason` covers a client that
+predates the split.
+
+This line used to write `disputeRequest.DisputeReason` unconditionally. That worked while the dialog
+collapsed both values into one field — for Billing and Report the reason *was* the label, and only an
+Others row held free text. Once "Please specify" became required for all three, writing the reason
+there would have put a sentence in every row. The disputes grid projects that column
+(`ATSRepository.DisputeOrders.cs:39` → `DisputeOrderListDTO.DisputeCategory`) into the console's
+"Reason for Dispute" chip, so every chip would have become a sentence. Writing the label keeps the
+chip reading `Billing` / `Report` / `Others` exactly as it did before.
+
+**No migration, and no new column.** The free text is not persisted at all — it exists to fill the
+acknowledgement's details line and is composed from the request in the same request. A `DisputeDetails`
+column was considered and rejected; see the high-level document's "What not to do".
 
 ## 9. Tests
 
@@ -222,18 +267,37 @@ persisted, so none of this moved.
 
 | File | Covers |
 |---|---|
-| `DisputeEmailNotificationTests.cs` | Filer addressed and `clientsupport@cibi.com.ph` copied; details bullet rendered for an Others dispute and **omitted** when the reason equals the category; reason used as the category when none was sent; greeting falls back to the address; skipped when there is no address; **does not throw** when the sender throws or reports failure |
+| `DisputeEmailNotificationTests.cs` | Filer addressed and `clientsupport@cibi.com.ph` copied; both lines rendered for **every** category (a `[Theory]` over Billing/Report/Others) and the details line **omitted** when the reason equals the category; reason used as the category when none was sent; greeting falls back to the address; skipped when there is no address; **does not throw** when the sender throws or reports failure |
 | `AtsDisputeEmailBodyTests.cs` | The composed body: exact copy, both contact addresses, header equals `DisputeEmail.Subject`, both bullets present with details and the details line absent without, values HTML-encoded, and every `href` is a `mailto:` |
-| `DisputeOrderServiceTests.cs` — new `#region Requestor Acknowledgement` | Orchestration only: acknowledgement sent after the commit with the right values; category and reason passed through unmangled for Others; candidate falls back to the order's address; **not** sent when the operations email fails; **not** sent when the write fails |
+| `DisputeOrderServiceTests.cs` — `#region Requestor Acknowledgement` | Orchestration only: acknowledgement sent after the commit with the right values including the order id; category and reason passed through unmangled (`..._ShouldPassCategoryAndReasonThroughUnmangled`); candidate falls back to the order's address; **not** sent when the write fails |
+
+`DisputeOrderServiceIntegrationTests` pins the persistence rule of §8 from both directions: the
+normal path asserts the **label** lands in `EmailInvitationRequest.DisputeCategory` rather than the
+typed sentence, and `MarkAsDisputedAsync_ShouldPersistTheReason_WhenTheClientSendsNoCategory` sends
+only `DisputeReason` and asserts the fallback still fills the column. Without the second test the
+fallback branch would be reachable only from a client nobody runs.
 
 The subject and the CC address are asserted as **literals**, not by reading `DisputeEmail`, so a
 change to the agreed copy fails a test rather than silently redefining it.
 
-The four pre-existing tests that assert the internal operations email
-(`MarkAsDisputedAsync_ShouldSendNotificationUpdateRepositoryAndReturnTrue` and friends) were left
-untouched and still pass — that message is unchanged. `DisputeOrderServiceIntegrationTests` stubs
-`IDisputeEmailNotification`, so it keeps exercising the dispute write, the cache invalidation and the
-operations email.
+Removing the operations alert changed four pre-existing tests rather than simply deleting them.
+`MarkAsDisputedAsync_ShouldSendNotificationUpdateRepositoryAndReturnTrue` became
+`..._ShouldMarkTheOrderDisputedAndReturnTrue` and now asserts the write and the commit.
+`..._ShouldUseFallbackEmailClaim_WhenStandardEmailClaimIsMissing` was repurposed rather than dropped —
+the short-`email`-claim fallback still matters, it now has to reach the acknowledgement instead of
+the operations mailbox, so it asserts the notifier receives the fallback address.
+`..._ShouldThrowAndSkipRepository_WhenEmailReturnsFalse` was deleted outright: the behaviour it
+pinned no longer exists. `..._ShouldWrapRepositoryFailure_AfterEmailIsSent` became
+`..._ShouldWrapRepositoryFailure_AndNotAcknowledgeTheFiler`.
+
+`DisputeOrderServiceIntegrationTests` stubs `IDisputeEmailNotification` and its `CreateService`
+factory no longer takes an `IEmailService`, so it keeps exercising the dispute write and the cache
+invalidation. Its `MarkAsDisputedAsync_ShouldThrowAndPreserveOrder_WhenEmailCannotBeSent` was deleted
+for the same reason as the unit test above. **That leaves a coverage gap worth naming:** no
+integration test now proves the dispute is recorded when delivery fails, because the swallow lives
+inside the real notifier and a mocked one cannot exercise it.
+`DisputeEmailNotificationTests.SendAsync_ShouldNotThrow_WhenTheSenderThrows` covers the guarantee at
+unit level instead.
 
 Not covered, and not coverable by unit tests: a successful SMTP send, so the `Cc:` header on the wire
 needs the manual pass in the high-level document.
@@ -245,10 +309,11 @@ needs the manual pass in the high-level document.
 | `DisputeEmail.Subject` | The header follows automatically; the **tests** do not — they pin the literal |
 | `DisputeEmail.CopyTeam` | The closing sentence in `BuildDisputeNotification`, which names it as prose alongside `ccteam@cibi.com.ph` (§7) |
 | The body copy | `AtsDisputeEmailBodyTests` asserts the sentences verbatim |
-| The dialog's categories, or which ones allow free text | `DisputeEmailNotification.SendNoticeAsync` step 2 — it compares values rather than matching `"Others"`, so it should keep working, but `DisputeEmailNotificationTests` pins the Billing and Others cases |
-| `DisputeOrderRequestDTO` on either side | The other side (§3), and `MarkAsDisputedCommandValidator` if the new field should be required |
-| What `DisputeReason` means | Persistence at `ATSRepository.DisputeOrders.cs:86`, the operations email at `DisputeOrderService.cs:139`, and §8 |
+| The dialog's categories, or which ones require free text | `DisputeEmailNotification.SendNoticeAsync` step 2 — it compares values rather than matching `"Others"`, so it should keep working, but `DisputeEmailNotificationTests` pins all three categories by name |
+| `DisputeOrderRequestDTO` on either side | The other side (§3), and `MarkAsDisputedCommandValidator` — note `DisputeCategory` is deliberately not `NotEmpty` |
+| Which field is persisted | `ATSRepository.DisputeOrders.cs:87`, the disputes grid's chip (`:39`), the details-line derivation in `DisputeEmailNotification.SendNoticeAsync` step 2, both DTOs' XML docs, and §8. The integration suite pins both directions |
 | `IAtsEmailSender`'s members | `ATSEmailService`, `FakeAtsEmailSender` (the integration host — §7), and the mocks in `AtsEmailAccountManagementFixture.cs:34` |
-| `DisputeOrderService`'s constructor | `DisputeOrderServiceTests.cs` and `DisputeOrderServiceIntegrationTests.cs:535` both news it up by hand |
+| `DisputeOrderService`'s constructor | `DisputeOrderServiceTests.cs` and `DisputeOrderServiceIntegrationTests.cs` both news it up by hand |
 | The transaction in `MarkAsDisputedAsync` | The acknowledgement must stay after `CommitAsync`, and `SendAsync` must stay unable to throw (§5) |
-| `SendEmailForDispute` | It is the *internal* body on `IEmailService`, implemented three times: `ATSEmailService.cs:646`, `BuildingBlocks/…/EmailService.cs:215`, and `FakeEmailSender.cs:26`. Do not confuse it with `BuildDisputeNotification` |
+| `IEmailService`'s members | It is a BuildingBlocks contract implemented by `ATSEmailService`, `BuildingBlocks/…/EmailService.cs` and the tests' `FakeEmailSender`. `SendEmailForDispute` was removed from all four; do not put a dispute composer back on it (§10 of the high-level document) |
+| `ATS:DisputeOrderEmailRecipient` | Nothing reads it any more. It was deleted from all five `appsettings` files — if an environment still exports `ATS__DISPUTEORDEREMAILRECIPIENT`, that variable is now inert |

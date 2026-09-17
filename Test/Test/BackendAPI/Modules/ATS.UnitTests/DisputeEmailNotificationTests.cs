@@ -48,7 +48,7 @@ public class DisputeEmailNotificationTests
 		string? requestorEmail = FilerEmail,
 		string? requestorName = FilerName,
 		string? disputeCategory = "Report",
-		string? disputeReason = "Report") => new(
+		string? disputeReason = "The employment dates on the report are wrong.") => new(
 			InvitationId,
 			requestorEmail,
 			requestorName,
@@ -132,8 +132,9 @@ public class DisputeEmailNotificationTests
 	[Fact]
 	public async Task SendAsync_ShouldRenderTheCategoryAlone_WhenTheReasonIsTheSameLabel()
 	{
-		// Arrange: a Billing or Report dispute. The console sends the category label as the reason
-		// too, so showing both lines would read "Category: Report / Details: Report".
+		// Arrange: the console asks every category for its own description, so this is now the odd
+		// case rather than the normal one - a filer who typed the category's own name into "Please
+		// specify". Showing both lines would read "Category: Billing / Details: Billing".
 		SetupComposedBody();
 		SetupSuccessfulSend();
 
@@ -146,21 +147,25 @@ public class DisputeEmailNotificationTests
 		VerifyBody(Times.Once(), "Billing", null);
 	}
 
-	[Fact]
-	public async Task SendAsync_ShouldRenderBothLines_WhenTheReasonDiffersFromTheCategory()
+	[Theory]
+	[InlineData("Billing")]
+	[InlineData("Report")]
+	[InlineData("Others")]
+	public async Task SendAsync_ShouldRenderBothLines_ForEveryCategory(string category)
 	{
-		// Arrange: an "Others" dispute, the only case where the console captures free text.
+		// Arrange: all three categories now carry free text, so all three render both lines. This
+		// used to be the "Others" case alone.
 		const string details = "The report lists an employer I never worked for.";
 		SetupComposedBody();
 		SetupSuccessfulSend();
 
 		// Act
 		await _notifier.SendAsync(
-			CreateDetails(disputeCategory: "Others", disputeReason: details),
+			CreateDetails(disputeCategory: category, disputeReason: details),
 			CancellationToken.None);
 
 		// Assert
-		VerifyBody(Times.Once(), "Others", details);
+		VerifyBody(Times.Once(), category, details);
 	}
 
 	[Fact]

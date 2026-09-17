@@ -2,9 +2,8 @@ namespace ATS.Services.EmailService;
 
 /// <inheritdoc cref="IDisputeEmailNotification"/>
 /// <remarks>
-/// Beside the sender it uses and the internal <see cref="ATSEmailService.SendEmailForDispute"/> body
-/// it is so easily confused with, so the two messages that go out for one dispute can be read side
-/// by side.
+/// Beside the sender it uses and the two sibling notices, so the three messages a requestor can
+/// receive about an order - withdrawn, disputed, completed - read the same way in one folder.
 /// </remarks>
 public class DisputeEmailNotification : IDisputeEmailNotification
 {
@@ -57,12 +56,12 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 			return;
 		}
 
-		// The console sends ONE value for what the template shows as two lines: the category label
-		// for Billing and Report, and free text only when "Others" is selected. Rendering both lines
-		// straight from that would repeat the category as its own details, so the details bullet
-		// appears only when the reason says something the category does not. Comparing the two
-		// values keeps this free of any knowledge of the "Others" literal, which is a private const
-		// in the Blazor component and not this service's business.
+		// The console now sends both lines separately - a category label and the free text every
+		// category requires - so the usual path renders both. Two cases still collapse to one line:
+		// a client that predates the split and sent only the label in DisputeReason, and a filer who
+		// typed the category name into the description. Both would otherwise read "Category: Report
+		// / Details: Report". Comparing the two values covers both without this service needing to
+		// know which categories exist.
 		var category = string.IsNullOrWhiteSpace(details.DisputeCategory)
 			? details.DisputeReason
 			: details.DisputeCategory;
