@@ -93,11 +93,15 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.HashTokenExpiration)
 			   .IsRequired(false);
 
-		// The fire-once stamp for the package follow-up reminder. Deliberately not
-		// indexed: the release query already narrows on EmailSentStatus, which is
-		// indexed, and this table is write-hot enough that a redundant index is pure
-		// cost - the same reasoning as the BulkFileID note at the bottom of this file.
-		builder.Property(e => e.FollowUpQueuedAt)
+		// "date", not a timestamp: this holds a Manila calendar date so the release query
+		// can ask "was one already queued today?" without a time component to reason about.
+		// Null means no reminder has ever been queued for the order.
+		//
+		// Deliberately not indexed: the release query already narrows on EmailSentStatus,
+		// which is indexed, and this table is write-hot enough that a redundant index is
+		// pure cost - the same reasoning as the BulkFileID note at the bottom of this file.
+		builder.Property(e => e.LastFollowUpSentDate)
+			   .HasColumnType("date")
 			   .IsRequired(false);
 
 		// Nullable because a data-screening order is never emailed: there is no

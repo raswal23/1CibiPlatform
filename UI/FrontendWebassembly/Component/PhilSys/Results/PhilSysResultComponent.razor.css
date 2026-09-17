@@ -24,6 +24,19 @@
     justify-content: center;
     padding: 24px 16px;
     font-family: Inter, sans-serif;
+    /* Vertical centring inside .philsys-liveness-page (min-height: 100vh).
+
+       Auto margins rather than the page's `align-items: center`, because this card is the
+       one child that can outgrow the viewport - a long result has a dozen-plus info rows.
+       A centred flex item taller than its container overflows BOTH edges, and the part
+       above the top is unreachable: scrolling cannot reach it. Auto margins centre while
+       free space is positive and collapse to zero when it is not, so a tall result falls
+       back to starting at the top and scrolls normally.
+
+       Cross-axis auto margins take priority over the container's align-items, so this wins
+       over the `align-items: flex-start` in philsys.css - which stays as the collapsed
+       fallback rather than being dead. */
+    margin: auto 0;
 }
 
 .philsys-result-shell ::deep .philsys-result-card {

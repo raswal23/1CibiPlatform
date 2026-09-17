@@ -207,6 +207,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 					await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
 						emailInvitationRequest.EmailInvitationID);
+
+					// Inside the same transaction as the status it describes, matching the
+					// queued path in EmailNotificationProcessorService. A data order records
+					// nothing here because no email was sent.
+					await _orderHistoryService.RecordAsync(
+						emailInvitationRequest.EmailInvitationID,
+						OrderHistoryEventType.InvitationEmailSent,
+						null,
+						OrderStatus.PendingCandidateInfo, ct, source);
 				}
 
 				await _orderHistoryService.RecordAsync(
@@ -710,8 +719,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		};
 
 		// One statement does the whole release: it picks the due rows, moves them back to
-		// Pending and stamps FollowUpQueuedAt together, so a crash cannot leave a row
-		// requeued but unstamped and chase the candidate twice.
+		// Pending and stamps both follow-up columns together, so a crash cannot leave a row
+		// requeued but undated and chase the candidate twice in one day.
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(cancellationToken);
 
 		if (released.Count == 0)

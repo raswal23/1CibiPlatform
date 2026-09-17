@@ -31,9 +31,18 @@ public partial class SearchReportComponent
 	private bool _isStatusLegendExpanded = false;
 	private bool _canUploadReport;
 	private bool _canEditSubjectName;
-	private int ReportColumnCount => 11
+	// 12 fixed columns; the last two are permission-gated. Must match the HeaderTemplate or
+	// the loading skeleton renders a different width than the table it stands in for.
+	private int ReportColumnCount => 12
 		+ (_canUploadReport ? 1 : 0)
 		+ (_canEditSubjectName ? 1 : 0);
+
+	// Why a row can show no follow-up count at all. Long enough to be worth naming once
+	// rather than inlining into the markup.
+	private const string FollowUpNotApplicableHint =
+		"Follow-up reminders do not apply to this order - it is either a data screening order, "
+			+ "its package has reminders switched off, or the application form has already been "
+			+ "answered or withdrawn.";
 
 	protected override async Task OnInitializedAsync()
 	{

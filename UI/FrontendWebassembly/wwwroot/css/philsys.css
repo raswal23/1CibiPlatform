@@ -73,6 +73,14 @@
     background: var(--c-page-bg);
 }
 
+    /* The result card is the one child that can outgrow the viewport, so it must not be
+       centred by align-items: a centred flex item taller than its container overflows both
+       edges and the top is unreachable to scroll. The card centres itself with `margin: auto 0`
+       instead, which collapses to zero when it runs out of room - leaving this as the
+       fallback alignment rather than a permanent top-align.
+
+       Padding stays 0 because .philsys-result-shell brings its own (24px/16px, 16px/12px on
+       small screens); doubling them would shrink the card for no reason. */
     .philsys-liveness-page:has(.philsys-result-shell) {
         align-items: flex-start;
         padding: 0;

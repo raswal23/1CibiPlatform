@@ -127,6 +127,7 @@
         "WithdrawalNoticeEmail" => "Withdrawal notice",
         "DisputeAcknowledgementEmail" => "Dispute acknowledgement",
         "CompletionNoticeEmail" => "Completion notice",
+        "InvitationEmailSent" => "Invitation email delivered",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
         "TicketRetryRequested" => "Ticketing retry requested",
@@ -135,11 +136,14 @@
 
     private static string GetDescription(string eventType) => eventType switch
     {
-        "OrderCreated" => "The order was created and the application invitation was sent.",
+        // "queued" for the events that hand a message to the sender, "delivered" only for
+        // InvitationEmailSent, which is written after the SMTP server accepted it.
+        "OrderCreated" => "The order was created and an application invitation was queued.",
         "ApplicationFormSubmitted" => "The subject successfully completed the application form.",
         "ApplicationFormWithdrawn" => "The subject withdrew the application form.",
-        "ApplicationFormResent" => "A new application invitation was sent to the subject.",
-        "ApplicationFormFollowUpSent" => "A reminder to complete the application form was sent to the subject.",
+        "ApplicationFormResent" => "A new application invitation was queued for the subject.",
+        "ApplicationFormFollowUpSent" => "A reminder to complete the application form was queued for the subject.",
+        "InvitationEmailSent" => "The invitation email was accepted by the mail server and is on its way to the subject.",
         "WithdrawalNoticeEmail" => "A withdrawal notice was issued to the requestor by email.",
         "DisputeAcknowledgementEmail" => "A dispute acknowledgement was issued to the filer by email.",
         "CompletionNoticeEmail" => "A completion notice was issued to the requestor by email.",
@@ -156,6 +160,7 @@
     // both would read as two things happening instead of one thing being announced.
     private static string GetTone(string eventType) => eventType switch
     {
+
         // Lifecycle steps, coloured.
         "ReportUploaded" => "is-success",
         "ApplicationFormSubmitted" => "is-active",
@@ -175,6 +180,7 @@
         "CompletionNoticeEmail" => "is-neutral",
         "TicketRetryRequested" => "is-neutral",
         _ => "is-neutral"
+
     };
 
     private static string GetIcon(string eventType) => eventType switch
@@ -187,6 +193,7 @@
         "WithdrawalNoticeEmail" => Icons.Material.Outlined.Send,
         "DisputeAcknowledgementEmail" => Icons.Material.Outlined.MarkEmailRead,
         "CompletionNoticeEmail" => Icons.Material.Outlined.ForwardToInbox,
+        "InvitationEmailSent" => Icons.Material.Outlined.MarkEmailRead,
         "ReportUploaded" => Icons.Material.Outlined.Check,
         "ReportDisputed" => Icons.Material.Outlined.WarningAmber,
 

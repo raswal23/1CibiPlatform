@@ -117,12 +117,30 @@ public partial class ATSRepository
 	// and it keeps one enormous client from filling the send queue in a single tick.
 	private const int MaxFollowUpReleasePerPass = 200;
 
+	// Every date and time-of-day comparison in the release below resolves in Manila, not UTC.
+	//
+	// This is a correctness requirement, not a preference. Reminders are anchored to the
+	// order's time of day, so a UTC-dated dedupe double-sends for any order created between
+	// midnight and 8am Manila: an order at Sep 16 06:00 +08 (= Sep 15 22:00Z) is released at
+	// Sep 16 22:00Z, stamped with the UTC date Sep 16, and then released AGAIN two hours
+	// later at Sep 17 00:00Z because the UTC date rolled over in the middle of the Manila
+	// day. Dating in Manila has no such window - consecutive releases are always a full local
+	// day apart.
+	//
+	// Postgres ships its own tzdata, so the name resolves regardless of the container's
+	// locale. FollowUpSchedule.Id is shared with ReportService, which counts the reminders
+	// still to come and has to measure days the same way this does.
+	private const string FollowUpTimeZone = FollowUpSchedule.Id;
+
 	public async Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken)
 	{
 		// Puts an already-sent invitation back on the email queue as the package's
-		// follow-up reminder, and stamps FollowUpQueuedAt in the SAME statement. That is
-		// what makes it fire exactly once: a crash between the requeue and the stamp
-		// cannot happen, so a restarted pass can never chase the same order twice.
+		// follow-up reminder, and stamps LastFollowUpSentDate in the SAME statement.
+		//
+		// The reminder repeats DAILY: PackageDetails.FollowUpEmail is the number of daily
+		// reminders, not a one-off delay. A package set to 2 chases the candidate on day 1
+		// and again on day 2, then stops. Each send is anchored to the order's own time of
+		// day, so an order placed at 8am is chased at ~8am, once every 24 hours.
 		//
 		// Unlike RequeueEmailInvitationAsync this leaves "HashToken" and
 		// "HashTokenCreatedAt" ALONE, deliberately. The reminder points the candidate at
@@ -130,7 +148,7 @@ public partial class ATSRepository
 		// sitting in their inbox, which is the opposite of what a chaser is for.
 		//
 		// Raw SQL because the join to PackageDetails (for FollowUpEmail, which is the
-		// per-package interval) and FOR UPDATE SKIP LOCKED are both outside what
+		// per-package reminder count) and FOR UPDATE SKIP LOCKED are both outside what
 		// ExecuteUpdateAsync can express.
 		//
 		// The predicate, clause by clause:
@@ -140,9 +158,17 @@ public partial class ATSRepository
 		//   ApplicationFormStatus Pending - never chase a form already submitted or withdrawn.
 		//   EmailSentStatus Done - only chase someone who actually received the first email;
 		//                          a row still queued or erroring is the sender's problem.
-		//   FollowUpQueuedAt IS NULL - fire once.
-		//   OrderCreatedAt <= now() - N days - the interval is measured from the order, which
-		//                          is the anchor the package form describes.
+		//   LastFollowUpSentDate <> today - the once-per-day guard. The job runs hourly, so
+		//                          without it a due row would be released on all 24 passes.
+		//                          IS DISTINCT FROM, not <>: a NULL (never chased) must pass.
+		//   day 1 has arrived    - now() is at or past the order's time of day, one day on.
+		//   within the N-day window - stops after FollowUpEmail reminders.
+		//
+		// The last two are what make it "every 24 hours" rather than "at midnight": the
+		// window is measured in whole days from OrderCreatedAt, and the time-of-day compare
+		// holds each send to the order's own clock time. Both run in Manila (see
+		// FollowUpTimeZone) so the calendar and the clock agree with the candidate's day.
+		//
 		// FromSqlRaw with RETURNING t.*, matching GetPendingEmailInvitationRequestsAsync:
 		// the caller needs the released rows' OrderStatus to write order history, and
 		// reading them back separately would race the very rows this just moved.
@@ -157,10 +183,15 @@ public partial class ATSRepository
 					  AND pd."FollowUpEmail" > 0
 					  AND eir."ApplicationFormStatus" = {0}
 					  AND eir."EmailSentStatus" = {1}
-					  AND eir."FollowUpQueuedAt" IS NULL
 					  AND eir."HashToken" IS NOT NULL
 					  AND eir."OrderCreatedAt" IS NOT NULL
-					  AND eir."OrderCreatedAt" <= now() - make_interval(days => pd."FollowUpEmail")
+					  AND eir."LastFollowUpSentDate"
+						  IS DISTINCT FROM (now() AT TIME ZONE {4})::date
+					  AND (now() AT TIME ZONE {4})
+						  >= (eir."OrderCreatedAt" AT TIME ZONE {4}) + interval '1 day'
+					  AND (now() AT TIME ZONE {4})
+						  <  (eir."OrderCreatedAt" AT TIME ZONE {4})
+							 + make_interval(days => pd."FollowUpEmail" + 1)
 					ORDER BY eir."OrderCreatedAt"
 					LIMIT {2}
 					FOR UPDATE OF eir SKIP LOCKED
@@ -170,7 +201,7 @@ public partial class ATSRepository
 					"EmailSendAttempts" = 0,
 					"EmailClaimedAt" = NULL,
 					"EmailSentAt" = NULL,
-					"FollowUpQueuedAt" = {4}
+					"LastFollowUpSentDate" = (now() AT TIME ZONE {4})::date
 				WHERE t."EmailInvitationID" IN (SELECT "EmailInvitationID" FROM due)
 				RETURNING t.*;
 				""",
@@ -178,7 +209,7 @@ public partial class ATSRepository
 				EmailStatus.Done,
 				MaxFollowUpReleasePerPass,
 				EmailStatus.Pending,
-				DateTime.UtcNow)
+				FollowUpTimeZone)
 			.AsNoTracking()
 			.ToListAsync(cancellationToken);
 	}

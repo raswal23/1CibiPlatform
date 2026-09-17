@@ -102,9 +102,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 			from invitation in _dbContext.EmailInvitationRequests.AsNoTracking()
 			where emailInvitationIds.Contains(invitation.EmailInvitationID)
 
-				// Joined on the id, not the name. Matching by name meant renaming a package
-				// silently orphaned every order that referenced it - they kept the old
-				// string and parked here as an error nobody could explain.
+			// Joined on the id, not the name. Matching by name meant renaming a package
+			// silently orphaned every order that referenced it - they kept the old
+			// string and parked here as an error nobody could explain.
 			from package in _dbContext.PackageDetails
 				.Where(p => p.PackageId == invitation.PackageId)
 				.DefaultIfEmpty()
