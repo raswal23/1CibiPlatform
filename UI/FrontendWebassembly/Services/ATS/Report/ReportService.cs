@@ -9,7 +9,7 @@ public class ReportService : IReportService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-    public async Task<ServiceResponse<bool>> UploadReportAsync(ReportDetailsDTO reportDetailsDTO)
+	public async Task<ServiceResponse<bool>> UploadReportAsync(ReportDetailsDTO reportDetailsDTO)
 	{
 		using var content = new MultipartFormDataContent();
 
@@ -56,7 +56,7 @@ public class ReportService : IReportService
 		}
 	}
 
-    public async Task<ServiceResponse<KeysetPaginatedResult<ReportListDTO>>> GetReportsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, DateTime? StartDate = null, DateTime? EndDate = null)
+	public async Task<ServiceResponse<KeysetPaginatedResult<ReportListDTO>>> GetReportsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, DateTime? StartDate = null, DateTime? EndDate = null)
 	{
 		var query = $"ats/getreports?pageSize={pageSize}";
 		if (!string.IsNullOrEmpty(cursor))

@@ -43,7 +43,7 @@ public partial class Home
 
 	private List<HomeAppCard> AvailableApps = new();
 	private IReadOnlyList<HomeAppCard> FilteredApps => string.IsNullOrWhiteSpace(ApplicationSearchQuery)
-		? AvailableApps.Where(app=> app.AppId != 1).ToList()
+		? AvailableApps.Where(app => app.AppId != 1).ToList()
 		: AvailableApps
 			.Where(app =>
 				(app.Name.Contains(ApplicationSearchQuery.Trim(), StringComparison.OrdinalIgnoreCase) ||

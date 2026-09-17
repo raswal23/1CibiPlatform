@@ -32,6 +32,7 @@ Documented features:
 |---|---|---|
 | ATS sender email accounts | [ats-email-accounts.md](docs/features/ats-email-accounts/ats-email-accounts.md) | [code explanation](docs/features/ats-email-accounts/ats-email-accounts_code_explanation.md) |
 | ATS email delivery | [ats-email-delivery.md](docs/features/ats-email-delivery/ats-email-delivery.md) | — |
+| ATS application form email copy | [ats-application-form-email-copy.md](docs/features/ats-application-form-email-copy/ats-application-form-email-copy.md) | [code explanation](docs/features/ats-application-form-email-copy/ats-application-form-email-copy_code_explanation.md) |
 | ATS in-app notifications | [ats-notifications.md](docs/features/ats-notifications/ats-notifications.md) | — |
 | ATS bulk requeue | [ats-bulk-requeue.md](docs/features/ats-bulk-requeue/ats-bulk-requeue.md) | — |
 | ATS AI assistant | [ats-ai-assistant.md](docs/features/ats-ai-assistant/ats-ai-assistant.md) | — |

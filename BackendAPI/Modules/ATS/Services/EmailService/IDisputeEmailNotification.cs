@@ -9,12 +9,12 @@ namespace ATS.Services.EmailService;
 /// implementation must never let a delivery failure escape. Callers await it after their commit and
 /// do not wrap it themselves.
 ///
-/// This is NOT the internal operations notification. <c>DisputeOrderService</c> also sends
-/// <c>IEmailService.SendEmailForDispute</c> to <c>ATS:DisputeOrderEmailRecipient</c> — before the
-/// transaction, throwing if it fails. Both messages go out for one dispute. They have different
-/// audiences and deliberately different failure semantics: an outage that stops operations from
-/// hearing about a dispute should stop the dispute, while an outage that stops the filer getting a
-/// courtesy acknowledgement should not.
+/// This is the only email a dispute produces. It replaced an earlier internal operations alert that
+/// went to the <c>ATS:DisputeOrderEmailRecipient</c> mailbox before the transaction and threw when it
+/// could not be delivered — which meant an SMTP outage stopped disputes from being filed at all.
+/// That coupling is gone: the dispute is recorded first and this acknowledgement is best-effort. CIBI
+/// now learns of a dispute from the <c>DisputeEmail.CopyTeam</c> address copied on this message
+/// rather than from a separate one.
 /// </remarks>
 public interface IDisputeEmailNotification
 {
@@ -39,9 +39,10 @@ public interface IDisputeEmailNotification
 /// the client sent them, collapsing and all; deciding what the two body lines should say from that
 /// is this feature's business, not the caller's. See <see cref="DisputeEmailNotification"/>.
 ///
-/// <paramref name="DisputeReason"/> is non-nullable because
-/// <c>MarkAsDisputedCommandValidator</c> rejects an empty one before the service is reached, and the
-/// notifier leans on that: it is the fallback label when no category was sent.
+/// <paramref name="DisputeReason"/> is the free text the filer typed - required for every category,
+/// not just "Others". It is non-nullable because <c>MarkAsDisputedCommandValidator</c> rejects an
+/// empty one before the service is reached, and the notifier leans on that: it is the fallback label
+/// when no category was sent.
 ///
 /// <paramref name="EmailInvitationId"/> is not used by the email itself. It identifies the order the
 /// acknowledgement belongs to, so the send can be recorded against that order's history - the

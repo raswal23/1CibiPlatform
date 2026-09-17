@@ -373,7 +373,7 @@ public partial class NewOrderComponent
 			},
 			{
 				nameof(YesNoDialogComponent.InformationMessage),
-				"By clicking ' Proceed ,' you attest and confirm that you have obtained the necessary and valid consent from the concerned individual(s) authorizing CIBI Information, Inc. to collect, process, verify, and validate their personal information for the purpose of conducting the requested background verification. You further confirm that the individual(s) have been appropriately informed of the nature and purpose of the background verification and that such consent was obtained prior to submitting this request."
+				"By clicking 'Proceed', you attest and confirm that you have obtained the necessary and valid consent from the concerned individual(s) authorizing CIBI Information, Inc. to collect, process, verify, and validate their personal information for the purpose of conducting the requested background verification. You further confirm that the individual(s) have been appropriately informed of the nature and purpose of the background verification and that such consent was obtained prior to submitting this request."
 			}
 		};
 
