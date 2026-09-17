@@ -155,13 +155,16 @@
 
     // The tone a row carries is the colour its status carries elsewhere in the console:
     // withdrawn is the red of the Search Report badge, completed its green, disputed the
-    // orange the dispute screens use. The four email notices stay neutral on purpose -
-    // each one sits directly beneath the lifecycle event that triggered it, and colouring
-    // both would read as two things happening instead of one thing being announced.
+    // orange the dispute screens use.
+    //
+    // The email rows are coloured by what the message did rather than by which screen sent
+    // it. An acknowledgement confirms something already happened, so it takes the same green
+    // as the completion it confirms. A notice announces something the reader has to know
+    // about and may have to act on, so it takes amber. Both read down the timeline as
+    // families - every green row is a confirmation, every amber row an announcement.
     private static string GetTone(string eventType) => eventType switch
     {
-
-        // Lifecycle steps, coloured.
+        // Lifecycle steps.
         "ReportUploaded" => "is-success",
         "ApplicationFormSubmitted" => "is-active",
         "ReportDisputed" => "is-dispute",
@@ -172,15 +175,22 @@
         "OrderCreated" => "is-pending",
         "ApplicationFormResent" => "is-pending",
 
-        // Informational: a notice went out, or a ticket was requeued. Neither moves
-        // the order.
-        "ApplicationFormFollowUpSent" => "is-neutral",
-        "WithdrawalNoticeEmail" => "is-neutral",
-        "DisputeAcknowledgementEmail" => "is-neutral",
-        "CompletionNoticeEmail" => "is-neutral",
+        // Acknowledgements: a message confirming something that already happened. The
+        // invitation row belongs here because it is the one email event written after the
+        // mail server accepted the message rather than when it was queued.
+        "DisputeAcknowledgementEmail" => "is-success",
+        "InvitationEmailSent" => "is-success",
+
+        // Notices: a message telling someone about a change. The follow-up reminder is one
+        // in everything but name - it chases a subject whose form is still outstanding.
+        "WithdrawalNoticeEmail" => "is-warning",
+        "CompletionNoticeEmail" => "is-warning",
+        "ApplicationFormFollowUpSent" => "is-warning",
+
+        // Neither an acknowledgement nor a notice: nothing was sent and the order did not
+        // move, so there is nothing for a colour to say.
         "TicketRetryRequested" => "is-neutral",
         _ => "is-neutral"
-
     };
 
     private static string GetIcon(string eventType) => eventType switch

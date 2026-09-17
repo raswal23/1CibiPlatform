@@ -60,25 +60,40 @@ timeline and the board agree.
 
 | Tone | Colour | Used by |
 |---|---|---|
-| `is-success` | `--c-success` | `ReportUploaded` |
+| `is-success` | `--c-success` | `ReportUploaded`, `DisputeAcknowledgementEmail`, `InvitationEmailSent` |
 | `is-active` | `--c-blue-500` / `--c-blue-600` | `ApplicationFormSubmitted` |
 | `is-danger` | `--c-danger-strong` | `ApplicationFormWithdrawn` |
 | `is-dispute` | `--c-accent-orange` | `ReportDisputed` |
+| `is-warning` | `--c-warn` | `WithdrawalNoticeEmail`, `CompletionNoticeEmail`, `ApplicationFormFollowUpSent` |
 | `is-pending` | dashed `--c-border-strong`, `--c-fg-subtle` | `OrderCreated`, `ApplicationFormResent` |
-| `is-warning` | `--c-warn` | nothing today — reserved for a future attention-level event |
-| `is-neutral` | `--c-neutral-fg` | the four notice events, `TicketRetryRequested`, and the fallback |
+| `is-neutral` | `--c-neutral-fg` | `TicketRetryRequested` and the fallback |
 
-The four coloured tones paint the marker, the title, and the connector segment below the row. The two
+The five coloured tones paint the marker, the title, and the connector segment below the row. The two
 quiet tones paint the marker only.
 
-**A non-lifecycle event takes `is-neutral`.** The notice events each sit directly beneath the
-lifecycle event that triggered them — a withdrawal writes both `ApplicationFormWithdrawn` and
-`WithdrawalNoticeEmail` — and colouring both would read as two things happening rather than one thing
-being announced. `is-active` is deliberately *not* the amber the board gives "In progress", so amber
-keeps a single meaning across the console.
+### Which tone an email event takes
 
-Dispute is orange rather than amber because `--c-accent-orange` is the accent the dispute screens
-already use, and `theme.css` describes it as the one place the app treats orange as a primary.
+An email row is coloured by **what the message did**, not by which screen sent it. Two families,
+each readable straight down the timeline:
+
+- **Acknowledgements take `is-success`.** The message confirms something that already happened, so it
+  carries the same green as the event it confirms. `InvitationEmailSent` belongs here even though it
+  is not named an acknowledgement: it is the only email event written *after* the mail server accepted
+  the message rather than when it was queued, which makes it a delivery confirmation.
+- **Notices take `is-warning`.** The message announces a change the reader has to know about and may
+  have to act on. `ApplicationFormFollowUpSent` belongs here even though it is not named a notice — it
+  chases a subject whose form is still outstanding, which is exactly what the two notice rows do.
+
+`TicketRetryRequested` is neither. Nothing was sent and the order did not move, so there is nothing
+for a colour to say.
+
+Two colour choices are deliberate and easy to undo by accident:
+
+- `is-active` is **not** the amber the board gives "In progress". Amber means *a notice went out* in
+  this dialog, and giving it a second meaning would cost the notice family its legibility.
+- Dispute is orange rather than amber because `--c-accent-orange` is the accent the dispute screens
+  already use, and `theme.css` describes it as the one place the app treats orange as a primary.
+  Keeping them distinct matters here because one timeline can carry both.
 
 ## Adding another lifecycle event
 

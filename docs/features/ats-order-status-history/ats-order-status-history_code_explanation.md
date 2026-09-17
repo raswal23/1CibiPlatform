@@ -801,6 +801,7 @@ expressions:
         "WithdrawalNoticeEmail" => "Withdrawal notice",
         "DisputeAcknowledgementEmail" => "Dispute acknowledgement",
         "CompletionNoticeEmail" => "Completion notice",
+        "InvitationEmailSent" => "Invitation email delivered",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
         "TicketRetryRequested" => "Ticketing retry requested",
@@ -808,13 +809,13 @@ expressions:
     };
 ```
 
-`GetDescription` and `GetIcon` carry the same eleven branches — every member of
-`OrderHistoryEventType`. `GetTone` does too, but maps them onto seven tones rather than eleven:
+`GetDescription` and `GetIcon` carry the same twelve branches — every member of
+`OrderHistoryEventType`. `GetTone` does too, but maps them onto seven tones rather than twelve:
 
 ```csharp
     private static string GetTone(string eventType) => eventType switch
     {
-        // Lifecycle steps, coloured.
+        // Lifecycle steps.
         "ReportUploaded" => "is-success",
         "ApplicationFormSubmitted" => "is-active",
         "ReportDisputed" => "is-dispute",
@@ -825,31 +826,44 @@ expressions:
         "OrderCreated" => "is-pending",
         "ApplicationFormResent" => "is-pending",
 
-        // Informational: a notice went out, or a ticket was requeued. Neither moves
-        // the order.
-        "ApplicationFormFollowUpSent" => "is-neutral",
-        "WithdrawalNoticeEmail" => "is-neutral",
-        "DisputeAcknowledgementEmail" => "is-neutral",
-        "CompletionNoticeEmail" => "is-neutral",
+        // Acknowledgements: a message confirming something that already happened. The
+        // invitation row belongs here because it is the one email event written after the
+        // mail server accepted the message rather than when it was queued.
+        "DisputeAcknowledgementEmail" => "is-success",
+        "InvitationEmailSent" => "is-success",
+
+        // Notices: a message telling someone about a change. The follow-up reminder is one
+        // in everything but name - it chases a subject whose form is still outstanding.
+        "WithdrawalNoticeEmail" => "is-warning",
+        "CompletionNoticeEmail" => "is-warning",
+        "ApplicationFormFollowUpSent" => "is-warning",
+
+        // Neither an acknowledgement nor a notice: nothing was sent and the order did not
+        // move, so there is nothing for a colour to say.
         "TicketRetryRequested" => "is-neutral",
         _ => "is-neutral"
     };
 ```
 
-The four email events land on `is-neutral` deliberately — they are informational, and giving them a
-colour would compete with the lifecycle event sitting one row above them. The tone table and the
-reasoning behind each colour are in the design doc's **Timeline tones** section; the CSS that paints
-them is `OrderStatusHistoryDialog.razor.css`, where `.ats-history-item.is-*` styles the marker for
-every tone and additionally the title and the connector rail for the four coloured ones.
+The email rows are coloured by **what the message did**, not by which screen sent it: an
+acknowledgement confirms something that already happened and takes the same green as the event it
+confirms, a notice announces a change the reader may have to act on and takes amber. Both families
+read straight down the timeline. The full tone table and the reasoning behind each colour are in the
+design doc's **Timeline tones** section; the CSS that paints them is
+`OrderStatusHistoryDialog.razor.css`, where `.ats-history-item.is-*` styles the marker for every tone
+and additionally the title and the connector rail for the five coloured ones.
 
-`is-warning` has a rule but no event mapped to it. That is intentional — it is the home for a future
-event that needs attention without being a failure — so do not delete it as dead CSS.
+Note that `is-warning` amber means *a notice went out* here — it is not the amber the Search Report
+board gives an in-progress order. `ApplicationFormSubmitted`, the event that moves an order into In
+Progress, is `is-active` blue for exactly that reason.
 
 Two hazards remain:
 
 1. **The literals are `"OrderCreated"`, not a shared constant** — and cannot be, since the constants
    live in the ATS backend assembly and this is a Blazor WASM project with no reference to it. A
-   renamed event type produces no compile error here. All four switches must be edited together.
+   renamed event type produces no compile error here. All four switches must be edited together —
+   `InvitationEmailSent` was mapped in three of them and missing from `GetTone`, which is a silent
+   fall-through to the neutral fallback rather than an error.
 2. **The fallbacks are silent.** `_ => eventType` and `_ => "The order lifecycle was updated."`
    degrade to ugly-but-plausible rather than failing loudly — right for a user-facing dialog, wrong
    for noticing a missing mapping. There is no test, no log, no build warning. This is what hid

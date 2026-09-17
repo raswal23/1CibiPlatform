@@ -166,7 +166,7 @@
 /* ---------- Tones ----------
 
    A row's tone is set by GetTone in the .razor and carries the colour its status
-   carries elsewhere in the console. The four loud tones below paint three things -
+   carries elsewhere in the console. The five loud tones below paint three things -
    the marker, the title, and the connector segment running down to the next row -
    so a withdrawal or a dispute is legible from the shape of the timeline rather
    than only from the text.
@@ -217,8 +217,9 @@
     background: var(--c-success);
 }
 
-/* Nothing maps to is-warning today. Kept as the home for a future event that needs
-   attention without being a failure. */
+/* The notice rows: a message announcing a change to someone who may have to act on it.
+   Amber rather than the dispute orange, so the two stay distinguishable in a timeline
+   that can carry both. */
 .ats-history-item.is-warning .ats-history-marker {
     border-color: var(--c-warn);
     background: var(--c-warn-bg);
