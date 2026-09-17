@@ -22,14 +22,13 @@ Branch: `feature/OMS-Generic-API-Integration`. Follows `docs/feature-development
 
 The ticket is queued the moment the `EmailInvitationRequest` row is inserted.
 
-The consequence, which is worth being explicit about: `PersonalDetails` does **not**
-exist at that point — it is only written when the applicant submits the application form
-(`ApplicationFormService.cs`, `AddPersonalDetailsDataAsync`). So the first ticket carries
-`DateOfBirth = null` and blank `SSSIDNumber` / `TIN`.
+The consequence, which is worth being explicit about: candidate identity is captured on the
+order only for data-screening orders, where no application form is ever sent. On a manual
+order the ticket carries `DateOfBirth = null` and blank `SSSIDNumber` / `TIN`.
 
 That is safe against the OMS contract:
 
-- `CreateTicketCommandValidator` applies its 10-digit SSS and 12-digit TIN rules only
+- `CreateTicketCommandValidator` applies its 10-digit SSS and 9–12-digit TIN rules only
   `.When(...)` the value is non-empty.
 - `OMSRepository` maps null → `DBNull` for `@p_birthdate` and → `string.Empty` for the
   two id parameters.
@@ -239,10 +238,10 @@ testable without a database or a live OMS connection.
 | OMS field | Source |
 |---|---|
 | `FirstName` / `MiddleName` / `LastName` | `EmailInvitationRequest` (`MiddleInitial` → `MiddleName`) |
-| `DateOfBirth` | `PersonalDetails.DOB`, null at enrolment |
+| `DateOfBirth` | `EmailInvitationRequest.DateOfBirth`, null unless data screening |
 | `EmailAddress` | `EmailInvitationRequest.EmailAddress` |
-| `PhoneNumber` | `PersonalDetails.MobileNumber` ?? `EmailInvitationRequest.MobileNumber`, normalised |
-| `SSSIDNumber` / `TIN` | `PersonalDetails`, blank at enrolment |
+| `PhoneNumber` | `EmailInvitationRequest.MobileNumber`, normalised |
+| `SSSIDNumber` / `TIN` | `EmailInvitationRequest.SSSNumber` / `TINNumber`, blank unless data screening |
 | `Remarks` | literal `"Remarks"` |
 | requestor name / email | Auth directory lookup |
 | `Site` | `UserDetails.Site` |
@@ -256,8 +255,10 @@ Two normalisations worth reviewing:
 - **Phone** — strips spaces and dashes, converts `+63…` / `63…` to the local `0…` form,
   and adds a missing trunk zero to a bare `9…` number. Returns null if the result is not
   11–12 digits, which parks the order rather than letting OMS reject it.
-- **SSS / TIN** — kept only when the digit count is exactly right; otherwise sent blank.
-  The field is optional, so a malformed value must not fail the whole ticket.
+- **SSS / TIN** — kept only when the digit count is accepted (SSS exactly 10, TIN 9 to 12);
+  otherwise sent blank. The field is optional, so a malformed value must not fail the whole
+  ticket. TIN takes a range because 9 digits (individual) and 12 (with branch code) are both
+  issued — an exact-12 rule here silently blanked every 9-digit TIN on its way to OMS.
 
 **How a mapping failure is signalled:** `TryMap` returns a tuple, not an exception and not a
 bare null — `(CreateOMSTicketRequest? Request, string? Failure)`. On any un-mappable input it

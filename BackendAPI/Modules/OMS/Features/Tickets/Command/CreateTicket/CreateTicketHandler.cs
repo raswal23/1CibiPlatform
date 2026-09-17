@@ -67,9 +67,13 @@ public sealed class CreateTicketCommandValidator
 				.WithMessage("SSS number must contain exactly 10 digits.")
 				.When(command => !string.IsNullOrEmpty(command.Request.SSSIDNumber));
 
+			// 9 for an individual, 12 with a branch code - both are issued, so an
+			// exact-12 rule rejects a legitimate TIN. Matches the range every other
+			// layer applies (OMSTicketPayloadMapper.NormalizeGovernmentId, the ATS web
+			// and bulk validators); these have to move together.
 			RuleFor(command => command.Request.TIN)
-				.Matches("^[0-9]{12}$")
-				.WithMessage("TIN must contain exactly 12 digits.")
+				.Matches("^[0-9]{9,12}$")
+				.WithMessage("TIN must contain 9 to 12 digits.")
 				.When(command => !string.IsNullOrEmpty(command.Request.TIN));
 
 			RuleFor(command => command.Request.PostalCode)

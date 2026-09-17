@@ -12,13 +12,13 @@ The `NormalizeGovernmentId` method performs the following steps:
 
 1. **Input Validation**: Checks if the value is null or whitespace and returns null if so
 2. **Character Filtering**: Strips all non-digit characters, retaining only numeric digits
-3. **Length Validation**: Verifies the resulting digit string matches the required length:
+3. **Length Validation**: Verifies the resulting digit string falls within the accepted range:
    - SSS Number: Must be exactly 10 digits
    - TIN Number: Must be between 9-12 digits
 4. **Output**: Returns the cleaned digit string if valid, otherwise returns null
 
 ```csharp
-public static string? NormalizeGovernmentId(string? value, int requiredLength)
+public static string? NormalizeGovernmentId(string? value, int minLength, int maxLength)
 {
     if (string.IsNullOrWhiteSpace(value))
     {
@@ -27,7 +27,7 @@ public static string? NormalizeGovernmentId(string? value, int requiredLength)
 
     var digits = new string(value.Where(char.IsDigit).ToArray());
 
-    return digits.Length == requiredLength
+    return digits.Length >= minLength && digits.Length <= maxLength
         ? digits
         : null;
 }
@@ -35,9 +35,13 @@ public static string? NormalizeGovernmentId(string? value, int requiredLength)
 
 ### Integration Behavior
 
-- **SSS Numbers**: Passed through as `NormalizeGovernmentId(payload.SSS, 10)`
-- **TIN Numbers**: Passed through as `NormalizeGovernmentId(payload.TIN, 12)`
+- **SSS Numbers**: Passed through as `NormalizeGovernmentId(payload.SSS, SssLength, SssLength)` — 10 exactly
+- **TIN Numbers**: Passed through as `NormalizeGovernmentId(payload.TIN, MinTinLength, MaxTinLength)` — 9 to 12
 - **Purpose**: The field is optional, so malformed values are sent as blank rather than failing the entire ticket
+
+> The method took a min/max pair only after an exact-length signature had forced TIN to a single
+> value of 12, silently blanking every 9-digit TIN on its way to OMS. The range documented here is
+> now what the code does, and it matches the validators that accept these values onto an order.
 
 ### Data Quality Layer
 

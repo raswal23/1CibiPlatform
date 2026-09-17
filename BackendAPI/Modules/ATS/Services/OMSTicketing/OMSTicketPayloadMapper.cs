@@ -19,6 +19,13 @@ public static class OMSTicketPayloadMapper
 	internal const int NormalTurnAroundTimeId = 1;
 	internal const int RushTurnAroundTimeId = 2;
 
+	// Government id lengths OMS accepts, matching the validators that let these values
+	// onto an order. SSS is a single exact length; TIN spans 9 (individual) to 12
+	// (with branch code).
+	internal const int SssLength = 10;
+	internal const int MinTinLength = 9;
+	internal const int MaxTinLength = 12;
+
 	/// <summary>
 	/// Returns the OMS request, or a reason why the order cannot be ticketed at all.
 	/// A failure here is never retryable: none of these inputs change on their own.
@@ -77,10 +84,10 @@ public static class OMSTicketPayloadMapper
 			return (null, "The requestor has no email address.");
 		}
 
-		// The subject's own number is preferred once the application form supplies it;
-		// before that the number captured at enrolment is the only one available.
-		var phoneNumber = NormalizePhoneNumber(payload.PersonalMobileNumber)
-			?? NormalizePhoneNumber(payload.MobileNumber);
+		// The number captured on the order at entry - the only one OMS is given. An
+		// earlier design preferred a form-supplied number over it, but both sides of
+		// that fallback read the same column once identity moved onto the order.
+		var phoneNumber = NormalizePhoneNumber(payload.MobileNumber);
 
 		if (phoneNumber is null)
 		{
@@ -98,10 +105,10 @@ public static class OMSTicketPayloadMapper
 			EmailAddress: payload.EmailAddress.Trim(),
 			PhoneNumber: phoneNumber,
 
-			// Blank rather than invalid: OMS only applies its 10/12-digit rules when
-			// these are non-empty, and neither is collected at enrolment.
-			SSSIDNumber: NormalizeGovernmentId(payload.SSS, 10),
-			TIN: NormalizeGovernmentId(payload.TIN, 12),
+			// Blank rather than invalid: OMS only applies its length rules when these
+			// are non-empty, and neither is collected on a manual order.
+			SSSIDNumber: NormalizeGovernmentId(payload.SSS, SssLength, SssLength),
+			TIN: NormalizeGovernmentId(payload.TIN, MinTinLength, MaxTinLength),
 			Remarks: DefaultRemarks,
 			RequestorFirstName: requestorFirstName.Trim(),
 			RequestorLastName: requestorLastName.Trim(),
@@ -188,11 +195,20 @@ public static class OMSTicketPayloadMapper
 	}
 
 	/// <summary>
-	/// SSS and TIN are optional. OMS applies an exact-length rule only when the value
-	/// is non-empty, so anything that would fail that rule is sent as blank rather
-	/// than failing the whole ticket.
+	/// SSS and TIN are optional. OMS applies its length rule only when the value is
+	/// non-empty, so anything that would fail that rule is sent as blank rather than
+	/// failing the whole ticket.
 	/// </summary>
-	public static string? NormalizeGovernmentId(string? value, int requiredLength)
+	/// <remarks>
+	/// A range rather than one length because TIN is 9 digits for an individual and 12
+	/// with a branch code, and both are issued. An exact-12 rule silently blanked every
+	/// 9-digit TIN - the ticket went through with no TIN at all rather than parking,
+	/// which is precisely the failure this "send blank" policy makes invisible. The
+	/// bounds mirror the validators that accept the values in the first place
+	/// (EmailInvitationRequestCommandValidator, BulkIdentityFieldsValidation); SSS
+	/// passes the same number twice because its rule is a single exact length.
+	/// </remarks>
+	public static string? NormalizeGovernmentId(string? value, int minLength, int maxLength)
 	{
 		if (string.IsNullOrWhiteSpace(value))
 		{
@@ -201,7 +217,7 @@ public static class OMSTicketPayloadMapper
 
 		var digits = new string(value.Where(char.IsDigit).ToArray());
 
-		return digits.Length == requiredLength
+		return digits.Length >= minLength && digits.Length <= maxLength
 			? digits
 			: null;
 	}

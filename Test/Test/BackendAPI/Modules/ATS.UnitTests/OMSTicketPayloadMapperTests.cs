@@ -8,8 +8,8 @@ public class OMSTicketPayloadMapperTests
 	private const string RequestorFirstName = "John";
 	private const string RequestorLastName = "Doe";
 
-	// An order as it exists at enrolment: no PersonalDetails row yet, so no DOB,
-	// SSS or TIN. This is the common case the mapper has to handle.
+	// An order as it exists at enrolment: identity is only captured on data-screening
+	// orders, so no DOB, SSS or TIN. This is the common case the mapper has to handle.
 	private static TicketablePayloadDTO NewlyEnrolledOrder() => new()
 	{
 		EmailInvitationID = Guid.CreateVersion7(),
@@ -81,13 +81,12 @@ public class OMSTicketPayloadMapperTests
 	}
 
 	[Fact]
-	public void TryMap_ShouldUseTheApplicantSuppliedDetails_WhenTheFormHasBeenSubmitted()
+	public void TryMap_ShouldSendTheIdentityFields_WhenTheOrderCapturedThem()
 	{
 		var payload = NewlyEnrolledOrder();
 		payload.DOB = new DateOnly(1990, 5, 17);
 		payload.SSS = "1111111110";
 		payload.TIN = "123456789234";
-		payload.PersonalMobileNumber = "09998887777";
 
 		var (request, failure) = OMSTicketPayloadMapper.TryMap(
 			payload,
@@ -98,9 +97,6 @@ public class OMSTicketPayloadMapperTests
 		Assert.Equal(new DateTime(1990, 5, 17), request!.DateOfBirth);
 		Assert.Equal("1111111110", request.SSSIDNumber);
 		Assert.Equal("123456789234", request.TIN);
-
-		// The subject's own number wins over the one captured at enrolment.
-		Assert.Equal("09998887777", request.PhoneNumber);
 	}
 
 	[Theory]
@@ -238,7 +234,6 @@ public class OMSTicketPayloadMapperTests
 	{
 		var payload = NewlyEnrolledOrder();
 		payload.MobileNumber = "12345";
-		payload.PersonalMobileNumber = null;
 
 		var (request, failure) = OMSTicketPayloadMapper.TryMap(
 			payload,
@@ -250,26 +245,55 @@ public class OMSTicketPayloadMapperTests
 	}
 
 	[Theory]
-	[InlineData("1111111110", 10, "1111111110")]
-	[InlineData("11-1111-1110", 10, "1111111110")]
-	[InlineData("123456789234", 12, "123456789234")]
-	public void NormalizeGovernmentId_ShouldKeepDigitsOfTheRequiredLength(
+	[InlineData("1111111110", 10, 10, "1111111110")]
+	[InlineData("11-1111-1110", 10, 10, "1111111110")]
+	[InlineData("123456789234", 9, 12, "123456789234")]
+	// A TIN with no branch code is 9 digits and is issued as such. An exact-12 rule
+	// blanked these, so the ticket reached OMS with no TIN and nothing said so.
+	[InlineData("123456789", 9, 12, "123456789")]
+	[InlineData("123-456-789", 9, 12, "123456789")]
+	// Inside the range but neither bound - a TIN is not only ever 9 or 12 long.
+	[InlineData("1234567890", 9, 12, "1234567890")]
+	public void NormalizeGovernmentId_ShouldKeepDigitsWithinTheAcceptedLengths(
 		string stored,
-		int requiredLength,
+		int minLength,
+		int maxLength,
 		string expected)
 	{
-		Assert.Equal(expected, OMSTicketPayloadMapper.NormalizeGovernmentId(stored, requiredLength));
+		Assert.Equal(expected, OMSTicketPayloadMapper.NormalizeGovernmentId(stored, minLength, maxLength));
 	}
 
 	[Theory]
-	[InlineData("123", 10)]
-	[InlineData("", 10)]
-	[InlineData(null, 12)]
+	[InlineData("123", 10, 10)]
+	[InlineData("", 10, 10)]
+	[InlineData(null, 9, 12)]
+	// Just outside each TIN bound.
+	[InlineData("12345678", 9, 12)]
+	[InlineData("1234567892345", 9, 12)]
 	public void NormalizeGovernmentId_ShouldReturnNull_WhenItWouldFailOMSValidation(
 		string? stored,
-		int requiredLength)
+		int minLength,
+		int maxLength)
 	{
 		// Sent blank rather than failing the whole ticket: the field is optional.
-		Assert.Null(OMSTicketPayloadMapper.NormalizeGovernmentId(stored, requiredLength));
+		Assert.Null(OMSTicketPayloadMapper.NormalizeGovernmentId(stored, minLength, maxLength));
+	}
+
+	// The bug this range replaced: a 9-digit TIN on a data-screening order reached OMS
+	// blank. End to end through TryMap, because the call site's arguments were the half
+	// of it that a NormalizeGovernmentId test alone would never have caught.
+	[Fact]
+	public void TryMap_ShouldSendANineDigitTin()
+	{
+		var payload = NewlyEnrolledOrder();
+		payload.TIN = "123456789";
+
+		var (request, failure) = OMSTicketPayloadMapper.TryMap(
+			payload,
+			RequestorFirstName,
+			RequestorLastName);
+
+		Assert.Null(failure);
+		Assert.Equal("123456789", request!.TIN);
 	}
 }
