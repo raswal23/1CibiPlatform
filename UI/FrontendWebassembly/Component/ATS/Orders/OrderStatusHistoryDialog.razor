@@ -65,7 +65,7 @@
                             <div class="ats-history-title">@GetTitle(item.EventType)</div>
                             <div class="ats-history-description">@GetDescription(item.EventType)</div>
                             <div class="ats-history-meta">
-                                @item.OccurredAt.ToLocalTime().ToString("MMMM dd, yyyy - h:mm tt") Â· @item.Source
+                                @item.OccurredAt.ToLocalTime().ToString("MMMM dd, yyyy - h:mm tt") &#183; @item.Source
                             </div>
                         </div>
                     </div>
@@ -129,6 +129,7 @@
         "CompletionNoticeEmail" => "Completion notice",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
+        "TicketRetryRequested" => "Ticketing retry requested",
         _ => eventType
     };
 
@@ -144,16 +145,36 @@
         "CompletionNoticeEmail" => "A completion notice was issued to the requestor by email.",
         "ReportUploaded" => "The final report was uploaded and the order was completed.",
         "ReportDisputed" => "The completed report was disputed by the requestor.",
+        "TicketRetryRequested" => "The order was placed back on the ticketing queue. Its status is unchanged.",
         _ => "The order lifecycle was updated."
     };
 
+    // The tone a row carries is the colour its status carries elsewhere in the console:
+    // withdrawn is the red of the Search Report badge, completed its green, disputed the
+    // orange the dispute screens use. The four email notices stay neutral on purpose -
+    // each one sits directly beneath the lifecycle event that triggered it, and colouring
+    // both would read as two things happening instead of one thing being announced.
     private static string GetTone(string eventType) => eventType switch
     {
-        "ReportUploaded" => "success",
-        "ApplicationFormSubmitted" => "active",
-        "ReportDisputed" => "warning",
-        "ApplicationFormWithdrawn" => "danger",
-        _ => "neutral"
+        // Lifecycle steps, coloured.
+        "ReportUploaded" => "is-success",
+        "ApplicationFormSubmitted" => "is-active",
+        "ReportDisputed" => "is-dispute",
+        "ApplicationFormWithdrawn" => "is-danger",
+
+        // Both land the order in Pending Candidate Info, which the board draws as a
+        // dashed outline rather than a filled pill - nothing has happened yet.
+        "OrderCreated" => "is-pending",
+        "ApplicationFormResent" => "is-pending",
+
+        // Informational: a notice went out, or a ticket was requeued. Neither moves
+        // the order.
+        "ApplicationFormFollowUpSent" => "is-neutral",
+        "WithdrawalNoticeEmail" => "is-neutral",
+        "DisputeAcknowledgementEmail" => "is-neutral",
+        "CompletionNoticeEmail" => "is-neutral",
+        "TicketRetryRequested" => "is-neutral",
+        _ => "is-neutral"
     };
 
     private static string GetIcon(string eventType) => eventType switch
@@ -168,6 +189,9 @@
         "CompletionNoticeEmail" => Icons.Material.Outlined.ForwardToInbox,
         "ReportUploaded" => Icons.Material.Outlined.Check,
         "ReportDisputed" => Icons.Material.Outlined.WarningAmber,
+
+        // Autorenew rather than Replay, which already belongs to ApplicationFormResent.
+        "TicketRetryRequested" => Icons.Material.Outlined.Autorenew,
         _ => Icons.Material.Outlined.Circle
     };
 }

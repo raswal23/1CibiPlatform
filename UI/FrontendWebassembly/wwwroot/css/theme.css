@@ -140,9 +140,12 @@
     /* Solid-filled pills that always carry white text (e.g. the "+3 more" chip). */
     --c-chip-solid-bg: #0b1b3d;
 
-    /* Dispute flow accent - the one place the app uses orange as a primary. */
+    /* Dispute flow accent - the one place the app uses orange as a primary.
+       The -bg tint is the dispute counterpart to --c-warn-bg / --c-danger-bg:
+       the pale wash behind an orange foreground on a dispute badge or marker. */
     --c-accent-orange: #d3540e;
     --c-accent-orange-500: #ea7317;
+    --c-accent-orange-bg: #fdeee2;
 
     /* Charts are drawn from C# (ATSDashboardComponent.razor.cs), but the surface
        they sit on is CSS. Keep the plot background here so the two agree. */
@@ -259,6 +262,7 @@ html.dark-startup {
     --c-chip-solid-bg: #2b3d54;
     --c-accent-orange: #e8763a;
     --c-accent-orange-500: #f08d4f;
+    --c-accent-orange-bg: #33200f;
 
     --c-chart-surface: #161c28;
     --c-chart-grid: #2a3446;

@@ -51,11 +51,40 @@ It resolves `IAtsAccessScopeResolver` and throws `NotFoundException` when the in
 are deliberately the same response, so a caller cannot probe which ids exist. Do not add
 a new entry point that bypasses that check.
 
+## Timeline tones
+
+Each row in `OrderStatusHistoryDialog` carries a tone, chosen by `GetTone` and painted by
+`OrderStatusHistoryDialog.razor.css`. A tone is the colour that status already carries elsewhere in
+the console — a withdrawal is the red of the Search Report badge, a completion its green — so the
+timeline and the board agree.
+
+| Tone | Colour | Used by |
+|---|---|---|
+| `is-success` | `--c-success` | `ReportUploaded` |
+| `is-active` | `--c-blue-500` / `--c-blue-600` | `ApplicationFormSubmitted` |
+| `is-danger` | `--c-danger-strong` | `ApplicationFormWithdrawn` |
+| `is-dispute` | `--c-accent-orange` | `ReportDisputed` |
+| `is-pending` | dashed `--c-border-strong`, `--c-fg-subtle` | `OrderCreated`, `ApplicationFormResent` |
+| `is-warning` | `--c-warn` | nothing today — reserved for a future attention-level event |
+| `is-neutral` | `--c-neutral-fg` | the four notice events, `TicketRetryRequested`, and the fallback |
+
+The four coloured tones paint the marker, the title, and the connector segment below the row. The two
+quiet tones paint the marker only.
+
+**A non-lifecycle event takes `is-neutral`.** The notice events each sit directly beneath the
+lifecycle event that triggered them — a withdrawal writes both `ApplicationFormWithdrawn` and
+`WithdrawalNoticeEmail` — and colouring both would read as two things happening rather than one thing
+being announced. `is-active` is deliberately *not* the amber the board gives "In progress", so amber
+keeps a single meaning across the console.
+
+Dispute is orange rather than amber because `--c-accent-orange` is the accent the dispute screens
+already use, and `theme.css` describes it as the one place the app treats orange as a primary.
+
 ## Adding another lifecycle event
 
 1. Add its stable name to `OrderHistoryEventType`.
 2. At the successful business transition, call `IOrderHistoryService.RecordAsync` with the actual previous and new statuses.
-3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog`.
+3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog` — all four switch expressions, picking a tone from the table above.
 4. Keep technical errors and exception details in PlatformLogging; do not add them to business history.
 
 ## Code formatting

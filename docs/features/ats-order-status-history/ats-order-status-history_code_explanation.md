@@ -28,7 +28,7 @@ path need to write one, and with what event type?"* That is §4.
 | **C5** | `ApplicationFormResent`: previous = "Application Withdrawn", new = "Pending Candidate Info" | The single resend passes `invitation.OrderStatus` — whatever it currently is, not necessarily Withdrawn. The **bulk** resend passes `null`. Two shapes for one event type (§4.3) |
 | **C6** | `ReportDisputed`: previous = Completed, new = Completed | `DisputeOrderService.cs:164` writes `order.OrderStatus` on the previous side and `order.OrderStatus ?? OrderStatus.Completed` on the new. When the status is null the entry reads `null → "Completed"` — not the symmetric pair described |
 | **C7** | Background jobs should write with `OrderHistorySource.System` when the job causes the transition | `OrderHistorySource.System` is **never referenced in any `.cs` file**. The bulk parsing job uses `file.Source ?? OrderHistorySource.Web`. The constant is dead |
-| **C8** | "Adding another lifecycle event … 3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog`." | Step 3 was **not done for `TicketRetryRequested`**. It is absent from all four switch expressions, so it renders as the raw constant with the fallback description (§7.2) |
+| **C8** | "Adding another lifecycle event … 3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog`." | **Resolved.** `TicketRetryRequested` was absent from all four switch expressions and rendered as the raw constant; it is now mapped in all four, with tone `is-neutral` because it moves nothing (§7.2) |
 | **C9** | Only one read path is described (the UI dialog) | There are **three**. The public API embeds the timeline in `PublicOrderDetailDTO.History`, and the Withdrawn Applications screen derives its `WithdrawnAt` column *from this table*. History is load-bearing (§6) |
 
 Two claims the doc gets right and that are easy to break: the chain `Carter endpoint → MediatR query
@@ -803,26 +803,57 @@ expressions:
         "CompletionNoticeEmail" => "Completion notice",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
+        "TicketRetryRequested" => "Ticketing retry requested",
         _ => eventType
     };
 ```
 
-`GetDescription` and `GetIcon` carry the same ten branches. `GetTone` carries only four —
-`ReportUploaded → "success"`, `ApplicationFormSubmitted → "active"`, `ReportDisputed → "warning"`,
-`ApplicationFormWithdrawn → "danger"` — and everything else falls to `"neutral"`, which is where the
-four email events land deliberately: they are informational, and giving them a colour would compete
-with the lifecycle event sitting one row above them. Three hazards, all live:
+`GetDescription` and `GetIcon` carry the same eleven branches — every member of
+`OrderHistoryEventType`. `GetTone` does too, but maps them onto seven tones rather than eleven:
+
+```csharp
+    private static string GetTone(string eventType) => eventType switch
+    {
+        // Lifecycle steps, coloured.
+        "ReportUploaded" => "is-success",
+        "ApplicationFormSubmitted" => "is-active",
+        "ReportDisputed" => "is-dispute",
+        "ApplicationFormWithdrawn" => "is-danger",
+
+        // Both land the order in Pending Candidate Info, which the board draws as a
+        // dashed outline rather than a filled pill - nothing has happened yet.
+        "OrderCreated" => "is-pending",
+        "ApplicationFormResent" => "is-pending",
+
+        // Informational: a notice went out, or a ticket was requeued. Neither moves
+        // the order.
+        "ApplicationFormFollowUpSent" => "is-neutral",
+        "WithdrawalNoticeEmail" => "is-neutral",
+        "DisputeAcknowledgementEmail" => "is-neutral",
+        "CompletionNoticeEmail" => "is-neutral",
+        "TicketRetryRequested" => "is-neutral",
+        _ => "is-neutral"
+    };
+```
+
+The four email events land on `is-neutral` deliberately — they are informational, and giving them a
+colour would compete with the lifecycle event sitting one row above them. The tone table and the
+reasoning behind each colour are in the design doc's **Timeline tones** section; the CSS that paints
+them is `OrderStatusHistoryDialog.razor.css`, where `.ats-history-item.is-*` styles the marker for
+every tone and additionally the title and the connector rail for the four coloured ones.
+
+`is-warning` has a rule but no event mapped to it. That is intentional — it is the home for a future
+event that needs attention without being a failure — so do not delete it as dead CSS.
+
+Two hazards remain:
 
 1. **The literals are `"OrderCreated"`, not a shared constant** — and cannot be, since the constants
    live in the ATS backend assembly and this is a Blazor WASM project with no reference to it. A
-   renamed event type produces no compile error here.
-2. **`TicketRetryRequested` is missing from all four (**C8**).** It falls through to `_ => eventType`,
-   so a requestor who forced a retry sees a row titled literally `TicketRetryRequested`, described as
-   "The order lifecycle was updated.", in `neutral` tone with a plain circle icon. The design doc's
-   own step 3 says to add it; it was not added.
-3. **The fallbacks are silent.** `_ => eventType` and `_ => "The order lifecycle was updated."`
+   renamed event type produces no compile error here. All four switches must be edited together.
+2. **The fallbacks are silent.** `_ => eventType` and `_ => "The order lifecycle was updated."`
    degrade to ugly-but-plausible rather than failing loudly — right for a user-facing dialog, wrong
-   for noticing a missing mapping. There is no test, no log, no build warning.
+   for noticing a missing mapping. There is no test, no log, no build warning. This is what hid
+   `TicketRetryRequested` for as long as it did (**C8**, now fixed).
 
 The three notice descriptions say the email was **issued**, not delivered, because the row records
 the attempt (§4, sites 14–16). Do not "improve" them to past tense that claims delivery.
