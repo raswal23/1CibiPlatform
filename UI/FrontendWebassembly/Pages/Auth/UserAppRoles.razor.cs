@@ -184,20 +184,101 @@ public partial class UserAppRoles
 			Snackbar.Add("Saved, but the notification could not be sent.", Severity.Warning);
 	}
 
+	// Opened directly rather than through OpenEditDialogAsync: that helper expects the dialog
+	// to close with the DTO, and this one closes with a decision - approve and reject are two
+	// different calls, and the user record alone cannot say which was clicked.
 	private async Task OpenEditUserApprovalDialog(UnApprovedUsersDTO unapproveduser)
 	{
-		await OpenEditDialogAsync<EditUserApprovalComponent, UnApprovedUsersDTO>("User Approval", "User", unapproveduser, async result =>
+		var parameters = new DialogParameters<EditUserApprovalComponent>
 		{
-			await EditUser(result);
+			{ component => component.User, unapproveduser }
+		};
 
-			var notificationResponse = await UserManagementService.SendApprovalNotificationAsync(result.email!);
+		var dialog = await DialogService.ShowAsync<EditUserApprovalComponent>(
+			"User Approval", parameters, UserManagementDialogOptions);
 
-			if (!notificationResponse.IsSuccess)
-			{
-				Snackbar.Add("Saved, but the approval notification could not be sent.", Severity.Warning);
-			}
-		}, UserManagementDialogOptions);
+		var result = await dialog.Result;
+
+		if (result is null || result.Canceled || result.Data is not UserApprovalDecision decision)
+		{
+			return;
+		}
+
+		if (decision.Action == UserApprovalAction.Reject)
+		{
+			await RejectUser(decision.User);
+			return;
+		}
+
+		await EditUser(decision.User);
+
+		var notificationResponse = await UserManagementService.SendApprovalNotificationAsync(decision.User.email!);
+
+		if (!notificationResponse.IsSuccess)
+		{
+			Snackbar.Add("Saved, but the approval notification could not be sent.", Severity.Warning);
+		}
 	}
+
+	/// <summary>
+	/// Confirms, then rejects a user awaiting approval so the row leaves the approval queue.
+	/// </summary>
+	/// <remarks>
+	/// Confirmed separately from the dialog's own button: rejecting is the one action here that
+	/// cannot be undone from this screen, and the approval dialog's Disapprove sits next to
+	/// Approve where a misclick is easy.
+	/// </remarks>
+	private async Task RejectUser(UnApprovedUsersDTO user)
+	{
+		var confirmed = await ShowUserManagementConfirmationAsync(
+			"Disapprove User",
+			$"Are you sure you want to disapprove {user.email}? They will be removed from the "
+			+ "approval list and will not be able to sign in.",
+			"Disapprove");
+
+		if (!confirmed)
+		{
+			return;
+		}
+
+		await ExecuteAndReloadAsync(
+			() => UserManagementService.RejectUserAsync(user.userId),
+			unapprovedUsersTable,
+			$"{user.email} was disapproved.");
+	}
+	/// <summary>
+	/// Opens the status dialog for a registered user and applies the result.
+	/// </summary>
+	/// <remarks>
+	/// Its own dialog rather than a full edit: the User tab can change activeness and
+	/// nothing else. The dialog returns the DTO and this page performs the call, matching
+	/// the rest of the screen.
+	/// </remarks>
+	private async Task OpenEditUserStatusDialog(UsersDTO user)
+	{
+		var parameters = new DialogParameters<EditUserStatusComponent>
+		{
+			{ component => component.User, user }
+		};
+
+		var dialog = await DialogService.ShowAsync<EditUserStatusComponent>(
+			"Edit User Status", parameters, UserManagementDialogOptions);
+
+		var result = await dialog.Result;
+
+		if (result is null || result.Canceled || result.Data is not EditUserStatusDTO status)
+		{
+			return;
+		}
+
+		await ExecuteAndReloadAsync(
+			() => UserManagementService.EditUserStatusAsync(status),
+			usersTable,
+			status.IsActive
+				? $"{user.email} was activated."
+				: $"{user.email} was deactivated.");
+	}
+
 	private async Task OpenEditApplicationDialog(ApplicationsDTO app)
 	  => await OpenEditDialogAsync<EditApplicationComponent, ApplicationsDTO>("Edit Application", "Application", app, EditApplication, UserManagementDialogOptions);
 
@@ -435,7 +516,12 @@ public partial class UserAppRoles
 		if (_appSubRoleReferenceDataError is not null)
 			return false;
 
+		// GetUsersAsync now returns the whole registry so the User tab can show and restore
+		// deactivated accounts. Assignment is the one place that still wants the old
+		// filter: linking an application role to a deactivated or unapproved user grants
+		// access that cannot be used and hides the real reason they cannot sign in.
 		_appSubRoleUsers = users.Items
+			.Where(user => user.isActive && user.isApproved)
 			.OrderBy(user => user.firstName)
 			.ThenBy(user => user.lastName)
 			.ThenBy(user => user.email)

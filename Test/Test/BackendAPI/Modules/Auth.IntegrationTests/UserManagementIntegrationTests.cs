@@ -2,6 +2,7 @@
 using Auth.DTO;
 using Auth.Features.AccountApprovalNotification;
 using Auth.Features.UserManagement.Command.EditUser;
+using Auth.Features.UserManagement.Command.EditUserStatus;
 using Auth.Features.UserManagement.Query.GetUnApprovedUsers;
 using Auth.Features.UserManagement.Query.GetUsers;
 using BuildingBlocks.Exceptions;
@@ -32,6 +33,7 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.Users.Items.Count.Should().Be(2);
+		result.Users.TotalCount.Should().Be(5);
 	}
 
 	[Fact]
@@ -79,7 +81,10 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 
 		// Assert
 		page1.Users.Items.Count.Should().Be(1);
-		page1.Users.TotalCount.Should().Be(2);
+
+		// All five seeded users: the User tab is the whole registry, not the approved and
+		// active subset it used to be.
+		page1.Users.TotalCount.Should().Be(5);
 		page2.Users.TotalCount.Should().BeNull();
 		page2.Users.Items.Select(u => u.userId)
 			.Should().NotIntersectWith(page1.Users.Items.Select(u => u.userId));
@@ -91,15 +96,33 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 		// Arrange
 		await SeedUserData();
 
-		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 1);
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 5);
 
 		// Act
 		var page1 = await _sender.Send(query);
-		var page2 = await _sender.Send(query with { Cursor = page1.Users.NextCursor });
 
 		// Assert
-		page2.Users.Items.Count.Should().Be(1);
-		page2.Users.NextCursor.Should().BeNull();
+		page1.Users.Items.Count.Should().Be(5);
+		page1.Users.NextCursor.Should().BeNull();
+	}
+
+	// The reason the filters were dropped: a deactivated or unapproved user has to stay
+	// visible on the one screen that can restore them.
+	[Fact]
+	public async Task GetUsers_ShouldIncludeInactiveAndUnapprovedUsers()
+	{
+		// Arrange
+		await SeedUserData();
+
+		var query = new GetUsersQueryRequest(Cursor: null, PageSize: 10);
+
+		// Act
+		var result = await _sender.Send(query);
+
+		// Assert
+		result.Users.Items.Should().Contain(u => u.email == "john@example5.com" && !u.isActive);
+		result.Users.Items.Should().Contain(u => u.email == "john@example1.com" && !u.isApproved);
+		result.Users.Items.Should().Contain(u => u.email == "john@example3.com" && u.isApproved && u.isActive);
 	}
 
 	[Fact]
@@ -231,6 +254,90 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
+	public async Task EditUserStatus_ShouldDeactivateUser_AndKeepThemListed()
+	{
+		// Arrange
+		await SeedUserData();
+
+		var existingUser = await _dbContext.AuthUsers
+			.AsNoTracking()
+			.FirstAsync(x => x.Email == "john@example3.com");
+
+		var command = new EditUserStatusCommand(new EditUserStatusDTO
+		{
+			UserId = existingUser.Id,
+			IsActive = false
+		});
+
+		// Act
+		await _sender.Send(command);
+
+		// Assert
+		var updated = await _dbContext.AuthUsers
+			.AsNoTracking()
+			.FirstAsync(x => x.Id == existingUser.Id);
+
+		updated.IsActive.Should().BeFalse();
+
+		// Approval is untouched, and the row is still on the board rather than filtered out.
+		updated.IsApproved.Should().BeTrue();
+
+		var listed = await _sender.Send(new GetUsersQueryRequest(Cursor: null, PageSize: 10));
+		listed.Users.Items.Should().Contain(u => u.userId == existingUser.Id && !u.isActive);
+	}
+
+	// Only reachable because GetUserByIdAsync does not filter on IsActive; through
+	// GetRawUserAsync this would be a NotFoundException.
+	[Fact]
+	public async Task EditUserStatus_ShouldReactivateAnInactiveUser()
+	{
+		// Arrange
+		await SeedUserData();
+
+		var inactiveUser = await _dbContext.AuthUsers
+			.AsNoTracking()
+			.FirstAsync(x => x.Email == "john@example5.com");
+
+		inactiveUser.IsActive.Should().BeFalse();
+
+		var command = new EditUserStatusCommand(new EditUserStatusDTO
+		{
+			UserId = inactiveUser.Id,
+			IsActive = true
+		});
+
+		// Act
+		await _sender.Send(command);
+
+		// Assert
+		var updated = await _dbContext.AuthUsers
+			.AsNoTracking()
+			.FirstAsync(x => x.Id == inactiveUser.Id);
+
+		updated.IsActive.Should().BeTrue();
+	}
+
+	[Fact]
+	public async Task EditUserStatus_ShouldThrow_WhenUserDoesNotExist()
+	{
+		// Arrange
+		var missingUserId = Guid.CreateVersion7();
+
+		var command = new EditUserStatusCommand(new EditUserStatusDTO
+		{
+			UserId = missingUserId,
+			IsActive = false
+		});
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>()
+			.WithMessage($"User {missingUserId} was not found.");
+	}
+
+	[Fact]
 	public async Task SendToUserEmailAsync_ShouldReturnAccountApprovalNotificationResponse_WhenSuccessful()
 	{
 		// Arrange
@@ -288,6 +395,19 @@ public class UserManagementIntegrationTests : BaseIntegrationTest
 				FirstName = "Admin4",
 				LastName = "",
 				IsApproved = true
+			},
+
+			// Approved but deactivated - the row the User tab has to keep showing so it can
+			// be reactivated, and the one the Approval tab must not pick up.
+			new Authusers
+			{
+				Id = Guid.CreateVersion7(),
+				Email = "john@example5.com",
+				PasswordHash = _passwordHasherService.HashPassword("p@ssw0rd!"),
+				FirstName = "Admin5",
+				LastName = "",
+				IsApproved = true,
+				IsActive = false
 			},
 
 		};

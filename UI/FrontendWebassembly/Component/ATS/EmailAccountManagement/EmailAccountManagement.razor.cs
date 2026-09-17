@@ -217,14 +217,7 @@ public partial class EmailAccountManagement
 
 	private async Task DeleteEmailAccountAsync(EmailAccountDTO account)
 	{
-		var confirmed = await ConfirmActionAsync(
-			"Delete sender account",
-			$"Removing {account.EmailAddress} takes {account.DailySendLimit} messages a day out of "
-			+ "your sending capacity, and the invitations it would have carried move onto the "
-			+ "remaining accounts. We will email a code to this mailbox to confirm.",
-			"Send code");
-
-		if (!confirmed)
+		if (!await ConfirmDeleteAsync(account))
 		{
 			return;
 		}
@@ -260,6 +253,73 @@ public partial class EmailAccountManagement
 		{
 			_isBusy = false;
 		}
+	}
+
+	/// <summary>
+	/// Opens the delete confirmation and reports whether the operator went ahead.
+	/// </summary>
+	/// <remarks>
+	/// The same <see cref="YesNoDialogComponent"/> the withdrawn board confirms a resend with,
+	/// in its danger tone rather than the warning one - this removes a sender, where that only
+	/// sends another email. No ConfirmActionAsync is passed: the deletion is a two-step
+	/// sequence this page owns, so the dialog's job ends at the answer.
+	/// </remarks>
+	private async Task<bool> ConfirmDeleteAsync(EmailAccountDTO account)
+	{
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Delete sender account"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				$"Removing {account.EmailAddress} takes {account.DailySendLimit} messages a day "
+				+ "out of your sending capacity, and the invitations it would have carried move "
+				+ "onto the remaining accounts."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Send code"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Clicking \"Send code\" emails a code to this mailbox. Nothing is removed until "
+				+ "you enter it."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.DeleteOutline
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon), Icons.Material.Filled.DeleteForever
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor), Color.Error
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor), Color.Error
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor), "var(--c-danger-bg)"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor), "theme-button-delete"
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(
+			null, confirmParam, options);
+
+		var result = await dialog.Result;
+
+		return result is { Canceled: false };
 	}
 
 	/// <summary>

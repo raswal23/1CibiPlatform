@@ -1390,7 +1390,14 @@
 
 /* ---------- Status pill ---------- */
 
-.ats-management-page .ats-status-pill {
+/* Deliberately NOT scoped to .ats-management-page. This is the one status badge for the
+   whole app - the ATS boards, the orders board's own .report-status, and the Auth user
+   console all want the identical chip, and the Auth page is not inside an
+   .ats-management-page wrapper. Scoping it there meant a second screen either nested
+   itself under an ATS class it is not, or copied the block and drifted.
+   Colours resolve from --c-* directly so the rules no longer depend on the
+   --management-* scope that .ats-management-page declares. */
+.ats-status-pill {
     display: inline-flex;
     align-self: flex-start;
     align-items: center;
@@ -1402,7 +1409,7 @@
     white-space: nowrap;
 }
 
-.ats-management-page .ats-status-pill::before {
+.ats-status-pill::before {
     content: '';
     width: 6px;
     height: 6px;
@@ -1410,33 +1417,33 @@
     background: currentColor;
 }
 
-.ats-management-page .ats-status-pill.pending {
+.ats-status-pill.pending {
     background: var(--c-surface-sunken);
     color: var(--c-fg-subtle);
-    border: 1px dashed var(--management-border-strong);
+    border: 1px dashed var(--c-border-strong);
 }
 
-.ats-management-page .ats-status-pill.processing {
+.ats-status-pill.processing {
     background: var(--c-warn-bg);
     color: var(--c-warn);
 }
 
 /* The only row state that is actively changing, so the dot breathes to say so. */
-.ats-management-page .ats-status-pill.processing::before {
+.ats-status-pill.processing::before {
     animation: ats-status-pulse 1.6s ease-in-out infinite;
 }
 
-.ats-management-page .ats-status-pill.done {
-    background: var(--management-green-tint);
-    color: var(--management-green);
+.ats-status-pill.done {
+    background: var(--c-success-bg);
+    color: var(--c-success);
 }
 
-.ats-management-page .ats-status-pill.error {
+.ats-status-pill.error {
     background: var(--c-danger-bg);
     color: var(--c-danger-strong);
 }
 
-.ats-management-page .ats-status-pill.unknown {
+.ats-status-pill.unknown {
     background: var(--c-neutral-bg);
     color: var(--c-fg-muted);
 }
@@ -1452,7 +1459,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ats-management-page .ats-status-pill.processing::before {
+    .ats-status-pill.processing::before {
         animation: none;
     }
 }
