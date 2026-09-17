@@ -33,6 +33,10 @@ public partial class TicketingStatusComponent
 	[SupplyParameterFromQuery(Name = "search")]
 	private string? SearchFromQuery { get; set; }
 
+	// The ?search= value this board has already acted on. Only a change to it counts as a
+	// new deep link - see OnParametersSetAsync.
+	private string? _appliedSearchFromQuery;
+
 	// Disables the row's button while its retry is in flight, so a double-click cannot
 	// queue the same order twice.
 	private Guid? _retryingOrderId;
@@ -74,6 +78,11 @@ public partial class TicketingStatusComponent
 			_searchString = SearchFromQuery;
 		}
 
+		// Claimed here so the OnParametersSetAsync pass that follows this first render does
+		// not treat the value it just seeded as an arriving deep link and reload on top of
+		// the table's own first load.
+		_appliedSearchFromQuery = SearchFromQuery;
+
 		await base.OnInitializedAsync();
 
 		// Without this guard the RequirePermission/RequireATSModule attributes are inert.
@@ -83,6 +92,49 @@ public partial class TicketingStatusComponent
 		}
 
 		await RefreshCountsAsync();
+	}
+
+	/// <summary>
+	/// Applies a ?search= that arrives while this board is already on screen.
+	/// </summary>
+	/// <remarks>
+	/// OnInitializedAsync only covers the case where the notification is clicked from
+	/// somewhere else, because that builds the component. Clicking one while already here
+	/// only rewrites the URL - Blazor reuses the component and re-supplies its query
+	/// parameters, so this is the only place the new term is seen. Without it the term
+	/// showed up in the address bar and the search box while the table below still listed
+	/// every order.
+	/// </remarks>
+	protected override async Task OnParametersSetAsync()
+	{
+		await base.OnParametersSetAsync();
+
+		if (!IsPageAuthorized || SearchFromQuery == _appliedSearchFromQuery)
+		{
+			return;
+		}
+
+		_appliedSearchFromQuery = SearchFromQuery;
+
+		// A link with no ?search= (the fallback when the notification has no name to pass)
+		// leaves the current filter alone rather than silently clearing what the user typed.
+		if (string.IsNullOrWhiteSpace(SearchFromQuery))
+		{
+			return;
+		}
+
+		_searchString = SearchFromQuery;
+
+		// The notification points at one order; a status filter left on from earlier would
+		// hide it. Clearing it here is why this does not call SetStatusAsync.
+		_activeStatus = null;
+
+		if (_ordersTable?.TableRef is not null)
+		{
+			_ordersTable.TableRef.CurrentPage = 0;
+		}
+
+		await ReloadTableAsync();
 	}
 
 	private async Task<TableData<TicketedOrderListDTO>> LoadOrdersAsync(

@@ -6,6 +6,7 @@ using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.DisputeOrder;
+using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
 using Auth.Constants;
 using Auth.Shared.Contracts;
@@ -532,6 +533,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			currentUser.Object,
 			userClientRepository.Object);
 
+		// The requestor-facing acknowledgement is best-effort and has its own unit tests
+		// (DisputeEmailNotificationTests). Stubbed here so this factory keeps exercising what it was
+		// written for: the dispute write, the cache invalidation and the operations email.
+		var disputeEmailNotification = new Mock<IDisputeEmailNotification>();
+
 		return new DisputeOrderService(
 			NullLogger<DisputeOrderService>.Instance,
 			emailService.Object,
@@ -542,7 +548,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			orderHistoryService.Object,
 			currentUser.Object,
 			accessScopeResolver,
-			new UnitOfWork(_dbContext));
+			new UnitOfWork(_dbContext),
+			disputeEmailNotification.Object);
 	}
 
 	private static Mock<IEmailService> CreateSuccessfulEmailService()

@@ -5,6 +5,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	private readonly ILogger<EmailNotificationProcessorService> _logger;
 	private readonly IATSRepository _repository;
 	private readonly IAtsNotificationService _notificationService;
+	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IUnitOfWork _unitOfWork;
 	private readonly IServiceScopeFactory _serviceScopeFactory;
 	private readonly IConfiguration _configuration;
 	private readonly ISmtpAccountPoolRegistry _poolRegistry;
@@ -26,6 +28,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		ILogger<EmailNotificationProcessorService> logger,
 		IATSRepository repository,
 		IAtsNotificationService notificationService,
+		IOrderHistoryService orderHistoryService,
+		IUnitOfWork unitOfWork,
 		IServiceScopeFactory serviceScopeFactory,
 		IConfiguration configuration,
 		ISmtpAccountPoolRegistry poolRegistry,
@@ -34,6 +38,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 		_logger = logger;
 		_repository = repository;
 		_notificationService = notificationService;
+		_orderHistoryService = orderHistoryService;
+		_unitOfWork = unitOfWork;
 		_serviceScopeFactory = serviceScopeFactory;
 		_configuration = configuration;
 		_poolRegistry = poolRegistry;
@@ -166,7 +172,36 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		if (successList.Count > 0)
 		{
-			await _repository.UpdateBulkEmailInvitationRequestForSentEmailAsync(successList);
+			// The status flip and its history rows are one transaction, because they are one
+			// fact: "this invitation was delivered". Written separately, a crash between them
+			// leaves an order showing Done with nothing in its history to say when it went
+			// out - and nothing ever revisits a Done row to notice the gap.
+			//
+			// RunAsync and not SideEffectGuard: history here is not a best-effort follow-up to
+			// the send, it is the record OF the send. If it cannot be written, the status must
+			// not stand either - the row stays claimable and the next pass retries both.
+			await TransactionRunner.RunAsync(
+				_unitOfWork,
+				async () =>
+				{
+					await _repository.UpdateBulkEmailInvitationRequestForSentEmailAsync(successList);
+
+					// One insert for the whole slice rather than one per row: a pass carries up
+					// to 200 invitations and this runs on every one of them.
+					//
+					// The status is written unchanged on both sides. Delivering an invitation
+					// does not advance the order's lifecycle - the candidate still has to fill
+					// the form in - so a previous/new pair would invent a transition that did
+					// not happen. Same choice the follow-up release makes.
+					await _orderHistoryService.RecordManyAsync(
+						successList.Select(request => request.EmailInvitationID).ToList(),
+						OrderHistoryEventType.InvitationEmailSent,
+						null,
+						OrderStatus.PendingCandidateInfo,
+						cancellationToken,
+						OrderHistorySource.System);
+				},
+				cancellationToken);
 		}
 
 		if (errorList.Count > 0)
@@ -378,16 +413,23 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 			var applicationFormLink = $"{_applicationformBaseUrl}/{request.HashToken}";
 
 			// Reminder copy only for a row the chaser released and the sender has not carried
-			// since. FollowUpQueuedAt alone is not enough - it stays set forever once stamped,
-			// so a row that already had its reminder delivered would keep claiming to be one.
+			// since. LastFollowUpSentDate alone is not enough - it stays set once stamped, so a
+			// row whose reminder was already delivered would keep claiming to be one.
 			// EmailSentAt is cleared by the same release UPDATE, so the pair means "queued as a
 			// follow-up, not yet sent".
 			//
-			// Known and accepted: an operator resend AFTER a chaser also reads as a reminder,
-			// because the resend clears EmailSentAt too. Benign - the candidate has had two
-			// emails by then either way - and the alternative, clearing the stamp on resend,
-			// would re-arm the chaser, since OrderCreatedAt never moves.
-			var isFollowUp = request.FollowUpQueuedAt is not null && request.EmailSentAt is null;
+			// Reads the same column that gates the release rather than a second stamp kept only
+			// for this line. The retired FollowUpQueuedAt could not be trusted here: its
+			// migration backfilled every pre-existing row with now(), so an operator resending a
+			// legacy order - which clears EmailSentAt - produced reminder copy for a candidate
+			// who had never been chased at all. LastFollowUpSentDate has no backfill, precisely
+			// because nothing older than its window can be chased, so null genuinely means
+			// "never chased".
+			//
+			// Known and accepted: an operator resend AFTER a real chase still reads as a
+			// reminder, because the resend clears EmailSentAt without clearing the date. Benign
+			// - the candidate has had two emails by then either way.
+			var isFollowUp = request.LastFollowUpSentDate is not null && request.EmailSentAt is null;
 
 			return await submissionService.SendApplicationFormToUserEmailWithResultAsync(
 				request.EmailAddress,

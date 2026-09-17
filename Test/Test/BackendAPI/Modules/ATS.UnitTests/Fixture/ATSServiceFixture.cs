@@ -1,6 +1,7 @@
 ﻿using ATS.Configuration;
 using ATS.Constants;
 using ATS.Data.Repository;
+using ATS.Data.UnitOfWork;
 using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.EmailAccounts;
@@ -36,6 +37,12 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IOrderHistoryService> MockOrderHistoryService { get; private set; }
 	public Mock<IAtsNotificationService> MockNotificationService { get; private set; }
 
+	// Loose: TransactionRunner drives the four ITransactionScope members and a default mock
+	// returns a completed Task for each, so the work delegate runs and the assertions see its
+	// effects. A strict mock here would fail on Begin/Commit without adding any coverage -
+	// what matters is what happened INSIDE the transaction, not that Moq saw the ceremony.
+	public Mock<IUnitOfWork> MockUnitOfWork { get; private set; }
+
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
 	public Mock<ILogger<EmailNotificationProcessorService>> EmailNotificationProcessoServiceLogger { get; private set; }
@@ -70,6 +77,7 @@ public class ATSServiceFixture : IDisposable
 		MockCurrentUser = new Mock<ICurrentUser>();
 		MockOrderHistoryService = new Mock<IOrderHistoryService>();
 		MockNotificationService = new Mock<IAtsNotificationService>();
+		MockUnitOfWork = new Mock<IUnitOfWork>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
 		EmailNotificationProcessoServiceLogger = new();
@@ -138,6 +146,8 @@ public class ATSServiceFixture : IDisposable
 			EmailNotificationProcessoServiceLogger.Object,
 			MockRepository.Object,
 			MockNotificationService.Object,
+			MockOrderHistoryService.Object,
+			MockUnitOfWork.Object,
 			MockServiceScopeFactory.Object,
 			Configuration,
 			MockPoolRegistry.Object,

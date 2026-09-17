@@ -65,7 +65,7 @@
                             <div class="ats-history-title">@GetTitle(item.EventType)</div>
                             <div class="ats-history-description">@GetDescription(item.EventType)</div>
                             <div class="ats-history-meta">
-                                @item.OccurredAt.ToLocalTime().ToString("MMMM dd, yyyy - h:mm tt") Â· @item.Source
+                                @item.OccurredAt.ToLocalTime().ToString("MMMM dd, yyyy - h:mm tt") &#183; @item.Source
                             </div>
                         </div>
                     </div>
@@ -124,30 +124,73 @@
         "ApplicationFormWithdrawn" => "Application withdrawn",
         "ApplicationFormResent" => "Application form resent",
         "ApplicationFormFollowUpSent" => "Follow-up reminder sent",
+        "WithdrawalNoticeEmail" => "Withdrawal notice",
+        "DisputeAcknowledgementEmail" => "Dispute acknowledgement",
+        "CompletionNoticeEmail" => "Completion notice",
+        "InvitationEmailSent" => "Invitation email delivered",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
+        "TicketRetryRequested" => "Ticketing retry requested",
         _ => eventType
     };
 
     private static string GetDescription(string eventType) => eventType switch
     {
-        "OrderCreated" => "The order was created and the application invitation was sent.",
+        // "queued" for the events that hand a message to the sender, "delivered" only for
+        // InvitationEmailSent, which is written after the SMTP server accepted it.
+        "OrderCreated" => "The order was created and an application invitation was queued.",
         "ApplicationFormSubmitted" => "The subject successfully completed the application form.",
         "ApplicationFormWithdrawn" => "The subject withdrew the application form.",
-        "ApplicationFormResent" => "A new application invitation was sent to the subject.",
-        "ApplicationFormFollowUpSent" => "A reminder to complete the application form was sent to the subject.",
+        "ApplicationFormResent" => "A new application invitation was queued for the subject.",
+        "ApplicationFormFollowUpSent" => "A reminder to complete the application form was queued for the subject.",
+        "InvitationEmailSent" => "The invitation email was accepted by the mail server and is on its way to the subject.",
+        "WithdrawalNoticeEmail" => "A withdrawal notice was issued to the requestor by email.",
+        "DisputeAcknowledgementEmail" => "A dispute acknowledgement was issued to the filer by email.",
+        "CompletionNoticeEmail" => "A completion notice was issued to the requestor by email.",
         "ReportUploaded" => "The final report was uploaded and the order was completed.",
         "ReportDisputed" => "The completed report was disputed by the requestor.",
+        "TicketRetryRequested" => "The order was placed back on the ticketing queue. Its status is unchanged.",
         _ => "The order lifecycle was updated."
     };
 
+    // The tone a row carries is the colour its status carries elsewhere in the console:
+    // withdrawn is the red of the Search Report badge, completed its green, disputed the
+    // orange the dispute screens use.
+    //
+    // The email rows are coloured by what the message did rather than by which screen sent
+    // it. An acknowledgement confirms something already happened, so it takes the same green
+    // as the completion it confirms. A notice announces something the reader has to know
+    // about and may have to act on, so it takes amber. Both read down the timeline as
+    // families - every green row is a confirmation, every amber row an announcement.
     private static string GetTone(string eventType) => eventType switch
     {
-        "ReportUploaded" => "success",
-        "ApplicationFormSubmitted" => "active",
-        "ReportDisputed" => "warning",
-        "ApplicationFormWithdrawn" => "danger",
-        _ => "neutral"
+        // Lifecycle steps.
+        "ReportUploaded" => "is-success",
+        "ApplicationFormSubmitted" => "is-active",
+        "ReportDisputed" => "is-dispute",
+        "ApplicationFormWithdrawn" => "is-danger",
+
+        // Both land the order in Pending Candidate Info, which the board draws as a
+        // dashed outline rather than a filled pill - nothing has happened yet.
+        "OrderCreated" => "is-pending",
+        "ApplicationFormResent" => "is-pending",
+
+        // Acknowledgements: a message confirming something that already happened. The
+        // invitation row belongs here because it is the one email event written after the
+        // mail server accepted the message rather than when it was queued.
+        "DisputeAcknowledgementEmail" => "is-success",
+        "InvitationEmailSent" => "is-success",
+
+        // Notices: a message telling someone about a change. The follow-up reminder is one
+        // in everything but name - it chases a subject whose form is still outstanding.
+        "WithdrawalNoticeEmail" => "is-warning",
+        "CompletionNoticeEmail" => "is-warning",
+        "ApplicationFormFollowUpSent" => "is-warning",
+
+        // Neither an acknowledgement nor a notice: nothing was sent and the order did not
+        // move, so there is nothing for a colour to say.
+        "TicketRetryRequested" => "is-neutral",
+        _ => "is-neutral"
     };
 
     private static string GetIcon(string eventType) => eventType switch
@@ -157,8 +200,15 @@
         "ApplicationFormWithdrawn" => Icons.Material.Outlined.Cancel,
         "ApplicationFormResent" => Icons.Material.Outlined.Replay,
         "ApplicationFormFollowUpSent" => Icons.Material.Outlined.NotificationsActive,
+        "WithdrawalNoticeEmail" => Icons.Material.Outlined.Send,
+        "DisputeAcknowledgementEmail" => Icons.Material.Outlined.MarkEmailRead,
+        "CompletionNoticeEmail" => Icons.Material.Outlined.ForwardToInbox,
+        "InvitationEmailSent" => Icons.Material.Outlined.MarkEmailRead,
         "ReportUploaded" => Icons.Material.Outlined.Check,
         "ReportDisputed" => Icons.Material.Outlined.WarningAmber,
+
+        // Autorenew rather than Replay, which already belongs to ApplicationFormResent.
+        "TicketRetryRequested" => Icons.Material.Outlined.Autorenew,
         _ => Icons.Material.Outlined.Circle
     };
 }

@@ -17,4 +17,12 @@ public sealed class ReportRowDTO
 	public string? SelectPackage { get; init; }
 	public string? RushNormal { get; init; }
 	public string? HitStatus { get; init; }
+
+	// The inputs the remaining-reminder count is derived from, carried raw rather than
+	// pre-computed. "How many are left" depends on today's date, so a number calculated in
+	// the database would be wrong the moment the row is cached - and these rows are cached.
+	// See ReportService, which does the arithmetic per request.
+	public int PackageFollowUpEmail { get; init; }
+	public bool ChasesCandidate { get; init; }
+	public string? ApplicationFormStatus { get; init; }
 }

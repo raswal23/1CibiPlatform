@@ -19,12 +19,19 @@ public interface IAtsEmailSender
 	/// failover without knowing the registry exists. The result reports which account
 	/// eventually carried it, because the caller logs and the audit trail need to say more
 	/// than "an email went out".
+	///
+	/// <paramref name="cc"/> is optional and last so the existing single-recipient callers keep
+	/// compiling untouched. Copied addresses are real recipients as far as the provider is
+	/// concerned, so they are charged to the account's daily cap along with the TO address
+	/// rather than riding along free - a message with two copies consumes three, and an
+	/// accounting that counted one would show headroom that does not exist.
 	/// </remarks>
 	Task<EmailDeliveryResult> SendATSEmailWithResultAsync(
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken);
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null);
 
 	/// <summary>
 	/// Sends through ONE named account with no failover, used to prove credentials during
@@ -41,7 +48,8 @@ public interface IAtsEmailSender
 		string toEmail,
 		string subject,
 		string body,
-		CancellationToken cancellationToken);
+		CancellationToken cancellationToken,
+		IReadOnlyCollection<string>? cc = null);
 
 	/// <summary>
 	/// Opens a throwaway SMTP session with credentials that are not stored anywhere yet, sends
@@ -87,4 +95,76 @@ public interface IAtsEmailSender
 		string applicationFormLink,
 		string? requestor,
 		string? clientName);
+
+	/// <summary>
+	/// Composes the withdrawal notice - the email the requestor gets when a candidate withdraws
+	/// their own application form from the emailed link.
+	/// </summary>
+	/// <remarks>
+	/// On this contract for the same reason as the reminder above: only ATS has a withdrawal to
+	/// announce, so the shared <c>IEmailService</c> that Auth and the test fakes implement stays
+	/// unaware of it.
+	///
+	/// Addressed to the REQUESTOR, not the candidate - the candidate is the one who pressed the
+	/// button and is copied on the message rather than being told something they just did. The
+	/// point of the copy is operational: the verification must not proceed, because the form that
+	/// would have authorised it no longer exists.
+	///
+	/// Composes, it does not send - the caller pairs the body with the withdrawal subject and
+	/// hands both to <see cref="SendATSEmailWithResultAsync"/>, so the notice travels the same
+	/// pooled, capped, paced path as every other ATS message.
+	/// </remarks>
+	string BuildWithdrawnApplicationNotification(
+		string requestorName,
+		string candidateName);
+
+	/// <summary>
+	/// Composes the dispute acknowledgement - the email the person who FILED a dispute gets,
+	/// confirming it was received and restating what they submitted.
+	/// </summary>
+	/// <remarks>
+	/// Not to be confused with <c>IEmailService.SendEmailForDispute</c>, which composes the
+	/// INTERNAL operations notification (a table of requestor email, company, order date and
+	/// reason) sent to <c>ATS:DisputeOrderEmailRecipient</c>. Both are sent for one dispute and
+	/// they have different audiences, subjects and bodies; this one is the requestor-facing copy.
+	///
+	/// On this contract for the same reason as the two above: only ATS files disputes, so the
+	/// shared <c>IEmailService</c> that Auth and the test fakes implement stays unaware of it.
+	///
+	/// <paramref name="disputeDetails"/> is nullable because the console only captures free text
+	/// for the "Others" category - a Billing or Report dispute has a category and nothing else.
+	/// The details bullet is omitted rather than rendered empty or padded with a placeholder.
+	///
+	/// Composes, it does not send - the caller pairs the body with <c>DisputeEmail.Subject</c> and
+	/// hands both to <see cref="SendATSEmailWithResultAsync"/>.
+	/// </remarks>
+	string BuildDisputeNotification(
+		string requestorName,
+		string candidateName,
+		string disputeCategory,
+		string? disputeDetails);
+
+	/// <summary>
+	/// Composes the completed-form notice - the email sent when a candidate finishes their
+	/// application form and the order moves to In Progress.
+	/// </summary>
+	/// <remarks>
+	/// On this contract for the same reason as the three above: only ATS has a completed form to
+	/// announce, so the shared <c>IEmailService</c> that Auth and the test fakes implement stays
+	/// unaware of it.
+	///
+	/// Addressed to the REQUESTOR, like the withdrawal notice and the dispute acknowledgement - all
+	/// three tell the person who raised the order what their candidate just did. The candidate is
+	/// copied rather than addressed.
+	///
+	/// The candidate name comes from the form they just submitted, not from the order row: this is
+	/// the first message about the form's contents, and the name they signed it with is the one that
+	/// matters. The requestor name still comes from the directory, as everywhere else.
+	///
+	/// Composes, it does not send - the caller pairs the body with <c>SubmittedFormEmail.Subject</c>
+	/// and hands both to <see cref="SendATSEmailWithResultAsync"/>.
+	/// </remarks>
+	string BuildSubmittedFormNotification(
+		string requestorName,
+		string candidateName);
 }

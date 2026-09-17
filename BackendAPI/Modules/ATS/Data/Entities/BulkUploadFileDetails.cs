@@ -35,7 +35,7 @@ public class BulkUploadFileDetails
 	public int AcceptedRowCount { get; set; }
 	public int RejectedRowCount { get; set; }
 	public string? RejectedRows { get; set; }
-	
+
 	// Flag to track if the file key has been deleted from object storage
 	public bool IsFileKeyDeleted { get; set; } = false;
 }

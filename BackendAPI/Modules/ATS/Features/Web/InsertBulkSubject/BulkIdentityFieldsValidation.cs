@@ -10,24 +10,24 @@ public static class BulkIdentityFieldsValidation
 			return;
 
 		// Get the screening type from the command to determine if validation should be applied
-		var screeningType = context.InstanceToValidate is InsertBulkSubjectCommand cmd 
-			? cmd.bulkUploadFileDetailsDTO.AutoChasing 
+		var screeningType = context.InstanceToValidate is InsertBulkSubjectCommand cmd
+			? cmd.bulkUploadFileDetailsDTO.AutoChasing
 			: null;
 
 		var validationResults = await ValidateIdentityFieldsWithScreeningTypeAsync(inputFile, screeningType, cancellationToken);
-		
+
 		// Report Date of Birth validation errors (only if screening type is data - false)
 		if (screeningType == false && validationResults.DateOfBirthErrors.Count > 0)
 		{
 			context.AddFailure($"Date of birth validation failed in row(s): {string.Join(", ", validationResults.DateOfBirthErrors.Select(err => $"Row {err.RowNumber} ({err.Error})"))}");
 		}
-		
+
 		// Report SSS Number validation errors (only if screening type is data - false)
 		if (screeningType == false && validationResults.SssNumberErrors.Count > 0)
 		{
 			context.AddFailure($"SSS number validation failed in row(s): {string.Join(", ", validationResults.SssNumberErrors.Select(err => $"Row {err.RowNumber} ({err.Error})"))}");
 		}
-		
+
 		// Report TIN Number validation errors (only if screening type is data - false)
 		if (screeningType == false && validationResults.TinNumberErrors.Count > 0)
 		{
@@ -41,7 +41,7 @@ public static class BulkIdentityFieldsValidation
 		CancellationToken ct = default)
 	{
 		var results = new IdentityValidationResults();
-		
+
 		await using var stream = file.OpenReadStream();
 		var csvContent = await CsvTextDecoder.DecodeAsync(stream, ct);
 		using var reader = new StringReader(csvContent);
@@ -90,7 +90,7 @@ public static class BulkIdentityFieldsValidation
 			if (dateOfBirthIndex >= 0)
 			{
 				var dateOfBirthValue = csv.GetField(dateOfBirthIndex)?.Trim();
-				
+
 				if (!string.IsNullOrWhiteSpace(dateOfBirthValue))
 				{
 					// The template's date format, matching the web form's picker display.
@@ -115,7 +115,7 @@ public static class BulkIdentityFieldsValidation
 			if (sssNumberIndex >= 0)
 			{
 				var sssValue = csv.GetField(sssNumberIndex)?.Trim();
-				
+
 				if (!string.IsNullOrWhiteSpace(sssValue))
 				{
 					// First check if it contains only digits
@@ -141,7 +141,7 @@ public static class BulkIdentityFieldsValidation
 			if (tinNumberIndex >= 0)
 			{
 				var tinValue = csv.GetField(tinNumberIndex)?.Trim();
-				
+
 				if (!string.IsNullOrWhiteSpace(tinValue))
 				{
 					// First check if it contains only digits

@@ -48,6 +48,39 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(result);
 
+	/// <summary>
+	/// Stubs the send for ANY value of the trailing isFollowUp flag.
+	/// </summary>
+	/// <remarks>
+	/// SetupSendResult above names six arguments, so the optional seventh is baked into the
+	/// expression tree as its default - it only matches isFollowUp: false. A test that expects
+	/// a reminder would otherwise fall through to an unstubbed call returning null, and fail
+	/// somewhere far away from the reason.
+	/// </remarks>
+	private void SetupSendResultForAnyCopy(EmailDeliveryResult result) =>
+		_fixture.MockEndorsementSubmissionService
+			.Setup(x => x.SendApplicationFormToUserEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<int?>(),
+				It.IsAny<CancellationToken>(),
+				It.IsAny<bool>()))
+			.ReturnsAsync(result);
+
+	private void VerifyCopyUsed(bool expectedIsFollowUp) =>
+		_fixture.MockEndorsementSubmissionService.Verify(
+			x => x.SendApplicationFormToUserEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<int?>(),
+				It.IsAny<CancellationToken>(),
+				expectedIsFollowUp),
+			Times.Once);
+
 	private void VerifySendCount(Times times) =>
 		_fixture.MockEndorsementSubmissionService.Verify(
 			x => x.SendApplicationFormToUserEmailWithResultAsync(
@@ -110,6 +143,195 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 			x => x.UpdateBulkEmailInvitationRequestForSentEmailAsync(
 				It.Is<List<EmailInvitationRequest>>(list => list.Count == 1)),
 			Times.Once);
+	}
+
+	#region Reminder vs. first-invitation copy
+
+	/// <summary>
+	/// LastFollowUpSentDate paired with a null EmailSentAt is what selects reminder wording.
+	/// </summary>
+	/// <remarks>
+	/// Worth pinning because the failure is silent and lands in a candidate's inbox: the send
+	/// succeeds either way, and the only symptom is a reminder that reads like a first
+	/// invitation ("here is your form") or a first invitation that reads like a reminder ("we
+	/// have not yet received your form") for someone who was never chased.
+	/// </remarks>
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldUseReminderCopy_WhenTheChaserReleasedTheRow()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+
+		var chased = PendingRequest("chased@example.com");
+		// What the release UPDATE leaves behind: a date stamped, EmailSentAt cleared.
+		chased.LastFollowUpSentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+		chased.EmailSentAt = null;
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { chased });
+
+		SetupSendResultForAnyCopy(EmailDeliveryResult.Sent);
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		VerifyCopyUsed(expectedIsFollowUp: true);
+	}
+
+	// A never-chased order gets first-invitation wording. This is the case the retired
+	// FollowUpQueuedAt got wrong: its migration backfilled every pre-existing row, so a legacy
+	// order resent by an operator claimed to be a reminder.
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldUseFirstInvitationCopy_WhenTheOrderWasNeverChased()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+
+		var neverChased = PendingRequest("new@example.com");
+		neverChased.LastFollowUpSentDate = null;
+		neverChased.EmailSentAt = null;
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { neverChased });
+
+		SetupSendResultForAnyCopy(EmailDeliveryResult.Sent);
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		VerifyCopyUsed(expectedIsFollowUp: false);
+	}
+
+	// The date alone is not enough. Once a reminder has actually been delivered the row carries
+	// both a date and an EmailSentAt, and a later send must not keep claiming to be that
+	// reminder.
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldUseFirstInvitationCopy_WhenTheReminderWasAlreadyDelivered()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+
+		var alreadyDelivered = PendingRequest("delivered@example.com");
+		alreadyDelivered.LastFollowUpSentDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+		alreadyDelivered.EmailSentAt = DateTime.UtcNow.AddDays(-1);
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { alreadyDelivered });
+
+		SetupSendResultForAnyCopy(EmailDeliveryResult.Sent);
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		VerifyCopyUsed(expectedIsFollowUp: false);
+	}
+
+	#endregion
+
+	// Every delivery is recorded, so "when did this candidate actually get their email?" is
+	// answerable from the order's history rather than from a log file.
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldRecordHistory_ForEverySentEmail()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockOrderHistoryService.Invocations.Clear();
+
+		var first = PendingRequest("first@example.com");
+		var second = PendingRequest("second@example.com");
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { first, second });
+
+		SetupSendResult(EmailDeliveryResult.Sent);
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert: one call carrying both ids, not one call per row - a pass can hold 200.
+		_fixture.MockOrderHistoryService.Verify(
+			x => x.RecordManyAsync(
+				It.Is<IReadOnlyCollection<Guid>>(ids =>
+					ids.Count == 2
+					&& ids.Contains(first.EmailInvitationID)
+					&& ids.Contains(second.EmailInvitationID)),
+				OrderHistoryEventType.InvitationEmailSent,
+				null,
+				// ATS.Constants.OrderStatus is internal, so the literal - same as the other
+				// tests in this suite.
+				"Pending Candidate Info",
+				It.IsAny<CancellationToken>(),
+				OrderHistorySource.System,
+				It.IsAny<Guid?>()),
+			Times.Once);
+	}
+
+	// The status and its history entry are one fact. Writing the status without the history
+	// would leave an order that says Done with nothing to say when - and nothing revisits a
+	// Done row to notice.
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldWriteTheSentStatusAndItsHistory_InOneTransaction()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockUnitOfWork.Invocations.Clear();
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { PendingRequest("candidate@example.com") });
+
+		SetupSendResult(EmailDeliveryResult.Sent);
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		_fixture.MockUnitOfWork.Verify(x => x.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+		_fixture.MockUnitOfWork.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+		_fixture.MockUnitOfWork.Verify(x => x.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
+	}
+
+	// Nothing was delivered, so there is nothing to record and no reason to open a
+	// transaction at all.
+	[Fact]
+	public async Task ProcessForPendingStatusAsync_ShouldNotRecordHistory_WhenEverySendFailed()
+	{
+		// Arrange
+		var service = _fixture.EmailNotificationProcessorService;
+		_fixture.MockOrderHistoryService.Invocations.Clear();
+		_fixture.MockUnitOfWork.Invocations.Clear();
+
+		_fixture.MockRepository
+			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())
+			.ReturnsAsync(new List<EmailInvitationRequest> { PendingRequest("candidate@example.com") });
+
+		SetupSendResult(EmailDeliveryResult.Permanent("550", "No such user here"));
+
+		// Act
+		await service.ProcessForPendingStatusAsync(CancellationToken.None);
+
+		// Assert
+		_fixture.MockOrderHistoryService.Verify(
+			x => x.RecordManyAsync(
+				It.IsAny<IReadOnlyCollection<Guid>>(),
+				It.IsAny<string>(),
+				It.IsAny<string?>(),
+				It.IsAny<string>(),
+				It.IsAny<CancellationToken>(),
+				It.IsAny<string>(),
+				It.IsAny<Guid?>()),
+			Times.Never);
+
+		_fixture.MockUnitOfWork.Verify(
+			x => x.BeginTransactionAsync(It.IsAny<CancellationToken>()),
+			Times.Never);
 	}
 
 	[Fact]

@@ -10,6 +10,8 @@ public class ApplicationFormService : IApplicationFormService
 	private readonly IFilePdfService _filePdfService;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly IAtsNotificationService _notificationService;
+	private readonly IWithdrawnEmailNotification _withdrawnEmailNotification;
+	private readonly ISubmittedFormEmailNotification _submittedFormEmailNotification;
 	private readonly string _applicationFormBaseUrl;
 	private readonly string _folderName;
 
@@ -41,7 +43,9 @@ public class ApplicationFormService : IApplicationFormService
 					  IObjectStorageService objectStorageService,
 					  IFilePdfService filePdfService,
 					  IOrderHistoryService orderHistoryService,
-					  IAtsNotificationService notificationService)
+					  IAtsNotificationService notificationService,
+					  IWithdrawnEmailNotification withdrawnEmailNotification,
+					  ISubmittedFormEmailNotification submittedFormEmailNotification)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -51,6 +55,8 @@ public class ApplicationFormService : IApplicationFormService
 		_filePdfService = filePdfService;
 		_orderHistoryService = orderHistoryService;
 		_notificationService = notificationService;
+		_withdrawnEmailNotification = withdrawnEmailNotification;
+		_submittedFormEmailNotification = submittedFormEmailNotification;
 		_applicationFormBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl", "");
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSApplicationFormFileFolderName", "");
 	}
@@ -127,6 +133,21 @@ public class ApplicationFormService : IApplicationFormService
 			await _notificationService.RaiseForOrderAsync(
 				emailInvitationId,
 				AtsNotificationType.ApplicationFormSubmitted,
+				ct);
+
+			// The email counterpart of the in-app notification above, and guarded for one reason
+			// beyond the usual "the work is already durable": the catch below deletes every file
+			// this submission uploaded as compensation, so an exception escaping from here would
+			// tear the attachments out from under a form that is already saved.
+			//
+			// The candidate is named from the form they just submitted rather than from the order
+			// row - this is the first message about the form's contents. The notifier reads the row
+			// anyway, for the requestor and for the candidate's mailbox, which the form does not
+			// carry.
+			await _submittedFormEmailNotification.SendAsync(
+				new SubmittedFormEmailDetails(
+					emailInvitationId,
+					$"{personalDetails.FirstName} {personalDetails.LastName}".Trim()),
 				ct);
 
 			return true;
@@ -497,6 +518,13 @@ public class ApplicationFormService : IApplicationFormService
 			await _unitOfWork.SaveChangesAsync(ct);
 
 			await _unitOfWork.CommitAsync(ct);
+
+			// After the commit, deliberately - the same reasoning as the submission path above.
+			// The withdrawal is the thing that matters and it is now durable; telling the requestor
+			// is a best-effort follow-up that must not be able to roll it back. The notifier guards
+			// itself, exactly as RaiseForOrderAsync does, so a delivery failure is logged there and
+			// the candidate still sees their withdrawal succeed.
+			await _withdrawnEmailNotification.SendAsync(invitation, ct);
 
 			return true;
 		}

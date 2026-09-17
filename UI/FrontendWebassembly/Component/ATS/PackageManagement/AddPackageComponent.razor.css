@@ -236,8 +236,10 @@
     line-height: 42px;
 }
 
+/* Reserves the width of .ap-unit-suffix, which is absolutely positioned over the field.
+   Without it a two-digit value runs underneath "daily reminders". */
 .ap-follow-up-wrap ::deep .mud-input-slot {
-    padding-right: 82px !important;
+    padding-right: 110px !important;
 }
 
 .ap-follow-up-wrap ::deep .mud-input-numeric-spin {

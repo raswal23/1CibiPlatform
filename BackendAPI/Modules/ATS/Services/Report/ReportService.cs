@@ -269,10 +269,77 @@ public class ReportService : IReportService
 			RushNormal = x.RushNormal,
 			Requestor = x.Requestor,
 			TicketNumber = x.TicketNumber,
-			HitStatus = x.HitStatus
+			HitStatus = x.HitStatus,
+			FollowUpEmailsRemaining = CalculateFollowUpEmailsRemaining(x)
 		}).ToList();
 
 		return new KeysetPaginatedResult<ReportListDTO>(items, nextCursor, totalCount);
+	}
+
+	/// <summary>
+	/// How many follow-up reminders an order will still receive, as of today.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Computed here rather than in SQL because the answer depends on today's date, and these
+	/// rows pass through a cache decorator - a number baked into the projection would be stale
+	/// by exactly as long as the entry lives.
+	/// </para>
+	/// <para>
+	/// This MIRRORS the window in ATSRepository.ReleaseDueFollowUpInvitationsAsync and has to
+	/// keep mirroring it. Reminders run from day 1 through day N inclusive, measured in Manila
+	/// from OrderCreatedAt, so the count left on day D is N - D. If that query's window
+	/// changes and this does not, the board will confidently promise reminders that never
+	/// arrive - a wrong number here is worse than no column, because an operator will act on
+	/// it instead of chasing the candidate themselves.
+	/// </para>
+	/// <para>
+	/// Null means the question does not apply; 0 means the schedule is spent. The caller
+	/// renders those differently.
+	/// </para>
+	/// </remarks>
+	private static int? CalculateFollowUpEmailsRemaining(ReportRowDTO row)
+	{
+		// Data-screening orders have no candidate to email, and 0 is the package's off switch.
+		if (!row.ChasesCandidate || row.PackageFollowUpEmail <= 0)
+		{
+			return null;
+		}
+
+		// Nobody who already dealt with the form is chased about it, whatever the schedule
+		// says. Same rule as the release query's ApplicationFormStatus clause.
+		if (!string.Equals(row.ApplicationFormStatus, ApplicationFormStatus.Pending, StringComparison.OrdinalIgnoreCase))
+		{
+			return null;
+		}
+
+		// A legacy row with no creation timestamp can never satisfy the window, so it is not
+		// "0 remaining" - the schedule simply cannot be evaluated for it.
+		if (row.OrderCreatedAt is not { } orderCreatedAt)
+		{
+			return null;
+		}
+
+		// Whole days elapsed in Manila, matching the timezone the release query compares in.
+		// Comparing the DATES rather than subtracting the instants is what makes this agree
+		// with a query whose first reminder fires at the order's own time of day: on the
+		// morning of day 1 the instant difference is under 24 hours until that hour arrives,
+		// but the reminder is still due today.
+		var orderDate = DateOnly.FromDateTime(
+			TimeZoneInfo.ConvertTimeFromUtc(
+				DateTime.SpecifyKind(orderCreatedAt, DateTimeKind.Utc),
+				FollowUpSchedule.TimeZone));
+
+		var today = DateOnly.FromDateTime(
+			TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, FollowUpSchedule.TimeZone));
+
+		var daysElapsed = today.DayNumber - orderDate.DayNumber;
+
+		// Clamped at both ends: a clock skew that puts the order in the future must not report
+		// MORE reminders than the package allows, and an order past its window reports 0.
+		var remaining = row.PackageFollowUpEmail - daysElapsed;
+
+		return Math.Clamp(remaining, 0, row.PackageFollowUpEmail);
 	}
 
 	public async Task<SubjectNameDTO> EditSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)

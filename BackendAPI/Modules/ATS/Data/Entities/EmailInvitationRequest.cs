@@ -44,10 +44,16 @@ public class EmailInvitationRequest
 	// nothing reads or writes this after the expiry removal; rows created before it
 	// keep the value they were stamped with.
 	public DateTime? HashTokenExpiration { get; set; }
-	// Stamped the moment the package follow-up reminder is queued, in the same UPDATE
-	// that requeues the row. Non-null means this order has already been chased, which
-	// is what makes the reminder fire exactly once.
-	public DateTime? FollowUpQueuedAt { get; set; }
+	// The Manila calendar date of the last reminder queued for this order. Two jobs at once:
+	//
+	//   1. The once-per-day guarantee. The chaser runs hourly, so a due row would otherwise be
+	//      released on all 24 passes; "<> today" collapses those to the first pass of the day.
+	//   2. Paired with a null EmailSentAt, it tells the sender to use reminder copy rather
+	//      than first-invitation copy.
+	//
+	// DateOnly rather than a timestamp because the rule is calendar-shaped - one per day, not
+	// one per 24 hours. Compared in Asia/Manila; see ReleaseDueFollowUpInvitationsAsync.
+	public DateOnly? LastFollowUpSentDate { get; set; }
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }

@@ -23,12 +23,12 @@ path need to write one, and with what event type?"* That is §4.
 |---|---|---|
 | **C1** | "The endpoint is authorized and applies the same ATS client/requestor scope as report access." | **NOT FOUND.** `GetOrderStatusHistoryEndpoint` calls `.RequireAuthorization()` and nothing else. No `IAtsAccessScopeResolver` appears anywhere in the slice, and the repository filters on `EmailInvitationRequestId` alone. Any authenticated user who knows an invitation id can read that order's timeline (§8.1) |
 | **C2** | The timeline records "who did it" | Half true. `ChangedByUserId` is **written** by the factory but is **not a member of `OrderStatusHistoryDTO`**, so no API returns it. The `who` is write-only (§3.3) |
-| **C3** | Lifecycle table lists six events | There are **seven**. `TicketRetryRequested` (`Constants/OrderHistoryEventType.cs:14`) is missing from the table entirely |
+| **C3** | Lifecycle table lists six events | There are now **eleven** constants. `TicketRetryRequested` is still missing from every table in the design doc. The four email events — `ApplicationFormFollowUpSent` plus `WithdrawalNoticeEmail`, `DisputeAcknowledgementEmail` and `CompletionNoticeEmail` — are documented in the design doc's "Notification events" section instead of the lifecycle table, because none of them is a lifecycle step |
 | **C4** | "Initial report uploads do not record completion; only an upload that actually moves the order to `Completed` does." | True only on the **first-upload** branch (`ReportService.cs:141`, guarded). The **re-upload** branch (`ReportService.cs:107`) records `ReportUploaded → Completed` unconditionally, even when `orderStatus` is still `In Progress` (§8.3) |
 | **C5** | `ApplicationFormResent`: previous = "Application Withdrawn", new = "Pending Candidate Info" | The single resend passes `invitation.OrderStatus` — whatever it currently is, not necessarily Withdrawn. The **bulk** resend passes `null`. Two shapes for one event type (§4.3) |
-| **C6** | `ReportDisputed`: previous = Completed, new = Completed | `DisputeOrderService.cs:159` writes `order.OrderStatus` on the previous side and `order.OrderStatus ?? OrderStatus.Completed` on the new. When the status is null the entry reads `null → "Completed"` — not the symmetric pair described |
+| **C6** | `ReportDisputed`: previous = Completed, new = Completed | `DisputeOrderService.cs:164` writes `order.OrderStatus` on the previous side and `order.OrderStatus ?? OrderStatus.Completed` on the new. When the status is null the entry reads `null → "Completed"` — not the symmetric pair described |
 | **C7** | Background jobs should write with `OrderHistorySource.System` when the job causes the transition | `OrderHistorySource.System` is **never referenced in any `.cs` file**. The bulk parsing job uses `file.Source ?? OrderHistorySource.Web`. The constant is dead |
-| **C8** | "Adding another lifecycle event … 3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog`." | Step 3 was **not done for `TicketRetryRequested`**. It is absent from all four switch expressions, so it renders as the raw constant with the fallback description (§7.2) |
+| **C8** | "Adding another lifecycle event … 3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog`." | **Resolved.** `TicketRetryRequested` was absent from all four switch expressions and rendered as the raw constant; it is now mapped in all four, with tone `is-neutral` because it moves nothing (§7.2) |
 | **C9** | Only one read path is described (the UI dialog) | There are **three**. The public API embeds the timeline in `PublicOrderDetailDTO.History`, and the Withdrawn Applications screen derives its `WithdrawnAt` column *from this table*. History is load-bearing (§6) |
 
 Two claims the doc gets right and that are easy to break: the chain `Carter endpoint → MediatR query
@@ -149,8 +149,24 @@ public static class OrderHistoryEventType
 	public const string ApplicationFormSubmitted = "ApplicationFormSubmitted";
 	public const string ApplicationFormWithdrawn = "ApplicationFormWithdrawn";
 	public const string ApplicationFormResent = "ApplicationFormResent";
+
+	// The package's FollowUpEmail interval elapsed with the form still Pending, so the
+	// chaser requeued the invitation. Distinct from ApplicationFormResent because nobody
+	// asked for it - reading the history, "a person resent this" and "the schedule did"
+	// are different facts.
+	public const string ApplicationFormFollowUpSent = "ApplicationFormFollowUpSent";
+
 	public const string ReportUploaded = "ReportUploaded";
 	public const string ReportDisputed = "ReportDisputed";
+
+	// The three requestor-facing notices, each distinct from the business event that triggers it
+	// for the same reason ApplicationFormFollowUpSent is distinct from ApplicationFormResent:
+	// reading the history, "the subject withdrew" and "we told the requestor" are different facts,
+	// and the second can fail while the first already happened. All three record the ATTEMPT
+	// rather than the delivery, so a row here means the send was made - not that it landed.
+	public const string WithdrawalNoticeEmail = "WithdrawalNoticeEmail";
+	public const string DisputeAcknowledgementEmail = "DisputeAcknowledgementEmail";
+	public const string CompletionNoticeEmail = "CompletionNoticeEmail";
 
 	// A person put an order whose automatic OMS retries were exhausted back on the
 	// ticketing queue. The order's own status does not change; this records who did it.
@@ -212,7 +228,7 @@ a refactor.
 ### 2.4 How the three relate
 
 An event type is the *verb*; the status pair is the *edge* in the lifecycle graph; the source is the
-*channel*. Legal combinations, as actually written by the twelve call sites in §4:
+*channel*. Legal combinations, as actually written by the sixteen call sites in §4:
 
 | Event type | Previous | New | Real transition? |
 |---|---|---|---|
@@ -223,9 +239,17 @@ An event type is the *verb*; the status pair is the *edge* in the lifecycle grap
 | `ReportUploaded` | the order's current status | `Completed` | Yes, when guarded |
 | `ReportDisputed` | the order's current status | the same, or `Completed` if null | **No** — deliberately |
 | `TicketRetryRequested` | the order's current status (single) / `null` (bulk) | the same, or `""` (bulk) | **No** — deliberately |
+| `ApplicationFormFollowUpSent` | `null` | `Pending Candidate Info` | **No** — deliberately |
+| `WithdrawalNoticeEmail` | `null` | `Application Withdrawn` | **No** — deliberately |
+| `DisputeAcknowledgementEmail` | `null` | `Completed` | **No** — deliberately |
+| `CompletionNoticeEmail` | `null` | `In Progress` | **No** — deliberately |
 
-Two event types are *not* lifecycle steps and record the same value on both sides so the timeline
-does not imply movement. That convention is §4.3.
+Six event types are *not* lifecycle steps and record the same status the order already holds, so the
+timeline does not imply movement. That convention is §4.3.
+
+The four email rows name the status the order is in when the notice goes out, not a destination.
+Reading them as transitions is the mistake the `Previous = null` is there to prevent: there is no
+"from" side, because nothing moved.
 
 ---
 
@@ -395,15 +419,26 @@ Twelve distinct writes across seven files. This is the table to consult before a
 | 1 | `OrderCreated` | `Services/EndorsementSubmission/EndorsementSubmissionService.cs:186` | parameter, default `Web` | `null` → `PendingCandidateInfo` | `TransactionRunner.RunAsync` |
 | 2 | `ApplicationFormResent` | `Services/EndorsementSubmission/EndorsementSubmissionService.cs:526` | default `Web` | `invitation.OrderStatus` → `PendingCandidateInfo` | none (after requeue commit) |
 | 3 | `ApplicationFormResent` | `Services/EndorsementSubmission/EndorsementSubmissionService.cs:625` | default `Web` | `null` → `PendingCandidateInfo` | none |
-| 4 | `ApplicationFormSubmitted` | `Services/ApplicationForm/ApplicationFormService.cs:113` | default `Web` | `PendingCandidateInfo` (**hardcoded**) → `InProgress` | `_unitOfWork`, pre-commit |
-| 5 | `ApplicationFormWithdrawn` | `Services/ApplicationForm/ApplicationFormService.cs:507` | default `Web` | `invitation.OrderStatus` → `ApplicationWithdrawn` | `_unitOfWork`, pre-commit |
+| 4 | `ApplicationFormSubmitted` | `Services/ApplicationForm/ApplicationFormService.cs:121` | default `Web` | `PendingCandidateInfo` (**hardcoded**) → `InProgress` | `_unitOfWork`, pre-commit |
+| 5 | `ApplicationFormWithdrawn` | `Services/ApplicationForm/ApplicationFormService.cs:516` | default `Web` | `invitation.OrderStatus` → `ApplicationWithdrawn` | `_unitOfWork`, pre-commit |
 | 6 | `ReportUploaded` | `Services/Report/ReportService.cs:107` | default `Web` | `invitation.OrderStatus` → `Completed` | `_unitOfWork`, pre-commit |
 | 7 | `ReportUploaded` | `Services/Report/ReportService.cs:141` | default `Web` | `invitation.OrderStatus` → `Completed` | `_unitOfWork`, pre-commit |
-| 8 | `ReportDisputed` | `Services/DisputeOrder/DisputeOrderService.cs:159` | default `Web` | `order.OrderStatus` → `order.OrderStatus ?? Completed` | `_unitOfWork`, pre-commit |
+| 8 | `ReportDisputed` | `Services/DisputeOrder/DisputeOrderService.cs:164` | default `Web` | `order.OrderStatus` → `order.OrderStatus ?? Completed` | `_unitOfWork`, pre-commit |
 | 9 | `ApplicationFormWithdrawn` | `Services/PublicApi/PublicApiService.cs:93` | **`PublicApi`** | `previousStatus` → `ApplicationWithdrawn` | none (after `WithdrawOrderAsync`) |
 | 10 | `OrderCreated` | `Services/BulkSubmissionProcessor/BulkSubmissionProcessorService.cs:236` | `file.Source ?? Web` | `null` → `PendingCandidateInfo` | none |
 | 11 | `TicketRetryRequested` | `Services/OMSTicketingMonitoring/OMSTicketingMonitoringService.cs:183` | default `Web` | `target.OrderStatus` → `target.OrderStatus ?? ""` | none |
 | 12 | `TicketRetryRequested` | `Services/OMSTicketingMonitoring/OMSTicketingMonitoringService.cs:256` | default `Web` | `null` → `""` | none |
+| 13 | `ApplicationFormFollowUpSent` | `Services/EndorsementSubmission/EndorsementSubmissionService.cs:727` | default `Web` | `null` → `PendingCandidateInfo` | none (after the release committed) |
+| 14 | `WithdrawalNoticeEmail` | `Services/EmailService/WithdrawnEmailNotification.cs:118` | default `Web` | `null` → `ApplicationWithdrawn` | none, inside `SideEffectGuard` |
+| 15 | `DisputeAcknowledgementEmail` | `Services/EmailService/DisputeEmailNotification.cs:97` | default `Web` | `null` → `Completed` | none, inside `SideEffectGuard` |
+| 16 | `CompletionNoticeEmail` | `Services/EmailService/SubmittedFormEmailNotification.cs:118` | default `Web` | `null` → `InProgress` | none, inside `SideEffectGuard` |
+
+Site 13 was added by the follow-up chaser and sites 14–16 by the three requestor-facing notices;
+the earlier revision of this table predates all four and listed twelve. Sites 14–16 are the only ones
+written from inside a `SideEffectGuard`, which has a consequence worth stating: the row is written
+whether or not the email was delivered, because it records the **attempt**. A notice that failed to
+send still appears on the timeline, and the failure is in the log. Sites 1–13 record work that
+actually happened.
 
 ### 4.1 Enrolment — `OrderCreated` (sites 1, 10)
 
@@ -762,26 +797,80 @@ expressions:
         "ApplicationFormSubmitted" => "Application form submitted",
         "ApplicationFormWithdrawn" => "Application withdrawn",
         "ApplicationFormResent" => "Application form resent",
+        "ApplicationFormFollowUpSent" => "Follow-up reminder sent",
+        "WithdrawalNoticeEmail" => "Withdrawal notice",
+        "DisputeAcknowledgementEmail" => "Dispute acknowledgement",
+        "CompletionNoticeEmail" => "Completion notice",
+        "InvitationEmailSent" => "Invitation email delivered",
         "ReportUploaded" => "Report uploaded",
         "ReportDisputed" => "Report disputed",
+        "TicketRetryRequested" => "Ticketing retry requested",
         _ => eventType
     };
 ```
 
-`GetDescription`, `GetTone` and `GetIcon` have the same six-branch shape (`GetTone` maps
-`ReportUploaded → "success"`, `ApplicationFormSubmitted → "active"`, `ReportDisputed → "warning"`,
-`ApplicationFormWithdrawn → "danger"`, everything else `"neutral"`). Three hazards, all live:
+`GetDescription` and `GetIcon` carry the same twelve branches — every member of
+`OrderHistoryEventType`. `GetTone` does too, but maps them onto seven tones rather than twelve:
+
+```csharp
+    private static string GetTone(string eventType) => eventType switch
+    {
+        // Lifecycle steps.
+        "ReportUploaded" => "is-success",
+        "ApplicationFormSubmitted" => "is-active",
+        "ReportDisputed" => "is-dispute",
+        "ApplicationFormWithdrawn" => "is-danger",
+
+        // Both land the order in Pending Candidate Info, which the board draws as a
+        // dashed outline rather than a filled pill - nothing has happened yet.
+        "OrderCreated" => "is-pending",
+        "ApplicationFormResent" => "is-pending",
+
+        // Acknowledgements: a message confirming something that already happened. The
+        // invitation row belongs here because it is the one email event written after the
+        // mail server accepted the message rather than when it was queued.
+        "DisputeAcknowledgementEmail" => "is-success",
+        "InvitationEmailSent" => "is-success",
+
+        // Notices: a message telling someone about a change. The follow-up reminder is one
+        // in everything but name - it chases a subject whose form is still outstanding.
+        "WithdrawalNoticeEmail" => "is-warning",
+        "CompletionNoticeEmail" => "is-warning",
+        "ApplicationFormFollowUpSent" => "is-warning",
+
+        // Neither an acknowledgement nor a notice: nothing was sent and the order did not
+        // move, so there is nothing for a colour to say.
+        "TicketRetryRequested" => "is-neutral",
+        _ => "is-neutral"
+    };
+```
+
+The email rows are coloured by **what the message did**, not by which screen sent it: an
+acknowledgement confirms something that already happened and takes the same green as the event it
+confirms, a notice announces a change the reader may have to act on and takes amber. Both families
+read straight down the timeline. The full tone table and the reasoning behind each colour are in the
+design doc's **Timeline tones** section; the CSS that paints them is
+`OrderStatusHistoryDialog.razor.css`, where `.ats-history-item.is-*` styles the marker for every tone
+and additionally the title and the connector rail for the five coloured ones.
+
+Note that `is-warning` amber means *a notice went out* here — it is not the amber the Search Report
+board gives an in-progress order. `ApplicationFormSubmitted`, the event that moves an order into In
+Progress, is `is-active` blue for exactly that reason.
+
+Two hazards remain:
 
 1. **The literals are `"OrderCreated"`, not a shared constant** — and cannot be, since the constants
    live in the ATS backend assembly and this is a Blazor WASM project with no reference to it. A
-   renamed event type produces no compile error here.
-2. **`TicketRetryRequested` is missing from all four (**C8**).** It falls through to `_ => eventType`,
-   so a requestor who forced a retry sees a row titled literally `TicketRetryRequested`, described as
-   "The order lifecycle was updated.", in `neutral` tone with a plain circle icon. The design doc's
-   own step 3 says to add it; it was not added.
-3. **The fallbacks are silent.** `_ => eventType` and `_ => "The order lifecycle was updated."`
+   renamed event type produces no compile error here. All four switches must be edited together —
+   `InvitationEmailSent` was mapped in three of them and missing from `GetTone`, which is a silent
+   fall-through to the neutral fallback rather than an error.
+2. **The fallbacks are silent.** `_ => eventType` and `_ => "The order lifecycle was updated."`
    degrade to ugly-but-plausible rather than failing loudly — right for a user-facing dialog, wrong
-   for noticing a missing mapping. There is no test, no log, no build warning.
+   for noticing a missing mapping. There is no test, no log, no build warning. This is what hid
+   `TicketRetryRequested` for as long as it did (**C8**, now fixed).
+
+The three notice descriptions say the email was **issued**, not delivered, because the row records
+the attempt (§4, sites 14–16). Do not "improve" them to past tense that claims delivery.
 
 `GetDescription` for `ReportUploaded` also asserts "The final report was uploaded **and the order was
 completed**", which is untrue on the unguarded re-upload path (§8.3).

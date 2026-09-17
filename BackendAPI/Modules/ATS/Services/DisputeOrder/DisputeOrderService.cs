@@ -13,6 +13,7 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly ICurrentUser _currentUser;
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly IDisputeEmailNotification _disputeEmailNotification;
 
 	public DisputeOrderService(
 		ILogger<DisputeOrderService> logger,
@@ -24,7 +25,8 @@ public class DisputeOrderService : IDisputeOrderService
 		IOrderHistoryService orderHistoryService,
 		ICurrentUser currentUser,
 		IAtsAccessScopeResolver accessScopeResolver,
-		IUnitOfWork unitOfWork)
+		IUnitOfWork unitOfWork,
+		IDisputeEmailNotification disputeEmailNotification)
 	{
 		_accessScopeResolver = accessScopeResolver;
 		_logger = logger;
@@ -37,6 +39,7 @@ public class DisputeOrderService : IDisputeOrderService
 		_orderHistoryService = orderHistoryService;
 		_currentUser = currentUser;
 		_unitOfWork = unitOfWork;
+		_disputeEmailNotification = disputeEmailNotification;
 	}
 
 	public async Task<KeysetPaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -165,6 +168,32 @@ public class DisputeOrderService : IDisputeOrderService
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 
 			await _unitOfWork.CommitAsync(cancellationToken);
+
+			// After the commit, and it cannot throw - DisputeEmailNotification guards itself, the
+			// same contract WithdrawnEmailNotification keeps. The dispute is durable by now, so a
+			// dead mailbox must not turn a filed dispute into a 500 that invites the filer to
+			// submit the same dispute a second time.
+			//
+			// Deliberately asymmetric with the operations notification above, which still runs
+			// BEFORE the write and still throws: if operations never hear about a dispute nobody
+			// will act on it, so that one is allowed to stop the filing. This one is a courtesy
+			// acknowledgement to the person who just pressed the button.
+			//
+			// The filer's own address is reused rather than re-read, so both messages name the same
+			// person even on a token that only carries the short "email" claim.
+			var candidateName = string.IsNullOrWhiteSpace(subjectName)
+				? order.EmailAddress ?? "this order"
+				: subjectName;
+
+			await _disputeEmailNotification.SendAsync(
+				new DisputeEmailDetails(
+					order.EmailInvitationID,
+					requestor,
+					_currentUser.FullName,
+					candidateName,
+					disputeRequest.DisputeCategory,
+					disputeRequest.DisputeReason!),
+				cancellationToken);
 		}
 		catch (Exception ex)
 		{
