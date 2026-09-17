@@ -237,9 +237,9 @@
 }
 
 /* Reserves the width of .ep-unit-suffix, which is absolutely positioned over the field.
-   Without it a two-digit value runs underneath "days after order". */
+   Without it a two-digit value runs underneath "daily reminders". */
 .ep-follow-up-wrap ::deep .mud-input-slot {
-    padding-right: 122px !important;
+    padding-right: 110px !important;
 }
 
 .ep-follow-up-wrap ::deep .mud-input-numeric-spin {

@@ -64,7 +64,7 @@ public class BulkUploadFileCleanupJob : IJob
 					await objectStorageService.DeleteAsync(file.FileKey, context.CancellationToken);
 					deletedCount++;
 
-					_logger.LogDebug("Successfully deleted file {FileKey} for file ID {FileId}", 
+					_logger.LogDebug("Successfully deleted file {FileKey} for file ID {FileId}",
 						file.FileKey, file.FileID);
 
 					// Clear the FileKey in the database after successful deletion
@@ -73,13 +73,13 @@ public class BulkUploadFileCleanupJob : IJob
 				catch (Exception ex)
 				{
 					errorCount++;
-					_logger.LogError(ex, "Failed to delete file {FileKey} for file ID {FileId}", 
+					_logger.LogError(ex, "Failed to delete file {FileKey} for file ID {FileId}",
 						file.FileKey, file.FileID);
 				}
 			}
 
 			_logger.LogInformation(
-				"Cleanup process completed. Successfully deleted {DeletedCount} files, {ErrorCount} errors occurred.", 
+				"Cleanup process completed. Successfully deleted {DeletedCount} files, {ErrorCount} errors occurred.",
 				deletedCount, errorCount);
 		}
 		catch (Exception ex)

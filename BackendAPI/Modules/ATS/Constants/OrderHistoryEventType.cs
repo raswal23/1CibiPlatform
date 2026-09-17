@@ -7,11 +7,18 @@ public static class OrderHistoryEventType
 	public const string ApplicationFormWithdrawn = "ApplicationFormWithdrawn";
 	public const string ApplicationFormResent = "ApplicationFormResent";
 
-	// The package's FollowUpEmail interval elapsed with the form still Pending, so the
-	// chaser requeued the invitation. Distinct from ApplicationFormResent because nobody
-	// asked for it - reading the history, "a person resent this" and "the schedule did"
-	// are different facts.
+	// A follow-up reminder became due with the form still Pending, so the chaser requeued
+	// the invitation. Distinct from ApplicationFormResent because nobody asked for it -
+	// reading the history, "a person resent this" and "the schedule did" are different
+	// facts. Recorded once per reminder, so an order chased three times carries three.
 	public const string ApplicationFormFollowUpSent = "ApplicationFormFollowUpSent";
+
+	// The invitation email actually reached the SMTP server. Every other email event above
+	// records that a message was QUEUED; this is the only one that means delivered, which is
+	// why "we sent it on the 3rd" can be answered from the history rather than from a log.
+	// Written for first invitations, operator resends and follow-up reminders alike - the
+	// sender does not distinguish them and neither does this.
+	public const string InvitationEmailSent = "InvitationEmailSent";
 
 	public const string ReportUploaded = "ReportUploaded";
 	public const string ReportDisputed = "ReportDisputed";

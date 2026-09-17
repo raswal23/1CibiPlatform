@@ -209,6 +209,93 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		});
 	}
 
+	#region Follow-up reminders remaining
+
+	/// <summary>
+	/// The count an operator reads off the board has to agree with the schedule the chaser
+	/// actually runs, so these pin the arithmetic against real rows.
+	/// </summary>
+	/// <remarks>
+	/// Seeded relative to the Manila date because that is the timezone the count is measured
+	/// in - "2 days ago" in UTC is a different number of days ago in Manila for eight hours
+	/// out of every twenty-four.
+	/// </remarks>
+	[Theory]
+	// Ordered on day 0 with 3 reminders configured: all 3 still to come.
+	[InlineData(3, 0, 3)]
+	// One day in, one reminder spent.
+	[InlineData(3, 1, 2)]
+	// The last day inside the window.
+	[InlineData(3, 2, 1)]
+	// Day 3 of a 3-reminder schedule: the window has closed.
+	[InlineData(3, 3, 0)]
+	// Long past the window - still 0, never negative.
+	[InlineData(3, 40, 0)]
+	public async Task GetReportsAsync_ShouldReportRemainingFollowUps_ForAChasedOrder(
+		int followUpEmail,
+		int daysSinceOrder,
+		int expectedRemaining)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 11;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(followUpEmail);
+
+		var invitation = CreateInvitation("Chased", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(daysSinceOrder);
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(expectedRemaining);
+	}
+
+	// Null, not 0. "Nothing is chasing this order" and "the chasing finished" are different
+	// facts, and the board renders them differently - a dash versus "Done".
+	[Theory]
+	// Data screening: nobody to email.
+	[InlineData(false, "Pending", 5)]
+	// Reminders switched off on the package.
+	[InlineData(true, "Pending", 0)]
+	// The candidate already answered, so the schedule stops mattering.
+	[InlineData(true, "Done", 5)]
+	// Withdrawn applications are not chased either.
+	[InlineData(true, "Withdrawn", 5)]
+	public async Task GetReportsAsync_ShouldReportNoRemainingFollowUps_WhenChasingDoesNotApply(
+		bool autoChasing,
+		string applicationFormStatus,
+		int followUpEmail)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 12;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(followUpEmail);
+
+		var invitation = CreateInvitation("Unchased", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = autoChasing;
+		invitation.ApplicationFormStatus = applicationFormStatus;
+		invitation.OrderCreatedAt = ManilaDaysAgo(1);
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().BeNull();
+	}
+
+	#endregion
+
 	[Theory]
 	[InlineData(AtsRoleIds.PlatformManager)]
 	[InlineData(AtsRoleIds.Admin)]
@@ -865,6 +952,35 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			Headers = new HeaderDictionary(),
 			ContentType = "application/pdf"
 		};
+	}
+
+	// The reminder count is measured in Manila, so the seeding has to be too - see
+	// FollowUpSchedule. Anchored at 00:30 local rather than the current time of day so a test
+	// never sits on the day boundary.
+	private static readonly TimeZoneInfo ManilaZone =
+		TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
+
+	private static DateTime ManilaDaysAgo(int days)
+	{
+		var manilaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ManilaZone);
+		var localDate = manilaNow.Date.AddDays(-days).AddMinutes(30);
+
+		return TimeZoneInfo.ConvertTimeToUtc(
+			DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified),
+			ManilaZone);
+	}
+
+	/// <summary>
+	/// Sets the reminder count on the package every seeded invitation points at. The default
+	/// test package carries 0, which is the off switch.
+	/// </summary>
+	private async Task SetPackageFollowUpAsync(int followUpEmail)
+	{
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""UPDATE ats."PackageDetails" SET "FollowUpEmail" = {0} WHERE "PackageId" = {1};""",
+			followUpEmail, DefaultPackageId);
+
+		_dbContext.ChangeTracker.Clear();
 	}
 
 	private static EmailInvitationRequest CreateInvitation(

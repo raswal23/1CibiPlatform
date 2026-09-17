@@ -455,6 +455,16 @@
 .report-hit.not-clear { background: var(--c-neutral-bg); color: var(--c-neutral-fg); }
 .report-hit.pending { border: 1px dashed var(--border-strong); background: var(--c-surface-sunken); color: var(--text-3); font-style: italic; }
 .report-hit.unknown { background: var(--c-neutral-bg); color: var(--c-neutral-fg); }
+
+/* Same pill geometry as .report-hit above, so the two columns sit level. Kept as its own
+   selector rather than an extra .report-hit modifier because the follow-up count is not a
+   hit status, and a shared class would invite one column's palette change into the other. */
+.report-followup { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+/* Reminders still to come: the blue "in progress" treatment the board uses elsewhere. */
+.report-followup.is-pending { background: var(--blue-tint); color: var(--blue-600); }
+/* Schedule spent. Neutral, not success - nothing good happened, the chasing just stopped. */
+.report-followup.is-done { background: var(--c-neutral-bg); color: var(--c-neutral-fg); }
+.report-followup-empty { color: var(--text-3); }
 .report-icon-action {
     display: flex;
     width: 30px;
@@ -581,6 +591,7 @@
     ::deep .report-order-type,
     ::deep .report-hit,
     ::deep .report-status,
+    ::deep .report-followup,
     ::deep .report-ticket-number {
         min-width: 0;
         white-space: normal;

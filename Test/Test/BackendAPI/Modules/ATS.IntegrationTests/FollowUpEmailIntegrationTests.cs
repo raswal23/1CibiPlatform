@@ -6,13 +6,13 @@ using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
 /// <summary>
-/// The package follow-up chaser: one reminder, N days after the order, reusing the candidate's
-/// original link. See docs/ats-package-follow-up-email.md.
+/// The package follow-up chaser: one reminder a day for N days, anchored to the order's own time
+/// of day, reusing the candidate's original link. See docs/ats-package-follow-up-email.md.
 /// </summary>
 /// <remarks>
 /// These exercise the release query directly rather than the Quartz job, because the job is a
 /// four-line wrapper around it and everything worth asserting - who gets chased, who does not,
-/// and that nobody gets chased twice - lives in the SQL.
+/// and that nobody gets chased twice in a day - lives in the SQL.
 /// </remarks>
 public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 {
@@ -23,14 +23,43 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 
 	private const string SeededHashToken = "follow-up-hash-token";
 
+	// The release compares and stamps in Manila, so the tests have to reason in it too.
+	// Seeding "2 days ago" in UTC and asserting against a Manila date is how a suite ends up
+	// green locally and red for eight hours a day on a UTC build agent.
+	private static readonly TimeZoneInfo ManilaZone =
+		TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
+
+	private static DateTime ManilaNow =>
+		TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ManilaZone);
+
+	private static DateOnly ManilaToday => DateOnly.FromDateTime(ManilaNow);
+
+	/// <summary>
+	/// A UTC instant that lands <paramref name="days"/> days ago in Manila, at a time of day
+	/// safely in the past so "the order's time of day has arrived" is unambiguously true.
+	/// </summary>
+	/// <remarks>
+	/// Anchored to 00:30 local rather than "now minus N days": a test seeding the current time
+	/// of day would sit exactly on the >= boundary, and whether it released would depend on
+	/// which side of the same second the query evaluated.
+	/// </remarks>
+	private static DateTime ManilaDaysAgo(int days)
+	{
+		var localDate = ManilaNow.Date.AddDays(-days).AddMinutes(30);
+
+		return TimeZoneInfo.ConvertTimeToUtc(
+			DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified),
+			ManilaZone);
+	}
+
 	#region Released
 
 	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldRequeueTheRow_WhenTheIntervalHasElapsed()
+	public async Task ReleaseDueFollowUps_ShouldRequeueTheRow_WhenTheFirstDayHasArrived()
 	{
 		// Arrange
 		await SetFollowUpDaysAsync(3);
-		var id = await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-4));
+		var id = await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(1));
 
 		// Act
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
@@ -50,14 +79,46 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 		updated.EmailSentAt.Should().BeNull();
 	}
 
+	// The reminder starts the day AFTER the order, never the same day: an order placed at 8am
+	// must not be chased at 9am the same morning.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_OnTheDayTheOrderWasPlaced()
+	{
+		await SetFollowUpDaysAsync(3);
+		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(0));
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().BeEmpty();
+	}
+
+	// The core of the feature, and what the fire-once design could not do: a second day due
+	// releases the same order again.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldReleaseTheSameRowAgain_OnTheFollowingDay()
+	{
+		await SetFollowUpDaysAsync(3);
+		var id = await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(2),
+			// Yesterday's reminder already went out, so today's is the second of three.
+			lastFollowUpSentDate: ManilaToday.AddDays(-1));
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().ContainSingle().Which.EmailInvitationID.Should().Be(id);
+
+		var updated = await ReadAsync(id);
+		updated.LastFollowUpSentDate.Should().Be(ManilaToday);
+	}
+
 	// The whole point of the feature: the email already sitting in the candidate's inbox has to
 	// keep working. If this ever fails, the reminder is actively worse than sending nothing -
 	// it would retire the link the candidate was about to click.
 	[Fact]
 	public async Task ReleaseDueFollowUps_ShouldNotRotateTheToken()
 	{
-		await SetFollowUpDaysAsync(1);
-		var createdAt = DateTime.UtcNow.AddDays(-5);
+		await SetFollowUpDaysAsync(3);
+		var createdAt = ManilaDaysAgo(1);
 		var id = await SeedOrderAsync(orderCreatedAt: createdAt, hashTokenCreatedAt: createdAt);
 
 		await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
@@ -67,26 +128,29 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 		updated.HashTokenCreatedAt.Should().BeCloseTo(createdAt, TimeSpan.FromSeconds(1));
 	}
 
+	// The column that makes "once a day" true, and the same column the sender reads to choose
+	// reminder copy. Stamped in the same UPDATE as the requeue, so a crash cannot leave a row
+	// released but undated - which would chase the candidate again on the very next hourly pass
+	// AND send that reminder with first-invitation wording.
 	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldStampFollowUpQueuedAt()
+	public async Task ReleaseDueFollowUps_ShouldStampLastFollowUpSentDateWithTheManilaDate()
 	{
 		await SetFollowUpDaysAsync(2);
-		var id = await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-3));
+		var id = await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(1));
 
 		await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		var updated = await ReadAsync(id);
-		updated.FollowUpQueuedAt.Should().NotBeNull();
-		updated.FollowUpQueuedAt!.Value.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+		updated.LastFollowUpSentDate.Should().Be(ManilaToday);
 	}
 
-	// Fire once, ever. The stamp is written in the same UPDATE as the requeue precisely so this
-	// holds even if the process dies mid-pass.
+	// Once per DAY, not once per pass. The job runs hourly, so without the date guard every
+	// remaining pass of the day would chase the same candidate again - up to 24 times.
 	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldReleaseNothingOnASecondPass()
+	public async Task ReleaseDueFollowUps_ShouldReleaseNothingOnASecondPassWithinTheSameDay()
 	{
-		await SetFollowUpDaysAsync(1);
-		await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-9));
+		await SetFollowUpDaysAsync(3);
+		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(1));
 
 		var first = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 		var second = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
@@ -104,22 +168,41 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	{
 		// 0 is the off switch, and it is the default every package starts with.
 		await SetFollowUpDaysAsync(0);
-		await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-30));
+		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(30));
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		released.Should().BeEmpty();
 	}
 
-	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenTheIntervalHasNotElapsed()
+	// The stop condition. N=2 chases on day 1 and day 2; day 3 is past the window and the order
+	// is never touched again, however long it stays unanswered.
+	[Theory]
+	[InlineData(3)]
+	[InlineData(10)]
+	[InlineData(60)]
+	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenTheReminderWindowHasClosed(int daysAgo)
 	{
-		await SetFollowUpDaysAsync(7);
-		await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-2));
+		await SetFollowUpDaysAsync(2);
+		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(daysAgo));
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		released.Should().BeEmpty();
+	}
+
+	// The last day inside the window still sends - the boundary belongs to the candidate.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldReleaseTheRow_OnTheFinalDayOfTheWindow()
+	{
+		await SetFollowUpDaysAsync(2);
+		var id = await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(2),
+			lastFollowUpSentDate: ManilaToday.AddDays(-1));
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().ContainSingle().Which.EmailInvitationID.Should().Be(id);
 	}
 
 	// Data screening has no candidate to email. NULL is excluded as well as false: an
@@ -129,8 +212,8 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	[InlineData(null)]
 	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenItIsNotManualScreening(bool? autoChasing)
 	{
-		await SetFollowUpDaysAsync(1);
-		await SeedOrderAsync(orderCreatedAt: DateTime.UtcNow.AddDays(-5), autoChasing: autoChasing);
+		await SetFollowUpDaysAsync(5);
+		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(1), autoChasing: autoChasing);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
@@ -143,9 +226,9 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	[InlineData("Withdrawn")]
 	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenTheFormIsNoLongerPending(string status)
 	{
-		await SetFollowUpDaysAsync(1);
+		await SetFollowUpDaysAsync(5);
 		await SeedOrderAsync(
-			orderCreatedAt: DateTime.UtcNow.AddDays(-5),
+			orderCreatedAt: ManilaDaysAgo(1),
 			applicationFormStatus: status);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
@@ -162,9 +245,9 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	[InlineData("Error")]
 	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenTheFirstEmailWasNeverDelivered(string status)
 	{
-		await SetFollowUpDaysAsync(1);
+		await SetFollowUpDaysAsync(5);
 		await SeedOrderAsync(
-			orderCreatedAt: DateTime.UtcNow.AddDays(-5),
+			orderCreatedAt: ManilaDaysAgo(1),
 			emailSentStatus: status);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
@@ -173,16 +256,32 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	}
 
 	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenItHasAlreadyBeenChased()
+	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenItWasAlreadyChasedToday()
 	{
-		await SetFollowUpDaysAsync(1);
+		await SetFollowUpDaysAsync(5);
 		await SeedOrderAsync(
-			orderCreatedAt: DateTime.UtcNow.AddDays(-5),
-			followUpQueuedAt: DateTime.UtcNow.AddDays(-1));
+			orderCreatedAt: ManilaDaysAgo(2),
+			lastFollowUpSentDate: ManilaToday);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		released.Should().BeEmpty();
+	}
+
+	// An order chased on an earlier day inside its window is due again today. This is the case
+	// the retired FollowUpQueuedAt would have blocked, and it is why the date - not a "has ever
+	// been queued" stamp - is what the predicate reads.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldReleaseTheRow_WhenTheLastReminderWasAnEarlierDay()
+	{
+		await SetFollowUpDaysAsync(5);
+		var id = await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(3),
+			lastFollowUpSentDate: ManilaToday.AddDays(-2));
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().ContainSingle().Which.EmailInvitationID.Should().Be(id);
 	}
 
 	#endregion
@@ -190,8 +289,9 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 	#region Helpers
 
 	/// <summary>
-	/// Sets the interval on the package every seeded order points at. The default package is
-	/// created with FollowUpEmail = 0, so a test that wants a chaser has to say so.
+	/// Sets the number of daily reminders on the package every seeded order points at. The
+	/// default package is created with FollowUpEmail = 0, so a test that wants a chaser has to
+	/// say so.
 	/// </summary>
 	private async Task SetFollowUpDaysAsync(int days)
 	{
@@ -209,8 +309,8 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 		bool? autoChasing = true,
 		string applicationFormStatus = "Pending",
 		string emailSentStatus = "Done",
-		DateTime? followUpQueuedAt = null,
-		DateTime? hashTokenCreatedAt = null)
+		DateTime? hashTokenCreatedAt = null,
+		DateOnly? lastFollowUpSentDate = null)
 	{
 		var order = new EmailInvitationRequest
 		{
@@ -231,7 +331,7 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 			EmailSentAt = emailSentStatus == "Done" ? orderCreatedAt : null,
 			OrderStatus = "Pending Candidate Info",
 			OrderCreatedAt = orderCreatedAt,
-			FollowUpQueuedAt = followUpQueuedAt
+			LastFollowUpSentDate = lastFollowUpSentDate
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(order);
