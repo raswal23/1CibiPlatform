@@ -405,7 +405,6 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetReportsAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
 		int roleId)
 	{
@@ -429,6 +428,44 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		result.TotalCount.Should().Be(1);
 		result.Items.Should().ContainSingle()
 			.Which.EmailInvitationRequestId.Should().Be(matching.EmailInvitationID);
+	}
+
+	// Service Delivery fulfils orders it did not raise and Client Experience reviews them
+	// across the platform, so neither is confined to a client or to its own requests - the
+	// restriction the theory above applies to an ordinary user.
+	[Theory]
+	[InlineData(AtsRoleIds.ServiceDelivery)]
+	[InlineData(AtsRoleIds.ClientExperience)]
+	public async Task GetReportsAsync_ShouldIncludeAllClientsAndRequesters_ForPlatformWideRoles(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var ownRequest = CreateInvitation("Own Request", orderStatus: "Completed");
+		ownRequest.ClientId = 5;
+		ownRequest.RequestorId = userId;
+		var otherRequester = CreateInvitation("Other Requester", orderStatus: "Completed");
+		otherRequester.ClientId = 5;
+		otherRequester.RequestorId = Guid.CreateVersion7();
+		var otherClient = CreateInvitation("Other Client", orderStatus: "Completed");
+		otherClient.ClientId = 6;
+		otherClient.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(ownRequest, otherRequester, otherClient);
+
+		// A claimed client id that matches none of the orders: it must not narrow the result.
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 99);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[]
+			{
+				ownRequest.EmailInvitationID,
+				otherRequester.EmailInvitationID,
+				otherClient.EmailInvitationID
+			});
 	}
 
 	[Fact]

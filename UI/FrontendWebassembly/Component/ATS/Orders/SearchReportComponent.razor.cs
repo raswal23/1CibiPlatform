@@ -1,4 +1,6 @@
-﻿namespace FrontendWebassembly.Component.ATS;
+﻿using FrontendWebassembly.ShareData.ATS;
+
+namespace FrontendWebassembly.Component.ATS;
 
 public partial class SearchReportComponent
 {
@@ -63,12 +65,18 @@ public partial class SearchReportComponent
 		var roleIds = await GetStoredRoleIdsAsync();
 		var atsRoleId = await GetStoredATSRoleIdAsync();
 
-		_canUploadReport = roleIds.Contains(1) || atsRoleId is 1 or 3;
+		// Client Experience is deliberately absent here: it reads and corrects orders but
+		// does not deliver results, so uploading a report is not its job.
+		_canUploadReport = roleIds.Contains(RoleList.SuperAdminId)
+			|| atsRoleId is AtsRoleList.PlatformManagerId or AtsRoleList.ServiceDeliveryId;
 
 		// Correcting a subject name is an administrative fix, so it follows the
 		// platform super admin / platform manager / admin ladder rather than the
-		// uploader-oriented one above. The API re-checks scope on every call.
-		_canEditSubjectName = roleIds.Contains(1) || atsRoleId is 1 or 2;
+		// delivery-oriented one above. The API re-checks scope on every call.
+		_canEditSubjectName = roleIds.Contains(RoleList.SuperAdminId)
+			|| atsRoleId is AtsRoleList.PlatformManagerId
+				or AtsRoleList.ClientAdminId
+				or AtsRoleList.ClientExperienceId;
 	}
 
 	/// <summary>

@@ -25,8 +25,13 @@ public class SubmittedFormEmailNotificationTests
 	// Deliberately literals rather than SubmittedFormEmail.Subject / .CopyTeams. These are the
 	// agreed copy, and a test that read the constant would keep passing if the constant were
 	// changed - which is the one thing it exists to catch.
+	//
+	// The first copied mailbox is clientsupport@, not the ccteam@ the body's closing sentence
+	// names: the notice is copied to one team and tells the reader to write to another. That
+	// mismatch is in the agreed copy (see SubmittedFormEmail), so this literal tracks the
+	// recipient only - AtsSubmittedFormEmailBodyTests pins the prose address separately.
 	private const string SubmittedSubject = "CIBI | Order Status – In Progress";
-	private const string CcTeam = "ccteam@cibi.com.ph";
+	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string PreWorkTeam = "pre-workteam@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
 	private const string RequestorName = "Ana Reyes";

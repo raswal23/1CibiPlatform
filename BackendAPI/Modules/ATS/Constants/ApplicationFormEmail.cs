@@ -47,12 +47,8 @@ public static class ApplicationFormEmail
 	/// <c>EndorsementSubmissionService.BuildCopyListAsync</c>, which appends it to a copy of this list.
 	/// Read that method for what the message actually carries.
 	/// </remarks>
-
-
-	// Test recipients while the branch is being verified, matching the same swap already made in
-	// SubmittedFormEmail, WithdrawnEmail and DisputeEmail. Restore the block above before release, or
-	// the invitation copies real team mailboxes while every other ATS notice copies the tester.
-
+	// The commented block below is a tester's mailboxes, swapped in while a branch is being
+	// verified and swapped back before release. The live list is the one in effect.
 	public static readonly IReadOnlyCollection<string> CopyTeams =
 	[
 		"clientsupport@cibi.com.ph",

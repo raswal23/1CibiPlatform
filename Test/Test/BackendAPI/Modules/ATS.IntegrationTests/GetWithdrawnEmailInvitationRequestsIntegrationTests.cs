@@ -45,7 +45,6 @@ public class GetWithdrawnEmailInvitationRequestsIntegrationTests : BaseIntegrati
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetWithdrawnEmailInvitationRequests_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
 		int roleId)
 	{

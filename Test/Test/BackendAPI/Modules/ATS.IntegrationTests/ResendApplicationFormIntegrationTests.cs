@@ -473,9 +473,9 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
 
-		// An uploader confined to client A must not be able to resend client B's
+		// A user confined to client A must not be able to resend client B's
 		// invitation just by knowing its id.
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
 
@@ -502,8 +502,8 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
 
-		// Same client, different requestor: an Uploader only owns their own orders.
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		// Same client, different requestor: an ordinary user only owns their own orders.
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
 
@@ -525,7 +525,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var command = new ResendApplicationFormCommand(emailInvitation.EmailInvitationID);
 
@@ -756,7 +756,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 
 		var theirOriginalToken = theirs.HashToken;
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var command = new ResendApplicationFormsCommand(
 			[mine.EmailInvitationID, theirs.EmailInvitationID]);
@@ -788,7 +788,7 @@ public class ResendApplicationFormIntegrationTests : BaseIntegrationTest
 		await _dbContext.SaveChangesAsync();
 		_dbContext.ChangeTracker.Clear();
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var command = new ResendApplicationFormsCommand([theirs.EmailInvitationID]);
 

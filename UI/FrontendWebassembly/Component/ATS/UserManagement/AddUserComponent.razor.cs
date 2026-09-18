@@ -65,7 +65,8 @@ public partial class AddUserComponent
 
 			return activeRoles.Where(role =>
 				role.RoleId != AtsRoleList.PlatformManagerId &&
-				role.RoleId != AtsRoleList.ServiceDeliveryId);
+				role.RoleId != AtsRoleList.ServiceDeliveryId &&
+				role.RoleId != AtsRoleList.ClientExperienceId);
 		}
 	}
 

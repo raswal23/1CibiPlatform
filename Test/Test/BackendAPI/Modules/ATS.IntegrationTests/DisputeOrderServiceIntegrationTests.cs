@@ -226,7 +226,6 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetDisputeOrdersAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
 		int roleId)
 	{

@@ -95,7 +95,6 @@ public class WithdrawnApplicationFilteringTests
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetWithdrawnEmailInvitationRequestsAsync_ShouldUseOwnClientAndRequestorForRestrictedRoles(
 		int roleId)
 	{

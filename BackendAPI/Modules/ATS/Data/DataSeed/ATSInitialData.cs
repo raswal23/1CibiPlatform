@@ -271,19 +271,22 @@ public class ATSInitialData
 		new ATSUserModuleSeedRow(
 			"atsService@cibi.com",
 			"ATS Service Delivery",
-			3,
+			AtsRoleIds.ServiceDelivery,
 			[.. Enumerable.Range(1, 13)]),
 
+		// Role 4, not 3: this is the ordinary client-side user. It shared Service
+		// Delivery's id until that role became platform-wide, which would have handed
+		// every seeded user the whole order book.
 		new ATSUserModuleSeedRow(
 			"atsUser@cibi.com",
 			"ATS User",
-			3,
+			AtsRoleIds.User,
 			[.. Enumerable.Range(1, 3), AtsModuleIds.AIAssistant, AtsModuleIds.BulkUploads]),
 
 		new ATSUserModuleSeedRow(
 			"atsUploader@cibi.com",
 			"ATS Uploader",
-			4,
+			AtsRoleIds.User,
 			[.. Enumerable.Range(1, 3), AtsModuleIds.BulkUploads])
 	];
 
@@ -334,6 +337,16 @@ public class ATSInitialData
 				RoleId = 4,
 				RoleName = "User",
 				RoleDescription = "Basic user role for ATS system.",
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow,
+				UpdatedAt = DateTime.UtcNow
+			},
+
+			new RoleDetails
+			{
+				RoleId = AtsRoleIds.ClientExperience,
+				RoleName = "Client Experience",
+				RoleDescription = "Client Experience role for ATS system.",
 				IsActive = true,
 				CreatedAt = DateTime.UtcNow,
 				UpdatedAt = DateTime.UtcNow

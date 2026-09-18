@@ -25,8 +25,13 @@ public class WithdrawnEmailNotificationTests
 	// Deliberately literals rather than WithdrawnEmail.Subject / .CopyTeam. These two are the
 	// agreed copy, and a test that read the constant would keep passing if the constant were
 	// changed - which is the one thing it exists to catch.
+	//
+	// The copied mailbox is clientsupport@, not the ccteam@ the body's closing sentence names:
+	// the notice is copied to one team and tells the reader to write to another. Both sides are
+	// deliberate, so this literal tracks the recipient only - AtsWithdrawnEmailBodyTests pins the
+	// prose address separately.
 	private const string WithdrawnSubject = "Order Status – Withdrawn";
-	private const string CcTeam = "ccteam@cibi.com.ph";
+	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
 	private const string RequestorName = "Ana Reyes";
 	private const string CandidateEmail = "candidate@example.test";

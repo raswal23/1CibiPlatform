@@ -31,18 +31,15 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 public class ApplicationFormEmailCopyTests
 {
 	// Read from the constant, DEPARTING from SubmittedFormEmailNotificationTests, which pins
-	// "ccteam@cibi.com.ph" and "pre-workteam@cibi.com.ph" as literals so that a change to the agreed
-	// copy fails a test rather than going out silently.
+	// "clientsupport@cibi.com.ph" and "pre-workteam@cibi.com.ph" as literals so that a change to the
+	// agreed copy fails a test rather than going out silently.
 	//
-	// That convention is right, and it is already doing its job: the constants in this module are
-	// currently swapped to a tester's mailboxes for branch verification, and the three sibling notice
-	// tests are red because of it. Pinning the same literals here would add a fourth red test that
-	// reports the identical, already-reported fact, and would say nothing about the wiring this file
-	// exists to cover - which addresses are copied, on which of the two bodies, and what happens when
-	// the sender cannot carry a copy list at all. Those assertions hold whatever the constant contains.
-	//
-	// The release check the literals provide is not lost: restoring all four constants is one step, and
-	// the three sibling tests go green together when it happens.
+	// That convention is right, and the sibling tests carry it for this module's copy list - the two
+	// notice tests pin the same pair of addresses this constant holds. Pinning them a third time here
+	// would report an already-reported fact and say nothing about the wiring this file exists to
+	// cover: which addresses are copied, on which of the two bodies, and what happens when the sender
+	// cannot carry a copy list at all. Those assertions hold whatever the constant contains, which is
+	// what lets this file stay green while a constant is temporarily swapped for branch verification.
 	private static readonly IReadOnlyCollection<string> CopyTeams = ApplicationFormEmail.CopyTeams;
 
 	private const string CandidateEmail = "candidate@example.test";
