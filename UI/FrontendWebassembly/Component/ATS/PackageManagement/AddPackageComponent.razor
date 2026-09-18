@@ -31,7 +31,7 @@
                         <div class="ap-section-head">
                             <span class="ap-section-number">1</span>
                             <h2 id="add-package-details-heading">Package details</h2>
-                            <span class="ap-section-helper">Name and describe the package</span>
+                            <span class="ap-section-helper">Name the package and set its report type ID</span>
                         </div>
 
                         <div class="ap-section-body">
@@ -53,23 +53,21 @@
                             </div>
 
                             <div class="ap-field">
-                                <label for="ap-package-description">Package description <span class="ap-required">*</span></label>
-                                <div class="ap-input-wrap ap-description-wrap">
+                                <label for="ap-package-description">Report type ID <span class="ap-required">*</span></label>
+                                <div class="ap-input-wrap ap-name-wrap">
                                     <MudTextField @bind-Value="Package.PackageDescription"
                                                   InputId="ap-package-description"
-                                                  Placeholder="What does this package include?"
+                                                  Placeholder="e.g. 182"
                                                   Required="true"
-                                                  RequiredError="Package description is required"
+                                                  RequiredError="Report type ID is required"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Lines="4"
                                                   Immediate="true"
                                                   MaxLength="240"
                                                   Adornment="Adornment.Start"
-                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
-                                                  Class="ap-control ap-description-control" />
+                                                  AdornmentIcon="@Icons.Material.Outlined.Tag"
+                                                  Class="ap-control" />
                                 </div>
-                                <div class="ap-character-count" aria-live="polite">@DescriptionLength / 240</div>
                             </div>
                         </div>
                     </section>
