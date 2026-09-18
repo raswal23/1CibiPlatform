@@ -29,6 +29,17 @@ public partial class AuthCacheRepository
 	
 	public Task<AuthUserAppRole?> GetAppSubRoleAsync(int appSubRoleId) =>
 		_authRepository.GetAppSubRoleAsync(appSubRoleId);
+
+	// Deliberately uncached, unlike the list reads above. This one decides whether a write is
+	// allowed, and a cached "no duplicate" would stay true for the life of the entry - long
+	// enough for two operators to each be told the assignment is free and both create it.
+	public Task<bool> AppSubRoleExistsAsync(
+		Guid userId,
+		int appId,
+		int subMenuId,
+		int? excludeAppRoleId,
+		CancellationToken cancellationToken) =>
+		_authRepository.AppSubRoleExistsAsync(userId, appId, subMenuId, excludeAppRoleId, cancellationToken);
 	
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 		{

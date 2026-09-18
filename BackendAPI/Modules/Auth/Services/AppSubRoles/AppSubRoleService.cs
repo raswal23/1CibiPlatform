@@ -65,7 +65,7 @@ public class AppSubRoleService : IAppSubRoleService
 		return isDeleted;
 	}
 
-	public async Task<AppSubRoleDTO> EditAppSubRoleAsync(EditAppSubRoleDTO appSubRoleDTO)
+	public async Task<AppSubRoleDTO> EditAppSubRoleAsync(EditAppSubRoleDTO appSubRoleDTO, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -82,6 +82,22 @@ public class AppSubRoleService : IAppSubRoleService
 			throw new NotFoundException($"AppSubRole with ID {appSubRoleDTO.AppSubRoleId} was not found.");
 		}
 
+		// The same rule the add path enforces, because an edit can land on an existing
+		// combination just as easily - guarding only the add would leave the back door open.
+		// Excluding this row is what lets an operator change the role without colliding with
+		// itself, which is the ordinary use of this dialog.
+		if (await _authRepository.AppSubRoleExistsAsync(
+				appSubRoleDTO.UserId,
+				appSubRoleDTO.AppId,
+				appSubRoleDTO.SubMenuId,
+				excludeAppRoleId: appSubRoleDTO.AppSubRoleId,
+				cancellationToken))
+		{
+			_logger.LogWarning("Duplicate app sub-role assignment rejected on edit: {@Context}", logContext);
+			throw new ConflictException(
+				"This user already has a role assigned for that application and submenu.");
+		}
+
 		existingAppSubRole.UserId = appSubRoleDTO.UserId;
 		existingAppSubRole.AppId = appSubRoleDTO.AppId;
 		existingAppSubRole.Submenu = appSubRoleDTO.SubMenuId;
@@ -91,7 +107,7 @@ public class AppSubRoleService : IAppSubRoleService
 		return updatedAppSubRole.Adapt<AppSubRoleDTO>();
 	}
 
-	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
+	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -105,6 +121,23 @@ public class AppSubRoleService : IAppSubRoleService
 		};
 
 		_logger.LogInformation("Adding app sub-role: {@Context}", logContext);
+
+		// One assignment per user per application per submenu. A second row for the same three
+		// leaves which role applies undefined, and the list gives an operator no way to tell the
+		// duplicates apart - both render identically apart from a hidden id.
+		if (await _authRepository.AppSubRoleExistsAsync(
+				appSubRole.UserId,
+				appSubRole.AppId,
+				appSubRole.SubMenuId,
+				excludeAppRoleId: null,
+				cancellationToken))
+		{
+			_logger.LogWarning("Duplicate app sub-role assignment rejected: {@Context}", logContext);
+			throw new ConflictException(
+				"This user already has a role assigned for that application and submenu. "
+					+ "Edit the existing assignment to change their role.");
+		}
+
 		var isAdded = await _authRepository.AddAppSubRoleAsync(appSubRole);
 		return isAdded;
 	}

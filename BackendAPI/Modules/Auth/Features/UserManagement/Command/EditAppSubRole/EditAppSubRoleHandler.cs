@@ -41,7 +41,7 @@ public class EditAppSubRoleHandler : ICommandHandler<EditAppSubRoleCommand, Edit
 	}
 	public async Task<EditAppSubRoleResult> Handle(EditAppSubRoleCommand request, CancellationToken cancellationToken)
 	{
-		var editAppSubRole = await _appSubRoleService.EditAppSubRoleAsync(request.editAppSubRole);
+		var editAppSubRole = await _appSubRoleService.EditAppSubRoleAsync(request.editAppSubRole, cancellationToken);
 		return new EditAppSubRoleResult(editAppSubRole);
 	}
 }
