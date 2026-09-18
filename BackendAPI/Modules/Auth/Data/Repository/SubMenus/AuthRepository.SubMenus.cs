@@ -26,9 +26,11 @@ public partial class AuthRepository
 
 	private IQueryable<AuthSubMenu> BuildSubMenusQuery(string? searchTerm)
 	{
+		// No IsActive filter, for the same reason as applications above: the tab is the
+		// registry, so a switched-off submenu stays visible and restorable. Assignment
+		// still filters these out.
 		var subMenusQuery = _dbcontext.AuthSubmenu
-			.AsNoTracking()
-			.Where(asm => asm.IsActive);
+			.AsNoTracking();
 
 		if (!string.IsNullOrEmpty(searchTerm))
 			subMenusQuery = subMenusQuery.Where(asm =>

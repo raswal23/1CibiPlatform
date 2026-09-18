@@ -1391,7 +1391,7 @@
                                                 <MudText Typo="Typo.subtitle2" Class="ats-employer-card-title mb-0">Employer 3</MudText>
                                                 <MudButton Variant="Variant.Text"
                                                             Class="ats-remove-employer-btn"
-                                                            OnClick="@(() => AddEmployer3 = false)">
+                                                            OnClick="RemoveEmployer3">
                                                     Remove ✕
                                                 </MudButton>
                                             </MudItem>
@@ -1825,7 +1825,8 @@
                                 {
                                     <MudCheckBox T="bool"
                                                  Class="ats-add-reference-card"
-                                                 @bind-Value="AddAnotherReference"
+                                                 Value="AddAnotherReference"
+                                                 ValueChanged="OnAddReference3Changed"
                                                  Label="+ Add Reference 3" />
                                 }
                                 <MudCollapse Expanded="@AddAnotherReference">
@@ -1835,7 +1836,7 @@
                                                 <MudText Typo="Typo.subtitle2" Class="ats-reference-title mb-0">Reference 3</MudText>
                                                 <MudButton Variant="Variant.Text"
                                                            Class="ats-remove-reference-btn"
-                                                           OnClick="@(() => AddAnotherReference = false)">
+                                                           OnClick="RemoveReference3">
                                                     Remove ✕
                                                 </MudButton>
                                             </MudItem>

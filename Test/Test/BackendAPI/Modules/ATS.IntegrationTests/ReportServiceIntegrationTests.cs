@@ -216,24 +216,26 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 	/// actually runs, so these pin the arithmetic against real rows.
 	/// </summary>
 	/// <remarks>
-	/// Seeded relative to the Manila date because that is the timezone the count is measured
-	/// in - "2 days ago" in UTC is a different number of days ago in Manila for eight hours
-	/// out of every twenty-four.
+	/// The age of the order is varied deliberately alongside the count: it must not affect the
+	/// answer. Days elapsed used to be the whole formula, and that is the bug these pin.
 	/// </remarks>
 	[Theory]
 	// Ordered on day 0 with 3 reminders configured: all 3 still to come.
-	[InlineData(3, 0, 3)]
-	// One day in, one reminder spent.
-	[InlineData(3, 1, 2)]
-	// The last day inside the window.
-	[InlineData(3, 2, 1)]
-	// Day 3 of a 3-reminder schedule: the window has closed.
-	[InlineData(3, 3, 0)]
-	// Long past the window - still 0, never negative.
-	[InlineData(3, 40, 0)]
+	[InlineData(3, 0, 0, 3)]
+	// One day in, one reminder actually sent.
+	[InlineData(3, 1, 1, 2)]
+	// Two sent.
+	[InlineData(3, 2, 2, 1)]
+	// All three sent: the schedule is spent.
+	[InlineData(3, 3, 3, 0)]
+	// Long past the nominal schedule but fully sent - still 0, never negative.
+	[InlineData(3, 40, 3, 0)]
+	// The package was lowered to 2 after 3 had already gone out. Clamped, not negative.
+	[InlineData(2, 5, 3, 0)]
 	public async Task GetReportsAsync_ShouldReportRemainingFollowUps_ForAChasedOrder(
 		int followUpEmail,
 		int daysSinceOrder,
+		int remindersSent,
 		int expectedRemaining)
 	{
 		var userId = Guid.CreateVersion7();
@@ -248,6 +250,7 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		invitation.AutoChasing = true;
 		invitation.ApplicationFormStatus = "Pending";
 		invitation.OrderCreatedAt = ManilaDaysAgo(daysSinceOrder);
+		invitation.FollowUpSentCount = remindersSent;
 		await AddInvitationsAsync(invitation);
 
 		var result = await _reportService.GetReportsAsync(
@@ -255,6 +258,76 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			CancellationToken.None);
 
 		result.Items.Single().FollowUpEmailsRemaining.Should().Be(expectedRemaining);
+	}
+
+	/// <summary>
+	/// A count of 0 means no reminder has ever been queued, so the full schedule is still to
+	/// come however old the order is. This is the reported bug: a package set to 2 showed
+	/// "2 left" on the day of the order and "1 left" the next day, while the candidate had
+	/// still received nothing.
+	/// </summary>
+	[Theory]
+	// The day after the order - the first reminder is due but has not been sent.
+	[InlineData(1)]
+	// Several days on and still nothing sent: still the whole schedule, not a smaller number.
+	[InlineData(2)]
+	// Even past the package's own reminder count, an unchased order has spent nothing.
+	[InlineData(5)]
+	public async Task GetReportsAsync_ShouldNotSpendFollowUps_WhenNoReminderHasBeenSent(
+		int daysSinceOrder)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 13;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(2);
+
+		var invitation = CreateInvitation("Unsent", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(daysSinceOrder);
+		invitation.FollowUpSentCount = 0;
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(2);
+	}
+
+	/// <summary>
+	/// Only sends count, so a day the chaser skipped is not deducted. An order three days old
+	/// that has been chased once still has the rest of its schedule to come - the reminders
+	/// that did not go out on the missed days have not been spent.
+	/// </summary>
+	[Fact]
+	public async Task GetReportsAsync_ShouldDeductOnlySends_WhenAChaseDayWasMissed()
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 14;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(3);
+
+		// Three days on, but only one reminder was ever sent. Two remain; the elapsed-days
+		// version reported 0 and the chaser stopped.
+		var invitation = CreateInvitation("Missed", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(3);
+		invitation.FollowUpSentCount = 1;
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(2);
 	}
 
 	// Null, not 0. "Nothing is chasing this order" and "the chasing finished" are different
@@ -969,6 +1042,7 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified),
 			ManilaZone);
 	}
+
 
 	/// <summary>
 	/// Sets the reminder count on the package every seeded invitation points at. The default

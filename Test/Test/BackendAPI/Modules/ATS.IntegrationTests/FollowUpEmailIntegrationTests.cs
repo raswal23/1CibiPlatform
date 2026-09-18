@@ -175,34 +175,95 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 		released.Should().BeEmpty();
 	}
 
-	// The stop condition. N=2 chases on day 1 and day 2; day 3 is past the window and the order
-	// is never touched again, however long it stays unanswered.
+	// The stop condition is the COUNT, not the calendar: N=2 stops once two reminders have
+	// actually gone out, however long ago that was.
 	[Theory]
 	[InlineData(3)]
 	[InlineData(10)]
 	[InlineData(60)]
-	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenTheReminderWindowHasClosed(int daysAgo)
+	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenEveryReminderHasBeenSent(int daysAgo)
 	{
 		await SetFollowUpDaysAsync(2);
-		await SeedOrderAsync(orderCreatedAt: ManilaDaysAgo(daysAgo));
+		await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(daysAgo),
+			followUpSentCount: 2);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		released.Should().BeEmpty();
 	}
 
-	// The last day inside the window still sends - the boundary belongs to the candidate.
-	[Fact]
-	public async Task ReleaseDueFollowUps_ShouldReleaseTheRow_OnTheFinalDayOfTheWindow()
+	// The reason the count exists. A reminder is only released for a row that satisfies every
+	// rule, so days pass with nothing sent whenever delivery was stuck - and the old
+	// time-bounded stop then ended the schedule for exactly the candidates who had received the
+	// least. Inside the grace window those sends are still owed and still go out.
+	[Theory]
+	// Past the nominal 2-day schedule, nothing ever sent.
+	[InlineData(3, 0)]
+	// Further out, one of the two sent.
+	[InlineData(5, 1)]
+	public async Task ReleaseDueFollowUps_ShouldStillRelease_WhenSendsWereMissedInsideTheGraceWindow(
+		int daysAgo,
+		int alreadySent)
 	{
 		await SetFollowUpDaysAsync(2);
 		var id = await SeedOrderAsync(
-			orderCreatedAt: ManilaDaysAgo(2),
-			lastFollowUpSentDate: ManilaToday.AddDays(-1));
+			orderCreatedAt: ManilaDaysAgo(daysAgo),
+			followUpSentCount: alreadySent);
 
 		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
 
 		released.Should().ContainSingle().Which.EmailInvitationID.Should().Be(id);
+	}
+
+	// The backstop. Without an upper bound a never-chased order stays eligible forever, and the
+	// daily-reminder migration ships no backfill precisely because the window is what protects
+	// the existing backlog. Grace is 7 days, so a 2-reminder package stops at order + 9.
+	[Theory]
+	[InlineData(10)]
+	[InlineData(60)]
+	public async Task ReleaseDueFollowUps_ShouldSkipTheRow_WhenItIsPastTheCatchUpGrace(int daysAgo)
+	{
+		await SetFollowUpDaysAsync(2);
+		await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(daysAgo),
+			followUpSentCount: 0);
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().BeEmpty();
+	}
+
+	// The final reminder of the schedule still sends - the boundary belongs to the candidate.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldReleaseTheRow_OnTheFinalReminderOfTheSchedule()
+	{
+		await SetFollowUpDaysAsync(2);
+		var id = await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(2),
+			lastFollowUpSentDate: ManilaToday.AddDays(-1),
+			followUpSentCount: 1);
+
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		released.Should().ContainSingle().Which.EmailInvitationID.Should().Be(id);
+	}
+
+	// The counter is incremented in the same UPDATE that stamps the date, so a crash cannot
+	// leave a row released but uncounted - which would let the schedule overrun.
+	[Fact]
+	public async Task ReleaseDueFollowUps_ShouldIncrementFollowUpSentCount()
+	{
+		await SetFollowUpDaysAsync(3);
+		var id = await SeedOrderAsync(
+			orderCreatedAt: ManilaDaysAgo(2),
+			lastFollowUpSentDate: ManilaToday.AddDays(-1),
+			followUpSentCount: 1);
+
+		await _atsRepository.ReleaseDueFollowUpInvitationsAsync(CancellationToken.None);
+
+		var updated = await ReadAsync(id);
+		updated.FollowUpSentCount.Should().Be(2);
 	}
 
 	// Data screening has no candidate to email. NULL is excluded as well as false: an
@@ -310,7 +371,8 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 		string applicationFormStatus = "Pending",
 		string emailSentStatus = "Done",
 		DateTime? hashTokenCreatedAt = null,
-		DateOnly? lastFollowUpSentDate = null)
+		DateOnly? lastFollowUpSentDate = null,
+		int followUpSentCount = 0)
 	{
 		var order = new EmailInvitationRequest
 		{
@@ -331,7 +393,8 @@ public class FollowUpEmailIntegrationTests : BaseIntegrationTest
 			EmailSentAt = emailSentStatus == "Done" ? orderCreatedAt : null,
 			OrderStatus = "Pending Candidate Info",
 			OrderCreatedAt = orderCreatedAt,
-			LastFollowUpSentDate = lastFollowUpSentDate
+			LastFollowUpSentDate = lastFollowUpSentDate,
+			FollowUpSentCount = followUpSentCount
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(order);

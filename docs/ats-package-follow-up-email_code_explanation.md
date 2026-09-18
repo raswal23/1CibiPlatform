@@ -7,8 +7,9 @@ code lives and why it is shaped the way it is.
 
 | File | Role |
 | --- | --- |
-| `Data/Entities/EmailInvitationRequest.cs` | `LastFollowUpSentDate` — the once-per-day guard **and** the reminder-copy signal |
-| `Data/EntityConfiguration/EmailInvitationRequestConfiguration.cs` | nullable, mapped to `date`, deliberately un-indexed |
+| `Data/Entities/EmailInvitationRequest.cs` | `LastFollowUpSentDate` — the once-per-day guard **and** the reminder-copy signal; `FollowUpSentCount` — the stop condition |
+| `Data/EntityConfiguration/EmailInvitationRequestConfiguration.cs` | the date nullable and mapped to `date`, the count NOT NULL defaulting to 0; both deliberately un-indexed |
+| `Migrations/ATS/…AddFollowUpSentCountToEmailInvitationRequest.cs` | the counter column; no backfill, by design |
 | `Migrations/ATS/…AddFollowUpQueuedAtToEmailInvitationRequest.cs` | historical: the fire-once column + the backlog backfill |
 | `Migrations/ATS/…AddLastFollowUpSentDateToEmailInvitationRequest.cs` | the daily-reminder column; no backfill, by design |
 | `Migrations/ATS/…DropFollowUpQueuedAtFromEmailInvitationRequest.cs` | removes the superseded column |
@@ -36,9 +37,10 @@ WITH due AS (
           IS DISTINCT FROM (now() AT TIME ZONE {4})::date
       AND (now() AT TIME ZONE {4})
           >= (eir."OrderCreatedAt" AT TIME ZONE {4}) + interval '1 day'
+      AND eir."FollowUpSentCount" < pd."FollowUpEmail"
       AND (now() AT TIME ZONE {4})
           <  (eir."OrderCreatedAt" AT TIME ZONE {4})
-             + make_interval(days => pd."FollowUpEmail" + 1)
+             + make_interval(days => pd."FollowUpEmail" + {5})
     ORDER BY eir."OrderCreatedAt"
     LIMIT 200
     FOR UPDATE OF eir SKIP LOCKED
@@ -46,20 +48,24 @@ WITH due AS (
 UPDATE ats."EmailInvitationRequest" t
 SET "EmailSentStatus" = Pending, "EmailSendAttempts" = 0,
     "EmailClaimedAt" = NULL, "EmailSentAt" = NULL,
-    "LastFollowUpSentDate" = (now() AT TIME ZONE {4})::date
+    "LastFollowUpSentDate" = (now() AT TIME ZONE {4})::date,
+    "FollowUpSentCount" = t."FollowUpSentCount" + 1
 WHERE t."EmailInvitationID" IN (SELECT … FROM due)
 RETURNING t.*;
 ```
+
+`{5}` is `FollowUpCatchUpGraceDays + 1`. The `+ 1` is the lower bound's day-1 offset carried into
+the upper bound; the grace is what lets a stuck order catch up.
 
 `{4}` is `FollowUpTimeZone`, the `Asia/Manila` constant at the top of the same file. It is a
 parameter rather than an inlined literal for the usual reason — it is the only form `FromSqlRaw`
 will accept without string concatenation.
 
-The three added clauses are the whole of the daily behaviour: **dedupe** (one per local day),
-**start** (the day after the order, at its time of day), and **stop** (the N-day window). Reading
-them in that order is the fastest way to reason about whether a given row is due.
+Four clauses are the whole of the daily behaviour: **dedupe** (one per local day), **start** (the
+day after the order, at its time of day), **stop** (N reminders sent), and **bound** (the grace
+window). Reading them in that order is the fastest way to reason about whether a given row is due.
 
-Six things about this shape are load-bearing:
+Seven things about this shape are load-bearing:
 
 **`FOR UPDATE … SKIP LOCKED`.** Quartz here is clustered and persistent, so two replicas can in
 principle overlap despite `[DisallowConcurrentExecution]` (see §7 of `ats-email-delivery.md`).
@@ -68,17 +74,25 @@ blocking on them or double-releasing.
 
 **The stamps are in the same `UPDATE` as the requeue.** If `LastFollowUpSentDate` were written
 separately, a crash between the two writes would leave a requeued row with no date — and the next
-hourly pass would chase that candidate again the same day. One statement, so the guarantee is the
-transaction's, not the scheduler's.
+hourly pass would chase that candidate again the same day. `FollowUpSentCount` rides the same
+statement for the same reason: a sent-but-uncounted row would overrun its schedule. One statement,
+so the guarantee is the transaction's, not the scheduler's.
 
 **`IS DISTINCT FROM`, not `<>`.** `NULL <> today` evaluates to NULL, not true, so a plain `<>`
 would exclude every row that has never been chased — i.e. the entire feature would silently never
 fire. This is the single easiest clause in the query to "simplify" into a no-op.
 
-**The window is half-open: `>= order + 1 day` and `< order + (N+1) days`.** That is N whole days
-wide starting at the first eligible moment, which is what makes `FollowUpEmail = 2` send twice.
-Dropping the `+ 1` sends once; making the upper bound `<=` sends N+1 times. Both look plausible in
-review and neither fails loudly.
+**`FollowUpSentCount < FollowUpEmail` is the stop, not the window.** Reminders are only released
+for rows meeting every other clause, so days pass with nothing sent whenever delivery is stuck. A
+time-based stop therefore ended the schedule early for exactly the candidates who had received the
+least. The count also has to be *stored* rather than derived from
+`LastFollowUpSentDate − OrderCreatedAt`: that gap equals the number sent only while every reminder
+lands on its own day, and overcounts the moment a missed one is caught up late.
+
+**The window survives as a backstop, widened by the grace.** `FollowUpSentCount` is not
+time-bounded, so without an upper limit a never-chased order is eligible forever — and no migration
+backfills, precisely because the window is what protects the backlog. The lower bound keeps its
+`+ 1` so the first reminder lands the day *after* the order.
 
 **`LIMIT 200`.** Same bound as the claim query. A pass is a slice, not the whole backlog; the job
 runs hourly and the work is measured in days, so there is never pressure to drain it in one go.
@@ -95,7 +109,7 @@ of five applies to it in its own right, exactly as it does for a resend.
 `PackageId` is a configured FK to `PackageDetails`, so reading `pd."FollowUpEmail"` in the
 predicate is a supported relationship and not an ambient assumption about table shapes.
 
-## Why no index on either follow-up column
+## Why no index on any follow-up column
 
 `EmailInvitationRequest` is write-hot — the configuration file carries its own note about not
 adding redundant indexes to it. The chaser runs once an hour and its predicate already narrows

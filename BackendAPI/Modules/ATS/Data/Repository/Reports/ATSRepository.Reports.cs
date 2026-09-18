@@ -136,7 +136,7 @@ public partial class ATSRepository
 					.Select(rd => rd.HitStatus)
 					.FirstOrDefault(),
 
-				// The three follow-up inputs, carried so the service can work out how many
+				// The follow-up inputs, carried so the service can work out how many
 				// reminders are left. A correlated subquery rather than a join, matching how
 				// HitStatus above is read: the shape of this query is one row per invitation
 				// and a join to PackageDetails would risk changing that.
@@ -145,7 +145,8 @@ public partial class ATSRepository
 					.Select(pd => pd.FollowUpEmail)
 					.FirstOrDefault(),
 				ChasesCandidate = eir.AutoChasing == true,
-				ApplicationFormStatus = eir.ApplicationFormStatus
+				ApplicationFormStatus = eir.ApplicationFormStatus,
+				FollowUpSentCount = eir.FollowUpSentCount
 			});
 	}
 

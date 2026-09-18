@@ -175,13 +175,14 @@ else if (_activeIndex == 3)
                     LoadServerData="LoadApplicationsServerData"
                     CursorPagerState="_applicationsLoader"
                     SearchString="@searchStringApp"
-                    ColumnCount="4"
+                    ColumnCount="5"
                     SearchStringChanged="@((string val) => searchStringApp = val)">
 
         <HeaderTemplate>
             <MudTh Class="um-id-col">Id</MudTh>
             <MudTh>Application</MudTh>
             <MudTh>Description</MudTh>
+            <MudTh>Active</MudTh>
             <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
@@ -189,6 +190,14 @@ else if (_activeIndex == 3)
             <MudTd DataLabel="Id" Class="um-id-col">@app.applicationId</MudTd>
             <MudTd DataLabel="Application">@app.applicationName</MudTd>
             <MudTd DataLabel="Description" Class="um-description-col">@app.Description</MudTd>
+            @* Same .ats-status-pill the User tab uses for Active, so a switched-off record
+               reads identically wherever it appears. The list is unfiltered now, which is
+               what makes this column worth showing at all. *@
+            <MudTd DataLabel="Active">
+                <span class="ats-status-pill @(app.IsActive ? "done" : "error")">
+                    @(app.IsActive ? "Active" : "Inactive")
+                </span>
+            </MudTd>
             <MudTd DataLabel="Action" Class="um-actions-col">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium"
                                    Class="um-icon-action um-icon-action-edit"
@@ -224,13 +233,14 @@ else if (_activeIndex == 4)
                     LoadServerData="LoadSubMenusServerData"
                     CursorPagerState="_subMenusLoader"
                     SearchString="@searchStringSub"
-                    ColumnCount="4"
+                    ColumnCount="5"
                     SearchStringChanged="@((string val) => searchStringSub = val)">
-              
+
         <HeaderTemplate>
             <MudTh Class="um-id-col">Id</MudTh>
             <MudTh>SubMenu</MudTh>
             <MudTh>Description</MudTh>
+            <MudTh>Active</MudTh>
             <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
@@ -238,6 +248,11 @@ else if (_activeIndex == 4)
             <MudTd DataLabel="Id" Class="um-id-col">@sub.subMenuId</MudTd>
             <MudTd DataLabel="SubMenu">@sub.subMenuName</MudTd>
             <MudTd DataLabel="Description" Class="um-description-col">@sub.Description</MudTd>
+            <MudTd DataLabel="Active">
+                <span class="ats-status-pill @(sub.IsActive ? "done" : "error")">
+                    @(sub.IsActive ? "Active" : "Inactive")
+                </span>
+            </MudTd>
             <MudTd DataLabel="Action" Class="um-actions-col">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" 
                                Color="Color.Primary" 

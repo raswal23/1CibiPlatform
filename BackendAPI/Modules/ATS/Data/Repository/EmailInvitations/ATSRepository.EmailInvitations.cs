@@ -132,6 +132,19 @@ public partial class ATSRepository
 	// still to come and has to measure days the same way this does.
 	private const string FollowUpTimeZone = FollowUpSchedule.Id;
 
+	// How long past its nominal schedule an order may still be caught up.
+	//
+	// The stop condition is FollowUpSentCount, not elapsed time, so this is no longer what ends
+	// the schedule - it is the backstop that keeps it bounded. Without an upper limit an order
+	// that was never chased stays eligible forever, and the daily-reminder migration ships no
+	// backfill precisely because the window was what protected the existing backlog (see
+	// docs/ats-package-follow-up-email.md). Anything older than its package's count plus this
+	// grace is permanently ineligible, whatever its count says.
+	//
+	// Seven days is wide enough to absorb a realistic outage - a send queue backed up over a
+	// long weekend - without letting a months-old order suddenly start chasing.
+	private const int FollowUpCatchUpGraceDays = 7;
+
 	public async Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken)
 	{
 		// Puts an already-sent invitation back on the email queue as the package's
@@ -162,12 +175,21 @@ public partial class ATSRepository
 		//                          without it a due row would be released on all 24 passes.
 		//                          IS DISTINCT FROM, not <>: a NULL (never chased) must pass.
 		//   day 1 has arrived    - now() is at or past the order's time of day, one day on.
-		//   within the N-day window - stops after FollowUpEmail reminders.
+		//   FollowUpSentCount < FollowUpEmail - the stop condition: N reminders SENT.
+		//   within the grace window - the backstop that keeps the schedule bounded.
 		//
-		// The last two are what make it "every 24 hours" rather than "at midnight": the
-		// window is measured in whole days from OrderCreatedAt, and the time-of-day compare
-		// holds each send to the order's own clock time. Both run in Manila (see
-		// FollowUpTimeZone) so the calendar and the clock agree with the candidate's day.
+		// The count, not the calendar, is what ends the schedule. Reminders are only released
+		// for rows meeting every rule above, so a day can pass with nothing sent - the first
+		// invitation still queued behind the send quota, or failed. A purely time-bounded stop
+		// therefore cut the schedule short for exactly the candidates who had received the
+		// least, and left the board's "Follow-ups Left" promising sends that could no longer
+		// happen. ReportService.CalculateFollowUpEmailsRemaining subtracts this same count.
+		//
+		// The window remains, widened by FollowUpCatchUpGraceDays, because it is still the only
+		// thing bounding the backlog - see that constant. The day-1 lower bound and the
+		// time-of-day compare are what make this "every 24 hours" rather than "at midnight".
+		// All of it runs in Manila (see FollowUpTimeZone) so the calendar and the clock agree
+		// with the candidate's day.
 		//
 		// FromSqlRaw with RETURNING t.*, matching GetPendingEmailInvitationRequestsAsync:
 		// the caller needs the released rows' OrderStatus to write order history, and
@@ -189,9 +211,10 @@ public partial class ATSRepository
 						  IS DISTINCT FROM (now() AT TIME ZONE {4})::date
 					  AND (now() AT TIME ZONE {4})
 						  >= (eir."OrderCreatedAt" AT TIME ZONE {4}) + interval '1 day'
+					  AND eir."FollowUpSentCount" < pd."FollowUpEmail"
 					  AND (now() AT TIME ZONE {4})
 						  <  (eir."OrderCreatedAt" AT TIME ZONE {4})
-							 + make_interval(days => pd."FollowUpEmail" + 1)
+							 + make_interval(days => pd."FollowUpEmail" + {5})
 					ORDER BY eir."OrderCreatedAt"
 					LIMIT {2}
 					FOR UPDATE OF eir SKIP LOCKED
@@ -201,7 +224,8 @@ public partial class ATSRepository
 					"EmailSendAttempts" = 0,
 					"EmailClaimedAt" = NULL,
 					"EmailSentAt" = NULL,
-					"LastFollowUpSentDate" = (now() AT TIME ZONE {4})::date
+					"LastFollowUpSentDate" = (now() AT TIME ZONE {4})::date,
+					"FollowUpSentCount" = t."FollowUpSentCount" + 1
 				WHERE t."EmailInvitationID" IN (SELECT "EmailInvitationID" FROM due)
 				RETURNING t.*;
 				""",
@@ -209,7 +233,8 @@ public partial class ATSRepository
 				EmailStatus.Done,
 				MaxFollowUpReleasePerPass,
 				EmailStatus.Pending,
-				FollowUpTimeZone)
+				FollowUpTimeZone,
+				FollowUpCatchUpGraceDays + 1)
 			.AsNoTracking()
 			.ToListAsync(cancellationToken);
 	}

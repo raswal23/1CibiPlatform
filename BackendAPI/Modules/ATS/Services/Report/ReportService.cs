@@ -286,12 +286,26 @@ public class ReportService : IReportService
 	/// by exactly as long as the entry lives.
 	/// </para>
 	/// <para>
-	/// This MIRRORS the window in ATSRepository.ReleaseDueFollowUpInvitationsAsync and has to
-	/// keep mirroring it. Reminders run from day 1 through day N inclusive, measured in Manila
-	/// from OrderCreatedAt, so the count left on day D is N - D. If that query's window
-	/// changes and this does not, the board will confidently promise reminders that never
-	/// arrive - a wrong number here is worse than no column, because an operator will act on
-	/// it instead of chasing the candidate themselves.
+	/// Counted from reminders SENT, not days elapsed. FollowUpSentCount is incremented in the
+	/// same UPDATE that queues each reminder, so it is the record of what actually went out.
+	/// Deducting elapsed days instead assumed the schedule always runs, so an order placed
+	/// today read "2 left" and dropped to "1 left" the next morning while the candidate had
+	/// received nothing - only the day had passed, not the reminder.
+	/// </para>
+	/// <para>
+	/// This is the SAME subtraction ATSRepository.ReleaseDueFollowUpInvitationsAsync makes to
+	/// decide whether to send at all (FollowUpSentCount &lt; FollowUpEmail), against the same two
+	/// columns. That is deliberate: the board and the chaser cannot drift apart, because they
+	/// are reading one fact rather than two formulas that have to be kept in step. A wrong
+	/// number here is worse than no column, because an operator will act on it instead of
+	/// chasing the candidate themselves.
+	/// </para>
+	/// <para>
+	/// One caveat this cannot express: the release query also refuses orders past
+	/// FollowUpCatchUpGraceDays beyond their schedule, so a long-abandoned order can show a
+	/// non-zero count that will never be sent. Accepted - it only affects orders already far
+	/// outside their window, and encoding the grace period here would reintroduce exactly the
+	/// duplicated-formula drift this change removes.
 	/// </para>
 	/// <para>
 	/// Null means the question does not apply; 0 means the schedule is spent. The caller
@@ -313,33 +327,24 @@ public class ReportService : IReportService
 			return null;
 		}
 
-		// A legacy row with no creation timestamp can never satisfy the window, so it is not
-		// "0 remaining" - the schedule simply cannot be evaluated for it.
-		if (row.OrderCreatedAt is not { } orderCreatedAt)
+		// A legacy row with no creation timestamp can never satisfy the release window, so it
+		// is not "0 remaining" - the schedule simply cannot be evaluated for it.
+		if (row.OrderCreatedAt is null)
 		{
 			return null;
 		}
 
-		// Whole days elapsed in Manila, matching the timezone the release query compares in.
-		// Comparing the DATES rather than subtracting the instants is what makes this agree
-		// with a query whose first reminder fires at the order's own time of day: on the
-		// morning of day 1 the instant difference is under 24 hours until that hour arrives,
-		// but the reminder is still due today.
-		var orderDate = DateOnly.FromDateTime(
-			TimeZoneInfo.ConvertTimeFromUtc(
-				DateTime.SpecifyKind(orderCreatedAt, DateTimeKind.Utc),
-				FollowUpSchedule.TimeZone));
-
-		var today = DateOnly.FromDateTime(
-			TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, FollowUpSchedule.TimeZone));
-
-		var daysElapsed = today.DayNumber - orderDate.DayNumber;
-
-		// Clamped at both ends: a clock skew that puts the order in the future must not report
-		// MORE reminders than the package allows, and an order past its window reports 0.
-		var remaining = row.PackageFollowUpEmail - daysElapsed;
-
-		return Math.Clamp(remaining, 0, row.PackageFollowUpEmail);
+		// The same subtraction the release query's stop condition makes, against the same two
+		// columns - which is what makes agreement structural rather than a pair of formulas
+		// that have to be kept in step.
+		//
+		// Clamped because neither end is guaranteed by the database: FollowUpEmail can be
+		// lowered on the package after reminders have already gone out, which would otherwise
+		// render a negative count.
+		return Math.Clamp(
+			row.PackageFollowUpEmail - row.FollowUpSentCount,
+			0,
+			row.PackageFollowUpEmail);
 	}
 
 	public async Task<SubjectNameDTO> EditSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)
