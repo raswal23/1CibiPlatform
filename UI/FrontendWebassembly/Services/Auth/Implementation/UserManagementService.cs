@@ -80,6 +80,9 @@ public class UserManagementService : IUserManagementService
 	public Task<ServiceResponse<bool>> DeleteLockedUserAsync(Guid lockedUserId)
 		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/deletelockeduser/{lockedUserId}"));
 
+	public Task<ServiceResponse<bool>> RejectUserAsync(Guid userId)
+		=> SendForBoolAsync(() => _httpClient.DeleteAsync($"auth/rejectuser/{userId}"));
+
 	public Task<ServiceResponse<bool>> AddApplicationAsync(AddApplicationDTO application)
 		=> SendForBoolAsync(() => _httpClient.PostAsJsonAsync($"auth/addapplication", new { application }));
 
@@ -148,6 +151,17 @@ public class UserManagementService : IUserManagementService
 		};
 
 		return PatchForAsync<EditUserDTO>("auth/edituser", new { editUser });
+	}
+
+	public Task<ServiceResponse<EditUserStatusDTO>> EditUserStatusAsync(EditUserStatusDTO editUserStatusDTO)
+	{
+		var editUserStatus = new EditUserStatusDTO
+		{
+			UserId = editUserStatusDTO.UserId,
+			IsActive = editUserStatusDTO.IsActive
+		};
+
+		return PatchForAsync<EditUserStatusDTO>("auth/edituserstatus", new { editUserStatus });
 	}
 
 	private static string BuildPagedQuery(string route, string? cursor, int? pageSize, string? searchTerm)

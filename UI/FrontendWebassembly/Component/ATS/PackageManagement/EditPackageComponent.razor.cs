@@ -11,7 +11,6 @@ public partial class EditPackageComponent
 	public PackageDetailsDTO Package { get; set; } = new();
 
 	private EditPackageDTO EditPackage = new();
-	private int DescriptionLength => EditPackage.PackageDescription?.Length ?? 0;
 
 	protected override void OnParametersSet()
 	{

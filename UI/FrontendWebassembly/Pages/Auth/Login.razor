@@ -371,6 +371,7 @@
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                                     </svg>
                                     <MudTextField @bind-Value="registerPassword"
+                                                  @bind-Value:after="RevalidateConfirmPassword"
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
@@ -401,10 +402,12 @@
                                         <rect x="4" y="10" width="16" height="10" rx="2" />
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                                     </svg>
-                                    <MudTextField @bind-Value="confirmPassword"
+                                    <MudTextField @ref="confirmPasswordField"
+                                                  @bind-Value="confirmPassword"
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
+                                                  Immediate="true"
                                                   Required="true"
                                                   RequiredError="Please confirm your password"
                                                   InputType="@confirmPasswordInput"

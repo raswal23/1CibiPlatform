@@ -183,6 +183,28 @@ public class AuthPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "EditUserStatusEntryPoint",
+				MatchPath: "/auth/edituserstatus",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/auth/edituserstatus" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "RejectUserEntryPoint",
+				MatchPath: "/auth/rejectuser/{UserId}",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Delete },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathRemovePrefix", "/auth/" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetMyProfileEntryPoint",
 				MatchPath: "/auth/getmyprofile",
 				ClusterId: GatewayConstants.OnePlatformApi,

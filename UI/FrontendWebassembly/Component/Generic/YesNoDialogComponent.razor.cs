@@ -40,12 +40,28 @@ public partial class YesNoDialogComponent
 
 	private bool isConfirming;
 
-	private string ToneCssClass =>
-		AvatarColor == Color.Warning ||
-		InfoColor == Color.Warning ||
-		ThemeButtonColor.Contains("warning", StringComparison.OrdinalIgnoreCase)
-			? "is-warning"
-			: "is-primary";
+	// Danger is checked before warning: a caller asking for Error anywhere means destructive,
+	// and a mixed set (Error avatar, warning button) should read as the more severe of the two
+	// rather than depending on which condition happens to be tested first.
+	private string ToneCssClass
+	{
+		get
+		{
+			if (AvatarColor == Color.Error ||
+				InfoColor == Color.Error ||
+				ThemeButtonColor.Contains("delete", StringComparison.OrdinalIgnoreCase) ||
+				ThemeButtonColor.Contains("danger", StringComparison.OrdinalIgnoreCase))
+			{
+				return "is-danger";
+			}
+
+			return AvatarColor == Color.Warning ||
+				InfoColor == Color.Warning ||
+				ThemeButtonColor.Contains("warning", StringComparison.OrdinalIgnoreCase)
+					? "is-warning"
+					: "is-primary";
+		}
+	}
 
 	private string? InfoBannerStyle => string.IsNullOrWhiteSpace(InfoBGColor)
 		? null

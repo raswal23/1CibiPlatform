@@ -495,6 +495,42 @@
     stroke-linejoin: round;
 }
 
+/* The same chip reporting the opposite state. Neutral rather than red: not yet approved is
+   a pending decision, not a fault, and the approval queue is where it is answered. */
+.um-section-body ::deep .approval-verified.is-off {
+    background: var(--c-neutral-bg);
+    color: var(--umd-text-2);
+}
+
+/* A standing condition the dialog cannot change, as opposed to .um-status-row which is the
+   control itself. Used by the status dialog to say an inactive-but-unapproved user still
+   cannot sign in once activated. */
+.um-section-body ::deep .um-inline-note {
+    display: flex;
+    margin-top: 14px;
+    padding: 11px 13px;
+    align-items: flex-start;
+    gap: 9px;
+    border: 1.5px solid var(--c-border-soft);
+    border-left: 3px solid var(--c-info);
+    border-radius: 10px;
+    background: var(--c-info-bg);
+    color: var(--umd-text-2);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.um-section-body ::deep .um-inline-note .mud-icon-root {
+    flex: 0 0 auto;
+    margin-top: 1px;
+    color: var(--c-info);
+}
+
+.um-section-body ::deep .um-inline-note strong {
+    color: var(--umd-text-1);
+    font-weight: 700;
+}
+
 .um-footer {
     display: flex;
     justify-content: flex-end;

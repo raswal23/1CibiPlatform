@@ -54,6 +54,7 @@ public partial class Login
 	private bool isConfirmPasswordVisible;
 	private InputType confirmPasswordInput = InputType.Password;
 	private string confirmPasswordIcon = Icons.Material.Filled.VisibilityOff;
+	private MudTextField<string>? confirmPasswordField;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -274,6 +275,17 @@ public partial class Login
 			return "Passwords do not match";
 
 		return null;
+	}
+
+	// Confirm password is validated against registerPassword, but MudBlazor only re-runs a
+	// field's validator when that field itself changes. Without this the match error stays
+	// stale while the user edits the password field.
+	private async Task RevalidateConfirmPassword()
+	{
+		if (confirmPasswordField is null || string.IsNullOrEmpty(confirmPassword))
+			return;
+
+		await confirmPasswordField.ValidateAsync();
 	}
 
 	private async Task HandleLogin()

@@ -9,8 +9,6 @@ public partial class AddPackageComponent
 	[Parameter]
 	public AddPackageDTO Package { get; set; } = new AddPackageDTO { IsActive = true };
 
-	private int DescriptionLength => Package.PackageDescription?.Length ?? 0;
-
 	void Cancel() => AddPackageDialog!.Cancel();
 
 	private void ToggleStatus() => Package.IsActive = !Package.IsActive;

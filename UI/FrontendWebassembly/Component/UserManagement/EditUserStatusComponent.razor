@@ -1,0 +1,88 @@
+@namespace FrontendWebassembly.Component.UserManagement
+@* No .razor.css: the status row, badge and toggle below already exist in
+   UserManagementDialogShell.razor.css (.um-status-row / .um-status-copy /
+   .um-status-badge / .um-toggle), which is where a change to them belongs. *@
+<UserManagementDialogShell Title="Edit user status"
+                           Subtitle="Activate or deactivate this account"
+                           SectionTitle="Account status"
+                           SectionHelper="Only activeness can be changed here"
+                           Icon="@Icons.Material.Outlined.ManageAccounts"
+                           OnClose="Cancel">
+    <ChildContent>
+        @* approval-field-display / approval-email are the read-only identity treatment the
+           approval dialog already uses; reused rather than restyled. *@
+        <div class="um-field">
+            <label>User</label>
+            <div class="approval-field-display">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="8" r="3.6" />
+                    <path d="M4.5 19.5a7.5 7.5 0 0 1 15 0" />
+                </svg>
+                <span class="approval-email">@DisplayName</span>
+                <span class="approval-verified @(User.isApproved ? string.Empty : "is-off")">
+                    @(User.isApproved ? "Approved" : "Unapproved")
+                </span>
+            </div>
+        </div>
+
+        <div class="um-field">
+            <label>Email</label>
+            <div class="approval-field-display">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M3 7l9 6 9-6" />
+                </svg>
+                <span class="approval-email">@User.email</span>
+            </div>
+        </div>
+
+        <div class="um-field">
+            <label>Status</label>
+            <div class="um-status-row">
+                <div class="um-status-copy">
+                    <p>Account @(IsActive ? "active" : "inactive")</p>
+                    <span>
+                        @(IsActive
+                            ? "User can sign in and use their assigned applications."
+                            : "User cannot sign in until the account is activated again.")
+                    </span>
+                </div>
+                <div class="um-status-control">
+                    <span class="um-status-badge @(IsActive ? string.Empty : "is-off")">
+                        @(IsActive ? "Active" : "Inactive")
+                    </span>
+                    <button type="button"
+                            class="um-toggle @(IsActive ? string.Empty : "is-off")"
+                            role="switch"
+                            aria-checked="@IsActive.ToString().ToLowerInvariant()"
+                            aria-label="Toggle account status"
+                            @onclick="ToggleStatus">
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @* An unapproved user cannot sign in whatever this toggle says, so activating one
+           would otherwise look like it had granted access. *@
+        @if (!User.isApproved)
+        {
+            <div class="um-inline-note" role="note">
+                <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" />
+                <span>
+                    This user has not been approved yet, so they cannot sign in even while
+                    active. Approve them on the <strong>Approval</strong> tab.
+                </span>
+            </div>
+        }
+    </ChildContent>
+    <FooterContent>
+        <button type="button" class="um-button um-button-cancel" @onclick="Cancel">Cancel</button>
+        <button type="button"
+                class="um-button um-button-save"
+                disabled="@(!HasChanged)"
+                @onclick="Submit">
+            Save changes
+        </button>
+    </FooterContent>
+</UserManagementDialogShell>

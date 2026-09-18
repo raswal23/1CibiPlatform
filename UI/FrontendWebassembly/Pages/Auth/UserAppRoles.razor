@@ -109,13 +109,16 @@ else if (_activeIndex == 2)
                     LoadServerData="LoadUsersServerData"
                     CursorPagerState="_usersLoader"
                     SearchString="@searchStringUser"
-                    ColumnCount="4"
+                    ColumnCount="7"
                     SearchStringChanged="@((string val) => searchStringUser = val)">
         <HeaderTemplate>
             <MudTh>Email</MudTh>
             <MudTh>First Name</MudTh>
             <MudTh>Middle Name</MudTh>
             <MudTh>Last Name</MudTh>
+            <MudTh>Approved</MudTh>
+            <MudTh>Active</MudTh>
+            <MudTh Class="um-actions-col">Action</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="user">
@@ -123,6 +126,28 @@ else if (_activeIndex == 2)
             <MudTd DataLabel="First Name">@user.firstName</MudTd>
             <MudTd DataLabel="Middle Name">@user.middleName</MudTd>
             <MudTd DataLabel="Last Name">@user.lastName</MudTd>
+            @* The shared .ats-status-pill from wwwroot/css/ats.css - the same chip every ATS
+               status board uses. "error" carries the red the orders board gives a withdrawn
+               application (.report-status.withdrawn is the same --c-danger-bg /
+               --c-danger-strong pair), so a blocked account reads the same way across the
+               app; "done" is the green both boards already use for a good state. *@
+            <MudTd DataLabel="Approved">
+                <span class="ats-status-pill @(user.isApproved ? "done" : "error")">
+                    @(user.isApproved ? "Approved" : "Not approved")
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Active">
+                <span class="ats-status-pill @(user.isActive ? "done" : "error")">
+                    @(user.isActive ? "Active" : "Inactive")
+                </span>
+            </MudTd>
+            <MudTd DataLabel="Action" Class="um-actions-col">
+                <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" Color="Color.Primary" Size="Size.Medium"
+                               Class="um-icon-action um-icon-action-edit"
+                               aria-label="@($"Edit status for {user.email}")"
+                               title="Activate or deactivate this user"
+                               OnClick="@(() => OpenEditUserStatusDialog(user))" />
+            </MudTd>
         </RowTemplate>
 
         <NoRecordsTemplate>

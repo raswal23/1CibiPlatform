@@ -24,10 +24,12 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 		var service = _fixture.UserManagementService;
 		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: null);
 
+		// One active and one inactive: the User tab lists the whole registry, so the
+		// service must pass both states through untouched.
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false),
-				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false, true),
+				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false, false)
 			};
 
 		_fixture.MockAuthRepository
@@ -54,7 +56,7 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false, true)
 			};
 
 		_fixture.MockAuthRepository
@@ -79,10 +81,11 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 		// Arrange
 		var paginationRequest = new KeysetPaginationRequest(Cursor: null, PageSize: 10, SearchTerm: null);
 
+		// Active but unapproved - the shape the Approval tab still filters for.
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false),
-				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false, true),
+				new UsersDTO(Guid.CreateVersion7(), "user2@example.com", "sample3" , "sample4" , null, false, true)
 			};
 
 		_fixture.MockAuthRepository
@@ -109,7 +112,7 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 
 		var userData = new List<UsersDTO>
 			{
-				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false)
+				new UsersDTO(Guid.CreateVersion7(), "user1@example.com", "sample1" , "sample2" , null, false, true)
 			};
 
 		_fixture.MockAuthRepository
@@ -168,6 +171,105 @@ public class UserManagementServiceTests : IClassFixture<AuthServiceFixture>
 		// Assert
 		result.Should().NotBeNull();
 		result.IsApproved.Should().BeTrue();
+	}
+
+	[Fact]
+	public async Task EditUserStatusAsync_ShouldDeactivateUser_WhenSuccessful()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		var statusDto = new EditUserStatusDTO { UserId = userId, IsActive = false };
+		var existingUser = new Authusers { Id = userId, Email = "johndoe@example.com", IsActive = true };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetUserByIdAsync(userId))
+			.ReturnsAsync(existingUser);
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.EditUserAsync(existingUser))
+			.ReturnsAsync(existingUser);
+
+		// Act
+		var result = await _fixture.UserManagementService.EditUserStatusAsync(statusDto);
+
+		// Assert
+		result.Should().NotBeNull();
+		existingUser.IsActive.Should().BeFalse();
+	}
+
+	// The case the filtered GetRawUserAsync could not serve: an inactive user is exactly
+	// the one being reactivated, so loading them must not depend on their being active.
+	[Fact]
+	public async Task EditUserStatusAsync_ShouldReactivateUser_WhenTheUserIsInactive()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		var statusDto = new EditUserStatusDTO { UserId = userId, IsActive = true };
+		var existingUser = new Authusers { Id = userId, Email = "johndoe@example.com", IsActive = false };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetUserByIdAsync(userId))
+			.ReturnsAsync(existingUser);
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.EditUserAsync(existingUser))
+			.ReturnsAsync(existingUser);
+
+		// Act
+		var result = await _fixture.UserManagementService.EditUserStatusAsync(statusDto);
+
+		// Assert
+		result.Should().NotBeNull();
+		existingUser.IsActive.Should().BeTrue();
+	}
+
+	// Approval is the approval queue's decision; a status edit must not be a back door to it.
+	[Fact]
+	public async Task EditUserStatusAsync_ShouldLeaveApprovalUntouched()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		var statusDto = new EditUserStatusDTO { UserId = userId, IsActive = false };
+		var existingUser = new Authusers
+		{
+			Id = userId,
+			Email = "johndoe@example.com",
+			IsActive = true,
+			IsApproved = true
+		};
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetUserByIdAsync(userId))
+			.ReturnsAsync(existingUser);
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.EditUserAsync(existingUser))
+			.ReturnsAsync(existingUser);
+
+		// Act
+		await _fixture.UserManagementService.EditUserStatusAsync(statusDto);
+
+		// Assert
+		existingUser.IsApproved.Should().BeTrue();
+	}
+
+	[Fact]
+	public async Task EditUserStatusAsync_ShouldThrow_WhenUserNotFound()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		var statusDto = new EditUserStatusDTO { UserId = userId, IsActive = false };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetUserByIdAsync(userId))
+			.ReturnsAsync((Authusers)null);
+
+		// Act
+		Func<Task> act = async () => await _fixture.UserManagementService.EditUserStatusAsync(statusDto);
+
+		// Assert
+		await act.Should().ThrowAsync<NotFoundException>()
+			.WithMessage($"User {userId} was not found.");
 	}
 
 	[Fact]
