@@ -21,6 +21,7 @@ public partial class ResetPassword
 	private bool isPasswordVisible = false;
 	private InputType passwordInput = InputType.Password;
 	private string passwordIcon = Icons.Material.Filled.VisibilityOff;
+	private MudTextField<string>? confirmPasswordField;
 	private Guid userId = Guid.Empty;
 	private bool tokenValid = false;
 	private int redirectCountdown = 5;
@@ -84,6 +85,17 @@ public partial class ResetPassword
 		if (confirm != newPassword)
 			return "Passwords do not match";
 		return null;
+	}
+
+	// Confirm password is validated against newPassword, but MudBlazor only re-runs a field's
+	// validator when that field itself changes. Without this the match error stays stale while
+	// the user edits the new password field.
+	private async Task RevalidateConfirmPassword()
+	{
+		if (confirmPasswordField is null || string.IsNullOrEmpty(confirmPassword))
+			return;
+
+		await confirmPasswordField.ValidateAsync();
 	}
 
 	private async Task HandleResetPassword()
