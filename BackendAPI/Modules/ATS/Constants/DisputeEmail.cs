@@ -4,10 +4,9 @@ namespace ATS.Constants;
 /// The fixed parts of the notice sent to the requestor when a dispute is raised on an order.
 /// </summary>
 /// <remarks>
-/// Separate from the internal <c>ATS:DisputeOrderEmailRecipient</c> notification, which keeps its
-/// own subject literal in <c>DisputeOrderService.SendDisputeOrderEmailAsync</c>. Two different
-/// audiences: that one tells CIBI operations a dispute arrived, this one tells the person who
-/// filed it that it was received. They are deliberately not the same message.
+/// The only email a dispute produces. An earlier internal operations alert used its own subject
+/// literal in <c>DisputeOrderService</c> and went to the <c>ATS:DisputeOrderEmailRecipient</c>
+/// mailbox; both were removed, so this is the one message and this is where its subject lives.
 ///
 /// The subject lives here rather than beside the send because
 /// <c>ATSEmailService.BuildDisputeNotification</c> renders it as the body's header, and a recipient
@@ -31,4 +30,5 @@ public static class DisputeEmail
 	/// the wiring table in <c>docs/features/ats-dispute-order-email/</c>.
 	/// </remarks>
 	public const string CopyTeam = "clientsupport@cibi.com.ph";
+	//public const string CopyTeam = "svaldemoro@cibi.com.ph";
 }

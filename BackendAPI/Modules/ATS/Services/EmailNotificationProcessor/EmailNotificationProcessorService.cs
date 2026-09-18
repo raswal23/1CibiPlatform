@@ -436,6 +436,7 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 				subjectName,
 				applicationFormLink,
 				request.Requestor,
+				request.RequestorId,
 				request.ClientId,
 				cancellationToken,
 				isFollowUp);

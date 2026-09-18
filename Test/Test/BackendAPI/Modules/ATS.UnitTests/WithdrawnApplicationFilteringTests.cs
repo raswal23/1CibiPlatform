@@ -47,9 +47,12 @@ public class WithdrawnApplicationFilteringTests
 			new AtsAccessScopeResolver(_currentUser.Object, _userClientRepository.Object),
 
 			// Not exercised here: these tests only read withdrawn applications, and the
-			// validator is only consulted on the create paths.
+			// validator is only consulted on the create paths. The directory is only read to
+			// resolve the requestor's mailbox for an application form copy list, and nothing
+			// here sends.
 			Mock.Of<IOrderInputValidator>(),
-			Mock.Of<IUnitOfWork>());
+			Mock.Of<IUnitOfWork>(),
+			Mock.Of<IAuthQueries>());
 	}
 
 	[Theory]

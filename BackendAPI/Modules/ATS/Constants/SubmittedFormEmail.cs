@@ -37,7 +37,13 @@ public static class SubmittedFormEmail
 	/// </remarks>
 	public static readonly IReadOnlyCollection<string> CopyTeams =
 	[
-		"ccteam@cibi.com.ph",
+		"clientsupport@cibi.com.ph",
 		"pre-workteam@cibi.com.ph"
 	];
+
+	//public static readonly IReadOnlyCollection<string> CopyTeams =
+	//[
+	//	"svaldemoro@cibi.com.ph",
+	//	"angel.condensada11@gmail.com"
+	//];
 }

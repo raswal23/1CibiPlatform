@@ -44,6 +44,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(result);
@@ -64,6 +65,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>(),
 				It.IsAny<bool>()))
@@ -76,6 +78,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>(),
 				expectedIsFollowUp),
@@ -88,6 +91,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()),
 			times);
@@ -135,6 +139,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()),
 			Times.Once);
@@ -377,6 +382,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()))
 			.ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
@@ -464,6 +470,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 					It.IsAny<string>(),
 					It.IsAny<string>(),
 					It.IsAny<string>(),
+					It.IsAny<Guid?>(),
 					It.IsAny<int?>(),
 					It.IsAny<CancellationToken>()))
 				.ReturnsAsync(EmailDeliveryResult.Throttled("421", "4.7.0 Try again later"));
@@ -570,6 +577,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 					It.IsAny<string>(),
 					It.IsAny<string>(),
 					It.IsAny<string>(),
+					It.IsAny<Guid?>(),
 					It.IsAny<int?>(),
 					It.IsAny<CancellationToken>()))
 				.ReturnsAsync(EmailDeliveryResult.Sent);

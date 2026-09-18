@@ -6,6 +6,7 @@ using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.OrderHistory;
 using ATS.Services.OrderValidation;
+using Auth.DTO;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
 using FluentAssertions;
@@ -48,6 +49,9 @@ public class ApplicationFormEmailCopyTests
 	private const string CandidateName = "Juan Dela Cruz";
 	private const string ApplicationFormLink = "https://example.test/form/token";
 	private const string RequestorName = "Ana Reyes";
+	private const string RequestorEmail = "ana.reyes@example.test";
+
+	private static readonly Guid RequestorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
 	private const string InvitationSubject = "CIBI | Background Verification Information Request";
 	private const string ReminderSubject = "CIBI | Reminder: Background Verification Information Request";
@@ -64,8 +68,25 @@ public class ApplicationFormEmailCopyTests
 	/// </summary>
 	private readonly Mock<IEmailService> _emailService = new();
 
+	/// <summary>
+	/// The requestor's mailbox is not on the order - only their display name is - so the copy list
+	/// resolves it through the Auth directory, the same lookup the three sibling notices use.
+	/// </summary>
+	private readonly Mock<IAuthQueries> _authQueries = new();
+
 	public ApplicationFormEmailCopyTests()
 	{
+		_authQueries
+			.Setup(queries => queries.GetATSAssignedUserAsync(
+				RequestorId,
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new ATSUserLookupDTO
+			{
+				UserId = RequestorId,
+				UserName = RequestorName,
+				UserEmail = RequestorEmail
+			});
+
 		_emailService
 			.Setup(sender => sender.SendAppplicationFormNotification(
 				It.IsAny<string>(),
@@ -100,7 +121,8 @@ public class ApplicationFormEmailCopyTests
 			// Not exercised here: these tests only send, and the validator is only consulted on the
 			// create paths.
 			Mock.Of<IOrderInputValidator>(),
-			Mock.Of<IUnitOfWork>());
+			Mock.Of<IUnitOfWork>(),
+			_authQueries.Object);
 
 	/// <summary>
 	/// Adds the ATS-only contract to the same mock object, so the service's cast succeeds and the
@@ -131,20 +153,37 @@ public class ApplicationFormEmailCopyTests
 		return sender;
 	}
 
-	private Task<EmailDeliveryResult> SendAsync(
+	private static Task<EmailDeliveryResult> SendAsync(
 		EndorsementSubmissionService service,
+		bool isFollowUp = false) =>
+		SendAsync(service, RequestorId, isFollowUp);
+
+	/// <summary>
+	/// The requestor id is explicit here rather than an optional <c>Guid?</c> defaulting to null,
+	/// so that "no requestor on the order" is a value a test can actually pass. A defaulted
+	/// parameter coalesced to <see cref="RequestorId"/> would make the null case unreachable.
+	/// </summary>
+	private static Task<EmailDeliveryResult> SendAsync(
+		EndorsementSubmissionService service,
+		Guid? requestorId,
 		bool isFollowUp = false) =>
 		service.SendApplicationFormToUserEmailWithResultAsync(
 			CandidateEmail,
 			CandidateName,
 			ApplicationFormLink,
 			RequestorName,
+			requestorId,
 
 			// Null so ResolveClientNameAsync returns without touching the repository - the client name
 			// is cosmetic and the body is stubbed anyway.
 			clientId: null,
 			CancellationToken.None,
 			isFollowUp);
+
+	/// <summary>
+	/// The full expected copy list: the fixed teams, then the requestor resolved from the directory.
+	/// </summary>
+	private static readonly string[] TeamsAndRequestor = [.. CopyTeams, RequestorEmail];
 
 	private static void VerifyCopiedTeams(
 		Mock<IAtsEmailSender> sender,
@@ -157,11 +196,11 @@ public class ApplicationFormEmailCopyTests
 				expectedBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(CopyTeams))),
+					cc != null && cc.SequenceEqual(TeamsAndRequestor))),
 			Times.Once);
 
 	[Fact]
-	public async Task SendApplicationForm_ShouldAddressTheCandidateAndCopyBothTeams()
+	public async Task SendApplicationForm_ShouldAddressTheCandidateAndCopyBothTeamsAndTheRequestor()
 	{
 		// Arrange
 		var sender = SetupResultAwareSender();
@@ -171,9 +210,175 @@ public class ApplicationFormEmailCopyTests
 		var result = await SendAsync(service);
 
 		// Assert: the candidate is the TO address - the form is theirs to fill in - and both CIBI teams
-		// are copied so a team mailbox holds the same thread the candidate does.
+		// plus the requestor who raised the order are copied, so each holds the same thread.
 		result.IsSent.Should().BeTrue();
 		VerifyCopiedTeams(sender, InvitationSubject, InvitationBody);
+	}
+
+	[Fact]
+	public async Task SendApplicationForm_ShouldResolveTheRequestorMailboxFromTheDirectory()
+	{
+		// Arrange: the order carries the requestor's DISPLAY NAME, not an address - Requestor is
+		// whatever ICurrentUser.FullName held at order time. The id is the durable handle, and the Auth
+		// directory is the only source for the mailbox.
+		var sender = SetupResultAwareSender();
+		var service = CreateService();
+
+		// Act
+		await SendAsync(service);
+
+		// Assert
+		_authQueries.Verify(
+			queries => queries.GetATSAssignedUserAsync(RequestorId, It.IsAny<CancellationToken>()),
+			Times.Once);
+
+		sender.Verify(
+			resultAware => resultAware.SendATSEmailWithResultAsync(
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<string>(),
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyCollection<string>?>(cc =>
+					cc != null && cc.Contains(RequestorEmail) && !cc.Contains(RequestorName))),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task SendApplicationForm_ShouldStillCopyTheTeams_WhenTheOrderHasNoRequestorId()
+	{
+		// Arrange: a bulk row or a public API order can be raised without one. The teams still need
+		// the thread, so the requestor is simply left off rather than the copy list being abandoned.
+		var sender = SetupResultAwareSender();
+		var service = CreateService();
+
+		// Act
+		var result = await SendAsync(service, requestorId: null);
+
+		// Assert
+		result.IsSent.Should().BeTrue();
+
+		// There is no id to look up, so the directory is not consulted at all - not consulted and
+		// answering nothing must both end in the same copy list.
+		_authQueries.Verify(
+			queries => queries.GetATSAssignedUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+			Times.Never);
+
+		sender.Verify(
+			resultAware => resultAware.SendATSEmailWithResultAsync(
+				CandidateEmail,
+				InvitationSubject,
+				InvitationBody,
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyCollection<string>?>(cc =>
+					cc != null && cc.SequenceEqual(CopyTeams))),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task SendApplicationForm_ShouldStillSend_WhenTheRequestorNoLongerResolves()
+	{
+		// Arrange: the user lost their ATS assignment since raising the order, so the directory returns
+		// nothing. The candidate's link is the point of the message - a copy that cannot be addressed
+		// must not take the invitation down with it. On the single-order path it would roll back the
+		// whole order, because the send runs inside the TransactionRunner boundary.
+		var sender = SetupResultAwareSender();
+
+		_authQueries
+			.Setup(queries => queries.GetATSAssignedUserAsync(
+				RequestorId,
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync((ATSUserLookupDTO?)null);
+
+		var service = CreateService();
+
+		// Act
+		var result = await SendAsync(service);
+
+		// Assert
+		result.IsSent.Should().BeTrue();
+
+		sender.Verify(
+			resultAware => resultAware.SendATSEmailWithResultAsync(
+				CandidateEmail,
+				InvitationSubject,
+				InvitationBody,
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyCollection<string>?>(cc =>
+					cc != null && cc.SequenceEqual(CopyTeams))),
+			Times.Once);
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("   ")]
+	public async Task SendApplicationForm_ShouldLeaveTheRequestorOff_WhenTheirMailboxIsBlank(string? userEmail)
+	{
+		// Arrange: the directory knows the user but holds no usable address for them. Whitespace counts
+		// as blank - MailboxAddress.Parse would throw on it inside BuildMessage, taking down a send that
+		// the candidate's link is the whole point of.
+		var sender = SetupResultAwareSender();
+
+		_authQueries
+			.Setup(queries => queries.GetATSAssignedUserAsync(
+				RequestorId,
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new ATSUserLookupDTO
+			{
+				UserId = RequestorId,
+				UserName = RequestorName,
+				UserEmail = userEmail!
+			});
+
+		var service = CreateService();
+
+		// Act
+		var result = await SendAsync(service);
+
+		// Assert
+		result.IsSent.Should().BeTrue();
+
+		sender.Verify(
+			resultAware => resultAware.SendATSEmailWithResultAsync(
+				CandidateEmail,
+				InvitationSubject,
+				InvitationBody,
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyCollection<string>?>(cc =>
+					cc != null && cc.SequenceEqual(CopyTeams))),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task SendApplicationForm_ShouldStillSend_WhenTheDirectoryLookupThrows()
+	{
+		// Arrange: same reasoning as the test above, for a directory that is unreachable rather than
+		// one that answers "no such user". SideEffectGuard swallows it and the send carries on.
+		var sender = SetupResultAwareSender();
+
+		_authQueries
+			.Setup(queries => queries.GetATSAssignedUserAsync(
+				RequestorId,
+				It.IsAny<CancellationToken>()))
+			.ThrowsAsync(new InvalidOperationException("The user directory is unavailable."));
+
+		var service = CreateService();
+
+		// Act
+		var result = await SendAsync(service);
+
+		// Assert
+		result.IsSent.Should().BeTrue();
+
+		sender.Verify(
+			resultAware => resultAware.SendATSEmailWithResultAsync(
+				CandidateEmail,
+				InvitationSubject,
+				InvitationBody,
+				It.IsAny<CancellationToken>(),
+				It.Is<IReadOnlyCollection<string>?>(cc =>
+					cc != null && cc.SequenceEqual(CopyTeams))),
+			Times.Once);
 	}
 
 	[Fact]
