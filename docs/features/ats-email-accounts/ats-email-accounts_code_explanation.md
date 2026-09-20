@@ -273,7 +273,7 @@ This is the path §1-3 exist to feed: an account isn't useful until it's `Verifi
 from here.
 
 ```
-EmailNotificationProcessorService (unchanged orchestration, not detailed here)
+BulkEmailNotificationProcessorService (unchanged orchestration, not detailed here)
   → IAtsEmailSender.SendATSEmailWithResultAsync(toEmail, subject, body, ct, cc?)   [ATSEmailService.cs]
       loop:
         → _poolRegistry.GetNextSendableAccountAsync(attemptedAccountIds, ct)  [4.1]

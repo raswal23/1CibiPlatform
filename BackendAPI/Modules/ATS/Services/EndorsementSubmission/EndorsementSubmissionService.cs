@@ -28,6 +28,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	// stores the requestor's NAME as text, which is not an address; the Auth directory is the
 	// only source for one, and it is the same lookup the three sibling notices use.
 	private readonly IAuthQueries _authQueries;
+
+	// Only for the two send bounds SingleEmailSendRetry takes. Read here rather than inside the
+	// retry so the helper stays stateless and its attempt loop can be driven by a test with no
+	// configuration at all.
+	private readonly AtsEmailDeliveryOptions _emailDeliveryOptions;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly string _folderName;
@@ -48,7 +53,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IAtsAccessScopeResolver accessScopeResolver,
 		IOrderInputValidator orderInputValidator,
 		IUnitOfWork unitOfWork,
-		IAuthQueries authQueries)
+		IAuthQueries authQueries,
+		IOptions<AtsEmailDeliveryOptions> emailDeliveryOptions)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -66,6 +72,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_orderInputValidator = orderInputValidator;
 		_unitOfWork = unitOfWork;
 		_authQueries = authQueries;
+		_emailDeliveryOptions = emailDeliveryOptions.Value;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkFileFolderName", "");
@@ -189,7 +196,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// does NOT cover: SMTP is external and cannot be rolled back, so if the send
 		// succeeds and the commit then fails, the candidate holds a link to an order that
 		// no longer exists. That window is the price of sending inline; the alternative is
-		// queueing it for EmailNotificationProcessor, which is how bulk orders work.
+		// queueing it for BulkEmailNotificationProcessor, which is how bulk orders work.
 		//
 		// A data order skips the send and the status update entirely, so its transaction is
 		// just the insert and the history entry. It is still queued for OMS ticketing - only
@@ -217,7 +224,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 						emailInvitationRequest.EmailInvitationID);
 
 					// Inside the same transaction as the status it describes, matching the
-					// queued path in EmailNotificationProcessorService. A data order records
+					// queued path in BulkEmailNotificationProcessorService. A data order records
 					// nothing here because no email was sent.
 					await _orderHistoryService.RecordAsync(
 						emailInvitationRequest.EmailInvitationID,
@@ -347,6 +354,19 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return await ATS.Features.Web.InsertBulkSubject.BulkMobileNumberValidation.ValidateMobileNumbersAsync(file, ct);
 	}
 
+	/// <remarks>
+	/// The retry lives on THIS overload rather than on the result-aware one below, and that is the
+	/// whole reason the two are still separate.
+	///
+	/// This is the single-order path: it runs inline inside a transaction, so a failed send takes
+	/// the order with it and there is no later tick to try again on. It spends the message's
+	/// attempt budget here or not at all.
+	///
+	/// The overload below is what the queue calls, and
+	/// <c>BulkEmailNotificationProcessorService</c> already loops over it in its own
+	/// <c>SendWithRetryAsync</c>, on a pass-level budget it owns. Putting the retry there instead
+	/// would nest one loop inside the other and cost a queued row nine sends rather than three.
+	/// </remarks>
 	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, Guid? requestorId, int? clientId)
 	{
 		var logContext = new
@@ -357,14 +377,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var result = await SendApplicationFormToUserEmailWithResultAsync(
-			gmail,
-			name,
-			applicationFormLink,
-			requestor,
-			requestorId,
-			clientId,
-			CancellationToken.None);
+		var result = await SingleEmailSendRetry.SendAsync(
+			send: _ => SendApplicationFormToUserEmailWithResultAsync(
+				gmail,
+				name,
+				applicationFormLink,
+				requestor,
+				requestorId,
+				clientId,
+				CancellationToken.None),
+			maxAttempts: _emailDeliveryOptions.MaxAttemptsPerMessage,
+			baseDelaySeconds: _emailDeliveryOptions.RetryBaseDelaySeconds,
+			logger: _logger,
+			description: $"the application form invitation to {gmail}",
+			cancellationToken: CancellationToken.None);
 
 		if (!result.IsSent)
 		{

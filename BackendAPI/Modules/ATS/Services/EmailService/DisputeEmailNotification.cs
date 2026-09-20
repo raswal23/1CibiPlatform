@@ -10,15 +10,18 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 	private readonly ILogger<DisputeEmailNotification> _logger;
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly AtsEmailDeliveryOptions _options;
 
 	public DisputeEmailNotification(
 		ILogger<DisputeEmailNotification> logger,
 		IAtsEmailSender emailSender,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_orderHistoryService = orderHistoryService;
+		_options = options.Value;
 	}
 
 	public async Task SendAsync(
@@ -82,12 +85,20 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 			category,
 			hasSeparateDetails ? details.DisputeReason : null);
 
-		var result = await _emailSender.SendATSEmailWithResultAsync(
-			toEmail: details.RequestorEmail,
-			subject: DisputeEmail.Subject,
-			body: body,
-			cancellationToken: cancellationToken,
-			cc: [DisputeEmail.CopyTeam]);
+		// Only the send is inside the retry - the body above is composed once, so a second attempt
+		// re-sends the same acknowledgement rather than rebuilding it.
+		var result = await SingleEmailSendRetry.SendAsync(
+			send: _ => _emailSender.SendATSEmailWithResultAsync(
+				toEmail: details.RequestorEmail,
+				subject: DisputeEmail.Subject,
+				body: body,
+				cancellationToken: cancellationToken,
+				cc: [DisputeEmail.CopyTeam]),
+			maxAttempts: _options.MaxAttemptsPerMessage,
+			baseDelaySeconds: _options.RetryBaseDelaySeconds,
+			logger: _logger,
+			description: $"the dispute acknowledgement for order {details.EmailInvitationId}",
+			cancellationToken: cancellationToken);
 
 		// Records the ATTEMPT rather than the delivery, so a failed send still leaves a row and the
 		// outcome stays in the log below. Status written unchanged - a dispute does not move the

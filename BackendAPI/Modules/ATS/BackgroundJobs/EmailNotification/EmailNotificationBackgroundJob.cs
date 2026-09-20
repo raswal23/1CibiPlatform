@@ -18,7 +18,7 @@ public class EmailNotificationBackgroundJob : IJob
 		using var scope = _scopeFactory.CreateScope();
 
 		var processor = scope.ServiceProvider
-			.GetRequiredService<IEmailNotificationProcessorService>();
+			.GetRequiredService<IBulkEmailNotificationProcessorService>();
 
 		await processor.ProcessForPendingStatusAsync(context.CancellationToken);
 	}

@@ -18,11 +18,14 @@ stand. Read that document first for the *why*; this one is for changing the code
 | 7b | In-app notification (pre-existing) | `…/ApplicationFormService.cs:133` | `RaiseForOrderAsync` |
 | 8 | **The notice** | `…/ApplicationFormService.cs:147` → `Services/EmailService/SubmittedFormEmailNotification.cs:28` | `SendAsync` → `SendNoticeAsync:47` |
 | 9 | Body | `…/Services/EmailService/ATSEmailService.cs:675` | `BuildSubmittedFormNotification` |
+| 9a | **Attempt loop** | `…/Services/EmailService/SingleEmailSendRetry.cs:69` | `SendAsync` — up to 3 attempts, 2s then 4s apart, transient only |
 | 10 | Send | `…/ATSEmailService.cs:61` | `SendATSEmailWithResultAsync` → `SendThroughAccountAsync:134` → `SendOverContextAsync:240` → `BuildMessage:386` |
 
 Steps 1–7b all existed before this feature. Step 8 is the only new call; step 9 is the only new
 member on the sender. Step 10's `cc` parameter was added by the withdrawal notice and is reused
-unchanged — this feature made no change to the send path at all.
+unchanged — this feature made no change to the send path at all. Step 9a was added later by
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md) and wraps step 10 from the
+outside, so one attempt is a full walk of the registered accounts.
 
 ## 2. The gate that makes the notice single-use
 
@@ -206,6 +209,7 @@ pass in the high-level document.
 | `SubmittedFormEmail.Subject` | The header follows automatically; the **tests** do not — they pin the literal |
 | `SubmittedFormEmail.CopyTeams` | The body's closing sentence in `BuildSubmittedFormNotification` (§7), and the expected `Cc:` sequence in `SubmittedFormEmailNotificationTests` |
 | The body copy | `AtsSubmittedFormEmailBodyTests` asserts the sentences verbatim |
+| `SingleEmailSendRetry.SendAsync`, or the attempt budget it is given | The other four inline sends and the queue spend the same budget — `docs/features/ats-email-send-retry/`. Do **not** add a second wrapper anywhere beneath it: nested budgets multiply |
 | `SubmittedFormEmailDetails` | Its single caller at `ApplicationFormService.cs:147`, and every test in `SubmittedFormEmailNotificationTests` |
 | Where the candidate name comes from | `ResolveCandidateName` (`:141`) and the three name tests; the form still has no primary email field, so the mailbox must keep coming from the row |
 | `ApplicationFormService`'s constructor | `ApplicationFormServiceWithdrawnEmailTests.cs:56` news it up by hand — the only place in the repo that does |

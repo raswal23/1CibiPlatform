@@ -1,14 +1,14 @@
-using ATS.Data.Entities;
+﻿using ATS.Data.Entities;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Test.BackendAPI.Infrastructure.ATS.Infrastracture;
 
 namespace Test.BackendAPI.Modules.ATS.IntegrationTests;
 
-public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
+public class BulkEmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 {
 
-	public EmailNotificationProcessorIntegrationTests(IntegrationTestWebAppFactory factory)
+	public BulkEmailNotificationProcessorIntegrationTests(IntegrationTestWebAppFactory factory)
 		: base(factory)
 	{
 	}
@@ -74,7 +74,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var emailInvitations = await SeedEmailInvitationRequestsAsync(3);
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert - the claim moved every row out of Pending and the send pass settled it
 		var processed = await ReloadAsync(emailInvitations);
@@ -97,7 +97,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 
 		// Act
 		Func<Task> act = async () =>
-			await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+			await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert
 		await act.Should().NotThrowAsync();
@@ -119,7 +119,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			emailClaimedAt: DateTime.UtcNow.AddHours(-25));
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert - released back to Pending, then claimed and settled in the same tick
 		var recovered = await ReloadAsync(stale);
@@ -141,7 +141,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 			emailClaimedAt: DateTime.UtcNow);
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert - the live worker is not robbed of rows it is still processing
 		var untouched = await ReloadAsync(claimed);
@@ -159,7 +159,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var dataScreening = await SeedEmailInvitationRequestsAsync(1, autoChasing: false);
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert - never claimed, so it cannot be emailed
 		var skipped = await ReloadAsync(dataScreening);
@@ -177,7 +177,7 @@ public class EmailNotificationProcessorIntegrationTests : BaseIntegrationTest
 		var unclassified = await SeedEmailInvitationRequestsAsync(1, autoChasing: null);
 
 		// Act
-		await _emailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
+		await _bulkEmailNotificationProcessorService.ProcessForPendingStatusAsync(CancellationToken.None);
 
 		// Assert
 		var skipped = await ReloadAsync(unclassified);

@@ -1,3 +1,4 @@
+﻿using ATS.Configuration;
 using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
@@ -119,7 +121,12 @@ public class ApplicationFormEmailCopyTests
 			// create paths.
 			Mock.Of<IOrderInputValidator>(),
 			Mock.Of<IUnitOfWork>(),
-			_authQueries.Object);
+			_authQueries.Object,
+
+			// Only the bool overload spends this budget, and these tests drive the result-aware one
+			// directly. Zero back-off regardless, so a future test that does go through the retry
+			// cannot add six seconds to the suite.
+			Options.Create(new AtsEmailDeliveryOptions { RetryBaseDelaySeconds = 0 }));
 
 	/// <summary>
 	/// Adds the ATS-only contract to the same mock object, so the service's cast succeeds and the

@@ -1,8 +1,23 @@
-﻿namespace ATS.Services.EmailNotificationProcessor;
+﻿namespace ATS.Services.BulkEmailNotificationProcessor;
 
-public class EmailNotificationProcessorService : IEmailNotificationProcessorService
+/// <summary>
+/// Drains the queued invitation rows - the bulk path.
+/// </summary>
+/// <remarks>
+/// "Bulk" in the name is the distinction that matters: this walks a CLAIMED SLICE of rows and
+/// decides what happens to each one as a row - sent, retired, or released back to Pending for a
+/// later tick.
+///
+/// The attempt loop is its own - <see cref="SendWithRetryAsync"/> - and deliberately NOT
+/// <c>SingleEmailSendRetry</c>, which is the helper the five inline notices share. A row has a
+/// next tick and a notice does not, so the two bound different things and read different options
+/// (<c>MaxAttemptsPerPass</c> here, <c>MaxAttemptsPerMessage</c> there). The loop here also
+/// re-reads the pass's stand-down signal between attempts, which a helper wrapping only the send
+/// cannot do.
+/// </remarks>
+public class BulkEmailNotificationProcessorService : IBulkEmailNotificationProcessorService
 {
-	private readonly ILogger<EmailNotificationProcessorService> _logger;
+	private readonly ILogger<BulkEmailNotificationProcessorService> _logger;
 	private readonly IATSRepository _repository;
 	private readonly IAtsNotificationService _notificationService;
 	private readonly IOrderHistoryService _orderHistoryService;
@@ -24,8 +39,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	// throttle back-off can add ten more.
 	private static readonly TimeSpan StaleClaimTimeout = TimeSpan.FromMinutes(30);
 
-	public EmailNotificationProcessorService(
-		ILogger<EmailNotificationProcessorService> logger,
+	public BulkEmailNotificationProcessorService(
+		ILogger<BulkEmailNotificationProcessorService> logger,
 		IATSRepository repository,
 		IAtsNotificationService notificationService,
 		IOrderHistoryService orderHistoryService,
@@ -117,9 +132,8 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 
 		var sendTasks = allRequests.Select(async request =>
 		{
-			// Checked before the semaphore as well as inside the retry loop: a pass that is
-			// already abandoning work should not queue hundreds of tasks to discover that
-			// one at a time.
+			// Checked before the semaphore as well as inside the send: a pass that is already
+			// abandoning work should not queue hundreds of tasks to discover that one at a time.
 			if (throttleSignal.IsCancellationRequested)
 			{
 				abandonedBag.Add(request);
@@ -245,6 +259,21 @@ public class EmailNotificationProcessorService : IEmailNotificationProcessorServ
 	/// genuine transient fault backs off and tries again.
 	/// </summary>
 	/// <remarks>
+	/// The queue keeps its OWN attempt loop rather than calling
+	/// <c>SingleEmailSendRetry</c>, which is the inline notices' helper. Two things here have no
+	/// counterpart there and are the reason the two paths do not share code:
+	///
+	/// The stand-down signal is re-read before EVERY attempt. A sibling row can discover mid-pass
+	/// that no account will take a message, and this row must not spend its remaining attempts
+	/// finding that out for itself. A helper that only wraps the send has no way to consult a
+	/// signal between attempts.
+	///
+	/// A spent budget here means something different. The row is released for a later tick, so
+	/// these attempts are a pass-level budget - <c>MaxAttemptsPerPass</c> - not the whole budget
+	/// a message gets. An inline notice has no later tick, so its attempts are all it gets.
+	/// Sharing one option between the two would tie a bulk pass's pacing to a withdrawal notice's
+	/// only chance at delivery.
+	///
 	/// Account failover happens one level down, inside the send: by the time a Throttled
 	/// reaches here, the switcher has already walked every registered account for this message
 	/// and none would take it. That is why this branch still stops the pass - not because one

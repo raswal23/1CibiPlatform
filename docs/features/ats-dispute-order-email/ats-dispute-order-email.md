@@ -46,6 +46,15 @@ Step 3 goes to `IDisputeEmailNotification`, which resolves the two body lines, a
 acknowledgement travels the same pooled, capped, paced, failover-capable path as every other ATS
 message.
 
+The send goes through `SingleEmailSendRetry.SendAsync`: up to three attempts on the one message, 2s
+then 4s apart, and only when the fault is transient. The retry wraps the account switcher from the
+outside, so each attempt is a full walk of the registered accounts rather than a second knock on one
+of them, and only the send is inside it — the body and the mailbox are resolved above, so attempt 2
+re-sends the same message instead of rebuilding it. See
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md). Unlike a queued
+invitation, this send has no later pass behind it, so the attempts it gets are the only ones it
+gets.
+
 `ats-dispute-order-email_code_explanation.md` walks the chain file by file.
 
 ## Order history

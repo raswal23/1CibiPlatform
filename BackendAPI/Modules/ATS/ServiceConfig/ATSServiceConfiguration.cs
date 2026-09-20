@@ -162,7 +162,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IDisputeEmailNotification, DisputeEmailNotification>();
 		services.AddScoped<ISubmittedFormEmailNotification, SubmittedFormEmailNotification>();
 		services.AddScoped<IBulkSubmissionProcessorService, BulkSubmissionProcessorService>();
-		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();
+		services.AddScoped<IBulkEmailNotificationProcessorService, BulkEmailNotificationProcessorService>();
 		services.AddScoped<IOMSTicketingProcessorService, OMSTicketingProcessorService>();
 		services.AddScoped<IOMSTicketingMonitoringService, OMSTicketingMonitoringService>();
 		services.AddScoped<IPublicApiService, PublicApiService>();

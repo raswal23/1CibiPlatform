@@ -161,7 +161,7 @@ All of them reach the method in §2. There is no second place to add a copy list
 | Entry | File | Path |
 |---|---|---|
 | Single manual order | `EndorsementSubmissionService.InsertEmailInvitationRequestAsync` (~line 201) | sends **inline, inside `TransactionRunner.RunAsync`**, via the bool wrapper `SendApplicationFormToUserEmailAsync` |
-| Bulk upload | `EmailNotificationProcessorService.SendEmailAsync` (~line 434) | the queued, paced path |
+| Bulk upload | `BulkEmailNotificationProcessorService.SendEmailAsync` (~line 434) | the queued, paced path |
 | Resend (single and bulk) | `EndorsementSubmissionService.ResendApplicationFormAsync` / `ResendApplicationFormsAsync` | **does not send** — `RequeueEmailInvitationAsync` puts the row back to Pending with a fresh token, and the queue above delivers it |
 | Follow-up chaser | `FollowUpEmailBackgroundJob` | releases rows by clearing `EmailSentAt`; the same processor sends them |
 
@@ -173,6 +173,18 @@ var isFollowUp = request.LastFollowUpSentDate is not null && request.EmailSentAt
 
 The copy list is indifferent to that flag. If you ever need it to branch, that boolean is already
 threaded through to §2 as the `isFollowUp` parameter.
+
+**Both sending entries retry, and §2 does not.** They do it by different mechanisms. The bool
+wrapper `SendApplicationFormToUserEmailAsync` calls `SingleEmailSendRetry.SendAsync` — three
+attempts on one message, 2s then 4s apart, transient faults only. The queue's `SendWithRetryAsync`
+runs its own `for` loop on the same cadence, deliberately not the shared helper, because it re-reads
+the pass's throttle stand-down before every attempt and its budget releases the row for a later tick
+rather than ending the road. The shared method in §2 is deliberately left bare on both routes: it is
+the *inner* call, so a retry there would nest inside the entry's and multiply the budget. See
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md). The consequence for this
+feature is that the copy list is built once per attempt of §2 — that is, once per attempt of the
+retry — so a transient retry re-resolves the requestor. `SideEffectGuard` already makes that lookup
+non-fatal, so the worst case is a repeated directory read, not a repeated failure.
 
 **Where `RequestorId` comes from on each route.** It was already carried everywhere it was needed;
 only the two send signatures had to widen to accept it.
@@ -324,7 +336,7 @@ Neither is about the copy list; both construct or mock something whose signature
 | File | Why |
 |---|---|
 | `WithdrawnApplicationFilteringTests` | builds `EndorsementSubmissionService` by hand — needed `Mock.Of<IAuthQueries>()` as the new 16th argument |
-| `EmailNotificationProcessorServiceTests` | mocks `IEndorsementSubmissionService` — every `Setup`/`Verify` of the send needed an `It.IsAny<Guid?>()` for the new parameter |
+| `BulkEmailNotificationProcessorServiceTests` | mocks `IEndorsementSubmissionService` — every `Setup`/`Verify` of the send needed an `It.IsAny<Guid?>()` for the new parameter |
 
 ### Suite state at the time of writing
 
@@ -342,7 +354,7 @@ Neither is about the copy list; both construct or mock something whose signature
 |---|---|
 | `ApplicationFormEmail.CopyTeams` | account provisioning — each entry multiplies daily-cap consumption per send; and that every address parses, or every send fails |
 | `BuildCopyListAsync` | the daily-cap figures in the feature doc, which assume teams + one requestor; and whether a new entry can ever collide with a team mailbox, since nothing deduplicates |
-| The signature of either `SendApplicationFormToUserEmail...` overload | `EmailNotificationProcessorService`, plus the mock setups in `EmailNotificationProcessorServiceTests` — a `Guid?` and an `int?` next to each other make a silently-wrong positional call easy |
+| The signature of either `SendApplicationFormToUserEmail...` overload | `BulkEmailNotificationProcessorService`, plus the mock setups in `BulkEmailNotificationProcessorServiceTests` — a `Guid?` and an `int?` next to each other make a silently-wrong positional call easy |
 | The constructor of `EndorsementSubmissionService` | `WithdrawnApplicationFilteringTests` and `ApplicationFormEmailCopyTests` both build it by hand |
 | The invitation or reminder **body** | the closing sentence names `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; a visible Cc has to keep agreeing with it |
 | `InvitationSubject` / `ReminderSubject` | the matching `<h1>` in `ATSEmailService`, which duplicates the literal rather than reading the const; and `ApplicationFormEmailCopyTests`, which pins both subjects as literals |

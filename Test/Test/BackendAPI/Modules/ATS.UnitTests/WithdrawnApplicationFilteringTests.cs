@@ -1,4 +1,5 @@
-﻿using ATS.Constants;
+﻿using ATS.Configuration;
+using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
@@ -52,7 +54,11 @@ public class WithdrawnApplicationFilteringTests
 			// here sends.
 			Mock.Of<IOrderInputValidator>(),
 			Mock.Of<IUnitOfWork>(),
-			Mock.Of<IAuthQueries>());
+			Mock.Of<IAuthQueries>(),
+
+			// Nothing here sends, so the send bounds are never read. Zero back-off anyway, so a
+			// future test that does send cannot add six seconds to the suite.
+			Options.Create(new AtsEmailDeliveryOptions { RetryBaseDelaySeconds = 0 }));
 	}
 
 	[Theory]
