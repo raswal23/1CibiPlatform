@@ -72,6 +72,34 @@ The filter therefore moved to the one caller that needs it —
 `LoadAppSubRoleReferenceDataAsync` filters `isActive && isApproved` — rather than staying in
 the query where it constrained everybody.
 
+### The same split now applies to applications and submenus
+
+The Application and SubMenu tabs took this pattern after the User tab proved it. Both
+`BuildApplicationsQuery` and `BuildSubMenusQuery` used to filter `IsActive`, which made an
+inactive record invisible on the only screen that could switch it back on — the same trap
+`BuildUsersQuery` had. Both now return the full registry and report state through an
+**Active** column, and `LoadAppSubRoleReferenceDataAsync` filters all three lists:
+
+```csharp
+_appSubRoleApplications = applications.Items.Where(a => a.IsActive)…
+_appSubRoleSubMenus     = subMenus.Items.Where(s => s.IsActive)…
+_appSubRoleUsers        = users.Items.Where(u => u.isActive && u.isApproved)…
+```
+
+Those `Where` clauses are load-bearing, not tidying. The repository queries were what kept
+switched-off records out of the assignment dropdowns, so removing the filter there without
+adding it here would have made them assignable.
+
+Roles have no such filter because `AuthRole` has no `IsActive` — the Role tab is name and
+description only, deliberately.
+
+The rule these enforce together: **the management tabs are the registry, the assignment
+dialog is the subset you may assign.** A record stays visible and restorable wherever it is
+administered, and unusable wherever it would grant access that does not work.
+
+See [`auth-appsubrole-assignment`](../auth-appsubrole-assignment/auth-appsubrole-assignment.md)
+for the assignment rules themselves, including the uniqueness constraint.
+
 ## How to verify it
 
 ```powershell
@@ -88,6 +116,10 @@ Correct looks like: both pills render on every row; deactivating a user leaves t
 place with an Inactive pill; reactivating that same user succeeds; and the deactivated user
 no longer appears in the AppSubRole user autocomplete.
 
+The same three checks apply to the Application and SubMenu tabs: an inactive record keeps its
+row and shows an Inactive pill, can be switched back on from the Edit dialog, and is absent
+from the AppSubRole dropdowns while off.
+
 ## What not to do
 
 | Don't | Because |
@@ -98,4 +130,6 @@ no longer appears in the AppSubRole user autocomplete.
 | Relax `GetRawUserAsync`'s filter instead | Password recovery relies on it; a deactivated account must not be resettable. |
 | Let the status path write `IsApproved` | Approval is the Approval tab's decision, and two write paths to one flag will disagree. |
 | Save without going through `EditUserAsync` | That is where the cache decorator invalidates `UsersTag`/`UnApprovedUsersTag`; a direct save leaves the board showing a stale first page. |
-| Drop the `isActive && isApproved` filter in `LoadAppSubRoleReferenceDataAsync` | Application roles get assigned to users who cannot sign in. |
+| Drop any of the `IsActive` filters in `LoadAppSubRoleReferenceDataAsync` | They are the only thing keeping switched-off users, applications and submenus out of the assignment dropdowns now that the repository queries no longer filter. Roles are the one list with no filter, because `AuthRole` has no `IsActive`. |
+| Re-add `.Where(x => x.IsActive)` to `BuildApplicationsQuery` or `BuildSubMenusQuery` | Same trap as `BuildUsersQuery`: an inactive record vanishes from the only screen that can restore it, and the Active column can then only ever read "Active". |
+| Add `IsActive` to `AuthRole` to "match" the others | Nothing asked for it, and it is a schema change plus a migration for a flag no caller reads. |

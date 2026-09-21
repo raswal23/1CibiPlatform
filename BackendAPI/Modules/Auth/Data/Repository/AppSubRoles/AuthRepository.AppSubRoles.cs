@@ -65,6 +65,26 @@ public partial class AuthRepository
 	
 	public Task<AuthUserAppRole?> GetAppSubRoleAsync(int appSubRoleId) =>
 		_dbcontext.AuthUserAppRoles.FirstOrDefaultAsync(x => x.AppRoleId == appSubRoleId);
+
+	// The assignment's natural key: one row per user per application per submenu. RoleId is
+	// deliberately NOT part of it - granting the same person a second role on the same submenu
+	// is the duplicate this prevents, because which of the two wins is undefined. Changing
+	// someone's role is an edit, not a second assignment.
+	//
+	// excludeAppRoleId lets the edit path reuse this: a row must not collide with itself.
+	public Task<bool> AppSubRoleExistsAsync(
+		Guid userId,
+		int appId,
+		int subMenuId,
+		int? excludeAppRoleId,
+		CancellationToken cancellationToken) =>
+		_dbcontext.AuthUserAppRoles
+			.AsNoTracking()
+			.AnyAsync(x => x.UserId == userId
+					   && x.AppId == appId
+					   && x.Submenu == subMenuId
+					   && (!excludeAppRoleId.HasValue || x.AppRoleId != excludeAppRoleId.Value),
+				cancellationToken);
 	
 	public async Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole)
 		{

@@ -17,10 +17,14 @@ they now stand. Read that document first for the *why*; this one is for changing
 | 8 | **The notice** | `…/Services/EmailService/WithdrawnEmailNotification.cs:25`, contract in `IWithdrawnEmailNotification.cs` | `SendAsync` → `SendNoticeAsync:53` |
 | 9 | Requestor lookup | `BackendAPI/Modules/Auth/Data/Repository/UserDirectory/AuthRepository.UserDirectory.cs:91` | `GetATSAssignedUserAsync` |
 | 10 | Body | `…/Services/EmailService/ATSEmailService.cs:552` | `BuildWithdrawnApplicationNotification` |
+| 10a | **Attempt loop** | `…/Services/EmailService/SingleEmailSendRetry.cs:69` | `SendAsync` — up to 3 attempts, 2s then 4s apart, transient only |
 | 11 | Send | `…/ATSEmailService.cs:61` | `SendATSEmailWithResultAsync` → `SendThroughAccountAsync:134` → `SendOverContextAsync:240` → `BuildMessage:386` |
 
 Steps 1–7 all existed before this feature. Step 8 is the only new call; 9–11 are existing machinery
-that gained one optional parameter.
+that gained one optional parameter. Step 10a was added later by
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md) and wraps step 11 from the
+outside, so one attempt is a full walk of the registered accounts — the notice is retried, the
+account rotation inside it is not repeated.
 
 ## 2. The button is labelled "Cancel", not "Withdraw"
 
@@ -320,6 +324,7 @@ left alone; re-run before concluding anything from it.
 | `WithdrawnEmail.CopyTeam` | The body's contact sentence in `BuildWithdrawnApplicationNotification`, which names it as prose (§7) |
 | The body copy | `AtsWithdrawnEmailBodyTests` asserts the sentences verbatim |
 | `SendATSEmailWithResultAsync`'s signature | `ATSEmailService.cs:29`, `EndorsementSubmissionService.cs:407`, `WithdrawnEmailNotification.SendNoticeAsync`, and four calls in `AtsEmailFailoverTests.cs` |
+| `SingleEmailSendRetry.SendAsync`, or the attempt budget it is given | The other four inline sends and the queue spend the same budget — `docs/features/ats-email-send-retry/`. Do **not** add a second wrapper anywhere beneath it: nested budgets multiply |
 | `SendThroughAccountAsync` | It is called from exactly one place — the switcher at `ATSEmailService.cs:105`. Its XML doc still claims registration uses it; it does not (finding C8 in `docs/features/ats-email-delivery/`) |
 | `ReportSuccessAsync`'s recipient count | `AtsEmailSendLog.RecipientCount`, `AtsEmailAccountRepository.BuildSnapshotQuery`, and the cap figure the UI shows |
 | `BuildMessage` | Every send path funnels through it, including the OTP verification path |

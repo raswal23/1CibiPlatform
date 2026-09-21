@@ -26,9 +26,13 @@ public partial class AuthRepository
 
 	private IQueryable<AuthApplication> BuildApplicationsQuery(string? searchTerm)
 	{
+		// No IsActive filter: the Application tab shows the full registry so an inactive
+		// application is visible and can be switched back on, the same reasoning the User
+		// tab uses for deactivated accounts. Assignment still filters - see
+		// LoadAppSubRoleReferenceDataAsync - because linking a role to a switched-off
+		// application grants access that cannot be used.
 		var applicationsQuery = _dbcontext.AuthApplications
-			.AsNoTracking()
-			.Where(aa => aa.IsActive);
+			.AsNoTracking();
 
 		if (!string.IsNullOrEmpty(searchTerm))
 			applicationsQuery = applicationsQuery.Where(aa =>

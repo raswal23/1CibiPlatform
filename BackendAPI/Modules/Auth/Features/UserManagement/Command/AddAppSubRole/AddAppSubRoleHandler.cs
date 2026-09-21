@@ -38,7 +38,7 @@ public class AddAppSubRoleHandler : ICommandHandler<AddAppSubRoleCommand, AddApp
 	}
 	public async Task<AddAppSubRoleResult> Handle(AddAppSubRoleCommand request, CancellationToken cancellationToken)
 	{
-		var addedAppSubRole = await _appSubRoleService.AddAppSubRoleAsync(request.appSubRole);
+		var addedAppSubRole = await _appSubRoleService.AddAppSubRoleAsync(request.appSubRole, cancellationToken);
 		return new AddAppSubRoleResult(addedAppSubRole);
 	}
 }

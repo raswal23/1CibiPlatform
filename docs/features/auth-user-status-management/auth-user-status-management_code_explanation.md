@@ -143,6 +143,22 @@ and `GetPageAsync` now projects `au.IsActive` as the seventh positional argument
 independent declarations of the same shape — the backend is a positional record, the
 frontend a property record deserialized by name.
 
+### 2.1 The same diff, later, for applications and submenus
+
+`BuildApplicationsQuery` and `BuildSubMenusQuery` lost the identical clause:
+
+```csharp
+var applicationsQuery = _dbcontext.AuthApplications
+    .AsNoTracking();              // was: .Where(aa => aa.IsActive)
+```
+
+Both DTOs already carried `IsActive` (the Add/Edit dialogs have always had the toggle), so
+unlike the user change this needed no DTO or projection edit — only the removal, an **Active**
+column in each table, and the compensating filter in `LoadAppSubRoleReferenceDataAsync`.
+
+`AuthRole` has no `IsActive` at all, so the Role tab keeps three columns and its reference
+list is unfiltered.
+
 ## 3. Wiring not visible from one file
 
 | Thing | Where | Note |
@@ -151,13 +167,14 @@ frontend a property record deserialized by name.
 | Gateway route | `Path/AuthPaths.cs` | Startup-only; restart to pick up. |
 | Cache invalidation | `AuthCacheRepository.UserManagement.Cache.cs` → `EditUserAsync` | Reached only because the service saves through `EditUserAsync`. |
 | Wrapper property name | UI `new { editUserStatus }` ↔ `EditUserStatusRequest(... editUserStatus)` | Must agree by string. |
-| AppSubRole user list | `UserAppRoles.razor.cs` → `LoadAppSubRoleReferenceDataAsync` | Holds the `isActive && isApproved` filter the query used to. |
+| AppSubRole reference lists | `UserAppRoles.razor.cs` → `LoadAppSubRoleReferenceDataAsync` | Holds the `IsActive` filters the repository queries used to — for users (`&& isApproved`), applications and submenus. Roles unfiltered. |
 
 ## 4. Change X, also check Y
 
 | If you change… | Also check |
 |---|---|
 | `BuildUsersQuery` | `LoadAppSubRoleReferenceDataAsync`'s filter; `GetUsers_*` integration count assertions (currently 5 seeded users) |
+| `BuildApplicationsQuery` / `BuildSubMenusQuery` | The matching filter in `LoadAppSubRoleReferenceDataAsync`; `Get*_ShouldIncludeInactive*` integration tests; the `ColumnCount="5"` on each table |
 | `UsersDTO` (either copy) | The other copy, `GetPageAsync`'s projection, and every `new UsersDTO(...)` in `Auth.UnitTests/UserManagementServiceTests.cs` |
 | `EditUserStatusAsync` | `UserManagementServiceTests` (4 cases) and `UserManagementIntegrationTests` (3 cases) |
 | The `auth/edituserstatus` route | `AuthPaths.cs` **and** the UI service path string |

@@ -9,7 +9,7 @@ using ATS.Services.ApplicantSearchProjections;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.BulkUploadMonitoring;
 using ATS.Services.Dashboard;
-using ATS.Services.EmailNotificationProcessor;
+using ATS.Services.BulkEmailNotificationProcessor;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.Report;
 using ATS.Services.Settings.ClientAssignment;
@@ -56,7 +56,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly ISecureToken _generateToken;
 	protected readonly IObjectStorageService _objectStorageService;
 	protected readonly IEndorsementSubmissionService _endorsementSubmissionService;
-	protected readonly IEmailNotificationProcessorService _emailNotificationProcessorService;
+	protected readonly IBulkEmailNotificationProcessorService _bulkEmailNotificationProcessorService;
 	protected readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
 	protected readonly IPackageManagementService _packageManagementService;
 	protected readonly IRoleManagementService _roleManagementService;
@@ -87,7 +87,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
 		_endorsementSubmissionService = _scope.ServiceProvider.GetRequiredService<IEndorsementSubmissionService>();
-		_emailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationProcessorService>();
+		_bulkEmailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkEmailNotificationProcessorService>();
 		_bulkSubmissionProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkSubmissionProcessorService>();
 		_packageManagementService = _scope.ServiceProvider.GetRequiredService<IPackageManagementService>();
 		_roleManagementService = _scope.ServiceProvider.GetRequiredService<IRoleManagementService>();

@@ -400,13 +400,13 @@ direction is the hazard, and the comment at `:163-166` says so:
 		// does NOT cover: SMTP is external and cannot be rolled back, so if the send
 		// succeeds and the commit then fails, the candidate holds a link to an order that
 		// no longer exists. That window is the price of sending inline; the alternative is
-		// queueing it for EmailNotificationProcessor, which is how bulk orders work.
+		// queueing it for BulkEmailNotificationProcessor, which is how bulk orders work.
 ```
 
 Concretely: the email leaves the server, then `RecordAsync` violates a constraint, then `CommitAsync`
 fails — the candidate holds an application-form link pointing at a `HashToken` that was rolled back
 and does not exist. Nothing detects it, nothing retries it. The bulk path avoids this by queueing the
-row as `EmailStatus.Pending` for `EmailNotificationProcessor` to deliver after the commit; the
+row as `EmailStatus.Pending` for `BulkEmailNotificationProcessor` to deliver after the commit; the
 single-order path accepts the window deliberately.
 
 **The cache invalidation.** `_atsRepository` is the *decorated* repository, so

@@ -265,7 +265,7 @@ public partial class ApplicationFormComponent
 	{
 		if (!value)
 		{
-			AddEmployer3 = false;
+			RemoveEmployer3();
 			return Task.CompletedTask;
 		}
 
@@ -297,10 +297,97 @@ public partial class ApplicationFormComponent
 		return Task.CompletedTask;
 	}
 
+	// Removing an employer clears its fields, it does not just hide them. Collapsing the card
+	// while the DTO kept its values meant a candidate who added Employer 2, filled it in, then
+	// removed it still submitted that employer - invisibly, with no way to review or correct it
+	// on the form they were looking at. Same reasoning as ClearProfessionalExperienceDetails,
+	// which already does this for "no work experience".
+	//
+	// The paired date fields are separate because the pickers bind DateTime? while the DTO
+	// holds DateOnly?; leaving them set would repopulate the slot on the next SaveDraft.
 	private void RemoveEmployer2()
 	{
-		AddEmployer3 = false;
+		// Employer 3 goes first: the form only offers it once Employer 2 exists, so leaving a
+		// filled Employer 3 behind a removed Employer 2 would submit a record the candidate
+		// cannot see or reach.
+		RemoveEmployer3();
+
+		professionalExperiences.Emp2CompanyName = null;
+		professionalExperiences.Emp2CurrentlyEmployed = false;
+		professionalExperiences.Emp2PermissionToContact = false;
+		professionalExperiences.Emp2CompanyCity = null;
+		professionalExperiences.Emp2CompanyProvince = null;
+		professionalExperiences.Emp2CompanyCountry = null;
+		professionalExperiences.Emp2CompanyPostalCode = null;
+		professionalExperiences.Emp2StartDate = null;
+		professionalExperiences.Emp2EndDate = null;
+		professionalExperiences.Emp2DatePermittedToContact = null;
+		professionalExperiences.Emp2JobTitle = null;
+		professionalExperiences.Emp2SupervisorName = null;
+		professionalExperiences.Emp2SupervisorContactNumber = null;
+		professionalExperiences.Emp2COEUploadFile = null;
+		professionalExperiences.Emp2COEUploadFileName = null;
+
+		DatePermittedToContact2 = null;
+		StartOfEmployment2 = null;
+		EndOfEmployment2 = null;
+		_emp2Error = false;
+
 		AddEmployer2 = false;
+	}
+
+	private void RemoveEmployer3()
+	{
+		professionalExperiences.Emp3CompanyName = null;
+		professionalExperiences.Emp3CurrentlyEmployed = false;
+		professionalExperiences.Emp3PermissionToContact = false;
+		professionalExperiences.Emp3CompanyCity = null;
+		professionalExperiences.Emp3CompanyProvince = null;
+		professionalExperiences.Emp3CompanyCountry = null;
+		professionalExperiences.Emp3CompanyPostalCode = null;
+		professionalExperiences.Emp3StartDate = null;
+		professionalExperiences.Emp3EndDate = null;
+		professionalExperiences.Emp3DatePermittedToContact = null;
+		professionalExperiences.Emp3JobTitle = null;
+		professionalExperiences.Emp3SupervisorName = null;
+		professionalExperiences.Emp3SupervisorContactNumber = null;
+		professionalExperiences.Emp3COEUploadFile = null;
+		professionalExperiences.Emp3COEUploadFileName = null;
+
+		DatePermittedToContact3 = null;
+		StartOfEmployment3 = null;
+		EndOfEmployment3 = null;
+		_emp3Error = false;
+
+		AddEmployer3 = false;
+	}
+
+	// Reference 3 is the only removable reference - 1 and 2 are always required.
+	private void RemoveReference3()
+	{
+		referenceDetails.Ref3FullName = null;
+		referenceDetails.Ref3ProfessionalRelationship = null;
+		referenceDetails.Ref3AffiliatedCompany = null;
+		referenceDetails.Ref3Email = null;
+		referenceDetails.Ref3ContactNumber = null;
+		referenceDetails.Ref3ModeOfContact = null;
+		referenceDetails.Ref3BestTimeToContact = null;
+
+		Ref3BestDate = null;
+		Ref3BestTime = null;
+
+		AddAnotherReference = false;
+	}
+
+	private void OnAddReference3Changed(bool value)
+	{
+		if (!value)
+		{
+			RemoveReference3();
+			return;
+		}
+
+		AddAnotherReference = true;
 	}
 
 	private bool ValidateUploads()

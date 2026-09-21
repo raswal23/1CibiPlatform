@@ -12,17 +12,20 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IAuthQueries _authQueries;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly AtsEmailDeliveryOptions _options;
 
 	public WithdrawnEmailNotification(
 		ILogger<WithdrawnEmailNotification> logger,
 		IAtsEmailSender emailSender,
 		IAuthQueries authQueries,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_authQueries = authQueries;
 		_orderHistoryService = orderHistoryService;
+		_options = options.Value;
 	}
 
 	public async Task SendAsync(
@@ -102,12 +105,21 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 			cc.Add(invitation.EmailAddress);
 		}
 
-		var result = await _emailSender.SendATSEmailWithResultAsync(
-			toEmail: requestor.UserEmail,
-			subject: WithdrawnEmail.Subject,
-			body: body,
-			cancellationToken: cancellationToken,
-			cc: cc);
+		// The body, the mailbox and the copy list are all resolved above and stay resolved: only the
+		// send is inside the retry, so a second attempt re-sends the same message rather than
+		// rebuilding it and charging the directory another lookup.
+		var result = await SingleEmailSendRetry.SendAsync(
+			send: _ => _emailSender.SendATSEmailWithResultAsync(
+				toEmail: requestor.UserEmail,
+				subject: WithdrawnEmail.Subject,
+				body: body,
+				cancellationToken: cancellationToken,
+				cc: cc),
+			maxAttempts: _options.MaxAttemptsPerMessage,
+			baseDelaySeconds: _options.RetryBaseDelaySeconds,
+			logger: _logger,
+			description: $"the withdrawal notice for order {invitation.EmailInvitationID}",
+			cancellationToken: cancellationToken);
 
 		// Records the ATTEMPT, before the outcome is inspected, so a failed delivery still leaves a
 		// row. "Did we try to tell the requestor?" and "did they get it?" are different questions,

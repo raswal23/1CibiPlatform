@@ -53,6 +53,38 @@ public class ApplicationIntegrationTests : BaseIntegrationTest
 		result.Applications.Items.ElementAt(0).Description.Should().Be("CNX Dashboard");
 	}
 
+	/// <summary>
+	/// The tab is the registry, so a switched-off application stays listed and carries its
+	/// status - that is what the Active column reads, and what makes it restorable. The
+	/// assignment dropdown still filters these out; see LoadAppSubRoleReferenceDataAsync.
+	/// </summary>
+	[Fact]
+	public async Task GetApplications_ShouldIncludeInactiveApplications()
+	{
+		// Arrange
+		await SeedApplicationData();
+
+		var inactive = new AuthApplication
+		{
+			AppId = 4,
+			AppName = "Retired",
+			Description = "No longer offered",
+			IsActive = false
+		};
+		_dbContext.AuthApplications.Add(inactive);
+		await _dbContext.SaveChangesAsync();
+
+		var query = new GetApplicationsQueryRequest(Cursor: null, PageSize: 10);
+
+		// Act
+		var result = await _sender.Send(query);
+
+		// Assert
+		result.Applications.TotalCount.Should().Be(4);
+		result.Applications.Items.Should()
+			.Contain(a => a.applicationName == "Retired" && !a.IsActive);
+	}
+
 	[Fact]
 	public async Task GetApplications_ShouldReturnEmptyList_WhenNoApplicationsExist()
 	{

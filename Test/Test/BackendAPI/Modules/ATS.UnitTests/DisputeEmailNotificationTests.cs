@@ -1,8 +1,10 @@
+﻿using ATS.Configuration;
 using ATS.Constants;
 using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
@@ -28,6 +30,9 @@ public class DisputeEmailNotificationTests
 	private const string CandidateName = "Ada Lovelace";
 	private const string EmailBody = "dispute-email-body";
 
+	/// <summary>The attempt budget these tests configure, so an assertion can name it rather than 3.</summary>
+	private const int MaxAttempts = 3;
+
 	private static readonly Guid InvitationId = Guid.CreateVersion7();
 
 	private readonly Mock<ILogger<DisputeEmailNotification>> _logger = new();
@@ -38,10 +43,17 @@ public class DisputeEmailNotificationTests
 
 	public DisputeEmailNotificationTests()
 	{
+		// Zero back-off. The production default sleeps 2s then 4s between attempts, and a test that
+		// drives a failing send must not spend six seconds proving the count.
 		_notifier = new DisputeEmailNotification(
 			_logger.Object,
 			_emailSender.Object,
-			_orderHistoryService.Object);
+			_orderHistoryService.Object,
+			Options.Create(new AtsEmailDeliveryOptions
+			{
+				MaxAttemptsPerMessage = MaxAttempts,
+				RetryBaseDelaySeconds = 0
+			}));
 	}
 
 	private static DisputeEmailDetails CreateDetails(

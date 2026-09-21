@@ -25,4 +25,13 @@ public sealed class ReportRowDTO
 	public int PackageFollowUpEmail { get; init; }
 	public bool ChasesCandidate { get; init; }
 	public string? ApplicationFormStatus { get; init; }
+
+	// Reminders actually queued for this order. The release query increments it as it sends
+	// and stops once it reaches PackageFollowUpEmail, so subtracting the two gives a number
+	// that agrees with the schedule by construction.
+	//
+	// Deliberately NOT EmailSentStatus - that column tracks where the row sits in the send
+	// queue and swings back to Pending on every release, so it cannot say how many reminders
+	// have gone out.
+	public int FollowUpSentCount { get; init; }
 }

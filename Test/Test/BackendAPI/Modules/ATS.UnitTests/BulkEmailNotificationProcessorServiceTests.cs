@@ -8,11 +8,11 @@ using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
-public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFixture>
+public class BulkEmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFixture>
 {
 	private readonly ATSServiceFixture _fixture;
 
-	public EmailNotificationProcessorServiceTests(ATSServiceFixture fixture)
+	public BulkEmailNotificationProcessorServiceTests(ATSServiceFixture fixture)
 	{
 		_fixture = fixture;
 
@@ -44,6 +44,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()))
 			.ReturnsAsync(result);
@@ -64,6 +65,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>(),
 				It.IsAny<bool>()))
@@ -76,6 +78,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>(),
 				expectedIsFollowUp),
@@ -88,6 +91,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()),
 			times);
@@ -97,7 +101,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldReturn_WhenNoPendingRequests()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
 
 		_fixture.MockRepository
@@ -116,7 +120,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldSendEmail_AndMarkAsSent()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		var pending = new List<EmailInvitationRequest> { PendingRequest("candidate@example.com") };
 
 		_fixture.MockRepository
@@ -135,6 +139,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()),
 			Times.Once);
@@ -160,7 +165,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldUseReminderCopy_WhenTheChaserReleasedTheRow()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 
 		var chased = PendingRequest("chased@example.com");
 		// What the release UPDATE leaves behind: a date stamped, EmailSentAt cleared.
@@ -187,7 +192,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldUseFirstInvitationCopy_WhenTheOrderWasNeverChased()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 
 		var neverChased = PendingRequest("new@example.com");
 		neverChased.LastFollowUpSentDate = null;
@@ -213,7 +218,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldUseFirstInvitationCopy_WhenTheReminderWasAlreadyDelivered()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 
 		var alreadyDelivered = PendingRequest("delivered@example.com");
 		alreadyDelivered.LastFollowUpSentDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
@@ -240,7 +245,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldRecordHistory_ForEverySentEmail()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		_fixture.MockOrderHistoryService.Invocations.Clear();
 
 		var first = PendingRequest("first@example.com");
@@ -280,7 +285,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldWriteTheSentStatusAndItsHistory_InOneTransaction()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		_fixture.MockUnitOfWork.Invocations.Clear();
 
 		_fixture.MockRepository
@@ -304,7 +309,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldNotRecordHistory_WhenEverySendFailed()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		_fixture.MockOrderHistoryService.Invocations.Clear();
 		_fixture.MockUnitOfWork.Invocations.Clear();
 
@@ -338,7 +343,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldReleaseStaleClaims_BeforeClaimingWork()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		_fixture.MockEndorsementSubmissionService.Invocations.Clear();
 
 		_fixture.MockRepository
@@ -364,7 +369,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldMarkAsError_WhenSendingFails()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		var pending = new List<EmailInvitationRequest> { PendingRequest("broken@example.com") };
 
 		_fixture.MockRepository
@@ -377,6 +382,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				It.IsAny<string>(),
 				It.IsAny<string>(),
 				It.IsAny<string>(),
+				It.IsAny<Guid?>(),
 				It.IsAny<int?>(),
 				It.IsAny<CancellationToken>()))
 			.ThrowsAsync(new InvalidOperationException("SMTP unavailable"));
@@ -396,7 +402,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldNotRetry_WhenRejectionIsPermanent()
 	{
 		// Arrange: the server refused the mailbox outright.
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		var pending = new List<EmailInvitationRequest> { PendingRequest("nobody@example.com") };
 
 		_fixture.MockRepository
@@ -422,7 +428,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldRetryTransientFailures_UpToTheConfiguredLimit()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		var pending = new List<EmailInvitationRequest> { PendingRequest("flaky@example.com") };
 
 		_fixture.MockRepository
@@ -464,12 +470,13 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 					It.IsAny<string>(),
 					It.IsAny<string>(),
 					It.IsAny<string>(),
+					It.IsAny<Guid?>(),
 					It.IsAny<int?>(),
 					It.IsAny<CancellationToken>()))
 				.ReturnsAsync(EmailDeliveryResult.Throttled("421", "4.7.0 Try again later"));
 
 			// Act
-			await service.EmailNotificationProcessorService
+			await service.BulkEmailNotificationProcessorService
 				.ProcessForPendingStatusAsync(CancellationToken.None);
 
 			// Assert: the rows go back to Pending with their attempt count intact, so a
@@ -522,7 +529,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 				.ReturnsAsync((AtsEmailAccountSnapshot?)null);
 
 			// Act
-			await fixture.EmailNotificationProcessorService
+			await fixture.BulkEmailNotificationProcessorService
 				.ProcessForPendingStatusAsync(CancellationToken.None);
 
 			// Assert: no rows are even claimed. Claiming them would hold them out of every
@@ -570,12 +577,13 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 					It.IsAny<string>(),
 					It.IsAny<string>(),
 					It.IsAny<string>(),
+					It.IsAny<Guid?>(),
 					It.IsAny<int?>(),
 					It.IsAny<CancellationToken>()))
 				.ReturnsAsync(EmailDeliveryResult.Sent);
 
 			// Act
-			await fixture.EmailNotificationProcessorService
+			await fixture.BulkEmailNotificationProcessorService
 				.ProcessForPendingStatusAsync(CancellationToken.None);
 
 			// Assert: rows were claimed and sent through the surviving account.
@@ -598,7 +606,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldFailImmediately_WhenAddressIsMissing()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 		var pending = new List<EmailInvitationRequest> { PendingRequest("   ") };
 
 		_fixture.MockRepository
@@ -622,7 +630,7 @@ public class EmailNotificationProcessorServiceTests : IClassFixture<ATSServiceFi
 	public async Task ProcessForPendingStatusAsync_ShouldPropagate_WhenRepositoryFails()
 	{
 		// Arrange
-		var service = _fixture.EmailNotificationProcessorService;
+		var service = _fixture.BulkEmailNotificationProcessorService;
 
 		_fixture.MockRepository
 			.Setup(x => x.GetPendingEmailInvitationRequestsAsync())

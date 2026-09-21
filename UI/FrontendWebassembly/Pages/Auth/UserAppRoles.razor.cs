@@ -526,10 +526,19 @@ public partial class UserAppRoles
 			.ThenBy(user => user.lastName)
 			.ThenBy(user => user.email)
 			.ToArray();
+		// Same split as users above, and for the same reason: the Application and SubMenu
+		// tabs now return the full registry so an inactive record stays visible and can be
+		// switched back on, but assignment only offers what is switched on. Linking a role
+		// to an inactive application or submenu grants access that cannot be used.
+		//
+		// These filters are load-bearing: the repository queries used to apply them, so
+		// dropping them here would make switched-off records assignable.
 		_appSubRoleApplications = applications.Items
+			.Where(application => application.IsActive)
 			.OrderBy(application => application.applicationName)
 			.ToArray();
 		_appSubRoleSubMenus = subMenus.Items
+			.Where(subMenu => subMenu.IsActive)
 			.OrderBy(subMenu => subMenu.subMenuName)
 			.ToArray();
 		_appSubRoleRoles = roles.Items

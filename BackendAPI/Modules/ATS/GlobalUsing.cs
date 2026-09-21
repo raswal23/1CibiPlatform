@@ -49,7 +49,7 @@ global using ATS.Services.BulkSubmissionProcessor;
 global using ATS.Services.BulkUploadMonitoring;
 global using ATS.Services.Dashboard;
 global using ATS.Services.DisputeOrder;
-global using ATS.Services.EmailNotificationProcessor;
+global using ATS.Services.BulkEmailNotificationProcessor;
 global using ATS.Services.EndorsementSubmission;
 global using ATS.Services.OMSTicketing;
 global using ATS.Services.OMSTicketingMonitoring;

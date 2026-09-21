@@ -89,9 +89,10 @@ public static class ATSDatabaseExtensions
 
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.TicketingStatus);
+		await BackfillRoleAsync(context, initData, AtsRoleIds.ClientExperience);
 
-		// Last, because the backfill above inserts ModuleDetails rows with explicit ids
-		// too. Syncing before it would leave the sequence stranded again.
+		// Last, because the backfills above insert RoleDetails and ModuleDetails rows with
+		// explicit ids too. Syncing before them would leave the sequence stranded again.
 		await SyncIdentitySequencesAsync(context);
 	}
 
@@ -127,6 +128,38 @@ public static class ATSDatabaseExtensions
 				GREATEST((SELECT MAX("ModuleId") FROM ats."ModuleDetails"), 1),
 				TRUE);
 			""");
+	}
+
+	/// <summary>
+	/// Inserts one seeded role into a database whose RoleDetails table is already populated.
+	/// </summary>
+	/// <remarks>
+	/// The role seed above is guarded on an empty table, so a role added after the first
+	/// deployment reaches new databases only - every existing environment would be missing
+	/// it, and any user assigned to it would fail the FK on UserDetails. Matched on RoleId
+	/// rather than name so an operator who renamed the row does not get a duplicate, and
+	/// idempotent for the same reason: a second run adds nothing.
+	/// </remarks>
+	private static async Task BackfillRoleAsync(
+		ATSDBContext context,
+		ATSInitialData initData,
+		int roleId)
+	{
+		if (await context.RoleDetails.AnyAsync(role => role.RoleId == roleId))
+		{
+			return;
+		}
+
+		var seededRole = initData.GetATSRoles()
+			.FirstOrDefault(candidate => candidate.RoleId == roleId);
+
+		if (seededRole is null)
+		{
+			return;
+		}
+
+		await context.RoleDetails.AddAsync(seededRole);
+		await context.SaveChangesAsync();
 	}
 
 	// The seed blocks above only run on an empty table, so a module added after the

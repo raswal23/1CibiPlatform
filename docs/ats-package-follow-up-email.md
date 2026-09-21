@@ -24,15 +24,33 @@ A row is chased only when **all** of these hold:
 | `LastFollowUpSentDate IS DISTINCT FROM today` | One per day. `IS DISTINCT FROM`, not `<>`, so a NULL (never chased) passes. |
 | `HashToken IS NOT NULL` | There is a link to resend. |
 | `now() >= OrderCreatedAt + 1 day` | The first reminder is the day *after* the order, never the same day. |
-| `now() < OrderCreatedAt + (FollowUpEmail + 1) days` | The stop condition — the window closes after N reminders. |
+| `FollowUpSentCount < FollowUpEmail` | **The stop condition** — N reminders *sent*, not N days elapsed. |
+| `now() < OrderCreatedAt + (FollowUpEmail + 8) days` | The backstop that keeps the schedule bounded. |
 
 Bounded to 0–90 by both package validators and the numeric field's `Max` on each form.
 
-### Why `+ 1` on the window
+### The stop condition counts sends, not days
 
-The window is `[order + 1 day, order + (N+1) days)`. That is N whole days wide starting at the
-first eligible moment, which is what makes `FollowUpEmail = 2` mean two reminders rather than one.
-Dropping the `+ 1` sends only on day 1; making the upper bound inclusive sends N+1 times.
+`FollowUpSentCount` is incremented in the same `UPDATE` that stamps `LastFollowUpSentDate`, and the
+schedule ends when it reaches `FollowUpEmail`.
+
+It originally ended `FollowUpEmail` days after the order, which assumed a reminder goes out every
+day. It does not — a row is only released when it satisfies every rule above, so a day passes with
+nothing sent whenever the first invitation is still queued behind the send quota or has failed.
+That cut the schedule short for exactly the candidates who had received the least: an order whose
+delivery was stuck for three days simply lost three of its reminders. Counting sends means a missed
+day is deferred, not forfeited.
+
+### Why the window still exists
+
+`FollowUpSentCount` alone is not time-bounded, so a never-chased order would stay eligible forever.
+The window survives as a **backstop**, widened by `FollowUpCatchUpGraceDays` (7) so a realistic
+outage can be caught up without letting a months-old order start chasing. This matters more than it
+looks: the daily-reminder migration ships no backfill precisely because the window is what protects
+the existing backlog — see *Existing orders are never chased* below.
+
+The lower bound still has its `+ 1`: the first reminder is the day *after* the order, so dropping it
+would chase on the order date itself.
 
 ## Once a day, for N days
 
@@ -92,14 +110,19 @@ Originally this was guaranteed by a backfill: the migration that added the now-r
 already-chased. Under the fire-once design that stamp was the only thing standing between a
 brand-new job and every open order in the table.
 
-**The window now does that job instead, which is why the daily-reminder migration adds no backfill.**
-An order is only eligible while `now()` is inside `[order + 1 day, order + (N+1) days)`. Anything
-older than its package's reminder count has already fallen out of its window and can never be
-selected again, whatever `LastFollowUpSentDate` holds. Leaving the new column NULL on existing rows
-is correct and simply means "no reminder queued yet today".
+**The window now does that job instead, which is why neither the daily-reminder migration nor the
+`FollowUpSentCount` migration adds a backfill.** An order is only eligible while `now()` is inside
+`[order + 1 day, order + (N + 8) days)`. Anything older than its package's reminder count plus the
+catch-up grace has fallen out of that window and can never be selected again, whatever
+`LastFollowUpSentDate` or `FollowUpSentCount` hold. Leaving those columns NULL and `0` on existing
+rows is correct: nothing has been queued or counted.
 
 This is a stronger guarantee than the backfill was, because it is not a one-time write that a later
-`UPDATE` could undo — an order more than N days old is structurally ineligible.
+`UPDATE` could undo — an order past its grace window is structurally ineligible.
+
+Widening the window by the grace period is what made it worth keeping once the stop condition moved
+to the count. It is no longer *why* the schedule ends; it is only the bound that stops an uncounted
+order from being eligible forever.
 
 ## The job queues; it never sends
 
@@ -173,7 +196,7 @@ a candidate says they never received anything.
 `InvitationEmailSent` is written **inside the same transaction** as the `EmailSentStatus = Done`
 flip it describes, because they are one fact. Written separately, a crash between them leaves an
 order showing Done with nothing in its history to say when — and nothing ever revisits a Done row
-to notice the gap. Both paths do this: the queued path in `EmailNotificationProcessorService` wraps
+to notice the gap. Both paths do this: the queued path in `BulkEmailNotificationProcessorService` wraps
 the pair in `TransactionRunner.RunAsync`, and the inline path in `EndorsementSubmissionService`
 records it inside the transaction that already surrounds the order insert.
 
@@ -197,14 +220,27 @@ someone needs to pick up the phone.
 on the board as though it had been chased and given up on.
 
 The number is computed per request in `ReportService.CalculateFollowUpEmailsRemaining`, not stored
-and not computed in SQL — the answer depends on today's date, and these rows pass through a cache
-decorator, so a persisted number would be stale by however long the entry lives.
+and not computed in SQL — the answer depends on `LastFollowUpSentDate`, which the chaser moves, and
+these rows pass through a cache decorator, so a persisted number would be stale by however long the
+entry lives.
 
-**It mirrors the release query's window and must keep mirroring it.** A wrong number here is worse
-than no column at all, because an operator will trust it instead of chasing the candidate
-themselves. Both sides measure days in Manila through the shared `FollowUpSchedule` constant rather
-than two separate literals, which is the one thing preventing a silent eight-hours-a-day drift
-between them.
+### It counts sends, not days
+
+`FollowUpEmail − FollowUpSentCount` — the **same subtraction the release query's stop condition
+makes**, against the same two columns. That is the point: the board and the chaser cannot drift
+apart, because they read one fact rather than two formulas someone has to remember to keep in step.
+
+It used to deduct elapsed days, which quietly assumed the schedule always runs. When delivery was
+stuck, the board counted the day anyway: an order placed today showed `2 left`, then `1 left` the
+next morning, for a candidate who had received no email at all.
+
+One thing the number cannot express: the release query also refuses orders past the catch-up grace,
+so a long-abandoned order can show a non-zero count that will never be sent. Accepted — it only
+affects orders already far outside their window, and encoding the grace period in a second place
+would reintroduce exactly the duplicated-formula drift this design removes.
+
+A wrong number here is worse than no column at all, because an operator will trust it instead of
+chasing the candidate themselves.
 
 ## How to verify it
 
@@ -219,8 +255,11 @@ The integration tests run against a real PostgreSQL Testcontainer, which is the 
 nothing about whether the column exists.
 
 Correct looks like: an order seeded one day back with `FollowUpEmail >= 1` releases on the first
-call and **not** on an immediate second call (same day), an order seeded on the current day releases
-nothing, and an order older than its window releases nothing however long it has waited.
+call and **not** on an immediate second call (same day); an order seeded on the current day releases
+nothing; an order whose `FollowUpSentCount` has reached `FollowUpEmail` releases nothing however
+recent it is; an order with sends still owed releases even when it is past its nominal schedule, so
+long as it is inside the grace window; and an order past that grace releases nothing however long it
+has waited.
 
 ## What not to do
 
@@ -230,9 +269,12 @@ nothing, and an order older than its window releases nothing however long it has
 | Write the date stamp in a second statement or in the service layer | A crash between the two writes leaves a released, undated row, which the next pass chases again. |
 | Switch the comparisons to UTC, or inline a second `"Asia/Manila"` literal | Double-sends for orders created between midnight and 8am Manila, and two literals drift. Both sides use `FollowUpSchedule`. |
 | Move `InvitationEmailSent` outside the transaction that sets `EmailSentStatus = Done` | A crash between them leaves a delivered-looking order with no delivery record, and nothing revisits a Done row. |
-| Change the release window without changing `CalculateFollowUpEmailsRemaining` | The board would promise reminders that never arrive, and an operator would act on it. |
+| Make the stop condition time-based again | Days pass whether or not a reminder was sent, so the schedule ends early for whoever had delivery trouble — the candidates who received the least get chased the fewest times. |
+| Increment `FollowUpSentCount` anywhere but the release `UPDATE` | A crash between the release and the increment leaves a sent-but-uncounted row, and the schedule overruns. Same reasoning as the date stamp. |
+| Derive the sent count from `LastFollowUpSentDate − OrderCreatedAt` instead of storing it | The gap only equals the count while every reminder lands on its own day. One late catch-up send and it overcounts, ending the schedule early. |
+| Remove the window now that the count is the stop condition | It is still the only bound on eligibility. Without it every never-chased order in the table is eligible forever, which is a mass send — and it is why no migration backfills. |
 | Stop writing `LastFollowUpSentDate`, or add a second "has been queued" stamp beside it | It does two jobs now — the once-per-day guard *and* the reminder-copy signal. A second stamp is what made the copy check wrong before. |
-| Backfill `LastFollowUpSentDate` for existing rows | Null means "never chased", which is what the copy check reads. A backfill would make every legacy resend claim to be a reminder. |
-| Make the window's upper bound inclusive, or remove the `+ 1` | Off-by-one in the reminder count: N+1 sends, or 1 send. |
+| Backfill `LastFollowUpSentDate` or `FollowUpSentCount` for existing rows | Null/`0` means "never chased", which is what the copy check and the count read. A backfill would make every legacy resend claim to be a reminder. |
+| Remove the `+ 1` on the window's lower bound | The first reminder would fire on the order date itself, rather than the day after. |
 | Rotate `HashToken` on release | Kills the link already sitting in the candidate's inbox. |
 | Raise `FollowUpEmail` on a high-volume package without checking send capacity | Reminders queue ahead of first invitations for that account. |

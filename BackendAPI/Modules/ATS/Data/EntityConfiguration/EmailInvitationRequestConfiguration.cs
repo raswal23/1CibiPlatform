@@ -104,6 +104,17 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 			   .HasColumnType("date")
 			   .IsRequired(false);
 
+		// NOT NULL defaulting to 0, so every pre-existing row reads "never chased" without a
+		// backfill - the same stance LastFollowUpSentDate takes, and for the same reason: a
+		// backfilled value here would be indistinguishable from a real send. Non-nullable
+		// because "no reminders sent" is 0, not unknown.
+		//
+		// Un-indexed, like the date above: the release query still narrows on EmailSentStatus,
+		// and this table is write-hot enough that a redundant index is pure cost.
+		builder.Property(e => e.FollowUpSentCount)
+			   .HasDefaultValue(0)
+			   .IsRequired();
+
 		// Nullable because a data-screening order is never emailed: there is no
 		// application form to send, so it has no place in the email queue at all.
 		// NULL is "not applicable", which is not the same as Pending - the worker

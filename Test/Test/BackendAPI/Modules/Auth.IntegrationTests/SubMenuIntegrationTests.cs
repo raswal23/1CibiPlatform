@@ -53,6 +53,38 @@ public class SubMenuIntegrationTests : BaseIntegrationTest
 		result.subMenus.Items.ElementAt(0).Description.Should().Be("CNX Dashboard");
 	}
 
+	/// <summary>
+	/// Same rule as applications: the tab lists the full registry so a switched-off submenu
+	/// keeps its row and its status, which is what the Active column shows. Assignment still
+	/// filters these out.
+	/// </summary>
+	[Fact]
+	public async Task GetSubMenus_ShouldIncludeInactiveSubMenus()
+	{
+		// Arrange
+		await SeedSubMenuData();
+
+		var inactive = new AuthSubMenu
+		{
+			SubMenuId = 4,
+			SubMenuName = "Retired",
+			Description = "No longer offered",
+			IsActive = false
+		};
+		_dbContext.AuthSubmenu.Add(inactive);
+		await _dbContext.SaveChangesAsync();
+
+		var query = new GetSubMenusQueryRequest(Cursor: null, PageSize: 10);
+
+		// Act
+		var result = await _sender.Send(query);
+
+		// Assert
+		result.subMenus.TotalCount.Should().Be(4);
+		result.subMenus.Items.Should()
+			.Contain(s => s.subMenuName == "Retired" && !s.IsActive);
+	}
+
 	[Fact]
 	public async Task GetSubMenus_ShouldReturnEmptyList_WhenNoSubMenusExist()
 	{

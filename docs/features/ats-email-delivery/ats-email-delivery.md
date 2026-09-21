@@ -63,10 +63,11 @@ for a login throttle.
 
 ```text
 EmailNotificationBackgroundJob (Quartz, every 5s, DisallowConcurrentExecution)
-  -> EmailNotificationProcessorService.ProcessForPendingStatusAsync
+  -> BulkEmailNotificationProcessorService.ProcessForPendingStatusAsync
        -> [skip entirely if NO registered account is sendable]
        -> claim slice from PostgreSQL (FOR UPDATE SKIP LOCKED)
-       -> per row: SendApplicationFormToUserEmailWithResultAsync
+       -> per row: SendWithRetryAsync   <- the queue's OWN loop, up to 3 attempts per pass, 2s then 4s apart
+            -> SendApplicationFormToUserEmailWithResultAsync
             -> ATSEmailService.SendATSEmailWithResultAsync   <- the switcher loop
                  -> registry.GetNextSendableAccountAsync(already tried)
                  -> [no account left? return Throttled, defer the row]
@@ -217,6 +218,40 @@ valid candidate addresses on the strength of our own misconfiguration. The provi
 still travels in the message, because "raise the daily limit" and "the password is wrong" need
 very different responses from whoever reads the log.
 
+### The retry wraps the switcher, it does not live inside it
+
+One helper, `SingleEmailSendRetry`, holds the attempt loop for the inline sends. It wraps
+`SendATSEmailWithResultAsync` from the **outside**, so one attempt is one full walk of the
+registered accounts, and the budget is spent per **message** rather than per account. Three
+attempts stay three attempts when a sixth account is registered.
+
+`Transient` is the only outcome it retries, which falls out of the switcher's own exits rather
+than being a second policy:
+
+- a **throttle** or a rejected credential never reaches the retry as itself — the switcher moves
+  to the next account on the spot, and only reports `Throttled` once every account has refused,
+  at which point re-knocking is the one response that makes it worse;
+- a **`Permanent` scoped to the message** is a refused recipient — the server read the address
+  and said no, and a second attempt produces the identical refusal;
+- a **transient** arrives as the final answer with the highest-priority account still selected,
+  because the switcher deliberately does not move it (above). The retry lands on that same
+  account again, unless its consecutive failures have meanwhile tripped the breaker and retired
+  it — in which case the next attempt walks on. Stay put while it looks like noise, move on once
+  it looks like a pattern, and let the breaker decide which it is.
+
+Five call sites share it: the inline sends — invitation, reminder, withdrawal notice, completion
+notice, dispute acknowledgement.
+
+**The queue is not one of them, deliberately.** `BulkEmailNotificationProcessorService` keeps its
+own `for` loop on the same cadence. Folding it into the helper was tried and reverted, for two
+reasons. A pass fans out across a semaphore, and any row that discovers no account will take a
+message stands the whole pass down; the queue's loop re-reads that signal before **every** attempt,
+which a helper wrapping only the send cannot do. And a spent budget means different things on the
+two paths — a queued row is released for the next tick with passes still in hand, while an inline
+caller standing in a committed transaction has no later tick and must report the failure. That is
+why they read separate options, `MaxAttemptsPerPass` and `MaxAttemptsPerMessage`, equal today and
+free to diverge.
+
 ## 4. Configuration
 
 Bind `AtsEmailDelivery` in appsettings to override any value. Every default works, so an
@@ -229,7 +264,8 @@ absent section is valid — the same convention as `AtsNotifications` and `AtsAu
 | `MinSecondsBetweenLogins` | 5 | Minimum gap between new sessions |
 | `MaxMessagesPerConnection` | 50 | Messages before a session is rebuilt |
 | `SendTimeoutSeconds` | 60 | Network timeout per operation |
-| `MaxAttemptsPerPass` | 3 | Attempts before requeueing a transient failure |
+| `MaxAttemptsPerPass` | 3 | Attempts the **queue** spends on a row in one pass, before releasing it for a later tick |
+| `MaxAttemptsPerMessage` | 3 | Attempts an **inline** send spends on ONE message before giving up entirely. Each attempt is a full walk of the accounts |
 | `RetryBaseDelaySeconds` | 2 | First back-off; doubles per attempt |
 | `ThrottleBackoffSeconds` | 600 | Pause after a send throttle |
 | `LoginThrottleBackoffSeconds` | 1800 | Pause after a login throttle |
@@ -266,7 +302,7 @@ is the cheap fix for volume; it is not a fix for rate.
 
 ```powershell
 dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~Smtp"
-dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~EmailNotificationProcessorServiceTests"
+dotnet test Test/Test/Test.csproj --filter "FullyQualifiedName~BulkEmailNotificationProcessorServiceTests"
 dotnet build 1CibiPlatform.sln
 ```
 
@@ -350,6 +386,13 @@ should no longer appear from throttling alone.
 - **Do not charge an attempt for a deferred row.** `ReleaseEmailInvitationClaimsAsync`
   exists specifically to avoid it.
 - **Do not retry a permanent rejection.** A 5xx is the server stating a fact.
+- **Do not wrap a send in `SingleEmailSendRetry` without checking what is already beneath it.**
+  Nested budgets multiply rather than share: a retry on
+  `SendApplicationFormToUserEmailWithResultAsync` would cost a queued row nine sends per pass,
+  because the queue already loops over that exact method. The retry on the single-order path is
+  on the `bool` overload for that reason, and the two overloads stay separate for no other.
+- **Do not replace the queue's `SendWithRetryAsync` with `SingleEmailSendRetry`.** It was tried
+  and reverted; see §3 for the two reasons.
 - **Do not shorten the Quartz interval to increase throughput.** It is a poll interval; the
   rate limiter is the real bound.
 - **Do not cache the account list or its health.** `AtsEmailAccountRepository` is uncached on

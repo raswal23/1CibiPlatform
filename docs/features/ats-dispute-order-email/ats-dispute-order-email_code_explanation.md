@@ -16,10 +16,13 @@ stand. Read that document first for the *why*; this one is for changing the code
 | 7 | Dispute write | `…/Services/DisputeOrder/DisputeOrderService.cs:94` | `MarkAsDisputedAsync` |
 | 8 | **The acknowledgement** | `…/DisputeOrderService.cs:162` → `Services/EmailService/DisputeEmailNotification.cs:24` | `SendAsync` → `SendNoticeAsync:43` |
 | 9 | Body | `…/Services/EmailService/ATSEmailService.cs:604` | `BuildDisputeNotification` |
+| 9a | **Attempt loop** | `…/Services/EmailService/SingleEmailSendRetry.cs:69` | `SendAsync` — up to 3 attempts, 2s then 4s apart, transient only |
 | 10 | Send | `…/ATSEmailService.cs:61` | `SendATSEmailWithResultAsync` → `SendThroughAccountAsync:134` → `SendOverContextAsync:240` → `BuildMessage:386` |
 
-Steps 1–7 existed before this feature; steps 1–3 gained one field. Steps 8–9 are the feature, and
-step 10 is reused unchanged — its `cc` parameter came with the withdrawal notice
+Steps 1–7 existed before this feature; steps 1–3 gained one field. Steps 8–9 are the feature.
+Step 9a was added later by
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md); it wraps step 10 from the
+outside, so one attempt is a full walk of the registered accounts. Step 10 is reused unchanged — its `cc` parameter came with the withdrawal notice
 (`docs/features/ats-withdrawn-application-email/`).
 
 There used to be a step between 7 and 8: an internal operations email composed by
@@ -313,6 +316,7 @@ needs the manual pass in the high-level document.
 | `DisputeOrderRequestDTO` on either side | The other side (§3), and `MarkAsDisputedCommandValidator` — note `DisputeCategory` is deliberately not `NotEmpty` |
 | Which field is persisted | `ATSRepository.DisputeOrders.cs:87`, the disputes grid's chip (`:39`), the details-line derivation in `DisputeEmailNotification.SendNoticeAsync` step 2, both DTOs' XML docs, and §8. The integration suite pins both directions |
 | `IAtsEmailSender`'s members | `ATSEmailService`, `FakeAtsEmailSender` (the integration host — §7), and the mocks in `AtsEmailAccountManagementFixture.cs:34` |
+| `SingleEmailSendRetry.SendAsync`, or the attempt budget it is given | The other four inline sends and the queue spend the same budget — `docs/features/ats-email-send-retry/`. Do **not** add a second wrapper anywhere beneath it: nested budgets multiply |
 | `DisputeOrderService`'s constructor | `DisputeOrderServiceTests.cs` and `DisputeOrderServiceIntegrationTests.cs` both news it up by hand |
 | The transaction in `MarkAsDisputedAsync` | The acknowledgement must stay after `CommitAsync`, and `SendAsync` must stay unable to throw (§5) |
 | `IEmailService`'s members | It is a BuildingBlocks contract implemented by `ATSEmailService`, `BuildingBlocks/…/EmailService.cs` and the tests' `FakeEmailSender`. `SendEmailForDispute` was removed from all four; do not put a dispute composer back on it (§10 of the high-level document) |

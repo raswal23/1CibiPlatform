@@ -54,6 +54,20 @@ public class EmailInvitationRequest
 	// DateOnly rather than a timestamp because the rule is calendar-shaped - one per day, not
 	// one per 24 hours. Compared in Asia/Manila; see ReleaseDueFollowUpInvitationsAsync.
 	public DateOnly? LastFollowUpSentDate { get; set; }
+
+	// How many reminders have actually been queued for this order, incremented in the same
+	// UPDATE that stamps LastFollowUpSentDate above.
+	//
+	// This is the stop condition - the schedule ends after FollowUpEmail SENDS, not after
+	// FollowUpEmail days. The two are not the same: a reminder is only released for a row that
+	// satisfies every rule in the release query, so a day can pass with nothing sent (the first
+	// invitation still queued behind the send quota, or failed). Counting days ended the
+	// schedule early for exactly the candidates who had received the least.
+	//
+	// A count rather than deriving it from LastFollowUpSentDate - OrderCreatedAt: that gap only
+	// equals the number sent while every reminder lands on its own day, and overcounts the
+	// moment a missed one goes out late.
+	public int FollowUpSentCount { get; set; }
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }

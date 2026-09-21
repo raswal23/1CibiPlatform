@@ -23,6 +23,16 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IOrderInputValidator _orderInputValidator;
 	private readonly IUnitOfWork _unitOfWork;
+
+	// Only to resolve the requestor's mailbox for the application form copy list. The order
+	// stores the requestor's NAME as text, which is not an address; the Auth directory is the
+	// only source for one, and it is the same lookup the three sibling notices use.
+	private readonly IAuthQueries _authQueries;
+
+	// Only for the two send bounds SingleEmailSendRetry takes. Read here rather than inside the
+	// retry so the helper stays stateless and its attempt loop can be driven by a test with no
+	// configuration at all.
+	private readonly AtsEmailDeliveryOptions _emailDeliveryOptions;
 	private readonly string _templateFileName;
 	private readonly string _applicationformBaseUrl;
 	private readonly string _folderName;
@@ -42,7 +52,9 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IUserClientRepository userClientRepository,
 		IAtsAccessScopeResolver accessScopeResolver,
 		IOrderInputValidator orderInputValidator,
-		IUnitOfWork unitOfWork)
+		IUnitOfWork unitOfWork,
+		IAuthQueries authQueries,
+		IOptions<AtsEmailDeliveryOptions> emailDeliveryOptions)
 	{
 		_logger = logger;
 		_hashService = hashService;
@@ -59,6 +71,8 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_accessScopeResolver = accessScopeResolver;
 		_orderInputValidator = orderInputValidator;
 		_unitOfWork = unitOfWork;
+		_authQueries = authQueries;
+		_emailDeliveryOptions = emailDeliveryOptions.Value;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkFileFolderName", "");
@@ -182,7 +196,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		// does NOT cover: SMTP is external and cannot be rolled back, so if the send
 		// succeeds and the commit then fails, the candidate holds a link to an order that
 		// no longer exists. That window is the price of sending inline; the alternative is
-		// queueing it for EmailNotificationProcessor, which is how bulk orders work.
+		// queueing it for BulkEmailNotificationProcessor, which is how bulk orders work.
 		//
 		// A data order skips the send and the status update entirely, so its transaction is
 		// just the insert and the history entry. It is still queued for OMS ticketing - only
@@ -203,13 +217,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 						subjectName,
 						applicationFormLink,
 						emailInvitationRequest.Requestor,
+						emailInvitationRequest.RequestorId,
 						emailInvitationRequest.ClientId);
 
 					await _atsRepository.UpdateSingleEmailInvitationRequestStatusForSentEmailAsync(
 						emailInvitationRequest.EmailInvitationID);
 
 					// Inside the same transaction as the status it describes, matching the
-					// queued path in EmailNotificationProcessorService. A data order records
+					// queued path in BulkEmailNotificationProcessorService. A data order records
 					// nothing here because no email was sent.
 					await _orderHistoryService.RecordAsync(
 						emailInvitationRequest.EmailInvitationID,
@@ -339,7 +354,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return await ATS.Features.Web.InsertBulkSubject.BulkMobileNumberValidation.ValidateMobileNumbersAsync(file, ct);
 	}
 
-	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, int? clientId)
+	/// <remarks>
+	/// The retry lives on THIS overload rather than on the result-aware one below, and that is the
+	/// whole reason the two are still separate.
+	///
+	/// This is the single-order path: it runs inline inside a transaction, so a failed send takes
+	/// the order with it and there is no later tick to try again on. It spends the message's
+	/// attempt budget here or not at all.
+	///
+	/// The overload below is what the queue calls, and
+	/// <c>BulkEmailNotificationProcessorService</c> already loops over it in its own
+	/// <c>SendWithRetryAsync</c>, on a pass-level budget it owns. Putting the retry there instead
+	/// would nest one loop inside the other and cost a queued row nine sends rather than three.
+	/// </remarks>
+	public async Task<bool> SendApplicationFormToUserEmailAsync(string gmail, string name, string applicationFormLink, string? requestor, Guid? requestorId, int? clientId)
 	{
 		var logContext = new
 		{
@@ -349,13 +377,20 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			Timestamp = DateTime.UtcNow
 		};
 
-		var result = await SendApplicationFormToUserEmailWithResultAsync(
-			gmail,
-			name,
-			applicationFormLink,
-			requestor,
-			clientId,
-			CancellationToken.None);
+		var result = await SingleEmailSendRetry.SendAsync(
+			send: _ => SendApplicationFormToUserEmailWithResultAsync(
+				gmail,
+				name,
+				applicationFormLink,
+				requestor,
+				requestorId,
+				clientId,
+				CancellationToken.None),
+			maxAttempts: _emailDeliveryOptions.MaxAttemptsPerMessage,
+			baseDelaySeconds: _emailDeliveryOptions.RetryBaseDelaySeconds,
+			logger: _logger,
+			description: $"the application form invitation to {gmail}",
+			cancellationToken: CancellationToken.None);
 
 		if (!result.IsSent)
 		{
@@ -379,6 +414,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		string name,
 		string applicationFormLink,
 		string? requestor,
+		Guid? requestorId,
 		int? clientId,
 		CancellationToken cancellationToken,
 		bool isFollowUp = false)
@@ -419,12 +455,14 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			// Auth and the test fakes to reason about a copy list they have no teams for. A sender
 			// that is not the ATS one therefore sends to the candidate alone - the same degradation
 			// the reminder body already accepts above.
+			var cc = await BuildCopyListAsync(requestorId, cancellationToken);
+
 			return await resultAwareSender.SendATSEmailWithResultAsync(
 				toEmail: gmail!,
 				subject: subject,
 				body: emailBody,
 				cancellationToken: cancellationToken,
-				cc: ApplicationFormEmail.CopyTeams);
+				cc: cc);
 		}
 
 		var isSent = await _emailService.SendATSEmailAsync(
@@ -435,6 +473,67 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		return isSent
 			? EmailDeliveryResult.Sent
 			: EmailDeliveryResult.Transient(null, "Email sender reported failure without a status code.");
+	}
+
+	/// <summary>
+	/// The copy list for one application form email: the CIBI teams, plus the requestor who
+	/// raised the order when their mailbox can be resolved.
+	/// </summary>
+	/// <remarks>
+	/// The requestor is looked up rather than read off the order because the order stores their
+	/// DISPLAY NAME - <c>Requestor</c> is whatever <c>ICurrentUser.FullName</c> held at order
+	/// time, and a name is not an address. <c>RequestorId</c> is the durable handle, and the Auth
+	/// directory is the only source for the mailbox, which is why this mirrors the lookup in
+	/// <c>SubmittedFormEmailNotification</c> and <c>WithdrawnEmailNotification</c>.
+	///
+	/// A resolved address is appended rather than prepended: the teams are on every one of these
+	/// emails and the requestor varies per order, so a team mailbox threading by Cc sees a stable
+	/// prefix. Order is otherwise irrelevant to delivery.
+	///
+	/// Three ways the requestor is simply left off, none of which fail the send:
+	/// a null id (a bulk row or public API order raised without one), an id the directory no
+	/// longer resolves (the user lost their ATS assignment since), and a resolved user with no
+	/// email. The candidate's link is the point of the message; losing a copy must never lose it.
+	/// The lookup itself is wrapped in <see cref="SideEffectGuard"/> for the same reason
+	/// <c>ResolveClientNameAsync</c> below is - a directory read that throws must not take the
+	/// invitation down with it, and on the single-order path it would roll back the whole order.
+	///
+	/// Note this is NOT deduplicated against the teams. A requestor whose own address is also a
+	/// team mailbox would be listed twice and charged twice to the daily cap. That cannot happen
+	/// with the current lists - the teams are shared CIBI mailboxes and requestors are individual
+	/// user accounts - and the guard would have to be revisited if a team address ever became a
+	/// real login.
+	/// </remarks>
+	private async Task<IReadOnlyCollection<string>> BuildCopyListAsync(
+		Guid? requestorId,
+		CancellationToken cancellationToken)
+	{
+		var cc = new List<string>(ApplicationFormEmail.CopyTeams);
+
+		if (!requestorId.HasValue)
+		{
+			return cc;
+		}
+
+		var requestor = await SideEffectGuard.RunAsync(
+			() => _authQueries.GetATSAssignedUserAsync(requestorId.Value, cancellationToken),
+			_logger,
+			$"resolve requestor {requestorId} for the application form copy list (the email still reaches the candidate)",
+			fallback: null,
+			cancellationToken);
+
+		if (!string.IsNullOrWhiteSpace(requestor?.UserEmail))
+		{
+			cc.Add(requestor.UserEmail);
+		}
+		else
+		{
+			_logger.LogWarning(
+				"Requestor {RequestorId} has no resolvable ATS user email, so they were left off the application form copy list.",
+				requestorId);
+		}
+
+		return cc;
 	}
 
 	// A missing or unknown client id degrades to null - the email body falls back to

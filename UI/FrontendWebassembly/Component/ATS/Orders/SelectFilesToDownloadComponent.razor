@@ -131,7 +131,11 @@
                 <div class="ats-download-doc-icon @(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "missing" : "available")">
                     <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
                 </div>
-                <MudText Class="ats-download-doc-name">Report file</MudText>
+                @* The report's own type ("Initial Report", "Final Report"), or "No Report" when
+                   none has been uploaded - the same label the result view shows for this row.
+                   A fixed "Report file" told an operator nothing about WHICH report they were
+                   about to download, and disagreed with the screen they opened this from. *@
+                <MudText Class="ats-download-doc-name">@ReportResult.ReportStatus</MudText>
                 <MudText Class="@($"ats-download-pill {(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "missing" : "available")}")">@(string.IsNullOrWhiteSpace(ReportResult.UploadedReportFileName) ? "Not uploaded" : "Available")</MudText>
             </div>
         </div>

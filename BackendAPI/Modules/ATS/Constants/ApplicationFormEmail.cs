@@ -28,7 +28,7 @@ namespace ATS.Constants;
 /// daily cap along with the candidate - see <c>ATSEmailService.SendThroughAccountAsync</c>, which logs
 /// <c>1 + cc.Count</c>. Both bodies are sent for EVERY order, including the bulk queue, so each entry
 /// added here multiplies the cap consumed by a batch. A 500-row upload with two copies consumes 1,500
-/// of the cap rather than 500.
+/// of the cap rather than 500 - 2,000 once the requestor below is resolved onto the list as well.
 /// </remarks>
 public static class ApplicationFormEmail
 {
@@ -41,19 +41,22 @@ public static class ApplicationFormEmail
 	/// Held as a collection rather than a single address, matching <see cref="SubmittedFormEmail"/>: the
 	/// two sibling notices that copy one team use a <c>const string</c>, and this list copies the same
 	/// two mailboxes the completed-form notice does.
+	///
+	/// The FIXED part of the copy list only. The requestor who raised the order is copied too, but they
+	/// vary per order and their mailbox is not on the order - it is resolved from the Auth directory by
+	/// <c>EndorsementSubmissionService.BuildCopyListAsync</c>, which appends it to a copy of this list.
+	/// Read that method for what the message actually carries.
 	/// </remarks>
-	//public static readonly IReadOnlyCollection<string> CopyTeams =
-	//[
-	//	"ccteam@cibi.com.ph",
-	//	"pre-workteam@cibi.com.ph"
-	//];
-
-	// Test recipients while the branch is being verified, matching the same swap already made in
-	// SubmittedFormEmail, WithdrawnEmail and DisputeEmail. Restore the block above before release, or
-	// the invitation copies real team mailboxes while every other ATS notice copies the tester.
+	// The commented block below is a tester's mailboxes, swapped in while a branch is being
+	// verified and swapped back before release. The live list is the one in effect.
 	public static readonly IReadOnlyCollection<string> CopyTeams =
 	[
-		"ccteam@cibi.com.ph",
+		"clientsupport@cibi.com.ph",
 		"pre-workteam@cibi.com.ph"
 	];
+	//public static readonly IReadOnlyCollection<string> CopyTeams =
+	//[
+	//	"svaldemoro@cibi.com.ph",
+	//	"angel.condensada11@gmail.com"
+	//];
 }
