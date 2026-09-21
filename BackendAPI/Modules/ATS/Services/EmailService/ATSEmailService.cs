@@ -453,11 +453,6 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 						</p>
 						<p style='margin:28px 0;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
 						<p style='font-size:15px;line-height:1.6'>Please comply <strong>at your earliest convenience</strong> so we can move forward with the completion of verification.</p>
-						<p style='font-size:15px;line-height:1.6'><strong>REMINDERS IN ANSWERING THE FORM</strong></p>
-						<ol style='font-size:15px;line-height:1.7;margin:0 0 16px;padding-left:20px'>
-							<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-							<li>In case you have a portion to input the Email Address of HR POC, kindly input your HR person of contact on the company you are applying to.</li>
-						</ol>
 						<p style='font-size:15px;line-height:1.6'>
 							For any questions or concerns, please do not hesitate to reach out to
 							<a href='mailto:ccteam@cibi.com.ph' style='color:#1d5fd1'>ccteam@cibi.com.ph</a>
@@ -478,10 +473,14 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 	/// lives on the ATS-only contract rather than beside the shared invitation body above.
 	/// </summary>
 	/// <remarks>
-	/// Deliberately the same layout, REMINDERS list, contact details and footer as the first
-	/// invitation: a candidate who ignored the original should recognise this as the same
-	/// request, not mistake it for a different one. Only the header and the opening sentences
-	/// change, and they say plainly that nothing has been received yet.
+	/// Deliberately the same layout, contact details and footer as the first invitation: a
+	/// candidate who ignored the original should recognise this as the same request, not
+	/// mistake it for a different one. Only the header and the opening sentences change, and
+	/// they say plainly that nothing has been received yet.
+	///
+	/// Neither body lists how to fill the form in any more. Both just link to it, and the
+	/// instructions live on the form's own intro page - the reminder block in
+	/// <c>UI/FrontendWebassembly/Pages/ATS/ATSApplicationForm.razor</c>.
 	///
 	/// The link is the one already in their inbox, so the sentence can honestly tell them the
 	/// original email still works - which is the reason the chaser reuses the token.
@@ -512,11 +511,6 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 						</p>
 						<p style='margin:28px 0;text-align:center'><a href='{applicationFormLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(100deg, #0b1b3d 0%, #1c3a70 35%, #1d5fd1 75%, #4f93ea 100%);color:#ffffff;text-decoration:none;font-weight:bold'>Application Form</a></p>
 						<p style='font-size:15px;line-height:1.6'>This is the same link we sent you earlier, so the original email still works if you would rather use that one. If you have already submitted your form, please disregard this message.</p>
-						<p style='font-size:15px;line-height:1.6'><strong>REMINDERS IN ANSWERING THE FORM</strong></p>
-						<ol style='font-size:15px;line-height:1.7;margin:0 0 16px;padding-left:20px'>
-							<li>In case you do not have a SSS or TIN Number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-							<li>In case you have a portion to input the Email Address of HR POC, kindly input your HR person of contact on the company you are applying to.</li>
-						</ol>
 						<p style='font-size:15px;line-height:1.6'>
 							For any questions or concerns, please do not hesitate to reach out to
 							<a href='mailto:ccteam@cibi.com.ph' style='color:#1d5fd1'>ccteam@cibi.com.ph</a>
