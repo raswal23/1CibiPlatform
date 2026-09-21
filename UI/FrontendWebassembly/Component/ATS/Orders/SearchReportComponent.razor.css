@@ -462,8 +462,19 @@
 .report-followup { display: inline-flex; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 /* Reminders still to come: the blue "in progress" treatment the board uses elsewhere. */
 .report-followup.is-pending { background: var(--blue-tint); color: var(--blue-600); }
-/* Schedule spent. Neutral, not success - nothing good happened, the chasing just stopped. */
-.report-followup.is-done { background: var(--c-neutral-bg); color: var(--c-neutral-fg); }
+/* Schedule spent. The success treatment with a leading dot, matching the Active badge in
+   user management - the same tokens that badge resolves to through its --users-green alias.
+   Alignment and gap live here rather than on .report-followup because only this state has
+   the dot; the pending pill is a single text run and would gain nothing from either. */
+.report-followup.is-done { align-items: center; gap: 5px; background: var(--c-success-bg); color: var(--c-success); }
+
+.report-followup.is-done::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-success);
+    content: "";
+}
 .report-followup-empty { color: var(--text-3); }
 .report-icon-action {
     display: flex;
