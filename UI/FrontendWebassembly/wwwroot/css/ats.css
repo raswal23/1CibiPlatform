@@ -2520,44 +2520,28 @@
     }
 }
 
-.ats-logo-facets {
-    animation: ats-pulse-glow 2s ease-out infinite;
-}
-
 .ats-console-logo-mark {
     width: 80px;
     height: 70px;
-    border-radius: 10px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
 }
 
+/* The CIBI hexagon, as the shipped PNG. object-fit keeps its 328:378 ratio inside
+   the box instead of stretching it to the box's own 80:70 - the lattice reads as
+   skewed the moment the aspect is off. No border-radius or overflow clipping any
+   more: the artwork has its own transparent margin, so there are no square corners
+   left to round off. The glow filters on the alpha channel, so it traces the
+   hexagon's edge rather than a rectangle. */
 .ats-logo-facets {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-}
-
-.ats-logo-text {
-    position: relative;
-    z-index: 1;
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: 0.1em;
-    color: var(--c-on-dark-fg);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
-}
-
-button.ats-console-brand-text {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: inherit;
-    cursor: pointer;
+    object-fit: contain;
+    animation: ats-pulse-glow 2s ease-out infinite;
 }
 
 .ats-console-nav-text {
@@ -2609,7 +2593,9 @@ button.ats-console-brand-text {
     padding-right: 10px;
 }
 
-.ats-console-collapsed .ats-console-brand-text,
+/* .ats-console-brand-text is gone from this list: the sidebar logo no longer has
+   an "ATS" label to hide when collapsed. The mark itself stays visible at both
+   widths. */
 .ats-console-collapsed .ats-console-nav-text,
 .ats-console-collapsed .ats-console-nav-label {
     display: none;
@@ -3402,12 +3388,16 @@ button.ats-console-brand-text {
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -3447,6 +3437,12 @@ button.ats-console-brand-text {
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 
@@ -4475,12 +4471,16 @@ button.ats-console-brand-text {
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -4520,6 +4520,12 @@ button.ats-console-brand-text {
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 
@@ -5180,7 +5186,7 @@ button.ats-console-brand-text {
         padding: 22px 14px;
     }
 
-    .ats-console-collapsed .ats-console-brand-text,
+    /* Mirrors the desktop rule above, which no longer hides a brand label. */
     .ats-console-collapsed .ats-console-nav-text,
     .ats-console-collapsed .ats-console-nav-label {
         display: block;

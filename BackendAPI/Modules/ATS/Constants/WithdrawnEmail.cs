@@ -26,6 +26,6 @@ public static class WithdrawnEmail
 	/// order has a candidate address on it is the caller's knowledge, and a constant that could be
 	/// empty would put an unparseable mailbox on the message.
 	/// </remarks>
-	public const string CopyTeam = "clientsupport@cibi.com.ph";
-	//public const string CopyTeam = "svaldemoro@cibi.com.ph";
+	//public const string CopyTeam = "clientsupport@cibi.com.ph";
+	public const string CopyTeam = "svaldemoro@cibi.com.ph";
 }

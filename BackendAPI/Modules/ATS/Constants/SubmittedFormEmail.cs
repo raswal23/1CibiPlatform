@@ -34,16 +34,16 @@ public static class SubmittedFormEmail
 	/// the sentence and not on the message. That mismatch is in the agreed copy and is reproduced
 	/// deliberately; see the wiring table in
 	/// <c>docs/features/ats-submitted-form-email/</c> before changing either side.
-	/// </remarks>
-	public static readonly IReadOnlyCollection<string> CopyTeams =
-	[
-		"clientsupport@cibi.com.ph",
-		"pre-workteam@cibi.com.ph"
-	];
-
+	///// </remarks>
 	//public static readonly IReadOnlyCollection<string> CopyTeams =
 	//[
-	//	"svaldemoro@cibi.com.ph",
-	//	"angel.condensada11@gmail.com"
+	//	"clientsupport@cibi.com.ph",
+	//	"pre-workteam@cibi.com.ph"
 	//];
+
+	public static readonly IReadOnlyCollection<string> CopyTeams =
+	[
+		"svaldemoro@cibi.com.ph",
+		"angel.condensada11@gmail.com"
+	];
 }

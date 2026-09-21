@@ -32,7 +32,7 @@ public class SubmittedFormEmailNotificationTests
 	// names: the notice is copied to one team and tells the reader to write to another. That
 	// mismatch is in the agreed copy (see SubmittedFormEmail), so this literal tracks the
 	// recipient only - AtsSubmittedFormEmailBodyTests pins the prose address separately.
-	private const string SubmittedSubject = "CIBI | Order Status â€“ In Progress";
+	private const string SubmittedSubject = "CIBI | Order Status – In Progress";
 	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string PreWorkTeam = "pre-workteam@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";

@@ -1861,31 +1861,70 @@
     align-items: center;
 }
 
-.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button {
+/* Step 1's bar sits directly under the Name and Date fields, so it drops the shared
+   pa-2 inset that would otherwise hold Cancel and Save & Next 8px inside the column
+   edges. Zeroed the same way the final step's bar already does it, leaving Cancel
+   flush with the left edge of Name and Save & Next flush with the right of Date. */
+.ats-consent-action-bar {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    align-items: center;
+}
+
+/* The left slot of the action bar: Withdraw on step 1, Previous on every later step.
+   Both are sized to the button they face - Save & Next, and Submit on the final step,
+   which are 46px / 11px radius / 14.5px sentence case. They used to be 42px / 10px /
+   13px uppercase, which left a 4px step and a different type treatment between the two
+   halves of the bar on every screen.
+
+   The box is shared; only the treatment differs. Previous is a reversible step back and
+   stays outlined; Withdraw ends the application for good and is solid red below. */
+.ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-withdraw-button) {
     width: auto !important;
-    height: 42px !important;
+    height: 46px !important;
     margin: 0 !important;
-    padding: 0 22px !important;
+    padding: 0 26px !important;
     border: 1.5px solid var(--c-border-strong) !important;
-    border-radius: 10px !important;
+    border-radius: 11px !important;
     background: var(--c-surface) !important;
     box-shadow: none !important;
     color: var(--c-blue-600) !important;
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
 .ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button:hover {
     background: var(--c-surface-sunken) !important;
 }
 
+/* Colour only - the box comes from the shared rule above, so Withdraw and Previous
+   occupy exactly the same footprint and the bar does not shift between steps.
+
+   --c-danger is theme-aware, so this stays legible in dark mode instead of
+   hardcoding a hex that only works on a light card. The border is kept and coloured
+   to match the fill rather than dropped, so the 1.5px stays inside the same 46px box
+   and Withdraw aligns exactly with Save & Next opposite it. */
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-withdraw-button {
+    border-color: var(--c-danger) !important;
+    background: var(--c-danger) !important;
+    color: var(--c-on-dark-fg) !important;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-withdraw-button:hover {
+    border-color: var(--c-danger-strong) !important;
+    background: var(--c-danger-strong) !important;
+}
+
+/* 16px to match the forward arrow on Save & Next opposite it - the two arrows read as
+   a pair, so a 14px back arrow against a 16px forward one looked lopsided once the
+   buttons themselves were the same size. */
 .ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button .mud-icon-root {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     color: var(--c-blue-600) !important;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .ats-step-action-bar.ats-step-action-bar ::deep .ats-save-next-button {
@@ -1965,7 +2004,7 @@
         gap: 12px;
     }
 
-    .ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-save-next-button),
+    .ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-withdraw-button, .ats-save-next-button),
     .ats-final-action-bar.ats-final-action-bar ::deep .ats-previous-button,
     .ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button {
         width: 100% !important;

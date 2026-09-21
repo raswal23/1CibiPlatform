@@ -32,7 +32,7 @@ public class WithdrawnEmailNotificationTests
 	// the notice is copied to one team and tells the reader to write to another. Both sides are
 	// deliberate, so this literal tracks the recipient only - AtsWithdrawnEmailBodyTests pins the
 	// prose address separately.
-	private const string WithdrawnSubject = "Order Status â€“ Withdrawn";
+	private const string WithdrawnSubject = "Order Status – Withdrawn";
 	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
 	private const string RequestorName = "Ana Reyes";

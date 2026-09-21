@@ -28,19 +28,15 @@
                move it off-screen. *@
             <div class="ats-console-logo">
                 <div class="ats-console-logo-mark">
-                    <svg class="ats-logo-facets" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        @* Uses --c-logo-* rather than the --ats-* ramp: this mark sits on
-                           the always-dark sidebar, so it must stay light-on-dark in both
-                           themes. The --ats-* tokens invert with the theme because they
-                           are text colours on light cards elsewhere. *@
-                        <polygon points="50,5 10,35 50,50" fill="var(--c-logo-light)"></polygon>
-                        <polygon points="50,5 90,35 50,50" fill="var(--c-logo-light)" opacity="0.7"></polygon>
-                        <polygon points="10,35 10,70 50,50" fill="var(--c-logo-mid)" opacity="0.85"></polygon>
-                        <polygon points="90,35 90,70 50,50" fill="var(--c-logo-mid)"></polygon>
-                        <polygon points="10,70 50,95 50,50" fill="var(--c-logo-dark)" opacity="0.55"></polygon>
-                        <polygon points="90,70 50,95 50,50" fill="var(--c-logo-dark)" opacity="0.85"></polygon>
-                    </svg>
-                    <span class="ats-logo-text ats-console-brand-text">ATS</span>
+                    @* The shipped CIBI mark, used as the asset rather than redrawn as inline
+                       polygons: the artwork is a seven-shade rhombic lattice, and a hand-traced
+                       copy would drift from the brand file the next time it is reissued. The
+                       same PNG is already the favicon in index.html.
+
+                       No "ATS" lettering over it any more - the mark stands alone. *@
+                    <img class="ats-logo-facets"
+                         src="images/generic/cibi-icon.png"
+                         alt="CIBI" />
                 </div>
             </div>
 

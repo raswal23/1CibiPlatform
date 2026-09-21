@@ -216,11 +216,6 @@
                                                            OnClick="ProceedClicked">
                                                     Proceed
                                                 </MudButton>
-                                                <MudButton Class="ats-step-one-secondary-btn"
-                                                           Disabled="@(!declineConsent || consent)"
-                                                           OnClick="CancelTransaction">
-                                                    Cancel
-                                                </MudButton>
                                             </div>
                                         </div>
                                     </MudPaper>
@@ -1945,10 +1940,21 @@
                 </ChildContent>
 
                 <ActionContent Context="stepper">
-                    <div class="d-flex w-100 pa-2 ats-step-action-bar @(_activeStep == 2 ? "ats-step-three-action-bar" : string.Empty) @(_activeStep == 3 ? "ats-step-four-action-bar" : string.Empty) @(_activeStep == 4 ? "ats-step-five-action-bar" : string.Empty) @(_activeStep == stepper.Steps.Count - 1 ? "ats-final-action-bar" : string.Empty)"
-                         style="@(_activeStep == 0 ? "justify-content: flex-end;" : "justify-content: space-between;")">
+                    <div class="d-flex w-100 pa-2 ats-step-action-bar @(_activeStep == 0 ? "ats-consent-action-bar" : string.Empty) @(_activeStep == 2 ? "ats-step-three-action-bar" : string.Empty) @(_activeStep == 3 ? "ats-step-four-action-bar" : string.Empty) @(_activeStep == 4 ? "ats-step-five-action-bar" : string.Empty) @(_activeStep == stepper.Steps.Count - 1 ? "ats-final-action-bar" : string.Empty)"
+                         style="justify-content: space-between;">
 
-                            @if (_activeStep != 0)
+                            @if (_activeStep == 0)
+                            {
+                                @* Labelled for what it does. The click opens the "Withdraw
+                                   Application" confirm and, on Yes, withdraws the form - it has
+                                   never been a dismiss-this-dialog Cancel. *@
+                                <MudButton Class="ats-withdraw-button"
+                                           Disabled="@isSaving"
+                                           OnClick="CancelTransaction">
+                                    Withdraw
+                                </MudButton>
+                            }
+                            else
                             {
                                 <MudButton Class="ats-previous-button"
                                            StartIcon="@Icons.Material.Filled.ArrowBack"
