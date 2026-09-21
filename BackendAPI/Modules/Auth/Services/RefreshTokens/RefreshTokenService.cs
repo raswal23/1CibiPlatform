@@ -34,7 +34,10 @@ namespace Auth.Services
 			this._sessionValidator = sessionValidator;
 
 			_httpCookieOnlyKey = _configuration.GetValue<string>("HttpCookieOnlyKey") ?? "";
-			_httpCookieOnlyRefreshTokenInDays = _configuration.GetValue<int>("AuthWeb:HttpCookieOnlyRefreshTokenInDays", 60);
+			// Same key LoginService reads. The previous name had no backing entry in the
+			// environment, so refresh silently fell back to the hardcoded default and
+			// shortened the expiry that login had set.
+			_httpCookieOnlyRefreshTokenInDays = _configuration.GetValue<int>("AuthWeb:AuthWebHttpCookieOnlyDays", 60);
 			_expiryinMinutesKey = double.Parse(_configuration.GetSection("Jwt:ExpiryInMinutes").Value! ?? "");
 			_refreshTokenKey = _configuration.GetSection("AuthWeb:AuthWebHttpCookieOnlyKey").Value! ?? "";
 			_isHttps = bool.Parse(_configuration.GetSection("AuthWeb:isHttps").Value!);
