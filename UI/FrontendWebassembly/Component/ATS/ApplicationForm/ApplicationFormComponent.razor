@@ -1945,10 +1945,13 @@
 
                             @if (_activeStep == 0)
                             {
+                                @* Labelled for what it does. The click opens the "Withdraw
+                                   Application" confirm and, on Yes, withdraws the form - it has
+                                   never been a dismiss-this-dialog Cancel. *@
                                 <MudButton Class="ats-withdraw-button"
                                            Disabled="@isSaving"
                                            OnClick="CancelTransaction">
-                                    Cancel
+                                    Withdraw
                                 </MudButton>
                             }
                             else
