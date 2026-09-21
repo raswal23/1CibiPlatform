@@ -58,14 +58,15 @@ of its steps.
 ```text
 Quartz trigger, every 5s  [DisallowConcurrentExecution]
   → EmailNotificationBackgroundJob.Execute                       (BackgroundJobs/EmailNotification/)
-    → scope.ServiceProvider.GetRequiredService<IEmailNotificationProcessorService>()
-      → EmailNotificationProcessorService.ProcessForPendingStatusAsync
+    → scope.ServiceProvider.GetRequiredService<IBulkEmailNotificationProcessorService>()
+      → BulkEmailNotificationProcessorService.ProcessForPendingStatusAsync
         → IATSRepository.ReleaseStaleEmailInvitationClaimsAsync(30 min)
         → HasSendableAccountAsync  →  ISmtpAccountPoolRegistry.GetNextSendableAccountAsync([])
              [no sendable account? raise EmailAccountsExhausted and return]
         → IATSRepository.GetPendingEmailInvitationRequestsAsync()   ← the claim, raw SQL
         → SemaphoreSlim(MaxConcurrentConnections * 2) fan-out over the claimed slice
-          → SendWithRetryAsync(request, linkedToken, throttleSignal)   up to MaxAttemptsPerPass
+          → SendWithRetryAsync(request, linkedToken, throttleSignal)
+            → its OWN loop: up to MaxAttemptsPerPass, back-off 2s then 4s
             → TrySendEmailAsync            ← one DI scope PER ATTEMPT
               → IEndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync
                 → ResolveClientNameAsync(clientId)                  (cosmetic, guarded)
@@ -117,7 +118,7 @@ public class EmailNotificationBackgroundJob : IJob
 		using var scope = _scopeFactory.CreateScope();
 
 		var processor = scope.ServiceProvider
-			.GetRequiredService<IEmailNotificationProcessorService>();
+			.GetRequiredService<IBulkEmailNotificationProcessorService>();
 
 		await processor.ProcessForPendingStatusAsync(context.CancellationToken);
 	}
@@ -152,7 +153,7 @@ of them owning the Quartz options object; registered at `ATSServiceConfiguration
 
 ### 1.2 `ProcessForPendingStatusAsync` — one pass, in order
 
-`Services/EmailNotificationProcessor/EmailNotificationProcessorService.cs`. The two constants the
+`Services/BulkEmailNotificationProcessor/BulkEmailNotificationProcessorService.cs`. The two constants the
 design doc does not name:
 
 ```csharp
@@ -331,8 +332,9 @@ The stale-claim sweeper, `:191`:
 ```
 
 It does **not** charge an attempt — consistent with `ReleaseEmailInvitationClaimsAsync` (§1.10) and
-with the ticketing sweeper. It also takes no `CancellationToken`. That combination is the second
-half of §10.1.
+with the ticketing sweeper. It also takes no `CancellationToken`. That combination is what turns a
+row stranded in `Processing` into a *second send* rather than a stuck row, and is why §10.1 matters
+as much as it does.
 
 ### 1.4 The fan-out and the throttle signal
 
@@ -426,7 +428,11 @@ for a slot, only one that is already sending. And `Task.WhenAll` at line 154 is 
 where an escaping exception from any row aborts the whole pass, including every write below it.
 That is §10.1.
 
-### 1.5 `SendWithRetryAsync` — the in-pass retry budget
+### 1.5 `SendWithRetryAsync` — the queue's own attempt budget, and the row's fate
+
+The queue writes its **own** attempt loop. Folding it into `SingleEmailSendRetry.SendAsync` (§3.5),
+the helper the five inline sends call, was tried and **reverted**: two things here have no
+counterpart on the inline path, and both are load-bearing.
 
 ```csharp
 	private async Task<EmailDeliveryOutcome> SendWithRetryAsync(
@@ -456,9 +462,7 @@ That is §10.1.
 
 				case EmailDeliveryOutcome.Throttled:
 					// Every account refused this message - the switcher already tried them all,
-					// and each one's own cooldown was recorded against it as it did. Nothing to
-					// park here; the accounts are already out of rotation and will readmit
-					// themselves when their cooldowns lapse.
+					// and each one's own cooldown was recorded against it as it did.
 					//
 					// Tell every queued task to stand down. The remaining rows would each walk
 					// the same empty account list and reach the same answer.
@@ -483,16 +487,39 @@ That is §10.1.
 	}
 ```
 
-Line 264 is the unguarded `Task.Delay`. `cancellationToken` here is the **linked** token, so
-`throttleSignal.CancelAsync()` at line 251 — called from a *different* row's task — makes this one
-throw. There is no `catch` in this method and none in the caller's lambda.
+**The stand-down signal is re-read at the top of every attempt.** A pass fans out across a
+semaphore (§1.4), and any one row that discovers no account will take a message cancels
+`throttleSignal` for all of them. A sibling already past a single up-front check would spend its
+whole remaining budget rediscovering the same fact — three more sends per row, against a provider
+that has already said no. `SingleEmailSendRetry` has no parameter for "a condition to re-check
+between attempts", and adding one would make it a worse helper for the five callers that have no
+such condition.
 
-The switch has three exits and a fall-through: `Sent`, `Permanent` (one attempt, no retry),
-`Throttled` (stand the whole pass down), and everything else — which is only ever `Transient` —
-falls out of the `switch` into the back-off. Note the outcome that reaches here as `Throttled` has
-already been through the switcher, so by definition **every** registered account refused this
-message; that is why standing the pass down is correct here and would have been wrong before the
-switcher existed.
+**The budget bounds a pass, not a message.** Exhausting it releases the row, and the next tick picks
+it up with `MaxEmailSendAttempts` passes still in hand. Exhausting the inline budget is the end of
+the road — a withdrawal notice is sent after its transaction has already committed and gets no
+second tick. That is why the two read separate options, `MaxAttemptsPerPass` here and
+`MaxAttemptsPerMessage` there (§4). They are equal today; merging them would tie a bulk pass's
+pacing to a notice's only chance at delivery.
+
+`attempt == 1 ? null : attempt` is passed into `TrySendEmailAsync` so a first attempt logs without an
+attempt number and a retry logs with one. That parameter exists for this loop alone.
+
+Four exits: `Sent`, `Permanent` (retired, on the first attempt — the loop never spends a second one
+on it), `Throttled` (stand the whole pass down), and the fall-through `Transient` (released, next
+tick tries again). Note that an outcome reaching here as `Throttled` has already been through the
+switcher, so by definition **every** registered account refused this message; that is why standing
+the pass down is correct here and would have been wrong before the switcher existed.
+
+Two nested loops, not three. This loop spends `MaxAttemptsPerPass` on one row; the switcher, inside
+each of those attempts, walks the accounts. Nothing stacks a third on top — wrapping
+`SendApplicationFormToUserEmailWithResultAsync` in `SingleEmailSendRetry` would do exactly that and
+cost a queued row nine sends per pass (§5.3).
+
+**Still open here:** the `Task.Delay` takes the linked token, so a stand-down raised by a *different*
+row's task throws `OperationCanceledException` out of this method, faults `Task.WhenAll` and skips
+every status write below it. That is §10.1, unchanged. The fix is to write the status batches in a
+`finally`, not to move the loop.
 
 ### 1.6 `TrySendEmailAsync` — the per-attempt scope
 
@@ -1071,7 +1098,8 @@ property initialisers in `Configuration/AtsEmailDeliveryOptions.cs`. These are t
 | **`MinSecondsBetweenLogins`** | **`5`** | **Incident 2** — the login limit |
 | `MaxMessagesPerConnection` | `50` | |
 | `SendTimeoutSeconds` | `60` | |
-| `MaxAttemptsPerPass` | `3` | |
+| `MaxAttemptsPerPass` | `3` | Read only by the queue's `SendWithRetryAsync` (§1.5) |
+| `MaxAttemptsPerMessage` | `3` | Read only by `SingleEmailSendRetry` (§3.5), on the inline path |
 | `RetryBaseDelaySeconds` | `2` | |
 | `ThrottleBackoffSeconds` | `600` | |
 | `LoginThrottleBackoffSeconds` | `1_800` | |
@@ -1379,10 +1407,16 @@ failover, not throughput** — consistent with accounts §11, and worth restatin
 delivery doc §4 says "two accounts clear the same 200 in about half the time", which the selection
 rule does not deliver on its own.
 
-The retry budget: `MaxAttemptsPerPass = 3` SMTP attempts per pass, × `MaxEmailSendAttempts = 5`
-passes, with `EmailSendAttempts` incremented once per pass. Back-off between in-pass attempts is
-2 s, 4 s (the third attempt has no trailing delay). So a persistently transient address costs up to
-15 SMTP attempts spread over five ticks — C3.
+The retry budget: `MaxAttemptsPerPass = 3` SMTP attempts within one pass (§1.5),
+× `MaxEmailSendAttempts = 5` passes, with `EmailSendAttempts` incremented once per pass. Back-off between in-pass attempts is 2 s, 4 s (the third attempt has no trailing delay). So a
+persistently transient address costs up to 15 SMTP attempts spread over five ticks — C3.
+
+Note the multiplier is 3 and not 9, which is the trap the name guards against. Each of those three
+attempts is a full walk of the account list, because failover lives *inside* an attempt. A second
+retry loop wrapped around the same send — for instance putting one on
+`SendApplicationFormToUserEmailWithResultAsync`, which the queue calls — would multiply rather than
+share, and a queued row would cost nine sends per pass and 45 overall. That is why the retry on the
+single-order path sits on the `bool` overload only (§5).
 
 ---
 
@@ -1603,10 +1637,19 @@ catch return `Transient(..., EmailFailureScope.Account)`. So for those two:
   therefore returns immediately, with the *same* result object, and `attemptedAccountIds` never
   grows. No second SMTP conversation happens for this message in this call.
 
-The message then goes back up to `SendWithRetryAsync`, whose `switch` has no `Transient` case — it
-falls through to the back-off and retries **on the same account selection path** on attempt 2, or
-returns `Transient` after `MaxAttemptsPerPass` and lands in `errorBag`. Either way the duplicate
-risk is deferred to a later attempt with a delay in front of it, never taken inside the same breath.
+The message then goes back up to the caller's attempt loop — `SingleEmailSendRetry` inline, or the
+queue's `SendWithRetryAsync` — the only outcome either retries: it
+sleeps, then calls the switcher again **from the top of the account selection path** on attempt 2,
+or returns the `Transient` once the budget is spent — which the queue maps to a released
+row, landing in `errorBag`. Either way the duplicate risk is deferred to a later attempt with a delay
+in front of it, never taken inside the same breath.
+
+Worth being precise about what attempt 2 sends to. It re-enters the switcher with an empty
+`attemptedAccountIds`, so selection starts from the highest-priority sendable account again — usually
+the same one. Usually, not always: the transient just counted toward that account's
+`ConsecutiveFailureThreshold`, and if it was the third, the account is out of rotation by the time
+attempt 2 asks and the retry lands on the next one. That is the intended behaviour and not a hole in
+the guard — an account cooled down by the breaker has had three failures, not one ambiguous timeout.
 
 Widening `CanRetryOnAnotherAccount` to include `Transient` would remove exactly that guard, which
 is why the design doc §6 lists it under "what not to do". Note that narrowing it further would
@@ -1624,6 +1667,68 @@ password) must switch, because retrying the same account produces the identical 
 
 The breaker side — `ReportFailureAsync`'s first line, `if (!result.IsAccountFault) return false;` —
 is accounts §4.4 and is not repeated here.
+
+### 3.5 `SingleEmailSendRetry` — the inline path's attempt loop
+
+`Services/EmailService/SingleEmailSendRetry.cs`. A `public static class` with one method, called by
+the five inline sends (§5). The queue does **not** use it — it has its own loop, for the reasons in
+§1.5.
+The whole rule is one predicate:
+
+```csharp
+		var attemptCeiling = Math.Max(1, maxAttempts);
+
+		for (var attempt = 1; ; attempt++)
+		{
+			var result = await send(attempt);
+
+			// Sent, a refused recipient, or an exhausted account rotation all leave immediately.
+			// Only a transient is worth sending twice.
+			if (result.Outcome != EmailDeliveryOutcome.Transient || attempt >= attemptCeiling)
+			{
+				return result;
+			}
+
+			var backoff = TimeSpan.FromSeconds(baseDelaySeconds * Math.Pow(2, attempt - 1));
+
+			logger.LogWarning(...);
+
+			await Task.Delay(backoff, cancellationToken);
+		}
+```
+
+**The nesting is the design.** It wraps `SendATSEmailWithResultAsync` — the switcher — from the
+*outside*, so one attempt is one full walk of the registered accounts. Account failover is the
+switcher's job and happens inside a single attempt; the budget is therefore per **message**, not per
+account, and does not grow when a sixth account is registered. Three attempts is three attempts.
+
+Why `Transient` is the only outcome retried follows directly from the switcher's own exits (§3.4):
+
+| Outcome reaching the helper | Why it returns immediately |
+|---|---|
+| `Sent` | nothing to retry |
+| `Permanent` / `Message` | the server read the address and refused it; a second attempt, on this account or any other, produces the identical refusal |
+| `Throttled` | it only *reaches* here after **every** account refused. The switcher moved between them itself and never reported the first throttle upward. Re-knocking on a closed door is the one response that makes it worse — `SmtpAccountPoolRegistry.ReportFailureAsync` cools an account down on the *first* throttle for exactly that reason |
+| `Transient` | the switcher deliberately does not move it to another account (§3.4), so it arrives as the final answer with the highest-priority account still selected |
+
+`Math.Max(1, maxAttempts)` floors the ceiling: a configured `0` must not mean "never send". The
+`for(;;)` has no bound in its header because the predicate above owns both exits — a bound there
+would be a second place to get the off-by-one wrong.
+
+The delay takes the caller's token and is **not** caught here. Every caller of this helper is an
+inline send, and a cancelled request has no queued row to release, so propagating is the right
+answer. The queue's own loop has the same unguarded delay with a very different consequence — see
+§10.1.
+
+Static, stateless, and reading no configuration — the caller supplies both bounds from
+`AtsEmailDeliveryOptions`. It is a separate class purely so the attempt loop can be driven with
+scripted results and no SMTP server.
+
+**The accepted risk, restated.** A transient can fire *after* the provider accepted the message, so
+retrying it here can duplicate a delivered one. That is the same hazard `CanRetryOnAnotherAccount`
+refuses to take across accounts (§3.4), taken deliberately in place: a duplicate was judged cheaper
+than a requestor never hearing that their candidate withdrew. The bound on the damage is that the
+budget is three, and does not scale with the account list.
 
 ---
 
@@ -1857,6 +1962,39 @@ The **duplicate `"ats"` registration** is not mentioned anywhere in the existing
 `SendOtpBody`, `SendPasswordResetBody`) — those belong to Auth's implementation. Resolving the
 keyed `"ats"` service and calling one of them throws at runtime, not at compile time.
 
+### 5.3 The five inline sends — who wraps the switcher in a retry
+
+The table above lists the callers of `SendATSEmailWithResultAsync`. What it does not show is that
+each of them reaches it through `SingleEmailSendRetry.SendAsync` (§3.5) rather than calling it
+directly. Five sends, four files:
+
+| Send | File | `description` in the retry log | Budget source |
+|---|---|---|---|
+| Application form invitation | `EndorsementSubmissionService.SendApplicationFormToUserEmailAsync` (the `bool` overload) | `the application form invitation to {gmail}` | `_emailDeliveryOptions` |
+| Application form reminder | same method, `isFollowUp: true` | same | same |
+| Withdrawal notice | `WithdrawnEmailNotification` | `the withdrawal notice for order {id}` | `_options` |
+| Completion notice | `SubmittedFormEmailNotification` | `the completion notice for order {id}` | `_options` |
+| Dispute acknowledgement | `DisputeEmailNotification` | `the dispute acknowledgement for order {id}` | `_options` |
+
+Each took a new `IOptions<AtsEmailDeliveryOptions>` constructor parameter to supply the two bounds.
+
+**Only the send is inside the lambda.** Composing the body, resolving the requestor's mailbox from
+the Auth directory and building the copy list all happen once, above the retry. Attempt 2 re-sends
+the same message; it does not rebuild it. `SingleEmailSendRetry`'s own parameter documentation states
+this as a contract on `send`.
+
+**The overload split in `EndorsementSubmissionService` is load-bearing.** The retry sits on the
+`bool` overload — the single-order path, which runs inline inside a transaction and has no later
+tick — and *not* on `SendApplicationFormToUserEmailWithResultAsync` beneath it. That lower method is
+what the queue calls, and `SendWithRetryAsync` already loops over it (§1.5). Putting the
+retry there as well would nest one budget inside the other and cost a queued row nine sends per pass
+instead of three. This is the one place in the module where the two send paths physically overlap,
+and the split is how they keep separate budgets.
+
+Failure handling at all five is unchanged: the result is logged and swallowed, never thrown. A dead
+SMTP account must not reach `CustomExceptionHandler` and answer a committed withdrawal or a filed
+dispute with a 500, which would invite the user to submit it again.
+
 ---
 
 ## 6. Operator-forced resend and requeue
@@ -2029,7 +2167,7 @@ when a change is ported between them. Same table, both columns verified against 
 | Re-claim of failures | `EmailSentStatus = Error AND EmailSendAttempts < 5` | `TicketStatus = Error AND TicketAttempts < 5` |
 | Budget constant | `MaxEmailSendAttempts = 5`, `private`, repository-owned | `MaxTicketAttempts = 5`, **`public`** because the UI prints `5/5` |
 | Attempts charged | **one per pass**, even though a pass makes up to 3 SMTP attempts | one per order outcome |
-| Stale timeout | 30 min, processor-owned (`EmailNotificationProcessorService.cs:23`) | 30 min, processor-owned (`OMSTicketingProcessorService.cs:7`) |
+| Stale timeout | 30 min, processor-owned (`BulkEmailNotificationProcessorService.cs:23`) | 30 min, processor-owned (`OMSTicketingProcessorService.cs:7`) |
 | Sweeper charges an attempt | no | no |
 | Fan-out | `SemaphoreSlim(MaxConcurrentConnections * 2)` = 4, **derived from config** (`:95`) | `SemaphoreSlim(MaxDegreeOfParallelism)` = 3, **`private const`** (`:11`) |
 | DI scope granularity | **per send attempt**, inside `TrySendEmailAsync` | **per order**, inside `ProcessOneAsync` |
@@ -2348,42 +2486,39 @@ either wrong is a silent deserialisation failure, not a compile error.
 
 Reported, not fixed. Ordered by how badly they can bite.
 
-### 10.1 An aborted pass re-sends mail the provider already accepted
+### 10.1 An aborted pass re-sends mail the provider already accepted — *open, two entrances*
 
-**Double-send.** `EmailNotificationProcessorService.cs:264`:
+**Via the back-off: OPEN.** The retry back-off in `SendWithRetryAsync` (§1.5) is an unguarded
+`await Task.Delay(backoff, cancellationToken)` on the **linked** token. When
+`throttleSignal.CancelAsync()` fires — from a *different* row's task, because that row found every
+account exhausted — any task sitting in its back-off throws `TaskCanceledException`, which escapes
+the lambda, faults `await Task.WhenAll(sendTasks)`, and skips **every write below it**, including
+`UpdateBulkEmailInvitationRequestForSentEmailAsync(successList)`. Rows whose messages the provider
+had already accepted stay at `EmailSentStatus = Processing`; thirty minutes later
+`ReleaseStaleEmailInvitationClaimsAsync` flips them to `Pending` with no attempt charged, and those
+candidates receive a second invitation.
 
-```csharp
-				await Task.Delay(backoff, cancellationToken);
-```
+Catching it inside `SendWithRetryAsync` and mapping it to `Throttled` would close this one
+entrance, but not the other below, and a `catch` per throw site is the wrong shape for a fault whose
+consequence is entirely about the writes. **The fix is to move the status writes into a `finally`**,
+which closes both at once. That is the change to make; nothing about the retry nesting affects it.
 
-and `:123`:
+**Via the semaphore wait: also OPEN.** `:123` is unchanged:
 
 ```csharp
 			await semaphore.WaitAsync(cancellationToken);
 ```
 
-Neither is inside a `try/catch`. The token at `:264` is `linkedTokenSource.Token`, so when
-`throttleSignal.CancelAsync()` fires at `:251` — from a *different* row's task, because that row
-found every account exhausted — any task sitting in its retry back-off throws `TaskCanceledException`.
-It escapes `SendWithRetryAsync`, escapes the lambda, faults `await Task.WhenAll(sendTasks)` at
-`:154`, and **every write below it is skipped**, including
-`UpdateBulkEmailInvitationRequestForSentEmailAsync(successList)`.
+That token is the **outer** one, so a throttle stand-down cannot reach it — but a graceful shutdown
+can. `context.CancellationToken` is signalled,
+`AddQuartzHostedService(options => options.WaitForJobsToComplete = true)`
+(`ATSServiceConfiguration.cs:278`) makes Quartz wait, and this await throws from inside the lambda
+with no `catch` around it, faulting `Task.WhenAll` exactly as before. The window is narrower — it
+needs a shutdown while rows are queued for a slot, not merely a capped provider — but the
+consequence is the same skipped batch of writes.
 
-Rows whose messages the provider already accepted stay at `EmailSentStatus = Processing`. Thirty
-minutes later `ReleaseStaleEmailInvitationClaimsAsync` flips them to `Pending` with no attempt
-charged, the next pass claims them, and those candidates receive a second invitation. The
-`TrySendEmailAsync` cancellation catch does not help: it guards the *send*, not the delay between
-sends.
-
-Graceful shutdown reaches the same place by the other door — `context.CancellationToken` is
-signalled, `AddQuartzHostedService(options => options.WaitForJobsToComplete = true)`
-(`ATSServiceConfiguration.cs:278`) makes Quartz wait, and both unguarded awaits throw. The design
-doc's §6 rule "a timeout that fires after the provider accepted the message … is how the same
-candidate gets emailed twice" describes a hazard that was closed at the SMTP layer and is still
-open at the orchestration layer.
-
-The shape of a fix is either to catch `OperationCanceledException` around the delay and return
-`Throttled`, or to write the three status batches in a `finally`. Both are out of scope here.
+The remaining fix is to write the three status batches in a `finally`, so no escaping exception can
+skip them whatever its source. Out of scope here.
 
 ### 10.2 A failed bookkeeping write turns a delivered message into a retry
 
@@ -2534,7 +2669,7 @@ the status update and the history entry in `TransactionRunner.RunAsync`, and the
 > What that does NOT cover: SMTP is external and cannot be rolled back, so if the send
 > succeeds and the commit then fails, the candidate holds a link to an order that
 > no longer exists. That window is the price of sending inline; the alternative is
-> queueing it for EmailNotificationProcessor, which is how bulk orders work.
+> queueing it for BulkEmailNotificationProcessor, which is how bulk orders work.
 
 What the comment does not mention is that the inline send **queues behind the bulk pass's rate
 limiter**. `WaitForSlotAsync` reserves a slot on the account's shared limiter, and the bulk job runs
@@ -2636,7 +2771,7 @@ Everything the delivery path needs, with the line it is on:
 			(IAtsEmailSender)provider.GetRequiredKeyedService<IEmailService>("ats"));        // 155-156
 ```
 ```csharp
-		services.AddScoped<IEmailNotificationProcessorService, EmailNotificationProcessorService>();  // 158
+		services.AddScoped<IBulkEmailNotificationProcessorService, BulkEmailNotificationProcessorService>();  // 158
 ```
 ```csharp
 		services.ConfigureOptions<EmailNotificationBackgroundJobSetup>();                    // 170
@@ -2652,7 +2787,7 @@ registration comment above line 132 is the reasoning, quoted in full in accounts
 
 The lifetime split is the thing to hold in mind: the **registry is a singleton** (it owns the pools,
 limiters, lease counts and throttle windows), and **everything that touches it is scoped** —
-`ATSEmailService`, `EndorsementSubmissionService`, `EmailNotificationProcessorService`,
+`ATSEmailService`, `EndorsementSubmissionService`, `BulkEmailNotificationProcessorService`,
 `AtsEmailAccountRepository`. That is why the registry takes `IServiceScopeFactory` and opens a scope
 per database touch, and why the processor opens a scope per send attempt.
 
@@ -2779,8 +2914,10 @@ delivery path is reachable over HTTP except the two resend slices.
 | `EmailDeliveryResult.CanRetryOnAnotherAccount` | `ATSEmailService.cs:113` (the switcher's continuation test) and every `EmailDeliveryResult.Transient(…, EmailFailureScope.Account)` construction | Including `Transient` is the duplicate-invitation bug: a transient can fire after the provider accepted the message (§3.4) |
 | The `Transient`/`Permanent`/`Throttled` factories' default `Scope` | `SmtpFailureClassifier`, `SendOverContextAsync`'s three catch blocks, `ReportFailureAsync`'s `IsAccountFault` gate | `Scope` defaults to `Message`; forgetting to pass `Account` silently stops the breaker counting a failure (§3.2, §3.3) |
 | `SendThroughAccountAsync`'s post-send reporting | `TrySendEmailAsync`'s `catch (Exception ex)` | Any throw from `ReportSuccessAsync`/`ReportFailureAsync` is read as a retryable delivery failure and re-sends a delivered message (§10.2) |
-| The `Task.Delay` or `semaphore.WaitAsync` in the processor | §10.1 | Both are unguarded; an escaping `OperationCanceledException` skips every status write and strands sent rows in `Processing` |
-| `MaxAttemptsPerPass` or `MaxEmailSendAttempts` | The design doc §2's "up to 15 attempts" and §5's `EmailSendAttempts = 5` diagnostic | `EmailSendAttempts` counts **passes**, not SMTP attempts; the product of the two is the real ceiling (§2.4) |
+| `semaphore.WaitAsync` or the back-off `Task.Delay` in the processor | §10.1 | Both unguarded; an escaping `OperationCanceledException` skips every status write and strands sent rows in `Processing`. Fix it with a `finally` around the writes, not a `catch` at each throw site |
+| `SingleEmailSendRetry.SendAsync`'s predicate or signature | All five call sites (§5.3) and `AtsEmailDeliveryOptions.MaxAttemptsPerMessage` | Widening it beyond `Transient` re-knocks on a closed door for `Throttled` and re-refuses a bad address for `Permanent` (§3.5). The queue has its own equivalent `switch` in `SendWithRetryAsync` and does **not** follow this one — change both or neither |
+| Where `SingleEmailSendRetry` wraps a send | Whether an attempt loop already exists beneath it | The budgets **multiply**, they do not share. The live hazard is `EndorsementSubmissionService`: the `bool` overload is wrapped, the result-aware one must not be, because the queue loops over that one itself (§5.3) |
+| `MaxAttemptsPerPass`, `MaxAttemptsPerMessage` or `MaxEmailSendAttempts` | The design doc §2's "up to 15 attempts" and §5's `EmailSendAttempts = 5` diagnostic; the first two must not be merged (§1.5) | `EmailSendAttempts` counts **passes**, not SMTP attempts; the product of the two is the real ceiling (§2.4) |
 | `inFlightLimit`'s derivation | `MaxConcurrentConnections` | It is `MaxConcurrentConnections * 2`, so a config change moves the fan-out with no code edit — unlike the ticketing job's constant (§7) |
 | Anything in `RequeueEmailInvitationAsync`'s setter list | `RequeueEmailInvitationsAsync` (the bulk form, `:108`) and the design doc §8's field table | Two near-identical setter lists with no shared code; the doc's table already omits `HashTokenCreatedAt` (C6) |
 | The requeue's `WHERE` predicate | `ResendApplicationFormIntegrationTests` (`…ShouldThrowConflict_WhenTheInvitationIsMidSend`, `…ShouldSkipInvitationsThatAreMidSend`) | The predicate *is* the concurrency guard; `Processing` is the only exclusion and both tests pin it (§6.1) |

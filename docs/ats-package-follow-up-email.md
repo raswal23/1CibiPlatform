@@ -196,7 +196,7 @@ a candidate says they never received anything.
 `InvitationEmailSent` is written **inside the same transaction** as the `EmailSentStatus = Done`
 flip it describes, because they are one fact. Written separately, a crash between them leaves an
 order showing Done with nothing in its history to say when — and nothing ever revisits a Done row
-to notice the gap. Both paths do this: the queued path in `EmailNotificationProcessorService` wraps
+to notice the gap. Both paths do this: the queued path in `BulkEmailNotificationProcessorService` wraps
 the pair in `TransactionRunner.RunAsync`, and the inline path in `EndorsementSubmissionService`
 records it inside the transaction that already surrounds the order insert.
 

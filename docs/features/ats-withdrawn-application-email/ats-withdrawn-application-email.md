@@ -46,6 +46,15 @@ the requestor, asks `ATSEmailService` to compose the body, and hands it to the e
 `IAtsEmailSender` — so the notice travels the same pooled, capped, paced, failover-capable path as
 every other ATS message rather than opening its own SMTP session.
 
+The send itself goes through `SingleEmailSendRetry.SendAsync`: up to three attempts on the one
+message, 2s then 4s apart, and only when the fault is transient. The retry wraps the account
+switcher from the outside, so each attempt is a full walk of the registered accounts rather than a
+second knock on one of them. Only the send is inside it — the body, the requestor's mailbox and the
+copy list are all resolved above, so attempt 2 re-sends the same message instead of rebuilding it.
+See [`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md). This matters here more
+than on a queued invitation: the notice is sent after the withdrawal has already committed and there
+is no later pass to put a dropped socket right.
+
 `docs/features/ats-withdrawn-application-email/ats-withdrawn-application-email_code_explanation.md`
 walks the chain file by file.
 

@@ -21,8 +21,8 @@ answered by §11.
 |---|---|---|
 | **C1** | §3 lists **seven** `AtsNotificationType` values | There are **ten**. `BulkEmailsCompleted`, `EmailAccountsExhausted` and `EmailAccountNeedsReverification` are all in `Constants/AtsNotificationType.cs` and all in the UI mirror, but none appears in the doc's constants list (§4 prose mentions only the first) |
 | **C2** | §10 "Keep the two `AtsNotificationType` lists in step" | They **are** in step — ten for ten. The real gap is on the sender side: `OrderDisputed`, `InvitationEmailFailed` and `EmailAccountNeedsReverification` are **never raised by any code**. See §4.7 |
-| **C3** | §4 lists **five** raise sites | There are **six**. `EmailNotificationProcessorService.RaiseAccountsExhaustedAsync` fans `EmailAccountsExhausted` out to every ATS administrator, and is the only notification not addressed to an order's requestor |
-| **C4** | §3 "The service … `RaiseAsync` … the primitive. `RaiseForOrderAsync` … the one the callers use" | Two callers use `RaiseAsync` **directly** (`BulkSubmissionProcessorService`, `EmailNotificationProcessorService`), and there is a third entry point the doc never lists as a service member in §3: `RaiseForCompletedBulkEmailsAsync` |
+| **C3** | §4 lists **five** raise sites | There are **six**. `BulkEmailNotificationProcessorService.RaiseAccountsExhaustedAsync` fans `EmailAccountsExhausted` out to every ATS administrator, and is the only notification not addressed to an order's requestor |
+| **C4** | §3 "The service … `RaiseAsync` … the primitive. `RaiseForOrderAsync` … the one the callers use" | Two callers use `RaiseAsync` **directly** (`BulkSubmissionProcessorService`, `BulkEmailNotificationProcessorService`), and there is a third entry point the doc never lists as a service member in §3: `RaiseForCompletedBulkEmailsAsync` |
 | **C5** | §3's repository table | Omits `GetCompletedBulkEmailFilesAsync`, the three-query method that decides whether a bulk file is finished. It is described in §4 prose only |
 | **C6** | §3 entity table: `Type` — "Stored as text", no width | `varchar(60)`, and **`Type` is the one field `Truncate` does not cover** (§2.4, §9.11) |
 | **C7** | §5 "`StartAsync()` Idempotent." | It is not. The guard runs *after* an `await`, and a non-null-but-disconnected connection is replaced without being disposed. Two callers can each build a socket (§8.1, §9.3) |
@@ -179,7 +179,7 @@ no endpoint accepts one. The ten values, and who raises each:
 | `BulkUploadCompleted` | `BulkSubmissionProcessorService` | 4.2 |
 | `BulkEmailsCompleted` | `AtsNotificationService.RaiseForCompletedBulkEmailsAsync` | 4.3 |
 | `TicketingFailed` | `OMSTicketingProcessorService.NotifyIfTicketingExhaustedAsync` | 4.4 |
-| `EmailAccountsExhausted` | `EmailNotificationProcessorService.RaiseAccountsExhaustedAsync` | 4.5 |
+| `EmailAccountsExhausted` | `BulkEmailNotificationProcessorService.RaiseAccountsExhaustedAsync` | 4.5 |
 | `OrderDisputed` | **nobody** | 4.7 |
 | `InvitationEmailFailed` | **nobody** | 4.7 |
 | `EmailAccountNeedsReverification` | **nobody** | 4.7 |
@@ -824,7 +824,7 @@ below guards properly with `is Guid uploaderId`. Only one of the two handles pub
 
 ### 4.3 `RaiseForCompletedBulkEmailsAsync` — once per file, not once per pass
 
-Called from `EmailNotificationProcessorService` line 201, after the sent/failed statuses are
+Called from `BulkEmailNotificationProcessorService` line 201, after the sent/failed statuses are
 written so the completeness check reads this pass's outcome:
 
 ```csharp
@@ -986,7 +986,7 @@ For the two non-retryable paths the guard is a formality — `MarkTicketFailedAs
 `TicketAttempts = MaxTicketAttempts` outright when `isRetryable` is false, so the read-back always
 comes positive and the notification always fires on the first attempt.
 
-### 4.5 `EmailNotificationProcessorService.RaiseAccountsExhaustedAsync` — the fan-out
+### 4.5 `BulkEmailNotificationProcessorService.RaiseAccountsExhaustedAsync` — the fan-out
 
 The only notification not addressed to an order's requestor, and the only one with more than one
 recipient. Two entry points into it, both in `ProcessForPendingStatusAsync`:
@@ -2344,7 +2344,7 @@ must be set to `/hubs/atsbulk` in the environment for the gateway route to reach
 |---|---|---|
 | Unit | `Test/Test/BackendAPI/Modules/ATS.UnitTests/AtsNotificationServiceTests.cs` (471 lines) | Persist-then-push ordering, no-push-on-persist-failure, survives-push-failure, `Guid.Empty` no-op, truncation to 160/500, `RaiseForOrderAsync` addressing and both link shapes, the no-requestor and unknown-order cases, `RaiseForCompletedBulkEmailsAsync` wording and skipping, cursor emission |
 | Integration | `Test/Test/BackendAPI/Modules/ATS.IntegrationTests/AtsHubGroupIsolationTests.cs` | The five group-assignment properties in §3.6 |
-| Unit (caller) | `OMSTicketingProcessorServiceTests.cs`, `ReportServiceTests.cs`, `EmailNotificationProcessorServiceTests.cs` | That each caller raises, via a `Mock<IAtsNotificationService>` |
+| Unit (caller) | `OMSTicketingProcessorServiceTests.cs`, `ReportServiceTests.cs`, `BulkEmailNotificationProcessorServiceTests.cs` | That each caller raises, via a `Mock<IAtsNotificationService>` |
 
 The group-name assertion is the one that pins §10.5's first row:
 
@@ -2386,7 +2386,7 @@ payload reaches a real client (§3.6); and no test covers the retention sweep.
 | `BuildOrderLink`'s destinations or search terms | The destination repository's search predicate, and `ModuleList.cs`'s `path` values | Ticketing searches first/last separately and needs the last name alone; `CanOpen` matches the last segment (§2.3, §8.7) |
 | `AtsNotificationOptions` defaults | Whether an `AtsNotifications` section now exists in appsettings | None does today; the defaults are the shipped behaviour (§6) |
 | `AtsNotificationRetentionService`'s sweep | `AtsAuditRetentionService` | Deliberately the same shape, including the sweep-on-boot (§6, §9.12) |
-| `RaiseAsync`'s signature | All **six** call paths, including the two that call it directly | `BulkSubmissionProcessorService` and `EmailNotificationProcessorService` do not go through `RaiseForOrderAsync` (§4.2, §4.5) |
+| `RaiseAsync`'s signature | All **six** call paths, including the two that call it directly | `BulkSubmissionProcessorService` and `BulkEmailNotificationProcessorService` do not go through `RaiseForOrderAsync` (§4.2, §4.5) |
 | `AddAsync`'s `SaveChangesAsync` | Every caller's transaction boundary | It flushes the whole ambient context, not just the notification (§9.7) |
 | `NotificationService.StartAsync` | §9.2, §9.3 | The `State == Connected` guard is what makes logout hand the socket to the next user, and what leaks a disconnected one |
 | `AddScoped<INotificationService, ...>` | `NotificationCenter.Dispose` and `NotificationsPage.Dispose` | Scoped = app lifetime in WASM; both unsubscribes depend on it, and disposal never runs (§8.1, §8.5) |

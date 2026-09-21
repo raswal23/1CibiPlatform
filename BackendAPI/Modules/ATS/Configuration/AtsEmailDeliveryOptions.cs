@@ -37,7 +37,31 @@ public sealed class AtsEmailDeliveryOptions
 	public int SendTimeoutSeconds { get; set; } = 60;
 
 	// Attempts within one pass, before the row goes back to the queue for a later tick.
+	//
+	// Read only by BulkEmailNotificationProcessorService, which owns its own attempt loop. A
+	// spent budget here is not the end of the road: the row is released and the next tick picks
+	// it up again, so this paces one pass rather than bounding a message's total attempts.
 	public int MaxAttemptsPerPass { get; set; } = 3;
+
+	// Attempts for ONE message by a caller sending it right now, before the sender gives up on it
+	// entirely. Each attempt is a full walk of the registered accounts, because account failover
+	// is the switcher's job and happens inside a single attempt - see
+	// ATSEmailService.SendATSEmailWithResultAsync.
+	//
+	// Separate from MaxAttemptsPerPass above because the two bound different things. A queued row
+	// that exhausts a pass is retried on the next one; an inline notice - a withdrawal, a
+	// completion, a dispute acknowledgement, a single-order invitation - is sent after its
+	// transaction has already committed and has no later tick at all. These attempts are the only
+	// ones it gets, so tuning a bulk pass's pacing must not quietly change a notice's only chance
+	// at delivery.
+	//
+	// Only a transient fault spends an attempt: a refused recipient, or a rotation where every
+	// account has already refused, is answered on the first one and never retried.
+	//
+	// Three is the same reasoning as ConsecutiveFailureThreshold below - one dropped socket is
+	// noise, three in a row is a pattern - and three attempts at the back-off below costs about six
+	// seconds, which the single-enrolment path pays inside its transaction.
+	public int MaxAttemptsPerMessage { get; set; } = 3;
 
 	// First retry waits this long, doubling per attempt (2s, 4s, 8s...). Fixed short delays
 	// re-knock on a door that is deliberately closed.

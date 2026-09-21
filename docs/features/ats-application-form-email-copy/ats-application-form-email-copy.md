@@ -80,9 +80,10 @@ alongside them.
 
 ```text
 single order:  InsertEmailInvitationRequestAsync (inside TransactionRunner)
-                 -> SendApplicationFormToUserEmailAsync
+                 -> SendApplicationFormToUserEmailAsync       wraps the call below in SingleEmailSendRetry
 resend:        ResendApplicationFormAsync requeues the row -> the queue below
-bulk:          EmailNotificationProcessorService.SendEmailAsync
+bulk:          BulkEmailNotificationProcessorService.SendEmailAsync
+                 -> SendWithRetryAsync                        its own pass-level attempt loop
 follow-up:     FollowUpEmailBackgroundJob releases rows -> the same processor
 
   all of them -> EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync
@@ -93,6 +94,12 @@ follow-up:     FollowUpEmailBackgroundJob releases rows -> the same processor
                    -> IAtsEmailSender.SendATSEmailWithResultAsync(..., cc: that list)
                       -> the pooled, capped, paced, failover-capable send
 ```
+
+The retry sits on the two *entry* methods, never on
+`SendApplicationFormToUserEmailWithResultAsync` itself — see
+[`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md). Wrapping the shared method
+as well would multiply the budgets rather than share them, and the copy list is built above the
+retry, so a second attempt re-sends the same list rather than resolving the requestor again.
 
 Every route funnels into one method, so the copy list was added in one place and applies to all of
 them. There is no second send site to keep in step. `RequestorId` was already on

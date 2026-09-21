@@ -11,7 +11,7 @@ namespace ATS.Services.EmailAccounts;
 ///
 /// Because it is a singleton it CANNOT inject <c>ATSDBContext</c>, which is scoped and not
 /// thread-safe. It takes <c>IServiceScopeFactory</c> and opens a scope per database touch - the
-/// same pattern <c>EmailNotificationProcessorService</c> already uses per send attempt, and for
+/// same pattern <c>BulkEmailNotificationProcessorService</c> already uses per send attempt, and for
 /// the same reason.
 ///
 /// Health lives in two places on purpose. The breaker counter is held in memory because the

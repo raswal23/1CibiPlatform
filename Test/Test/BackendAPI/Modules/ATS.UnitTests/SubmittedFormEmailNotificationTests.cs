@@ -1,3 +1,4 @@
+﻿using ATS.Configuration;
 using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
@@ -7,6 +8,7 @@ using Auth.DTO;
 using Auth.Shared.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
@@ -30,7 +32,7 @@ public class SubmittedFormEmailNotificationTests
 	// names: the notice is copied to one team and tells the reader to write to another. That
 	// mismatch is in the agreed copy (see SubmittedFormEmail), so this literal tracks the
 	// recipient only - AtsSubmittedFormEmailBodyTests pins the prose address separately.
-	private const string SubmittedSubject = "CIBI | Order Status – In Progress";
+	private const string SubmittedSubject = "CIBI | Order Status â€“ In Progress";
 	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string PreWorkTeam = "pre-workteam@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
@@ -38,6 +40,9 @@ public class SubmittedFormEmailNotificationTests
 	private const string CandidateEmail = "candidate@example.test";
 	private const string SubmittedCandidateName = "Juan Dela Cruz";
 	private const string EmailBody = "submitted-form-email-body";
+
+	/// <summary>The attempt budget these tests configure, so an assertion can name it rather than 3.</summary>
+	private const int MaxAttempts = 3;
 
 	private static readonly Guid InvitationId = Guid.CreateVersion7();
 	private static readonly Guid RequestorId = Guid.CreateVersion7();
@@ -52,12 +57,19 @@ public class SubmittedFormEmailNotificationTests
 
 	public SubmittedFormEmailNotificationTests()
 	{
+		// Zero back-off. The production default sleeps 2s then 4s between attempts, and a test that
+		// drives a failing send must not spend six seconds proving the count.
 		_notifier = new SubmittedFormEmailNotification(
 			_logger.Object,
 			_emailSender.Object,
 			_authQueries.Object,
 			_repository.Object,
-			_orderHistoryService.Object);
+			_orderHistoryService.Object,
+			Options.Create(new AtsEmailDeliveryOptions
+			{
+				MaxAttemptsPerMessage = MaxAttempts,
+				RetryBaseDelaySeconds = 0
+			}));
 	}
 
 	/// <summary>

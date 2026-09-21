@@ -18,7 +18,7 @@ code lives and why it is shaped the way it is.
 | `Services/EndorsementSubmission/EndorsementSubmissionService.cs` | `ReleaseDueFollowUpEmailsAsync` — release, record history, log |
 | `BackgroundJobs/FollowUpEmail/` | hourly Quartz job + its setup |
 | `Services/EmailService/ATSEmailService.cs` | `BuildApplicationFormReminderNotification` |
-| `Services/EmailNotificationProcessor/EmailNotificationProcessorService.cs` | picks reminder vs. invitation copy; writes `InvitationEmailSent` history in the same transaction as the sent status |
+| `Services/BulkEmailNotificationProcessor/BulkEmailNotificationProcessorService.cs` | picks reminder vs. invitation copy; writes `InvitationEmailSent` history in the same transaction as the sent status |
 | `Constants/FollowUpSchedule.cs` | the one `Asia/Manila` definition, shared by the release query and the remaining-count |
 | `Services/Report/ReportService.cs` | `CalculateFollowUpEmailsRemaining` — the board's "Follow-ups Left" number |
 | `Component/ATS/Orders/SearchReportComponent.razor` | the column that renders it |
@@ -174,7 +174,7 @@ your form". Reading the column that actually gates the release removes the secon
 and the defect with it: `LastFollowUpSentDate` is never backfilled, so null means never chased.
 
 The three `#region Reminder vs. first-invitation copy` tests in
-`EmailNotificationProcessorServiceTests` pin all three states — chased-and-pending, never-chased,
+`BulkEmailNotificationProcessorServiceTests` pin all three states — chased-and-pending, never-chased,
 and already-delivered. Worth having because the failure is silent: the send succeeds either way and
 the only symptom is wrong wording in someone's inbox.
 
@@ -208,7 +208,7 @@ emails a single unanswered order can generate.
 
 ## Recording the delivery
 
-`EmailNotificationProcessorService.ProcessForPendingStatusAsync` used to flip the sent status on
+`BulkEmailNotificationProcessorService.ProcessForPendingStatusAsync` used to flip the sent status on
 its own. It now writes the status and the history together:
 
 ```csharp
@@ -323,7 +323,7 @@ depend on which side of the same second the query evaluated.
 | `ReportRowDTO`'s follow-up fields | `BuildReportRowsQuery` populates them and `CalculateFollowUpEmailsRemaining` consumes them; the cache decorator passes them through untouched |
 | `ReportListDTO.FollowUpEmailsRemaining` | The UI DTO must match, and `SearchReportComponent`'s three render branches assume null / 0 / positive are all distinct |
 | The reports table's columns | `ReportColumnCount` in `SearchReportComponent.razor.cs` — it sizes the loading skeleton and is not derived from the markup |
-| `LastFollowUpSentDate` (name, type, or that it is written in the release `UPDATE`) | It has **two** consumers, not one: the release predicate's dedupe clause and `EmailNotificationProcessorService.isFollowUp`, which selects reminder copy. Plus the entity, the configuration's `date` mapping, the migration, the model snapshot, and the hourly trigger's assumption that a guard exists |
+| `LastFollowUpSentDate` (name, type, or that it is written in the release `UPDATE`) | It has **two** consumers, not one: the release predicate's dedupe clause and `BulkEmailNotificationProcessorService.isFollowUp`, which selects reminder copy. Plus the entity, the configuration's `date` mapping, the migration, the model snapshot, and the hourly trigger's assumption that a guard exists |
 | The Quartz interval in `FollowUpEmailBackgroundJobSetup` | The dedupe column is what makes a sub-daily interval safe; a faster trigger is fine, removing the guard is not |
 | `FollowUpEmail`'s 0–90 bound | Both validators **and** both `Max="90"` attributes; `PackageFollowUpValidationTests` pins the server half |
 | The package form's label or hint | `AddPackageComponent.razor` and `EditPackageComponent.razor` both carry it, plus the `padding-right` in each `.razor.css` that reserves room for the suffix |

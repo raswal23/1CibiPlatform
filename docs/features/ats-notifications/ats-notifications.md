@@ -211,7 +211,7 @@ services.Configure<AtsNotificationOptions>(configuration.GetSection(AtsNotificat
 |---|---|---|
 | Candidate submitted the form | `Services/ApplicationForm/ApplicationFormService.cs` | after `CommitAsync` |
 | Bulk upload **parsed** | `Services/BulkSubmissionProcessor/BulkSubmissionProcessorService.cs` | beside the existing `ReceiveATSResponse` toast, reusing `file.UploadedByUserId` |
-| Bulk invitations **all emailed** | `Services/EmailNotificationProcessor/EmailNotificationProcessorService.cs` | after the sent/failed statuses are written |
+| Bulk invitations **all emailed** | `Services/BulkEmailNotificationProcessor/BulkEmailNotificationProcessorService.cs` | after the sent/failed statuses are written |
 | Report ready / order completed | `Services/Report/ReportService.cs` | after `CommitAsync`, on both the update and the insert path |
 | Ticketing retries exhausted | `Services/OMSTicketing/OMSTicketingProcessorService.cs` | after each `MarkTicketFailedAsync` |
 

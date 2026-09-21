@@ -5,7 +5,7 @@ using ATS.Data.UnitOfWork;
 using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.EmailAccounts;
-using ATS.Services.EmailNotificationProcessor;
+using ATS.Services.BulkEmailNotificationProcessor;
 using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.Notifications;
@@ -45,7 +45,7 @@ public class ATSServiceFixture : IDisposable
 
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
-	public Mock<ILogger<EmailNotificationProcessorService>> EmailNotificationProcessoServiceLogger { get; private set; }
+	public Mock<ILogger<BulkEmailNotificationProcessorService>> BulkEmailNotificationProcessorServiceLogger { get; private set; }
 
 	// Configuration
 	public IConfiguration Configuration { get; private set; }
@@ -60,7 +60,7 @@ public class ATSServiceFixture : IDisposable
 
 	// Service instances
 	public BulkSubmissionProcessorService BulkSubmissionProcessorService { get; private set; }
-	public EmailNotificationProcessorService EmailNotificationProcessorService { get; private set; }
+	public BulkEmailNotificationProcessorService BulkEmailNotificationProcessorService { get; private set; }
 
 	public ATSServiceFixture()
 	{
@@ -80,7 +80,7 @@ public class ATSServiceFixture : IDisposable
 		MockUnitOfWork = new Mock<IUnitOfWork>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
-		EmailNotificationProcessoServiceLogger = new();
+		BulkEmailNotificationProcessorServiceLogger = new();
 
 		// configuration values required by several services
 		Configuration = new ConfigurationBuilder()
@@ -116,6 +116,7 @@ public class ATSServiceFixture : IDisposable
 		{
 			MaxSendsPerSecond = 10_000,
 			MaxAttemptsPerPass = 3,
+			MaxAttemptsPerMessage = 3,
 			RetryBaseDelaySeconds = 0,
 			ThrottleBackoffSeconds = 600
 		};
@@ -142,8 +143,8 @@ public class ATSServiceFixture : IDisposable
 		// IEndorsementSubmissionService is no longer injected: each send resolves its own
 		// from a scope, because it reaches a DbContext and the sends now run concurrently.
 		// MockEndorsementSubmissionService is registered on the scope factory instead.
-		EmailNotificationProcessorService = new EmailNotificationProcessorService(
-			EmailNotificationProcessoServiceLogger.Object,
+		BulkEmailNotificationProcessorService = new BulkEmailNotificationProcessorService(
+			BulkEmailNotificationProcessorServiceLogger.Object,
 			MockRepository.Object,
 			MockNotificationService.Object,
 			MockOrderHistoryService.Object,

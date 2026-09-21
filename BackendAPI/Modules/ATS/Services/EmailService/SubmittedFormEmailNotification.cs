@@ -13,19 +13,22 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 	private readonly IAuthQueries _authQueries;
 	private readonly IATSRepository _atsRepository;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly AtsEmailDeliveryOptions _options;
 
 	public SubmittedFormEmailNotification(
 		ILogger<SubmittedFormEmailNotification> logger,
 		IAtsEmailSender emailSender,
 		IAuthQueries authQueries,
 		IATSRepository atsRepository,
-		IOrderHistoryService orderHistoryService)
+		IOrderHistoryService orderHistoryService,
+		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_authQueries = authQueries;
 		_atsRepository = atsRepository;
 		_orderHistoryService = orderHistoryService;
+		_options = options.Value;
 	}
 
 	public async Task SendAsync(
@@ -104,12 +107,21 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 			cc.Add(invitation.EmailAddress);
 		}
 
-		var result = await _emailSender.SendATSEmailWithResultAsync(
-			toEmail: requestor.UserEmail,
-			subject: SubmittedFormEmail.Subject,
-			body: body,
-			cancellationToken: cancellationToken,
-			cc: cc);
+		// Only the send is inside the retry. The order read, the directory lookup and the copy list
+		// above are resolved once, so a second attempt re-sends the same message rather than
+		// rebuilding it.
+		var result = await SingleEmailSendRetry.SendAsync(
+			send: _ => _emailSender.SendATSEmailWithResultAsync(
+				toEmail: requestor.UserEmail,
+				subject: SubmittedFormEmail.Subject,
+				body: body,
+				cancellationToken: cancellationToken,
+				cc: cc),
+			maxAttempts: _options.MaxAttemptsPerMessage,
+			baseDelaySeconds: _options.RetryBaseDelaySeconds,
+			logger: _logger,
+			description: $"the completion notice for order {details.EmailInvitationId}",
+			cancellationToken: cancellationToken);
 
 		// Records the ATTEMPT rather than the delivery, so a failed send still leaves a row and the
 		// outcome stays in the log below. Status written unchanged, because emailing is not a step
