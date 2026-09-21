@@ -460,6 +460,10 @@ public partial class ApplicationFormComponent
 				"By clicking 'Withdraw', the application form will be withdrawn and you will not be able to submit it."
 			},
 			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)WithdrawApplicationFormAsync
+			},
+			{
 				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
 			},
 			{
@@ -486,24 +490,33 @@ public partial class ApplicationFormComponent
 
 		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
-		var result = await dialog.Result;
+		await dialog.Result;
+	}
 
-		if (result!.Canceled)
-			return;
-
+	// The dialog owns the wait: it runs this on Withdraw, spins its confirm button for the
+	// duration, and only closes when this returns true. Returning false on a failed withdraw
+	// keeps the dialog open so the candidate can read the snackbar and retry, rather than
+	// dropping them back on a form that silently did nothing.
+	private async Task<bool> WithdrawApplicationFormAsync()
+	{
 		var withdrawResponse = await ATSService.WithdrawApplicationForm(HashToken!);
 
 		if (!withdrawResponse.IsSuccess)
 		{
 			Snackbar.Add(withdrawResponse.ErrorDetail, Severity.Error);
-			return;
+			return false;
 		}
 
 		if (!withdrawResponse.Data)
-			return;
+		{
+			Snackbar.Add("Failed to withdraw the application form.", Severity.Error);
+			return false;
+		}
 
 		await IsWithDrawn.InvokeAsync("Withdrawn");
 		await RemoveItemsAsync();
+
+		return true;
 	}
 
 	private async Task ProceedClicked()

@@ -3388,12 +3388,16 @@
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -3433,6 +3437,12 @@
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 
@@ -4461,12 +4471,16 @@
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -4506,6 +4520,12 @@
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 

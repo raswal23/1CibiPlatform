@@ -29,6 +29,6 @@ public static class DisputeEmail
 	/// only this one is actually copied. Changing the constant does not change the sentence - see
 	/// the wiring table in <c>docs/features/ats-dispute-order-email/</c>.
 	/// </remarks>
-	public const string CopyTeam = "clientsupport@cibi.com.ph";
-	//public const string CopyTeam = "svaldemoro@cibi.com.ph";
+	//public const string CopyTeam = "clientsupport@cibi.com.ph";
+	public const string CopyTeam = "svaldemoro@cibi.com.ph";
 }

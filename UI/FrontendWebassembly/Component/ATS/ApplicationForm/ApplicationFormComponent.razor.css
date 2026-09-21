@@ -1861,7 +1861,20 @@
     align-items: center;
 }
 
-.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button {
+/* Step 1's bar sits directly under the Name and Date fields, so it drops the shared
+   pa-2 inset that would otherwise hold Cancel and Save & Next 8px inside the column
+   edges. Zeroed the same way the final step's bar already does it, leaving Cancel
+   flush with the left edge of Name and Save & Next flush with the right of Date. */
+.ats-consent-action-bar {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    align-items: center;
+}
+
+/* The withdraw action on step 1 occupies the slot Previous uses on every later
+   step, so it carries the same outlined treatment - only the accent differs,
+   since withdrawing is destructive. */
+.ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-withdraw-button) {
     width: auto !important;
     height: 42px !important;
     margin: 0 !important;
@@ -1877,8 +1890,12 @@
     text-transform: uppercase;
 }
 
-.ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button:hover {
+.ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-withdraw-button):hover {
     background: var(--c-surface-sunken) !important;
+}
+
+.ats-step-action-bar.ats-step-action-bar ::deep .ats-withdraw-button {
+    color: var(--c-fg-muted) !important;
 }
 
 .ats-step-action-bar.ats-step-action-bar ::deep .ats-previous-button .mud-icon-root {
@@ -1965,7 +1982,7 @@
         gap: 12px;
     }
 
-    .ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-save-next-button),
+    .ats-step-action-bar.ats-step-action-bar ::deep :is(.ats-previous-button, .ats-withdraw-button, .ats-save-next-button),
     .ats-final-action-bar.ats-final-action-bar ::deep .ats-previous-button,
     .ats-final-action-bar.ats-final-action-bar ::deep .ats-final-submit-button {
         width: 100% !important;

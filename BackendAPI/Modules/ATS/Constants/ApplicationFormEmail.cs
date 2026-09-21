@@ -49,14 +49,14 @@ public static class ApplicationFormEmail
 	/// </remarks>
 	// The commented block below is a tester's mailboxes, swapped in while a branch is being
 	// verified and swapped back before release. The live list is the one in effect.
-	public static readonly IReadOnlyCollection<string> CopyTeams =
-	[
-		"clientsupport@cibi.com.ph",
-		"pre-workteam@cibi.com.ph"
-	];
 	//public static readonly IReadOnlyCollection<string> CopyTeams =
 	//[
-	//	"svaldemoro@cibi.com.ph",
-	//	"angel.condensada11@gmail.com"
+	//	"clientsupport@cibi.com.ph",
+	//	"pre-workteam@cibi.com.ph"
 	//];
+	public static readonly IReadOnlyCollection<string> CopyTeams =
+	[
+		"svaldemoro@cibi.com.ph",
+		"angel.condensada11@gmail.com"
+	];
 }
