@@ -24,11 +24,14 @@ namespace ATS.Constants;
 /// team addresses in their inbox, which is the intent - the closing sentence of both bodies already
 /// tells them to write to <c>ccteam@cibi.com.ph</c>, so a visible copy agrees with the copy they read.
 ///
-/// Every copied address is a real recipient to the provider and is charged to the sending account's
-/// daily cap along with the candidate - see <c>ATSEmailService.SendThroughAccountAsync</c>, which logs
-/// <c>1 + cc.Count</c>. Both bodies are sent for EVERY order, including the bulk queue, so each entry
-/// added here multiplies the cap consumed by a batch. A 500-row upload with two copies consumes 1,500
-/// of the cap rather than 500 - 2,000 once the requestor below is resolved onto the list as well.
+/// Every copied address is a real recipient to the provider and IS charged to the sending account's
+/// daily cap along with the candidate - but it is NOT charged to the send log, which records the TO
+/// address only (see <c>ATSEmailService.SendThroughAccountAsync</c>, which logs <c>1</c>). Both bodies
+/// are sent for EVERY order, including the bulk queue, so each entry added here multiplies the real
+/// cap consumed by a batch while the logged figure stays flat: a 500-row upload with two copies takes
+/// 1,500 from the provider - 2,000 once the requestor below is resolved onto the list - and reports
+/// 500. The slack in <c>DefaultDailySendLimit</c> is what absorbs the difference, so adding an address
+/// here means lowering that limit to match.
 /// </remarks>
 public static class ApplicationFormEmail
 {

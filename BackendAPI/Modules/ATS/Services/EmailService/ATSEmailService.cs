@@ -139,8 +139,8 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 		CancellationToken cancellationToken,
 		IReadOnlyCollection<string>? cc = null)
 	{
-		// Normalised once here rather than inside the message builder, so the recipient count
-		// charged to this account's daily cap is provably the same list that goes on the wire.
+		// Normalised once here rather than inside the message builder, so what goes on the wire
+		// is one list built in one place.
 		var copied = NormalizeRecipients(cc);
 
 		SmtpAccountContext context;
@@ -178,10 +178,13 @@ public class ATSEmailService : IEmailService, IAtsEmailSender
 
 		if (result.IsSent)
 		{
-			// Recipients, not messages: the TO address plus everyone copied. The provider counts
-			// recipients against the daily cap, so a copied message has to consume more of it -
-			// see AtsEmailSendLog.RecipientCount, which is summed rather than counted.
-			await _poolRegistry.ReportSuccessAsync(accountId, 1 + copied.Count, cancellationToken);
+			// The TO address only. Copied addresses are deliberately NOT charged here, even
+			// though the provider counts them against the daily cap - the logged figure tracks
+			// messages delivered to candidates, not the provider's own accounting. The gap is
+			// absorbed by DefaultDailySendLimit sitting below the real cap; widening the copy
+			// list therefore has to be paired with lowering that limit, because nothing else
+			// will notice the extra recipients.
+			await _poolRegistry.ReportSuccessAsync(accountId, 1, cancellationToken);
 		}
 		else
 		{
