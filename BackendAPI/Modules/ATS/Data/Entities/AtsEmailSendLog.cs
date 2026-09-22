@@ -23,9 +23,12 @@ public sealed class AtsEmailSendLog
 
 	public int AtsEmailAccountId { get; set; }
 
-	// Recipients, not messages: Google counts the former. One invitation is one recipient
-	// today, but a future CC or BCC would consume more quota than rows, and the selector must
-	// count what the provider counts.
+	// The TO address only - always 1 as written today, so this SUM and a COUNT(*) agree.
+	// Copied addresses are real recipients to the provider and DO consume its cap, but they are
+	// deliberately not charged here (see ATSEmailService.SendThroughAccountAsync), so this
+	// figure runs below true provider consumption whenever a message carries a copy list.
+	// Kept as a column rather than dropped because the shortfall is the thing most likely to
+	// need correcting later, and a per-row number is where that correction would go.
 	public int RecipientCount { get; set; }
 
 	public DateTime SentAt { get; set; }
