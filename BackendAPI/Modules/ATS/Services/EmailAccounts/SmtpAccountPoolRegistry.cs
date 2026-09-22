@@ -253,11 +253,47 @@ public sealed class SmtpAccountPoolRegistry : ISmtpAccountPoolRegistry, IAsyncDi
 			return true;
 		}
 
-		// A permanent, account-scoped failure is a rejected credential or a disowned mailbox.
-		// Waiting fixes neither, so the account leaves rotation until a human re-verifies it
-		// rather than cooling down and coming back to fail identically.
+		// A permanent, account-scoped failure is either a daily-limit refusal (temporary, resets
+		// after the quota window) or a genuinely broken credential (permanent). The daily-limit
+		// error is the whole point of having multiple accounts: Gmail's "5.4.5 Daily user sending
+		// limit exceeded" locks the mailbox for roughly 24 hours, but the quota resets
+		// automatically once the rolling window slides past the sends. Treating it as a
+		// permanent credential failure would park the account until a human re-verifies it, which
+		// is never - the quota clears on its own, so the account should too.
+		//
+		// A cooldown of one quota window is enough: by the time it expires, the consumption
+		// counter has been reset by the retention sweep, and IsSendable will let the account back
+		// in because RemainingInWindow will be positive again.
 		if (result.Outcome == EmailDeliveryOutcome.Permanent)
 		{
+			var isDailyLimitExceeded = LooksLikeDailyLimitExceeded(result);
+
+			if (isDailyLimitExceeded)
+			{
+				// Daily limit: cooldown for one quota window, then the account is eligible again
+				// once consumption resets. Do NOT invalidate the context - the credentials are
+				// still good, and the pool can be reused when the cooldown expires.
+				var cooldownUntil = now.AddHours(_options.Value.QuotaWindowHours);
+
+				await repository.RecordHealthAsync(
+					accountId,
+					consecutiveFailureCount: 0,
+					coolingDownUntil: cooldownUntil,
+					lastFailureReason: reason,
+					verificationStatus: null,
+					cancellationToken);
+
+				_logger.LogWarning(
+					"Sender account {AccountId} hit its daily limit ({StatusCode}). Cooling down until {Until:O} - quota window will reset consumption.",
+					accountId,
+					result.StatusCode,
+					cooldownUntil);
+
+				return true;
+			}
+
+			// Genuine credential failure (auth rejected, account disabled, etc.): requires manual
+			// re-verification because waiting will not fix a bad password or a suspended mailbox.
 			await repository.RecordHealthAsync(
 				accountId,
 				consecutiveFailureCount: 0,
@@ -317,6 +353,25 @@ public sealed class SmtpAccountPoolRegistry : ISmtpAccountPoolRegistry, IAsyncDi
 		}
 
 		return tripped;
+	}
+
+	/// <summary>
+	/// True when the failure message says the sender hit its daily quota, not that the
+	/// credentials are broken.
+	/// </summary>
+	/// <remarks>
+	/// Matches the same phrases that <c>SmtpFailureClassifier.LooksLikeSenderRejection</c> uses
+	/// to classify daily-limit errors as account-scoped. The two must stay in sync: if the
+	/// classifier calls it a sender rejection, this method must recognise it as a temporary
+	/// quota exhaustion rather than a permanent credential failure.
+	/// </remarks>
+	private static bool LooksLikeDailyLimitExceeded(EmailDeliveryResult result)
+	{
+		var message = result.Message ?? string.Empty;
+
+		return message.Contains("daily user sending limit", StringComparison.OrdinalIgnoreCase)
+			|| message.Contains("daily sending quota", StringComparison.OrdinalIgnoreCase)
+			|| message.Contains("sending limit exceeded", StringComparison.OrdinalIgnoreCase);
 	}
 
 	public bool IsLeased(int accountId) =>
