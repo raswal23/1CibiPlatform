@@ -50,8 +50,11 @@ public static class ApplicationFormEmail
 	/// <c>EndorsementSubmissionService.BuildCopyListAsync</c>, which appends it to a copy of this list.
 	/// Read that method for what the message actually carries.
 	/// </remarks>
-	// The commented block below is a tester's mailboxes, swapped in while a branch is being
-	// verified and swapped back before release. The live list is the one in effect.
+	// SWAPPED FOR VERIFICATION. The LIVE list below is a tester's mailboxes; the COMMENTED block
+	// is the agreed list and has to be restored before release. Until it is,
+	// ApplicationFormEmailCopyTests' siblings - the three notice tests, which pin the agreed
+	// addresses as literals - stay red on purpose. Those failures are the swap being reported,
+	// not a defect.
 	//public static readonly IReadOnlyCollection<string> CopyTeams =
 	//[
 	//	"clientsupport@cibi.com.ph",
