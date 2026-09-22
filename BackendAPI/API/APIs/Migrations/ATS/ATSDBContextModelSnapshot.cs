@@ -50,10 +50,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("CurrentStayFrom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("CurrentTypeOfOwnership")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -78,10 +74,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("PermanentProvince")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("PermanentTypeOfOwnership")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -762,40 +754,10 @@ namespace APIs.Migrations.ATS
                     b.ToTable("ClientDetails", "ats");
                 });
 
-            modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
-                {
-                    b.Property<Guid>("DocumentDetailsID")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DocumentName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("DocumentValue")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<Guid>("EmailInvitationID")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("DocumentDetailsID");
-
-                    b.HasIndex("EmailInvitationID");
-
-                    b.ToTable("DocumentDetails", "ats");
-                });
-
             modelBuilder.Entity("ATS.Data.Entities.EducationalBackground", b =>
                 {
                     b.Property<Guid>("EducationalBackgroundID")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("BachelorsAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("BachelorsDegree")
                         .HasMaxLength(255)
@@ -811,15 +773,7 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("BachelorsGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("BachelorsMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("BachelorsSchoolName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeAddress")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -837,20 +791,12 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("CollegeGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("CollegeMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("CollegeSchoolName")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DoctorateAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("DoctorateDegree")
                         .HasMaxLength(255)
@@ -866,16 +812,8 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("DoctorateGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("DoctorateMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<Guid>("EmailInvitationID")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("HighSchoolAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("HighSchoolDiplomaFileKey")
                         .HasMaxLength(255)
@@ -895,10 +833,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("MastersAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("MastersDegree")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -913,23 +847,11 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("MastersGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("MastersMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("MastersSchoolName")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("PhDSchoolName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("SchoolSpecificLOAFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("SeniorHighSchoolAddress")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1928,15 +1850,6 @@ namespace APIs.Migrations.ATS
                     b.Navigation("Package");
                 });
 
-            modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
-                {
-                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
-                        .WithMany("Documents")
-                        .HasForeignKey("EmailInvitationID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ATS.Data.Entities.EducationalBackground", b =>
                 {
                     b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
@@ -2048,8 +1961,6 @@ namespace APIs.Migrations.ATS
                     b.Navigation("ApplicantSearchProjection");
 
                     b.Navigation("ArchiveReports");
-
-                    b.Navigation("Documents");
 
                     b.Navigation("EducationalBackground");
 

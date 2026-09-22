@@ -33,12 +33,6 @@ public class AddressDetailsConfiguration : IEntityTypeConfiguration<AddressDetai
 		builder.Property(a => a.CurrentPostalCode)
 			   .HasMaxLength(255);
 
-		builder.Property(a => a.CurrentStayFrom)
-			   .HasMaxLength(255);
-
-		builder.Property(a => a.PermanentTypeOfOwnership)
-			   .HasMaxLength(255);
-
 		builder.Property(a => a.PermanentAddress)
 			   .HasMaxLength(255);
 
