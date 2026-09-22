@@ -301,6 +301,7 @@
                                         <MudItem xs="12" sm="4">
                                             <MudSelect @bind-Value="personalDetails.Suffix"
                                                        Label="Suffix"
+                                                       Placeholder="Select suffix"
                                                        FullWidth="true"
                                                        Required="true"
                                                        Variant="Variant.Outlined"
@@ -344,6 +345,7 @@
                                                        Margin="Margin.Dense"
                                                        Adornment="Adornment.None"
                                                        Label="Sex"
+                                                       Placeholder="Select sex"
                                                        FullWidth="true">
                                                 <MudSelectItem Value="@("Male")">Male</MudSelectItem>
                                                 <MudSelectItem Value="@("Female")">Female</MudSelectItem>
@@ -360,7 +362,7 @@
                                                           Class="oneplatform-rounded-input"
                                                           Adornment="Adornment.Start"
                                                           AdornmentIcon="@Icons.Material.Outlined.Email"
-                                                          Placeholder="juan.delacruz@email.com"
+                                                          Placeholder="juandelacruz@cibi.com.ph"
                                                           Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
                                                           Label="Alternate email address" />
                                         </MudItem>
@@ -1595,6 +1597,7 @@
                                                       Required="true"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref1FullName"
+                                                      Placeholder="Juan Dela Cruz"
                                                       Label="Full Name" />
                                     </MudItem>
 
@@ -1628,6 +1631,7 @@
                                                       RequiredError="Affiliated Company is required"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref1AffiliatedCompany"
+                                                      Placeholder="Company name"
                                                       Label="Affiliated Company" />
                                     </MudItem>
                                     <MudItem xs="12" sm="4">
@@ -1639,6 +1643,7 @@
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref1Email"
                                                       Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                                      Placeholder="juandelacruz@cibi.com.ph"
                                                       Label="Email Contact" />
                                     </MudItem>
 
@@ -1712,6 +1717,7 @@
                                                       Required="true"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref2FullName"
+                                                      Placeholder="Juan Dela Cruz"
                                                       Label="Full Name" />
                                     </MudItem>
                                     <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
@@ -1744,6 +1750,7 @@
                                                       RequiredError="Affiliated Company is required"
                                                       Class="oneplatform-rounded-input"
                                                       @bind-Value="referenceDetails.Ref2AffiliatedCompany"
+                                                      Placeholder="Company name"
                                                       Label="Affiliated Company" />
                                     </MudItem>
                                     <MudItem xs="12" sm="4">
@@ -1755,6 +1762,7 @@
                                                       Required="true"
                                                       RequiredError="Email Contact Information is required"
                                                       Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                                      Placeholder="juandelacruz@cibi.com.ph"
                                                       Label="Email Contact" />
                                     </MudItem>
 
@@ -1842,6 +1850,7 @@
                                                               Required="@AddAnotherReference"
                                                               Class="oneplatform-rounded-input"
                                                               @bind-Value="referenceDetails.Ref3FullName"
+                                                              Placeholder="Juan Dela Cruz"
                                                               Label="Full Name" />
                                             </MudItem>
                                             <MudItem xs="12" sm="6" Class="ats-reference-option-wrap">
@@ -1866,6 +1875,7 @@
                                                               Required="@AddAnotherReference"
                                                               RequiredError="Affiliated Company is required"
                                                               @bind-Value="referenceDetails.Ref3AffiliatedCompany"
+                                                              Placeholder="Company name"
                                                               Label="Affiliated Company" />
                                             </MudItem>
                                             <MudItem xs="12" sm="4">
@@ -1877,6 +1887,7 @@
                                                               Required="@AddAnotherReference"
                                                               RequiredError="Email Contact Information is required"
                                                               Validation="@((string value) => EmailValidationService.ValidateEmail(value))"
+                                                              Placeholder="juandelacruz@cibi.com.ph"
                                                               Label="Email Contact" />
                                             </MudItem>
                                             <MudItem xs="12" sm="4">
