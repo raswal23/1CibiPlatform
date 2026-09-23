@@ -326,12 +326,9 @@ public partial class UserAppRoles
 	}
 
 	// Delete Dialog
-	private async Task ConfirmDelete(int id, string table)
+	private async Task ConfirmDelete(int id, string table, string? name = null)
 	{
-		var confirmed = await ShowUserManagementConfirmationAsync(
-			"Confirm Delete",
-			$"Are you sure you want to delete this {table}?",
-			"Delete");
+		var confirmed = await ConfirmDeleteAsync(table, name);
 
 		if (confirmed)
 		{
@@ -351,6 +348,66 @@ public partial class UserAppRoles
 					break;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Delete confirmation for the four access-control tables, in the same danger-tone
+	/// <see cref="YesNoDialogComponent"/> the ATS sender accounts use.
+	/// </summary>
+	/// <remarks>
+	/// Deliberately not routed through <see cref="ShowUserManagementConfirmationAsync"/>: that
+	/// helper still serves Disapprove User and Unlock Account, which are reversible from this
+	/// screen and should keep the neutral ConfirmationDialogComponent. These four are not - the
+	/// row is gone and, for applications, submenus and roles, every app-sub-role built on it goes
+	/// with it - so they get the red avatar, the danger info banner and the delete-toned confirm
+	/// button, matching EmailAccountManagement.ConfirmDeleteAsync.
+	///
+	/// No ConfirmActionAsync is passed: the caller owns the delete-then-reload sequence, so the
+	/// dialog's job ends at the answer.
+	/// </remarks>
+	private async Task<bool> ConfirmDeleteAsync(string table, string? name)
+	{
+		var (noun, consequence) = table switch
+		{
+			"application" => ("application",
+				"Any submenus and application roles pointing at it lose the access they grant."),
+			"submenu" => ("submenu",
+				"Any application roles pointing at it lose the access they grant."),
+			"role" => ("role",
+				"Anyone holding it through an application role loses that access."),
+			_ => ("application role",
+				"The users it covers lose that access the next time they sign in.")
+		};
+
+		var target = string.IsNullOrWhiteSpace(name) ? $"this {noun}" : $"\"{name}\"";
+
+		var parameters = new DialogParameters
+		{
+			{ nameof(YesNoDialogComponent.Title), $"Delete {noun}" },
+			{
+				nameof(YesNoDialogComponent.Message),
+				$"Removing {target} cannot be undone. {consequence}"
+			},
+			{ nameof(YesNoDialogComponent.ConfirmText), "Delete" },
+			{ nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.DeleteOutline },
+			{ nameof(YesNoDialogComponent.AvatarIcon), Icons.Material.Filled.DeleteForever },
+			{ nameof(YesNoDialogComponent.AvatarColor), Color.Error },
+			{ nameof(YesNoDialogComponent.InfoColor), Color.Error },
+			{ nameof(YesNoDialogComponent.InfoBGColor), "var(--c-danger-bg)" },
+			{ nameof(YesNoDialogComponent.ThemeButtonColor), "theme-button-delete" }
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, parameters, options);
+		var result = await dialog.Result;
+
+		return result is { Canceled: false };
 	}
 
 	private async Task ConfirmUnlockAccount(Guid id)

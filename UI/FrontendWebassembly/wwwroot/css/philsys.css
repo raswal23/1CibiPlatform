@@ -8,60 +8,19 @@
     --modern-blue: var(--c-blue-500);
 }
 
-.philsys-wrapper {
-    max-width: 900px;
-    margin: 0 auto !important;
-}
 
-.philsys-tab-pannel {
-    border-radius: 4px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
 
-.philsys-tab-pannel-active {
-    background: var(--c-brand-bar-gradient) !important;
-    color: white !important;
-}
 
-.mud-theme-light .philsys-tab-pannel-inactive {
-    background-color: var(--mud-palette-surface) !important;
-    color: black;
-}
 
-.mud-theme-dark .philsys-tab-pannel-active {
-    color: white !important;
-}
 
-.mud-theme-dark .philsys-tab-pannel-inactive {
-    color: white !important;
-}
 
-.philsys-custom-tabs .mud-tabs-scroll-button {
-    display: none !important;
-}
 
-.philsys-custom-tabs .mud-tab {
-    border: 1px solid gray;
-    max-height: 45px;
-    font-size: clamp(12px, 2.5vw, 15px);
-    white-space: nowrap;
-}
 
-.philsys-form-container {
-    margin: 0 auto;
-}
 
 .mud-tab-slider {
     display: none !important;
 }
 
-.philsys-form-wrapper {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 16px;
-    box-sizing: border-box;
-}
 
 .philsys-liveness-page {
     min-height: 100vh;
@@ -112,23 +71,8 @@
     width: 100%;
 }
 
-    .philsys-modern .philsys-custom-tabs {
-        background: var(--c-surface-sunken);
-        border-radius: 10px;
-        padding: 4px;
-    }
 
-        .philsys-modern .philsys-custom-tabs .mud-tab {
-            min-height: 38px;
-            border-radius: 8px;
-            text-transform: none;
-            font-weight: 600;
-        }
 
-            .philsys-modern .philsys-custom-tabs .mud-tab.mud-tab-active {
-                background: var(--c-surface);
-                color: var(--modern-title);
-            }
 
     .philsys-modern .philsys-modern-actions {
         display: flex;
@@ -136,24 +80,8 @@
         margin-top: 14px;
     }
 
-    .philsys-modern .philsys-modern-pill {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 6px 12px;
-        font-size: 12px;
-        font-weight: 600;
-    }
 
-        .philsys-modern .philsys-modern-pill.success {
-            background: var(--c-success-bg);
-            color: var(--c-success);
-        }
 
-        .philsys-modern .philsys-modern-pill.error {
-            background: var(--c-danger-bg);
-            color: var(--c-danger);
-        }
 
 .philsys-lookup-shell {
     display: flex;
