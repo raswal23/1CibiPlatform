@@ -11,7 +11,7 @@
     overflow: hidden;
     border-radius: 24px;
     background: var(--c-surface);
-    box-shadow: 0 22px 60px rgba(125, 41, 113, .18);
+    box-shadow: 0 22px 60px var(--c-ev-shadow);
 }
 
 .ev-confirm-header {

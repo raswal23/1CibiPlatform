@@ -1,0 +1,24 @@
+@page "/employmentverification/verification"
+@layout ConsoleLayout
+
+@* The route registered as submenu 9 in ShareData/Auth/SubMenuList.cs, which is what
+   the home application card is built from. It used to be the whole module; the console
+   is now three tabs, so this stays as a redirect to the first of them rather than
+   becoming a fourth page.
+
+   Keeping it means the home card, any bookmark, and the backend application/submenu
+   seed data (application 8, submenu 9) all keep working untouched - the feature guide
+   requires those IDs to agree across the frontend catalogs and the API seed, so a
+   renamed route here would be a much wider change than it looks.
+
+   ConsoleLayout rather than EVLayout: rendering the navbar for the instant before the
+   redirect fires would flash a shell the user never lands on. *@
+
+<CibiLoaderComponent />
+
+@code {
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    protected override void OnInitialized() =>
+        Nav.NavigateTo(EmploymentVerificationRoutes.NeedsRequest, replace: true);
+}
