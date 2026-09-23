@@ -77,7 +77,6 @@ public class FilePdfServiceTests
 					EndDate = "May 2020",
 					CurrentlyEmployed = "No",
 					PermissionToContact = "Yes",
-					ReasonForLeaving = "Career growth",
 					SupervisorName = "Maria Reyes",
 					SupervisorContactNumber = "09181234567",
 					SupervisorEmail = "maria@acme.com",

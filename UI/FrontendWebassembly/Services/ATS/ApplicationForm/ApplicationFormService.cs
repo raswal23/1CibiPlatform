@@ -128,6 +128,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp1EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1EndDate");
 		AddString(ProfessionalExperiences.Emp1DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp1DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp1SupervisorName, "ProfessionalExperiences.Emp1SupervisorName");
+		AddString(ProfessionalExperiences.Emp1SupervisorEmail, "ProfessionalExperiences.Emp1SupervisorEmail");
 		AddString(ProfessionalExperiences.Emp1SupervisorContactNumber, "ProfessionalExperiences.Emp1SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp1COEUploadFile, "ProfessionalExperiences.Emp1COEUploadFile", ProfessionalExperiences.Emp1COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp1COEUploadFileName, "ProfessionalExperiences.Emp1COEUploadFileName");
@@ -144,6 +145,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp2EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2EndDate");
 		AddString(ProfessionalExperiences.Emp2DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp2DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp2SupervisorName, "ProfessionalExperiences.Emp2SupervisorName");
+		AddString(ProfessionalExperiences.Emp2SupervisorEmail, "ProfessionalExperiences.Emp2SupervisorEmail");
 		AddString(ProfessionalExperiences.Emp2SupervisorContactNumber, "ProfessionalExperiences.Emp2SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp2COEUploadFile, "ProfessionalExperiences.Emp2COEUploadFile", ProfessionalExperiences.Emp2COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp2COEUploadFileName, "ProfessionalExperiences.Emp2COEUploadFileName");
@@ -160,6 +162,7 @@ public class ApplicationFormService : IApplicationFormService
 		AddString(ProfessionalExperiences.Emp3EndDate?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3EndDate");
 		AddString(ProfessionalExperiences.Emp3DatePermittedToContact?.ToString("yyyy-MM-dd"), "ProfessionalExperiences.Emp3DatePermittedToContact");
 		AddString(ProfessionalExperiences.Emp3SupervisorName, "ProfessionalExperiences.Emp3SupervisorName");
+		AddString(ProfessionalExperiences.Emp3SupervisorEmail, "ProfessionalExperiences.Emp3SupervisorEmail");
 		AddString(ProfessionalExperiences.Emp3SupervisorContactNumber, "ProfessionalExperiences.Emp3SupervisorContactNumber");
 		AddFile(ProfessionalExperiences.Emp3COEUploadFile, "ProfessionalExperiences.Emp3COEUploadFile", ProfessionalExperiences.Emp3COEUploadFileName);
 		AddString(ProfessionalExperiences.Emp3COEUploadFileName, "ProfessionalExperiences.Emp3COEUploadFileName");

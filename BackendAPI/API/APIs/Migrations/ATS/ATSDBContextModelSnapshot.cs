@@ -777,24 +777,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("CollegeDegree")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeDiplomaFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeDiplomaFileName")
-                        .HasColumnType("text");
-
-                    b.Property<DateOnly?>("CollegeGraduationDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("CollegeSchoolName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -1328,13 +1310,6 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("ProfessionalExperiencesID")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("COEUploadFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("COEUploadFileName")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -1368,10 +1343,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("Emp1PermissionToContact")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Emp1ReasonForLeaving")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1420,10 +1391,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Emp2ReasonForLeaving")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<DateOnly?>("Emp2StartDate")
                         .HasColumnType("date");
 
@@ -1466,10 +1433,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("Emp3PermissionToContact")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Emp3ReasonForLeaving")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 

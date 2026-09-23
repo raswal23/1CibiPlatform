@@ -312,7 +312,6 @@ function Get-RelatedGeneratedValue($Context, $Mapping) {
 	if ($property -like 'Emp?CurrentlyEmployed') { return Select-StableValue $seed @('No', 'No', 'Yes') }
 	if ($property -like 'Emp?PermissionToContact') { return 'Yes' }
 	if ($property -like 'Emp?JobTitle') { return Select-StableValue $seed @('Team Lead', 'Business Analyst', 'Operations Associate', 'Account Specialist', 'Software Developer', 'Administrative Officer') }
-	if ($property -like 'Emp?ReasonForLeaving') { return Select-StableValue $seed @('Career advancement', 'End of contract', 'Relocation', 'Better opportunity') }
 	if ($property -like 'Ref?ProfessionalRelationship') { return Select-StableValue $seed @('Former Supervisor', 'Colleague', 'Team Lead', 'Department Manager') }
 	if ($property -like 'Ref?ModeOfContact') { return Select-StableValue $seed @('Mobile', 'Email', 'Mobile') }
 	if ($property -eq 'HitStatus') { return Get-CompletedValue $Context 'HitStatus' }

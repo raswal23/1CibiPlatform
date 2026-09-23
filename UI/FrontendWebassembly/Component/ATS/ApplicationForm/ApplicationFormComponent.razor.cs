@@ -181,6 +181,7 @@ public partial class ApplicationFormComponent
 		(professionalExperiences.Emp1CurrentlyEmployed || EndOfEmployment1.HasValue) &&
 		professionalExperiences.Emp1COEUploadFile is not null &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorEmail) &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorContactNumber);
 
 	private bool CanAddEmployer3 =>
@@ -195,6 +196,7 @@ public partial class ApplicationFormComponent
 		(professionalExperiences.Emp2CurrentlyEmployed || EndOfEmployment2.HasValue) &&
 		professionalExperiences.Emp2COEUploadFile is not null &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorEmail) &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorContactNumber);
 
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
@@ -324,6 +326,7 @@ public partial class ApplicationFormComponent
 		professionalExperiences.Emp2DatePermittedToContact = null;
 		professionalExperiences.Emp2JobTitle = null;
 		professionalExperiences.Emp2SupervisorName = null;
+		professionalExperiences.Emp2SupervisorEmail = null;
 		professionalExperiences.Emp2SupervisorContactNumber = null;
 		professionalExperiences.Emp2COEUploadFile = null;
 		professionalExperiences.Emp2COEUploadFileName = null;
@@ -350,6 +353,7 @@ public partial class ApplicationFormComponent
 		professionalExperiences.Emp3DatePermittedToContact = null;
 		professionalExperiences.Emp3JobTitle = null;
 		professionalExperiences.Emp3SupervisorName = null;
+		professionalExperiences.Emp3SupervisorEmail = null;
 		professionalExperiences.Emp3SupervisorContactNumber = null;
 		professionalExperiences.Emp3COEUploadFile = null;
 		professionalExperiences.Emp3COEUploadFileName = null;

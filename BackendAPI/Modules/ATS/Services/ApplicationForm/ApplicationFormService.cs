@@ -309,10 +309,6 @@ public class ApplicationFormService : IApplicationFormService
 		educationalBackground.HighSchoolDiplomaFileKey = highSchoolDiplomaKey;
 		educationalBackground.SeniorHighSchoolDiplomaFileKey = seniorHighSchoolDiplomaKey;
 		educationalBackground.BachelorsDiplomaFileKey = bachelorsDiplomaKey;
-		educationalBackground.CollegeSchoolName = educationalBackgroundDTO.BachelorsSchoolName;
-		educationalBackground.CollegeGraduationDate = educationalBackgroundDTO.BachelorsGraduationDate;
-		educationalBackground.CollegeDegree = educationalBackgroundDTO.BachelorsDegree;
-		educationalBackground.CollegeDiplomaFileKey = bachelorsDiplomaKey;
 		educationalBackground.MastersDiplomaFileKey = mastersDiplomaKey;
 		educationalBackground.DoctorateDiplomaFileKey = doctorateDiplomaKey;
 		educationalBackground.CreatedDate = DateTime.UtcNow;

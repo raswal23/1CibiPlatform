@@ -13,11 +13,6 @@ public class EducationalBackground
 	public DateOnly? SeniorHighSchoolGraduationDate { get; set; }
 	public string? SeniorHighSchoolDiplomaFileKey { get; set; }
 	public string? SeniorHighSchoolDiplomaFileName { get; set; }
-	public string? CollegeSchoolName { get; set; }
-	public DateOnly? CollegeGraduationDate { get; set; }
-	public string? CollegeDiplomaFileKey { get; set; }
-	public string? CollegeDiplomaFileName { get; set; }
-	public string? CollegeDegree { get; set; }
 	public string? BachelorsSchoolName { get; set; }
 	public DateOnly? BachelorsGraduationDate { get; set; }
 	public string? BachelorsDiplomaFileKey { get; set; }

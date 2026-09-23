@@ -5103,6 +5103,34 @@
     min-height: 28px;
 }
 
+/* "Best time to contact" is a native <input type="time">, so its clock glyph is
+   browser shadow DOM (::-webkit-calendar-picker-indicator) that no CSS colour
+   property reaches - the UA paints it from `color-scheme`. MudBlazor sets that on
+   .mud-input from --mud-native-html-color-scheme, which its theme provider emits
+   at runtime; this page runs under GenericLayout's UNBOUND provider (kept unbound
+   so candidate token-link pages stay light for staff who picked dark), so the
+   value is frozen at `light` even while html.dark flips every --c-* token around
+   it. That left a black clock glyph on the dark field. Restoring the scheme on
+   just these inputs repaints the glyph and the native picker popup without
+   touching the provider. The sibling "Best Date" field is a MudDatePicker - a
+   real MudBlazor icon that is already themed - so it is deliberately excluded.
+
+   The Class lands on the outer .mud-input-control, while MudBlazor sets
+   color-scheme on the inner .mud-input - so the property has to be set on the
+   descendant (and on the <input> itself, which is what actually renders the
+   glyph), not on the wrapper, or .mud-input would simply override it again.
+
+   Declared here, after the second .ats-step-five block, because this sheet
+   defines that block twice and the later copy wins. */
+html.dark .ats-step-five .ats-reference-time,
+html.dark .ats-step-five .ats-reference-time .mud-input,
+html.dark .ats-step-five .ats-reference-time input[type="time"],
+html.dark-startup .ats-step-five .ats-reference-time,
+html.dark-startup .ats-step-five .ats-reference-time .mud-input,
+html.dark-startup .ats-step-five .ats-reference-time input[type="time"] {
+    color-scheme: dark;
+}
+
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
 }
@@ -5588,6 +5616,11 @@
             align-items: stretch;
         }
 
+/* The hero is a MudPaper: without an override it paints MudBlazor's
+   --mud-palette-surface, which stays white on this page (GenericLayout's unbound
+   theme provider), so under html.dark it sat as a white slab on the dark card.
+   Transparent lets the themed card surface show through in both modes - same
+   reasoning as .ats-consent-step .ats-consent-copy-section below. */
 .ats-application-card .ats-step-one .ats-step-one-hero {
     display: flex;
     width: 100%;
@@ -5597,6 +5630,7 @@
     justify-content: center;
     padding: 12px 0 0;
     border-radius: 0 !important;
+    background: transparent;
 }
 
 .ats-application-card .ats-step-one .ats-step-one-hero-content {
@@ -6306,6 +6340,33 @@
 .ats-appform-modern .mud-input-adornment .mud-icon-button,
 .ats-appform-modern .mud-input-adornment .mud-icon-button .mud-icon-root {
     color: var(--c-fg-subtle);
+}
+
+/* The date-picker calendar popup. MudBlazor teleports it to the popover provider,
+   outside .ats-appform-modern, so no descendant selector on the form reaches it -
+   every picker therefore tags its own popup with PopoverClass="ats-appform-picker-popover".
+
+   The popup is a .mud-paper: it paints --mud-palette-surface / -text-primary, and
+   its days, weekday row and hover states read the other --mud-palette-* vars below.
+   Those come from the MudThemeProvider, which on this page is UNBOUND (GenericLayout
+   keeps it that way so candidate token-link pages stay light for staff who picked
+   dark), so they were frozen light while html.dark flipped every --c-* token around
+   them - a white calendar with near-black days over the dark form.
+
+   Re-pointing the palette vars themselves, rather than restyling each part, is what
+   makes the whole popup - days, month/year lists, header, hover and disabled states -
+   land on the same surface, text and border colours the New Order calendar gets from
+   its bound provider under ConsoleLayout. */
+.ats-appform-picker-popover .mud-paper,
+.ats-appform-picker-popover.mud-popover {
+    --mud-palette-surface: var(--c-surface);
+    --mud-palette-text-primary: var(--c-fg-strong);
+    --mud-palette-text-secondary: var(--c-fg-muted);
+    --mud-palette-text-disabled: var(--c-fg-subtle);
+    --mud-palette-action-default-hover: var(--c-surface-hover);
+    --mud-palette-lines-default: var(--c-border-soft);
+    background-color: var(--c-surface);
+    color: var(--c-fg-strong);
 }
 
 .ats-application-card .ats-step-action-bar:has(.ats-consent-save-button) {

@@ -22,10 +22,6 @@ public class EducationalBackgroundConfiguration : IEntityTypeConfiguration<Educa
 		builder.Property(e => e.SeniorHighSchoolName).HasMaxLength(255);
 		builder.Property(e => e.SeniorHighSchoolGraduationDate).HasColumnType("date");
 		builder.Property(e => e.SeniorHighSchoolDiplomaFileKey).HasMaxLength(255);
-		builder.Property(e => e.CollegeSchoolName).HasMaxLength(255);
-		builder.Property(e => e.CollegeGraduationDate).HasColumnType("date");
-		builder.Property(e => e.CollegeDiplomaFileKey).HasMaxLength(255);
-		builder.Property(e => e.CollegeDegree).HasMaxLength(255);
 		builder.Property(e => e.BachelorsSchoolName).HasMaxLength(255);
 		builder.Property(e => e.BachelorsGraduationDate).HasColumnType("date");
 		builder.Property(e => e.BachelorsDiplomaFileKey).HasMaxLength(255);
