@@ -1,5 +1,10 @@
 namespace EmploymentVerification.Services;
 
+/// <param name="EmploymentSegment">
+/// Which of the application form's three employer slots this request covers. Null for
+/// a request not raised from an ATS record. Stored on the row so the availability
+/// check can tell an order's three employers apart.
+/// </param>
 public sealed record CreateEmploymentVerificationRequest(
 	string CandidateName,
 	string PreviousEmployer,
@@ -7,7 +12,9 @@ public sealed record CreateEmploymentVerificationRequest(
 	string HrEmail,
 	DateTime? EmploymentStartDate,
 	DateTime? EmploymentEndDate,
-	Guid? AtsSubjectId);
+	Guid? AtsSubjectId,
+	short? EmploymentSegment = null,
+	string? RecipientSource = null);
 
 public interface IEmploymentVerificationService
 {
@@ -25,6 +32,29 @@ public interface IEmploymentVerificationService
 	/// withheld until that request is rejected or its link lapses.
 	/// </summary>
 	Task<IReadOnlyList<ATSInProgressEmploymentRecord>> GetAvailableATSRecordsAsync(CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Tells ATS these orders no longer need handing over, so later passes skip them.
+	/// </summary>
+	/// <remarks>
+	/// Only call this for an order with nothing outstanding. A released order is
+	/// invisible to <see cref="GetAvailableATSRecordsAsync"/> until something reinstates
+	/// it, so releasing one that still has work to do would strand that work silently.
+	/// </remarks>
+	Task ReleaseFinishedOrdersAsync(
+		IReadOnlyCollection<Guid> subjectIds,
+		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Puts back any released order that has become actionable again, so the next read
+	/// can see it.
+	/// </summary>
+	/// <remarks>
+	/// The one way that happens is a sent link lapsing unanswered: the segment reopens
+	/// here, but ATS was told the order was finished and stopped offering it. This is
+	/// what reconciles the two.
+	/// </remarks>
+	Task ReinstateLapsedOrdersAsync(CancellationToken cancellationToken);
 	Task<EmploymentVerificationRequest> CreateAndSendAsync(CreateEmploymentVerificationRequest request, CancellationToken cancellationToken);
 	/// <summary>
 	/// Records the HR contact's response against the emailed token. Set

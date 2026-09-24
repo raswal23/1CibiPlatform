@@ -23,6 +23,23 @@ public interface IContactDirectoryRepository
 		CancellationToken cancellationToken);
 
 	/// <summary>
+	/// Of the supplied addresses, returns the ones listed as an active contact. The
+	/// comparison is on the lower-cased address, matching how contacts are stored.
+	/// </summary>
+	/// <remarks>
+	/// This is the gate on automatic sending: a supervisor address the directory does
+	/// not know is not written to. The directory is the allow-list, so an address a
+	/// candidate invented cannot receive their own verification request.
+	/// <para>
+	/// Takes the whole batch in one call: a pass covering a few hundred candidates
+	/// would otherwise issue a query per employment slot.
+	/// </para>
+	/// </remarks>
+	Task<IReadOnlySet<string>> GetKnownActiveMailboxesAsync(
+		IReadOnlyCollection<string> emailAddresses,
+		CancellationToken cancellationToken);
+
+	/// <summary>
 	/// Whether the (company, mailbox) pair is already listed. <paramref name="excludeId"/>
 	/// is the row being edited, so renaming a contact without changing its identity
 	/// does not collide with itself.

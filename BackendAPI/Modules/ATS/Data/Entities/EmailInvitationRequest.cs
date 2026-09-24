@@ -73,6 +73,17 @@ public class EmailInvitationRequest
 	public DateTime? OrderCompletedAt { get; set; }
 	public bool NeedsProjection { get; set; } = true;
 	public DateTime? ProjectionUpdatedAt { get; set; }
+
+	// Employment verification hand-off, the same shape as NeedsProjection above: ATS
+	// says "this order still needs giving to EV", and EV clears it once it has taken
+	// every employment slot the order offers.
+	//
+	// A marker, not a status. What happened to each request - sent, confirmed,
+	// declined, expired - belongs to EmploymentVerificationRequests and is none of
+	// ATS's business. This exists only so the provider query can find the handful of
+	// unclaimed orders in SQL instead of loading every in-progress order and
+	// discarding most of them in memory on every pass.
+	public bool NeedsEmploymentVerification { get; set; } = true;
 	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
 

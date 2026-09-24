@@ -18,11 +18,18 @@ public sealed class EmploymentVerificationCacheRepository(
 
 	// Deliberately uncached: the result turns on how the supplied instant compares
 	// to each token expiry, so a cached list would keep lapsed requests blocking
-	// their candidate until the entry aged out.
-	public Task<IReadOnlyList<Guid>> ListBlockedAtsSubjectIdsAsync(
+	// their segment until the entry aged out.
+	public Task<IReadOnlyList<BlockedEmploymentSegment>> ListBlockedSegmentsAsync(
 		DateTime asOfUtc,
 		CancellationToken cancellationToken) =>
-		repository.ListBlockedAtsSubjectIdsAsync(asOfUtc, cancellationToken);
+		repository.ListBlockedSegmentsAsync(asOfUtc, cancellationToken);
+
+	// Deliberately uncached, for the same reason as the blocked-segment read: whether a
+	// link has lapsed turns on the supplied instant.
+	public Task<IReadOnlyList<Guid>> ListSubjectsWithLapsedRequestsAsync(
+		DateTime asOfUtc,
+		CancellationToken cancellationToken) =>
+		repository.ListSubjectsWithLapsedRequestsAsync(asOfUtc, cancellationToken);
 
 	public Task<EmploymentVerificationRequest?> FindByTokenHashAsync(
 		string tokenHash,

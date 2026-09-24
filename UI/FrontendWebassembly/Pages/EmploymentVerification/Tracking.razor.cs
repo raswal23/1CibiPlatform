@@ -59,6 +59,18 @@ public partial class Tracking
 
 	private Task ReloadAsync() => LoadAsync();
 
+	/// <summary>
+	/// Plain-language label for the stored recipient source. The stored values are the
+	/// server's enum names, which are not what an operator should have to read.
+	/// </summary>
+	private static string GetRecipientSourceLabel(string? recipientSource) =>
+		recipientSource switch
+		{
+			"Directory" => "Vetted company mailbox",
+			"CandidateSupplied" => "Supplied by the candidate",
+			_ => recipientSource ?? string.Empty
+		};
+
 	private int CountByStatus(string status) =>
 		_sentRequests.Count(request => request.Status == status);
 

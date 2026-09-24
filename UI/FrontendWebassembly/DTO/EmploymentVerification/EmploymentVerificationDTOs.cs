@@ -44,6 +44,17 @@ public sealed class SentVerificationRequestDTO
 	public DateTime? EmploymentEndDate { get; set; }
 	public string? HrName { get; set; }
 	public string HrEmail { get; set; } = "";
+
+	/// <summary>
+	/// Where <see cref="HrEmail"/> came from - "Directory" for a vetted company
+	/// mailbox, "CandidateSupplied" for the address the candidate typed. Null on
+	/// requests raised before sending was automated.
+	/// </summary>
+	public string? RecipientSource { get; set; }
+
+	/// <summary>Which of the form's three employer slots this request covers.</summary>
+	public short? EmploymentSegment { get; set; }
+
 	public string Status { get; set; } = "";
 	public DateTime RequestedAt { get; set; }
 	public DateTime? SentAt { get; set; }
@@ -91,14 +102,34 @@ public sealed class CreateEmploymentVerificationRequestDTO
 	public DateTime? EmploymentEndDate { get; set; }
 }
 
+/// <summary>
+/// One employment slot awaiting a verification request. Mirrors the API's
+/// <c>ATSInProgressEmploymentRecord</c>, which returns one record per slot rather than
+/// per candidate - a candidate with three former employers appears three times.
+/// </summary>
 public sealed class ATSInProgressEmploymentRecordDTO
 {
 	public Guid SubjectId { get; set; }
+
+	/// <summary>Which of the form's three employer slots this is: 1, 2 or 3.</summary>
+	public short EmploymentSegment { get; set; }
+
 	public string CandidateName { get; set; } = "";
 	public string Employer { get; set; } = "";
 	public string? Position { get; set; }
 	public DateOnly? StartDate { get; set; }
 	public DateOnly? EndDate { get; set; }
-	public string? HrName { get; set; }
-	public string? HrEmail { get; set; }
+	public string? SupervisorName { get; set; }
+
+	/// <summary>
+	/// The address the candidate supplied. The sender prefers a vetted directory
+	/// mailbox where the company is known, so this is not necessarily who was emailed.
+	/// </summary>
+	public string? SupervisorEmail { get; set; }
+
+	/// <summary>
+	/// Whether the candidate agreed this employer may be contacted. False also covers
+	/// "never answered" - the queue treats absence of consent as no.
+	/// </summary>
+	public bool PermissionToContact { get; set; }
 }

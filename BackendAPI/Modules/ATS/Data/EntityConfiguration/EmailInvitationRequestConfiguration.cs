@@ -141,6 +141,16 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.ProjectionUpdatedAt)
 			   .IsRequired(false);
 
+		builder.Property(e => e.NeedsEmploymentVerification)
+			   .IsRequired(true)
+			   .HasDefaultValue(true);
+
+		// Filtered: the verification job only ever asks for unclaimed orders, so
+		// indexing the false rows would grow with the table while never being read.
+		// Same reasoning as the TicketStatus index below.
+		builder.HasIndex(e => e.NeedsEmploymentVerification)
+			   .HasFilter("\"NeedsEmploymentVerification\"");
+
 		builder.Property(e => e.DisputeCategory)
 			   .HasMaxLength(255)
 			   .IsRequired(false);

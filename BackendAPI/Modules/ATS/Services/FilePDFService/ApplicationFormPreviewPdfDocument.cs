@@ -576,9 +576,10 @@ public class ApplicationFormPreviewPdfDocument : IDocument
 	}
 
 	// Same interpretation the dialog applies to the applicant's yes/no answers.
+	// Delegates to the shared helper so this and the employment-verification consent
+	// check cannot drift: both decide what the form's stored "True"/"Yes" means.
 	private static bool IsAffirmative(string? value) =>
-		string.Equals(value?.Trim(), "yes", StringComparison.OrdinalIgnoreCase)
-		|| string.Equals(value?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+		AffirmativeAnswer.IsAffirmative(value);
 
 	private static string EmploymentDates(EmployerPreviewDTO employer)
 	{
