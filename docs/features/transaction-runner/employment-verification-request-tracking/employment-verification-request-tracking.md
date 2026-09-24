@@ -61,10 +61,16 @@ The typed `EmploymentVerificationPaths` module is the only wiring, and that is c
 > and **sending is now automatic** (see
 > [employment-verification-auto-send.md](../../employment-verification-auto-send/employment-verification-auto-send.md)).
 >
-> Two consequences for what follows. The Needs-request view is **read-only** — a scheduled
-> job sends, so there is no Send button and no review drawer. And a request now covers one
+> Three consequences for what follows. The Needs-request view is **read-only** — a scheduled
+> job sends, so there is no Send button and no review drawer. A request now covers one
 > **employment segment** rather than a whole order: a candidate with three former employers
-> produces three independent requests, each with its own token and outcome.
+> produces three independent requests, each with its own token and outcome. And ATS carries
+> a hand-off marker (`NeedsEmploymentVerification`) so the provider query returns only
+> orders this module has not yet taken, rather than every in-progress order on every pass.
+>
+> Also note `Rejected` now **blocks its segment permanently**. It used to release it, which
+> was safe while a human chose whether to retry; under a job that runs every five minutes it
+> re-mailed an employer who had just declined.
 
 The two views are separate routes under `Layout/EVLayout.razor`, each a
 `.razor` / `.razor.cs` trio inheriting `CrudPageBase`:

@@ -47,7 +47,12 @@ groups. The contract unpivots them.
 
 ## How it works
 
-Every five minutes the job asks for eligible segments and, for each one:
+Every five minutes the job reconciles lapsed links, asks for eligible segments, and for
+each one:
+
+0. **Reconcile.** Any request whose link has expired unanswered puts its order back in the
+   hand-off queue. This runs *first*, because a released order is invisible to the read
+   below it — without this a lapsed link could never be retried.
 
 1. **Consent.** The candidate must have ticked *permission to contact* for that employer.
    Blank, absent or unrecognised reads as no — absence of consent is not consent. A
@@ -57,6 +62,72 @@ Every five minutes the job asks for eligible segments and, for each one:
 3. **Send.** `CreateAndSendAsync` is reused unchanged. It mints a token whose emailed link
    embeds the exact 86-character hash the verify endpoints validate, so reimplementing it
    would have produced links those endpoints reject.
+
+### The hand-off marker
+
+`ats."EmailInvitationRequest"."NeedsEmploymentVerification"` — one boolean, defaulting to
+true, set again on every form submission.
+
+It answers exactly one question: **does ATS still have employment records this module has
+not taken?** Nothing about outcomes. What happened to each request — sent, confirmed,
+declined, expired — lives in `EmploymentVerificationRequests` and is none of ATS's
+business.
+
+```
+form submitted        → true    queued for hand-off
+all segments taken    → false   EV has them; stop offering this order
+a sent link lapses    → true    that segment reopened; offer it again
+```
+
+It exists for cost, not correctness. Without it the provider query returned **every**
+in-progress order on every pass — a form submitted a year ago, all its employers long since
+answered, was still read, unpivoted and discarded every five minutes. The cost of a pass
+tracked the size of the order table rather than the work outstanding. With it, the filter
+happens in SQL against a filtered index.
+
+`ats."ProfessionalExperiences"` is **untouched**. A marker there would have meant three
+columns (one per slot), EV writing into ATS's table to clear them, and a second copy of
+state EV already holds. The order is the right grain because the marker is about the
+hand-off, not about any one employer.
+
+It is the third of its kind on that table, beside `NeedsProjection` (search index) and
+`IsTicketed` (OMS). All three are ATS saying *"this order still needs handing to X"*, with
+X's own state living in X.
+
+### Released is not the same as answered
+
+An order is released once every segment has a request — **before** any employer replies:
+
+```
+pass 1   seg 1, 2 sent          → nothing left to hand over → marker = false
+         (both still awaiting a reply; that is EV's business now)
+
+2 days   employer 1 confirms    → marker untouched
+3 days   seg 2 link lapses      → marker = true, segment offered again
+```
+
+So the two guards answer different questions, and neither replaces the other:
+
+| | prevents | lives in |
+|---|---|---|
+| `NeedsEmploymentVerification` | **re-reading** a finished order | ATS, SQL filter |
+| blocked `(subject, segment)` pairs | **re-sending** a handled segment | EV, per pass |
+
+### Settled versus deferred
+
+Release is deliberately conservative — a released order is invisible until something
+reinstates it, so releasing one with work left would strand that work silently.
+
+| Segment outcome | Releases the order? |
+|---|---|
+| sent | ✓ handed over |
+| consent not given | ✓ settled — it will never become sendable |
+| address not in the directory | ✗ **deferred** — an operator may add it tomorrow |
+| send failed | ✗ deferred |
+| trimmed by the per-pass cap | ✗ deferred |
+
+The distinction is whether the segment *can* still become sendable. "No consent" never can;
+"not in Contacts" can, the moment someone adds the address.
 
 ### The directory is an allow-list, not a preference
 
@@ -204,18 +275,34 @@ employers and permission to contact, and within five minutes expect two rows wit
 the other is unaffected.
 
 ```sql
+-- what was sent, per employer slot
 SELECT "EmploymentSegment", "PreviousEmployer", "HrEmail", "RecipientSource", "Status"
 FROM employment_verification."EmploymentVerificationRequests"
 WHERE "AtsSubjectId" = '<order id>'
 ORDER BY "EmploymentSegment";
+
+-- and whether ATS still considers the order outstanding
+SELECT "OrderStatus", "NeedsEmploymentVerification"
+FROM ats."EmailInvitationRequest"
+WHERE "EmailInvitationID" = '<order id>';
 ```
+
+Expect the marker to be **false** once every slot has a row — released at hand-off, not
+when the employers reply. If it is still true, one slot is deferred: check the queue for a
+*No email* or *Pending check* row.
 
 ## What not to do
 
 - **Do not block on `AtsSubjectId` alone.** It is the bug the discriminator exists for: one
   employer would silently suppress the candidate's others.
 - **Do not add a sent-flag to `ats.ProfessionalExperiences`.** It is the wrong module's
-  table, and a single flag cannot express a re-send.
+  table, and a single flag cannot express a re-send. The hand-off marker belongs on the
+  order, and carries no outcome.
+- **Do not release an order with a deferred segment.** A released order is invisible to the
+  provider query; releasing one that is merely waiting on a contact strands it with no
+  error anywhere.
+- **Do not drop the reconcile step,** or move it after the read. A lapsed link on a
+  released order would never be retried.
 - **Do not send to an address the directory does not list**, however plausible it looks.
   The candidate chose it; the directory is what authorises it.
 - **Do not "fix" the low send rate by loosening the gate.** The fix is adding addresses to

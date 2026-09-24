@@ -30,11 +30,21 @@ what carries the correctness. Read it once, then use the closing table as a map.
 | **C9** | Guide §11a: token-link pages use `GenericLayout` | `VerifyEmployment.razor:1` **does** follow it. `Layout/EmploymentVerificationLayout.razor` was dead and has since been deleted; `Layout/EVLayout.razor` is the staff shell now — **resolved** |
 | **C10** | "Keep Employment Verification code vertically structured … do not compress into one-line blocks" | `EmploymentVerification.csproj:2` packs the whole `PropertyGroup` onto one line; `EmploymentVerificationDbContext.cs` has no blank line between `Requests` and `OnModelCreating` |
 
-Verified **correct** in the design doc: the availability table matches `ListBlockedAtsSubjectIdsAsync`
-predicate-for-predicate; `Expired` is declared and never assigned; `asOfUtc` is a parameter, not a clock
+Verified **correct** in the design doc: `asOfUtc` is a parameter, not a clock
 read in the repository; `MarkRespondedAsync` gates on `Pending || Sent`; the decorator invalidates
 inside each write gated on the returned bool; `SentVerificationRequestDTO` omits the hash;
 `ResponseRate` returns an em dash on an empty list.
+
+Two claims from that review have since been **overtaken by the auto-send feature** and no
+longer hold:
+
+- *"the availability table matches `ListBlockedAtsSubjectIdsAsync` predicate-for-predicate"* —
+  that method is now `ListBlockedSegmentsAsync` and returns `(subject, segment)` pairs, and
+  `Rejected` blocks permanently rather than releasing.
+- *"`Expired` is declared and never assigned"* — it is now what a failed send is marked
+  with, and it is the one status that releases a segment for retry.
+
+See [employment-verification-auto-send](../../employment-verification-auto-send/employment-verification-auto-send.md).
 
 ---
 
