@@ -277,6 +277,9 @@ public partial class ApplicationFormComponent
 			return Task.CompletedTask;
 		}
 
+		// Matches Employer 1's default. RemoveEmployer3 clears the flag along with the rest
+		// of the card, so revealing it again is what re-ticks the box.
+		professionalExperiences.Emp3PermissionToContact = true;
 		AddEmployer3 = true;
 		return Task.CompletedTask;
 	}
@@ -295,6 +298,9 @@ public partial class ApplicationFormComponent
 			return Task.CompletedTask;
 		}
 
+		// Matches Employer 1's default. RemoveEmployer2 clears the flag along with the rest
+		// of the card, so revealing it again is what re-ticks the box.
+		professionalExperiences.Emp2PermissionToContact = true;
 		AddEmployer2 = true;
 		return Task.CompletedTask;
 	}
