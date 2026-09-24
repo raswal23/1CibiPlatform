@@ -30,11 +30,16 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		await _repository.ListAsync(cancellationToken);
 
 	/// <summary>
-	/// Lists the in-progress ATS candidates that still need a verification email.
-	/// A candidate is withheld while a request is awaiting a response or has been
-	/// confirmed; rejected and lapsed requests release the candidate so a fresh
-	/// request can be sent.
+	/// Lists the employment segments of in-progress ATS orders that still need a
+	/// verification email. A segment is withheld while its request is awaiting a
+	/// response or has been confirmed; rejected and lapsed requests release it so a
+	/// fresh request can be sent.
 	/// </summary>
+	/// <remarks>
+	/// Filtered per (subject, segment), not per subject: the three employers of one
+	/// order share an AtsSubjectId, so filtering by subject alone would let a request
+	/// raised for the first employer suppress the candidate's other two.
+	/// </remarks>
 	public async Task<IReadOnlyList<ATSInProgressEmploymentRecord>> GetAvailableATSRecordsAsync(
 		CancellationToken cancellationToken)
 	{
@@ -45,20 +50,42 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 			return atsRecords;
 		}
 
-		var blockedSubjectIds = await _repository.ListBlockedAtsSubjectIdsAsync(
+		var blockedSegments = await _repository.ListBlockedSegmentsAsync(
 			DateTime.UtcNow,
 			cancellationToken);
 
-		if (blockedSubjectIds.Count == 0)
+		if (blockedSegments.Count == 0)
 		{
 			return atsRecords;
 		}
 
-		var blocked = blockedSubjectIds.ToHashSet();
+		var blocked = blockedSegments.ToHashSet();
 
 		return atsRecords
-			.Where(record => !blocked.Contains(record.SubjectId))
+			.Where(record => !blocked.Contains(
+				new BlockedEmploymentSegment(record.SubjectId, record.EmploymentSegment)))
 			.ToList();
+	}
+
+	public Task ReleaseFinishedOrdersAsync(
+		IReadOnlyCollection<Guid> subjectIds,
+		CancellationToken cancellationToken) =>
+		_atsProvider.ReleaseOrdersAsync(subjectIds, cancellationToken);
+
+	public async Task ReinstateLapsedOrdersAsync(CancellationToken cancellationToken)
+	{
+		var lapsed = await _repository.ListSubjectsWithLapsedRequestsAsync(
+			DateTime.UtcNow,
+			cancellationToken);
+
+		if (lapsed.Count == 0)
+		{
+			return;
+		}
+
+		// Unconditional: the provider only writes rows whose flag actually differs, so
+		// re-reinstating an order that is already queued costs nothing.
+		await _atsProvider.ReinstateOrdersAsync(lapsed, cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<SentVerificationRequestDTO>> ListSentRequestsAsync(
@@ -92,10 +119,12 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		{
 			Id = Guid.NewGuid(),
 			AtsSubjectId = request.AtsSubjectId,
+			EmploymentSegment = request.EmploymentSegment,
 			CandidateName = request.CandidateName,
 			PreviousEmployer = request.PreviousEmployer,
 			Position = request.Position,
 			HrEmail = request.HrEmail,
+			RecipientSource = request.RecipientSource,
 			EmploymentStartDate = ToUtc(request.EmploymentStartDate),
 			EmploymentEndDate = ToUtc(request.EmploymentEndDate),
 			RequestedAt = now,
@@ -125,7 +154,7 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Position</td><td style='padding:12px 16px;font-weight:bold'>{entity.Position}</td></tr>
 					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Employment period</td><td style='padding:12px 16px;font-weight:bold'>{entity.EmploymentStartDate:MMM yyyy} – {entity.EmploymentEndDate:MMM yyyy}</td></tr>
 				  </table>
-				  <p style='font-size:15px;line-height:1.6'>Choose one response below. This secure link can be used once and expires in 72 hours.</p>
+				  <p style='font-size:15px;line-height:1.6'>Choose one response below. This secure link can be used once and expires in {_tokenExpiryHours} hours.</p>
 				  <p style='margin:28px 0;text-align:center'><a href='{verificationLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(120deg,#a52d91,#e3489f);color:#ffffff;text-decoration:none;font-weight:bold'>Confirm employment details</a></p>
 				  <p style='font-size:12px;line-height:1.6;color:#8a7186;text-align:center'>If you cannot confirm this information, open the link and choose the rejection option.</p>
 				</div>
@@ -141,6 +170,22 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 				body,
 				true))
 		{
+			// The row is already committed - AddAsync above saves - and Pending blocks
+			// its segment permanently, with no expiry and no sweeper. A failed send
+			// would therefore leave the segment unreachable forever, which was tolerable
+			// while a human clicked Send and could see it fail, but accumulates silently
+			// now that a job does.
+			//
+			// Expired, not Rejected: Rejected means the employer answered no and blocks
+			// the segment for good, so reusing it here would both hide a delivery failure
+			// as a decline and permanently strand the segment. Expired was declared and
+			// never assigned; this is what it is for.
+			await _repository.MarkRespondedAsync(
+				entity.Id,
+				VerificationRequestStatus.Expired,
+				DateTime.UtcNow,
+				cancellationToken);
+
 			throw new InvalidOperationException("The verification email could not be sent.");
 		}
 

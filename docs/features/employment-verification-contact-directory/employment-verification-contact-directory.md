@@ -51,6 +51,19 @@ address, with add and edit dialogs styled identically to the ATS client dialogs.
 answers a concrete question staff had no good answer to: *which HR mailbox do I send
 this verification request to?*
 
+> **Now load-bearing, and it is an allow-list.** The directory was standalone when it
+> shipped. The automatic sender
+> ([employment-verification-auto-send.md](../employment-verification-auto-send/employment-verification-auto-send.md))
+> will only write to a supervisor address that appears here — the address comes off the
+> candidate's own application form, so the directory is what authorises it. Matched on the
+> address, case-insensitively, via
+> `IContactDirectoryRepository.GetKnownActiveMailboxesAsync`.
+>
+> Two consequences. **Adding or deactivating a row changes whether real mail is sent**, not
+> merely where. And because this directory holds general company mailboxes while the form
+> captures named individuals, most segments will not match until someone adds the address —
+> the auto-send queue is the worklist for that.
+
 ## How it works
 
 ### The three tabs

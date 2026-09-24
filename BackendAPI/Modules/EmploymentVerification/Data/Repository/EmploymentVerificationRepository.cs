@@ -9,16 +9,52 @@ public sealed class EmploymentVerificationRepository(EmploymentVerificationDbCon
 			.OrderByDescending(request => request.RequestedAt)
 			.ToListAsync(cancellationToken);
 
-	public async Task<IReadOnlyList<Guid>> ListBlockedAtsSubjectIdsAsync(
+	/// <summary>
+	/// The availability rule. A segment is blocked while a request for it is awaiting a
+	/// response, and permanently once the employer has answered either way.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <c>Rejected</c> blocks. It did not under manual sending, where it meant "an
+	/// operator may try this employer again" and a human decided whether to. With a job
+	/// sending every five minutes that reading re-mails an employer who has just
+	/// declined, which is the one outcome a verification flow must never produce.
+	/// </para>
+	/// <para>
+	/// The cost is that a send failure - which also lands on <c>Rejected</c>, to release
+	/// the committed row - is no longer retried automatically. That is the safer side of
+	/// the trade: a missed send is visible in the queue and can be resent by hand, while
+	/// a duplicate request to someone who said no cannot be taken back.
+	/// </para>
+	/// </remarks>
+	public async Task<IReadOnlyList<BlockedEmploymentSegment>> ListBlockedSegmentsAsync(
 		DateTime asOfUtc,
 		CancellationToken cancellationToken) =>
 		await db.Requests.AsNoTracking()
 			.Where(request => request.AtsSubjectId != null)
+			.Where(request => request.EmploymentSegment != null)
 			.Where(request =>
 				request.Status == VerificationRequestStatus.Pending ||
 				request.Status == VerificationRequestStatus.Verified ||
+				request.Status == VerificationRequestStatus.Rejected ||
 				(request.Status == VerificationRequestStatus.Sent &&
 					request.TokenExpiresAt >= asOfUtc))
+			.Select(request => new BlockedEmploymentSegment(
+				request.AtsSubjectId!.Value,
+				request.EmploymentSegment!.Value))
+			.Distinct()
+			.ToListAsync(cancellationToken);
+
+	// The mirror of the Sent clause in the availability rule above: a request whose
+	// link has passed its expiry without an answer releases its segment, which means
+	// the order has work to do again and must be offered by ATS once more.
+	public async Task<IReadOnlyList<Guid>> ListSubjectsWithLapsedRequestsAsync(
+		DateTime asOfUtc,
+		CancellationToken cancellationToken) =>
+		await db.Requests.AsNoTracking()
+			.Where(request => request.AtsSubjectId != null)
+			.Where(request => request.Status == VerificationRequestStatus.Sent)
+			.Where(request => request.TokenExpiresAt < asOfUtc)
 			.Select(request => request.AtsSubjectId!.Value)
 			.Distinct()
 			.ToListAsync(cancellationToken);

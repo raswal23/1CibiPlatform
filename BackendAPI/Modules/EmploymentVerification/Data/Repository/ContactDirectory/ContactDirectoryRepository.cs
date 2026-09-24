@@ -47,6 +47,34 @@ public sealed class ContactDirectoryRepository(EmploymentVerificationDbContext d
 		CancellationToken cancellationToken) =>
 		BuildContactsQuery(searchTerm).LongCountAsync(cancellationToken);
 
+	public async Task<IReadOnlySet<string>> GetKnownActiveMailboxesAsync(
+		IReadOnlyCollection<string> emailAddresses,
+		CancellationToken cancellationToken)
+	{
+		// Contacts are stored lower-cased by ContactDirectoryService, so the candidate's
+		// address is folded the same way before comparing - otherwise a form entry of
+		// "HR@Acme.com" would miss a directory row of "hr@acme.com".
+		var addresses = emailAddresses
+			.Where(address => !string.IsNullOrWhiteSpace(address))
+			.Select(address => address.Trim().ToLowerInvariant())
+			.Distinct()
+			.ToList();
+
+		if (addresses.Count == 0)
+		{
+			return new HashSet<string>();
+		}
+
+		var known = await db.Contacts
+			.AsNoTracking()
+			.Where(contact => contact.IsActive)
+			.Where(contact => addresses.Contains(contact.EmailAddress))
+			.Select(contact => contact.EmailAddress)
+			.ToListAsync(cancellationToken);
+
+		return known.ToHashSet();
+	}
+
 	public Task<bool> ContactExistsAsync(
 		string companyName,
 		string emailAddress,

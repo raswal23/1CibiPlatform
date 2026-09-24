@@ -59,7 +59,7 @@
         <HeaderTemplate>
             <MudTh>Candidate</MudTh>
             <MudTh>Previous employer</MudTh>
-            <MudTh>HR email</MudTh>
+            <MudTh>Sent to</MudTh>
             <MudTh>Requested</MudTh>
             <MudTh>Responded</MudTh>
             <MudTh Class="ats-table-cell-center">Status</MudTh>
@@ -75,7 +75,18 @@
 
             <MudTd DataLabel="Previous employer">@request.PreviousEmployer</MudTd>
 
-            <MudTd Class="ev-email-cell" DataLabel="HR email">@request.HrEmail</MudTd>
+            @* The address AND where it came from. A confirmation from a vetted company
+               mailbox is stronger evidence than one from an address the candidate
+               supplied, and after the fact that distinction is only visible here. *@
+            <MudTd Class="ev-email-cell" DataLabel="Sent to">
+                <span class="ev-stacked-cell">
+                    <strong>@request.HrEmail</strong>
+                    @if (!string.IsNullOrWhiteSpace(request.RecipientSource))
+                    {
+                        <small>@GetRecipientSourceLabel(request.RecipientSource)</small>
+                    }
+                </span>
+            </MudTd>
 
             <MudTd Class="ats-management-date" DataLabel="Requested">
                 @request.RequestedAt.ToLocalTime().ToString("MMM dd, yyyy")

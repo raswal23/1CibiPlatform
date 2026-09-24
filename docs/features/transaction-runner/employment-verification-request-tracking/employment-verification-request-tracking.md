@@ -54,20 +54,37 @@ The typed `EmploymentVerificationPaths` module is the only wiring, and that is c
 
 ## UI
 
-> **Restructured.** The single `EmploymentVerification.razor` page described here was split
-> into separate routes under a top-navbar shell, and the module was rethemed from magenta
-> to teal. See
-> [employment-verification-contact-directory.md](../../employment-verification-contact-directory/employment-verification-contact-directory.md)
-> for what changed and why. The two views below still exist and behave the same; they are
-> now two pages rather than two states of one.
+> **Restructured twice.** The single `EmploymentVerification.razor` page described here was
+> split into separate routes under a top-navbar shell and rethemed from magenta to teal
+> (see
+> [employment-verification-contact-directory.md](../../employment-verification-contact-directory/employment-verification-contact-directory.md)),
+> and **sending is now automatic** (see
+> [employment-verification-auto-send.md](../../employment-verification-auto-send/employment-verification-auto-send.md)).
+>
+> Three consequences for what follows. The Needs-request view is **read-only** — a scheduled
+> job sends, so there is no Send button and no review drawer. A request now covers one
+> **employment segment** rather than a whole order: a candidate with three former employers
+> produces three independent requests, each with its own token and outcome. And ATS carries
+> a hand-off marker (`NeedsEmploymentVerification`) so the provider query returns only
+> orders this module has not yet taken, rather than every in-progress order on every pass.
+>
+> Also note `Rejected` now **blocks its segment permanently**. It used to release it, which
+> was safe while a human chose whether to retry; under a job that runs every five minutes it
+> re-mailed an employer who had just declined.
 
 The two views are separate routes under `Layout/EVLayout.razor`, each a
 `.razor` / `.razor.cs` trio inheriting `CrudPageBase`:
 
 | Route | Page | Columns |
 |---|---|---|
-| `/employmentverification/requests` | `NeedsRequest.razor` | candidate, previous employer, employment period, HR email |
-| `/employmentverification/tracking` | `Tracking.razor` | candidate, previous employer, HR email, requested, responded, status |
+| `/employmentverification/requests` | `NeedsRequest.razor` | candidate, employer no., previous employer, employment period, supervisor email, status |
+| `/employmentverification/tracking` | `Tracking.razor` | candidate, previous employer, sent to (+ source), requested, responded, status |
+
+Needs request is a **queue**, one row per employment segment, answering "why has this
+employer not been contacted yet?" Its status chips — Queued, No consent, Needs recipient —
+are **derived**, not stored: they describe a segment ATS offers that has no request row.
+Tracking's "Sent to" column shows both the address and whether it came from the vetted
+directory or from the candidate, which is what makes a returned confirmation auditable.
 
 `/employmentverification/verification` — the path registered as submenu 9, and therefore
 the one the home application card links to — remains as a redirect to the Needs request

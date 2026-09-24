@@ -2,25 +2,21 @@ namespace FrontendWebassembly.Pages.EmploymentVerification;
 
 public partial class NeedsRequest
 {
-	/// <summary>Candidates from ATS that still need a verification email.</summary>
+	/// <summary>
+	/// Employment slots from ATS with no live verification request. One entry per
+	/// employer slot, so a candidate with three former employers appears three times.
+	/// </summary>
 	private readonly List<ATSInProgressEmploymentRecordDTO> _candidates = [];
 
 	private TableComponent<ATSInProgressEmploymentRecordDTO>? _candidatesTable;
-	private ElementReference _drawerElement;
 
 	private string _searchString = string.Empty;
-	private bool _isSubmitting;
-	private bool _shouldFocusDrawer;
-
-	private ATSInProgressEmploymentRecordDTO? SelectedCandidate { get; set; }
 
 	private bool HasSearch => !string.IsNullOrWhiteSpace(_searchString);
 
 	/// <summary>
-	/// Candidates matching the current term. The endpoint returns the whole list in
-	/// one call, so filtering stays client side and needs no server round trip. If
-	/// that endpoint ever becomes keyset-paginated, this moves to
-	/// <c>CrudPageBase.LoadCursorPagedDataAsync</c> the way Contacts does.
+	/// Records matching the current term. The endpoint returns the whole list in one
+	/// call, so filtering stays client side and needs no server round trip.
 	/// </summary>
 	private List<ATSInProgressEmploymentRecordDTO> FilteredCandidates =>
 		!HasSearch
@@ -30,7 +26,7 @@ public partial class NeedsRequest
 					EmploymentVerificationDisplay.Matches(candidate.CandidateName, _searchString) ||
 					EmploymentVerificationDisplay.Matches(candidate.Employer, _searchString) ||
 					EmploymentVerificationDisplay.Matches(candidate.Position, _searchString) ||
-					EmploymentVerificationDisplay.Matches(candidate.HrEmail, _searchString))
+					EmploymentVerificationDisplay.Matches(candidate.SupervisorEmail, _searchString))
 				.ToList();
 
 	protected override async Task OnInitializedAsync()
@@ -60,91 +56,46 @@ public partial class NeedsRequest
 		_candidates.AddRange(result.Data ?? []);
 	}
 
-	/// <summary>
-	/// Refetches the list. TableComponent already guards against a second click while
-	/// this is in flight, so no re-entrancy flag is needed here.
-	/// </summary>
 	private Task ReloadAsync() => LoadAsync();
 
-	private void ViewCandidate(ATSInProgressEmploymentRecordDTO candidate)
+	/// <summary>
+	/// Why a record is still here. Everything on this screen is by definition not yet
+	/// sent - the server already filtered out slots with a live request - so the only
+	/// question is whether the next pass will pick it up, and if not, what is missing.
+	/// </summary>
+	/// <remarks>
+	/// These states are derived, not stored. A sent request becomes a row in the
+	/// verification table and leaves this list entirely; there is no "queued" record
+	/// anywhere, only the absence of a sent one.
+	/// </remarks>
+	private static string GetQueueStatus(ATSInProgressEmploymentRecordDTO candidate)
 	{
-		SelectedCandidate = candidate;
+		if (!candidate.PermissionToContact)
+		{
+			return "No consent";
+		}
 
-		// Focus moves to the drawer on the next render so Escape reaches it and
-		// keyboard users are not left behind on the table row.
-		_shouldFocusDrawer = true;
+		if (string.IsNullOrWhiteSpace(candidate.SupervisorEmail))
+		{
+			return "No email";
+		}
+
+		// Deliberately does not claim "Queued". The job will only write to an address
+		// the contact directory lists, and this screen does not know whether it does -
+		// checking per row would mean a lookup per row. "Pending check" is honest about
+		// that; the Tracking tab shows what actually went out.
+		return "Pending check";
 	}
-
-	private void CloseCandidate() => SelectedCandidate = null;
 
 	/// <summary>
-	/// Escape closes the drawer. Backdrop clicks deliberately do not, so an
-	/// accidental click outside cannot discard the request being reviewed.
+	/// Maps the queue state onto the shared .ats-status-pill vocabulary so a chip looks
+	/// the same here as on the ATS boards.
 	/// </summary>
-	private void HandleDrawerKeyDown(KeyboardEventArgs args)
-	{
-		if (args.Key == "Escape")
+	private static string GetQueueStatusCssClass(ATSInProgressEmploymentRecordDTO candidate) =>
+		GetQueueStatus(candidate) switch
 		{
-			CloseCandidate();
-		}
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (!_shouldFocusDrawer)
-		{
-			return;
-		}
-
-		_shouldFocusDrawer = false;
-		await _drawerElement.FocusAsync();
-	}
-
-	private async Task SendSelectedRequestAsync()
-	{
-		if (SelectedCandidate is null || string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail))
-		{
-			Snackbar.Add("The selected record does not have an HR email.", Severity.Warning);
-			return;
-		}
-
-		_isSubmitting = true;
-
-		try
-		{
-			var request = new CreateEmploymentVerificationRequestDTO
-			{
-				AtsSubjectId = SelectedCandidate.SubjectId,
-				CandidateName = SelectedCandidate.CandidateName,
-				PreviousEmployer = SelectedCandidate.Employer,
-				Position = string.IsNullOrWhiteSpace(SelectedCandidate.Position)
-					? "Not provided"
-					: SelectedCandidate.Position,
-				HrEmail = SelectedCandidate.HrEmail,
-				EmploymentStartDate = EmploymentVerificationDisplay.ToDateTime(SelectedCandidate.StartDate)
-					?? DateTime.UtcNow.AddYears(-2),
-				EmploymentEndDate = EmploymentVerificationDisplay.ToDateTime(SelectedCandidate.EndDate)
-					?? DateTime.UtcNow.AddMonths(-6)
-			};
-
-			var result = await VerificationService.CreateAndSendAsync(request);
-
-			if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-			{
-				Snackbar.Add(result.ErrorMessage, Severity.Error);
-				return;
-			}
-
-			Snackbar.Add(result.Detail, Severity.Success);
-			CloseCandidate();
-
-			// The candidate now has an open request, so it leaves this list and
-			// appears under Tracking.
-			await LoadAsync();
-		}
-		finally
-		{
-			_isSubmitting = false;
-		}
-	}
+			"Pending check" => "ats-status-pill processing",
+			"No consent" => "ats-status-pill unknown",
+			_ => "ats-status-pill pending"
+		};
 }

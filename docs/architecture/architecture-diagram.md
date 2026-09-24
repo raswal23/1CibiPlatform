@@ -197,7 +197,7 @@ flowchart TB
         EVD[("<b>EV Data</b><br/>Verification Requests<br/>hashed tokens • expiry • outcome")]
     end
 
-    CONTRACT["<b>IATSVerificationDataProvider</b><br/><i>published contract</i><br/>ATS exposes in-progress employment records;<br/>EV consumes them. No direct database coupling."]
+    CONTRACT["<b>IATSVerificationDataProvider</b><br/><i>published contract</i><br/>ATS exposes in-progress employment records, one per employer slot;<br/>EV consumes them and hands each order back when taken.<br/>No direct database coupling."]
 
     ATSF --> ATSD
     ATSJ --> ATSD

@@ -36,6 +36,9 @@ public sealed class EmploymentVerificationRequestConfiguration
 			.HasConversion<string>()
 			.HasMaxLength(20);
 
+		builder.Property(request => request.RecipientSource)
+			.HasMaxLength(30);
+
 		builder.HasIndex(request => request.VerificationTokenHash)
 			.IsUnique();
 
@@ -43,6 +46,25 @@ public sealed class EmploymentVerificationRequestConfiguration
 		{
 			request.Status,
 			request.RequestedAt
+		});
+
+		// Drives the availability check, which asks "which (order, employer slot)
+		// pairs already have a live request". AtsSubjectId alone was never indexed
+		// even though that query has always projected and de-duplicated it.
+		// Deliberately NOT unique: a lapsed or failed request releases its segment, and
+		// the retry is a new row with its own token and expiry rather than an edit of
+		// the old one, so a segment legitimately accumulates several rows over time.
+		//
+		// Duplicate prevention is therefore the availability check in
+		// ListBlockedSegmentsAsync, not a constraint. That read-then-insert has no lock
+		// across it, so a Quartz misfire or a second writer could in principle slip a
+		// duplicate through; a PARTIAL unique index over the blocking statuses only
+		// would close it without forbidding legitimate retries, if that ever proves
+		// necessary.
+		builder.HasIndex(request => new
+		{
+			request.AtsSubjectId,
+			request.EmploymentSegment
 		});
 	}
 }

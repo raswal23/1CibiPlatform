@@ -106,7 +106,12 @@ public partial class ATSRepository
 				x => x.OrderStatus == OrderStatus.Completed
 					? x.OrderStatus
 					: OrderStatus.InProgress)
-			.SetProperty(x => x.NeedsProjection, x => true));
+			.SetProperty(x => x.NeedsProjection, x => true)
+			// Queued for employment verification here rather than at enrolment: the
+			// supervisor addresses it needs only exist once the candidate has filled
+			// the form in. Set on every submission, so a re-submitted form offers its
+			// employers again.
+			.SetProperty(x => x.NeedsEmploymentVerification, x => true));
 
 		return true;
 	}

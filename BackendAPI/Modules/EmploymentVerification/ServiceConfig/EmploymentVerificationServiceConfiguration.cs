@@ -67,6 +67,11 @@ public static class EmploymentVerificationServiceConfiguration
 			IContactDirectoryRepository,
 			ContactDirectoryCacheRepository>();
 		services.AddScoped<IContactDirectoryService, ContactDirectoryService>();
+		services.AddScoped<IAutoVerificationRequestService, AutoVerificationRequestService>();
+
+		// Rides the scheduler ATS owns - there is one in the process, backed by the
+		// ats.qrtz_* tables - the same way PhilSys registers its cleanup job.
+		services.ConfigureOptions<AutoVerificationRequestJobSetup>();
 
 		return services;
 	}

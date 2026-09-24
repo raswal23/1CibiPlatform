@@ -61,6 +61,14 @@ public sealed class ContactDirectoryCacheRepository(
 			tags: [ContactsTag],
 			cancellationToken: cancellationToken).AsTask();
 
+	// Deliberately uncached: this decides whether an address may be written to at all,
+	// so a cached answer could keep sending to a contact an operator had just
+	// deactivated, or keep refusing one they had just added.
+	public Task<IReadOnlySet<string>> GetKnownActiveMailboxesAsync(
+		IReadOnlyCollection<string> emailAddresses,
+		CancellationToken cancellationToken) =>
+		repository.GetKnownActiveMailboxesAsync(emailAddresses, cancellationToken);
+
 	// Deliberately uncached: this is the duplicate guard behind the 409, and a cached
 	// answer would let a second row through the window before the tag was evicted.
 	public Task<bool> ContactExistsAsync(

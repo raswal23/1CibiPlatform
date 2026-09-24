@@ -43,6 +43,7 @@ Documented features:
 | OMS auto-ticketing | [oms-auto-ticketing.md](docs/features/oms-auto-ticketing/oms-auto-ticketing.md) | — |
 | Employment verification tracking | [employment-verification-request-tracking.md](docs/features/transaction-runner/employment-verification-request-tracking/employment-verification-request-tracking.md) | [code explanation](docs/features/transaction-runner/employment-verification-request-tracking/employment-verification-request-tracking_code_explanation.md) |
 | Employment verification contact directory | [employment-verification-contact-directory.md](docs/features/employment-verification-contact-directory/employment-verification-contact-directory.md) | [code explanation](docs/features/employment-verification-contact-directory/employment-verification-contact-directory_code_explanation.md) |
+| Employment verification auto-send | [employment-verification-auto-send.md](docs/features/employment-verification-auto-send/employment-verification-auto-send.md) | [code explanation](docs/features/employment-verification-auto-send/employment-verification-auto-send_code_explanation.md) |
 | Authentication session security | [authentication-session-security.md](docs/features/authentication-session-security/authentication-session-security.md) | — |
 | Transaction runner | [transaction-runner.md](docs/features/transaction-runner/transaction-runner.md) | — |
 
@@ -164,7 +165,7 @@ Per-route rate limits come from each route's `RateLimitPolicy` metadata: `LoginP
 | **Auth** | Platform identity: login (web + API), registration, OTP, refresh tokens, password recovery, session liveness, locked-user management, and platform admin (applications, roles, submenus, app-sub-roles) | ~25 slices; own DbContext, 9 entities |
 | **PhilSys** | Philippine national ID verification via government eVerify — PCN, face liveness, partner/internal system queries | 8 slices; named `HttpClient("PhilSys")`; Quartz cleanup job |
 | **AIAgent** | Policy RAG assistant: ingest HR/company policy documents and answer questions over them. Semantic Kernel chat + embeddings stored in **pgvector**, YAML-declared skill registry, SignalR hub | 2 slices; plugin/skill architecture |
-| **EmploymentVerification** | Employer-to-employer employment verification: create a request from an ATS record, then the contacted party verifies or rejects through an emailed token link. Plus a directory of known HR mailboxes per company | 10 slices; 2 entities; reuses ATS email service |
+| **EmploymentVerification** | Employer-to-employer employment verification. A Quartz job picks up each employer slot of a submitted application form and emails a token link, which the contacted party verifies or rejects. Sends only to mailboxes listed in its own vetted contact directory | 10 slices; 2 entities; Quartz job; reuses ATS email service |
 | **PlatformLogging** | Centralized log persistence and query API. Custom Serilog `PostgreSqlBatchingSink` batch-writes Warning+ events; hosted retention service prunes them | 2 slices |
 | **OMS** | Bridge to the legacy Order Management System — raises tickets for failed ATS email invitations | 1 slice; **no EF Core**, SQL Server stored procedures by design |
 | **SSO** | SAML2 single sign-on (Sustainsys) with callback at `/sso/login/callback` | 3 slices; no database |
