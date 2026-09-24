@@ -1,0 +1,107 @@
+@page "/employmentverification/tracking"
+@layout EVLayout
+@inherits CrudPageBase
+@attribute [RequirePermission(8, 9)]
+@inject IEmploymentVerificationService VerificationService
+
+<PageTitle>Employment Verification - Tracking</PageTitle>
+
+<div class="ev-management-page">
+    <div class="ev-page-head">
+        <div>
+            <span class="ev-eyebrow">Outcomes</span>
+            <h1>Verification requests</h1>
+            <p>Requests raised from this module and their responses.</p>
+        </div>
+    </div>
+
+    @* The stat strip lives here rather than on Needs request: every number it shows
+       is derived from the sent requests this page already holds. *@
+    <div class="ev-stats">
+        <div class="ev-stat">
+            <span>Awaiting response</span>
+            <strong>@CountByStatus("Sent")</strong>
+        </div>
+        <div class="ev-stat">
+            <span>Verified</span>
+            <strong>@CountByStatus("Verified")</strong>
+        </div>
+        <div class="ev-stat">
+            <span>Rejected</span>
+            <strong>@CountByStatus("Rejected")</strong>
+        </div>
+        <div class="ev-stat">
+            <span>Response rate</span>
+            <strong>@EmploymentVerificationDisplay.GetResponseRate(_sentRequests)</strong>
+        </div>
+    </div>
+
+    @* SearchImmediate because this list is already in memory - there is no server
+       round trip to debounce, unlike the Contacts table. Razor comments cannot sit
+       inside an attribute list: the parser reads them as an attribute name. *@
+    <TableComponent TItem="SentVerificationRequestDTO"
+                    @ref="_requestsTable"
+                    Title="Requests"
+                    CountLabel="requests"
+                    Items="FilteredRequests"
+                    EnableReload="true"
+                    OnReloadClicked="ReloadAsync"
+                    ContainerClass="ats-management-card"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search candidate, employer, HR email or status"
+                    SearchImmediate="true"
+                    ColumnCount="6"
+                    RowsPerPage="10"
+                    SearchString="@_searchString"
+                    SearchStringChanged="@((string value) => _searchString = value)">
+
+        <HeaderTemplate>
+            <MudTh>Candidate</MudTh>
+            <MudTh>Previous employer</MudTh>
+            <MudTh>HR email</MudTh>
+            <MudTh>Requested</MudTh>
+            <MudTh>Responded</MudTh>
+            <MudTh Class="ats-table-cell-center">Status</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="request">
+            <MudTd Class="ats-management-primary" DataLabel="Candidate">
+                <span class="ev-stacked-cell">
+                    <strong>@request.CandidateName</strong>
+                    <small>@request.Position</small>
+                </span>
+            </MudTd>
+
+            <MudTd DataLabel="Previous employer">@request.PreviousEmployer</MudTd>
+
+            <MudTd Class="ev-email-cell" DataLabel="HR email">@request.HrEmail</MudTd>
+
+            <MudTd Class="ats-management-date" DataLabel="Requested">
+                @request.RequestedAt.ToLocalTime().ToString("MMM dd, yyyy")
+            </MudTd>
+
+            <MudTd Class="ats-management-date" DataLabel="Responded">
+                @EmploymentVerificationDisplay.GetRespondedOn(request)
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Status">
+                <span class="@GetStatusCssClass(request)">
+                    @EmploymentVerificationDisplay.GetDisplayStatus(request)
+                </span>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-management-empty">
+                <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" />
+                <strong>@(HasSearch ? "No matching requests" : "No requests yet")</strong>
+                <span>
+                    @(HasSearch
+                        ? "Try a different name, email or status."
+                        : "Send a verification email from the Needs request tab and it will appear here.")
+                </span>
+            </div>
+        </NoRecordsTemplate>
+    </TableComponent>
+</div>

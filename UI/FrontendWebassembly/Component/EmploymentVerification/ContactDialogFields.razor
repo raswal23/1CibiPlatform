@@ -1,0 +1,152 @@
+@namespace FrontendWebassembly.Component.EmploymentVerification
+
+@* The form body shared by the add and edit contact dialogs. The two differ only in
+   their header copy and what they return, so the fields live here rather than in two
+   copies that would drift the moment a validation rule changes. *@
+
+<section class="evc-section" aria-labelledby="@($"{IdPrefix}-details-heading")">
+    <div class="evc-section-head">
+        <span class="evc-section-number">1</span>
+        <h2 id="@($"{IdPrefix}-details-heading")">Contact details</h2>
+        <span class="evc-section-helper">Company and HR mailbox</span>
+    </div>
+
+    <div class="evc-section-body">
+        <div class="evc-field">
+            <label for="@($"{IdPrefix}-company")">
+                Company name <span class="evc-required">*</span>
+            </label>
+            <div class="evc-input-wrap">
+                <MudTextField Value="@CompanyName"
+                              ValueChanged="@OnCompanyNameChanged"
+                              T="string"
+                              InputId="@($"{IdPrefix}-company")"
+                              Placeholder="e.g. CONCENTRIX"
+                              Required="true"
+                              RequiredError="Company name is required"
+                              Validation="@ValidateCompanyName"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              MaxLength="150"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.Apartment"
+                              Class="evc-control" />
+            </div>
+        </div>
+
+        <div class="evc-field">
+            <label for="@($"{IdPrefix}-email")">
+                Email address <span class="evc-required">*</span>
+            </label>
+            <div class="evc-input-wrap">
+                <MudTextField Value="@EmailAddress"
+                              ValueChanged="@OnEmailAddressChanged"
+                              T="string"
+                              InputId="@($"{IdPrefix}-email")"
+                              Placeholder="e.g. hr@company.com"
+                              Required="true"
+                              RequiredError="Email address is required"
+                              Validation="@ValidateEmailAddress"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="true"
+                              MaxLength="320"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.AlternateEmail"
+                              Class="evc-control" />
+            </div>
+            <span class="evc-hint">
+                The same mailbox may be listed under more than one company, but not twice
+                for the same one.
+            </span>
+        </div>
+
+        <div class="evc-field">
+            <label>Status</label>
+            <div class="evc-status-row">
+                <div class="evc-status-copy">
+                    <p>Contact @(IsActive ? "active" : "inactive")</p>
+                    <span>Inactive contacts stay listed but are marked disabled</span>
+                </div>
+                <div class="evc-status-control">
+                    <span class="evc-status-badge @(IsActive ? string.Empty : "is-off")">
+                        @(IsActive ? "Active" : "Inactive")
+                    </span>
+                    <button type="button"
+                            class="evc-toggle @(IsActive ? string.Empty : "is-off")"
+                            role="switch"
+                            aria-checked="@IsActive.ToString().ToLowerInvariant()"
+                            aria-label="Toggle contact status"
+                            @onclick="ToggleStatus">
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string IdPrefix { get; set; } = "evc";
+
+    [Parameter] public string CompanyName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> CompanyNameChanged { get; set; }
+
+    [Parameter] public string EmailAddress { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> EmailAddressChanged { get; set; }
+
+    [Parameter] public bool IsActive { get; set; } = true;
+    [Parameter] public EventCallback<bool> IsActiveChanged { get; set; }
+
+    private Task OnCompanyNameChanged(string value) => CompanyNameChanged.InvokeAsync(value);
+
+    private Task OnEmailAddressChanged(string value) => EmailAddressChanged.InvokeAsync(value);
+
+    private Task ToggleStatus() => IsActiveChanged.InvokeAsync(!IsActive);
+
+    // Mirrors AddContactCommandValidator / EditContactCommandValidator so the user is
+    // told here rather than by a 400 from the server. The '|' rule is not cosmetic:
+    // the keyset cursor is base64("company|id") and CursorCodec splits on '|', so a
+    // name carrying one makes every cursor minted from that row decode as null.
+    private static string? ValidateCompanyName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "Company name is required";
+        }
+
+        if (value.Trim().Length > 150)
+        {
+            return "Company name must be 150 characters or fewer";
+        }
+
+        return value.Contains('|')
+            ? "Company name cannot contain the '|' character"
+            : null;
+    }
+
+    private static string? ValidateEmailAddress(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "Email address is required";
+        }
+
+        var trimmed = value.Trim();
+
+        if (trimmed.Length > 320)
+        {
+            return "Email address must be 320 characters or fewer";
+        }
+
+        // Matches FluentValidation's EmailAddress() rule on the server: a single '@'
+        // with non-whitespace either side. Deliberately NOT stricter - requiring a dot
+        // in the domain would reject addresses the server accepts, and a client that
+        // blocks what the API would have taken is worse than one that lets the 400
+        // through.
+        return System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^[^@\s]+@[^@\s]+$")
+            ? null
+            : "Enter a valid email address";
+    }
+}

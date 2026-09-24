@@ -1,0 +1,64 @@
+@namespace FrontendWebassembly.Component.EmploymentVerification
+
+@* um-dialog is not decorative: it zeroes MudBlazor's default .mud-dialog-content
+   padding. Without it that wrapper keeps its own overflow and you get a second
+   scrollbar outside the one on .ats-dialog-body. Every ATS dialog carries the same
+   three classes - um-dialog, its own prefix, ats-scroll-dialog. *@
+<MudDialog Class="um-dialog evc-dialog ats-scroll-dialog"
+           Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        <div class="evc-shell ats-dialog-shell">
+            <header class="ats-dialog-headline ats-dialog-header">
+                <div class="ats-dialog-headline-content">
+                    <div class="ats-dialog-headline-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.EditNote" />
+                    </div>
+                    <div class="ats-dialog-headline-text">
+                        <h2>Edit contact</h2>
+                        <p>@Contact.CompanyName</p>
+                    </div>
+                </div>
+
+                @* MudIcon, not a bare <svg>: .ats-dialog-headline-close in ats.css sizes
+                   .mud-icon-root and nothing else, so an inline svg carrying only a
+                   viewBox collapses to zero and the button renders empty. *@
+                <button type="button"
+                        class="ats-dialog-headline-close"
+                        aria-label="Close edit contact dialog"
+                        @onclick="Cancel">
+                    <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+                </button>
+            </header>
+
+            <main class="evc-body ats-dialog-body">
+                <MudForm @ref="_form">
+                    <ContactDialogFields IdPrefix="edit-contact"
+                                         @bind-CompanyName="_companyName"
+                                         @bind-EmailAddress="_emailAddress"
+                                         @bind-IsActive="_isActive" />
+
+                    @* Deactivating is the only form of removal - there is no delete
+                       endpoint, matching ATS module and client management. Saying so
+                       here stops a user hunting for a delete button that is absent by
+                       design. *@
+                    <p class="evc-note">
+                        Contacts are deactivated rather than deleted, so a row switched
+                        off by mistake can still be found and switched back on.
+                    </p>
+                </MudForm>
+            </main>
+
+            <footer class="evc-footer ats-dialog-footer">
+                <button type="button" class="evc-button evc-button-cancel" @onclick="Cancel">
+                    Cancel
+                </button>
+                <button type="button" class="evc-button evc-button-save" @onclick="SubmitAsync">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

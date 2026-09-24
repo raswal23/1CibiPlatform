@@ -71,6 +71,37 @@ public sealed class EmploymentVerificationPaths : IReverseProxyModule
 			Transforms: new Dictionary<string, string>
 			{
 				["PathPattern"] = "/api/employment-verification/reject/{token}"
+			}),
+
+		// Contact directory. The three share one backend path and are distinguished by
+		// method, so they stay separate route entries - a single entry listing all
+		// three methods would forward a PATCH to the GET handler.
+		new RouteDefinitionDTO(
+			RouteId: "GetEmploymentVerificationContacts",
+			MatchPath: "/employmentverification/getcontacts",
+			ClusterId: GatewayConstants.OnePlatformApi,
+			Methods: [GatewayConstants.HttpMethod.Get],
+			Transforms: new Dictionary<string, string>
+			{
+				["PathSet"] = "/api/employment-verification/contacts"
+			}),
+		new RouteDefinitionDTO(
+			RouteId: "AddEmploymentVerificationContact",
+			MatchPath: "/employmentverification/addcontact",
+			ClusterId: GatewayConstants.OnePlatformApi,
+			Methods: [GatewayConstants.HttpMethod.Post],
+			Transforms: new Dictionary<string, string>
+			{
+				["PathSet"] = "/api/employment-verification/contacts"
+			}),
+		new RouteDefinitionDTO(
+			RouteId: "EditEmploymentVerificationContact",
+			MatchPath: "/employmentverification/editcontact",
+			ClusterId: GatewayConstants.OnePlatformApi,
+			Methods: [GatewayConstants.HttpMethod.Patch],
+			Transforms: new Dictionary<string, string>
+			{
+				["PathSet"] = "/api/employment-verification/contacts"
 			})
 	];
 

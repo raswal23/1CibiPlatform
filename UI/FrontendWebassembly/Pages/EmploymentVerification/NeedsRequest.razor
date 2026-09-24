@@ -1,0 +1,188 @@
+@page "/employmentverification/requests"
+@layout EVLayout
+@inherits CrudPageBase
+@attribute [RequirePermission(8, 9)]
+@inject IEmploymentVerificationService VerificationService
+
+<PageTitle>Employment Verification - Needs Request</PageTitle>
+
+<div class="ev-management-page">
+    <div class="ev-page-head">
+        <div>
+            <span class="ev-eyebrow">ATS connected</span>
+            <h1>Candidates needing verification</h1>
+            <p>In-progress ATS records without an open verification request.</p>
+        </div>
+    </div>
+
+    @* SearchImmediate because this list is already in memory - there is no server
+       round trip to debounce, unlike the Contacts table. Razor comments cannot sit
+       inside an attribute list: the parser reads them as an attribute name. *@
+    <TableComponent TItem="ATSInProgressEmploymentRecordDTO"
+                    @ref="_candidatesTable"
+                    Title="Candidates"
+                    CountLabel="candidates"
+                    Items="FilteredCandidates"
+                    EnableReload="true"
+                    OnReloadClicked="ReloadAsync"
+                    ContainerClass="ats-management-card"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search candidate, employer or HR email"
+                    SearchImmediate="true"
+                    ColumnCount="5"
+                    RowsPerPage="10"
+                    SearchString="@_searchString"
+                    SearchStringChanged="@((string value) => _searchString = value)">
+
+        <HeaderTemplate>
+            <MudTh>Candidate</MudTh>
+            <MudTh>Previous employer</MudTh>
+            <MudTh>Employment period</MudTh>
+            <MudTh>HR email</MudTh>
+            <MudTh Class="ats-table-cell-center">Actions</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="candidate">
+            <MudTd Class="ats-management-primary" DataLabel="Candidate">
+                <div class="ats-management-client-cell">
+                    <span class="ats-management-client-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="3.5" />
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+                        </svg>
+                    </span>
+                    <span class="ev-stacked-cell">
+                        <strong>@candidate.CandidateName</strong>
+                        <small>
+                            @(string.IsNullOrWhiteSpace(candidate.Position)
+                                ? "Not provided"
+                                : candidate.Position)
+                        </small>
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Previous employer">@candidate.Employer</MudTd>
+
+            <MudTd Class="ats-management-date" DataLabel="Employment period">
+                @EmploymentVerificationDisplay.GetEmploymentPeriod(candidate.StartDate, candidate.EndDate)
+            </MudTd>
+
+            <MudTd Class="ev-email-cell" DataLabel="HR email">
+                @(string.IsNullOrWhiteSpace(candidate.HrEmail)
+                    ? "Not provided"
+                    : candidate.HrEmail)
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+                <button type="button"
+                        class="ev-review-button"
+                        aria-label="@($"Review {candidate.CandidateName}")"
+                        @onclick="@(() => ViewCandidate(candidate))">
+                    Review
+                </button>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-management-empty">
+                <MudIcon Icon="@Icons.Material.Filled.TaskAlt" />
+                <strong>@(HasSearch ? "No matching candidates" : "Nothing to request")</strong>
+                <span>
+                    @(HasSearch
+                        ? "Try a different name, employer or email."
+                        : "Every in-progress ATS candidate already has a verification request awaiting a response or confirmed.")
+                </span>
+            </div>
+        </NoRecordsTemplate>
+    </TableComponent>
+</div>
+
+@if (SelectedCandidate is not null)
+{
+    @* Backdrop clicks deliberately do not close the drawer: an accidental click
+       outside should not discard a request the user is reviewing. Use the x button,
+       the Close button, or Escape.
+
+       This stays a drawer rather than becoming a MudDialog like the ATS CRUD screens:
+       it is a read-and-send review panel, not a form, and it is the one surface where
+       Employment Verification keeps its own character. *@
+    <div class="ev-drawer-backdrop">
+        <aside class="ev-drawer"
+               role="dialog"
+               aria-modal="true"
+               aria-label="Verification request details"
+               tabindex="-1"
+               @ref="_drawerElement"
+               @onkeydown="HandleDrawerKeyDown">
+            <header class="ev-drawer-head">
+                <div>
+                    <span class="ev-eyebrow">Request details</span>
+                    <h2>@SelectedCandidate.CandidateName</h2>
+                    <p>Employment verification request</p>
+                </div>
+                <button type="button"
+                        class="ev-drawer-close"
+                        @onclick="CloseCandidate"
+                        aria-label="Close details">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                </button>
+            </header>
+
+            <div class="ev-detail-grid">
+                <div>
+                    <span class="ev-detail-label">Employer</span>
+                    <strong>@SelectedCandidate.Employer</strong>
+                </div>
+                <div>
+                    <span class="ev-detail-label">Position</span>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(SelectedCandidate.Position)
+                            ? "Not provided"
+                            : SelectedCandidate.Position)
+                    </strong>
+                </div>
+                <div>
+                    <span class="ev-detail-label">Employment period</span>
+                    <strong>
+                        @EmploymentVerificationDisplay.GetEmploymentPeriod(
+                            SelectedCandidate.StartDate,
+                            SelectedCandidate.EndDate)
+                    </strong>
+                </div>
+                <div>
+                    <span class="ev-detail-label">HR recipient</span>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail)
+                            ? "Not provided"
+                            : SelectedCandidate.HrEmail)
+                    </strong>
+                </div>
+            </div>
+
+            <div class="ev-drawer-section">
+                <span class="ev-email-label">Email preview</span>
+                <h3>Employment verification request for @SelectedCandidate.CandidateName</h3>
+                <p>
+                    Good day, please confirm whether the employment details above are accurate
+                    by selecting a response below.
+                </p>
+            </div>
+
+            <footer class="ev-drawer-actions">
+                <button type="button" class="ev-button ev-button-cancel" @onclick="CloseCandidate">
+                    Close
+                </button>
+                <button type="button"
+                        class="ev-button ev-button-send"
+                        @onclick="SendSelectedRequestAsync"
+                        disabled="@(_isSubmitting || string.IsNullOrWhiteSpace(SelectedCandidate.HrEmail))">
+                    @(_isSubmitting ? "Sending…" : "Send verification email")
+                </button>
+            </footer>
+        </aside>
+    </div>
+}

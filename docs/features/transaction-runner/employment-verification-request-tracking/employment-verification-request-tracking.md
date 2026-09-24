@@ -54,12 +54,39 @@ The typed `EmploymentVerificationPaths` module is the only wiring, and that is c
 
 ## UI
 
-`Pages/EmploymentVerification/EmploymentVerification.razor` presents one table at a time behind a segmented switcher, following the `ats-segmented` pattern in `Component/ATS/Settings.razor`:
+> **Restructured.** The single `EmploymentVerification.razor` page described here was split
+> into separate routes under a top-navbar shell, and the module was rethemed from magenta
+> to teal. See
+> [employment-verification-contact-directory.md](../../employment-verification-contact-directory/employment-verification-contact-directory.md)
+> for what changed and why. The two views below still exist and behave the same; they are
+> now two pages rather than two states of one.
 
-- **Needs request** — candidate, previous employer, employment period, HR email. No `Requested` column: that value belongs to a verification request, not to an ATS record, so showing it here was misleading.
-- **Tracking** — candidate, previous employer, HR email, requested, responded, status.
+The two views are separate routes under `Layout/EVLayout.razor`, each a
+`.razor` / `.razor.cs` trio inheriting `CrudPageBase`:
 
-Both views render an empty state and replace the table while loading rather than showing an empty body. The response-rate tile is computed from answered requests and reports an em dash until something has been sent, instead of `0%`.
+| Route | Page | Columns |
+|---|---|---|
+| `/employmentverification/requests` | `NeedsRequest.razor` | candidate, previous employer, employment period, HR email |
+| `/employmentverification/tracking` | `Tracking.razor` | candidate, previous employer, HR email, requested, responded, status |
+
+`/employmentverification/verification` — the path registered as submenu 9, and therefore
+the one the home application card links to — remains as a redirect to the Needs request
+tab, so the card, existing bookmarks and the backend application/submenu seed data are all
+untouched.
+
+Needs request has no `Requested` column: that value belongs to a verification request, not
+to an ATS record, so showing it there was misleading.
+
+Both pages use the shared `TableComponent` (search, reload, skeleton loading rows, 960px
+card mode) instead of the hand-written `<table class="ev-table">` they used to, and the
+shared `.ats-status-pill` classes for status chips. They still filter client side, because
+both endpoints return the whole list in one call. The response-rate tile now lives on
+Tracking, where its numbers come from, and still reports an em dash until something has
+been sent rather than `0%`.
+
+The "send verification email" review panel is deliberately still a drawer rather than a
+MudDialog — it is a read-and-send panel, not a form — and backdrop clicks still do not
+close it.
 
 `SecurePageBase` supplies the `[RequirePermission(8, 9)]` check in `OnInitializedAsync`. A page overriding that method must call `base.OnInitializedAsync()` and return early when `IsPageAuthorized` is false, otherwise the permission attribute is silently inert.
 
@@ -67,4 +94,17 @@ Both views render an empty state and replace the table while loading rather than
 
 Keep Employment Verification code vertically structured: one property or statement per line, long parameter lists and object initializers split across lines. Do not compress Razor markup, DTO properties, or service logic into one-line blocks.
 
-Prefix module-owned CSS classes with `ev-` so styles stay module-specific. The module uses its own magenta palette (`--pink`, `--pink-dark`, `--ink`) rather than the ATS navy, and custom markup rather than `TableComponent`/`CrudPageBase`; keep new work consistent with whichever of those the surrounding file already uses.
+Prefix module-owned CSS classes with `ev-` so styles stay module-specific, and put them in
+`wwwroot/css/ev.css` rather than a scoped `.razor.css` when more than one page or component
+needs them.
+
+The module's accent is **teal** (`--c-ev-accent` and friends in `theme.css`), not the
+magenta it used to be, and not a second copy of the ATS blue. The always-dark surfaces —
+navbar, dialog headers, primary buttons — share the ATS navy tokens exactly; only the
+accent differs, which is what makes the two applications read as siblings. The private
+`--pink` / `--pink-dark` / `--ink` aliases are gone.
+
+New screens should use `TableComponent`, `CrudPageBase` and the shared `.ats-management-*`
+and `.ats-dialog-headline` families rather than bespoke markup. `ev.css` re-points the
+`--management-*` properties those shared rules read, so they render teal inside this module
+with no rule copied.

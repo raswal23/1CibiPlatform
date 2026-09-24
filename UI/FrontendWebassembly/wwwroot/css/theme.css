@@ -87,17 +87,26 @@
     --c-neutral-bg: #eef0f5;
     --c-neutral-fg: #6b7690;
 
-    /* Employment Verification keeps its own magenta identity; it is a separate
-       brand surface, not a variant of the ATS blue. */
-    --c-ev-accent: #d9468d;
-    --c-ev-accent-strong: #a52a70;
-    --c-ev-accent-soft: #e14f9b;
-    --c-ev-tint: #fff0f7;
-    --c-ev-tint-2: #fff8fc;
-    --c-ev-border: #f2d9e7;
-    --c-ev-fg: #7d245d;
-    --c-ev-fg-muted: #95667f;
-    --c-ev-page-gradient: linear-gradient(135deg, #fff2fa 0%, #f8e6f7 48%, #ffe2ed 100%);
+    /* Employment Verification is a sibling of the ATS console, not a separate brand.
+       It shares the navy base - sidebar, dialog headers and primary buttons all use
+       the same --c-sidebar-gradient / --c-dialog-header-gradient / --c-primary-gradient
+       as ATS - and differs only in accent. The teal is drawn from colours already in
+       the brand: the brand bar's #68c0d6 stop and the logo's #7fc4e8 facet, rather
+       than a new hue. It replaced a magenta identity that made a user clicking a blue
+       card on the home grid land on a pink page.
+       --c-ev-shadow and --c-ev-focus-ring exist because the accent-tinted shadows on
+       the EV hero, drawer and bookmark had no shared equivalent; everything else uses
+       the --c-shadow-* / --c-overlay tokens above. */
+    --c-ev-accent: #0e7490;
+    --c-ev-accent-strong: #0c5f78;
+    --c-ev-accent-soft: #0891b2;
+    --c-ev-tint: #ecfaff;
+    --c-ev-tint-2: #f6fdff;
+    --c-ev-border: #c9e6f0;
+    --c-ev-fg: #0b4a5e;
+    --c-ev-fg-muted: #5a7d8a;
+    --c-ev-shadow: rgba(11, 74, 94, 0.18);
+    --c-ev-focus-ring: rgba(8, 145, 178, 0.35);
 
     /* ---- Effects ---- */
     --c-shadow-card: 0 12px 32px -12px rgba(11, 27, 61, 0.12);
@@ -223,15 +232,18 @@ html.dark-startup {
     --c-neutral-bg: #222b3a;
     --c-neutral-fg: #a3b0c8;
 
-    --c-ev-accent: #f07ab5;
-    --c-ev-accent-strong: #f79ac9;
-    --c-ev-accent-soft: #e884ba;
-    --c-ev-tint: #2a1622;
-    --c-ev-tint-2: #1d1219;
-    --c-ev-border: #43263a;
-    --c-ev-fg: #f6d7e7;
-    --c-ev-fg-muted: #c9a3b8;
-    --c-ev-page-gradient: linear-gradient(135deg, #17101a 0%, #1d1219 48%, #201017 100%);
+    /* Employment Verification teal. Like the brand ramp above, the accent lightens on
+       dark so it stays legible on #161c28; the tints deepen instead of inverting. */
+    --c-ev-accent: #38bdd8;
+    --c-ev-accent-strong: #5fd0e6;
+    --c-ev-accent-soft: #22b0cc;
+    --c-ev-tint: #0e2731;
+    --c-ev-tint-2: #0a1d24;
+    --c-ev-border: #1e3f4b;
+    --c-ev-fg: #c9edf7;
+    --c-ev-fg-muted: #94b9c6;
+    --c-ev-shadow: rgba(0, 0, 0, 0.7);
+    --c-ev-focus-ring: rgba(56, 189, 216, 0.4);
 
     /* ---- Effects ----
        Shadows carry almost no weight on dark surfaces; depth comes from the

@@ -19,15 +19,15 @@ what carries the correctness. Read it once, then use the closing table as a map.
 
 | # | The design doc says | The code actually does |
 |---|---|---|
-| **C1** | "Public contracts" lists **two** gateway routes | `Path/EmploymentVerificationPaths.cs` declares **seven**, including `POST createrequest` and the anonymous `preview/{token}`, `verify/{token}`, `reject/{token}` |
+| **C1** | "Public contracts" lists **two** gateway routes | `Path/EmploymentVerificationPaths.cs` declares **ten** — seven at the time of this review, plus the three contact-directory routes added later — including `POST createrequest` and the anonymous `preview/{token}`, `verify/{token}`, `reject/{token}` |
 | **C2** | Describes `Verified`/`Rejected` only as lifecycle outcomes | A whole second trust boundary exists — `Features/VerifyEmployment/`, three `AllowAnonymous()` slices — that the doc never names, routes or authorises on paper |
 | **C3** | "Known gap: `getrequests` returns the entity including `VerificationTokenHash`" | True, and **`POST createrequest` does the same** (`Results.Ok(result)`, `result` being the entity). One leaking route is flagged; there are two |
-| **C4** | "a bounced or unanswered request can be re-sent from the UI without a database edit" | **No re-send action exists.** `SendSelectedRequestAsync` is wired only inside the *Needs request* drawer (`EmploymentVerification.razor:357`). A released candidate reappears there and starting again inserts a **second row** |
+| **C4** | "a bounced or unanswered request can be re-sent from the UI without a database edit" | **No re-send action exists.** `SendSelectedRequestAsync` is wired only inside the *Needs request* drawer (now `NeedsRequest.razor`). A released candidate reappears there and starting again inserts a **second row** |
 | **C5** | Lifecycle: "Request row created before the email is attempted" | Correct, but the consequence is unstated: the row is **committed** first, so a failed send leaves a permanent `Pending` row, and `ListBlockedAtsSubjectIdsAsync` applies `Pending` no expiry — that candidate is blocked **forever** |
 | **C6** | Tracking view shows "HR email" | `HrName` is **never assigned** on the create path, so it is NULL for every module-created request. `ResponseNotes` is a dead column — no writer, no reader, anywhere |
 | **C7** | Candidate, employer, period, HR email come from ATS | When ATS has no dates the UI **fabricates them**: `?? DateTime.UtcNow.AddYears(-2)` / `?? DateTime.UtcNow.AddMonths(-6)`, plus `Position = "Not provided"` |
 | **C8** | "`EmploymentVerificationPaths` is the only wiring, and that is correct" | True — but no EV route populates `RouteDefinitionDTO.Metadata`, so **none carries a `RateLimitPolicy`**. ATS's equivalent anonymous routes all do |
-| **C9** | Guide §11a: token-link pages use `GenericLayout` | `VerifyEmployment.razor:1` **does** follow it. But `Layout/EmploymentVerificationLayout.razor` exists (itself `@layout GenericLayout`) and is referenced by **nothing** |
+| **C9** | Guide §11a: token-link pages use `GenericLayout` | `VerifyEmployment.razor:1` **does** follow it. `Layout/EmploymentVerificationLayout.razor` was dead and has since been deleted; `Layout/EVLayout.razor` is the staff shell now — **resolved** |
 | **C10** | "Keep Employment Verification code vertically structured … do not compress into one-line blocks" | `EmploymentVerification.csproj:2` packs the whole `PropertyGroup` onto one line; `EmploymentVerificationDbContext.cs` has no blank line between `Requests` and `OnModelCreating` |
 
 Verified **correct** in the design doc: the availability table matches `ListBlockedAtsSubjectIdsAsync`
@@ -283,20 +283,23 @@ the other on a token route forwards the literal `{token}` and every link 404s.
 
 ## 3. One request traced end to end — `Command/CreateRequest`
 
-**Frontend.** `EmploymentVerification.razor:357` wires the drawer's send button to
-`SendSelectedRequestAsync` in `EmploymentVerification.razor.cs`. It refuses without an HR email, then
+**Frontend.** `NeedsRequest.razor` wires the drawer's send button to
+`SendSelectedRequestAsync` in `NeedsRequest.razor.cs`. It refuses without an HR email, then
 builds the transport DTO — including the fabricated fallbacks from C7:
 
 ```csharp
 				Position = string.IsNullOrWhiteSpace(SelectedCandidate.Position)
 					? "Not provided"
 					: SelectedCandidate.Position,
-				HrEmail = SelectedCandidate.HrEmail, //"contract.fullstackdev@cibi.com.ph",
-				EmploymentStartDate = ToDateTime(SelectedCandidate.StartDate)
+				HrEmail = SelectedCandidate.HrEmail,
+				EmploymentStartDate = EmploymentVerificationDisplay.ToDateTime(SelectedCandidate.StartDate)
 					?? DateTime.UtcNow.AddYears(-2),
-				EmploymentEndDate = ToDateTime(SelectedCandidate.EndDate)
+				EmploymentEndDate = EmploymentVerificationDisplay.ToDateTime(SelectedCandidate.EndDate)
 					?? DateTime.UtcNow.AddMonths(-6)
 ```
+
+(The commented-out internal address that used to sit beside `HrEmail`, flagged as a
+leftover debug value in §10, went with the page split.)
 
 The UI service's `CreateAndSendAsync` posts to `employmentverification/createrequest` on the named
 `"API"` client and binds the body to `EmploymentVerificationResponseDetailsDTO`, which declares only
@@ -560,24 +563,45 @@ the normal response path revokes the tag itself.
 
 ## 8. The frontend
 
-Two pages, two audiences, two layouts. **Staff page** —
-`Pages/EmploymentVerification/EmploymentVerification.razor` (367 lines) with `.razor.cs` and scoped
-`.razor.css`:
+> **Restructured.** The single staff page described below was split into separate routes
+> under a top-navbar layout, and the module was rethemed. The call chain is unchanged —
+> the same service methods, the same DTOs, the same status derivation — but the file names
+> and layout have moved. See
+> [the contact directory walkthrough](../../employment-verification-contact-directory/employment-verification-contact-directory_code_explanation.md).
+
+**Staff pages** — three routes under `Layout/EVLayout.razor`, each a `.razor` /
+`.razor.cs` pair inheriting `CrudPageBase` (which itself extends `SecurePageBase`):
 
 ```razor
-@page "/employmentverification/verification"
-@layout ConsoleLayout
-@inherits SecurePageBase
+@page "/employmentverification/requests"     @* NeedsRequest.razor *@
+@page "/employmentverification/tracking"     @* Tracking.razor     *@
+@page "/employmentverification/contacts"     @* Contacts.razor     *@
+@layout EVLayout
+@inherits CrudPageBase
 @attribute [RequirePermission(8, 9)]
 ```
 
-`OnInitializedAsync` calls `await base.OnInitializedAsync();` then returns early on `!IsPageAuthorized`
-before `LoadAsync()` — the ordering the design doc warns about, done correctly. One segmented switcher
-(`NeedsRequestView`/`TrackingView`), each with its own search term so a filter does not carry across,
-both lists held in memory and filtered client-side. `GetDisplayStatus` renders
-`Sent && TokenExpiresAt < UtcNow` as `"Expired"` for display only; `ResponseRate` returns `"—"` on an
-empty list. The drawer moves focus on render and closes on Escape but deliberately not on backdrop
-click. All module CSS is `ev-`-prefixed.
+`EmploymentVerificationLanding.razor` holds the original
+`/employmentverification/verification` route and redirects to Needs request. It exists
+because that path is submenu 9 in `ShareData/Auth/SubMenuList.cs`, which `Home.razor.cs`
+builds the application card's link from and which the backend permission seed data agrees
+with — renaming it would be a far wider change than it looks.
+
+`NeedsRequest` and `Tracking` each call `await base.OnInitializedAsync();` then return
+early on `!IsPageAuthorized` before loading — the ordering the design doc warns about, done
+correctly. Each owns its own search term, so a filter cannot carry across to a list where
+it means something different. Both hold their list in memory and filter client-side,
+because both endpoints return everything in one call.
+
+Shared formatting moved to `SharedService/EmploymentVerificationDisplay.cs` when the pages
+split, since both still need it and a second copy would drift: `GetDisplayStatus` renders
+`Sent && TokenExpiresAt < UtcNow` as `"Expired"` for display only, and `GetResponseRate`
+returns `"—"` on an empty list rather than `0%`.
+
+Tables are the shared `TableComponent`; status chips are the shared `.ats-status-pill`
+classes, mapped in `Tracking.razor.cs` → `GetStatusCssClass`. The review drawer still moves
+focus on render and closes on Escape but deliberately not on backdrop click. Module CSS is
+`ev-`-prefixed and lives in `wwwroot/css/ev.css`.
 
 **Anonymous page** — `Pages/EmploymentVerification/VerifyEmployment.razor`, first line
 `@layout GenericLayout`, which is what guide §11a requires of a token-link page. It declares **two routes
@@ -613,26 +637,35 @@ Deserialization needs `PropertyNameCaseInsensitive = true` because ProblemDetail
 the file's own comment records that `title`/`detail` otherwise bind to null and raw JSON leaks into the
 page.
 
-**`Layout/EmploymentVerificationLayout.razor` is dead** — a `@layout GenericLayout` wrapper around
-`<div class="employment-verification-layout">@Body</div>`, referenced by nothing in `UI/`.
-`VerifyEmployment.razor` uses `GenericLayout` directly, so the module *does* follow the guide's rule;
-delete the layout or use it, because as it stands it invites a future page to adopt one no page has
-exercised.
+**`Layout/EmploymentVerificationLayout.razor` was dead and has been deleted.** It was a
+`@layout GenericLayout` wrapper around `<div class="employment-verification-layout">@Body</div>`
+referenced by nothing, and it invited a future page to adopt a layout no page had exercised.
+`Layout/EVLayout.razor` is the module's real shell now; `VerifyEmployment.razor` still uses
+`GenericLayout` directly, which is what guide §11a requires of a token-link page — that page
+must stay light regardless of what a staff member picked in the same browser.
 
 ---
 
 ## 9. Tests
 
-**There are none.** `Test/Test/BackendAPI/Modules/` contains `ATS.UnitTests`, `ATS.IntegrationTests`,
-`Auth.UnitTests`, `Auth.IntegrationTests`, `PhilSys.UnitTests`, `PhilSys.IntegrationTests` and
-`OMS.UnitTests`; there is no `EmploymentVerification.*` project, and a glob for
-`Test/**/*EmploymentVerification*` returns nothing.
+`Test/Test/BackendAPI/Modules/EmploymentVerification.UnitTests/` now exists, but covers only
+two things: `VerificationTokenHashExposureTests` (the projection must never carry the token
+hash) and the contact-directory suites added with that feature —
+`ContactDirectoryServiceTests` and `ContactDirectoryValidatorTests`. There are still **no
+EmploymentVerification integration tests**, and no `Test/**/*Infrastructure*` harness for
+this module.
 
-So the module's most sensitive code is uncovered: token generation and expiry arithmetic, the three
-copies of the 86-character validator, the `MarkRespondedAsync` predicate that is the *only* thing
-enforcing single use, the availability rule the design doc calls business logic belonging in the
-service, and all three anonymous endpoints. That rule was designed to be testable — `asOfUtc` is a
-parameter precisely so the instant can be supplied — and no test supplies it.
+So the request-tracking path described in this document remains almost entirely uncovered:
+token generation and expiry arithmetic, the three copies of the 86-character validator, the
+`MarkRespondedAsync` predicate that is the *only* thing enforcing single use, the
+availability rule the design doc calls business logic belonging in the service, and all
+three anonymous endpoints. That rule was designed to be testable — `asOfUtc` is a parameter
+precisely so the instant can be supplied — and no test supplies it.
+
+When an integration harness is written for this module, it must clear **both** EV cache tags
+(`employmentverification:requests` and `employmentverification:contacts`) alongside the table
+truncation, for the reason `BaseIntegrationTest` already documents: cached first pages and
+counts otherwise survive the truncate.
 
 ---
 
@@ -725,12 +758,12 @@ recipient's client assumes. Neither value is validated at startup.
 `Where` clause.
 
 **S15 — Dead code that will mislead the next reader.** `CreateApiExceptionAsync` in the UI service is
-private and never called; `Layout/EmploymentVerificationLayout.razor` is referenced by nothing (§8);
+private and never called; `Layout/EmploymentVerificationLayout.razor` was referenced by nothing and has
+since been deleted (§8), as has the unused `--c-ev-page-gradient` token;
 `AddEmploymentVerificationCarterModules` is never called, because the composition root's
 `AddModuleCarter` already lists `_employmentVerificationAssembly` in its `DependencyContextAssemblyCatalog`;
-`ResponseNotes` has no reader or writer; `HrName` is never set on the create path; and
-`EmploymentVerification.razor.cs` still carries debug comments naming a real internal address —
-`HrEmail = SelectedCandidate.HrEmail, //"contract.fullstackdev@cibi.com.ph",`.
+`ResponseNotes` has no reader or writer; and `HrName` is never set on the create path. (The debug
+comment naming a real internal address beside `HrEmail` went with the page split.)
 
 **S16 — The 86-character rule is duplicated three times (§2.2)** with no shared constant. Changing
 `HashService`'s output length breaks all three validators independently, and the failure mode is a 400
@@ -744,12 +777,13 @@ Everything that must agree across files with nothing enforcing it at compile tim
 
 | Thing | Declared in | Must agree with |
 |---|---|---|
-| Gateway routes | `EmploymentVerificationPaths.GetRoutes()` — 7 `RouteDefinitionDTO`s | Loaded via `IReverseProxyModule` discovery. The `ReverseProxy:Routes` appsettings section has no reader; do not add entries there |
-| Backend route strings | Each `*Endpoint.cs` `MapGet`/`MapPost` literal | The `PathSet`/`PathPattern` value in `EmploymentVerificationPaths` — four `PathSet`, three `PathPattern` (§2.4) |
+| Gateway routes | `EmploymentVerificationPaths.GetRoutes()` — 10 `RouteDefinitionDTO`s (7 request + 3 contact directory) | Loaded via `IReverseProxyModule` discovery. The `ReverseProxy:Routes` appsettings section has no reader; do not add entries there |
+| Backend route strings | Each `*Endpoint.cs` `MapGet`/`MapPost`/`MapPatch` literal | The `PathSet`/`PathPattern` value in `EmploymentVerificationPaths` — seven `PathSet`, three `PathPattern` (§2.4). The three contact routes share one backend path and differ only by method, so they must stay separate entries |
 | Keyed email sender | `"ats"` at `EmploymentVerificationServiceConfiguration.cs:57` | `[FromKeyedServices("ats")]` at `EmploymentVerificationService.cs:16`; also registered at `ATSServiceConfiguration.cs:148` |
 | Token length | `TokenLength = 86` × 3 validators | `HashService.Hash` output width (SHA-512 → 86 unpadded base64url chars) |
 | ProblemDetails titles | `"TokenExpired"` / `"TokenAlreadyUsed"` / `"TokenNotFound"` in 3 endpoints | `ReadFailureAsync`'s switch in the UI service (§8) |
-| Permission pair | `[RequirePermission(8, 9)]` on `EmploymentVerification.razor` | `ApplicationList.cs`, `SubMenuList.cs`, backend application/submenu seed data. **UI-only** — no API policy exists |
+| Permission pair | `[RequirePermission(8, 9)]` on `NeedsRequest.razor`, `Tracking.razor` and `Contacts.razor` | `ApplicationList.cs`, `SubMenuList.cs`, backend application/submenu seed data. Submenu 9's path (`verification`) is also what `Home.razor.cs` builds the card link from, which is why `EmploymentVerificationLanding.razor` keeps that route alive as a redirect. **UI-only** — no API policy exists |
+| Console route strings | `ShareData/EmploymentVerification/EmploymentVerificationRoutes.cs` | Each page's `@page` directive and the `EVLayout` navbar tabs — three places, nothing enforcing agreement at compile time |
 | Migration namespace | `EmploymentVerification.Data.Migrations` | Files live in `APIs/Migrations/EmploymentVerification/`; `MigrationsAssembly("APIs")` appears in both `AddEmploymentVerificationInfrastructure` and `EmploymentVerificationDbContextFactory` |
 | Assembly marker | `EmploymentVerificationMarker` (namespace `BackendAPI.Modules.EmploymentVerification`) | `ServiceConfiguration.cs:13` `typeof(EmploymentVerificationMarker).Assembly`, used for Carter, MediatR and validators |
 | Config keys | `EmailVerification:EmploymentVerificationUrl`, `:TokenExpiryInHours` | Env placeholders in all three `appsettings.*.json` (lines 80-83). `GetValue<int>` with a default silently swallows an unexpanded `${…}` placeholder and falls back to 72 |
