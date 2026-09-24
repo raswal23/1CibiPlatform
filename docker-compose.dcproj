@@ -10,6 +10,7 @@
     <DockerServiceName>apis</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="monitoring\**" />
     <None Remove="UI\FrontendWebassembly\Component\ATS\Special\**" />
     <None Remove="UI\FrontendWebassembly\Services\ATS\Implementation\**" />
     <None Remove="UI\FrontendWebassembly\Services\ATS\Interface\**" />
@@ -2559,8 +2560,6 @@
     <None Include="docker\postgres\Dockerfile" />
     <None Include="docker\postgres\init-db.d\01_create_extension.sql" />
     <None Include="docs\upgrade-net9-to-net10.md" />
-    <None Include="monitoring\loki-config.yml" />
-    <None Include="monitoring\promtail-config.yml" />
     <None Include="temp_replace_methods.ps1" />
     <None Include="UI\FrontendWebassembly\App.razor" />
     <None Include="UI\FrontendWebassembly\bin\Debug\net10.0\dotnet.js" />
@@ -4018,9 +4017,6 @@
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\CompletedComponent.razor" />
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\CompletedComponent.razor.cs" />
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\CompletedComponent.razor.css" />
-    <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\ExpiredComponent.razor" />
-    <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\ExpiredComponent.razor.cs" />
-    <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\ExpiredComponent.razor.css" />
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\PhilSysComponent.razor" />
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\PhilSysComponent.razor.cs" />
     <None Include="UI\FrontendWebassembly\Component\ATS\ApplicationForm\SuccessApplicationFormComponent.razor" />

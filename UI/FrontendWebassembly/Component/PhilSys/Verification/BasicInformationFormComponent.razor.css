@@ -156,6 +156,19 @@
     margin-top: 0 !important;
 }
 
+/* The Suffix select passes Adornment.None to drop the dropdown caret, but MudBlazor
+   still renders the adornment wrapper - and without the -end suffix, so the rule
+   above does not reach it. Left unhandled it inherits the input's height and
+   stretches the flex row, pulling the selected value off centre. Same third rule the
+   application form needed for its Suffix/Sex selects. */
+.philsys-suffix-field ::deep .mud-input.mud-select-input > .mud-input-adornment {
+    height: auto;
+    max-height: none;
+    margin-top: 0;
+    align-items: center;
+    align-self: center;
+}
+
 .philsys-field ::deep input::placeholder {
     color: var(--philsys-text-3);
     opacity: 1;

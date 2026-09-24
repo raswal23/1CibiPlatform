@@ -303,22 +303,17 @@ function Get-RelatedGeneratedValue($Context, $Mapping) {
 	if ($property -like '*Address') {
 		return "$(Get-StableNumber $seed 10 999) $(Select-StableValue "${seed}:street" @('Acacia Street', 'Mabini Avenue', 'Rizal Street', 'Sampaguita Road', 'Bonifacio Drive')), $($location[0])"
 	}
-	if ($property -eq 'CurrentStayFrom') { return "$(Get-StableNumber $seed 2 12) years" }
 	if ($property -eq 'HighestEducationalAttainment') { return Select-StableValue $seed @("Bachelor's Degree", "Bachelor's Degree", "Master's Degree", 'College Graduate') }
 	if ($property -like '*SchoolName') { return Select-StableValue $seed @('University of the Philippines', 'Polytechnic University of the Philippines', 'De La Salle University', 'Ateneo de Manila University', 'University of San Carlos', 'Far Eastern University') }
 	if ($property -like '*Degree') { return Select-StableValue $seed @('Bachelor of Science', 'Bachelor of Arts', 'Master of Business Administration', 'Doctor of Philosophy') }
-	if ($property -like '*Major') { return Select-StableValue $seed @('Information Technology', 'Business Administration', 'Psychology', 'Accountancy', 'Communication') }
 	if ($property -eq 'LicenseName') { return Select-StableValue $seed @('Civil Service Professional Eligibility', 'Licensed Professional Teacher', 'Certified Public Accountant', 'Professional Driver License') }
 	if ($property -eq 'LicenseNumber') { return "LIC-$((Get-StableNumber $seed 1000000 9999999))" }
 	if ($property -like 'Emp?CompanyName' -or $property -like 'Ref?AffiliatedCompany') { return Select-StableValue $seed @('Ayala Corporation', 'SM Investments Corporation', 'Jollibee Foods Corporation', 'Globe Telecom', 'San Miguel Corporation', 'BDO Unibank') }
 	if ($property -like 'Emp?CurrentlyEmployed') { return Select-StableValue $seed @('No', 'No', 'Yes') }
 	if ($property -like 'Emp?PermissionToContact') { return 'Yes' }
 	if ($property -like 'Emp?JobTitle') { return Select-StableValue $seed @('Team Lead', 'Business Analyst', 'Operations Associate', 'Account Specialist', 'Software Developer', 'Administrative Officer') }
-	if ($property -like 'Emp?ReasonForLeaving') { return Select-StableValue $seed @('Career advancement', 'End of contract', 'Relocation', 'Better opportunity') }
 	if ($property -like 'Ref?ProfessionalRelationship') { return Select-StableValue $seed @('Former Supervisor', 'Colleague', 'Team Lead', 'Department Manager') }
 	if ($property -like 'Ref?ModeOfContact') { return Select-StableValue $seed @('Mobile', 'Email', 'Mobile') }
-	if ($property -eq 'DocumentName') { return Select-StableValue $seed @('Government ID', 'Resume', 'NBI Clearance', 'Diploma') }
-	if ($property -eq 'DocumentValue') { return "documents/$ticket/$(Convert-ToSlug (Select-StableValue $seed @('government-id', 'resume', 'nbi-clearance', 'diploma'))).pdf" }
 	if ($property -eq 'HitStatus') { return Get-CompletedValue $Context 'HitStatus' }
 	if ($property -eq 'ReportStatus') {
 		if ($entity -eq 'ArchiveReport') { return 'Initial Report' }
@@ -412,7 +407,6 @@ $relatedEntities = [ordered]@{
 	'ProfessionalExperiences' = 'ProfessionalExperiences'
 	'ReferenceDetails' = 'ReferenceDetails'
 	'SignatureDetails' = 'SignatureDetails'
-	'Documents[0]' = 'DocumentDetails'
 	'ReportDetails[0]' = 'ReportDetails'
 	'ArchiveReports[0]' = 'ArchiveReport'
 	'OrderStatusHistories[0]' = 'OrderStatusHistory'

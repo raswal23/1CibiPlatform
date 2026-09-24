@@ -348,10 +348,9 @@ public class ApplicationFormPreviewPdfDocument : IDocument
 					("Company name", employer.CompanyName),
 					("Job title", employer.JobTitle),
 					("Company address", employer.CompanyAddress),
-					("Reason for leaving", employer.ReasonForLeaving),
 					("Supervisor name", employer.SupervisorName),
-					("Supervisor contact number", employer.SupervisorContactNumber),
-					("Supervisor email", employer.SupervisorEmail)
+					("Supervisor email", employer.SupervisorEmail),
+					("Supervisor contact number", employer.SupervisorContactNumber)
 				], columns: 2);
 
 				AttachmentRow(entry, "Certificate of employment (COE)", employer.CoeFileName);

@@ -96,7 +96,6 @@ public class EmailInvitationRequest
 	public ProfessionalExperiences? ProfessionalExperiences { get; set; }
 	public ReferenceDetails? ReferenceDetails { get; set; }
 	public SignatureDetails? SignatureDetails { get; set; }
-	public ICollection<DocumentDetails>? Documents { get; set; }
 	public ICollection<ReportDetails>? ReportDetails { get; set; }
 	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
 	public ICollection<OrderStatusHistory>? OrderStatusHistories { get; set; }

@@ -10,8 +10,6 @@ public class AddressDetails
 	public string? CurrentCountry { get; set; }
 	public string? CurrentAddress { get; set; }
 	public string? CurrentPostalCode { get; set; }
-	public string? CurrentStayFrom { get; set; }
-	public string? PermanentTypeOfOwnership { get; set; }
 	public string? PermanentAddress { get; set; }
 	public string? PermanentCity { get; set; }
 	public string? PermanentProvince { get; set; }

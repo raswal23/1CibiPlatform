@@ -204,7 +204,7 @@ else if (_activeIndex == 3)
                                    OnClick="@(() => OpenEditApplicationDialog(app))" />
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium"
                                    Class="um-icon-action um-icon-action-danger"
-                                   OnClick="@(() => ConfirmDelete(app.applicationId, "application"))" />
+                                   OnClick="@(() => ConfirmDelete(app.applicationId, "application", app.applicationName))" />
                 </MudTd>
         </RowTemplate>
 
@@ -263,7 +263,7 @@ else if (_activeIndex == 4)
                                Color="Color.Error" 
                                Size="Size.Medium" 
                                Class="um-icon-action um-icon-action-danger"
-                               OnClick="@(() => ConfirmDelete(sub.subMenuId, "submenu"))" />
+                               OnClick="@(() => ConfirmDelete(sub.subMenuId, "submenu", sub.subMenuName))" />
             </MudTd>
         </RowTemplate>
 
@@ -316,7 +316,7 @@ else if (_activeIndex == 5)
                                Color="Color.Error" 
                                Size="Size.Medium" 
                                Class="um-icon-action um-icon-action-danger"
-                               OnClick="@(() => ConfirmDelete(role.roleId, "role"))" />
+                               OnClick="@(() => ConfirmDelete(role.roleId, "role", role.roleName))" />
             </MudTd>
         </RowTemplate>
 
@@ -371,7 +371,7 @@ else if (_activeIndex == 6)
                                Color="Color.Error" 
                                Size="Size.Medium" 
                                Class="um-icon-action um-icon-action-danger"
-                               OnClick="@(() => ConfirmDelete(appSubRole.AppRoleId, "appsubrole"))" />
+                               OnClick="@(() => ConfirmDelete(appSubRole.AppRoleId, "appsubrole", $"{appSubRole.RoleName} on {appSubRole.SubMenuName}"))" />
             </MudTd>
         </RowTemplate>
 

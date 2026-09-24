@@ -102,21 +102,28 @@
 }
 
 /* MudDatePicker wraps its input in .mud-picker; flush the wrapper so the field
-   sits level with the Suffix/Sex selects in the same row. */
+   sits level with the Suffix/Sex selects in the same row.
+
+   .mud-picker-inline is `display: flex` with the default row direction. The
+   label lift relies on a column, so inside the picker the label would be laid
+   out beside the input rather than above it, leaving this field a label-row
+   shorter than the selects next to it. Force the column here. */
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field .mud-picker,
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field .mud-picker-inline {
     width: 100%;
     margin: 0 !important;
     padding: 0;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-/* On the selects, oneplatform-rounded-input sits ON .mud-input-control, so the
-   generic `.oneplatform-rounded-input .mud-input-control { margin-top: 0 }` rule
-   below never touches them and MudBlazor's dense-with-label margin (8px top,
-   4px bottom) applies. On the picker the control is nested inside .mud-picker,
-   so that rule strips its top margin; restore the same 8px/4px here. */
+/* Previously restored MudBlazor's dense-with-label margin (8px top, 4px bottom)
+   so the picker matched the selects beside it, both of which reserved that space
+   for a floating label. Labels are real rows above the box now and every control
+   in this scope gets the same 24px from the label itself, so the extra margin
+   would push the birth date field out of line with Suffix and Sex on its row. */
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field .mud-input-control {
-    margin: 8px 0 4px !important;
+    margin: 0 !important;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-birthdate-field .mud-input-outlined :is(.mud-input-slot, input) {
@@ -133,8 +140,17 @@
     width: 100%;
 }
 
-.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-control {
+/* MudBlazor's .mud-input-control-margin-dense is `margin: 4px 0`, and on a
+   MudSelect or MudTextField that class lands on the SAME element as
+   oneplatform-rounded-input - a descendant selector alone never reaches it. The
+   date picker nests its control one level deeper, so it was getting 0 while its
+   neighbours kept the 4px, which is exactly the offset between Birth date and
+   the Suffix/Sex selects on that row. Zero it on both shapes. */
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input.mud-input-control,
+.ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-control,
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-control.mud-input-control-margin-dense {
     margin-top: 0;
+    margin-bottom: 0;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .oneplatform-rounded-input .mud-input-outlined {
@@ -162,6 +178,62 @@
     font-size: 12px !important;
     font-weight: 600 !important;
     letter-spacing: 0.2px;
+}
+
+/* Static labels above the box, matching the Address step's external-label
+   layout (.ats-step-four-field-label) so the two steps line up.
+
+   Done in CSS rather than by hoisting 20-odd <label> elements into the markup:
+   MudBlazor already renders the label as a real child of .mud-input-control,
+   which is a flex column. It only overlays the box because it is absolutely
+   positioned. Returning it to static flow gives it real space, with no markup
+   change, which also keeps the `for`/id wiring, the asterisk and the error
+   colouring that MudBlazor manages.
+
+   The label is emitted AFTER the input, not before - MudBlazor's own rules are
+   keyed on `.mud-input:focus-within ~ label`, a following-sibling selector. In
+   static flow that puts it under the box, so the order properties below lift it
+   back to the top of the column. Without them the name reads as a caption
+   beneath the field.
+
+   The transform overrides must beat those same shrink rules, which are more
+   specific than this selector (0,4,1 vs 0,3,1) and would otherwise re-float the
+   label on focus; hence !important on transform and max-width. */
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-label-inputcontrol {
+    order: -1;
+    position: static;
+    margin: 0 0 6px;
+    min-height: 18px;
+    transform: none !important;
+    max-width: 100% !important;
+    line-height: 1.5;
+}
+
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-control {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* The input container holds BOTH the label and the input, and is
+   `display: contents` by default - it has no flex line of its own, so `order` on
+   the label would do nothing. Giving it a real flex context is what lets the
+   lift above happen. Restricted to containers that actually hold a label so
+   checkbox and radio controls, which rely on the default, are untouched. */
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-control-input-container:has(> .mud-input-label-inputcontrol) {
+    display: flex;
+    flex-direction: column;
+    order: 0;
+}
+
+/* Close the notch in the top border. The outlined border is a <fieldset> whose
+   <legend> widens to `auto` while the field is shrunk, cutting a gap for the
+   floating label to sit in. The label is outside the box now, so that gap is
+   just a hole in the outline - the "invisible" top edge. Step 4 never shows it
+   because its fields pass no Label at all, so MudBlazor renders no legend.
+   Collapsing it back to zero restores an unbroken border. */
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-input-outlined-border legend {
+    width: 0 !important;
+    padding: 0 !important;
 }
 
 .ats-step-three-scope.ats-step-three-scope ::deep .mud-input-label-asterisk {
@@ -237,19 +309,38 @@
     box-sizing: border-box;
 }
 
-/* Top-align the cell; the wrap's 44px min-height centers the checkbox against
-   the input's 44px band so it doesn't sink when the required error adds a
-   helper-text line under the middle name field. */
+/* The third of New Order's .ats-select rules, omitted when the two above were
+   copied. MudBlazor still renders the adornment wrapper under Adornment.None,
+   and it inherits the input's height, so without this it stretches the flex row
+   and pulls the value off center. */
+.ats-step-three-scope.ats-step-three-scope ::deep .mud-select.oneplatform-rounded-input .mud-select-input > .mud-input-adornment {
+    height: auto;
+    max-height: none;
+    margin-top: 0;
+    align-items: center;
+    align-self: center;
+}
+
+/* Top-align the cell; the wrap's min-height centers the checkbox against the
+   middle name field beside it so it doesn't sink when the required error adds a
+   helper-text line under that field. */
 .ats-step-three-scope.ats-step-three-scope ::deep .ats-step-three-fields-grid > .mud-grid-item:nth-child(4) {
     display: flex;
     align-self: stretch;
     align-items: flex-start;
 }
 
+/* Offset by the neighbouring field's label row so the checkbox centres against
+   the middle name BOX rather than the whole field. The offset is 24px of label
+   (18px row + 6px margin); the grid item itself supplies no padding, so it is
+   applied here as padding-top with the 44px band below it.
+   Measured, not derived: see the harness in the alignment pass. */
 .ats-step-three-middle-check-wrap {
     display: flex;
+    box-sizing: content-box;
     width: 100%;
     min-height: 44px;
+    padding-top: 24px;
     align-items: center;
     gap: 8px;
 }
@@ -505,8 +596,11 @@
         align-items: center;
     }
 
+    /* Stacked full-width here, so there is no field beside the checkbox to align
+       against - drop the label-row offset along with the min-height. */
     .ats-step-three-middle-check-wrap {
         min-height: 0;
+        margin-top: 0;
         padding-bottom: 0;
     }
 
@@ -1083,9 +1177,13 @@
     margin: 0;
 }
 
+/* Was `margin: 8px 0 4px` - MudBlazor's dense-with-label spacing, reserving room
+   for the floating label. The label is a real row above the box now, so that
+   margin pushed these two fields out of line with the upload button beside them
+   (whose spacer supplies the same 24px). */
 .ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) .ats-step-five-control.mud-input-control,
 .ats-step-five-scope.ats-step-five-scope ::deep :is(.ats-license-main-field, .ats-license-side-field) .ats-step-five-control .mud-input-control {
-    margin: 8px 0 4px;
+    margin: 0;
 }
 
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-step-five-control .mud-input-outlined {
@@ -1113,6 +1211,36 @@
     font-size: 12px !important;
     font-weight: 600 !important;
     letter-spacing: 0.2px;
+}
+
+/* Static labels above the box - same conversion as .ats-step-three-scope above;
+   see that block for why this is done in CSS, and why the label needs lifting
+   with `order` rather than just being un-positioned. */
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-label-inputcontrol {
+    order: -1;
+    position: static;
+    margin: 0 0 6px;
+    min-height: 18px;
+    transform: none !important;
+    max-width: 100% !important;
+    line-height: 1.5;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-control {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-control-input-container:has(> .mud-input-label-inputcontrol) {
+    display: flex;
+    flex-direction: column;
+    order: 0;
+}
+
+/* Close the notch in the top border - see .ats-step-three-scope above. */
+.ats-step-five-scope.ats-step-five-scope ::deep .mud-input-outlined-border legend {
+    width: 0 !important;
+    padding: 0 !important;
 }
 
 .ats-step-five-scope.ats-step-five-scope ::deep .mud-input-label-asterisk {
@@ -1172,14 +1300,20 @@
     color: var(--step5-text-3) !important;
 }
 
+/* Stands in for the label row on the neighbouring License no. field so the
+   upload button's 44px band lines up with that field's input band. Was 8px,
+   which matched MudBlazor's old dense-with-floating-label margin; the label is
+   now a real 24px row (18px + its 6px margin), so the button sat 16px high.
+   Same geometry as .ats-employer-upload-label, which does this job with real
+   caption text. */
 .ats-step-five-scope.ats-step-five-scope ::deep .ats-license-upload-spacer {
     display: block;
-    height: 8px;
-    min-height: 8px;
-    margin: 0;
+    height: 18px;
+    min-height: 18px;
+    margin: 0 0 6px;
     color: transparent;
     font-size: 12px;
-    line-height: 8px;
+    line-height: 1.5;
     user-select: none;
 }
 
@@ -1584,13 +1718,44 @@
     width: 100%;
 }
 
-.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-control {
+/* Both shapes - see the same rule in .ats-step-three-scope. MudBlazor's
+   `.mud-input-control-margin-dense { margin: 4px 0 }` sits on the control
+   element itself for a text field, so a descendant-only selector misses it and
+   the field ends up 4px lower than the pill group beside it. */
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input.mud-input-control,
+.ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-control,
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-control.mud-input-control-margin-dense {
     margin-top: 0;
+    margin-bottom: 0;
 }
 
+/* Was MudBlazor's dense-with-label margin, making room for the floating label.
+   The label now takes real space above the box, so the extra top margin would
+   read as a double gap and misalign these against the fields beside them. */
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap .oneplatform-rounded-input.mud-input-control,
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-datetime-wrap .oneplatform-rounded-input .mud-input-control {
-    margin: 8px 0 4px;
+    margin: 0;
+}
+
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-control {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+/* Restricted to containers that actually hold a label: the radio-pill and
+   add-reference-card rules further down rely on this element staying
+   position:static/display:contents so their ::after overlay anchors to the card,
+   and those controls have no label to lift. */
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-control-input-container:has(> .mud-input-label-inputcontrol) {
+    display: flex;
+    flex-direction: column;
+    order: 0;
+}
+
+/* Close the notch in the top border - see .ats-step-three-scope above. */
+.ats-final-step-scope.ats-final-step-scope ::deep .mud-input-outlined-border legend {
+    width: 0 !important;
+    padding: 0 !important;
 }
 
 .ats-final-step-scope.ats-final-step-scope ::deep .oneplatform-rounded-input .mud-input-outlined {
@@ -1604,12 +1769,18 @@
     letter-spacing: 0.2px;
 }
 
-/* ats.css's .ats-appform-form rule adds margin-top: 3px to every input label,
-   which pushes the resting (placeholder-style) label below the vertical center
-   of the 42px outlined box; MudBlazor's own translate(14px, 12px) already
-   centers it, so zero the margin inside this scope. */
+/* Static labels above the box - same conversion as .ats-step-three-scope; see
+   that block for why this is done in CSS rather than in the markup. This is the
+   References half of the same step as .ats-step-five-scope, so it has to move
+   with it or the two halves of one screen would disagree. */
 .ats-final-step-scope.ats-final-step-scope ::deep .mud-input-label-inputcontrol {
-    margin-top: 0;
+    order: -1;
+    position: static;
+    margin: 0 0 6px;
+    min-height: 18px;
+    transform: none !important;
+    max-width: 100% !important;
+    line-height: 1.5;
 }
 
 .ats-final-step-scope.ats-final-step-scope ::deep .mud-input-label-asterisk {
@@ -1658,26 +1829,38 @@
     font-size: 15px;
 }
 
+/* gap: 0 - the caption below now carries the same 6px bottom margin as a field
+   label, so the pill row starts at the same y as the Full Name input beside it.
+   An 8px flex gap on top of that margin would push the pills 8px low. */
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-option-wrap {
     display: flex;
     min-width: 0;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    gap: 8px;
+    gap: 0;
 }
 
+/* Same box model as a real field label (18px row + 6px margin = 24px) so the
+   pill row lines up with the Full Name input band on the same row. */
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-option-label {
-    margin: 0;
+    display: block;
+    min-height: 18px;
+    margin: 0 0 6px;
     color: var(--final-text);
     font-size: 12px;
     font-weight: 700;
     line-height: 1.5;
 }
 
+/* The pills are 34px, shorter than the 44px input band on purpose. Centring the
+   group in a 44px min-height lines the single-row case up with the Full Name
+   field beside it; when the pills wrap the group simply grows past it. */
 .ats-final-step-scope.ats-final-step-scope ::deep .ats-reference-pill-group {
     display: flex;
+    min-height: 44px;
     flex-wrap: wrap;
+    align-content: center;
     gap: 7px;
 }
 
