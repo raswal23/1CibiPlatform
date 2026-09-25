@@ -13,6 +13,7 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 	private readonly IAuthQueries _authQueries;
 	private readonly IATSRepository _atsRepository;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IEmailProcessManagementService _emailProcessManagementService;
 	private readonly AtsEmailDeliveryOptions _options;
 
 	public SubmittedFormEmailNotification(
@@ -21,6 +22,7 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 		IAuthQueries authQueries,
 		IATSRepository atsRepository,
 		IOrderHistoryService orderHistoryService,
+		IEmailProcessManagementService emailProcessManagementService,
 		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
@@ -28,6 +30,7 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 		_authQueries = authQueries;
 		_atsRepository = atsRepository;
 		_orderHistoryService = orderHistoryService;
+		_emailProcessManagementService = emailProcessManagementService;
 		_options = options.Value;
 	}
 
@@ -96,11 +99,15 @@ public class SubmittedFormEmailNotification : ISubmittedFormEmailNotification
 			requestorName,
 			ResolveCandidateName(details.CandidateName, invitation));
 
-		// The two CIBI teams are always copied. The candidate joins them from the address the
-		// invitation link was sent to - the submitted form carries no primary email address, only an
-		// alternative one, so the order row is the only reliable mailbox for them. An order with no
-		// address simply leaves the candidate off the copy rather than failing the send.
-		var cc = new List<string>(SubmittedFormEmail.CopyTeams);
+		// The CIBI teams copied on this notice come from its EmailProcessDetails row, so the list is
+		// an operator's to change. The candidate joins them from the address the invitation link was
+		// sent to - the submitted form carries no primary email address, only an alternative one, so
+		// the order row is the only reliable mailbox for them. An order with no address simply leaves
+		// the candidate off the copy rather than failing the send.
+		var cc = new List<string>(
+			await _emailProcessManagementService.GetCopyListAsync(
+				AtsEmailProcess.SubmittedForm,
+				cancellationToken));
 
 		if (!string.IsNullOrWhiteSpace(invitation.EmailAddress))
 		{

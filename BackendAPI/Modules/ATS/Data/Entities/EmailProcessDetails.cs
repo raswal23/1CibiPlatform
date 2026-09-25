@@ -4,10 +4,11 @@ namespace ATS.Data.Entities;
 /// The copy list for one ATS notice - the row-backed replacement for the hardcoded copy lists.
 /// </summary>
 /// <remarks>
-/// The copy lists used to be compile-time literals - see <see cref="ATS.Constants.ApplicationFormEmail"/>,
-/// whose <c>CopyTeams</c> is still a hardcoded array that a deployment has to be rebuilt to change.
-/// Rows let an operator add or retire a copied mailbox without a release, which is the whole reason
-/// this table exists.
+/// The copy lists used to be compile-time literals - an <c>ApplicationFormEmail.CopyTeams</c> array
+/// and a <c>CopyTeam</c> const on each of the three notice classes, every one of them needing a
+/// rebuild to change. Rows let an operator add or retire a copied mailbox without a release, which
+/// is the whole reason this table exists. The literals are gone; the send path reads these rows
+/// through <c>IEmailProcessManagementService.GetCopyListAsync</c>.
 ///
 /// The grain is ONE ROW PER NOTICE, with every copied mailbox held in <see cref="CCEmail"/> as a
 /// comma-separated list. The whole list for a notice is therefore read, edited and saved as a single
@@ -26,9 +27,14 @@ namespace ATS.Data.Entities;
 /// is one toggle rather than re-entering the list.
 ///
 /// Every address here is a real recipient to the provider and IS charged to the sending account's
-/// daily cap alongside the candidate, while the send log records the TO address only - the same
-/// arithmetic <c>ApplicationFormEmail</c> documents. Each address added to a list multiplies the cap
-/// a batch really consumes, so the headroom in <c>DefaultDailySendLimit</c> is what absorbs it.
+/// daily cap alongside the candidate, while the send log records the TO address only (see
+/// <c>ATSEmailService.SendThroughAccountAsync</c>, which logs <c>1</c>). The application form rows
+/// are the ones this bites: their notice goes out for EVERY order including the bulk queue, so a
+/// 500-row upload with two copied teams takes 1,500 from the provider - 2,000 once the requestor is
+/// resolved onto the list - and reports 500. The headroom in <c>DefaultDailySendLimit</c> is what
+/// absorbs the difference, and it is fixed at deploy time. This is the real cost of making the list
+/// editable: an operator adding a third address to an application form row raises what a batch
+/// consumes by a third, and nothing on the edit screen tells them so.
 /// </remarks>
 public sealed class EmailProcessDetails
 {

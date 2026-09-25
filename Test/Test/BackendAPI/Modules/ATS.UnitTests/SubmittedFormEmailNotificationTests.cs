@@ -4,12 +4,14 @@ using ATS.Data.Entities;
 using ATS.Data.Repository;
 using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
+using ATS.Services.Settings.EmailProcessManagement;
 using Auth.DTO;
 using Auth.Shared.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
@@ -24,15 +26,19 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 /// </remarks>
 public class SubmittedFormEmailNotificationTests
 {
-	// Deliberately literals rather than SubmittedFormEmail.Subject / .CopyTeams. These are the
-	// agreed copy, and a test that read the constant would keep passing if the constant were
-	// changed - which is the one thing it exists to catch.
-	//
-	// The first copied mailbox is clientsupport@, not the ccteam@ the body's closing sentence
-	// names: the notice is copied to one team and tells the reader to write to another. That
-	// mismatch is in the agreed copy (see SubmittedFormEmail), so this literal tracks the
-	// recipient only - AtsSubmittedFormEmailBodyTests pins the prose address separately.
+	// Deliberately a literal rather than SubmittedFormEmail.Subject. This is the agreed copy, and a
+	// test that read the constant would keep passing if the constant were changed - which is the
+	// one thing it exists to catch.
 	private const string SubmittedSubject = "CIBI | Order Status – In Progress";
+
+	// The two team copies are a row now, stubbed below, so these are the stub's values rather than
+	// a pin on the agreed list - see the fuller note in WithdrawnEmailNotificationTests. They are
+	// still the pair the SubmittedForm row is seeded with, and the assertions below pin their ORDER
+	// on the message: the teams first, the candidate appended.
+	//
+	// Neither is the ccteam@ the body's closing sentence names: the notice is copied to one pair of
+	// teams and tells the reader to write to a third address. That mismatch is in the agreed copy
+	// (see SubmittedFormEmail), and AtsSubmittedFormEmailBodyTests pins the prose address.
 	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string PreWorkTeam = "pre-workteam@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
@@ -53,6 +59,9 @@ public class SubmittedFormEmailNotificationTests
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
+	private readonly Mock<IEmailProcessManagementService> _emailProcessManagementService =
+		EmailCopyListFixture.Returning(AtsEmailProcess.SubmittedForm, CcTeam, PreWorkTeam);
+
 	private readonly SubmittedFormEmailNotification _notifier;
 
 	public SubmittedFormEmailNotificationTests()
@@ -65,6 +74,7 @@ public class SubmittedFormEmailNotificationTests
 			_authQueries.Object,
 			_repository.Object,
 			_orderHistoryService.Object,
+			_emailProcessManagementService.Object,
 			Options.Create(new AtsEmailDeliveryOptions
 			{
 				MaxAttemptsPerMessage = MaxAttempts,

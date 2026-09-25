@@ -175,7 +175,10 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 5. **Build the copy list.**
 
 ```csharp
-		var cc = new List<string> { WithdrawnEmail.CopyTeam };
+		var cc = new List<string>(
+			await _emailProcessManagementService.GetCopyListAsync(
+				AtsEmailProcess.Withdrawn,
+				cancellationToken));
 
 		if (!string.IsNullOrWhiteSpace(invitation.EmailAddress))
 		{
@@ -183,8 +186,16 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 		}
 ```
 
-   A missing candidate address leaves them off the copy rather than failing the send — the requestor
-   is still owed the notice.
+   The team copy was `WithdrawnEmail.CopyTeam`, a `const string`. It is now the
+   `AtsEmailProcess.Withdrawn` row of `ats."EmailProcessDetails"`, so an operator can change who is
+   copied without a deploy. See [`ats-email-process`](../ats-email-process/ats-email-process.md).
+
+   Two independent degradations, both of which still send. A missing candidate address leaves them
+   off the copy — the requestor is still owed the notice. And an empty copy list, whether because
+   the row is missing, switched off or unreadable, leaves the team off; `GetCopyListAsync` never
+   throws, so the requestor who has to stop the verification still hears about it. That is the one
+   method on `IEmailProcessManagementService` which behaves that way — the console's write methods
+   on the same interface throw, and this notifier must never call one.
 6. **Send** through `SendATSEmailWithResultAsync`, then log the outcome. A `!result.IsSent` is a
    warning, not an exception: `Throttled` means "defer", and there is no queue behind a withdrawal.
 
@@ -239,15 +250,19 @@ constant:
 | Thing | Where it must agree | Enforced by |
 |---|---|---|
 | Subject line vs. body header | `Constants/WithdrawnEmail.cs` `Subject`, read by `WithdrawnEmailNotification.SendNoticeAsync` and by `BuildWithdrawnApplicationNotification` | The shared constant only |
-| `ccteam@cibi.com.ph` | `WithdrawnEmail.CopyTeam`, and the *body copy* which names `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph` as prose | Nothing — the body text is a separate literal |
+| `clientsupport@cibi.com.ph` | The `Withdrawn` row's `CCEmail`, and the *body copy* which names `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph` as prose | Nothing — the body text is a separate literal, and the Cc is now an editable row, so they can diverge without a commit |
 | Route `/ats/withdrawnapplicationform` | `ATSPaths.cs:648` `MatchPath` vs. the UI's `_httpClient.PatchAsJsonAsync($"ats/withdrawnapplicationform")` vs. Carter's `MapPatch` + `PathSet` | Nothing at compile time |
 | `IAtsEmailSender` resolution | `ATSServiceConfiguration.cs:156` registers it by casting the **keyed** `"ats"` `IEmailService` | Runtime cast — see §7.1 |
 | `IWithdrawnEmailNotification` | `ATSServiceConfiguration.cs`, registered immediately after the sender it depends on | DI |
 | Recipient count vs. copy list | `1 + copied.Count` in `SendThroughAccountAsync` vs. what `BuildMessage` puts on the wire | `NormalizeRecipients` being called once, in the same method |
 
-The `ccteam@cibi.com.ph` duplication is the one to watch: it appears both as the CC address and
-inside the body's contact sentence. Changing one without the other produces an email that tells the
-recipient to contact a mailbox that was not copied.
+The `clientsupport@cibi.com.ph` duplication is the one to watch: it is both the seeded CC address and
+one of the two mailboxes the body's contact sentence names. Changing one without the other produces
+an email that tells the recipient to contact a mailbox that was not copied. That was a code review
+away before the cutover; now the Cc side is an operator's edit with no commit behind it.
+
+(The sentence also names `ccteam@cibi.com.ph`, which has never been copied on this notice — the same
+deliberate prose-vs-recipient mismatch the submitted-form and dispute notices carry.)
 
 ### 7.1 The keyed cast, and why the integration host needs its own fake
 
@@ -295,9 +310,15 @@ on the interface directly and the fake has to satisfy it. **Any new ATS service 
 | `WithdrawnEmailNotificationTests.cs` | Recipient and copy list; greeting name from the directory and its two fallbacks; skip when there is no `RequestorId` or no directory entry; candidate left off the copy when the row has no address; **does not throw** when the sender throws or reports failure |
 | `AtsWithdrawnEmailBodyTests.cs` | The composed body: exact copy, both contact addresses, header equals `WithdrawnEmail.Subject`, names HTML-encoded, and every `href` is a `mailto:` — i.e. no application-form button |
 
-The subject and the CC address are asserted as **literals**, not by reading `WithdrawnEmail`. A test
-that read the constant would keep passing if someone changed the agreed copy, which is the one thing
-it exists to catch.
+The subject is asserted as a **literal**, not by reading `WithdrawnEmail.Subject`. A test that read
+the constant would keep passing if someone changed the agreed copy, which is the one thing it exists
+to catch.
+
+The CC address was asserted the same way and no longer can be: it comes from the table, and the
+suite stubs `IEmailProcessManagementService.GetCopyListAsync` through
+`Fixture/EmailCopyListFixture.cs`. The literal in this file now pins the **wiring** — that the
+notifier asks for `AtsEmailProcess.Withdrawn` and puts what comes back on the Cc, with the candidate
+appended after. The agreed address itself is pinned by `EmailProcessSeedTests`, where it lives.
 
 Not covered, and not coverable by unit tests: a successful SMTP send, so the `Cc:` header on the
 wire and the `RecipientCount = 3` write to `ats."EmailSendLog"` both need the manual pass in the
@@ -321,7 +342,8 @@ left alone; re-run before concluding anything from it.
 | If you change… | Also check… |
 |---|---|
 | `WithdrawnEmail.Subject` | The body header follows automatically. The **tests** do not — they pin the literal, so update `WithdrawnEmailNotificationTests.WithdrawnSubject` and `AtsWithdrawnEmailBodyTests` |
-| `WithdrawnEmail.CopyTeam` | The body's contact sentence in `BuildWithdrawnApplicationNotification`, which names it as prose (§7) |
+| The `Withdrawn` row's `CCEmail` | The body's contact sentence in `BuildWithdrawnApplicationNotification`, which names `clientsupport@cibi.com.ph` as prose (§7). No rebuild is involved, so nothing forces you to look |
+| `EmailProcessManagementService.GetCopyListAsync` | All five ATS notices read it — `docs/features/ats-email-process/`. Its file also holds the console's write methods, which throw; this one must not |
 | The body copy | `AtsWithdrawnEmailBodyTests` asserts the sentences verbatim |
 | `SendATSEmailWithResultAsync`'s signature | `ATSEmailService.cs:29`, `EndorsementSubmissionService.cs:407`, `WithdrawnEmailNotification.SendNoticeAsync`, and four calls in `AtsEmailFailoverTests.cs` |
 | `SingleEmailSendRetry.SendAsync`, or the attempt budget it is given | The other four inline sends and the queue spend the same budget — `docs/features/ats-email-send-retry/`. Do **not** add a second wrapper anywhere beneath it: nested budgets multiply |

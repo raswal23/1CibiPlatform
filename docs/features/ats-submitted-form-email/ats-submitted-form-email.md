@@ -13,7 +13,7 @@ email went out. This adds it.
 | | |
 |---|---|
 | **To** | the requestor, resolved from the order's `RequestorId` |
-| **Cc** | `ccteam@cibi.com.ph`, `pre-workteam@cibi.com.ph`, then the candidate |
+| **Cc** | the `SubmittedForm` copy list — `clientsupport@cibi.com.ph`, `pre-workteam@cibi.com.ph` as seeded — then the candidate |
 | **Subject** | `CIBI \| Order Status – In Progress` |
 
 The body is the standard CIBI card — navy gradient header, confidentiality footer — greeting the
@@ -23,7 +23,8 @@ ATS, and closing with the contact sentence naming `ccteam@cibi.com.ph` and
 
 This completes the set of three requestor-facing notices: **withdrawn**, **disputed**, and now
 **completed**. All three live beside the sender in `Services/EmailService/`, all three are
-best-effort after a commit, and all three read their subject from a constant in `Constants/`.
+best-effort after a commit, all three read their subject from a constant in `Constants/`, and all
+three read their copy list from a row in `ats."EmailProcessDetails"`.
 
 ## How it works
 
@@ -98,7 +99,9 @@ successfully completed…", so a blank would leave a hole mid-sentence.
 
 **Three addresses copied, and the quota follows.** The `cc` support added for the withdrawal notice
 handles this unchanged: `SendThroughAccountAsync` reports `1 + copied.Count`, so a completion notice
-charges the sending account four recipients, not one.
+charges the sending account four recipients against the seeded row, not one. Four is not a constant
+any more — two of the three copies come from the `SubmittedForm` row, so an operator adding or
+retiring a mailbox moves the charge with it. The arithmetic is what is fixed; the number is not.
 
 **The follow-up chaser already stops.** `ReleaseDueFollowUpInvitationsAsync` filters
 `ApplicationFormStatus = Pending`, so submitting ends the reminders on its own. Nothing to change.
@@ -106,6 +109,9 @@ charges the sending account four recipients, not one.
 **No link in the body.** The copy says the form is "available for download through the Applicant
 Tracking System", which is the console the requestor already signs into. There is no candidate-facing
 URL that would be safe to include in a message copied to two internal teams, so none is rendered.
+That argument now rests on a row an operator can edit: the reason no link is rendered is that the
+message goes to mailboxes the candidate is also on, and who those are is no longer fixed at compile
+time. Adding a link here would need the copy list re-read, not just the body.
 
 ## How to verify
 
@@ -117,8 +123,9 @@ dotnet build 1CibiPlatform.sln
 ```
 
 Manual, end to end: open an invitation link, complete all seven sections, sign, and submit. Confirm
-the success state renders, that the requestor receives `CIBI | Order Status – In Progress` with all
-three addresses on `Cc:`, that the row reads `ApplicationFormStatus = Done` /
+the success state renders, that the requestor receives `CIBI | Order Status – In Progress` with the candidate and every
+address in the `SubmittedForm` row of `ats."EmailProcessDetails"` on `Cc:` — read the row first
+rather than expecting three, since it is operator-editable — that the row reads `ApplicationFormStatus = Done` /
 `OrderStatus = InProgress` with `FormCompletedAt` set, and that an `ApplicationFormSubmitted`
 history row exists. Then submit the same link again and confirm it is rejected as already completed
 — and that **no second email** arrives. Finally, point the sender at a dead account and confirm the
@@ -126,8 +133,8 @@ form is still saved with its attachments intact.
 
 A successful SMTP send is not covered by unit tests and cannot be: `SmtpLease` wraps a real
 `SmtpClient`. The tests stop at `IAtsEmailSender`, and the composed body is asserted directly since
-that is a pure function. The `Cc:` header and the 4-recipient quota charge need the manual pass
-above.
+that is a pure function. The `Cc:` header and the quota charge need the manual pass above — four
+recipients against the seeded row, `1 + copied.Count` against whatever the row holds now.
 
 ## What not to do
 
@@ -144,10 +151,13 @@ above.
 - **Do not change the subject without the header.** The body's `<h1>` reads
   `SubmittedFormEmail.Subject`, the same constant sent as the subject line.
 - **Do not assume the body's contact sentence matches the CC list.** The sentence names
-  `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; the message copies `ccteam` and
-  `pre-workteam`. `clientsupport` is in the text but not on the message, and `pre-workteam` is on
-  the message but not in the text. That mismatch is in the agreed copy and is reproduced
-  deliberately — see the wiring table in the code walkthrough before changing either side.
+  `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; the seeded row copies `clientsupport` and
+  `pre-workteam`. So `clientsupport` is on both sides, `ccteam` is in the text but has never been
+  copied, and `pre-workteam` is copied but unnamed. That mismatch is in the agreed copy and is
+  reproduced deliberately — see the wiring table in the code walkthrough before changing either side.
+  The two sides can now drift further on their own: the sentence is compiled into `ATSEmailService`
+  and the list is a database row, so an operator editing the row changes one side with no commit on
+  the other. See [`ats-email-process`](../ats-email-process/ats-email-process.md).
 - **Do not put the composer on `IEmailService`**, and do not inject `IAtsEmailSender` into a new ATS
   service without checking the integration host's fake. Both are covered in
   `docs/features/ats-withdrawn-application-email/`.

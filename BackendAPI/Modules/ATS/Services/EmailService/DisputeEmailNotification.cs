@@ -10,17 +10,20 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 	private readonly ILogger<DisputeEmailNotification> _logger;
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IEmailProcessManagementService _emailProcessManagementService;
 	private readonly AtsEmailDeliveryOptions _options;
 
 	public DisputeEmailNotification(
 		ILogger<DisputeEmailNotification> logger,
 		IAtsEmailSender emailSender,
 		IOrderHistoryService orderHistoryService,
+		IEmailProcessManagementService emailProcessManagementService,
 		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_orderHistoryService = orderHistoryService;
+		_emailProcessManagementService = emailProcessManagementService;
 		_options = options.Value;
 	}
 
@@ -85,6 +88,13 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 			category,
 			hasSeparateDetails ? details.DisputeReason : null);
 
+		// From the EmailProcessDetails row rather than a literal, so who is copied on a dispute is an
+		// operator's decision rather than a deploy. Resolved out here with the body, not inside the
+		// retry below, for the same reason: a second attempt re-sends, it does not re-read.
+		var cc = await _emailProcessManagementService.GetCopyListAsync(
+			AtsEmailProcess.Dispute,
+			cancellationToken);
+
 		// Only the send is inside the retry - the body above is composed once, so a second attempt
 		// re-sends the same acknowledgement rather than rebuilding it.
 		var result = await SingleEmailSendRetry.SendAsync(
@@ -93,7 +103,7 @@ public class DisputeEmailNotification : IDisputeEmailNotification
 				subject: DisputeEmail.Subject,
 				body: body,
 				cancellationToken: cancellationToken,
-				cc: [DisputeEmail.CopyTeam]),
+				cc: cc),
 			maxAttempts: _options.MaxAttemptsPerMessage,
 			baseDelaySeconds: _options.RetryBaseDelaySeconds,
 			logger: _logger,

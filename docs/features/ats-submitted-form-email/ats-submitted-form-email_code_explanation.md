@@ -130,7 +130,10 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 6. **Build the copy list.**
 
 ```csharp
-		var cc = new List<string>(SubmittedFormEmail.CopyTeams);
+		var cc = new List<string>(
+			await _emailProcessManagementService.GetCopyListAsync(
+				AtsEmailProcess.SubmittedForm,
+				cancellationToken));
 
 		if (!string.IsNullOrWhiteSpace(invitation.EmailAddress))
 		{
@@ -138,8 +141,17 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 		}
 ```
 
-   `new List<string>(...)` rather than a collection expression, because `CopyTeams` is a shared
-   `static readonly` collection and appending to it directly would mutate it for every later caller.
+   The teams were `SubmittedFormEmail.CopyTeams`, a compiled `static readonly` collection. They are
+   now the `AtsEmailProcess.SubmittedForm` row of `ats."EmailProcessDetails"`, so an operator can
+   change who is copied without a deploy. The `new List<string>(...)` stays: `GetCopyListAsync`
+   returns `IReadOnlyList<string>` and is free to hand back a cached array, so the candidate is
+   appended to a copy either way.
+
+   `GetCopyListAsync` never throws and never returns null. An empty list — no row, row switched off,
+   database unreachable — leaves the teams off and still sends to the requestor. It is the only
+   method on `IEmailProcessManagementService` with that behaviour; the console's writes on the same
+   interface throw, and this notifier calls none of them. See
+   [`ats-email-process`](../ats-email-process/ats-email-process.md).
 7. **Send** with `subject: SubmittedFormEmail.Subject` and `cc`, then log. A `!result.IsSent` is a
    warning, not an exception — `Throttled` means defer, and there is no queue behind this notice.
 
@@ -153,16 +165,17 @@ both interpolated names HTML-encoded. Its header reads the shared constant:
 						<h1 style='margin:0;font-size:20px'>{SubmittedFormEmail.Subject}</h1>
 ```
 
-`Constants/SubmittedFormEmail.cs` holds `Subject` (`:23`) and `CopyTeams` (`:38`). The subject says
-"In Progress" rather than "Submitted" because that is the `OrderStatus` the submission sets, so the
-email and the console grid agree.
+`Constants/SubmittedFormEmail.cs` now holds **only** `Subject`. The subject says "In Progress" rather
+than "Submitted" because that is the `OrderStatus` the submission sets, so the email and the console
+grid agree. `CopyTeams` used to sit beside it and moved to the table; a subject stayed compiled in
+because changing one rewords the message, which is a copy decision made with the body.
 
 ## 6. Wiring that is not visible from any one file
 
 | Thing | Where it must agree | Enforced by |
 |---|---|---|
 | Subject vs. body header | `Constants/SubmittedFormEmail.cs:23`, read by `SubmittedFormEmailNotification.SendNoticeAsync` and by `BuildSubmittedFormNotification` | The shared constant only |
-| CC list vs. body copy | `CopyTeams` = `ccteam` + `pre-workteam`; the closing sentence names `ccteam` **and** `clientsupport` | **Nothing** — and they genuinely disagree (§7) |
+| CC list vs. body copy | The `SubmittedForm` row seeds to `clientsupport` + `pre-workteam`; the closing sentence names `ccteam` **and** `clientsupport` | **Nothing** — and they genuinely disagree (§7). The gap widened: the Cc is now operator-editable while the prose is a literal in `ATSEmailService` |
 | Candidate name source | `ApplicationFormService.cs:147` passes `personalDetails`; `ResolveCandidateName` falls back to the row | Nothing — the fallback is silent |
 | Route `/ats/addapplicationformdata` | `ATSPaths.cs:23` `MatchPath` vs. the UI's `PostAsync` (`ApplicationFormService.cs:210`) vs. Carter's `MapPost` + `PathSet` | Nothing at compile time |
 | `ISubmittedFormEmailNotification` | `ATSServiceConfiguration.cs:163`, registered beside the sender it depends on | DI |
@@ -171,15 +184,20 @@ email and the console grid agree.
 
 ## 7. The CC list and the body copy disagree, deliberately
 
-`CopyTeams` puts `ccteam@cibi.com.ph` and `pre-workteam@cibi.com.ph` on the message. The body's
-closing sentence tells the reader to contact `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`.
+The seeded `SubmittedForm` row puts `clientsupport@cibi.com.ph` and `pre-workteam@cibi.com.ph` on
+the message. The body's closing sentence tells the reader to contact `ccteam@cibi.com.ph` and
+`clientsupport@cibi.com.ph`.
 
-So `clientsupport` is named in the text but not copied, and `pre-workteam` is copied but not named.
-Both sides are reproduced exactly as agreed, and neither is a typo to "fix" unilaterally — the same
-kind of mismatch exists in the dispute notice. If either list changes, change the constant *and* the
-sentence in `BuildSubmittedFormNotification`, and expect `AtsSubmittedFormEmailBodyTests` and
-`SubmittedFormEmailNotificationTests` to fail until both are updated: they pin the literals on
-purpose.
+So `ccteam` is named in the text but not copied, and `pre-workteam` is copied but not named. Both
+sides are reproduced exactly as agreed, and neither is a typo to "fix" unilaterally — the same kind
+of mismatch exists in the dispute notice.
+
+**Keeping them in step got harder, not easier.** The copy list used to be a constant, so changing it
+meant a commit, and `SubmittedFormEmailNotificationTests` pinned the literals and failed until the
+prose was reconsidered. Now the list is a row: an operator retiring `pre-workteam` changes the Cc
+with no commit, no test failure and no prompt to look at the body. The prose is still a literal in
+`BuildSubmittedFormNotification`, still pinned by `AtsSubmittedFormEmailBodyTests`. Nothing connects
+the two. If you change either side, check the other by hand.
 
 ## 8. Tests
 
@@ -190,9 +208,15 @@ purpose.
 | `SubmittedFormEmailNotificationTests.cs` | Requestor addressed with both teams **and** the candidate copied, in that order; submitted name beats the name on the order row; falls back to the row, then to the mailbox; candidate left off the copy when the row has no address; skipped when there is no `RequestorId`, when the order cannot be found (the empty-placeholder case), or when the requestor is not in the directory; **does not throw** when the sender throws or reports failure |
 | `AtsSubmittedFormEmailBodyTests.cs` | The composed body: exact copy, both contact addresses, header equals `SubmittedFormEmail.Subject`, names HTML-encoded, and every `href` is a `mailto:` — i.e. no download link |
 
-The subject and the two team addresses are asserted as **literals**, not by reading
-`SubmittedFormEmail`, so a change to the agreed copy fails a test rather than silently redefining
-it.
+The subject is asserted as a **literal**, not by reading `SubmittedFormEmail.Subject`, so a change
+to the agreed copy fails a test rather than silently redefining it.
+
+The two team addresses were asserted the same way and no longer can be: they come from the table,
+and the suite stubs `IEmailProcessManagementService.GetCopyListAsync` through
+`Fixture/EmailCopyListFixture.cs`. The literals
+in this file now pin the **wiring** — that the notifier asks for `AtsEmailProcess.SubmittedForm`, and
+that the candidate is appended *after* the teams rather than mixed in. The agreed addresses
+themselves are pinned by `EmailProcessSeedTests`, where they live.
 
 The submit path's own wiring is exercised by the pre-existing `AddApplicationFormDataIntegrationTests`
 through the real container, which is what catches a missing `FakeAtsEmailSender` member. Those tests
@@ -207,7 +231,8 @@ pass in the high-level document.
 | If you change… | Also check… |
 |---|---|
 | `SubmittedFormEmail.Subject` | The header follows automatically; the **tests** do not — they pin the literal |
-| `SubmittedFormEmail.CopyTeams` | The body's closing sentence in `BuildSubmittedFormNotification` (§7), and the expected `Cc:` sequence in `SubmittedFormEmailNotificationTests` |
+| The `SubmittedForm` row's `CCEmail` | The body's closing sentence in `BuildSubmittedFormNotification` (§7) — no rebuild is involved, so nothing forces you to look; and the daily-cap arithmetic, since each address is a charged recipient |
+| `EmailProcessManagementService.GetCopyListAsync` | All five ATS notices read it — `docs/features/ats-email-process/`. Its file also holds the console's write methods, which throw; this one must not |
 | The body copy | `AtsSubmittedFormEmailBodyTests` asserts the sentences verbatim |
 | `SingleEmailSendRetry.SendAsync`, or the attempt budget it is given | The other four inline sends and the queue spend the same budget — `docs/features/ats-email-send-retry/`. Do **not** add a second wrapper anywhere beneath it: nested budgets multiply |
 | `SubmittedFormEmailDetails` | Its single caller at `ApplicationFormService.cs:147`, and every test in `SubmittedFormEmailNotificationTests` |

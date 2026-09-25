@@ -11,4 +11,5 @@ public static class CacheTags
 	public const string Role = "role";
 	public const string Client = "client";
 	public const string Package = "package";
+	public const string EmailProcess = "emailprocess";
 }

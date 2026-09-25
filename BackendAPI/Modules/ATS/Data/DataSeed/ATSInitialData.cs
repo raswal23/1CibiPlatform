@@ -562,17 +562,21 @@ public class ATSInitialData
 	/// <see cref="AtsEmailProcess.All"/>, carrying its mailboxes as a comma-separated list.
 	/// </summary>
 	/// <remarks>
-	/// These are the AGREED addresses - the ones sitting commented out in
-	/// <see cref="WithdrawnEmail"/>, <see cref="DisputeEmail"/> and
-	/// <see cref="ApplicationFormEmail"/> - deliberately NOT the tester mailboxes those constants
-	/// are currently swapped to. Seed data ships to production and runs on first startup, so
-	/// copying the live swap forward would put a personal gmail address on real candidate mail.
-	/// The consequence, which is intended: until that swap is unwound, this table and the
-	/// constants disagree, and the table holds the correct list.
+	/// These are the AGREED addresses. They were chosen over the tester mailboxes the four notice
+	/// constants were swapped to for branch verification, because seed data ships to production and
+	/// runs on first startup - copying that swap forward would have put a personal gmail address on
+	/// real candidate mail.
 	///
-	/// <c>ApplicationForm</c> and <c>FollowUp</c> get identical lists because one literal serves
-	/// both today. They are separate rows so they can diverge without a release, which is the
-	/// point of storing a process per row.
+	/// Those constants are now deleted and the send path reads these rows, so the swap is undone by
+	/// the same change that made this the source: every notice copies the agreed list again. That is
+	/// the intended outcome and not a side effect to be reverted, but it IS a behaviour change on a
+	/// verification branch - a tester who was receiving these notices stops, and the CIBI teams
+	/// start. In a running environment the seeder will not overwrite an edited row, so an operator
+	/// who wants the tester copied adds them through the management screen rather than here.
+	///
+	/// <c>ApplicationForm</c> and <c>FollowUp</c> get identical lists because one literal served
+	/// both. They are separate rows so they can diverge without a release, which is the point of
+	/// storing a process per row.
 	///
 	/// Seeded ACTIVE, unlike the placeholder rows this replaced: every list here is a real,
 	/// parseable set of mailboxes, so there is no empty string for the send path to choke on.
@@ -581,8 +585,8 @@ public class ATSInitialData
 	{
 		var now = DateTime.UtcNow;
 
-		// Built from the parts rather than written as four literals, so a change to one team's
-		// address cannot be applied to three processes and missed on the fourth.
+		// Built from the parts rather than written as a literal per process, so a change to one
+		// team's address cannot be applied to four processes and missed on the fifth.
 		const string clientSupport = "clientsupport@cibi.com.ph";
 		const string preWorkTeam = "pre-workteam@cibi.com.ph";
 
@@ -591,7 +595,8 @@ public class ATSInitialData
 			[AtsEmailProcess.Withdrawn] = clientSupport,
 			[AtsEmailProcess.Dispute] = clientSupport,
 			[AtsEmailProcess.ApplicationForm] = $"{clientSupport},{preWorkTeam}",
-			[AtsEmailProcess.FollowUp] = $"{clientSupport},{preWorkTeam}"
+			[AtsEmailProcess.FollowUp] = $"{clientSupport},{preWorkTeam}",
+			[AtsEmailProcess.SubmittedForm] = $"{clientSupport},{preWorkTeam}"
 		};
 
 		// Driven by AtsEmailProcess.All rather than by the dictionary, so a process added to the

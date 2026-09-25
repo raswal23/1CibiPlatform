@@ -7,6 +7,7 @@ using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.OrderHistory;
 using ATS.Services.OrderValidation;
+using ATS.Services.Settings.EmailProcessManagement;
 using Auth.DTO;
 using Auth.Shared.Contracts;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
@@ -32,17 +34,24 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 /// </remarks>
 public class ApplicationFormEmailCopyTests
 {
-	// Read from the constant, DEPARTING from SubmittedFormEmailNotificationTests, which pins
-	// "clientsupport@cibi.com.ph" and "pre-workteam@cibi.com.ph" as literals so that a change to the
-	// agreed copy fails a test rather than going out silently.
+	// Arbitrary, and deliberately NOT the agreed CIBI addresses. The copy list is a row now, stubbed
+	// per test below, so this file has no constant left to read and nothing it could pin: what the
+	// agreed list contains is ATSInitialData's business and EmailProcessSeedTests'.
 	//
-	// That convention is right, and the sibling tests carry it for this module's copy list - the two
-	// notice tests pin the same pair of addresses this constant holds. Pinning them a third time here
-	// would report an already-reported fact and say nothing about the wiring this file exists to
-	// cover: which addresses are copied, on which of the two bodies, and what happens when the sender
-	// cannot carry a copy list at all. Those assertions hold whatever the constant contains, which is
-	// what lets this file stay green while a constant is temporarily swapped for branch verification.
-	private static readonly IReadOnlyCollection<string> CopyTeams = ApplicationFormEmail.CopyTeams;
+	// Distinct addresses are the point. This is the one suite where the process asked for is itself
+	// under test - the invitation and the reminder read SEPARATE rows, and a stub that answered both
+	// with the same pair would let the two be swapped with every assertion still green.
+	private static readonly string[] InvitationTeams =
+	[
+		"invitation-team-one@example.test",
+		"invitation-team-two@example.test"
+	];
+
+	private static readonly string[] ReminderTeams =
+	[
+		"reminder-team-one@example.test",
+		"reminder-team-two@example.test"
+	];
 
 	private const string CandidateEmail = "candidate@example.test";
 	private const string CandidateName = "Juan Dela Cruz";
@@ -72,6 +81,16 @@ public class ApplicationFormEmailCopyTests
 	/// resolves it through the Auth directory, the same lookup the three sibling notices use.
 	/// </summary>
 	private readonly Mock<IAuthQueries> _authQueries = new();
+
+	/// <summary>
+	/// Two rows, two lists. The invitation and the reminder were seeded with the same addresses, but
+	/// they are separate rows precisely so they can diverge - which is only testable if the stub
+	/// answers them differently.
+	/// </summary>
+	private readonly Mock<IEmailProcessManagementService> _emailProcessManagementService =
+		EmailCopyListFixture
+			.Returning(AtsEmailProcess.ApplicationForm, InvitationTeams)
+			.AlsoReturning(AtsEmailProcess.FollowUp, ReminderTeams);
 
 	public ApplicationFormEmailCopyTests()
 	{
@@ -122,6 +141,7 @@ public class ApplicationFormEmailCopyTests
 			Mock.Of<IOrderInputValidator>(),
 			Mock.Of<IUnitOfWork>(),
 			_authQueries.Object,
+			_emailProcessManagementService.Object,
 
 			// Only the bool overload spends this budget, and these tests drive the result-aware one
 			// directly. Zero back-off regardless, so a future test that does go through the retry
@@ -185,14 +205,22 @@ public class ApplicationFormEmailCopyTests
 			isFollowUp);
 
 	/// <summary>
-	/// The full expected copy list: the fixed teams, then the requestor resolved from the directory.
+	/// The full expected copy list: the notice's own teams, then the requestor resolved from the
+	/// directory.
 	/// </summary>
-	private static readonly string[] TeamsAndRequestor = [.. CopyTeams, RequestorEmail];
-
+	/// <remarks>
+	/// <c>SequenceEqual</c> rather than a set comparison, because the ORDER is a documented choice -
+	/// the teams are on every one of these emails and the requestor varies per order, so a team
+	/// mailbox threading by Cc sees a stable prefix. See <c>BuildCopyListAsync</c>'s remark.
+	/// </remarks>
 	private static void VerifyCopiedTeams(
 		Mock<IAtsEmailSender> sender,
 		string expectedSubject,
-		string expectedBody) =>
+		string expectedBody,
+		IReadOnlyCollection<string> expectedTeams)
+	{
+		string[] teamsAndRequestor = [.. expectedTeams, RequestorEmail];
+
 		sender.Verify(
 			resultAware => resultAware.SendATSEmailWithResultAsync(
 				CandidateEmail,
@@ -200,8 +228,9 @@ public class ApplicationFormEmailCopyTests
 				expectedBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(TeamsAndRequestor))),
+					cc != null && cc.SequenceEqual(teamsAndRequestor))),
 			Times.Once);
+	}
 
 	[Fact]
 	public async Task SendApplicationForm_ShouldAddressTheCandidateAndCopyBothTeamsAndTheRequestor()
@@ -216,7 +245,7 @@ public class ApplicationFormEmailCopyTests
 		// Assert: the candidate is the TO address - the form is theirs to fill in - and both CIBI teams
 		// plus the requestor who raised the order are copied, so each holds the same thread.
 		result.IsSent.Should().BeTrue();
-		VerifyCopiedTeams(sender, InvitationSubject, InvitationBody);
+		VerifyCopiedTeams(sender, InvitationSubject, InvitationBody, InvitationTeams);
 	}
 
 	[Fact]
@@ -274,7 +303,7 @@ public class ApplicationFormEmailCopyTests
 				InvitationBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(CopyTeams))),
+					cc != null && cc.SequenceEqual(InvitationTeams))),
 			Times.Once);
 	}
 
@@ -308,7 +337,7 @@ public class ApplicationFormEmailCopyTests
 				InvitationBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(CopyTeams))),
+					cc != null && cc.SequenceEqual(InvitationTeams))),
 			Times.Once);
 	}
 
@@ -349,7 +378,7 @@ public class ApplicationFormEmailCopyTests
 				InvitationBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(CopyTeams))),
+					cc != null && cc.SequenceEqual(InvitationTeams))),
 			Times.Once);
 	}
 
@@ -381,15 +410,17 @@ public class ApplicationFormEmailCopyTests
 				InvitationBody,
 				It.IsAny<CancellationToken>(),
 				It.Is<IReadOnlyCollection<string>?>(cc =>
-					cc != null && cc.SequenceEqual(CopyTeams))),
+					cc != null && cc.SequenceEqual(InvitationTeams))),
 			Times.Once);
 	}
 
 	[Fact]
-	public async Task SendApplicationForm_ShouldCopyBothTeamsOnTheFollowUpReminder_Too()
+	public async Task SendApplicationForm_ShouldCopyTheFollowUpTeamsOnTheReminder_NotTheInvitationOnes()
 	{
-		// Arrange: the reminder is the same request sent again, so the teams see the chase as well as
-		// the original. Both bodies travel the same send, and the copy list does not branch on which.
+		// Arrange: the reminder is the same request sent again, so a copy list is owed here too - but
+		// it is the FollowUp row's, not the invitation's. Those rows ship with identical addresses, so
+		// this is the assertion that would stay green under identical stubs while the send read the
+		// wrong row; the two stubbed lists are deliberately different to make it bite.
 		var sender = SetupResultAwareSender();
 		var service = CreateService();
 
@@ -398,7 +429,7 @@ public class ApplicationFormEmailCopyTests
 
 		// Assert
 		result.IsSent.Should().BeTrue();
-		VerifyCopiedTeams(sender, ReminderSubject, ReminderBody);
+		VerifyCopiedTeams(sender, ReminderSubject, ReminderBody, ReminderTeams);
 	}
 
 	[Fact]

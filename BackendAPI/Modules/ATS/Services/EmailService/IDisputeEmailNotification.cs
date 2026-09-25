@@ -13,8 +13,9 @@ namespace ATS.Services.EmailService;
 /// went to the <c>ATS:DisputeOrderEmailRecipient</c> mailbox before the transaction and threw when it
 /// could not be delivered — which meant an SMTP outage stopped disputes from being filed at all.
 /// That coupling is gone: the dispute is recorded first and this acknowledgement is best-effort. CIBI
-/// now learns of a dispute from the <c>DisputeEmail.CopyTeam</c> address copied on this message
-/// rather than from a separate one.
+/// now learns of a dispute from the addresses copied on this message rather than from a separate one
+/// - which are whatever the <see cref="AtsEmailProcess.Dispute"/> row holds, so switching that row
+/// off means nobody at CIBI is told a dispute was filed.
 /// </remarks>
 public interface IDisputeEmailNotification
 {

@@ -12,7 +12,7 @@ it, confirming receipt and restating what they submitted.
 | | |
 |---|---|
 | **To** | the person who filed the dispute, from their token |
-| **Cc** | `clientsupport@cibi.com.ph` |
+| **Cc** | the `Dispute` copy list — `clientsupport@cibi.com.ph` as seeded |
 | **Subject** | `CIBI \| Order Dispute` |
 
 The body is the standard CIBI card — navy gradient header, the same confidentiality footer as every
@@ -25,8 +25,11 @@ alert to the `ATS:DisputeOrderEmailRecipient` mailbox, subject `CIBI | Dispute O
 carrying a table of requestor email, company, order date and reason. It has been removed, along with
 `IEmailService.SendEmailForDispute` (all three implementations), the `SendDisputeOrderEmailAsync`
 helper and the config key from all five `appsettings` files. CIBI now learns of a dispute from the
-`clientsupport@cibi.com.ph` copy on this message and from the order's history, not from a separate
-message.
+copy on this message and from the order's history, not from a separate message.
+
+That makes the `Dispute` row load-bearing in a way it was not when the address was compiled in.
+Emptying it, or switching it off, does not merely drop a copy — it removes the only email anyone at
+CIBI receives when a dispute is filed. The order history still records it, but nobody is told.
 
 ## How it works
 
@@ -54,6 +57,13 @@ re-sends the same message instead of rebuilding it. See
 [`ats-email-send-retry`](../ats-email-send-retry/ats-email-send-retry.md). Unlike a queued
 invitation, this send has no later pass behind it, so the attempts it gets are the only ones it
 gets.
+
+The copy list is resolved above the retry too, out of `ats."EmailProcessDetails"` through
+`IEmailProcessManagementService.GetCopyListAsync` — the console's own settings service, called here
+for its one method that cannot throw — so the addresses are read once per dispute, not once per
+attempt.
+It used to be `DisputeEmail.CopyTeam`, a compiled literal; only the subject is still in that file.
+See [`ats-email-process`](../ats-email-process/ats-email-process.md).
 
 `ats-dispute-order-email_code_explanation.md` walks the chain file by file.
 
@@ -133,7 +143,9 @@ dotnet build 1CibiPlatform.sln
 Manual, end to end: in **Disputes**, open the dialog and confirm "Please specify" is locked until a
 category is selected and that clicking it while locked blinks the note. Then file one dispute under
 **Billing** and one under **Others**, each with its own text in "Please specify". For each, confirm
-the filer receives `CIBI | Order Dispute` with `clientsupport@cibi.com.ph` on `Cc:`, that **both**
+the filer receives `CIBI | Order Dispute` with every address in the `Dispute` row of
+`ats."EmailProcessDetails"` on `Cc:` — read the row first rather than expecting the seeded
+`clientsupport@cibi.com.ph`, since it is operator-editable — that **both**
 the category and the details line are present, that the grid's "Reason for Dispute" chip shows the
 label rather than the typed sentence, and that **no second message arrives** — the internal
 operations alert is gone. Then check the row is `IsDisputed` with `DisputedAt` set, and that the order's history shows
@@ -169,8 +181,12 @@ that is a pure function. The `Cc:` header on the wire needs the manual pass abov
 - **Do not change the subject without the header.** The body's `<h1>` reads `DisputeEmail.Subject`,
   the same constant sent as the subject line.
 - **Do not assume the body's contact sentence matches the CC list.** The sentence names both
-  `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; only the latter is actually copied. They are
-  separate literals in separate files and nothing keeps them in step.
+  `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; only the latter is copied, and only because
+  it is in the `Dispute` row of `ats."EmailProcessDetails"`. The sentence is compiled into
+  `ATSEmailService`; the row is edited in the database. Nothing keeps them in step, and since the
+  cutover the two sides cannot even be reviewed together — an operator retiring an address leaves the
+  sentence pointing at an uncopied mailbox with no commit to show for it. See
+  [`ats-email-process`](../ats-email-process/ats-email-process.md).
 - **Do not put a dispute composer back on `IEmailService`.** `SendEmailForDispute` was removed from
   that interface precisely because it is a BuildingBlocks contract implemented by Auth and by the
   tests' `FakeEmailSender`, neither of which files disputes. `BuildDisputeNotification` lives on

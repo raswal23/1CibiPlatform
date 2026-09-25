@@ -3,12 +3,14 @@ using ATS.Constants;
 using ATS.Data.Entities;
 using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
+using ATS.Services.Settings.EmailProcessManagement;
 using Auth.DTO;
 using Auth.Shared.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
@@ -24,15 +26,20 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 /// </remarks>
 public class WithdrawnEmailNotificationTests
 {
-	// Deliberately literals rather than WithdrawnEmail.Subject / .CopyTeam. These two are the
-	// agreed copy, and a test that read the constant would keep passing if the constant were
-	// changed - which is the one thing it exists to catch.
-	//
-	// The copied mailbox is clientsupport@, not the ccteam@ the body's closing sentence names:
-	// the notice is copied to one team and tells the reader to write to another. Both sides are
-	// deliberate, so this literal tracks the recipient only - AtsWithdrawnEmailBodyTests pins the
-	// prose address separately.
+	// Deliberately a literal rather than WithdrawnEmail.Subject. This is the agreed copy, and a test
+	// that read the constant would keep passing if the constant were changed - which is the one
+	// thing it exists to catch.
 	private const string WithdrawnSubject = "Order Status – Withdrawn";
+
+	// The team copy is now a row in ats."EmailProcessDetails", stubbed below - so this literal has
+	// stopped being a pin on the agreed copy and become the stub's value. What it still pins is the
+	// WIRING: that whatever the Withdrawn row holds lands on the message alongside the candidate.
+	// The agreed addresses themselves moved to ATSInitialData, and
+	// EmailProcessSeedTests is where a change to them is now caught.
+	//
+	// Still not the ccteam@ the body's closing sentence names: the notice is copied to one team and
+	// tells the reader to write to another. Both sides are deliberate, and
+	// AtsWithdrawnEmailBodyTests pins the prose address separately.
 	private const string CcTeam = "clientsupport@cibi.com.ph";
 	private const string RequestorEmail = "requestor@cibi.test";
 	private const string RequestorName = "Ana Reyes";
@@ -52,6 +59,9 @@ public class WithdrawnEmailNotificationTests
 	private readonly Mock<IAuthQueries> _authQueries = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
+	private readonly Mock<IEmailProcessManagementService> _emailProcessManagementService =
+		EmailCopyListFixture.Returning(AtsEmailProcess.Withdrawn, CcTeam);
+
 	private readonly WithdrawnEmailNotification _notifier;
 
 	public WithdrawnEmailNotificationTests()
@@ -63,6 +73,7 @@ public class WithdrawnEmailNotificationTests
 			_emailSender.Object,
 			_authQueries.Object,
 			_orderHistoryService.Object,
+			_emailProcessManagementService.Object,
 			Options.Create(new AtsEmailDeliveryOptions
 			{
 				MaxAttemptsPerMessage = MaxAttempts,

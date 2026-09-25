@@ -188,9 +188,26 @@ Two files under `Services/EmailService/`, following the module's one-type-per-fi
 3. **Greeting name.** `RequestorName` (the token's `FullName`), falling back to the address.
 4. **Compose** via `_emailSender.BuildDisputeNotification(...)`, passing `null` for the details when
    `hasSeparateDetails` is false.
-5. **Send** with `cc: [DisputeEmail.CopyTeam]` and `subject: DisputeEmail.Subject`, then log. A
+5. **Send** with `subject: DisputeEmail.Subject` and a `cc` resolved from the table, then log. A
    `!result.IsSent` is a warning, not an exception — `Throttled` means defer, and there is no queue
    behind an acknowledgement.
+
+   The copy list was `[DisputeEmail.CopyTeam]`, a compiled literal. It is now the
+   `AtsEmailProcess.Dispute` row of `ats."EmailProcessDetails"`:
+
+   ```csharp
+   var cc = await _emailProcessManagementService.GetCopyListAsync(
+   	AtsEmailProcess.Dispute,
+   	cancellationToken);
+   ```
+
+   Resolved out here with the body, **not inside the retry loop below** — a second attempt re-sends,
+   it does not re-read. And it never throws: a missing row, an inactive row or an unreachable
+   database all yield an empty list, and the acknowledgement still reaches the filer. That is this
+   one method's contract, not the interface's — `IEmailProcessManagementService` is the console's
+   settings service and its write methods throw, so a notifier must call nothing else on it. The cost
+   of the choice is that switching the row off means **nobody at CIBI is told a dispute was filed**,
+   silently. See [`ats-email-process`](../ats-email-process/ats-email-process.md).
 
 ## 6. The composer and the constants
 
@@ -217,15 +234,18 @@ The details bullet is built outside the verbatim string and dropped in:
 			: $"<li style='margin:6px 0;font-size:15px;line-height:1.6'><span style='color:#5b6f8f'>Dispute Details:</span> {WebUtility.HtmlEncode(disputeDetails.Trim())}</li>";
 ```
 
-`Constants/DisputeEmail.cs` holds `Subject` (`:22`) and `CopyTeam`. Read by the notifier and by the
-composer, so one change moves both.
+`Constants/DisputeEmail.cs` now holds **only** `Subject`, read by the notifier and by the composer,
+so one change moves both. It used to hold `CopyTeam` alongside it; that address moved to the table.
+A subject stayed compiled in because changing one rewords the message — a copy decision made with
+the body beside it, not an operational setting.
 
 ## 7. Wiring that is not visible from any one file
 
 | Thing | Where it must agree | Enforced by |
 |---|---|---|
 | Subject vs. body header | `Constants/DisputeEmail.cs` `Subject`, read by `DisputeEmailNotification.SendNoticeAsync` and by `BuildDisputeNotification` | The shared constant only |
-| CC address vs. body copy | `DisputeEmail.CopyTeam` = `clientsupport@cibi.com.ph`, but the closing sentence names `ccteam@cibi.com.ph` **and** `clientsupport@cibi.com.ph` as prose | **Nothing** — separate literals in separate files |
+| CC address vs. body copy | The `Dispute` row seeds to `clientsupport@cibi.com.ph`, but the closing sentence names `ccteam@cibi.com.ph` **and** `clientsupport@cibi.com.ph` as prose | **Nothing** — and the gap widened: the Cc is now operator-editable while the prose is a literal in `ATSEmailService`, so retiring a mailbox from the row leaves the body still naming it |
+| The copy list existing at all | `AtsEmailProcess.Dispute` must have an active row with addresses | **Nothing at send time, by design** — an empty list is a valid answer and the notice goes out regardless. `EmailProcessSeedTests` pins the seeded starting state; an operator's later edit is theirs |
 | `DisputeCategory` | `UI/…/DTO/ATS/DisputeOrderRequestDTO.cs` vs. `BackendAPI/Modules/ATS/DTO/DisputeOrderRequestDTO.cs` | JSON property name only |
 | Which field reaches the column | The dialog sends both; `ATSRepository.DisputeOrders.cs:87` writes `DisputeCategory` into `EmailInvitationRequest.DisputeCategory` and falls back to `DisputeReason` | Nothing — see §8 |
 | Route `/ats/markasdisputed` | `ATSPaths.cs:559` `MatchPath` vs. the UI's `PatchAsJsonAsync` vs. Carter's `MapPatch` + `PathSet` | Nothing at compile time |
@@ -280,8 +300,15 @@ typed sentence, and `MarkAsDisputedAsync_ShouldPersistTheReason_WhenTheClientSen
 only `DisputeReason` and asserts the fallback still fills the column. Without the second test the
 fallback branch would be reachable only from a client nobody runs.
 
-The subject and the CC address are asserted as **literals**, not by reading `DisputeEmail`, so a
-change to the agreed copy fails a test rather than silently redefining it.
+The subject is asserted as a **literal**, not by reading `DisputeEmail.Subject`, so a change to the
+agreed copy fails a test rather than silently redefining it.
+
+The CC address was asserted the same way and no longer can be: it comes from the table, and the
+suite stubs `IEmailProcessManagementService.GetCopyListAsync` through
+`Fixture/EmailCopyListFixture.cs`. What the literal in
+this file now pins is the **wiring** — that the notifier asks for `AtsEmailProcess.Dispute` and puts
+what comes back on the Cc. The agreed addresses themselves are pinned by `EmailProcessSeedTests`,
+where they live.
 
 Removing the operations alert changed four pre-existing tests rather than simply deleting them.
 `MarkAsDisputedAsync_ShouldSendNotificationUpdateRepositoryAndReturnTrue` became
@@ -310,7 +337,7 @@ needs the manual pass in the high-level document.
 | If you change… | Also check… |
 |---|---|
 | `DisputeEmail.Subject` | The header follows automatically; the **tests** do not — they pin the literal |
-| `DisputeEmail.CopyTeam` | The closing sentence in `BuildDisputeNotification`, which names it as prose alongside `ccteam@cibi.com.ph` (§7) |
+| The `Dispute` row's `CCEmail` | The closing sentence in `BuildDisputeNotification`, which names `clientsupport@cibi.com.ph` as prose alongside `ccteam@cibi.com.ph` (§7). No rebuild is involved in changing the row, so nothing forces anyone to look |
 | The body copy | `AtsDisputeEmailBodyTests` asserts the sentences verbatim |
 | The dialog's categories, or which ones require free text | `DisputeEmailNotification.SendNoticeAsync` step 2 — it compares values rather than matching `"Others"`, so it should keep working, but `DisputeEmailNotificationTests` pins all three categories by name |
 | `DisputeOrderRequestDTO` on either side | The other side (§3), and `MarkAsDisputedCommandValidator` — note `DisputeCategory` is deliberately not `NotEmpty` |

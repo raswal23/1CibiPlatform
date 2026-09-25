@@ -42,6 +42,7 @@ global using ATS.Services.Settings.RoleManagement;
 global using ATS.Services.Settings.ModuleManagement;
 global using ATS.Services.Settings.PackageManagement;
 global using ATS.Services.Settings.EmailAccountManagement;
+global using ATS.Services.Settings.EmailProcessManagement;
 global using ATS.Services.Settings.ClientManagement;
 global using ATS.Services.ApplicationForm;
 global using ATS.Services.AccessScope;

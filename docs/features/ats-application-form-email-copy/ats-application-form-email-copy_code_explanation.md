@@ -3,47 +3,46 @@
 The call chain behind `ats-application-form-email-copy.md`, file by file. Read that one first for
 what changed and why; this one is for the next person who has to modify it.
 
-The change is a new constant for the fixed part of the copy list, a helper that appends the requestor
-to it, and the `RequestorId` threaded down to that helper. Everything else below already existed and
-is documented because the copy list now depends on it.
+The change is a source for the team part of the copy list, a helper that appends the requestor to it,
+and the `RequestorId` threaded down to that helper. Everything else below already existed and is
+documented because the copy list now depends on it.
 
 ---
 
-## 1. `BackendAPI/Modules/ATS/Constants/ApplicationFormEmail.cs` — new
+## 1. The team addresses — `ats."EmailProcessDetails"`, via `GetCopyListAsync`
+
+This started life as a constant, `BackendAPI/Modules/ATS/Constants/ApplicationFormEmail.cs`, holding
+a two-entry `CopyTeams` and nothing else. **That file is deleted.** The addresses are now rows in
+`ats."EmailProcessDetails"`, read on the send path by
+`Services/Settings/EmailProcessManagement/EmailProcessManagementService.cs`:
 
 ```csharp
-public static class ApplicationFormEmail
-{
-	//public static readonly IReadOnlyCollection<string> CopyTeams =
-	//[
-	//	"clientsupport@cibi.com.ph",
-	//	"pre-workteam@cibi.com.ph"
-	//];
-
-	// Test recipients while the branch is being verified ...
-	public static readonly IReadOnlyCollection<string> CopyTeams =
-	[
-		"svaldemoro@cibi.com.ph",
-		"angel.condensada11@gmail.com"
-	];
-}
+Task<IReadOnlyList<string>> GetCopyListAsync(string emailProcess, CancellationToken cancellationToken);
 ```
 
-This is the **fixed** part of the list only. The requestor is copied too, but varies per order and
-their mailbox is not on the order — §2a resolves it and appends it to a *copy* of this collection.
-Never mutate `CopyTeams` itself; it is static and shared by every send in the process.
+`docs/features/ats-email-process/ats-email-process_code_explanation.md` documents that method in
+full. Four properties of it matter to the code below:
 
-`IReadOnlyCollection<string>` rather than a `const string`, because this copies two mailboxes.
-`SubmittedFormEmail` uses the same shape for the same reason; `WithdrawnEmail` and `DisputeEmail`
-copy one team each and use a `const string`.
+- **It never throws and never returns null.** A missing row, an inactive row and an unreachable
+  database all produce an empty list, and the notice still goes to the candidate. That is the same
+  stance §5 takes about losing the copy on the bool path — this just adds three more ways to reach it.
+- **Two processes, not one.** `AtsEmailProcess.ApplicationForm` for the first invitation,
+  `AtsEmailProcess.FollowUp` for the reminder. The constant could not tell them apart; the rows can,
+  and §2 now picks between them.
+- **The returned list is fresh per call.** The old warning against mutating the static `CopyTeams`
+  no longer applies, but §2a still copies into a new `List<string>` before appending the requestor —
+  the contract returns `IReadOnlyList<string>` and the implementation is free to hand back a cached
+  array.
+- **It lives on `IEmailProcessManagementService`, the console's settings service.** That is the
+  service the Add and Edit handlers use, and its write methods throw on bad input. This service
+  holds that interface only for `GetCopyListAsync` and must never call a write: a send path has no
+  operator to show a `BadRequestException` to. The field comment on the dependency says so.
 
-**It holds no `Subject`, unlike all three siblings.** Each of those is *one* notice with one subject,
-interpolated into the body's header (`BuildSubmittedFormNotification` renders
-`{SubmittedFormEmail.Subject}` directly into its `<h1>`), so one constant keeps the preview line and
-the header in step. This is *two* bodies with two subjects, already held as `InvitationSubject` and
-`ReminderSubject` at lines 374–375 of the service — next to
-`SendApplicationFormToUserEmailWithResultAsync`, the one place that picks between them. Moving a pair
-of subjects here would separate them from that choice and buy nothing.
+The two subjects were never in the deleted constant and did not move: `InvitationSubject` and
+`ReminderSubject` are `private const` at lines 374–375 of the service, next to
+`SendApplicationFormToUserEmailWithResultAsync`, the one place that picks between them. The three
+sibling constants (`WithdrawnEmail`, `DisputeEmail`, `SubmittedFormEmail`) kept their `Subject` for
+the same reason and lost only their copy lists.
 
 **Related pre-existing wart, not fixed by this change:** the two application form bodies do *not*
 interpolate those consts. `SendAppplicationFormNotification` (~line 446) and
@@ -51,9 +50,6 @@ interpolate those consts. `SendAppplicationFormNotification` (~line 446) and
 string literal. The four strings agree today; nothing enforces it. Editing a subject means editing its
 header by hand. Unifying them is a change to the bodies and was out of scope for a copy list — it is
 recorded in §8.
-
-The active list is the tester's mailboxes with the real block commented out above it — the same swap
-already present in the three siblings on this branch. See *Before release* in the feature doc.
 
 ---
 
@@ -74,7 +70,10 @@ It:
 Step 5 is the edit:
 
 ```csharp
-var cc = await BuildCopyListAsync(requestorId, cancellationToken);
+var cc = await BuildCopyListAsync(
+	isFollowUp ? AtsEmailProcess.FollowUp : AtsEmailProcess.ApplicationForm,
+	requestorId,
+	cancellationToken);
 
 return await resultAwareSender.SendATSEmailWithResultAsync(
 	toEmail: gmail!,
@@ -84,8 +83,10 @@ return await resultAwareSender.SendATSEmailWithResultAsync(
 	cc: cc);
 ```
 
-The list is passed unconditionally — it does not branch on `isFollowUp`. That is the decision
-recorded in the feature doc: the teams see the chase as well as the original.
+The list is passed unconditionally — both messages carry one. What `isFollowUp` selects is *which
+row* it comes from, reusing the same flag step 3 uses to pick the body. The teams still see the
+chase as well as the original, because both rows were seeded with the same addresses; the difference
+is that an operator can now change one without the other.
 
 The `else` branch below it is unchanged and still calls `_emailService.SendATSEmailAsync(toEmail,
 subject, body)`. That is the `IEmailService` bool contract in BuildingBlocks, which **has no `cc`
@@ -98,10 +99,12 @@ deliberate — see §5.
 
 ```csharp
 private async Task<IReadOnlyCollection<string>> BuildCopyListAsync(
+	string emailProcess,
 	Guid? requestorId,
 	CancellationToken cancellationToken)
 {
-	var cc = new List<string>(ApplicationFormEmail.CopyTeams);
+	var cc = new List<string>(
+		await _emailProcessManagementService.GetCopyListAsync(emailProcess, cancellationToken));
 
 	if (!requestorId.HasValue)
 		return cc;
@@ -135,9 +138,14 @@ look redundant; the XML doc on `IEndorsementSubmissionService` says so explicitl
 `GetATSAssignedUserAsync(Guid, CancellationToken)` that `SubmittedFormEmailNotification` and
 `WithdrawnEmailNotification` use to find who to *address* their notice to; here it finds who to copy.
 It is cached behind `AuthCacheRepository.UserDirectory.Cache.cs`, so the per-send cost is a cache
-read in the common case. The dependency is the **16th and last** constructor parameter of
-`EndorsementSubmissionService` — two unit test files construct it by hand and need updating if that
-list changes again.
+read in the common case. It sits second-to-last in the constructor of `EndorsementSubmissionService`,
+with `IEmailProcessManagementService` added after it — two unit test files construct that service by
+hand and need updating whenever the list changes. The Test project carries no global usings, so both
+of them also need `using ATS.Services.Settings.EmailProcessManagement;` written out.
+
+**The team read costs nothing extra.** `GetCopyListAsync` reads the whole `EmailProcessDetails`
+table, which the cache decorator holds under one key, so resolving a copy list is a cache read too.
+Two cache reads per send, no queries.
 
 **`SideEffectGuard`, not a bare await.** The single-order path in §3 runs this send *inside*
 `TransactionRunner.RunAsync`. An unguarded throw from a directory read would roll back the entire
@@ -147,10 +155,11 @@ returns the `fallback: null`, and the send carries on with the teams alone. Same
 
 **Appended, not prepended, and not deduplicated.** The teams are on every one of these emails and the
 requestor varies, so a team mailbox threading by `Cc` sees a stable prefix. Order is otherwise
-irrelevant to delivery. There is no dedup pass: a requestor whose address is also a team mailbox would
-be listed twice and charged twice to the daily cap. Impossible with the current lists — teams are
-shared mailboxes, requestors are individual logins — and worth revisiting only if that stops being
-true.
+irrelevant to delivery. There is no dedup pass: a requestor whose address is also a team mailbox
+would be listed twice and charged twice to the daily cap. That was unreachable while the teams were
+a compiled literal — shared mailboxes, requestors are individual logins. It is reachable now: the row
+is operator-editable, and nothing stops somebody adding their own login to it. `EmailCopyList.Validate`
+rejects an address repeated *within* a row and cannot see the requestor appended here.
 
 ---
 
@@ -171,8 +180,8 @@ The processor decides which body applies at line ~432:
 var isFollowUp = request.LastFollowUpSentDate is not null && request.EmailSentAt is null;
 ```
 
-The copy list is indifferent to that flag. If you ever need it to branch, that boolean is already
-threaded through to §2 as the `isFollowUp` parameter.
+That same flag reaches §2 as the `isFollowUp` parameter and now selects which row the copy list is
+read from — so a reminder released by this job copies the `FollowUp` list, not the invitation's.
 
 **Both sending entries retry, and §2 does not.** They do it by different mechanisms. The bool
 wrapper `SendApplicationFormToUserEmailAsync` calls `SingleEmailSendRetry.SendAsync` — three
@@ -238,8 +247,13 @@ foreach (var copied in cc)
 ```
 
 `MailboxAddress.Parse` throws on an unparseable address. `NormalizeRecipients` only removes blanks —
-it does not validate. A malformed entry added to `CopyTeams` therefore fails **every** application
-form send, not just one row. Treat the constant as production configuration.
+it does not validate, and neither does the resolver, deliberately. A malformed entry in the
+`ApplicationForm` row therefore fails **every** application form send, not just one row.
+
+That hazard used to need a code review to reach production; now it needs an operator saving a typo.
+`EmailCopyList.Validate` is what stands in the way — it runs on the Add and Edit commands and
+rejects an address `BulkSubjectRowValidator.IsValidEmail` will not accept. A row edited directly in
+the database bypasses it entirely.
 
 The same hazard applies to the requestor, but scoped to one order: a directory row holding a
 malformed `UserEmail` fails that candidate's send. §2a's `IsNullOrWhiteSpace` check catches the blank
@@ -269,12 +283,13 @@ exists so a future re-registration degrades instead of throwing.
 |---|---|
 | `AtsEmailSendLog.RecipientCount` is **summed**, not counted (`AtsEmailAccountRepository` lines ~85, ~243) | Three copies quadruple what a batch consumes: a 500-row upload charges up to 2,000. The email accounts screen reads the same sum. |
 | The resend endpoints requeue rather than send | Changing the copy list changes resends too, but not until the background job picks the row up. |
-| `BuildMessage` parses each address with no validation upstream | A typo in `CopyTeams` breaks every send, not one. |
+| `BuildMessage` parses each address with no validation upstream | A typo in the `ApplicationForm` row breaks every send, not one. The command validator is the only guard, and a direct database edit skips it. |
+| The team copy list is read at send time from a table | A row switched off, deleted or unreadable copies nobody, and the send still succeeds. Three new silent-degradation routes the constant did not have. |
 | The reminder body and the copy list both depend on the same guarded cast | If the cast ever starts failing, you lose the reminder wording *and* the copy together, silently — the candidate still receives a working invitation, so nothing alerts. |
 | The requestor's copy is best-effort and fails **quietly** by design | A directory outage drops every requestor from every copy list and logs a warning per send; nothing fails and no test catches it in production. The warning text is the only signal. |
 | Both bodies' `<h1>` duplicate the subject consts as literals instead of interpolating them | The subject and the header can drift apart with nothing failing. The sibling notices cannot — theirs interpolate. |
 | The bodies' closing sentence names `ccteam@cibi.com.ph` **and** `clientsupport@cibi.com.ph`, but the copied teams are `clientsupport` and `pre-workteam` | A deliberate mismatch, the same kind `SubmittedFormEmail` documents: `ccteam` is in the text and not on the message, `pre-workteam` is on the message and not in the text. Check both sides before changing either. |
-| `SubmittedFormEmail`, `WithdrawnEmail`, `DisputeEmail` and now `ApplicationFormEmail` all carry the tester swap | They must be restored in one commit. Restoring three of four leaves one notice going to the wrong mailboxes. |
+| The agreed addresses now live in the **seed**, which runs in Production | A tester mailbox committed to `ATSInitialData.GetEmailProcesses()` reaches real candidate mail. `EmailProcessSeedTests` fails on any domain but `@cibi.com.ph`. Test against a real mailbox by editing the row in that environment, not the seed. |
 
 ---
 
@@ -290,7 +305,7 @@ exists so a future re-registration degrades instead of throwing.
 | `...ShouldStillSend_WhenTheRequestorNoLongerResolves` | directory returns null → teams only, send succeeds |
 | `...ShouldLeaveTheRequestorOff_WhenTheirMailboxIsBlank` (×3: null, empty, whitespace) | blank addresses never reach `MailboxAddress.Parse` |
 | `...ShouldStillSend_WhenTheDirectoryLookupThrows` | `SideEffectGuard` swallows it; the candidate's link still goes out |
-| `...ShouldCopyBothTeamsOnTheFollowUpReminder_Too` | same copy list with `isFollowUp: true`, reminder subject and body |
+| `...ShouldCopyTheFollowUpTeamsOnTheReminder_NotTheInvitationOnes` | `isFollowUp: true` reads the `FollowUp` row, reminder subject and body |
 | `...ShouldNeverCopyTheCandidateTwice` | the candidate's address never appears in the copy list |
 | `...ShouldStillSendToTheCandidate_WhenTheSenderCannotCarryACopyList` | the `IEmailService` fallback still delivers — losing the copy must never lose the send |
 
@@ -315,14 +330,30 @@ anything touches `.Object` — and the service constructor touches it. A field i
 makes every result-aware test throw *"Mock type has already been initialized by accessing its Object
 property."* Hence `CreateService()`, called **after** `SetupResultAwareSender()`.
 
-**The cc assertion reads `ApplicationFormEmail.CopyTeams` rather than pinning literals.** This departs
-from `SubmittedFormEmailNotificationTests`, which pins `ccteam@cibi.com.ph` and
-`pre-workteam@cibi.com.ph` so an unagreed change to the copy fails a test. That convention is right
-and is currently doing its job — the constants are swapped to a tester's mailboxes, and the three
-sibling notice tests are red because of it. Pinning the same literals here would add a fourth red test
-reporting an already-reported fact, and would assert nothing about what this file exists to cover:
-which addresses are copied, on which of the two bodies, and what happens when the sender cannot carry
-a copy list. Those hold whatever the constant contains.
+**The two stubbed copy lists are deliberately different.**
+
+```csharp
+private readonly Mock<IEmailProcessManagementService> _emailProcessManagementService =
+	EmailCopyListFixture
+		.Returning(AtsEmailProcess.ApplicationForm, InvitationTeams)
+		.AlsoReturning(AtsEmailProcess.FollowUp, ReminderTeams);
+```
+
+The fixture stubs `GetCopyListAsync` and nothing else on that interface. A test that reached a write
+method would get Moq's default — which is the right outcome, because a send path calling one is the
+bug, not the stub.
+
+`InvitationTeams` and `ReminderTeams` are four fictional `@example.test` addresses, not the real
+CIBI ones. Two things follow. A send path reading the wrong row fails — which is the only way the
+invitation/reminder split is testable at all, since the seed gives both rows the same addresses.
+And the assertions say nothing about *which* addresses CIBI actually copies: that is
+`EmailProcessSeedTests`' job now, pinned where the addresses live.
+
+That is a change of convention from the original file, which asserted against
+`ApplicationFormEmail.CopyTeams`, and from the three sibling notice suites, which pinned the real
+literals so an unagreed change to the copy failed a test. Splitting the two concerns — *what a
+notice does with a list* here, *what the list contains* in the seed suite — is what the move to a
+table forces, and it is a better split: the notice behaviour holds whatever the addresses are.
 
 The tests stop at `IAtsEmailSender`. That the copied addresses reach the wire and are charged to the
 cap is `ATSEmailService`'s business, covered by `AtsEmailFailoverTests`. A successful SMTP send cannot
@@ -335,16 +366,19 @@ Neither is about the copy list; both construct or mock something whose signature
 
 | File | Why |
 |---|---|
-| `WithdrawnApplicationFilteringTests` | builds `EndorsementSubmissionService` by hand — needed `Mock.Of<IAuthQueries>()` as the new 16th argument |
+| `WithdrawnApplicationFilteringTests` | builds `EndorsementSubmissionService` by hand — needed `Mock.Of<IAuthQueries>()`, and later `Mock.Of<IEmailProcessManagementService>()`, as new constructor arguments |
 | `BulkEmailNotificationProcessorServiceTests` | mocks `IEndorsementSubmissionService` — every `Setup`/`Verify` of the send needed an `It.IsAny<Guid?>()` for the new parameter |
+
+`Fixture/EmailCopyListFixture.cs` is shared with the three sibling notice suites, which stub
+`GetCopyListAsync` the same way. Its catch-all returns an empty list for any process it was not told
+about, so a send path reading the wrong row copies nobody and the assertion fails.
 
 ### Suite state at the time of writing
 
 - `ApplicationFormEmailCopyTests` — 11 passed
-- `ATS.UnitTests` — 517 passed, 8 failed. All 8 pre-existing and unrelated: the three sibling notice
-  test classes asserting the real team literals against the tester swap, which was already in the
-  working tree before this change.
-- `ATS.IntegrationTests` — 310 passed, 0 failed
+- `ATS.UnitTests` — 590 passed, 0 failed. The 8 failures recorded here previously were the
+  tester-mailbox swap in the email constants; deleting those constants removed the cause.
+- `ATS.IntegrationTests` — 334 passed, 0 failed
 
 ---
 
@@ -352,12 +386,13 @@ Neither is about the copy list; both construct or mock something whose signature
 
 | If you change | Check |
 |---|---|
-| `ApplicationFormEmail.CopyTeams` | account provisioning — each entry multiplies daily-cap consumption per send; and that every address parses, or every send fails |
+| The `ApplicationForm` or `FollowUp` row's `CCEmail` | account provisioning — each entry multiplies daily-cap consumption per send; and that every address parses, or every send fails. No rebuild is involved, so nothing forces a review |
 | `BuildCopyListAsync` | the daily-cap figures in the feature doc, which assume teams + one requestor; and whether a new entry can ever collide with a team mailbox, since nothing deduplicates |
+| `EmailProcessManagementService.GetCopyListAsync` | all five notices read it — see `ats-email-process_code_explanation.md`. It shares a file with the console's write methods, which throw; this one must not |
 | The signature of either `SendApplicationFormToUserEmail...` overload | `BulkEmailNotificationProcessorService`, plus the mock setups in `BulkEmailNotificationProcessorServiceTests` — a `Guid?` and an `int?` next to each other make a silently-wrong positional call easy |
 | The constructor of `EndorsementSubmissionService` | `WithdrawnApplicationFilteringTests` and `ApplicationFormEmailCopyTests` both build it by hand |
-| The invitation or reminder **body** | the closing sentence names `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; a visible Cc has to keep agreeing with it |
 | `InvitationSubject` / `ReminderSubject` | the matching `<h1>` in `ATSEmailService`, which duplicates the literal rather than reading the const; and `ApplicationFormEmailCopyTests`, which pins both subjects as literals |
+| The invitation or reminder **body** | the closing sentence names `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; a visible Cc has to keep agreeing with it, and nothing checks |
 | The guarded cast in §2 | you would lose the reminder wording and the copy together; the fallback test is the only thing holding the send |
 | `NormalizeRecipients` or `1 + copied.Count` | the daily-cap arithmetic for **every** ATS email, not just this one |
-| Anything in `Constants/` carrying the tester swap | restore all four together |
+| `ATSInitialData.GetEmailProcesses()` | it seeds **Production**; `EmailProcessSeedTests` pins the agreed addresses and rejects any non-CIBI domain |
