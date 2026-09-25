@@ -30,6 +30,7 @@ public class ATSDBContext : DbContext
 	public DbSet<AtsEmailAccount> EmailAccounts { get; set; }
 	public DbSet<AtsEmailSendLog> EmailSendLog { get; set; }
 	public DbSet<AtsEmailAccountOtp> EmailAccountOtp { get; set; }
+	public DbSet<EmailProcessDetails> EmailProcessDetails { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

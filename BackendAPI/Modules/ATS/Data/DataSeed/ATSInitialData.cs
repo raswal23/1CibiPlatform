@@ -555,4 +555,65 @@ public class ATSInitialData
 		};
 	}
 	#endregion
+
+	#region Email process copy lists
+	/// <summary>
+	/// The copy list each notice ships with - one row per process in
+	/// <see cref="AtsEmailProcess.All"/>, carrying its mailboxes as a comma-separated list.
+	/// </summary>
+	/// <remarks>
+	/// These are the AGREED addresses - the ones sitting commented out in
+	/// <see cref="WithdrawnEmail"/>, <see cref="DisputeEmail"/> and
+	/// <see cref="ApplicationFormEmail"/> - deliberately NOT the tester mailboxes those constants
+	/// are currently swapped to. Seed data ships to production and runs on first startup, so
+	/// copying the live swap forward would put a personal gmail address on real candidate mail.
+	/// The consequence, which is intended: until that swap is unwound, this table and the
+	/// constants disagree, and the table holds the correct list.
+	///
+	/// <c>ApplicationForm</c> and <c>FollowUp</c> get identical lists because one literal serves
+	/// both today. They are separate rows so they can diverge without a release, which is the
+	/// point of storing a process per row.
+	///
+	/// Seeded ACTIVE, unlike the placeholder rows this replaced: every list here is a real,
+	/// parseable set of mailboxes, so there is no empty string for the send path to choke on.
+	/// </remarks>
+	public static IReadOnlyList<EmailProcessDetails> GetEmailProcesses()
+	{
+		var now = DateTime.UtcNow;
+
+		// Built from the parts rather than written as four literals, so a change to one team's
+		// address cannot be applied to three processes and missed on the fourth.
+		const string clientSupport = "clientsupport@cibi.com.ph";
+		const string preWorkTeam = "pre-workteam@cibi.com.ph";
+
+		var copyListsByProcess = new Dictionary<string, string>
+		{
+			[AtsEmailProcess.Withdrawn] = clientSupport,
+			[AtsEmailProcess.Dispute] = clientSupport,
+			[AtsEmailProcess.ApplicationForm] = $"{clientSupport},{preWorkTeam}",
+			[AtsEmailProcess.FollowUp] = $"{clientSupport},{preWorkTeam}"
+		};
+
+		// Driven by AtsEmailProcess.All rather than by the dictionary, so a process added to the
+		// constant without a copy list here still gets its row - empty and inactive - instead of
+		// silently having none.
+		return AtsEmailProcess.All
+			.Select(process =>
+			{
+				var hasCopyList = copyListsByProcess.TryGetValue(process, out var copyList);
+
+				return new EmailProcessDetails
+				{
+					EmailProcess = process,
+					CCEmail = copyList ?? string.Empty,
+					CreatedDate = now,
+
+					// An empty list active would hand "" to MimeKit.MailboxAddress.Parse on the
+					// first send of that notice, which throws.
+					IsActive = hasCopyList
+				};
+			})
+			.ToArray();
+	}
+	#endregion
 }

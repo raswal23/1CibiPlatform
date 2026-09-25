@@ -85,6 +85,21 @@ public static class ATSDatabaseExtensions
 			}
 		}
 
+		// One copy list per notice, matched on the process rather than guarded on an empty
+		// table: a process added to AtsEmailProcess later would otherwise reach new databases
+		// only, and every existing environment would be missing it. Idempotent, and it never
+		// touches a process that is already present - so an operator's edited list, and a
+		// notice they deliberately emptied, both survive a restart rather than being reset to
+		// the seeded addresses on the next boot.
+		var existingProcesses = await context.EmailProcessDetails
+			.AsNoTracking()
+			.Select(row => row.EmailProcess)
+			.ToListAsync();
+
+		await context.EmailProcessDetails.AddRangeAsync(
+			ATSInitialData.GetEmailProcesses()
+				.Where(row => !existingProcesses.Contains(row.EmailProcess)));
+
 		await context.SaveChangesAsync();
 
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);
