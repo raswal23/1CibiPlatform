@@ -204,11 +204,19 @@ verified OTP into a real state change, called only from `VerifyOtpAsync`:
 
 ### 3.1 Page shell — `Component/ATS/EmailAccountManagement/EmailAccountManagement.razor` (+ `.razor.cs`)
 
-- Route/guards: `@page "/s&i/ats/emailaccounts"`, `@attribute [RequirePermission(6, 7)]`,
-  `@attribute [RequireATSModule(16)]`, `@inherits CrudPageBase`. `OnInitializedAsync` checks
+- Guards: `@attribute [RequirePermission(6, 7)]`, `@attribute [RequireATSModule(16)]`,
+  `@inherits CrudPageBase`. `OnInitializedAsync` checks
   `IsPageAuthorized` (set by those attributes via `CrudPageBase`) before calling
   `LoadAccountsAsync` — the comment in the code notes the guard is load-bearing: without it the
   attributes are inert (they don't block rendering by themselves).
+- **There is no `@page` any more.** This screen is the *Email Accounts* tab of
+  `Component/ATS/EmailManagement/EmailManagement.razor`, which owns `/s&i/ats/emailmanagement` and
+  presents this board beside the notice copy lists under one permission — module 16, renamed
+  `AtsModuleIds.EmailManagement`. Its former route `/s&i/ats/emailaccounts` no longer resolves, and
+  the `EmailAccountsExhausted` notification that used to link to it now links to the host. See
+  `docs/features/ats-email-process/ats-email-process.md` section 9. The `RequireATSModule` attribute
+  is kept as a second check: `SecurePageBase` reads attributes off the type whether or not the
+  component was routed to.
 - `LoadAccountsAsync` → `EmailAccountService.GetAccountsAsync()` → populates `_accounts`, which
   feeds `FilteredAccounts` (client-side search over `DisplayName`/`EmailAddress` — no server round
   trip per keystroke, deliberately, per the inline comment: the whole list is a handful of rows).

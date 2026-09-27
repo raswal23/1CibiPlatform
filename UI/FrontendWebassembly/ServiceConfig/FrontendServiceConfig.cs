@@ -88,6 +88,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IAtsEmailAccountService, AtsEmailAccountService>();
+		services.AddScoped<IEmailProcessManagementService, EmailProcessManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();

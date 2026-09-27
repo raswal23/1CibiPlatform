@@ -190,6 +190,7 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 			new EditEmailProcessDTO
 			{
 				Id = added.Id,
+				EmailProcess = AtsEmailProcess.ApplicationForm,
 				CCEmail = " newteam@cibi.com.ph ",
 				IsActive = true
 			},
@@ -206,8 +207,9 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.CCEmail.Should().Be("newteam@cibi.com.ph");
 	}
 
-	// The process a row serves, and the date it was created, are the row's - not the caller's.
-	// EditEmailProcessDTO carries neither, and this proves the edit leaves both alone.
+	// The name IS editable now, so what this pins is narrower than it used to be: an edit that
+	// resubmits the name it was given must not disturb it, and must not disturb the row's own
+	// creation date - which no DTO has ever carried, because it is the row's and not the caller's.
 	[Fact]
 	public async Task EditEmailProcessAsync_ShouldLeaveTheProcessAndCreatedDateUntouched()
 	{
@@ -227,6 +229,7 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 			new EditEmailProcessDTO
 			{
 				Id = added.Id,
+				EmailProcess = AtsEmailProcess.Dispute,
 				CCEmail = "another@cibi.com.ph",
 				IsActive = true
 			},
@@ -256,6 +259,7 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 			new EditEmailProcessDTO
 			{
 				Id = added.Id,
+				EmailProcess = AtsEmailProcess.FollowUp,
 				CCEmail = "clientsupport@cibi.com.ph",
 				IsActive = false
 			},
@@ -274,6 +278,7 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 			new EditEmailProcessDTO
 			{
 				Id = 987654,
+				EmailProcess = AtsEmailProcess.Withdrawn,
 				CCEmail = "clientsupport@cibi.com.ph",
 				IsActive = true
 			},
@@ -282,6 +287,85 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 		// Assert
 		await act.Should().ThrowAsync<NotFoundException>()
 			.WithMessage("*987654*");
+	}
+
+	// A rename is a MOVE: the send path matches on this string, so pointing a row at a different
+	// notice hands that notice the addresses - and takes them away from the one it served.
+	// The row keeps its id and its creation date, which is what makes it a move and not a
+	// delete-plus-add.
+	[Fact]
+	public async Task EditEmailProcessAsync_ShouldMoveTheListToAnotherNotice_WhenTheProcessIsRenamed()
+	{
+		// Arrange
+		var added = await _emailProcessManagementService.AddEmailProcessAsync(
+			NewCopyList(AtsEmailProcess.Withdrawn, "clientsupport@cibi.com.ph"),
+			CancellationToken.None);
+
+		// Act
+		var result = await _emailProcessManagementService.EditEmailProcessAsync(
+			new EditEmailProcessDTO
+			{
+				Id = added.Id,
+				EmailProcess = AtsEmailProcess.Dispute,
+				CCEmail = "clientsupport@cibi.com.ph",
+				IsActive = true
+			},
+			CancellationToken.None);
+
+		// Assert
+		result.Id.Should().Be(added.Id);
+		result.EmailProcess.Should().Be(AtsEmailProcess.Dispute);
+
+		var persisted = await _dbContext.EmailProcessDetails
+			.AsNoTracking()
+			.SingleAsync(row => row.Id == added.Id);
+
+		persisted.EmailProcess.Should().Be(AtsEmailProcess.Dispute);
+		persisted.CreatedDate.Should().BeCloseTo(added.CreatedDate, TimeSpan.FromMilliseconds(1));
+
+		// One row moved, not a second row created - the count is what the unique index enforces.
+		var withdrawnRows = await _dbContext.EmailProcessDetails
+			.CountAsync(row => row.EmailProcess == AtsEmailProcess.Withdrawn);
+
+		withdrawnRows.Should().Be(0);
+	}
+
+	// The guard that stops two notices sharing one name. Without excludingId on the exists check
+	// the ordinary edit - which resubmits the name it was given - would collide with its own row
+	// and every save would fail, which is what EditEmailProcessAsync_ShouldReplaceTheCopyList
+	// Wholesale above would have caught.
+	[Fact]
+	public async Task EditEmailProcessAsync_ShouldThrowBadRequest_WhenRenamedToAProcessThatAlreadyHasAList()
+	{
+		// Arrange
+		await _emailProcessManagementService.AddEmailProcessAsync(
+			NewCopyList(AtsEmailProcess.Dispute),
+			CancellationToken.None);
+
+		var added = await _emailProcessManagementService.AddEmailProcessAsync(
+			NewCopyList(AtsEmailProcess.FollowUp),
+			CancellationToken.None);
+
+		// Act
+		var act = async () => await _emailProcessManagementService.EditEmailProcessAsync(
+			new EditEmailProcessDTO
+			{
+				Id = added.Id,
+				EmailProcess = AtsEmailProcess.Dispute,
+				CCEmail = "clientsupport@cibi.com.ph",
+				IsActive = true
+			},
+			CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<BadRequestException>()
+			.WithMessage($"*{AtsEmailProcess.Dispute}*already exists*");
+
+		var persisted = await _dbContext.EmailProcessDetails
+			.AsNoTracking()
+			.SingleAsync(row => row.Id == added.Id);
+
+		persisted.EmailProcess.Should().Be(AtsEmailProcess.FollowUp);
 	}
 
 	#endregion
@@ -306,6 +390,7 @@ public class EmailProcessManagementServiceIntegrationTests : BaseIntegrationTest
 			new EditEmailProcessDTO
 			{
 				Id = added.Id,
+				EmailProcess = AtsEmailProcess.Withdrawn,
 				CCEmail = "changed@cibi.com.ph",
 				IsActive = true
 			},

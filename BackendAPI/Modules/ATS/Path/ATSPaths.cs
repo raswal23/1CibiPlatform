@@ -196,6 +196,17 @@ public class ATSPaths : IReverseProxyModule
 
 			// ---------- Notice copy lists ----------
 			new RouteDefinitionDTO(
+				RouteId: "GetEmailProcesses",
+				MatchPath: "/ats/getemailprocesses",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getemailprocesses" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "AddEmailProcess",
 				MatchPath: "/ats/addemailprocess",
 				ClusterId: GatewayConstants.OnePlatformApi,

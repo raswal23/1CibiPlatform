@@ -31,11 +31,13 @@ public class EmailProcessValidationTests
 
 	private static EditEmailProcessCommand EditCommand(
 		int id = 1,
+		string emailProcess = AtsEmailProcess.Withdrawn,
 		string ccEmail = "clientsupport@cibi.com.ph",
 		bool isActive = true) =>
 		new(new EditEmailProcessDTO
 		{
 			Id = id,
+			EmailProcess = emailProcess,
 			CCEmail = ccEmail,
 			IsActive = isActive
 		});
@@ -75,6 +77,49 @@ public class EmailProcessValidationTests
 	public void AddValidator_ShouldRejectMissingProcess(string emailProcess)
 	{
 		var result = _addValidator.Validate(AddCommand(emailProcess: emailProcess));
+
+		result.IsValid.Should().BeFalse();
+		result.Errors.Should().Contain(error => error.ErrorMessage == "EmailProcess is required.");
+	}
+
+	// The name is editable, and closing it to the same constant is what keeps an edit from
+	// turning into a rename to something no notice sends. Renaming BETWEEN two known values is
+	// allowed and is guarded against the unique index in the service, not here - a validator
+	// cannot see the other rows.
+	[Theory]
+	[InlineData(AtsEmailProcess.Withdrawn)]
+	[InlineData(AtsEmailProcess.Dispute)]
+	[InlineData(AtsEmailProcess.ApplicationForm)]
+	[InlineData(AtsEmailProcess.FollowUp)]
+	public void EditValidator_ShouldAcceptEveryKnownProcess(string emailProcess)
+	{
+		var result = _editValidator.Validate(EditCommand(emailProcess: emailProcess));
+
+		result.IsValid.Should().BeTrue();
+	}
+
+	[Theory]
+	[InlineData("Withdrawal")]
+	[InlineData("withdrawn")]
+	[InlineData("Application Form")]
+	public void EditValidator_ShouldRejectUnknownProcess(string emailProcess)
+	{
+		var result = _editValidator.Validate(EditCommand(emailProcess: emailProcess));
+
+		result.IsValid.Should().BeFalse();
+		result.Errors.Should().Contain(error =>
+			error.ErrorMessage.StartsWith("EmailProcess must be one of:"));
+	}
+
+	// The load-bearing pair: the membership rule carries a When(), and a trailing When() applies
+	// to every rule in its chain. Chained onto the NotEmpty instead of declared beside it, the
+	// NotEmpty would be switched off for exactly the empty value it exists to catch.
+	[Theory]
+	[InlineData("")]
+	[InlineData("   ")]
+	public void EditValidator_ShouldRejectMissingProcess(string emailProcess)
+	{
+		var result = _editValidator.Validate(EditCommand(emailProcess: emailProcess));
 
 		result.IsValid.Should().BeFalse();
 		result.Errors.Should().Contain(error => error.ErrorMessage == "EmailProcess is required.");

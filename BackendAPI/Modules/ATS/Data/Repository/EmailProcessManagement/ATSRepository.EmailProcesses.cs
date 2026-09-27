@@ -26,10 +26,18 @@ public partial class ATSRepository
 	// ILike, not ==, for the reason on the contract: the unique index is case-sensitive and the
 	// send path's lookup is not, so an exact match would miss "withdrawn" against "Withdrawn"
 	// and let both rows exist.
-	public Task<bool> EmailProcessExistsAsync(string emailProcess, CancellationToken cancellationToken) =>
+	//
+	// excludingId is compared in the same query rather than by filtering a materialised list, so
+	// an edit that renames a row to a name another row already holds is still caught.
+	public Task<bool> EmailProcessExistsAsync(
+		string emailProcess,
+		int excludingId,
+		CancellationToken cancellationToken) =>
 		_dbcontext.EmailProcessDetails
 			.AsNoTracking()
-			.AnyAsync(process => EF.Functions.ILike(process.EmailProcess, emailProcess), cancellationToken);
+			.AnyAsync(process =>
+				EF.Functions.ILike(process.EmailProcess, emailProcess)
+				&& process.Id != excludingId, cancellationToken);
 
 	public async Task<EmailProcessDetails> AddEmailProcessAsync(
 		EmailProcessDetails emailProcess,

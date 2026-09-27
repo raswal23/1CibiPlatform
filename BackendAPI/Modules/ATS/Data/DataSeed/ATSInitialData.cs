@@ -496,9 +496,9 @@ public class ATSInitialData
 		   },
 		   new()
 		   {
-			   ModuleId = AtsModuleIds.EmailAccountManagement,
-			   ModuleName = "Email Accounts",
-			   ModuleDescription = "Sender email account management module for ATS system.",
+			   ModuleId = AtsModuleIds.EmailManagement,
+			   ModuleName = "Email Management",
+			   ModuleDescription = "Sender email account and notice copy list management module for ATS system.",
 			   IsActive = true,
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow

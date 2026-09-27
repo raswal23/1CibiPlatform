@@ -1,12 +1,19 @@
-@page "/s&i/ats/emailaccounts"
 @namespace FrontendWebassembly.Component.ATS
-@layout ATSLayout
 @attribute [RequirePermission(6, 7)]
 @attribute [RequireATSModule(16)]
 @inherits CrudPageBase
 @inject IAtsEmailAccountService EmailAccountService
 
-<PageTitle>ATS - Email Accounts</PageTitle>
+@* No @page, no @layout and no <PageTitle>: this is the Email Accounts tab of
+   Component/ATS/EmailManagement/EmailManagement.razor, which owns /s&i/ats/emailmanagement, the
+   document title, and the RequireATSModule(16) gate. It used to be a route of its own at
+   /s&i/ats/emailaccounts, and giving it one back would mean a second URL for the same tab plus a
+   branch in ATSLayout.CanAccessRoute with no module behind it - the ungrantable-entry trap the
+   Notifications comment in ModuleList records. The attributes stay as a second check, since
+   SecurePageBase reads them off the type whether or not the component was routed to.
+
+   The "invitations have stopped" notification links here, so its target moved with the route:
+   see BulkEmailNotificationProcessorService. *@
 
 @* Not cursor-paginated, unlike the other management boards. The service returns the whole
    list because the columns show live health and consumption: paging them would let the

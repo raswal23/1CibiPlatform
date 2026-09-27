@@ -16,6 +16,18 @@ public class EditEmailProcessCommandValidator : AbstractValidator<EditEmailProce
 			RuleFor(x => x.editEmailProcess.Id)
 				.GreaterThan(0).WithMessage("Id is required.");
 
+			// Same two-chain shape as AddEmailProcess, and for the same load-bearing reason: a
+			// trailing When() applies to every rule in its chain, so chaining the membership check
+			// onto the NotEmpty would switch the NotEmpty off for exactly the empty value it
+			// exists to catch.
+			RuleFor(x => x.editEmailProcess.EmailProcess)
+				.NotEmpty().WithMessage("EmailProcess is required.");
+
+			RuleFor(x => x.editEmailProcess.EmailProcess)
+				.Must(process => AtsEmailProcess.All.Contains(process.Trim(), StringComparer.Ordinal))
+				.WithMessage($"EmailProcess must be one of: {string.Join(", ", AtsEmailProcess.All)}.")
+				.When(x => !string.IsNullOrWhiteSpace(x.editEmailProcess.EmailProcess));
+
 			// Same rules as AddEmailProcess - see the notes there. An edit is the far more
 			// common way a bad address gets in, since it is the screen an operator uses every
 			// time a team's mailbox changes.

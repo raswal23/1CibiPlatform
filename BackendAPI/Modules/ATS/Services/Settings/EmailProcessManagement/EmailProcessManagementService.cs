@@ -103,7 +103,10 @@ public class EmailProcessManagementService : IEmailProcessManagementService
 		// adds of the same process both pass this and the loser dies on the constraint - but
 		// this turns the ordinary case, an operator adding a process that is already listed,
 		// into a message the screen can render instead of a 500.
-		if (await _emailProcessRepository.EmailProcessExistsAsync(emailProcess, cancellationToken))
+		if (await _emailProcessRepository.EmailProcessExistsAsync(
+			emailProcess,
+			excludingId: 0,
+			cancellationToken))
 		{
 			_logger.LogWarning(
 				"{EmailProcess} already has a copy list: {@Context}",
@@ -154,10 +157,46 @@ public class EmailProcessManagementService : IEmailProcessManagementService
 			throw new NotFoundException($"Email process with ID {emailProcessDTO.Id} was not found.");
 		}
 
-		// EmailProcess and CreatedDate are deliberately not touched. The process is what the
-		// send path matches on and retyping it would silently move the list to another notice
-		// - see the remark on EditEmailProcessDTO. The creation date is the row's, not the
-		// caller's.
+		// CreatedDate is deliberately not touched: it is the row's own, not the caller's.
+		//
+		// The process name IS editable, and changing it moves this list onto another notice -
+		// the send path matches on the string, so the name is the row's identity as far as a
+		// notice is concerned. Guarded against the unique index exactly like an add, minus the
+		// row being edited so that leaving the name alone is not a collision with itself.
+		//
+		// Only checked when the name actually differs. Two reasons: it keeps the ordinary edit,
+		// which retypes nothing, off an extra uncached query; and it means a pair of rows that
+		// differ only by case - which the validator can no longer create but a hand-inserted row
+		// can - does not lock an operator out of fixing the copy list on one of them.
+		var emailProcess = emailProcessDTO.EmailProcess.Trim();
+
+		if (!string.Equals(existingEmailProcess.EmailProcess, emailProcess, StringComparison.Ordinal))
+		{
+			if (await _emailProcessRepository.EmailProcessExistsAsync(
+				emailProcess,
+				excludingId: existingEmailProcess.Id,
+				cancellationToken))
+			{
+				_logger.LogWarning(
+					"{Id} cannot be renamed to {EmailProcess}, which already has a copy list: {@Context}",
+					existingEmailProcess.Id,
+					emailProcess,
+					logContext);
+
+				throw new BadRequestException(
+					$"A copy list for '{emailProcess}' already exists. Edit that one instead.");
+			}
+
+			_logger.LogInformation(
+				"Moving the copy list on {Id} from {PreviousEmailProcess} to {EmailProcess}: {@Context}",
+				existingEmailProcess.Id,
+				existingEmailProcess.EmailProcess,
+				emailProcess,
+				logContext);
+
+			existingEmailProcess.EmailProcess = emailProcess;
+		}
+
 		existingEmailProcess.CCEmail = EmailCopyList.Normalize(emailProcessDTO.CCEmail);
 		existingEmailProcess.IsActive = emailProcessDTO.IsActive;
 

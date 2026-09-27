@@ -34,7 +34,16 @@ public interface IEmailProcessRepository
 	/// through. The validator closes the value to <see cref="AtsEmailProcess.All"/> before this
 	/// runs, which makes a differing case the only way to reach it.
 	/// </remarks>
-	Task<bool> EmailProcessExistsAsync(string emailProcess, CancellationToken cancellationToken);
+	/// <param name="emailProcess">The process name to look for, already trimmed by the caller.</param>
+	/// <param name="excludingId">
+	/// A row to ignore, or 0 for none. An edit passes its own id: the name is part of the
+	/// editable payload, so a caller that changes nothing else would otherwise collide with the
+	/// row it is holding. An add passes 0 and no row is excluded.
+	/// </param>
+	Task<bool> EmailProcessExistsAsync(
+		string emailProcess,
+		int excludingId,
+		CancellationToken cancellationToken);
 
 	Task<EmailProcessDetails> AddEmailProcessAsync(
 		EmailProcessDetails emailProcess,

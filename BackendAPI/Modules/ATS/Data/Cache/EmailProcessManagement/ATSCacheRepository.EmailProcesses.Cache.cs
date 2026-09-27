@@ -19,8 +19,11 @@ public partial class ATSCacheRepository
 
 	// Uniqueness guard - must see the current rows, never a cached answer, or two callers
 	// adding the same process in the same window both pass and the second dies on the index.
-	public Task<bool> EmailProcessExistsAsync(string emailProcess, CancellationToken cancellationToken) =>
-		_atsRepository.EmailProcessExistsAsync(emailProcess, cancellationToken);
+	public Task<bool> EmailProcessExistsAsync(
+		string emailProcess,
+		int excludingId,
+		CancellationToken cancellationToken) =>
+		_atsRepository.EmailProcessExistsAsync(emailProcess, excludingId, cancellationToken);
 
 	public async Task<EmailProcessDetails> AddEmailProcessAsync(
 		EmailProcessDetails emailProcess,
