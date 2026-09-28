@@ -13,6 +13,7 @@ public interface IATSRepository :
 	IDashboardRepository,
 	IDisputeOrderRepository,
 	IEmailInvitationRepository,
+	IEmailProcessRepository,
 	IModuleRepository,
 	IOrderHistoryRepository,
 	IPackageRepository,

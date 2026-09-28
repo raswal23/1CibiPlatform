@@ -194,6 +194,40 @@ public class ATSPaths : IReverseProxyModule
 				}
 			),
 
+			// ---------- Notice copy lists ----------
+			new RouteDefinitionDTO(
+				RouteId: "GetEmailProcesses",
+				MatchPath: "/ats/getemailprocesses",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getemailprocesses" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AddEmailProcess",
+				MatchPath: "/ats/addemailprocess",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/addemailprocess" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "EditEmailProcess",
+				MatchPath: "/ats/editemailprocess",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/editemailprocess" }
+				}
+			),
+
 			new RouteDefinitionDTO(
 				RouteId: "GetReports",
 				MatchPath: "/ats/getreports",

@@ -15,6 +15,14 @@ public static class ModuleList
 	// Manager may grant at all. It must stay equal to every module id outside the Client
 	// Admin entry in RoleOnlyModuleIds below - Client Admin is the lowest role that reaches
 	// User Management, so what it may grant is exactly what is not restricted here.
+	// 16 (Email Management) is restricted because of what both of its tabs control. The Email
+	// Accounts tab holds the credentials every outbound invitation is sent through: deleting one
+	// silently shifts that volume onto the remaining senders, and a wrong daily limit stalls the
+	// queue. The Email Receiver tab decides which team mailboxes are copied on candidate-facing
+	// notices, and every address added is charged against the sending account's daily cap
+	// alongside the real recipient - see
+	// docs/features/ats-email-process/ats-email-process.md section 6. Same rule as 15: the backend
+	// enforces it independently.
 	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11, 15, 16];
 
 	// Module-access matrix, from the ATS module access sheet: which modules a role may be
@@ -53,7 +61,14 @@ public static class ModuleList
 			{ 13, ("bulkuploads", "Bulk Uploads Status", Icons.Material.Filled.CloudUpload) },
 			{ 14, ("ticketingstatus", "Ticketing Status", Icons.Material.Filled.ConfirmationNumber) },
 			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) },
-			{ 16, ("emailaccounts", "Email Accounts", Icons.Material.Filled.AlternateEmail) }
+
+			// One id for both email tabs, and one sidebar entry. The path moved from
+			// "emailaccounts" to "emailmanagement" when the copy-list screen was grouped with it,
+			// which is why the sender-account board no longer has a route of its own - and why
+			// BulkEmailNotificationProcessorService had to repoint its "invitations have stopped"
+			// link at the host. 17 was this screen's id for one uncommitted iteration; it is
+			// retired, not free. See AtsModuleIds.
+			{ 16, ("emailmanagement", "Email Management", Icons.Material.Filled.Email) }
 
 			// Notifications (/s&i/ats/notifications) is deliberately NOT here. This list
 			// drives both the sidebar and ATSLayout.CanAccessRoute, and every id in it must

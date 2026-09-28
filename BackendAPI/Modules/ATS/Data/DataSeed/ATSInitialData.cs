@@ -496,9 +496,9 @@ public class ATSInitialData
 		   },
 		   new()
 		   {
-			   ModuleId = AtsModuleIds.EmailAccountManagement,
-			   ModuleName = "Email Accounts",
-			   ModuleDescription = "Sender email account management module for ATS system.",
+			   ModuleId = AtsModuleIds.EmailManagement,
+			   ModuleName = "Email Management",
+			   ModuleDescription = "Sender email account and notice copy list management module for ATS system.",
 			   IsActive = true,
 			   CreatedAt = DateTime.UtcNow,
 			   UpdatedAt = DateTime.UtcNow
@@ -553,6 +553,72 @@ public class ATSInitialData
 			CreatedAt = now,
 			UpdatedAt = now
 		};
+	}
+	#endregion
+
+	#region Email process copy lists
+	/// <summary>
+	/// The copy list each notice ships with - one row per process in
+	/// <see cref="AtsEmailProcess.All"/>, carrying its mailboxes as a comma-separated list.
+	/// </summary>
+	/// <remarks>
+	/// These are the AGREED addresses. They were chosen over the tester mailboxes the four notice
+	/// constants were swapped to for branch verification, because seed data ships to production and
+	/// runs on first startup - copying that swap forward would have put a personal gmail address on
+	/// real candidate mail.
+	///
+	/// Those constants are now deleted and the send path reads these rows, so the swap is undone by
+	/// the same change that made this the source: every notice copies the agreed list again. That is
+	/// the intended outcome and not a side effect to be reverted, but it IS a behaviour change on a
+	/// verification branch - a tester who was receiving these notices stops, and the CIBI teams
+	/// start. In a running environment the seeder will not overwrite an edited row, so an operator
+	/// who wants the tester copied adds them through the management screen rather than here.
+	///
+	/// <c>ApplicationForm</c> and <c>FollowUp</c> get identical lists because one literal served
+	/// both. They are separate rows so they can diverge without a release, which is the point of
+	/// storing a process per row.
+	///
+	/// Seeded ACTIVE, unlike the placeholder rows this replaced: every list here is a real,
+	/// parseable set of mailboxes, so there is no empty string for the send path to choke on.
+	/// </remarks>
+	public static IReadOnlyList<EmailProcessDetails> GetEmailProcesses()
+	{
+		var now = DateTime.UtcNow;
+
+		// Built from the parts rather than written as a literal per process, so a change to one
+		// team's address cannot be applied to four processes and missed on the fifth.
+		const string clientSupport = "clientsupport@cibi.com.ph";
+		const string preWorkTeam = "pre-workteam@cibi.com.ph";
+
+		var copyListsByProcess = new Dictionary<string, string>
+		{
+			[AtsEmailProcess.Withdrawn] = clientSupport,
+			[AtsEmailProcess.Dispute] = clientSupport,
+			[AtsEmailProcess.ApplicationForm] = $"{clientSupport},{preWorkTeam}",
+			[AtsEmailProcess.FollowUp] = $"{clientSupport},{preWorkTeam}",
+			[AtsEmailProcess.SubmittedForm] = $"{clientSupport},{preWorkTeam}"
+		};
+
+		// Driven by AtsEmailProcess.All rather than by the dictionary, so a process added to the
+		// constant without a copy list here still gets its row - empty and inactive - instead of
+		// silently having none.
+		return AtsEmailProcess.All
+			.Select(process =>
+			{
+				var hasCopyList = copyListsByProcess.TryGetValue(process, out var copyList);
+
+				return new EmailProcessDetails
+				{
+					EmailProcess = process,
+					CCEmail = copyList ?? string.Empty,
+					CreatedDate = now,
+
+					// An empty list active would hand "" to MimeKit.MailboxAddress.Parse on the
+					// first send of that notice, which throws.
+					IsActive = hasCopyList
+				};
+			})
+			.ToArray();
 	}
 	#endregion
 }

@@ -1,0 +1,157 @@
+@namespace FrontendWebassembly.Component.ATS
+@using FrontendWebassembly.ShareData.ATS
+
+<MudDialog Class="um-dialog ats-scroll-dialog" Style="padding: 0; width: min(560px, calc(100vw - 24px)); max-width: 560px;">
+    <DialogContent>
+        <div class="epm-shell ats-dialog-shell">
+            <header class="ats-dialog-header ats-dialog-headline">
+                <div class="ats-dialog-headline-content">
+                    <span class="ats-dialog-headline-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.Edit" />
+                    </span>
+                    <div class="ats-dialog-headline-text">
+                        <h2>Edit email process</h2>
+                        <p>@AtsEmailProcesses.Label(Process.EmailProcess)</p>
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="ats-dialog-headline-close"
+                        aria-label="Close edit email process dialog"
+                        @onclick="Cancel">
+                    <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+                </button>
+            </header>
+
+            <main class="ats-dialog-body epm-body">
+                <MudForm @ref="_editEmailProcessForm">
+                    @if (IsRenamed)
+                    {
+                        <div class="epm-notice" role="status">
+                            <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" />
+                            <span>
+                                Renaming does not retitle this row - it <strong>moves</strong> the list onto
+                                another notice. A notice reads its copy list by this exact name, so
+                                <strong>@AtsEmailProcesses.Label(Process.EmailProcess)</strong> stops copying
+                                anyone and <strong>@AtsEmailProcesses.Label(_edit.EmailProcess)</strong> starts
+                                copying these mailboxes instead.
+                            </span>
+                        </div>
+                    }
+
+                    <section class="epm-section" aria-labelledby="edit-email-process-notice-heading">
+                        <div class="epm-section-head">
+                            <span class="epm-section-number">1</span>
+                            <h2 id="edit-email-process-notice-heading">Notice</h2>
+                            <span class="epm-section-helper">Which message this list serves</span>
+                        </div>
+
+                        <div class="epm-section-body">
+                            <div class="epm-field">
+                                <label for="eep-process">Email process <span class="epm-required">*</span></label>
+                                <div class="epm-control">
+                                    <MudSelect T="string"
+                                               @bind-Value="_edit.EmailProcess"
+                                               InputId="eep-process"
+                                               Required="true"
+                                               RequiredError="Select the notice this copy list serves"
+                                               Placeholder="Select a notice"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.MarkEmailUnread">
+                                        @foreach (var process in AtsEmailProcesses.All)
+                                        {
+                                            <MudSelectItem T="string" Value="@process">
+                                                @AtsEmailProcesses.Label(process)
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                                <p class="epm-hint">
+                                    Registered as <strong>@Process.EmailProcess</strong>, created
+                                    @Process.CreatedDate.ToString("MMMM d, yyyy"). The name is closed to
+                                    the five notices that send one; the server refuses a name another
+                                    row already holds.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="epm-section" aria-labelledby="edit-email-process-copy-heading">
+                        <div class="epm-section-head">
+                            <span class="epm-section-number">2</span>
+                            <h2 id="edit-email-process-copy-heading">Copied mailboxes</h2>
+                            <span class="epm-section-helper">Who is on the Cc</span>
+                        </div>
+
+                        <div class="epm-section-body">
+                            @* The cost is stated because nothing else on this screen says it, and
+                               adding an address looks free from here. See
+                               docs/features/ats-email-process/ats-email-process.md section 6. *@
+                            <div class="epm-notice" role="note">
+                                <span>
+                                    <MudIcon Icon="@Icons.Material.Outlined.Info" />
+                                    Every address here is a real recipient, and each one is charged
+                                    against the sending account's daily cap <strong>alongside</strong> the
+                                    candidate or requestor the notice actually goes to. Saving replaces the
+                                    whole list, so removing an address here stops that copy immediately.
+                                </span>
+                            </div>
+
+                            <div class="epm-field">
+                                <label for="eep-cc-email">Copy list</label>
+                                <EmailCopyListInput @ref="_copyListInput"
+                                                    @bind-Value="_edit.CCEmail"
+                                                    InputId="eep-cc-email"
+                                                    AriaLabel="Mailboxes copied on this notice"
+                                                    Placeholder="team@cibi.com.ph"
+                                                    Hint="Press Enter or a comma to add. Backspace removes the last one." />
+                            </div>
+
+                            <div class="epm-field">
+                                <label>Status</label>
+                                <div class="epm-status-row">
+                                    <div class="epm-status-copy">
+                                        <p>Copy list @(_edit.IsActive ? "active" : "inactive")</p>
+                                        <span>@StatusExplanation</span>
+                                    </div>
+                                    <div class="epm-status-control">
+                                        <span class="epm-status-badge @(_edit.IsActive ? string.Empty : "is-off")">
+                                            @(_edit.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="epm-toggle @(_edit.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@_edit.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle copy list status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if (ShowValidation && EmptyActiveProblem)
+                                {
+                                    <p class="epm-hint epm-hint-error" role="alert">
+                                        A copy list with no email addresses cannot be active - the notice
+                                        would have nothing to hand the sender. Add an address, or switch
+                                        it off; the addresses stay on file either way.
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ats-dialog-footer epm-footer">
+                <button type="button" class="epm-button epm-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="epm-button epm-button-save" @onclick="Submit">
+                    <MudIcon Icon="@Icons.Material.Outlined.Check" />
+                    <span>Save</span>
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

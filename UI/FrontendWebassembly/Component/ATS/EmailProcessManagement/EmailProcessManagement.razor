@@ -1,0 +1,148 @@
+@namespace FrontendWebassembly.Component.ATS
+@using FrontendWebassembly.ShareData.ATS
+@inherits CrudPageBase
+@inject IEmailProcessManagementService EmailProcessService
+
+@* No @page, no layout, no <PageTitle> and no Require* attributes: this is the Email Receiver tab
+   of Component/ATS/EmailManagement/EmailManagement.razor, which owns the
+   /s&i/ats/emailmanagement route, the document title and the RequireATSModule(16) gate. It
+   deliberately has no route of its own - module 16's path belongs to the host, and a second URL
+   for the same tab would need its own branch in ATSLayout.CanAccessRoute with no module behind
+   it, which is the ungrantable-entry trap the Notifications comment in ModuleList warns about.
+   Sibling tab EmailAccountManagement is built the same way. *@
+
+@* Not cursor-paginated, like the sender-account board beside it and unlike packages and clients.
+   There is one row per notice that sends a copy, so five today, and the backend caches that whole
+   table under a single key every send path also reads through. TableComponent's Items parameter
+   renders the same shell without the keyset walk. *@
+<div class="ats-management-page ats-email-process-page">
+
+    <div class="ats-status-board-intro">
+        <MudIcon Icon="@Icons.Material.Outlined.ForwardToInbox" Size="Size.Small" />
+        <div>
+            <p class="ats-status-board-intro-title">Who is copied on each ATS notice</p>
+            <p class="ats-status-board-intro-text">
+                Five notices copy a team alongside their real recipient - a withdrawal, a dispute, an
+                application form, a follow-up and a submitted form. Each one reads its list from here,
+                so a change takes effect on the next notice sent and needs no release. An inactive row
+                copies nobody; the notice itself still goes to its recipient. Every address is a real
+                recipient and is <strong>charged against the sending account's daily cap</strong> beside
+                the one the notice is actually about, which is what makes a long list expensive rather
+                than free.
+            </p>
+        </div>
+    </div>
+
+    <div class="ats-management-actions">
+        <button type="button" class="ats-management-button" disabled="@_isBusy" @onclick="AddEmailProcessAsync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add email process
+        </button>
+    </div>
+
+    <TableComponent TItem="EmailProcessDetailsDTO"
+                    Title="Notice copy lists"
+                    CountLabel="registered"
+                    TitleId="ats-email-process-heading"
+                    TableAriaLabel="ATS notice copy lists"
+                    ContainerClass="ats-management-card"
+                    EnableReload="true"
+                    OnReloadClicked="LoadEmailProcessesAsync"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search notice or mailbox"
+                    SearchImmediate="true"
+                    ColumnCount="5"
+                    RowsPerPage="10"
+                    Items="FilteredEmailProcesses"
+                    SearchString="@_searchString"
+                    SearchStringChanged="OnSearchChanged">
+
+        <HeaderTemplate>
+            <MudTh>Notice</MudTh>
+            <MudTh>Copied mailboxes</MudTh>
+            <MudTh Class="ats-table-cell-center">Status</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh Class="ats-table-cell-center">Actions</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="row">
+            <MudTd DataLabel="Notice">
+                <div class="ats-cell-lead">
+                    <span class="ats-cell-lead-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.MarkEmailRead" Size="Size.Small" />
+                    </span>
+                    <span class="ats-cell-lead-copy">
+                        <span class="ats-cell-lead-title">@AtsEmailProcesses.Label(row.EmailProcess)</span>
+                        @* The stored spelling, not a restatement of the label: this is the string the
+                           send path matches on, so it is the one worth being able to read here. *@
+                        <span class="ats-cell-lead-sub" title="@row.EmailProcess">@row.EmailProcess</span>
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd DataLabel="Copied mailboxes">
+                @{
+                    // Split once per row. The cell reads the list four times - the empty check, the
+                    // first three chips, the overflow count and the overflow tooltip - and each read
+                    // would otherwise re-split the same string.
+                    var mailboxes = CopiedMailboxes(row);
+                }
+                @if (mailboxes.Count == 0)
+                {
+                    <span class="ats-cell-muted">Nobody is copied</span>
+                }
+                else
+                {
+                    <div class="ats-management-chips">
+                        @foreach (var address in mailboxes.Take(3))
+                        {
+                            <span class="ats-management-chip" title="@address">@address</span>
+                        }
+                        @if (mailboxes.Count > 3)
+                        {
+                            <span class="ats-management-chip ats-management-chip-more"
+                                  title="@OverflowTooltip(mailboxes)">
+                                +@(mailboxes.Count - 3) more
+                            </span>
+                        }
+                    </div>
+                }
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Status">
+                <span class="ats-status-pill @(row.IsActive ? "done" : "unknown")">
+                    @(row.IsActive ? "Active" : "Inactive")
+                </span>
+            </MudTd>
+
+            <MudTd DataLabel="Created">
+                @row.CreatedDate.ToLocalTime().ToString("MMMM d, yyyy")
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Actions">
+                <button type="button"
+                        class="ats-cell-action"
+                        aria-label="Edit the @AtsEmailProcesses.Label(row.EmailProcess) copy list"
+                        title="Edit this copy list"
+                        disabled="@_isBusy"
+                        @onclick="@(() => EditEmailProcessAsync(row))">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </button>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-management-empty">
+                <MudIcon Icon="@Icons.Material.Filled.ForwardToInbox" />
+                <strong>@EmptyTitle</strong>
+                <span>@EmptyMessage</span>
+            </div>
+        </NoRecordsTemplate>
+    </TableComponent>
+</div>

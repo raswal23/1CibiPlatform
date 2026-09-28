@@ -15,13 +15,18 @@ This adds the missing notice. Once the withdrawal has committed, the requestor r
 | | |
 |---|---|
 | **To** | the requestor's mailbox, resolved from the order's `RequestorId` |
-| **Cc** | `ccteam@cibi.com.ph`, then the candidate's own address |
+| **Cc** | the `Withdrawn` copy list — `clientsupport@cibi.com.ph` as seeded — then the candidate's own address |
 | **Subject** | `Order Status – Withdrawn` |
 
 The body is the standard CIBI card — navy gradient header, the same confidentiality footer as every
 other ATS message — carrying three sentences: the greeting, the fact that the candidate withdrew and
 that the verification should not proceed without the completed form, and the two contact addresses
 (`ccteam@cibi.com.ph`, `clientsupport@cibi.com.ph`).
+
+Those two addresses are **prose in the body**, not the copy list. `ccteam` has never been copied on
+this notice, and the address that is copied is whatever the `Withdrawn` row currently holds. The two
+sides are no longer even the same kind of value — see "Do not assume the body's contact sentence
+matches the CC list" below.
 
 It is addressed to the requestor rather than the candidate on purpose. The candidate is the one who
 pressed the button; copying them puts the notice on record for them without telling them something
@@ -118,16 +123,18 @@ dotnet build 1CibiPlatform.sln
 ```
 
 Manual, end to end: open an invitation link, click **Withdraw**, confirm. The screen should show the
-withdrawn state. Then check that the requestor received the notice with the candidate and
-`ccteam@cibi.com.ph` on `Cc:` and the exact subject, that the row reads
+withdrawn state. Then check that the requestor received the notice with the candidate and every
+address in the `Withdrawn` row of `ats."EmailProcessDetails"` on `Cc:` and the exact subject — read
+the row first rather than expecting the seeded value, since it is operator-editable. Check that the
+row reads
 `ApplicationFormStatus = Withdrawn` / `OrderStatus = Application Withdrawn`, and that an
 `ApplicationFormWithdrawn` order-history row exists. Finally, point the sender at a dead account and
 confirm the candidate still sees a successful withdrawal while the failure appears in the log.
 
 A successful SMTP send is not covered by unit tests and cannot be: `SmtpLease` wraps a real
 `SmtpClient`. The tests stop at `IAtsEmailSender`, and the composed body is asserted directly since
-that is a pure function. The `Cc:` header itself and the 3-recipient quota charge need the manual
-pass above.
+that is a pure function. The `Cc:` header itself and the quota charge need the manual pass above —
+three recipients against the seeded row, `1 + copied.Count` against whatever the row holds now.
 
 The full `~ATS` run is worth doing even though this feature adds no integration test of its own: it
 resolves the real container, which is how the `IAtsEmailSender` registration constraint below was
@@ -156,11 +163,18 @@ of an email change.
   `WithdrawnEmail.Subject` — the same constant sent as the subject line. They are read together in a
   mail client preview, and a mismatch looks like a mis-send. Nothing enforces this at compile time
   beyond the shared constant.
+- **Do not assume the body's contact sentence matches the CC list.** The sentence names
+  `ccteam@cibi.com.ph` and `clientsupport@cibi.com.ph`; only the second has ever been copied, and it
+  is copied because it is in the `Withdrawn` row, not because the sentence names it. The sentence is
+  compiled into `ATSEmailService`; the row is edited in the database. An operator retiring an address
+  leaves the message telling its reader to write to a mailbox nobody is copied on, and no commit
+  records that it happened. See [`ats-email-process`](../ats-email-process/ats-email-process.md).
 - **Do not address the candidate.** If the requirement ever changes, remember that the candidate's
   address can be absent and already degrades to being left off the copy.
-- **Do not hardcode a recipient count.** If a third address is ever copied, the quota figure follows
-  automatically from `1 + copied.Count`; a literal would silently under-report consumption and
-  retire accounts late.
+- **Do not hardcode a recipient count**, and do not write one into this document either. The quota
+  figure follows automatically from `1 + copied.Count`, and the copy list is now a table row whose
+  length an operator can change; a literal would silently under-report consumption and retire
+  accounts late.
 - **A withdrawn order is never chased.** `ReleaseDueFollowUpInvitationsAsync` filters
   `ApplicationFormStatus = Pending`, so the follow-up reminder cannot fire after a withdrawal. Do
   not widen that predicate without re-reading this document.

@@ -54,6 +54,7 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IDashboardRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IDisputeOrderRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IEmailInvitationRepository>(provider => provider.GetRequiredService<IATSRepository>());
+		services.AddScoped<IEmailProcessRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IModuleRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IOrderHistoryRepository>(provider => provider.GetRequiredService<IATSRepository>());
 		services.AddScoped<IPackageRepository>(provider => provider.GetRequiredService<IATSRepository>());
@@ -105,6 +106,12 @@ public static class ATSServiceConfiguration
 		services.AddScoped<IFilePdfService, FilePdfService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
 		services.AddScoped<IAtsEmailAccountManagementService, AtsEmailAccountManagementService>();
+		// Both the console's writes and the notices' copy-list read. Registered here with the other
+		// settings services rather than beside the notifications below, because the table is the
+		// console's; the send paths are a second reader of it. Scoped for the DbContext behind the
+		// repository, and the read is answered by that repository's cache decorator, so depending on
+		// it from a notice costs nothing per send.
+		services.AddScoped<IEmailProcessManagementService, EmailProcessManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();

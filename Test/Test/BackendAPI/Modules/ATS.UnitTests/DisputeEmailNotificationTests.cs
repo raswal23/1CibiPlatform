@@ -2,10 +2,12 @@
 using ATS.Constants;
 using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
+using ATS.Services.Settings.EmailProcessManagement;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
@@ -20,10 +22,14 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 /// </remarks>
 public class DisputeEmailNotificationTests
 {
-	// Deliberately literals rather than DisputeEmail.Subject / .CopyTeam. These are the agreed
-	// copy, and a test that read the constant would keep passing if the constant were changed -
-	// which is the one thing it exists to catch.
+	// Deliberately a literal rather than DisputeEmail.Subject. This is the agreed copy, and a test
+	// that read the constant would keep passing if the constant were changed - which is the one
+	// thing it exists to catch.
 	private const string DisputeSubject = "CIBI | Order Dispute";
+
+	// The team copy is a row now, stubbed below, so this is the stub's value rather than a pin on
+	// the agreed list - see the fuller note in WithdrawnEmailNotificationTests. What it still pins
+	// is that the Dispute row's addresses are the ones that reach the message.
 	private const string CopyTeam = "clientsupport@cibi.com.ph";
 	private const string FilerEmail = "requestor@cibi.test";
 	private const string FilerName = "Ana Reyes";
@@ -39,6 +45,9 @@ public class DisputeEmailNotificationTests
 	private readonly Mock<IAtsEmailSender> _emailSender = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 
+	private readonly Mock<IEmailProcessManagementService> _emailProcessManagementService =
+		EmailCopyListFixture.Returning(AtsEmailProcess.Dispute, CopyTeam);
+
 	private readonly DisputeEmailNotification _notifier;
 
 	public DisputeEmailNotificationTests()
@@ -49,6 +58,7 @@ public class DisputeEmailNotificationTests
 			_logger.Object,
 			_emailSender.Object,
 			_orderHistoryService.Object,
+			_emailProcessManagementService.Object,
 			Options.Create(new AtsEmailDeliveryOptions
 			{
 				MaxAttemptsPerMessage = MaxAttempts,

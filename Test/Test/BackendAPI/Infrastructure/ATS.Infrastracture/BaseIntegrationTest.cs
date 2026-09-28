@@ -14,6 +14,7 @@ using ATS.Services.EndorsementSubmission;
 using ATS.Services.Report;
 using ATS.Services.Settings.ClientAssignment;
 using ATS.Services.Settings.ClientManagement;
+using ATS.Services.Settings.EmailProcessManagement;
 using ATS.Services.Settings.ModuleManagement;
 using ATS.Services.Settings.PackageManagement;
 using ATS.Services.Settings.RoleManagement;
@@ -59,6 +60,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IBulkEmailNotificationProcessorService _bulkEmailNotificationProcessorService;
 	protected readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
 	protected readonly IPackageManagementService _packageManagementService;
+	protected readonly IEmailProcessManagementService _emailProcessManagementService;
 	protected readonly IRoleManagementService _roleManagementService;
 	protected readonly IModuleManagementService _moduleManagementService;
 	protected readonly IClientManagementService _clientManagementService;
@@ -90,6 +92,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_bulkEmailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkEmailNotificationProcessorService>();
 		_bulkSubmissionProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkSubmissionProcessorService>();
 		_packageManagementService = _scope.ServiceProvider.GetRequiredService<IPackageManagementService>();
+		_emailProcessManagementService = _scope.ServiceProvider.GetRequiredService<IEmailProcessManagementService>();
 		_roleManagementService = _scope.ServiceProvider.GetRequiredService<IRoleManagementService>();
 		_moduleManagementService = _scope.ServiceProvider.GetRequiredService<IModuleManagementService>();
 		_clientManagementService = _scope.ServiceProvider.GetRequiredService<IClientManagementService>();
@@ -112,11 +115,19 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		{
 			if (_dbContext is not null)
 			{
-				// Table is in the ats schema
+				// Table is in the ats schema.
+				//
+				// EmailProcessDetails is in the list even though nothing below seeds it: the
+				// table has a UNIQUE index on EmailProcess, so one test registering a copy list
+				// for "Withdrawn" would make every later test that registers the same one fail
+				// on the constraint rather than on its own assertion. The production seed never
+				// runs here - AppConfiguration skips IntializeDatabaseAsync in the Testing
+				// environment - so a test that needs a row arranges it itself.
 				var sql = @"TRUNCATE TABLE
 								ats.""EmailAccountOtp"",
 								ats.""EmailSendLog"",
 								ats.""EmailAccounts"",
+								ats.""EmailProcessDetails"",
 								ats.""AddressDetails"",
 								ats.""EducationalBackground"",
 								ats.""ReportDetails"",
@@ -187,6 +198,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 			await _hybridCache.RemoveByTagAsync("module");
 			await _hybridCache.RemoveByTagAsync("client");
 			await _hybridCache.RemoveByTagAsync("package");
+			await _hybridCache.RemoveByTagAsync("emailprocess");
 
 			if (_objectStorageService is MockObjectStorageService mockObjectStorage)
 				mockObjectStorage.Clear();

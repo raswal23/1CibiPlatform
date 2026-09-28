@@ -1,0 +1,33 @@
+@page "/s&i/ats/emailmanagement"
+@namespace FrontendWebassembly.Component.ATS
+@layout ATSLayout
+@attribute [RequirePermission(6, 7)]
+@attribute [RequireATSModule(16)]
+@inherits SecurePageBase
+
+@* Both halves of email administration under one permission: the mailboxes notices are sent FROM,
+   and the mailboxes notices are copied TO. Module 16, in the same shape Settings.razor uses for
+   Package / Client / Role.
+
+   The tabs carry no per-tab guard, unlike Settings, because there is only one id behind them and
+   RequireATSModule above has already established the operator holds it - a Contains(16) around
+   each would be a condition that can never be false. Splitting the two screens onto separate
+   permissions again means putting those guards back, and giving the second id a branch in
+   ATSLayout.CanAccessRoute, which resolves this route through ModuleList and would otherwise
+   admit only the id this page carries. *@
+
+<PageTitle>ATS - Email Management</PageTitle>
+
+<div class="ats-segmented">
+    <button class="@GetAccountsSegmentClass()" type="button" @onclick='@(() => SetActiveTab("Accounts"))'>Email Accounts</button>
+    <button class="@GetReceiverSegmentClass()" type="button" @onclick='@(() => SetActiveTab("Receiver"))'>Email Receiver</button>
+</div>
+
+@if (ActiveTab == "Accounts")
+{
+    <EmailAccountManagement/>
+}
+else if (ActiveTab == "Receiver")
+{
+    <EmailProcessManagement/>
+}
