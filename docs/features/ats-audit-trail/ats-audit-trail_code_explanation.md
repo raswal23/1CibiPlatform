@@ -2668,7 +2668,7 @@ Four separate things make the page reachable, and all four must agree:
 	public const int EmailAccountManagement = 16;
 ```
 
-**(b)** `UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs:32`:
+**(b)** `UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs:55`:
 
 ```csharp
 			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) },
@@ -3667,7 +3667,7 @@ The integration tests need Docker (Postgres Testcontainer).
 | An endpoint response record's property name (`AuditEntries`, `Counts`) | `GetAuditTrailResponseDTO` / `GetAuditOutcomeCountsResponseDTO` in the UI | JSON binding by name; a mismatch surfaces as "The server returned an empty response.", not a compile error (§6.5) |
 | `AuditTrailListDTO` (backend) | `AuditTrailListDTO` (UI) and `AtsAuditRepository.Projection` | Eighteen properties copied by hand across an assembly boundary, plus an `Expression` that lists them a third time (§3.4, §6.5) |
 | `AtsEntityChangeDTO` / `AtsPropertyChangeDTO` | `AuditEntityChangeDTO` / `AuditPropertyChangeDTO` in the UI, and the `PropertyNameCaseInsensitive` option | The backend serializes with default (PascalCase) options; case-insensitivity is the only thing bridging it (§1.5, §6.4) |
-| `AtsModuleIds.AuditTrail` (15) | `ShareData/ATS/ModuleList.cs:32`, `RestrictedAdministrationModuleIds:13`, `ATSInitialData.cs:482`, and the `@page` route's last segment | Four places must agree for the page to be reachable; 15 is deliberately **not** in `IsPrimaryNavigationModule` and has **no** grant backfill (§6.1) |
+| `AtsModuleIds.AuditTrail` (15) | `ShareData/ATS/ModuleList.cs:55`, `RestrictedAdministrationModuleIds:18`, `ATSInitialData.cs:482`, and the `@page` route's last segment | Four places must agree for the page to be reachable; 15 is deliberately **not** in `IsPrimaryNavigationModule` and has **no** grant backfill (§6.1) |
 | `AtsAuditService.CanRead` | `ExportAuditTrailAsync`'s throw, the two empty-result returns, `AtsAssistantPlugin._isPlatformSuperAdmin`, and `ModuleList.RestrictedAdministrationModuleIds` | One rule, five independent enforcements; reads return empty, export throws 403 (§3.3, §4.2, §5.2) |
 | `MaxExportRows` or `MaxAssistantEntries` | `AtsAssistantPlugin.MaxAuditResults`, and the silent truncation in `ExportAuditTrailAsync` | Both caps are silent — no marker in the workbook, no note in the chat answer (§4.2, §5.1) |
 | `AtsAuditWorkbookWriter`'s `headers` array | `ColumnCount = 12`, `StyleOutcome`'s range, `ApplyLayout`'s column pins (5 and 10) | Four places assume twelve columns and that Cause is 5 / Details is 10; nothing checks (§4.3) |
