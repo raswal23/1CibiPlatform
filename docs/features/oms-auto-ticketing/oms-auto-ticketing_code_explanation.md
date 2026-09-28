@@ -1305,7 +1305,7 @@ Three separate things make the page reachable, and all three must agree:
 1. **Sidebar entry** — `Layout/ATSLayout.razor:48-56` iterates `ModuleList.List` filtered by
    `IsPrimaryNavigationModule(item.Key) && _accessibleModuleIds.Contains(item.Key)`, building
    `href="@($"/s&i/ats/{module.Value.path}")"`. Module 14 is primary nav per
-   `ShareData/ATS/ModuleList.cs:44-46`:
+   `ShareData/ATS/ModuleList.cs:66-68`:
    ```csharp
  	// Modules that belong in the primary sidebar navigation rather than under Manage.
  	public static bool IsPrimaryNavigationModule(int moduleId) =>
@@ -1840,7 +1840,7 @@ and its tests.
 | `ClaimBatchSize` or `MaxDegreeOfParallelism` | `StaleClaimTimeout` (30 min) | The sweeper must outlast the worst-case batch or it steals live rows and duplicates tickets (§2.6) |
 | A Carter route string (`MapGet("getticketedorders")`) | `PathSet` in `Path/ATSPaths.cs` **and** the URL literal in `Services/ATS/OMSTicketing/OMSTicketingService.cs` | Three independent string literals in three assemblies (§6.5, §6.6) |
 | An endpoint response record's property name | The UI's `*ResponseDTO` wrapper | JSON binding by name; a mismatch is a silent deserialise failure, not a compile error (§3.1) |
-| `AtsModuleIds.TicketingStatus` (14) | `ShareData/ATS/ModuleList.cs:31`, `Data/DataSeed/ATSInitialData.cs:472`, `IsPrimaryNavigationModule`, and both `BackfillModuleGrantedWithNewOrderAsync` call sites | Four places must agree for the page to be reachable at all (§6.1, §10) |
+| `AtsModuleIds.TicketingStatus` (14) | `ShareData/ATS/ModuleList.cs:54`, `Data/DataSeed/ATSInitialData.cs:472`, `IsPrimaryNavigationModule`, and both `BackfillModuleGrantedWithNewOrderAsync` call sites | Four places must agree for the page to be reachable at all (§6.1, §10) |
 | The `@page` route's last segment | The `path` in `ModuleList.cs` | `ATSLayout` matches the URL segment against that string (§6.1) |
 | `TicketStatus` nullability or length | The migration and `ATSDBContextModelSnapshot` | `IsRequired(false)` is why legacy orders are unqueued (§1.2) |
 | `TicketError` column length (500) | The truncation in `MarkTicketFailedAsync` | A longer message throws on write and masks the real failure (§2.11) |
@@ -1865,7 +1865,7 @@ The design doc says three. `IsPrimaryNavigationModule` is the fourth (§6.1).
 	public const int AuditTrail = 15;
 ```
 
-**(b)** `UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs:31`:
+**(b)** `UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs:54`:
 
 ```csharp
 			{ 13, ("bulkuploads", "Bulk Uploads Status", Icons.Material.Filled.CloudUpload) },

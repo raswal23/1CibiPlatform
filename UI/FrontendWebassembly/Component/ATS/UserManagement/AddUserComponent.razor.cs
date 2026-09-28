@@ -40,10 +40,22 @@ public partial class AddUserComponent
 	private ATSUserLookupDTO? SelectedAuthUser { get; set; }
 	private string? AuthUserError { get; set; }
 	private string? ModuleError { get; set; }
+	// The checklist offers only what the chosen role may hold, so an admin cannot grant a
+	// Client Experience user Package Management just because the admin could hold it.
 	private IEnumerable<ModuleDetailsDTO> VisibleModules => Modules
-		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules));
-	private IEnumerable<ModuleDetailsDTO> SelectedModules => VisibleModules
-		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+		.Where(module => ModuleList.IsSelectableForUserRole(
+			module.ModuleId,
+			_canViewAllModules,
+			User.RoleId));
+	// Chips are gated by the actor, not the role: switching the role leaves a module the new
+	// role disallows selected and rendered disabled, so nothing is stripped behind the admin's
+	// back. It can still be removed, just not re-added.
+	private IEnumerable<(ModuleDetailsDTO Module, bool IsOutsideRole)> SelectedModuleChips => Modules
+		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules))
+		.Where(module => SelectedModuleIds.Contains(module.ModuleId))
+		.Select(module => (
+			module,
+			!ModuleList.IsInRoleModuleSet(module.ModuleId, User.RoleId)));
 	private IReadOnlyCollection<int> ActiveVisibleModuleIds => VisibleModules
 		.Where(module => module.IsActive)
 		.Select(module => module.ModuleId)
@@ -188,8 +200,12 @@ public partial class AddUserComponent
 		OnSelectedModuleIdsChanged(moduleIds);
 	}
 
+	// Select-all only touches the chosen role's active modules; a module selected but outside
+	// that role is left alone rather than wiped, matching EditUserComponent.
 	private void ToggleAllModules() =>
-		OnSelectedModuleIdsChanged(AllModulesSelected ? [] : ActiveVisibleModuleIds);
+		OnSelectedModuleIdsChanged(AllModulesSelected
+			? SelectedModuleIds.Except(ActiveVisibleModuleIds)
+			: SelectedModuleIds.Concat(ActiveVisibleModuleIds));
 
 	private void RemoveModule(int moduleId) =>
 		OnSelectedModuleIdsChanged(SelectedModuleIds.Where(id => id != moduleId));

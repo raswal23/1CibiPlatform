@@ -41,11 +41,22 @@ public partial class EditUserComponent
 	// Restricted administration modules stay hidden from the menu and the chips
 	// for admins outside the SuperAdmin / Platform Manager ladder, but any such
 	// module already assigned to the user is kept in SelectedModuleIds so saving
-	// never silently strips what this admin cannot see.
+	// never silently strips what this admin cannot see. The checklist is narrowed
+	// a second time by the role on the user being edited.
 	private IEnumerable<ModuleDetailsDTO> VisibleModules => Modules
-		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules));
-	private IEnumerable<ModuleDetailsDTO> SelectedModules => VisibleModules
-		.Where(module => SelectedModuleIds.Contains(module.ModuleId));
+		.Where(module => ModuleList.IsSelectableForUserRole(
+			module.ModuleId,
+			_canViewAllModules,
+			EditUser.RoleId));
+	// Chips are gated by the actor rather than the role, so a module the user already holds
+	// but the selected role disallows stays selected and renders disabled. It can still be
+	// removed through its chip; it just cannot be re-added from the menu.
+	private IEnumerable<(ModuleDetailsDTO Module, bool IsOutsideRole)> SelectedModuleChips => Modules
+		.Where(module => ModuleList.IsVisibleForAdministration(module.ModuleId, _canViewAllModules))
+		.Where(module => SelectedModuleIds.Contains(module.ModuleId))
+		.Select(module => (
+			module,
+			!ModuleList.IsInRoleModuleSet(module.ModuleId, EditUser.RoleId)));
 	private IReadOnlyCollection<int> ActiveModuleIds => VisibleModules
 		.Where(module => module.IsActive)
 		.Select(module => module.ModuleId)
