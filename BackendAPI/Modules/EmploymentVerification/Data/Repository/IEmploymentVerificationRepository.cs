@@ -50,9 +50,16 @@ public interface IEmploymentVerificationRepository
 	/// Records the HR contact's terminal response. The matching timestamp column
 	/// is set and the opposite one cleared so a row never claims both outcomes.
 	/// </summary>
+	/// <param name="responseNotes">
+	/// What the contact said when reporting the details inaccurate. Written on every
+	/// terminal response so the column always matches the outcome it sits beside - a
+	/// confirmation or a lapsed send passes null and clears any earlier text, which is
+	/// why a row can never carry a reason for an outcome that is not a rejection.
+	/// </param>
 	Task<bool> MarkRespondedAsync(
 		Guid id,
 		VerificationRequestStatus status,
 		DateTime respondedAt,
+		string? responseNotes,
 		CancellationToken cancellationToken);
 }

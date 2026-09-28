@@ -96,6 +96,7 @@ public sealed class EmploymentVerificationRepository(EmploymentVerificationDbCon
 		Guid id,
 		VerificationRequestStatus status,
 		DateTime respondedAt,
+		string? responseNotes,
 		CancellationToken cancellationToken)
 	{
 		var verifiedAt = status == VerificationRequestStatus.Verified
@@ -117,7 +118,11 @@ public sealed class EmploymentVerificationRepository(EmploymentVerificationDbCon
 				setters => setters
 					.SetProperty(request => request.Status, status)
 					.SetProperty(request => request.VerifiedAt, verifiedAt)
-					.SetProperty(request => request.RejectedAt, rejectedAt),
+					.SetProperty(request => request.RejectedAt, rejectedAt)
+					// Unconditional, like the two timestamps above: a reason belongs to
+					// the rejection it was typed against, so any other terminal outcome
+					// clears it rather than leaving a stale sentence beside a Verified row.
+					.SetProperty(request => request.ResponseNotes, responseNotes),
 				cancellationToken);
 
 		return affectedRows > 0;

@@ -26,8 +26,11 @@
             <span>Verified</span>
             <strong>@CountByStatus("Verified")</strong>
         </div>
+        @* The label is the displayed status but the count argument is the stored one:
+           CountByStatus reads request.Status, which stays "Rejected" in the database.
+           Passing the display string here would silently count nothing. *@
         <div class="ev-stat">
-            <span>Rejected</span>
+            <span>@EmploymentVerificationDisplay.InaccurateStatusLabel</span>
             <strong>@CountByStatus("Rejected")</strong>
         </div>
         <div class="ev-stat">
@@ -51,7 +54,7 @@
                     SearchLabel=""
                     SearchPlaceholder="Search candidate, employer, HR email or status"
                     SearchImmediate="true"
-                    ColumnCount="6"
+                    ColumnCount="7"
                     RowsPerPage="10"
                     SearchString="@_searchString"
                     SearchStringChanged="@((string value) => _searchString = value)">
@@ -63,6 +66,7 @@
             <MudTh>Requested</MudTh>
             <MudTh>Responded</MudTh>
             <MudTh Class="ats-table-cell-center">Status</MudTh>
+            <MudTh>Reason for inaccuracy</MudTh>
         </HeaderTemplate>
 
         <RowTemplate Context="request">
@@ -99,6 +103,16 @@
             <MudTd Class="ats-table-cell-center" DataLabel="Status">
                 <span class="@GetStatusCssClass(request)">
                     @EmploymentVerificationDisplay.GetDisplayStatus(request)
+                </span>
+            </MudTd>
+
+            @* Last column on purpose: this one holds up to 1000 characters of
+               anonymous free text, so it sits where a long value cannot squeeze the
+               fixed-width date and status columns beside it. Clamped to three lines,
+               full text on hover. *@
+            <MudTd Class="ev-reason-cell" DataLabel="Reason for inaccuracy">
+                <span class="ev-reason-clamp" title="@request.ResponseNotes">
+                    @EmploymentVerificationDisplay.GetInaccuracyReason(request)
                 </span>
             </MudTd>
         </RowTemplate>

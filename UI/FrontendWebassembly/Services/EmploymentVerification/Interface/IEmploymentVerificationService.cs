@@ -31,10 +31,13 @@ public interface IEmploymentVerificationService
 		CancellationToken cancellationToken = default);
 
 	/// <summary>
-	/// Records the HR contact's report that the employment details are inaccurate.
+	/// Records the HR contact's report that the employment details are inaccurate,
+	/// together with the reason they gave. The API requires the reason, so the page
+	/// must collect one before calling this.
 	/// </summary>
 	Task<VerificationLinkResultDTO<EmploymentVerificationPreviewDTO>> RejectAsync(
 		string token,
+		string reason,
 		CancellationToken cancellationToken = default);
 
 	/// <summary>

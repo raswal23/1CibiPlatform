@@ -69,12 +69,14 @@ public sealed class EmploymentVerificationCacheRepository(
 		Guid id,
 		VerificationRequestStatus status,
 		DateTime respondedAt,
+		string? responseNotes,
 		CancellationToken cancellationToken)
 	{
 		var result = await repository.MarkRespondedAsync(
 			id,
 			status,
 			respondedAt,
+			responseNotes,
 			cancellationToken);
 
 		if (result)

@@ -32,5 +32,6 @@ public sealed class VerifyRequestHandler(
 		service.VerifyAsync(
 			request.Token,
 			reject: false,
+			reason: null,
 			cancellationToken);
 }

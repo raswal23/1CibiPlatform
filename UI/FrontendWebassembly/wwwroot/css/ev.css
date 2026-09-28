@@ -244,6 +244,27 @@
     overflow-wrap: anywhere;
 }
 
+/* The decline reason is anonymous free text of up to 1000 characters, so it wraps
+   anywhere like an address does - and is clamped, because one long sentence must not
+   set the row height for the whole page. The cell carries the full text on its title
+   attribute. Two classes because the clamp needs a box to apply to and a <td> is not
+   one: the same split .ev-email-cell and .ev-stacked-cell already use. */
+.ev-reason-cell {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ev-reason-clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    color: var(--c-fg-subtle);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 /* A standing note on the queue screen explaining that sending is automatic. Uses the
    EV tint rather than a status colour: it is context, not a warning. */
 .ev-notice {

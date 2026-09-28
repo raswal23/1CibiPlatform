@@ -24,7 +24,7 @@ what carries the correctness. Read it once, then use the closing table as a map.
 | **C3** | "Known gap: `getrequests` returns the entity including `VerificationTokenHash`" | True, and **`POST createrequest` does the same** (`Results.Ok(result)`, `result` being the entity). One leaking route is flagged; there are two |
 | **C4** | "a bounced or unanswered request can be re-sent from the UI without a database edit" | **No re-send action exists.** `SendSelectedRequestAsync` is wired only inside the *Needs request* drawer (now `NeedsRequest.razor`). A released candidate reappears there and starting again inserts a **second row** |
 | **C5** | Lifecycle: "Request row created before the email is attempted" | Correct, but the consequence is unstated: the row is **committed** first, so a failed send leaves a permanent `Pending` row, and `ListBlockedAtsSubjectIdsAsync` applies `Pending` no expiry — that candidate is blocked **forever** |
-| **C6** | Tracking view shows "HR email" | `HrName` is **never assigned** on the create path, so it is NULL for every module-created request. `ResponseNotes` is a dead column — no writer, no reader, anywhere |
+| **C6** | Tracking view shows "HR email" | `HrName` is **never assigned** on the create path, so it is NULL for every module-created request — still open. `ResponseNotes` **was** a dead column and no longer is: `MarkRespondedAsync` writes it and the Tracking grid's "Reason for inaccuracy" column reads it — **resolved** by [`employment-verification-decline-reason`](../../employment-verification-decline-reason/employment-verification-decline-reason.md) |
 | **C7** | Candidate, employer, period, HR email come from ATS | When ATS has no dates the UI **fabricates them**: `?? DateTime.UtcNow.AddYears(-2)` / `?? DateTime.UtcNow.AddMonths(-6)`, plus `Position = "Not provided"` |
 | **C8** | "`EmploymentVerificationPaths` is the only wiring, and that is correct" | True — but no EV route populates `RouteDefinitionDTO.Metadata`, so **none carries a `RateLimitPolicy`**. ATS's equivalent anonymous routes all do |
 | **C9** | Guide §11a: token-link pages use `GenericLayout` | `VerifyEmployment.razor:1` **does** follow it. `Layout/EmploymentVerificationLayout.razor` was dead and has since been deleted; `Layout/EVLayout.razor` is the staff shell now — **resolved** |
@@ -772,7 +772,9 @@ private and never called; `Layout/EmploymentVerificationLayout.razor` was refere
 since been deleted (§8), as has the unused `--c-ev-page-gradient` token;
 `AddEmploymentVerificationCarterModules` is never called, because the composition root's
 `AddModuleCarter` already lists `_employmentVerificationAssembly` in its `DependencyContextAssemblyCatalog`;
-`ResponseNotes` has no reader or writer; and `HrName` is never set on the create path. (The debug
+and `HrName` is never set on the create path. (`ResponseNotes` belonged on this list and no
+longer does — the decline-reason feature gave it a writer in `MarkRespondedAsync` and a reader
+in the Tracking grid. The debug
 comment naming a real internal address beside `HrEmail` went with the page split.)
 
 **S16 — The 86-character rule is duplicated three times (§2.2)** with no shared constant. Changing

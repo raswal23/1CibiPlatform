@@ -137,11 +137,13 @@ public sealed class EmploymentVerificationService(
 
 	public Task<VerificationLinkResultDTO<EmploymentVerificationPreviewDTO>> RejectAsync(
 		string token,
+		string reason,
 		CancellationToken cancellationToken = default) =>
 		CompleteVerificationAsync(
 			token,
 			"reject",
-			cancellationToken);
+			cancellationToken,
+			new RejectEmploymentVerificationRequest(reason));
 
 	public async Task<VerificationLinkResultDTO<EmploymentVerificationPreviewDTO>> GetPreviewAsync(
 		string token,
@@ -198,7 +200,8 @@ public sealed class EmploymentVerificationService(
 		CompleteVerificationAsync(
 			string token,
 			string action,
-			CancellationToken cancellationToken)
+			CancellationToken cancellationToken,
+			object? payload = null)
 	{
 		if (string.IsNullOrWhiteSpace(token))
 		{
@@ -210,10 +213,14 @@ public sealed class EmploymentVerificationService(
 
 		try
 		{
-			var response = await _httpClient.PostAsync(
-				$"employmentverification/{action}/{Uri.EscapeDataString(token)}",
-				content: null,
-				cancellationToken);
+			var url = $"employmentverification/{action}/{Uri.EscapeDataString(token)}";
+
+			// Confirm posts nothing; decline has to carry the reason the endpoint now
+			// requires. One helper serves both so the problem-title mapping below is
+			// not duplicated.
+			var response = payload is null
+				? await _httpClient.PostAsync(url, content: null, cancellationToken)
+				: await _httpClient.PostAsJsonAsync(url, payload, cancellationToken);
 
 			if (!response.IsSuccessStatusCode)
 			{
