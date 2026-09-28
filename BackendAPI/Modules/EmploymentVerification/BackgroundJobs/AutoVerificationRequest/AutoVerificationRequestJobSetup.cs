@@ -20,6 +20,6 @@ public class AutoVerificationRequestJobSetup : IConfigureOptions<QuartzOptions>
 		options.AddTrigger(opts => opts
 			.ForJob(jobKey)
 			.WithIdentity("AutoVerificationRequestTrigger")
-			.WithSimpleSchedule(x => x.WithIntervalInMinutes(5).RepeatForever()));
+			.WithSimpleSchedule(x => x.WithIntervalInSeconds(5).RepeatForever()));
 	}
 }
