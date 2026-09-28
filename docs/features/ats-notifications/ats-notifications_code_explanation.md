@@ -1040,7 +1040,9 @@ The method itself:
 					AtsNotificationType.EmailAccountsExhausted,
 					"Invitation emails have stopped",
 					"Every registered sender account is capped, cooling down or unverified. Invitations are being held and will resume automatically once an account recovers.",
-					"/s&i/ats/emailaccounts",
+					// The Email Management host, which opens on the Email Accounts tab. Has to
+					// match module 16's path in ShareData/ATS/ModuleList.cs - see the note below.
+					"/s&i/ats/emailmanagement",
 					null,
 					cancellationToken);
 			}
@@ -1055,9 +1057,14 @@ The method itself:
 ```
 
 Four things to note. `EntityId` is `null` — there is no subject. The link is a bare module path with
-no `?search=`, because there is nothing to filter to. Each recipient gets their **own row** (a
-sequential `foreach`, so N admins = N inserts and N pushes, each to a single-user group). And the
-`try/catch` is hand-rolled where every other notification path uses `SideEffectGuard` (§9.10).
+no `?search=`, because there is nothing to filter to — and its last segment has to match a path in
+`UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs`, since the notification centre resolves a link
+that way to decide whether the reader may see it (§8.7). A link that resolves to nothing is shown to
+everyone and then navigates nowhere, which is what happened when module 16's path moved from
+`emailaccounts` to `emailmanagement` and this literal had to follow it. Each recipient gets their
+**own row** (a sequential `foreach`, so N admins = N inserts and N pushes, each to a single-user
+group). And the `try/catch` is hand-rolled where every other notification path uses
+`SideEffectGuard` (§9.10).
 
 The roster query is the reason `Distinct()` matters:
 
@@ -1902,9 +1909,9 @@ since that method redirects anything under `s&i/ats/` whose segment it cannot ma
 			return true;
 ```
 
-**Add module 17 for notifications and the page breaks** — `ModuleList` would match the segment
-first, `module.Key > 0` would be true, and every user without the grant would be redirected. The
-absence from `ModuleList` is load-bearing, in two files.
+**Give notifications a module id of their own and the page breaks** — `ModuleList` would match the
+segment first, `module.Key > 0` would be true, and every user without the grant would be redirected.
+The absence from `ModuleList` is load-bearing, in two files.
 
 The `CanOpen` courtesy check in both components depends on the same list, and fails open by design:
 
@@ -2334,7 +2341,7 @@ must be set to `/hubs/atsbulk` in the environment for the gateway route to reach
 | `GetNotificationsEndpointResponse.Notifications` | The endpoint record | `GetNotificationsResponseDTO.Notifications` | `SendAsync<TResponse, TResult>`'s `select` returns null → *"The server returned an empty response."* |
 | `AtsNotificationType.*` | `BackendAPI/Modules/ATS/Constants/` | `AtsNotificationTypes.*` in `UI/.../ShareData/ATS/` | Ten for ten today. A backend-only addition renders with the neutral bell |
 | `TitleMaxLength`/`BodyMaxLength`/`LinkUrlMaxLength` | `AtsNotificationService` constants | `HasMaxLength` in `AtsNotificationConfiguration` | A widened column silently keeps truncating; a narrowed one throws on insert |
-| `/s&i/ats/searchreport`, `/ticketingstatus`, `/bulkuploads`, `/emailaccounts` | `BuildOrderLink` and the two call-site links | The `path` values in `ShareData/ATS/ModuleList.cs` | `CanOpen` matches on the last segment; a mismatch falls through to `module.Key == 0` and *allows*, so the user is bounced off `/access-denied` by the destination instead |
+| `/s&i/ats/searchreport`, `/ticketingstatus`, `/bulkuploads`, `/emailmanagement` | `BuildOrderLink` and the two call-site links | The `path` values in `ShareData/ATS/ModuleList.cs` | `CanOpen` matches on the last segment; a mismatch falls through to `module.Key == 0` and *allows*, so the user is bounced off `/access-denied` by the destination instead |
 | `ApplyOrder` vs `ApplySeek` | Both in `AtsNotificationRepository` | The `IsDescending(false, true, true)` index | The repository comment says "must mirror this expression exactly". A drift skips or repeats rows at page boundaries |
 | `"notifications"` | `ATSLayout.CanAccessRoute`'s explicit allow | The `@page` route's last segment | §8.7 — renaming the page 302s every user to `/access-denied` |
 

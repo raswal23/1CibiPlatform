@@ -310,6 +310,11 @@ else
 		if (string.Equals(routeSegment, "notifications", StringComparison.OrdinalIgnoreCase))
 			return true;
 
+		// Settings is not itself a module - it is a host for the tabs that are. This set has to
+		// match the RequireATSModule list on Component/ATS/Settings/Settings.razor exactly, and
+		// nothing checks that it does: an id present there but missing here means the tab renders
+		// for a user who can never reach the page, because navigation is refused first. Adding a
+		// Settings tab means editing both. (6 Package, 7 Client, 8 Role.)
 		return string.Equals(routeSegment, "settings", StringComparison.OrdinalIgnoreCase) &&
 			_accessibleModuleIds.Overlaps([6, 7, 8]);
 	}

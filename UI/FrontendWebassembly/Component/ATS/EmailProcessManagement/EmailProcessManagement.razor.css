@@ -1,0 +1,58 @@
+/* Scoped to the Email Management board.
+
+   The intro banner, the lead-identity cell, the muted cell, the chip row, the action button and
+   the status pill all come from the shared .ats-status-board-* / .ats-cell-* / .ats-management-* /
+   .ats-status-pill rules in wwwroot/css/ats.css, which every other ATS board uses too. None of
+   that is re-declared here. What is left is only what this board's five columns need: their
+   widths, the row alignment, and clipping for a long address.
+
+   ::deep throughout: the table is rendered by TableComponent, a child component, so its container
+   and cells carry no scope attribute of this page's. The rule still has to start from a class this
+   page renders - .ats-email-process-page on the root div - or it matches nothing. Same mechanism
+   NewOrderComponent uses to reach into MudSelect.
+
+   These were originally in ats.css as .ats-email-process-card. Moved here so nothing this feature
+   owns can leak onto another screen; a global sheet is shared by every board whether it asks for
+   it or not. */
+
+/* Five columns: notice, copied mailboxes, status, created, actions. Percentages rather than fixed
+   widths so the table still fits the 601-960px band; below 960px MudTable switches to card mode
+   and these no longer apply. */
+.ats-email-process-page ::deep .ats-management-card thead .mud-table-cell:nth-child(1) {
+    width: 24%;
+}
+
+.ats-email-process-page ::deep .ats-management-card thead .mud-table-cell:nth-child(2) {
+    width: 36%;
+}
+
+.ats-email-process-page ::deep .ats-management-card thead .mud-table-cell:nth-child(3) {
+    width: 12%;
+}
+
+.ats-email-process-page ::deep .ats-management-card thead .mud-table-cell:nth-child(4) {
+    width: 18%;
+}
+
+.ats-email-process-page ::deep .ats-management-card thead .mud-table-cell:nth-child(5) {
+    width: 10%;
+}
+
+/* The shared card rule leaves body cells top-aligned, which suits a two-line lead cell but not a
+   row whose tallest content is a chip. Every other management card overrides this the same way. */
+.ats-email-process-page ::deep .ats-management-card tbody .mud-table-cell {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    vertical-align: middle;
+}
+
+/* An address can run to 255 characters, and the shared chip's white-space: nowrap would let one
+   push its cell wider than the card. Clipped here rather than in .ats-management-chip so the
+   package and client chips, whose values are short and bounded, keep their current look. The
+   whole address stays readable through the chip's title attribute. */
+.ats-email-process-page ::deep .ats-management-chip {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -41,6 +41,22 @@ public partial class ATSCacheRepository
 		var result = await _atsRepository.EditPackageAsync(packageDetails, cancellationToken);
 		await _hybridCache.RemoveByTagAsync(CacheTags.Package, cancellationToken);
 		await _hybridCache.RemoveByTagAsync(CacheTags.Client, cancellationToken);
+
+		// FollowUpEmail is read live off PackageDetails by the report rows (see
+		// ATSRepository.BuildReportRowsQuery) and baked into the cached page as the board's
+		// "Follow-ups Left", so an edit that changes the reminder count leaves that column
+		// stale for however long the entry lives. The chaser honours the new value on its
+		// very next pass - its stop condition joins PackageDetails directly - so without
+		// this the board and the chaser disagree, which is the one thing
+		// ReportService.CalculateFollowUpEmailsRemaining exists to prevent.
+		//
+		// Not conditional on the count having changed: an edit here is a rare admin action,
+		// and comparing against the pre-update value would mean reading the row back purely
+		// to decide whether to drop a tag. Previously only the rename path invalidated this,
+		// so a package whose reminders were retuned without being renamed kept reporting the
+		// old schedule.
+		await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+
 		return result;
 	}
 

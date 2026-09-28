@@ -29,6 +29,11 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	// only source for one, and it is the same lookup the three sibling notices use.
 	private readonly IAuthQueries _authQueries;
 
+	// The team half of that same copy list, from ats."EmailProcessDetails" rather than a literal.
+	// Reads the invitation's row or the reminder's depending on which message is going out. The
+	// console's service, used here only for its read: a send path never writes a row.
+	private readonly IEmailProcessManagementService _emailProcessManagementService;
+
 	// Only for the two send bounds SingleEmailSendRetry takes. Read here rather than inside the
 	// retry so the helper stays stateless and its attempt loop can be driven by a test with no
 	// configuration at all.
@@ -54,6 +59,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		IOrderInputValidator orderInputValidator,
 		IUnitOfWork unitOfWork,
 		IAuthQueries authQueries,
+		IEmailProcessManagementService emailProcessManagementService,
 		IOptions<AtsEmailDeliveryOptions> emailDeliveryOptions)
 	{
 		_logger = logger;
@@ -72,6 +78,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 		_orderInputValidator = orderInputValidator;
 		_unitOfWork = unitOfWork;
 		_authQueries = authQueries;
+		_emailProcessManagementService = emailProcessManagementService;
 		_emailDeliveryOptions = emailDeliveryOptions.Value;
 		_applicationformBaseUrl = _configuration.GetSection("ATS").GetValue<string>("ApplicationFormBaseUrl") ?? string.Empty;
 		_templateFileName = _configuration.GetSection("ATS").GetValue<string>("ATSBulkTemplatePath") ?? string.Empty;
@@ -455,7 +462,15 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 			// Auth and the test fakes to reason about a copy list they have no teams for. A sender
 			// that is not the ATS one therefore sends to the candidate alone - the same degradation
 			// the reminder body already accepts above.
-			var cc = await BuildCopyListAsync(requestorId, cancellationToken);
+			//
+			// The two messages read separate rows. They were seeded with the same addresses so this
+			// cutover changed nothing, but the reminder chases a candidate who has gone quiet and the
+			// invitation does not - the list that wants to hear about the second is not obviously the
+			// list that wants to hear about the first, and an operator can now say so.
+			var cc = await BuildCopyListAsync(
+				isFollowUp ? AtsEmailProcess.FollowUp : AtsEmailProcess.ApplicationForm,
+				requestorId,
+				cancellationToken);
 
 			return await resultAwareSender.SendATSEmailWithResultAsync(
 				toEmail: gmail!,
@@ -476,10 +491,18 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	}
 
 	/// <summary>
-	/// The copy list for one application form email: the CIBI teams, plus the requestor who
-	/// raised the order when their mailbox can be resolved.
+	/// The copy list for one application form email: the CIBI teams registered against
+	/// <paramref name="emailProcess"/>, plus the requestor who raised the order when their mailbox
+	/// can be resolved.
 	/// </summary>
 	/// <remarks>
+	/// The teams come from <c>ats."EmailProcessDetails"</c> through
+	/// <see cref="IEmailProcessManagementService.GetCopyListAsync"/>, which answers with an empty
+	/// list rather than throwing when the row is missing or switched off - so the candidate's link
+	/// survives a copy list that does not. Note that is the ONE method on that service which behaves
+	/// that way; its write methods throw. The caller passes the process because the invitation and
+	/// the reminder are separate rows; see the note at the call site.
+	///
 	/// The requestor is looked up rather than read off the order because the order stores their
 	/// DISPLAY NAME - <c>Requestor</c> is whatever <c>ICurrentUser.FullName</c> held at order
 	/// time, and a name is not an address. <c>RequestorId</c> is the durable handle, and the Auth
@@ -505,10 +528,12 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 	/// real login.
 	/// </remarks>
 	private async Task<IReadOnlyCollection<string>> BuildCopyListAsync(
+		string emailProcess,
 		Guid? requestorId,
 		CancellationToken cancellationToken)
 	{
-		var cc = new List<string>(ApplicationFormEmail.CopyTeams);
+		var cc = new List<string>(
+			await _emailProcessManagementService.GetCopyListAsync(emailProcess, cancellationToken));
 
 		if (!requestorId.HasValue)
 		{

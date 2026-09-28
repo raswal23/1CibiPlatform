@@ -88,8 +88,9 @@ follow-up:     FollowUpEmailBackgroundJob releases rows -> the same processor
 
   all of them -> EndorsementSubmissionService.SendApplicationFormToUserEmailWithResultAsync
                    compose body (invitation or reminder)
-                   BuildCopyListAsync(requestorId)
-                     ApplicationFormEmail.CopyTeams        the fixed part
+                   BuildCopyListAsync(ApplicationForm | FollowUp, requestorId)
+                     IEmailProcessManagementService.GetCopyListAsync
+                       -> ats."EmailProcessDetails"                   the team part
                      + SideEffectGuard( IAuthQueries.GetATSAssignedUserAsync )   the requestor, if resolvable
                    -> IAtsEmailSender.SendATSEmailWithResultAsync(..., cc: that list)
                       -> the pooled, capped, paced, failover-capable send
@@ -109,11 +110,29 @@ reach the lookup.
 The directory read is wrapped in `SideEffectGuard` because the single-order path runs inside a
 `TransactionRunner`: an unguarded throw there would roll back the whole order over a cosmetic copy.
 
-The copy list is a new constant, `Constants/ApplicationFormEmail.cs`, holding `CopyTeams` and nothing
-else — unlike its three siblings, which also hold a `Subject`. Each of those is one notice with one
-subject. These are two bodies with two subjects, already held as `InvitationSubject` and
-`ReminderSubject` beside the send that picks between them; moving a *pair* of subjects into the
-constant would separate them from the only code that chooses, and buy nothing.
+**The team half of the list has since moved out of code.** It was originally a new constant,
+`Constants/ApplicationFormEmail.cs`, holding `CopyTeams` and nothing else. That file is deleted; the
+addresses now live in `ats."EmailProcessDetails"` and are read through
+`IEmailProcessManagementService.GetCopyListAsync` — the same service the console uses to edit those
+rows, called here for the one method on it that never throws — so an operator can change who is
+copied without a deploy. See [`ats-email-process`](../ats-email-process/ats-email-process.md).
+
+Two things changed in the shape of this feature as a result:
+
+- **The invitation and the reminder read separate rows** — `AtsEmailProcess.ApplicationForm` and
+  `AtsEmailProcess.FollowUp`, chosen by the `isFollowUp` flag already in scope at the call site. The
+  single constant could not distinguish them; they were seeded with identical addresses so the
+  cutover changed no behaviour, and they are now independently editable.
+- **`BuildCopyListAsync` takes the process as a parameter.** Everything below it — the requestor
+  lookup, the guard around it, the four degradation cases — is unchanged.
+
+The team list can now be empty for a reason other than a bug: its row can be switched off, or
+missing, or unreadable. All three degrade the same way as the requestor cases below, and the
+candidate still receives their link.
+
+The two subjects stayed in code. They were never in the deleted constant: `InvitationSubject` and
+`ReminderSubject` sit beside the send that picks between them, because a subject is a copy decision
+made with the body, not an operational setting.
 
 **Pre-existing and untouched:** both bodies hardcode their `<h1>` as a duplicate of their subject
 rather than interpolating the const, unlike `BuildSubmittedFormNotification` which renders
@@ -146,9 +165,11 @@ and the candidate are unaffected, each covered by a unit test:
 | the lookup throws | the directory is unreachable; `SideEffectGuard` logs and returns null |
 
 Note the copy list is **not** deduplicated against the teams. A requestor whose own address is also a
-team mailbox would be listed twice and charged twice. That cannot happen with the current lists —
-the teams are shared mailboxes and requestors are individual logins — and the guard would need
-revisiting if a team address ever became a real account.
+team mailbox would be listed twice and charged twice. That was safe while the teams were a compiled
+literal — shared mailboxes, requestors are individual logins — but the list is now operator-editable,
+so somebody adding their own login to a row is a reachable way to produce the duplicate. The
+per-list validator rejects an address repeated *within* a row; it cannot see the requestor appended
+afterwards.
 
 ## Manual verification
 
@@ -165,14 +186,15 @@ need a real pass:
 5. Raise an order as a user with no ATS assignment, or with a blank email in the directory, and
    confirm the candidate still receives their link with the two teams copied and a warning logged.
 
-## Before release
+## Resolved: the tester-mailbox swap
 
-`ApplicationFormEmail.CopyTeams` currently holds a tester's mailboxes, with the real block commented
-out directly above it. This matches the same swap already present in `SubmittedFormEmail`,
-`WithdrawnEmail` and `DisputeEmail` on this branch.
+`ApplicationFormEmail.CopyTeams` and its three siblings spent a stretch on this branch swapped to a
+tester's mailboxes, with the real block commented out above each. Eight unit tests across the notice
+suites were red the whole time, correctly reporting the swap.
 
-**All four must be restored together.** The three sibling notice tests
-(`SubmittedFormEmailNotificationTests`, `WithdrawnEmailNotificationTests`,
-`DisputeEmailNotificationTests`) pin the real addresses as literals and are red until that happens —
-they are doing exactly what they were written to do. They go green together when the constants are
-restored.
+Deleting those constants ended it. The agreed addresses live in `ATSInitialData.GetEmailProcesses()`,
+and swapping one for a tester now means editing the *seed* — which ships to Production.
+`EmailProcessSeedTests` fails on any address outside `@cibi.com.ph` for that reason. Manual testing
+against a personal mailbox is done through the management screen, on a row, in the environment being
+tested; the seeder does not overwrite an edited row, so the change survives a restart and never
+reaches a commit.

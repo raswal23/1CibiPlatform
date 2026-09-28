@@ -383,7 +383,14 @@ public class BulkEmailNotificationProcessorService : IBulkEmailNotificationProce
 					AtsNotificationType.EmailAccountsExhausted,
 					"Invitation emails have stopped",
 					"Every registered sender account is capped, cooling down or unverified. Invitations are being held and will resume automatically once an account recovers.",
-					"/s&i/ats/emailaccounts",
+					// The host page for email administration, which opens on the Email Accounts
+					// tab. Sender accounts are no longer a route of their own. This string has to
+					// match the path module 16 carries in
+					// UI/FrontendWebassembly/ShareData/ATS/ModuleList.cs: the notification centre
+					// resolves a link's last segment against that catalogue to decide whether the
+					// reader may see it, and a link it cannot resolve is shown to everyone and
+					// then navigates nowhere.
+					"/s&i/ats/emailmanagement",
 					null,
 					cancellationToken);
 			}

@@ -2753,9 +2753,9 @@ but the grant backfill is called for 13 and 14 only (lines 90-91):
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.TicketingStatus);
 ```
 
-This is **correct for 15 and would be a bug for any module 17**. Nobody is granted module 15
-because nobody should be — access is by platform role, not by module grant, and `ATSLayout` gives a
-super admin every module id unconditionally:
+This is **correct for 15 and would be a bug for any module that is granted per user**. Nobody is
+granted module 15 because nobody should be — access is by platform role, not by module grant, and
+`ATSLayout` gives a super admin every module id unconditionally:
 
 ```csharp
 		if (await AccessService.HasRoleAsync(RoleList.SuperAdminId))

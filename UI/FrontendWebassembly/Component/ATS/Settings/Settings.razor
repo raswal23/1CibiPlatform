@@ -6,6 +6,11 @@
 @attribute [RequireATSModule(6, 7, 8)]
 @inherits SecurePageBase
 
+@* The RequireATSModule list above and the settings branch of ATSLayout.CanAccessRoute hold the
+   same ids, and nothing enforces that they agree. A tab listed here but missing there is
+   unreachable: navigation to /s&i/ats/settings is refused before this page ever renders, so the
+   tab never appears and nothing reports why. Adding a tab means editing both. *@
+
 <PageTitle>ATS - Settings</PageTitle>
 
 <div class="ats-segmented">

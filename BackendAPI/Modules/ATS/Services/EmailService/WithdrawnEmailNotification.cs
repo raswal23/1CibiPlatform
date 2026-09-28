@@ -12,6 +12,7 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 	private readonly IAtsEmailSender _emailSender;
 	private readonly IAuthQueries _authQueries;
 	private readonly IOrderHistoryService _orderHistoryService;
+	private readonly IEmailProcessManagementService _emailProcessManagementService;
 	private readonly AtsEmailDeliveryOptions _options;
 
 	public WithdrawnEmailNotification(
@@ -19,12 +20,14 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 		IAtsEmailSender emailSender,
 		IAuthQueries authQueries,
 		IOrderHistoryService orderHistoryService,
+		IEmailProcessManagementService emailProcessManagementService,
 		IOptions<AtsEmailDeliveryOptions> options)
 	{
 		_logger = logger;
 		_emailSender = emailSender;
 		_authQueries = authQueries;
 		_orderHistoryService = orderHistoryService;
+		_emailProcessManagementService = emailProcessManagementService;
 		_options = options.Value;
 	}
 
@@ -96,10 +99,16 @@ public class WithdrawnEmailNotification : IWithdrawnEmailNotification
 			requestorName,
 			BuildCandidateName(invitation));
 
+		// The team copy comes from the EmailProcessDetails row for this notice, not from a literal:
+		// an operator can change who is copied without a deploy. An empty list is a valid answer -
+		// the row may be switched off - and the notice still goes to the requestor.
+		var cc = new List<string>(
+			await _emailProcessManagementService.GetCopyListAsync(
+				AtsEmailProcess.Withdrawn,
+				cancellationToken));
+
 		// A row with no candidate address simply leaves them off the copy. The notice is still worth
 		// sending to the requestor, who is the one that has to stop the verification.
-		var cc = new List<string> { WithdrawnEmail.CopyTeam };
-
 		if (!string.IsNullOrWhiteSpace(invitation.EmailAddress))
 		{
 			cc.Add(invitation.EmailAddress);

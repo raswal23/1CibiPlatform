@@ -309,7 +309,12 @@ The processor then:
 1. cancels the pass so the remaining rows do not each walk the same empty list,
 2. releases them to `Pending` with their attempt count untouched,
 3. raises `AtsNotificationType.EmailAccountsExhausted` to the ATS administrators **once per
-   pass**, linking to `/s&i/ats/emailaccounts`.
+   pass**, linking to `/s&i/ats/emailmanagement` — the Email Management host, which opens on the
+   Email Accounts tab. It used to link to `/s&i/ats/emailaccounts`, before this board became a tab
+   of that host and lost its own route; the link is a literal in
+   `BulkEmailNotificationProcessorService` and has to match module 16's path in
+   `ShareData/ATS/ModuleList.cs`, because the notification centre resolves a link's last segment
+   against that catalogue to decide whether the reader is allowed to see it.
 
 That notification is the only thing standing between this feature and a silent outage. A capped
 account defers rows correctly and quietly: the queue looks calm, the logs look normal, and

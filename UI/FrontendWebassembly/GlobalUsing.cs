@@ -40,6 +40,7 @@ global using FrontendWebassembly.Services.ATS.ClientManagement;
 global using FrontendWebassembly.Services.ATS.Dashboard;
 global using FrontendWebassembly.Services.ATS.DisputeOrder;
 global using FrontendWebassembly.Services.ATS.EmailAccountManagement;
+global using FrontendWebassembly.Services.ATS.EmailProcessManagement;
 global using FrontendWebassembly.Services.ATS.EndorsementSubmission;
 global using FrontendWebassembly.Services.ATS.Notifications;
 global using FrontendWebassembly.Validation.CheckBulkFileName;

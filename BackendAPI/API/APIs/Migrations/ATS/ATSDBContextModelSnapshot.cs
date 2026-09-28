@@ -1055,6 +1055,38 @@ namespace APIs.Migrations.ATS
                     b.ToTable("EmailInvitationRequest", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.EmailProcessDetails", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CCEmail")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailProcess")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailProcess")
+                        .IsUnique();
+
+                    b.ToTable("EmailProcessDetails", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.LicensesDetails", b =>
                 {
                     b.Property<Guid>("LicensesDetailsID")

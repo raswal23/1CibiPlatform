@@ -367,6 +367,79 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		result.Items.Single().FollowUpEmailsRemaining.Should().BeNull();
 	}
 
+	/// <summary>
+	/// Retuning a package's reminder count has to show up on the board immediately, even when
+	/// the package was not renamed.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// FollowUpEmail is read live off PackageDetails into the report row and baked into the
+	/// cached first page as "Follow-ups Left", so the package edit has to drop the report tag.
+	/// It used to drop only the package and client tags; the report tag came along solely via
+	/// the rename path, which <c>PackageManagementService</c> calls only when the name actually
+	/// changed. An admin who raised the count without renaming therefore left every cached page
+	/// reporting the old schedule.
+	/// </para>
+	/// <para>
+	/// That window is exactly the drift <c>CalculateFollowUpEmailsRemaining</c> exists to
+	/// prevent: the chaser joins PackageDetails directly, so it honours the new count on its
+	/// very next hourly pass while the board still promised the old one.
+	/// </para>
+	/// <para>
+	/// The first read is load-bearing - it is what populates the entry the edit must evict.
+	/// Without it the second read would be a cache miss and pass whether or not the fix exists.
+	/// </para>
+	/// </remarks>
+	[Fact]
+	public async Task GetReportsAsync_ShouldReportTheNewFollowUpCount_WhenThePackageIsRetunedWithoutBeingRenamed()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		const int clientId = 15;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(3);
+
+		var invitation = CreateInvitation("Retuned", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(1);
+		invitation.FollowUpSentCount = 0;
+		await AddInvitationsAsync(invitation);
+
+		var beforeEdit = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+		beforeEdit.Items.Single().FollowUpEmailsRemaining.Should().Be(3);
+
+		var existing = await _dbContext.PackageDetails
+			.AsNoTracking()
+			.FirstAsync(package => package.PackageId == DefaultPackageId);
+		_dbContext.ChangeTracker.Clear();
+
+		// Act
+		// The same name, deliberately: this must invalidate on its own rather than riding on
+		// the rename path's invalidation.
+		await _packageManagementService.EditPackageAsync(new EditPackageDTO
+		{
+			PackageId = existing.PackageId,
+			PackageName = existing.PackageName,
+			PackageDescription = existing.PackageDescription,
+			IsActive = existing.IsActive,
+			FollowUpEmail = 5,
+			AutoChasing = existing.AutoChasing
+		}, CancellationToken.None);
+
+		// Assert
+		var afterEdit = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		afterEdit.Items.Single().FollowUpEmailsRemaining.Should().Be(5);
+	}
+
 	#endregion
 
 	[Theory]
