@@ -46,5 +46,16 @@ public sealed class EmploymentVerificationRequest
 	public DateTime? SentAt { get; set; }
 	public DateTime? VerifiedAt { get; set; }
 	public DateTime? RejectedAt { get; set; }
+
+	/// <summary>
+	/// What the HR contact typed when reporting the details inaccurate. Null on a
+	/// confirmation and on a send that lapsed, so a value here always belongs to the
+	/// <see cref="VerificationRequestStatus.Rejected"/> row it sits on.
+	/// </summary>
+	/// <remarks>
+	/// The column existed unused until the decline flow started capturing a reason;
+	/// it is the only record of <c>why</c> an employer disputed the details, and the
+	/// tracking view shows it beside the "Verified with inaccuracy" status.
+	/// </remarks>
 	public string? ResponseNotes { get; set; }
 }

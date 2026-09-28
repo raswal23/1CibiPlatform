@@ -23,6 +23,13 @@ public sealed record SentVerificationRequestDTO(
 	DateTime? SentAt,
 	DateTime? VerifiedAt,
 	DateTime? RejectedAt,
+
+	/// <summary>
+	/// Why the HR contact reported the details inaccurate. Null unless the request was
+	/// rejected, so the tracking view shows an em dash for every other outcome.
+	/// </summary>
+	string? ResponseNotes,
+
 	DateTime TokenExpiresAt)
 {
 	/// <summary>
@@ -48,5 +55,6 @@ public sealed record SentVerificationRequestDTO(
 			SentAt: entity.SentAt,
 			VerifiedAt: entity.VerifiedAt,
 			RejectedAt: entity.RejectedAt,
+			ResponseNotes: entity.ResponseNotes,
 			TokenExpiresAt: entity.TokenExpiresAt);
 }

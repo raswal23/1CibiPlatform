@@ -80,11 +80,16 @@ public partial class Tracking
 	/// here and on the ATS boards. "Sent" is the only actively-changing state, and
 	/// <c>processing</c> is the class whose dot pulses to say so.
 	/// </summary>
+	/// <remarks>
+	/// Matched on the <c>displayed</c> status, so the inaccurate case has to be the
+	/// relabelled string rather than the stored "Rejected" - matching the stored value
+	/// here would silently fall through to <c>unknown</c> and drop the chip's colour.
+	/// </remarks>
 	private static string GetStatusCssClass(SentVerificationRequestDTO request) =>
 		EmploymentVerificationDisplay.GetDisplayStatus(request) switch
 		{
 			"Verified" => "ats-status-pill done",
-			"Rejected" => "ats-status-pill error",
+			EmploymentVerificationDisplay.InaccurateStatusLabel => "ats-status-pill error",
 			"Sent" => "ats-status-pill processing",
 			"Pending" => "ats-status-pill pending",
 			_ => "ats-status-pill unknown"

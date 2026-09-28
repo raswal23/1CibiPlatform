@@ -60,7 +60,16 @@ public interface IEmploymentVerificationService
 	/// Records the HR contact's response against the emailed token. Set
 	/// <paramref name="reject"/> to mark the details inaccurate instead of confirmed.
 	/// </summary>
-	Task<EmploymentVerificationCompletionResult> VerifyAsync(string token, bool reject, CancellationToken cancellationToken);
+	/// <param name="reason">
+	/// Why the contact says the details are wrong. Stored only when
+	/// <paramref name="reject"/> is true; a confirmation discards it so the column
+	/// never holds a sentence beside an outcome it does not describe.
+	/// </param>
+	Task<EmploymentVerificationCompletionResult> VerifyAsync(
+		string token,
+		bool reject,
+		string? reason,
+		CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Validates the emailed token and, when it is still actionable, returns the

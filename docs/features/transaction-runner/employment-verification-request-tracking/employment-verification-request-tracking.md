@@ -9,9 +9,22 @@ The Employment Verification page now separates the two datasets it works with: A
 | Request row created before the email is attempted | `Pending` | `RequestedAt`, `TokenExpiresAt` |
 | Verification email accepted by the email service | `Sent` | `SentAt` |
 | HR contact confirms the details | `Verified` | `VerifiedAt` |
-| HR contact reports the details inaccurate | `Rejected` | `RejectedAt` |
+| HR contact reports the details inaccurate | `Rejected` | `RejectedAt`, plus their reason in `ResponseNotes` |
+| The email service refused the send | `Expired` | neither — see below |
 
-`Expired` exists on `VerificationRequestStatus` but is never written. A lapsed link is derived as `Status == Sent && TokenExpiresAt < now`, so no background sweep is needed to keep the list correct. The UI labels such a row `Expired` for display only; the stored status stays `Sent`.
+Two statuses are **display-only relabels**; the stored enum is what every rule reads. A sent
+request whose link has lapsed is derived as `Status == Sent && TokenExpiresAt < now` and shown
+as `Expired`, so no background sweep is needed to keep the list correct. A `Rejected` row is
+shown as **`Verified with inaccuracy`**, because "Rejected" reads as though CIBI turned the
+request down when what happened is that the employer answered and disputed the details. Both
+mappings live in `EmploymentVerificationDisplay.GetDisplayStatus`; see
+[`employment-verification-decline-reason`](../../employment-verification-decline-reason/employment-verification-decline-reason.md).
+
+`Expired` *is* written, in one place: when the email service refuses a send, the row is marked
+`Expired` rather than left `Pending`. `Pending` blocks its segment permanently with no expiry
+and no sweeper, so a failed send would strand that employer forever. It is not marked
+`Rejected` either, because that would hide a delivery failure as a decline. A **lapsed** link,
+by contrast, is never stored as `Expired` — it stays `Sent` and is derived on read.
 
 ## Candidate availability rule
 
@@ -78,7 +91,7 @@ The two views are separate routes under `Layout/EVLayout.razor`, each a
 | Route | Page | Columns |
 |---|---|---|
 | `/employmentverification/requests` | `NeedsRequest.razor` | candidate, employer no., previous employer, employment period, supervisor email, status |
-| `/employmentverification/tracking` | `Tracking.razor` | candidate, previous employer, sent to (+ source), requested, responded, status |
+| `/employmentverification/tracking` | `Tracking.razor` | candidate, previous employer, sent to (+ source), requested, responded, status, reason for inaccuracy |
 
 Needs request is a **queue**, one row per employment segment, answering "why has this
 employer not been contacted yet?" Its status chips — Queued, No consent, Needs recipient —

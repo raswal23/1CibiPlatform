@@ -60,8 +60,21 @@ public sealed class SentVerificationRequestDTO
 	public DateTime? SentAt { get; set; }
 	public DateTime? VerifiedAt { get; set; }
 	public DateTime? RejectedAt { get; set; }
+
+	/// <summary>
+	/// Why the HR contact reported the details inaccurate. Null unless the row was
+	/// rejected, so every other outcome renders an em dash.
+	/// </summary>
+	public string? ResponseNotes { get; set; }
+
 	public DateTime TokenExpiresAt { get; set; }
 }
+
+/// <summary>
+/// Body of <c>POST /employmentverification/reject/{token}</c>. Mirrors the API's
+/// <c>RejectRequestBody</c>; the token travels in the route, not here.
+/// </summary>
+public sealed record RejectEmploymentVerificationRequest(string Reason);
 
 /// <summary>
 /// Transport model for the anonymous token preview returned by
