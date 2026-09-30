@@ -61,6 +61,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Data-only migration scripts ship beside the assembly rather than inside it,
+		     matching how Scripts\quartz_postgres.sql is already handled. The Employment
+		     Verification contact seed is ~950 KB; embedding it as a resource nearly
+		     doubled APIs.dll and tripped this machine's Smart App Control policy, which
+		     then blocked the test host from loading the assembly at all.
+
+		     Content rather than None: Content flows to the output of referencing
+		     projects, so Test.csproj gets the script too and integration tests migrate
+		     the same seeded schema production does. The migration throws if the file is
+		     missing, so dropping this item group fails loudly rather than silently
+		     shipping an empty table. -->
+		<Content Include="Migrations\**\*.sql" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Update="Scripts\quartz_postgres.sql">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

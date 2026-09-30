@@ -165,7 +165,8 @@ public partial class SelectFilesToDownloadComponent
 
 			var parameters = new DialogParameters
 			{
-				{ nameof(ApplicationFormPreviewComponent.Preview), previewResponse.Data }
+				{ nameof(ApplicationFormPreviewComponent.Preview), previewResponse.Data },
+				{ nameof(ApplicationFormPreviewComponent.EmailInvitationId), EmailInvitationId }
 			};
 
 			var options = new DialogOptions

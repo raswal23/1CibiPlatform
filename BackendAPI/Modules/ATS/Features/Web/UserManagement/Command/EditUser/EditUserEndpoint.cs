@@ -23,6 +23,7 @@ public class EditUserEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Edit ATS User")
 		.WithDescription("Edits an ATS user and synchronizes the selected module assignments.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -31,7 +31,7 @@
                         <div class="ap-section-head">
                             <span class="ap-section-number">1</span>
                             <h2 id="add-package-details-heading">Package details</h2>
-                            <span class="ap-section-helper">Name and describe the package</span>
+                            <span class="ap-section-helper">Name the package and set its report type ID</span>
                         </div>
 
                         <div class="ap-section-body">
@@ -53,23 +53,21 @@
                             </div>
 
                             <div class="ap-field">
-                                <label for="ap-package-description">Package description <span class="ap-required">*</span></label>
-                                <div class="ap-input-wrap ap-description-wrap">
+                                <label for="ap-package-description">Report type ID <span class="ap-required">*</span></label>
+                                <div class="ap-input-wrap ap-name-wrap">
                                     <MudTextField @bind-Value="Package.PackageDescription"
                                                   InputId="ap-package-description"
-                                                  Placeholder="What does this package include?"
+                                                  Placeholder="e.g. 182"
                                                   Required="true"
-                                                  RequiredError="Package description is required"
+                                                  RequiredError="Report type ID is required"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Lines="4"
                                                   Immediate="true"
                                                   MaxLength="240"
                                                   Adornment="Adornment.Start"
-                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
-                                                  Class="ap-control ap-description-control" />
+                                                  AdornmentIcon="@Icons.Material.Outlined.Tag"
+                                                  Class="ap-control" />
                                 </div>
-                                <div class="ap-character-count" aria-live="polite">@DescriptionLength / 240</div>
                             </div>
                         </div>
                     </section>
@@ -83,20 +81,40 @@
 
                         <div class="ap-section-body">
                             <div class="ap-field">
+                                <label for="ap-screening-type">Screening type</label>
+                                <div class="ap-input-wrap ap-screening-type-wrap">
+                                    <MudSelect T="bool?"
+                                               @bind-Value="Package.AutoChasing"
+                                               InputId="ap-screening-type"
+                                               Placeholder="Select a screening type"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
+                                               Class="ap-control">
+                                        <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                                        <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                                <p class="ap-hint">Manual packages are chased by the screening team; data packages are processed automatically.</p>
+                            </div>
+
+                            <div class="ap-field">
                                 <label for="ap-follow-up-email">Follow up email</label>
                                 <div class="ap-input-wrap ap-follow-up-wrap">
                                     <MudNumericField T="int"
                                                      @bind-Value="Package.FollowUpEmail"
                                                      InputId="ap-follow-up-email"
                                                      Min="0"
+                                                     Max="90"
                                                      Variant="Variant.Outlined"
                                                      Margin="Margin.Dense"
                                                      Adornment="Adornment.Start"
                                                      AdornmentIcon="@Icons.Material.Outlined.Email"
                                                      Class="ap-control" />
-                                    <span class="ap-unit-suffix">days after</span>
+                                    <span class="ap-unit-suffix">daily reminders</span>
                                 </div>
-                                <p class="ap-hint">Sends a reminder email this many days after the order is placed. Use 0 to turn it off.</p>
+                                <p class="ap-hint">Sends a reminder email once a day for this many days, starting the day after the order is placed, until the form is answered. Use 0 to turn it off.</p>
                             </div>
 
                             <div class="ap-field">

@@ -68,7 +68,7 @@ public sealed class OrderInputValidator : IOrderInputValidator
 		// The id is what the order stores; the stored spelling of the name travels with
 		// it as a label, so a caller who sent "criminal records check" is echoed the
 		// canonical form.
-		return new ValidatedOrderInput(matched.PackageId, matched.PackageName, normalizedOrderType);
+		return new ValidatedOrderInput(matched.PackageId, matched.PackageName, normalizedOrderType, matched.AutoChasing);
 	}
 
 	public async Task<IReadOnlyList<PackageDetailsDTO>> GetAssignedPackagesAsync(

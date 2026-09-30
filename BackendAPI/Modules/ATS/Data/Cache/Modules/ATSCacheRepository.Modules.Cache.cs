@@ -32,6 +32,10 @@ public partial class ATSCacheRepository
 
 	public Task<bool> ModuleNameExistsAsync(string moduleName) => _atsRepository.ModuleNameExistsAsync(moduleName);
 
+	// Deactivation guard — must always see the current assignments, never a cached count.
+	public Task<int> CountActiveUsersWithModuleAsync(int moduleId, CancellationToken cancellationToken) =>
+		_atsRepository.CountActiveUsersWithModuleAsync(moduleId, cancellationToken);
+
 	public async Task<ModuleDetails> EditModuleAsync(ModuleDetails moduleDetails)
 	{
 		var result = await _atsRepository.EditModuleAsync(moduleDetails);

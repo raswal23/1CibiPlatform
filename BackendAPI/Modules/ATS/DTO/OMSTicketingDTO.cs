@@ -1,9 +1,9 @@
 namespace ATS.Data.DTO;
 
 // Everything the OMS payload needs for one claimed order, assembled by the repository
-// in a single round trip. PersonalDetails is a left join on purpose: an order is
-// ticketed at enrolment, long before the applicant fills in the form, so DOB/SSS/TIN
-// are legitimately absent and must not filter the row out.
+// in a single round trip. DOB/SSS/TIN come from the order itself, captured at entry:
+// they are required only for data-screening orders, so on every other order they are
+// legitimately null and the mapper sends them blank rather than parking the ticket.
 public record TicketablePayloadDTO
 {
 	public Guid EmailInvitationID { get; set; }
@@ -26,10 +26,10 @@ public record TicketablePayloadDTO
 	// TurnAroundTimeID rather than every ticket going out at one hard-coded value.
 	public string? RushNormal { get; set; }
 
-	// From PersonalDetails when the application form has already been submitted.
+	// Candidate identity captured on the order at entry. Null unless the order is a
+	// data-screening one, where the web validator requires all three because no
+	// application form is ever sent to collect them.
 	public DateOnly? DOB { get; set; }
-
-	public string? PersonalMobileNumber { get; set; }
 
 	public string? SSS { get; set; }
 

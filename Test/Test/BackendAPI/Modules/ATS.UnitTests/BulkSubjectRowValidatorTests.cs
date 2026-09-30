@@ -160,4 +160,109 @@ public class BulkSubjectRowValidatorTests
 
 		BulkSubjectRowValidator.Validate(row).Failure.Should().BeNull();
 	}
+
+	// ValidateIdentity guards the data-screening path, where no application form is sent
+	// and so the candidate never gets a chance to supply these values themselves.
+	private static BulkUploadCsvRecord ValidIdentityRow()
+	{
+		var row = ValidRow();
+		row.DateOfBirth = "03/15/1990";
+		row.SSSNumber = "1234567890";
+		row.TINNumber = "123456789012";
+
+		return row;
+	}
+
+	[Fact]
+	public void ValidateIdentity_ShouldAcceptACompleteRow()
+	{
+		var (failure, dateOfBirth) = BulkSubjectRowValidator.ValidateIdentity(ValidIdentityRow());
+
+		failure.Should().BeNull();
+		dateOfBirth.Should().Be(new DateOnly(1990, 3, 15));
+	}
+
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("   ")]
+	public void ValidateIdentity_ShouldRejectAMissingDateOfBirth(string? dateOfBirth)
+	{
+		var row = ValidIdentityRow();
+		row.DateOfBirth = dateOfBirth;
+
+		BulkSubjectRowValidator.ValidateIdentity(row)
+			.Failure.Should().Be("Date of birth is required for data screening.");
+	}
+
+	[Theory]
+	[InlineData("1990-03-15")]        // ISO, not the template's format
+	[InlineData("15/03/1990")]        // day first
+	[InlineData("March 15, 1990")]
+	public void ValidateIdentity_ShouldRejectADateOfBirth_InAnotherFormat(string dateOfBirth)
+	{
+		var row = ValidIdentityRow();
+		row.DateOfBirth = dateOfBirth;
+
+		BulkSubjectRowValidator.ValidateIdentity(row)
+			.Failure.Should().Be("Date of birth must be in MM/dd/yyyy format.");
+	}
+
+	[Fact]
+	public void ValidateIdentity_ShouldRejectADateOfBirth_ThatIsNotInThePast()
+	{
+		var row = ValidIdentityRow();
+		row.DateOfBirth = DateTime.UtcNow.AddYears(1).ToString("MM/dd/yyyy");
+
+		BulkSubjectRowValidator.ValidateIdentity(row)
+			.Failure.Should().Be("Date of birth must be in the past.");
+	}
+
+	[Theory]
+	[InlineData("123456789")]         // 9 digits
+	[InlineData("12345678901")]       // 11 digits
+	[InlineData("12345-6789")]        // punctuation is not stripped
+	public void ValidateIdentity_ShouldRejectAnSssNumber_ThatIsNotTenDigits(string sssNumber)
+	{
+		var row = ValidIdentityRow();
+		row.SSSNumber = sssNumber;
+
+		BulkSubjectRowValidator.ValidateIdentity(row)
+			.Failure.Should().Be("SSS number must be 10 digits.");
+	}
+
+	[Theory]
+	[InlineData("12345678")]          // 8 digits
+	[InlineData("1234567890123")]     // 13 digits
+	[InlineData("123-456-789")]
+	public void ValidateIdentity_ShouldRejectATinNumber_OutsideNineToTwelveDigits(string tinNumber)
+	{
+		var row = ValidIdentityRow();
+		row.TINNumber = tinNumber;
+
+		BulkSubjectRowValidator.ValidateIdentity(row)
+			.Failure.Should().Be("TIN number must be 9 to 12 digits.");
+	}
+
+	[Theory]
+	[InlineData("123456789")]         // the 9-digit lower bound
+	[InlineData("123456789012")]      // the 12-digit upper bound
+	public void ValidateIdentity_ShouldAcceptATinNumber_AtEitherBound(string tinNumber)
+	{
+		var row = ValidIdentityRow();
+		row.TINNumber = tinNumber;
+
+		BulkSubjectRowValidator.ValidateIdentity(row).Failure.Should().BeNull();
+	}
+
+	[Fact]
+	public void ValidateIdentity_ShouldTolerateSurroundingWhitespace()
+	{
+		var row = ValidIdentityRow();
+		row.DateOfBirth = "  03/15/1990  ";
+		row.SSSNumber = "  1234567890  ";
+		row.TINNumber = "  123456789012  ";
+
+		BulkSubjectRowValidator.ValidateIdentity(row).Failure.Should().BeNull();
+	}
 }

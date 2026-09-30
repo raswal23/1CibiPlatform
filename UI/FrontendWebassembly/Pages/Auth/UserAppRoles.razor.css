@@ -361,6 +361,11 @@
     white-space: nowrap !important;
 }
 
+/* The Approved and Active columns use the shared .ats-status-pill from
+   wwwroot/css/ats.css - global, so nothing is re-declared here. It was un-scoped from
+   .ats-management-page in the same change that added these columns, precisely so this
+   screen could use it instead of keeping a near-identical copy. */
+
 .user-app-roles-page ::deep .user-management-panel .um-icon-action.mud-icon-button {
     width: 30px;
     height: 30px;

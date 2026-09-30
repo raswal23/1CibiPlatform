@@ -57,4 +57,10 @@ public partial class ATSRepository
 		await _dbcontext.SaveChangesAsync();
 		return role;
 	}
+
+	// UserDetails holds one row per (UserId, ModuleId), so count distinct users.
+	public Task<int> CountActiveUsersInRoleAsync(int roleId, CancellationToken cancellationToken) =>
+		_dbcontext.UserDetails.AsNoTracking()
+			.Where(user => user.RoleId == roleId && user.IsActive)
+			.Select(user => user.UserId).Distinct().CountAsync(cancellationToken);
 }

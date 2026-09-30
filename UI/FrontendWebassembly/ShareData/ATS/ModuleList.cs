@@ -5,7 +5,43 @@ public static class ModuleList
 	// 15 (Audit Trail) is restricted for a different reason than the rest: a trail the
 	// audited user can read is a weaker control, so only a platform super admin sees it.
 	// The backend enforces the same rule independently.
-	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11, 15];
+	//
+	// 16 (Email Accounts) is restricted because the accounts it manages are the credentials
+	// every outbound invitation is sent through: deleting one silently shifts that volume onto
+	// the remaining senders, and a wrong daily limit stalls the queue. Same rule as 15 - the
+	// backend enforces it independently.
+	//
+	// This array is the *actor* gate: what an admin who is neither Super Admin nor Platform
+	// Manager may grant at all. It must stay equal to every module id outside the Client
+	// Admin entry in RoleOnlyModuleIds below - Client Admin is the lowest role that reaches
+	// User Management, so what it may grant is exactly what is not restricted here.
+	// 16 (Email Management) is restricted because of what both of its tabs control. The Email
+	// Accounts tab holds the credentials every outbound invitation is sent through: deleting one
+	// silently shifts that volume onto the remaining senders, and a wrong daily limit stalls the
+	// queue. The Email Receiver tab decides which team mailboxes are copied on candidate-facing
+	// notices, and every address added is charged against the sending account's daily cap
+	// alongside the real recipient - see
+	// docs/features/ats-email-process/ats-email-process.md section 6. Same rule as 15: the backend
+	// enforces it independently.
+	private static readonly int[] RestrictedAdministrationModuleIds = [6, 7, 8, 9, 11, 15, 16];
+
+	// Module-access matrix, from the ATS module access sheet: which modules a role may be
+	// granted. Every role sees these eight. Deliberately separate from
+	// IsPrimaryNavigationModule below - the two sets happen to match today, but one is about
+	// access and the other is about where a link sits in the sidebar.
+	private static readonly int[] AllRoleModuleIds = [1, 2, 3, 4, 5, 12, 13, 14];
+
+	// Modules beyond AllRoleModuleIds that each role may hold. A role absent from this
+	// dictionary - and role id 0, meaning no role has been picked yet - gets the all-roles
+	// set alone.
+	private static readonly Dictionary<int, int[]> RoleOnlyModuleIds = new()
+	{
+		[AtsRoleList.PlatformManagerId] = [6, 7, 8, 9, 10, 11, 15, 16],
+		[AtsRoleList.ClientAdminId] = [10],
+		[AtsRoleList.ServiceDeliveryId] = [],
+		[AtsRoleList.UserId] = [],
+		[AtsRoleList.ClientExperienceId] = []
+	};
 
 	public static Dictionary<int, (string path, string Name, string Icon)> List =>
 		new()
@@ -24,7 +60,15 @@ public static class ModuleList
 			{ 12, ("aiassistant", "AI Assistant", Icons.Material.Filled.SmartToy) },
 			{ 13, ("bulkuploads", "Bulk Uploads Status", Icons.Material.Filled.CloudUpload) },
 			{ 14, ("ticketingstatus", "Ticketing Status", Icons.Material.Filled.ConfirmationNumber) },
-			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) }
+			{ 15, ("audittrail", "Audit Trail", Icons.Material.Filled.History) },
+
+			// One id for both email tabs, and one sidebar entry. The path moved from
+			// "emailaccounts" to "emailmanagement" when the copy-list screen was grouped with it,
+			// which is why the sender-account board no longer has a route of its own - and why
+			// BulkEmailNotificationProcessorService had to repoint its "invitations have stopped"
+			// link at the host. 17 was this screen's id for one uncommitted iteration; it is
+			// retired, not free. See AtsModuleIds.
+			{ 16, ("emailmanagement", "Email Management", Icons.Material.Filled.Email) }
 
 			// Notifications (/s&i/ats/notifications) is deliberately NOT here. This list
 			// drives both the sidebar and ATSLayout.CanAccessRoute, and every id in it must
@@ -40,4 +84,20 @@ public static class ModuleList
 
 	public static bool IsVisibleForAdministration(int moduleId, bool canViewAllModules) =>
 		canViewAllModules || !RestrictedAdministrationModuleIds.Contains(moduleId);
+
+	// Whether the module belongs to the set a given ATS role may hold.
+	public static bool IsInRoleModuleSet(int moduleId, int atsRoleId) =>
+		AllRoleModuleIds.Contains(moduleId) ||
+		(RoleOnlyModuleIds.TryGetValue(atsRoleId, out var roleOnlyIds) &&
+		 roleOnlyIds.Contains(moduleId));
+
+	// The Add/Edit User checklist gate: the actor may grant it, and the role being assigned
+	// may hold it. A module already on the user that fails the role half stays selected and
+	// is rendered disabled, so changing the role never silently strips existing access.
+	public static bool IsSelectableForUserRole(
+		int moduleId,
+		bool canViewAllModules,
+		int atsRoleId) =>
+		IsVisibleForAdministration(moduleId, canViewAllModules) &&
+		IsInRoleModuleSet(moduleId, atsRoleId);
 }

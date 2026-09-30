@@ -1,3 +1,4 @@
+using ATS.Constants;
 using ATS.Data.Entities;
 using Auth.Constants;
 using FluentAssertions;
@@ -89,7 +90,7 @@ public class AtsAssistantServiceIntegrationTests : BaseIntegrationTest
 		await AddInvitationsAsync(order);
 
 		// An ATS User is scoped to their own requests only
-		SetCurrentUser(Guid.CreateVersion7(), roleId: 3, clientId: 7);
+		SetCurrentUser(Guid.CreateVersion7(), AtsRoleIds.User, clientId: 7);
 
 		// Act
 		var orders = await _atsAssistantService.SearchOrdersBySubjectAsync(
@@ -110,7 +111,7 @@ public class AtsAssistantServiceIntegrationTests : BaseIntegrationTest
 		order.RequestorId = requestorId;
 		await AddInvitationsAsync(order);
 
-		SetCurrentUser(requestorId, roleId: 3, clientId: 7);
+		SetCurrentUser(requestorId, AtsRoleIds.User, clientId: 7);
 
 		// Act
 		var orders = await _atsAssistantService.SearchOrdersBySubjectAsync(

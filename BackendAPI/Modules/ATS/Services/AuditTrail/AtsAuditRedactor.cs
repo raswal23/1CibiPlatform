@@ -38,6 +38,12 @@ public static class AtsAuditRedactor
 		"Password",
 		"NewPassword",
 		"CurrentPassword",
+		// Matched by WHOLE name, so "Password" above does not cover these. An SMTP app
+		// password reaching the audit trail would be readable by anyone with audit access
+		// and would outlive the row it came from.
+		"AppPassword",
+		"SmtpPassword",
+		"EncryptedPassword",
 		"Token",
 		"AccessToken",
 		"RefreshToken",
@@ -58,6 +64,18 @@ public static class AtsAuditRedactor
 		ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles,
 		MaxDepth = 32
 	};
+
+	/// <summary>
+	/// True when a property of this name must never have its value recorded.
+	/// </summary>
+	/// <remarks>
+	/// Exposed so the entity-change interceptor masks the same names this class masks in command
+	/// payloads. Two lists would drift, and the one that drifted would leak silently - the
+	/// interceptor writes column values straight from the change tracker, where an SMTP password
+	/// is as readable as a display name.
+	/// </remarks>
+	public static bool IsSensitiveProperty(string propertyName) =>
+		SensitivePropertyNames.Contains(propertyName);
 
 	public static string Redact<TRequest>(TRequest request)
 	{

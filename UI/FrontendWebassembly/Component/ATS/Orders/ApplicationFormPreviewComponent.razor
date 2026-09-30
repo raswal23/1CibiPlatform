@@ -172,10 +172,9 @@
                                                 @PreviewField("Company name", employer.CompanyName)
                                                 @PreviewField("Job title", employer.JobTitle)
                                                 @PreviewField("Company address", employer.CompanyAddress)
-                                                @PreviewField("Reason for leaving", employer.ReasonForLeaving)
                                                 @PreviewField("Supervisor name", employer.SupervisorName)
-                                                @PreviewField("Supervisor contact number", employer.SupervisorContactNumber)
                                                 @PreviewField("Supervisor email", employer.SupervisorEmail)
+                                                @PreviewField("Supervisor contact number", employer.SupervisorContactNumber)
                                             </dl>
                                             @if (!string.IsNullOrWhiteSpace(employer.CoeFileName))
                                             {
@@ -242,6 +241,23 @@
                     </section>
                 }
             </main>
+
+            <footer class="ats-download-actions ats-dialog-footer">
+                <MudButton Class="ats-send-button"
+                           Disabled="@isDownloading"
+                           StartIcon="@(isDownloading ? null : Icons.Material.Outlined.Download)"
+                           OnClick="DownloadPdfAsync">
+                    @if (isDownloading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                        <span>Preparing...</span>
+                    }
+                    else
+                    {
+                        <span>Download PDF</span>
+                    }
+                </MudButton>
+            </footer>
         </div>
     </DialogContent>
 </MudDialog>

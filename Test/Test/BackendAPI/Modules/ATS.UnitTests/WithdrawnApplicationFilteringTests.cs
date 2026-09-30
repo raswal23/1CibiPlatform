@@ -1,11 +1,14 @@
-﻿using ATS.Constants;
+﻿using ATS.Configuration;
+using ATS.Constants;
 using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.AccessScope;
+using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.OrderHistory;
 using ATS.Services.OrderValidation;
+using ATS.Services.Settings.EmailProcessManagement;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Pagination;
 using BuildingBlocks.SharedServices.Interfaces;
@@ -14,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests;
@@ -47,9 +51,17 @@ public class WithdrawnApplicationFilteringTests
 			new AtsAccessScopeResolver(_currentUser.Object, _userClientRepository.Object),
 
 			// Not exercised here: these tests only read withdrawn applications, and the
-			// validator is only consulted on the create paths.
+			// validator is only consulted on the create paths. The directory and the copy list
+			// resolver are only read to build an application form email's Cc, and nothing here
+			// sends.
 			Mock.Of<IOrderInputValidator>(),
-			Mock.Of<IUnitOfWork>());
+			Mock.Of<IUnitOfWork>(),
+			Mock.Of<IAuthQueries>(),
+			Mock.Of<IEmailProcessManagementService>(),
+
+			// Nothing here sends, so the send bounds are never read. Zero back-off anyway, so a
+			// future test that does send cannot add six seconds to the suite.
+			Options.Create(new AtsEmailDeliveryOptions { RetryBaseDelaySeconds = 0 }));
 	}
 
 	[Theory]
@@ -92,7 +104,6 @@ public class WithdrawnApplicationFilteringTests
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetWithdrawnEmailInvitationRequestsAsync_ShouldUseOwnClientAndRequestorForRestrictedRoles(
 		int roleId)
 	{

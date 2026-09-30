@@ -13,7 +13,6 @@ public class ATSDBContext : DbContext
 	public DbSet<LicensesDetails> LicensesDetails { get; set; }
 	public DbSet<ProfessionalExperiences> ProfessionalExperiences { get; set; }
 	public DbSet<ReferenceDetails> ReferenceDetails { get; set; }
-	public DbSet<DocumentDetails> DocumentDetails { get; set; }
 	public DbSet<SignatureDetails> SignatureDetails { get; set; }
 	public DbSet<BulkUploadFileDetails> BulkUploadFileDetails { get; set; }
 	public DbSet<ReportDetails> ReportDetails { get; set; }
@@ -28,6 +27,10 @@ public class ATSDBContext : DbContext
 	public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 	public DbSet<AtsAuditEntry> AuditTrail { get; set; }
 	public DbSet<AtsNotification> Notifications { get; set; }
+	public DbSet<AtsEmailAccount> EmailAccounts { get; set; }
+	public DbSet<AtsEmailSendLog> EmailSendLog { get; set; }
+	public DbSet<AtsEmailAccountOtp> EmailAccountOtp { get; set; }
+	public DbSet<EmailProcessDetails> EmailProcessDetails { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

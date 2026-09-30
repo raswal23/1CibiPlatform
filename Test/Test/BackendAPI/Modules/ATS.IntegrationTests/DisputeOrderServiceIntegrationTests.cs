@@ -6,12 +6,12 @@ using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.DisputeOrder;
+using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
 using Auth.Constants;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
-using BuildingBlocks.SharedServices.Interfaces;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -78,7 +78,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		}
 
 		await AddOrdersAsync(disputed, newest, oldest, outsideDisputeWindow, incomplete);
-		var service = CreateService(CreateSuccessfulEmailService());
+		var service = CreateService();
 
 		// Act
 		var result = await service.GetDisputeOrdersAsync(
@@ -159,7 +159,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		}
 
 		await AddOrdersAsync(firstNameMatch, lastNameMatch, emailMatch, nonMatch, expiredMatch);
-		var service = CreateService(CreateSuccessfulEmailService());
+		var service = CreateService();
 
 		// Act
 		var result = await service.GetDisputeOrdersAsync(
@@ -209,7 +209,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		await AddOrdersAsync(assigned, sameClient, unassigned);
 		await AddAssignmentAsync(userId, clientId: 3);
 		SetAuthenticatedUser(userId, roleId, clientId: 99);
-		var service = CreateService(CreateSuccessfulEmailService());
+		var service = CreateService();
 
 		var result = await service.GetDisputeOrdersAsync(
 			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
@@ -226,7 +226,6 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetDisputeOrdersAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
 		int roleId)
 	{
@@ -258,7 +257,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		wrongClient.RequestorId = userId;
 		await AddOrdersAsync(matching, wrongRequester, wrongClient);
 		SetAuthenticatedUser(userId, roleId, clientId: 5);
-		var service = CreateService(CreateSuccessfulEmailService());
+		var service = CreateService();
 
 		var result = await service.GetDisputeOrdersAsync(
 			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
@@ -295,7 +294,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			AtsRoleIds.User,
 			clientId: 99,
 			isPlatformSuperAdmin: true);
-		var service = CreateService(CreateSuccessfulEmailService());
+		var service = CreateService();
 
 		var result = await service.GetDisputeOrdersAsync(
 			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
@@ -328,8 +327,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			clientId: 7,
 			email: requestor);
 
-		var emailService = CreateSuccessfulEmailService();
-		var service = CreateService(emailService);
+		var service = CreateService();
 		var pagination = new KeysetPaginationRequest(Cursor: null, PageSize: 10);
 		var cachedBeforeUpdate = await service.GetDisputeOrdersAsync(
 			pagination,
@@ -339,7 +337,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var request = new DisputeOrderRequestDTO
 		{
 			EmailInvitationId = order.EmailInvitationID,
-			DisputeReason = "Report"
+			DisputeCategory = "Report",
+			DisputeReason = "The employment dates on the report are wrong."
 		};
 		var startedAt = DateTime.UtcNow;
 
@@ -356,6 +355,10 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		var persisted = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.SingleAsync(item => item.EmailInvitationID == order.EmailInvitationID);
+
+		// The CATEGORY LABEL is what lands in the column, not the filer's description. The column
+		// feeds the console's "Reason for Dispute" chip, and a chip has to stay a label now that
+		// every category carries free text beside it.
 		persisted.DisputeCategory.Should().Be("Report");
 		persisted.DisputedAt.Should().NotBeNull();
 		persisted.DisputedAt!.Value.Should().BeOnOrAfter(startedAt);
@@ -367,78 +370,56 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		refreshedOrder.DisputedAt.Should().BeCloseTo(
 			persisted.DisputedAt.Value,
 			TimeSpan.FromMilliseconds(1));
-
-		var recipient = _configuration["ATS:DisputeOrderEmailRecipient"] ?? string.Empty;
-		emailService.Verify(serviceMock => serviceMock.SendEmailForDispute(
-			recipient,
-			CompanyName,
-			"Report",
-			It.Is<DateTime?>(value => value.HasValue
-				&& order.OrderCreatedAt.HasValue
-				&& Math.Abs((value.Value - order.OrderCreatedAt.Value).TotalMilliseconds) < 1),
-			requestor,
-			"Ada Lovelace"), Times.Once);
-		emailService.Verify(serviceMock => serviceMock.SendATSEmailAsync(
-			recipient,
-			"CIBI | Dispute Order Notification",
-			"dispute-email-body"), Times.Once);
 	}
 
-	#endregion
-
-	#region Bad Path
-
 	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldThrowAndPreserveOrder_WhenEmailCannotBeSent()
+	public async Task MarkAsDisputedAsync_ShouldPersistTheReason_WhenTheClientSendsNoCategory()
 	{
-		// Arrange
+		// Arrange: a console that predates every category carrying its own description sent the label
+		// in DisputeReason and nothing in DisputeCategory. Writing null would blank the dispute list's
+		// chip for that row, so the reason is still the fallback.
 		var order = CreateOrder(
-			"Email",
-			"Failure",
-			"email.failure@example.com",
+			"Legacy",
+			"Client",
+			"legacy@example.com",
 			DateTime.UtcNow.AddDays(-2),
 			DateTime.UtcNow.AddDays(-1));
+		order.ClientId = 7;
+		order.RequestorId = AuthenticatedUserId;
 		await AddOrdersAsync(order);
 		await AddAssignmentAsync(AuthenticatedUserId, clientId: 7);
 
-		var emailService = new Mock<IEmailService>();
-		emailService
-			.Setup(service => service.SendEmailForDispute(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<DateTime?>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.Returns("dispute-email-body");
-		emailService
-			.Setup(service => service.SendATSEmailAsync(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.ReturnsAsync(false);
+		SetAuthenticatedUser(
+			AuthenticatedUserId,
+			AtsRoleIds.User,
+			clientId: 7,
+			email: "requestor@example.com");
 
-		var service = CreateService(emailService);
-		var request = CreateDisputeRequest(order);
+		var request = new DisputeOrderRequestDTO
+		{
+			EmailInvitationId = order.EmailInvitationID,
+			DisputeReason = "Billing"
+		};
 
 		// Act
-		Func<Task> act = () => service.MarkAsDisputedAsync(
+		var result = await CreateService().MarkAsDisputedAsync(
 			request,
 			AuthenticatedUserId,
 			CancellationToken.None);
 
 		// Assert
-		await act.Should()
-			.ThrowAsync<InternalServerException>()
-			.WithMessage("Failed to send dispute order notification email.");
-
+		result.Should().BeTrue();
 		_dbContext.ChangeTracker.Clear();
+
 		var persisted = await _dbContext.EmailInvitationRequests
 			.AsNoTracking()
 			.SingleAsync(item => item.EmailInvitationID == order.EmailInvitationID);
-		persisted.DisputeCategory.Should().BeNull();
-		persisted.DisputedAt.Should().BeNull();
+		persisted.DisputeCategory.Should().Be("Billing");
 	}
+
+	#endregion
+
+	#region Bad Path
 
 	[Fact]
 	public async Task MarkAsDisputedAsync_ShouldPropagateCancellationAndPreserveOrder()
@@ -453,8 +434,7 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 		await AddOrdersAsync(order);
 		await AddAssignmentAsync(AuthenticatedUserId, clientId: 7);
 
-		var emailService = CreateSuccessfulEmailService();
-		var service = CreateService(emailService);
+		var service = CreateService();
 		var request = CreateDisputeRequest(order);
 		using var cancellationSource = new CancellationTokenSource();
 		cancellationSource.Cancel();
@@ -475,15 +455,11 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			.SingleAsync(item => item.EmailInvitationID == order.EmailInvitationID);
 		persisted.DisputeCategory.Should().BeNull();
 		persisted.DisputedAt.Should().BeNull();
-		emailService.Verify(serviceMock => serviceMock.SendATSEmailAsync(
-			It.IsAny<string>(),
-			It.IsAny<string>(),
-			It.IsAny<string>()), Times.Never);
 	}
 
 	#endregion
 
-	private DisputeOrderService CreateService(Mock<IEmailService> emailService)
+	private DisputeOrderService CreateService()
 	{
 		var orderHistoryService = new Mock<IOrderHistoryService>();
 		var userClientRepository = new Mock<IUserClientRepository>();
@@ -532,39 +508,21 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 			currentUser.Object,
 			userClientRepository.Object);
 
+		// The requestor-facing acknowledgement is best-effort and has its own unit tests
+		// (DisputeEmailNotificationTests). Stubbed here so this factory keeps exercising what it was
+		// written for: the dispute write and the cache invalidation.
+		var disputeEmailNotification = new Mock<IDisputeEmailNotification>();
+
 		return new DisputeOrderService(
 			NullLogger<DisputeOrderService>.Instance,
-			emailService.Object,
-			_configuration,
 			_atsRepository,
 			userClientRepository.Object,
 			_httpContextAccessor,
 			orderHistoryService.Object,
 			currentUser.Object,
 			accessScopeResolver,
-			new UnitOfWork(_dbContext));
-	}
-
-	private static Mock<IEmailService> CreateSuccessfulEmailService()
-	{
-		var emailService = new Mock<IEmailService>();
-		emailService
-			.Setup(service => service.SendEmailForDispute(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<DateTime?>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.Returns("dispute-email-body");
-		emailService
-			.Setup(service => service.SendATSEmailAsync(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.ReturnsAsync(true);
-
-		return emailService;
+			new UnitOfWork(_dbContext),
+			disputeEmailNotification.Object);
 	}
 
 	private async Task AddOrdersAsync(params EmailInvitationRequest[] orders)
@@ -617,7 +575,8 @@ public class DisputeOrderServiceIntegrationTests : BaseIntegrationTest
 	private static DisputeOrderRequestDTO CreateDisputeRequest(EmailInvitationRequest order) => new()
 	{
 		EmailInvitationId = order.EmailInvitationID,
-		DisputeReason = "Billing"
+		DisputeCategory = "Billing",
+		DisputeReason = "Charged twice for the same order."
 	};
 
 	private static EmailInvitationRequest CreateOrder(

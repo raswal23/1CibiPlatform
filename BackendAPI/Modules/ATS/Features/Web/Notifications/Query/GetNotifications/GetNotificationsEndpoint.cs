@@ -35,6 +35,7 @@ public class GetNotificationsEndpoint : ICarterModule
 			+ "pagination for the infinite-scroll notifications page. The recipient is "
 			+ "always the authenticated user - there is no parameter to read another "
 			+ "user's inbox.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

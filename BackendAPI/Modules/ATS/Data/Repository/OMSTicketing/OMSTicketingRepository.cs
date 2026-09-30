@@ -86,9 +86,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				cancellationToken);
 	}
 
-	// Left joins throughout: an order claimed at enrolment has no PersonalDetails yet,
-	// and a package whose name no longer matches must still come back so the service
-	// can park it with a reason rather than silently dropping it from the batch.
+	// Left joins throughout: a package whose name no longer matches, or a requestor
+	// with no UserDetails row, must still come back so the service can park the order
+	// with a reason rather than silently dropping it from the batch.
 	public async Task<List<TicketablePayloadDTO>> GetTicketPayloadsAsync(
 		IReadOnlyCollection<Guid> emailInvitationIds,
 		CancellationToken cancellationToken)
@@ -102,13 +102,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 			from invitation in _dbContext.EmailInvitationRequests.AsNoTracking()
 			where emailInvitationIds.Contains(invitation.EmailInvitationID)
 
-			from personal in _dbContext.PersonalDetails
-				.Where(p => p.EmailInvitationID == invitation.EmailInvitationID)
-				.DefaultIfEmpty()
-
-				// Joined on the id, not the name. Matching by name meant renaming a package
-				// silently orphaned every order that referenced it - they kept the old
-				// string and parked here as an error nobody could explain.
+			// Joined on the id, not the name. Matching by name meant renaming a package
+			// silently orphaned every order that referenced it - they kept the old
+			// string and parked here as an error nobody could explain.
 			from package in _dbContext.PackageDetails
 				.Where(p => p.PackageId == invitation.PackageId)
 				.DefaultIfEmpty()
@@ -131,10 +127,9 @@ public sealed class OMSTicketingRepository : IOMSTicketingRepository
 				SelectPackage = invitation.SelectPackage,
 				RequestorId = invitation.RequestorId,
 				RushNormal = invitation.RushNormal,
-				DOB = personal != null ? personal.DOB : null,
-				PersonalMobileNumber = personal != null ? personal.MobileNumber : null,
-				SSS = personal != null ? personal.SSS : null,
-				TIN = personal != null ? personal.TIN : null,
+				DOB = invitation.DateOfBirth,
+				SSS = invitation.SSSNumber,
+				TIN = invitation.TINNumber,
 				PackageDescription = package != null ? package.PackageDescription : null,
 
 				// Site is ATS-owned. The requestor's name parts are not: UserDetails

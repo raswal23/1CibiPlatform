@@ -228,7 +228,8 @@ public class CreateTicketCommandValidatorTests
 	}
 
 	[Theory]
-	[InlineData("12345678923")]
+	// Below the 9-digit floor, above the 12-digit ceiling, and a non-digit.
+	[InlineData("12345678")]
 	[InlineData("1234567892345")]
 	[InlineData("12345678923a")]
 	public void Validate_ShouldFail_WhenTINIsInvalid(string tin)
@@ -238,6 +239,22 @@ public class CreateTicketCommandValidatorTests
 		var result = _validator.Validate(CreateCommand(request));
 
 		result.IsValid.Should().BeFalse();
+	}
+
+	// A TIN is 9 digits for an individual and 12 with a branch code, with the lengths
+	// between them equally valid. An exact-12 rule here rejected all but the last.
+	[Theory]
+	[InlineData("123456789")]
+	[InlineData("1234567890")]
+	[InlineData("12345678923")]
+	[InlineData("123456789234")]
+	public void Validate_ShouldPass_WhenTINIsWithinTheAcceptedLengths(string tin)
+	{
+		var request = OMSServiceFixture.CreateValidRequest() with { TIN = tin };
+
+		var result = _validator.Validate(CreateCommand(request));
+
+		result.IsValid.Should().BeTrue();
 	}
 
 	[Theory]

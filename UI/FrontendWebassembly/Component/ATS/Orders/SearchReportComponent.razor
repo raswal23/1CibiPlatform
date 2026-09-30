@@ -156,6 +156,7 @@
             <MudTh>Subject Name</MudTh>
             <MudTh>Requestor</MudTh>
             <MudTh>Status</MudTh>
+            <MudTh>Follow-ups Left</MudTh>
             <MudTh>Date Created</MudTh>
             <MudTh>Date Completed</MudTh>
             <MudTh>Selected Package</MudTh>
@@ -194,6 +195,27 @@
             <MudTd DataLabel="Subject Name"><div class="report-subject"><span class="report-avatar">@GetInitials(r.SubjectName)</span><span class="report-name">@r.SubjectName</span></div></MudTd>
             <MudTd DataLabel="Requestor">@r.Requestor</MudTd>
             <MudTd DataLabel="Status"><button type="button" class="report-status-button" @onclick="@(() => OpenStatusHistoryDialog(r))"><span class="report-status @GetOrderStatusClass(r.OrderStatus)">@GetOrderStatusText(r.OrderStatus)</span></button></MudTd>
+            <MudTd DataLabel="Follow-ups Left">
+                @* Three states, not two: a dash where chasing does not apply at all, "Done"
+                   where the schedule is spent, and a count while reminders are still coming.
+                   Collapsing the first two would read as "this order is being chased" for
+                   every data order on the board. *@
+                @if (r.FollowUpEmailsRemaining is not { } remaining)
+                {
+                    <span class="report-followup-empty" title="@FollowUpNotApplicableHint">—</span>
+                }
+                else if (remaining == 0)
+                {
+                    <span class="report-followup is-done" title="Every scheduled reminder for this order has been sent.">Done</span>
+                }
+                else
+                {
+                    <span class="report-followup is-pending"
+                          title="@($"{remaining} more daily reminder{(remaining == 1 ? string.Empty : "s")} will be sent while the form is unanswered.")">
+                        @remaining left
+                    </span>
+                }
+            </MudTd>
             <MudTd Class="report-date" DataLabel="Date Created">@(r.OrderCreatedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")</MudTd>
             <MudTd Class="report-date" DataLabel="Date Completed">@(r.OrderCompletedAt?.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt") ?? "—")</MudTd>
             <MudTd DataLabel="Selected Package"><span class="report-package">@r.SelectedPackage</span></MudTd>

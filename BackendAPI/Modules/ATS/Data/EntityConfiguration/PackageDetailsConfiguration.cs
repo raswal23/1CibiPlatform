@@ -26,6 +26,10 @@ public class PackageDetailsConfiguration : IEntityTypeConfiguration<PackageDetai
 		builder.Property(x => x.FollowUpEmail)
 			.IsRequired();
 
+		// Nullable on purpose: null means the screening type was never chosen,
+		// which the UI shows as "Not set" rather than defaulting to Data.
+		builder.Property(x => x.AutoChasing);
+
 		builder.Property(x => x.CreatedAt)
 			.IsRequired();
 

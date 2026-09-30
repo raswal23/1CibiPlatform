@@ -168,6 +168,7 @@ public class EndorsementSubmissionService : IEndorsementSubmissionService
 
 		AddString(bulkUploadFileDetails.PackageType, "bulkUploadFileDetailsDTO.PackageType");
 		AddString(bulkUploadFileDetails.OrderType, "bulkUploadFileDetailsDTO.OrderType");
+		AddString(bulkUploadFileDetails.AutoChasing?.ToString().ToLowerInvariant(), "bulkUploadFileDetailsDTO.AutoChasing");
 		AddString(bulkUploadFileDetails.FileName, "bulkUploadFileDetailsDTO.FileName");
 		AddFile(bulkUploadFileDetails.BulkFile, "bulkUploadFileDetailsDTO.BulkFile");
 

@@ -45,6 +45,17 @@ public class CustomExceptionHandler
 				exception.GetType().Name,
 				context.Response.StatusCode = StatusCodes.Status401Unauthorized
 			),
+			// System.UnauthorizedAccessException is not the BuildingBlocks type above and
+			// was previously falling through to the 500 default. The auth module throws it
+			// for genuine authentication failures - a rejected refresh token, a locked
+			// account, an unapproved account - all of which the client must be able to
+			// tell apart from a server fault.
+			UnauthorizedAccessException =>
+			(
+				exception.Message,
+				exception.GetType().Name,
+				context.Response.StatusCode = StatusCodes.Status401Unauthorized
+			),
 			ForbiddenException =>
 			(
 				exception.Message,

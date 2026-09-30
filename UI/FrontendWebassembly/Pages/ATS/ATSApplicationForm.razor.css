@@ -190,16 +190,15 @@
     line-height: 1;
 }
 
-.ats-application-document-list li.is-optional {
-    background: var(--c-surface-sunken);
-}
-
-.ats-application-document-list li.is-optional .ats-application-document-index {
-    background: var(--intro-text-3);
-}
-
 .ats-application-reminder-block {
     margin-bottom: 14px;
+}
+
+/* The reminders section holds more than one block now (uploading, then the form
+   itself). The gap belongs BETWEEN them; the last one would otherwise add its
+   own 14px on top of the section's 26px and open a gap before the notice. */
+.ats-application-reminder-block:last-child {
+    margin-bottom: 0;
 }
 
 .ats-application-reminder-block h3 {

@@ -21,6 +21,11 @@ public class EditPackageCommandValidator : AbstractValidator<EditPackageCommand>
 				.MaximumLength(500).WithMessage("PackageDescription cannot exceed 500 characters.");
 			RuleFor(x => x.editPackage.IsActive)
 				.NotNull().WithMessage("IsActive is required.");
+
+			// Same bound as AddPackage - see the note there. Editing a package to 900 days
+			// would silently disarm the chaser for every order placed under it afterwards.
+			RuleFor(x => x.editPackage.FollowUpEmail)
+				.InclusiveBetween(0, 90).WithMessage("Follow-up must be between 0 and 90 days.");
 		});
 	}
 }

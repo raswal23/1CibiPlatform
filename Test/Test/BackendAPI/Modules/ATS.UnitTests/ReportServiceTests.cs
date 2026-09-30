@@ -6,6 +6,7 @@ using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.AccessScope;
+using ATS.Services.FilePDFService;
 using ATS.Services.OrderHistory;
 using ATS.Constants;
 using Auth.Shared.Contracts;
@@ -39,6 +40,10 @@ public class ReportServiceTests
 	// so these tests only need it to exist. Its own behaviour is covered separately.
 	private readonly Mock<IAtsNotificationService> _notificationService = new();
 
+	// The compiled multi-order download renders the application form with the real
+	// QuestPDF service - no seams to mock, and it keeps the merged page counts honest.
+	private readonly FilePdfService _filePdfService = new();
+
 	private readonly ReportService _service;
 
 	public ReportServiceTests()
@@ -64,7 +69,8 @@ public class ReportServiceTests
 			_orderHistoryService.Object,
 			_accessScopeResolver.Object,
 			_unitOfWork.Object,
-			_notificationService.Object);
+			_notificationService.Object,
+			_filePdfService);
 	}
 
 	#region Happy Path

@@ -22,6 +22,42 @@ namespace EmploymentVerification.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("EmploymentVerification.Data.Entities.EmploymentVerificationContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyName", "EmailAddress")
+                        .IsUnique()
+                        .HasDatabaseName("UX_EmploymentVerificationContacts_Company_Email");
+
+                    b.HasIndex("CompanyName", "Id");
+
+                    b.ToTable("EmploymentVerificationContacts", "employment_verification");
+                });
+
             modelBuilder.Entity("EmploymentVerification.Data.Entities.EmploymentVerificationRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -38,6 +74,9 @@ namespace EmploymentVerification.Data.Migrations
 
                     b.Property<DateTime?>("EmploymentEndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<short?>("EmploymentSegment")
+                        .HasColumnType("smallint");
 
                     b.Property<DateTime?>("EmploymentStartDate")
                         .HasColumnType("timestamp with time zone");
@@ -59,6 +98,10 @@ namespace EmploymentVerification.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("character varying(250)");
+
+                    b.Property<string>("RecipientSource")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime?>("RejectedAt")
                         .HasColumnType("timestamp with time zone");
@@ -92,6 +135,8 @@ namespace EmploymentVerification.Data.Migrations
 
                     b.HasIndex("VerificationTokenHash")
                         .IsUnique();
+
+                    b.HasIndex("AtsSubjectId", "EmploymentSegment");
 
                     b.HasIndex("Status", "RequestedAt");
 

@@ -44,7 +44,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("mine-2.csv", UploaderId, ClientA, BulkFileStatus.Pending, Anchor.AddMinutes(-1)),
 			NewFile("theirs.csv", OtherUploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-2)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50),
@@ -124,7 +124,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("processing.csv", UploaderId, ClientA, BulkFileStatus.Processing, Anchor.AddMinutes(-1)),
 			NewFile("done.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-2)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50),
@@ -145,7 +145,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("d1.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-3)),
 			NewFile("hidden.csv", OtherUploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-4)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var counts = await _bulkUploadMonitoringService.GetStatusCountsAsync(
 			null,
@@ -169,7 +169,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("payroll-done.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-1)),
 			NewFile("unrelated.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-2)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var counts = await _bulkUploadMonitoringService.GetStatusCountsAsync(
 			"payroll",
@@ -195,7 +195,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("Quarterly-Hires.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor),
 			NewFile("unrelated.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor.AddMinutes(-1)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50, SearchTerm: "quarterly"),
@@ -216,7 +216,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("in-range.csv", UploaderId, ClientA, BulkFileStatus.Done, endDay.AddHours(23)),
 			NewFile("after-range.csv", UploaderId, ClientA, BulkFileStatus.Done, endDay.AddDays(1)));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50, StartDate: endDay, EndDate: endDay),
@@ -244,7 +244,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 
 		await AddFilesAsync(files);
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var seen = new List<string>();
 		string? cursor = null;
@@ -281,7 +281,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 	{
 		await AddFilesAsync(NewFile("only.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(Cursor: "not-a-real-cursor", PageSize: 10),
@@ -302,7 +302,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewFile("tie-b.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor),
 			NewFile("tie-c.csv", UploaderId, ClientA, BulkFileStatus.Done, Anchor));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var seen = new List<string>();
 		string? cursor = null;
@@ -348,7 +348,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			// Belongs to no bulk file: a single inquiry must never inflate a rollup.
 			NewInvitation(null, ClientA, UploaderId, EmailSentDone));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50),
@@ -386,7 +386,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			// A single inquiry, not from any bulk file. It must never appear.
 			NewNamedInvitation(null, ClientA, UploaderId, EmailSentDone, "Dina", "Lim"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetSubjectsAsync(
 			mine.FileID,
@@ -410,7 +410,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 		await AddInvitationsAsync(
 			NewNamedInvitation(theirs.FileID, ClientA, OtherUploaderId, EmailSentDone, "Ana", "Reyes"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var act = async () => await _bulkUploadMonitoringService.GetSubjectsAsync(
 			theirs.FileID,
@@ -443,7 +443,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 	[Fact]
 	public async Task GetSubjectsAsync_ShouldThrowNotFound_WhenFileDoesNotExist()
 	{
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var act = async () => await _bulkUploadMonitoringService.GetSubjectsAsync(
 			Guid.CreateVersion7(),
@@ -474,7 +474,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 
 		await AddInvitationsAsync(invitations);
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var seen = new List<Guid>();
 		string? cursor = null;
@@ -518,7 +518,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Delivered", "Three"),
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentError, "Broken", "Four"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var pending = await _bulkUploadMonitoringService.GetSubjectsAsync(
 			file.FileID,
@@ -551,7 +551,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Madeleine", "Ocampo"),
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Rodrigo", "Santos"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetSubjectsAsync(
 			file.FileID,
@@ -577,7 +577,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentError, "Dina", "Walker"),
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Elsa", "Rivera"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var all = await _bulkUploadMonitoringService.GetSubjectCountsAsync(
 			file.FileID,
@@ -611,7 +611,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Carl", "Three"),
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentError, "Dina", "Four"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var result = await _bulkUploadMonitoringService.GetBulkUploadsAsync(
 			new KeysetPaginationRequest(PageSize: 50),
@@ -636,7 +636,7 @@ public class BulkUploadDashboardIntegrationTests : BaseIntegrationTest
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentDone, "Ana", "Reyes"),
 			NewNamedInvitation(file.FileID, ClientA, UploaderId, EmailSentError, "Ben", "Cruz"));
 
-		SetAuthenticatedUser(UploaderId, AtsRoleIds.Uploader, ClientA);
+		SetAuthenticatedUser(UploaderId, AtsRoleIds.User, ClientA);
 
 		var export = await _bulkUploadMonitoringService.ExportSubjectsAsync(
 			file.FileID,

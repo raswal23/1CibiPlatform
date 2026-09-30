@@ -56,6 +56,13 @@ public partial class AuthCacheRepository
 			return await _authRepository.GetRawUserAsync(id);
 		}
 
+	// Uncached like GetRawUserAsync: a single-row read taken immediately before a write,
+	// where a stale hit would decide the status flip from an out-of-date value.
+	public async Task<Authusers> GetUserByIdAsync(Guid id)
+		{
+			return await _authRepository.GetUserByIdAsync(id);
+		}
+
 	public async Task<Authusers> EditUserAsync(Authusers user)
 		{
 			var updated = await _authRepository.EditUserAsync(user);

@@ -3,9 +3,11 @@ namespace ATS.Services.OrderValidation;
 /// <summary>
 /// The package and order type an order was placed with, canonicalised.
 /// <c>PackageId</c> is the relationship the order stores; <c>Package</c> is the label
-/// that travels with it for display and search.
+/// that travels with it for display and search. <c>AutoChasing</c> is the package's
+/// screening type (true = manual, false = data, null = not set), carried so callers
+/// can cross-check the screening type the user chose.
 /// </summary>
-public record ValidatedOrderInput(int PackageId, string Package, string OrderType);
+public record ValidatedOrderInput(int PackageId, string Package, string OrderType, bool? AutoChasing);
 
 public interface IOrderInputValidator
 {

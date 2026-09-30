@@ -9,7 +9,7 @@ public class ReportService : IReportService
 		_httpClient = httpClientFactory.CreateClient("API");
 	}
 
-    public async Task<ServiceResponse<bool>> UploadReportAsync(ReportDetailsDTO reportDetailsDTO)
+	public async Task<ServiceResponse<bool>> UploadReportAsync(ReportDetailsDTO reportDetailsDTO)
 	{
 		using var content = new MultipartFormDataContent();
 
@@ -56,7 +56,7 @@ public class ReportService : IReportService
 		}
 	}
 
-    public async Task<ServiceResponse<KeysetPaginatedResult<ReportListDTO>>> GetReportsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, DateTime? StartDate = null, DateTime? EndDate = null)
+	public async Task<ServiceResponse<KeysetPaginatedResult<ReportListDTO>>> GetReportsAsync(string? cursor = null, int? pageSize = 10, string? SearchTerm = null, DateTime? StartDate = null, DateTime? EndDate = null)
 	{
 		var query = $"ats/getreports?pageSize={pageSize}";
 		if (!string.IsNullOrEmpty(cursor))
@@ -189,6 +189,30 @@ public class ReportService : IReportService
 		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
 		{
 			return ServiceResponse<SubjectNameDTO>.Failure($"Unable to reach the server. {ex.Message}");
+		}
+	}
+
+	public async Task<ServiceResponse<HttpResponseMessage>> DownloadApplicationFormPreviewAsync(
+		Guid emailInvitationRequestId,
+		CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var response = await _httpClient.GetAsync(
+				$"ats/downloadapplicationformpreview?emailInvitationRequestId={emailInvitationRequestId}",
+				cancellationToken);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return ServiceResponse<HttpResponseMessage>.Failure(await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			return ServiceResponse<HttpResponseMessage>.Success(response);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<HttpResponseMessage>.Failure($"Unable to reach the server. {ex.Message}");
 		}
 	}
 

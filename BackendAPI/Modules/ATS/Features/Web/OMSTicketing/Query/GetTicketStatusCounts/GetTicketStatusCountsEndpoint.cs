@@ -34,6 +34,7 @@ public class GetTicketStatusCountsEndpoint : ICarterModule
 			"Returns how many of the caller's orders are Pending, Processing, Done and "
 			+ "Error for OMS ticketing. Honours the search and date filters but never the "
 			+ "selected status, so every bucket keeps reporting its own size.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

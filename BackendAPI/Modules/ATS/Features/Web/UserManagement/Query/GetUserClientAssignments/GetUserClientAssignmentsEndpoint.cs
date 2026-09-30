@@ -18,6 +18,7 @@ public class GetUserClientAssignmentsEndpoint : ICarterModule
 		.Produces<IReadOnlyList<UserClientDetailsDTO>>()
 		.WithSummary("Get ATS user-client assignments")
 		.WithDescription("Retrieves the client assigned to each ATS Auth user.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

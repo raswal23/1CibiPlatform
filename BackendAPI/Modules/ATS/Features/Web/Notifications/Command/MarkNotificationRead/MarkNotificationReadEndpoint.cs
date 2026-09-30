@@ -31,6 +31,7 @@ public class MarkNotificationReadEndpoint : ICarterModule
 			+ "notification is unknown, already read, or belongs to another user - the "
 			+ "three are deliberately indistinguishable so the response cannot be used to "
 			+ "probe for somebody else's notification ids.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -18,6 +18,7 @@ public class GetAuthUsersEndpoint : ICarterModule
 		.Produces<IReadOnlyList<ATSUserLookupDTO>>()
 		.WithSummary("Get Auth users assigned to ATS")
 		.WithDescription("Retrieves active Auth users assigned to ATS through submenu 7.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -56,6 +56,23 @@ public static class EmploymentVerificationServiceConfiguration
 			EmploymentVerificationCacheRepository>();
 		services.AddKeyedScoped<IEmailService, ATSEmailService>("ats");
 		services.AddScoped<IEmploymentVerificationService, EmploymentVerificationService>();
+
+		// The contact directory is a separate business area with its own focused
+		// contract, decorator and cache tag, so it gets its own Scrutor pair rather
+		// than growing IEmploymentVerificationRepository.
+		services.AddScoped<
+			IContactDirectoryRepository,
+			ContactDirectoryRepository>();
+		services.Decorate<
+			IContactDirectoryRepository,
+			ContactDirectoryCacheRepository>();
+		services.AddScoped<IContactDirectoryService, ContactDirectoryService>();
+		services.AddScoped<IAutoVerificationRequestService, AutoVerificationRequestService>();
+
+		// Rides the scheduler ATS owns - there is one in the process, backed by the
+		// ats.qrtz_* tables - the same way PhilSys registers its cleanup job.
+		services.ConfigureOptions<AutoVerificationRequestJobSetup>();
+
 		return services;
 	}
 	#endregion

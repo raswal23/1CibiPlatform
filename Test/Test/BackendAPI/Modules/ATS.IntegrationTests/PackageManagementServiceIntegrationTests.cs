@@ -26,7 +26,8 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			PackageName = "  Standard Screening  ",
 			PackageDescription = "  Standard background screening package  ",
 			IsActive = true,
-			FollowUpEmail = 3
+			FollowUpEmail = 3,
+			AutoChasing = true
 		};
 
 		// Act
@@ -42,6 +43,7 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.PackageDescription.Should().Be("Standard background screening package");
 		persisted.IsActive.Should().BeTrue();
 		persisted.FollowUpEmail.Should().Be(3);
+		persisted.AutoChasing.Should().BeTrue();
 		persisted.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 		persisted.UpdatedAt.Should().BeCloseTo(persisted.CreatedAt, TimeSpan.FromSeconds(1));
 	}
@@ -125,7 +127,8 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 			PackageName = "  Updated Package  ",
 			PackageDescription = "  Updated description  ",
 			IsActive = false,
-			FollowUpEmail = 7
+			FollowUpEmail = 7,
+			AutoChasing = true
 		};
 
 		// Act
@@ -137,6 +140,7 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		result.PackageDescription.Should().Be("Updated description");
 		result.IsActive.Should().BeFalse();
 		result.FollowUpEmail.Should().Be(7);
+		result.AutoChasing.Should().BeTrue();
 		result.UpdatedAt.Should().BeOnOrAfter(existing.UpdatedAt);
 
 		var persisted = await _dbContext.PackageDetails
@@ -147,11 +151,100 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 		persisted.PackageDescription.Should().Be("Updated description");
 		persisted.IsActive.Should().BeFalse();
 		persisted.FollowUpEmail.Should().Be(7);
+		persisted.AutoChasing.Should().BeTrue();
+	}
+
+	[Fact]
+	public async Task EditPackageAsync_ShouldDeactivatePackage_WhenOnlyInactiveClientsHaveIt()
+	{
+		// Arrange
+		var packageId = await AddPackageReturningIdAsync("Dormant Package");
+		await SeedClientOnPackageAsync(packageId, "Dormant Client", isActive: false);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditPackageDTO
+		{
+			PackageId = packageId,
+			PackageName = "Dormant Package",
+			PackageDescription = "Assigned only to an inactive client",
+			IsActive = false,
+			FollowUpEmail = 1
+		};
+
+		// Act
+		var result = await _packageManagementService.EditPackageAsync(request, CancellationToken.None);
+
+		// Assert
+		result.IsActive.Should().BeFalse();
+
+		var persisted = await _dbContext.PackageDetails
+			.AsNoTracking()
+			.SingleAsync(x => x.PackageId == packageId);
+		persisted.IsActive.Should().BeFalse();
+	}
+
+	[Fact]
+	public async Task EditPackageAsync_ShouldSkipUsageGuard_WhenPackageStaysActive()
+	{
+		// Arrange
+		var packageId = await AddPackageReturningIdAsync("Busy Package");
+		await SeedClientOnPackageAsync(packageId, "Busy Client", isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditPackageDTO
+		{
+			PackageId = packageId,
+			PackageName = "Busy Package Renamed",
+			PackageDescription = "Renamed while in use",
+			IsActive = true,
+			FollowUpEmail = 1
+		};
+
+		// Act
+		var result = await _packageManagementService.EditPackageAsync(request, CancellationToken.None);
+
+		// Assert
+		result.PackageName.Should().Be("Busy Package Renamed");
+		result.IsActive.Should().BeTrue();
 	}
 
 	#endregion
 
 	#region Bad Path
+
+	[Fact]
+	public async Task EditPackageAsync_ShouldThrowConflictException_WhenDeactivatingPackageAssignedToActiveClients()
+	{
+		// Arrange
+		var packageId = await AddPackageReturningIdAsync("Occupied Package");
+		await SeedClientOnPackageAsync(packageId, "Occupied Client", isActive: true);
+
+		_dbContext.ChangeTracker.Clear();
+
+		var request = new EditPackageDTO
+		{
+			PackageId = packageId,
+			PackageName = "Occupied Package",
+			PackageDescription = "Still assigned to an active client",
+			IsActive = false,
+			FollowUpEmail = 1
+		};
+
+		// Act
+		Func<Task> act = () => _packageManagementService.EditPackageAsync(request, CancellationToken.None);
+
+		// Assert
+		await act.Should()
+			.ThrowAsync<ConflictException>()
+			.WithMessage("Cannot disable this package: 1 active client currently has it assigned.");
+
+		var persisted = await _dbContext.PackageDetails
+			.AsNoTracking()
+			.SingleAsync(x => x.PackageId == packageId);
+		persisted.IsActive.Should().BeTrue();
+	}
 
 	[Fact]
 	public async Task EditPackageAsync_ShouldThrowNotFoundException_WhenPackageDoesNotExist()
@@ -282,5 +375,37 @@ public class PackageManagementServiceIntegrationTests : BaseIntegrationTest
 				FollowUpEmail = 1
 			}, CancellationToken.None);
 		}
+	}
+
+	private async Task<int> AddPackageReturningIdAsync(string packageName)
+	{
+		await _packageManagementService.AddPackageAsync(new AddPackageDTO
+		{
+			PackageName = packageName,
+			PackageDescription = $"Description for {packageName}",
+			IsActive = true,
+			FollowUpEmail = 1
+		}, CancellationToken.None);
+
+		return await _dbContext.PackageDetails
+			.AsNoTracking()
+			.Where(package => package.PackageName == packageName)
+			.Select(package => package.PackageId)
+			.SingleAsync();
+	}
+
+	private async Task SeedClientOnPackageAsync(int packageId, string clientName, bool isActive)
+	{
+		var now = DateTime.UtcNow;
+		await _dbContext.ClientDetails.AddAsync(new ClientDetails
+		{
+			ClientName = clientName,
+			ClientDescription = "Seeded for the package deactivation guard",
+			IsActive = isActive,
+			PackageId = packageId,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+		await _dbContext.SaveChangesAsync();
 	}
 }

@@ -127,6 +127,108 @@ public class ATSPaths : IReverseProxyModule
 			),
 
 			new RouteDefinitionDTO(
+				RouteId: "GetEmailAccounts",
+				MatchPath: "/ats/getemailaccounts",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getemailaccounts" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "RegisterEmailAccount",
+				MatchPath: "/ats/registeremailaccount",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/registeremailaccount" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "VerifyEmailAccountOtp",
+				MatchPath: "/ats/verifyemailaccountotp",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/verifyemailaccountotp" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "ResendEmailAccountOtp",
+				MatchPath: "/ats/resendemailaccountotp",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/resendemailaccountotp" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "EditEmailAccount",
+				MatchPath: "/ats/editemailaccount",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/editemailaccount" }
+				}
+			),
+
+			// Post, not Delete: the call sends a verification code, and the removal happens on
+			// the verify route once that code comes back.
+			new RouteDefinitionDTO(
+				RouteId: "DeleteEmailAccount",
+				MatchPath: "/ats/deleteemailaccount",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/deleteemailaccount" }
+				}
+			),
+
+			// ---------- Notice copy lists ----------
+			new RouteDefinitionDTO(
+				RouteId: "GetEmailProcesses",
+				MatchPath: "/ats/getemailprocesses",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/getemailprocesses" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "AddEmailProcess",
+				MatchPath: "/ats/addemailprocess",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Post },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/addemailprocess" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "EditEmailProcess",
+				MatchPath: "/ats/editemailprocess",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Patch },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/editemailprocess" }
+				}
+			),
+
+			new RouteDefinitionDTO(
 				RouteId: "GetReports",
 				MatchPath: "/ats/getreports",
 				ClusterId: GatewayConstants.OnePlatformApi,
@@ -473,6 +575,17 @@ public class ATSPaths : IReverseProxyModule
 				Transforms: new Dictionary<string, string>
 				{
 					{ "PathSet", "/getapplicationformpreview" }
+				}
+			),
+
+			new RouteDefinitionDTO(
+				RouteId: "DownloadApplicationFormPreview",
+				MatchPath: "/ats/downloadapplicationformpreview",
+				ClusterId: GatewayConstants.OnePlatformApi,
+				Methods: new [] { GatewayConstants.HttpMethod.Get },
+				Transforms: new Dictionary<string, string>
+				{
+					{ "PathSet", "/downloadapplicationformpreview" }
 				}
 			),
 

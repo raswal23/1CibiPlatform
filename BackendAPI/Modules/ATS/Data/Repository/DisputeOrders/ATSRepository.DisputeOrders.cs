@@ -80,10 +80,18 @@ public partial class ATSRepository
 
 	public async Task<bool> MarkAsDisputedAsync(DisputeOrderRequestDTO disputeRequest, CancellationToken cancellationToken)
 	{
+		// The column stores the CATEGORY LABEL - Billing, Report or Others - which is what the console's
+		// "Reason for Dispute" chip renders. The filer's free text is not persisted; it exists only to
+		// fill the acknowledgement email's details line. DisputeReason is the fallback for a client that
+		// predates every category carrying its own text, where the label was sent in that field instead.
+		var category = string.IsNullOrWhiteSpace(disputeRequest.DisputeCategory)
+			? disputeRequest.DisputeReason
+			: disputeRequest.DisputeCategory;
+
 		var affectedRows = await _dbcontext.EmailInvitationRequests
 			.Where(eir => eir.EmailInvitationID == disputeRequest.EmailInvitationId)
 			.ExecuteUpdateAsync(setters => setters
-				.SetProperty(eir => eir.DisputeCategory, disputeRequest.DisputeReason)
+				.SetProperty(eir => eir.DisputeCategory, category)
 				.SetProperty(eir => eir.DisputedAt, DateTime.UtcNow),
 				cancellationToken);
 

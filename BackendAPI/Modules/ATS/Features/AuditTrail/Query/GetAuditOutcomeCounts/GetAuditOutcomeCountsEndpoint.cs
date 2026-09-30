@@ -38,6 +38,7 @@ public class GetAuditOutcomeCountsEndpoint : ICarterModule
 			"Returns the number of successful and failed ATS actions for the current "
 			+ "filters, so the audit trail chips keep showing every bucket's size while "
 			+ "one of them is selected.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

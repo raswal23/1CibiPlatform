@@ -1,0 +1,64 @@
+@namespace FrontendWebassembly.Component.ATS
+
+@* The copy list is stored as ONE comma-separated string, but an operator adds addresses one at a
+   time and the backend rejects the whole notice if a single fragment is malformed - so the string
+   is assembled here rather than typed raw. Each chip is checked as it goes in, which is the only
+   point at which a mistake is cheap to report. *@
+<div class="ecl @(HasError ? "is-invalid" : string.Empty) @(Disabled ? "is-disabled" : string.Empty)">
+    <div class="ecl-chips">
+        @for (var index = 0; index < _addresses.Count; index++)
+        {
+            var address = _addresses[index];
+
+            @* Captured per iteration, and the reason is not cosmetic. A `for` variable is ONE
+               variable shared by every iteration - unlike `foreach`, which has been per-iteration
+               since C# 5 - so a lambda closing over `index` directly does not see the value it had
+               when that chip rendered. It sees the value `index` holds when the lambda finally
+               runs, which is _addresses.Count: one past the end. Every remove button then hits the
+               bounds guard and quietly does nothing. *@
+            var removeIndex = index;
+
+            <span class="ecl-chip" title="@address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                    <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span class="ecl-chip-text">@address</span>
+                <button type="button"
+                        class="ecl-chip-remove"
+                        disabled="@Disabled"
+                        aria-label="Remove @address from the copy list"
+                        @onclick="@(() => RemoveAt(removeIndex))"
+                        @onclick:stopPropagation="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                </button>
+            </span>
+        }
+
+        <input class="ecl-input"
+               type="text"
+               id="@InputId"
+               value="@_draft"
+               disabled="@Disabled"
+               placeholder="@Placeholder"
+               autocomplete="off"
+               spellcheck="false"
+               aria-label="@AriaLabel"
+               aria-invalid="@(HasError ? "true" : "false")"
+               aria-describedby="@_describedBy"
+               @oninput="OnInput"
+               @onkeydown="OnKeyDown"
+               @onblur="CommitDraft" />
+    </div>
+</div>
+
+@if (HasError)
+{
+    <p class="ecl-message ecl-message-error" id="@(InputId)-error" role="alert">@_error</p>
+}
+
+<p class="ecl-message ecl-message-hint" id="@(InputId)-hint">
+    @Hint
+</p>

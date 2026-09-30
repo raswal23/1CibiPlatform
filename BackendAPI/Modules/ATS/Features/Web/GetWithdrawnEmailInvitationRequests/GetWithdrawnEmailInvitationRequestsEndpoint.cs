@@ -30,6 +30,7 @@ public class GetWithdrawnEmailInvitationRequestsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Withdrawn Email Invitation Requests")
 		.WithDescription("Retrieves a paginated list of email invitation requests with OrderStatus = 'Application Withdrawn'.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

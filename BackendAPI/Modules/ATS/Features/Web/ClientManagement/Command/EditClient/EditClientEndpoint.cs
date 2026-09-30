@@ -19,8 +19,10 @@ public class EditClientEndpoint : ICarterModule
 		.WithTags("Client Management")
 		.Produces<IReadOnlyList<ClientDetailsDTO>>()
 		.ProducesProblem(StatusCodes.Status400BadRequest)
+		.ProducesProblem(StatusCodes.Status409Conflict)
 		.WithSummary("Edit Client")
 		.WithDescription("Edits an existing client.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

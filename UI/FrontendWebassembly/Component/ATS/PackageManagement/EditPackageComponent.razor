@@ -31,7 +31,7 @@
                         <div class="ep-section-head">
                             <span class="ep-section-number">1</span>
                             <h2 id="edit-package-details-heading">Package details</h2>
-                            <span class="ep-section-helper">Name and describe the package</span>
+                            <span class="ep-section-helper">Name the package and set its report type ID</span>
                         </div>
 
                         <div class="ep-section-body">
@@ -53,23 +53,21 @@
                             </div>
 
                             <div class="ep-field">
-                                <label for="ep-package-description">Package description <span class="ep-required">*</span></label>
-                                <div class="ep-input-wrap ep-description-wrap">
+                                <label for="ep-package-description">Report type ID <span class="ep-required">*</span></label>
+                                <div class="ep-input-wrap ep-name-wrap">
                                     <MudTextField @bind-Value="EditPackage.PackageDescription"
                                                   InputId="ep-package-description"
-                                                  Placeholder="What does this package include?"
+                                                  Placeholder="e.g. 182"
                                                   Required="true"
-                                                  RequiredError="Package description is required"
+                                                  RequiredError="Report type ID is required"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
-                                                  Lines="4"
                                                   Immediate="true"
                                                   MaxLength="240"
                                                   Adornment="Adornment.Start"
-                                                  AdornmentIcon="@Icons.Material.Outlined.Article"
-                                                  Class="ep-control ep-description-control" />
+                                                  AdornmentIcon="@Icons.Material.Outlined.Tag"
+                                                  Class="ep-control" />
                                 </div>
-                                <div class="ep-character-count" aria-live="polite">@DescriptionLength / 240</div>
                             </div>
                         </div>
                     </section>
@@ -83,20 +81,40 @@
 
                         <div class="ep-section-body">
                             <div class="ep-field">
+                                <label for="ep-screening-type">Screening type</label>
+                                <div class="ep-input-wrap ep-screening-type-wrap">
+                                    <MudSelect T="bool?"
+                                               @bind-Value="EditPackage.AutoChasing"
+                                               InputId="ep-screening-type"
+                                               Placeholder="Select a screening type"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense"
+                                               Adornment="Adornment.Start"
+                                               AdornmentIcon="@Icons.Material.Outlined.ManageSearch"
+                                               Class="ep-control">
+                                        <MudSelectItem T="bool?" Value="true">Manual</MudSelectItem>
+                                        <MudSelectItem T="bool?" Value="false">Data</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                                <p class="ep-hint">Manual packages are chased by the screening team; data packages are processed automatically.</p>
+                            </div>
+
+                            <div class="ep-field">
                                 <label for="ep-follow-up-email">Follow up email</label>
                                 <div class="ep-input-wrap ep-follow-up-wrap">
                                     <MudNumericField T="int"
                                                      @bind-Value="EditPackage.FollowUpEmail"
                                                      InputId="ep-follow-up-email"
                                                      Min="0"
+                                                     Max="90"
                                                      Variant="Variant.Outlined"
                                                      Margin="Margin.Dense"
                                                      Adornment="Adornment.Start"
                                                      AdornmentIcon="@Icons.Material.Outlined.Email"
                                                      Class="ep-control" />
-                                    <span class="ep-unit-suffix">days after</span>
+                                    <span class="ep-unit-suffix">daily reminders</span>
                                 </div>
-                                <p class="ep-hint">Sends a reminder email this many days after the order is placed. Use 0 to turn it off.</p>
+                                <p class="ep-hint">Sends a reminder email once a day for this many days, starting the day after the order is placed, until the form is answered. Use 0 to turn it off.</p>
                             </div>
 
                             <div class="ep-field">

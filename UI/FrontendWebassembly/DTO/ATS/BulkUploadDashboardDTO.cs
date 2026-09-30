@@ -27,6 +27,10 @@ public record BulkUploadListDTO
 	// Still queued or being sent. Distinguishes "16/17 because one failed" from
 	// "16/17 because one has not gone out yet".
 	public int EmailsPending { get; set; }
+
+	// Screening type of the file. A data file sends no invitations at all, so the
+	// Emails column shows a dash rather than a permanently empty 0/N progress bar.
+	public bool? AutoChasing { get; set; }
 }
 
 public record BulkUploadStatusCountsDTO

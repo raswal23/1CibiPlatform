@@ -134,7 +134,19 @@ public partial class ATSRepository
 					.Where(rd => rd.EmailInvitationRequestId == eir.EmailInvitationID)
 					.OrderByDescending(rd => rd.ReportUploadedAt)
 					.Select(rd => rd.HitStatus)
-					.FirstOrDefault()
+					.FirstOrDefault(),
+
+				// The follow-up inputs, carried so the service can work out how many
+				// reminders are left. A correlated subquery rather than a join, matching how
+				// HitStatus above is read: the shape of this query is one row per invitation
+				// and a join to PackageDetails would risk changing that.
+				PackageFollowUpEmail = _dbcontext.PackageDetails
+					.Where(pd => pd.PackageId == eir.PackageId)
+					.Select(pd => pd.FollowUpEmail)
+					.FirstOrDefault(),
+				ChasesCandidate = eir.AutoChasing == true,
+				ApplicationFormStatus = eir.ApplicationFormStatus,
+				FollowUpSentCount = eir.FollowUpSentCount
 			});
 	}
 
@@ -166,6 +178,7 @@ public partial class ATSRepository
 				EF.Functions.ILike((x.FirstName ?? "") + " " + (x.LastName ?? ""), search) ||
 				EF.Functions.ILike(x.TicketNumber ?? string.Empty, search) ||
 				EF.Functions.ILike(x.Requestor ?? string.Empty, search) ||
+				EF.Functions.ILike(x.OrderStatus ?? string.Empty, search) ||
 				EF.Functions.ILike(x.SelectPackage ?? string.Empty, search) ||
 				EF.Functions.ILike(x.HitStatus ?? string.Empty, search));
 		}
@@ -244,9 +257,7 @@ public partial class ATSRepository
 					eir.ProfessionalExperiences!.Emp2COEUploadFileName,
 					eir.ProfessionalExperiences!.Emp2COEUploadFileKey,
 					eir.ProfessionalExperiences!.Emp3COEUploadFileName,
-					eir.ProfessionalExperiences!.Emp3COEUploadFileKey,
-					eir.ProfessionalExperiences!.COEUploadFileName,
-					eir.ProfessionalExperiences!.COEUploadFileKey
+					eir.ProfessionalExperiences!.Emp3COEUploadFileKey
 				},
 				Signature = new
 				{
@@ -296,13 +307,11 @@ public partial class ATSRepository
 
 		string? coeFileName = result.Professional?.Emp1COEUploadFileName
 			?? result.Professional?.Emp2COEUploadFileName
-			?? result.Professional?.Emp3COEUploadFileName
-			?? result.Professional?.COEUploadFileName;
+			?? result.Professional?.Emp3COEUploadFileName;
 
 		string? coeFileKey = result.Professional?.Emp1COEUploadFileKey
 			?? result.Professional?.Emp2COEUploadFileKey
-			?? result.Professional?.Emp3COEUploadFileKey
-			?? result.Professional?.COEUploadFileKey;
+			?? result.Professional?.Emp3COEUploadFileKey;
 
 		return new ReportResultDTO
 		{
@@ -401,10 +410,7 @@ public partial class ATSRepository
 					eir.ProfessionalExperiences.Emp2COEUploadFileKey,
 
 					eir.ProfessionalExperiences.Emp3COEUploadFileName,
-					eir.ProfessionalExperiences.Emp3COEUploadFileKey,
-
-					eir.ProfessionalExperiences.COEUploadFileName,
-					eir.ProfessionalExperiences.COEUploadFileKey
+					eir.ProfessionalExperiences.Emp3COEUploadFileKey
 				},
 
 				License = new
@@ -443,7 +449,7 @@ public partial class ATSRepository
 
 		foreach (var result in results)
 		{
-			void Add(string? fileName, string? fileKey)
+			void Add(string? fileName, string? fileKey, string documentType)
 			{
 				if (!string.IsNullOrWhiteSpace(fileName) &&
 					!string.IsNullOrWhiteSpace(fileKey))
@@ -453,18 +459,19 @@ public partial class ATSRepository
 						EmailInvitationRequestId = result.EmailInvitationID,
 						SubjectName = result.SubjectName,
 						FileName = fileName,
-						FileKey = fileKey
+						FileKey = fileKey,
+						DocumentType = documentType
 					});
 				}
 			}
 
-			Add(result.Personal?.ResumeFileName, result.Personal?.ResumeFileKey);
+			Add(result.Personal?.ResumeFileName, result.Personal?.ResumeFileKey, AtsDocumentTypes.Resume);
 
-			Add(result.Personal?.BiometricFileName, result.Personal?.BiometricFileKey);
+			Add(result.Personal?.BiometricFileName, result.Personal?.BiometricFileKey, AtsDocumentTypes.BiometricPhoto);
 
-			Add(result.Personal?.AdditionalGovtIDFileName, result.Personal?.AdditionalGovtIDFileKey);
+			Add(result.Personal?.AdditionalGovtIDFileName, result.Personal?.AdditionalGovtIDFileKey, AtsDocumentTypes.GovernmentId);
 
-			Add(result.Personal?.NBIClearanceFileName, result.Personal?.NBIClearanceFileKey);
+			Add(result.Personal?.NBIClearanceFileName, result.Personal?.NBIClearanceFileKey, AtsDocumentTypes.NbiClearance);
 
 			// Only the highest diploma on record goes into the compiled file.
 			Add(
@@ -477,20 +484,20 @@ public partial class ATSRepository
 					?? result.Educational?.MastersDiplomaFileKey
 					?? result.Educational?.BachelorsDiplomaFileKey
 					?? result.Educational?.SeniorHighSchoolDiplomaFileKey
-					?? result.Educational?.HighSchoolDiplomaFileKey);
+					?? result.Educational?.HighSchoolDiplomaFileKey,
+				AtsDocumentTypes.Diploma);
 
 			// The COEs used to share that coalesce shape, which silently dropped
 			// employers 2 and 3 whenever employer 1 had a COE; every COE is included.
-			Add(result.Professional?.Emp1COEUploadFileName, result.Professional?.Emp1COEUploadFileKey);
-			Add(result.Professional?.Emp2COEUploadFileName, result.Professional?.Emp2COEUploadFileKey);
-			Add(result.Professional?.Emp3COEUploadFileName, result.Professional?.Emp3COEUploadFileKey);
-			Add(result.Professional?.COEUploadFileName, result.Professional?.COEUploadFileKey);
+			Add(result.Professional?.Emp1COEUploadFileName, result.Professional?.Emp1COEUploadFileKey, AtsDocumentTypes.Coe1);
+			Add(result.Professional?.Emp2COEUploadFileName, result.Professional?.Emp2COEUploadFileKey, AtsDocumentTypes.Coe2);
+			Add(result.Professional?.Emp3COEUploadFileName, result.Professional?.Emp3COEUploadFileKey, AtsDocumentTypes.Coe3);
 
-			Add(result.License?.LicenseUploadFileName, result.License?.LicenseUploadFileKey);
+			Add(result.License?.LicenseUploadFileName, result.License?.LicenseUploadFileKey, AtsDocumentTypes.License);
 
-			Add(result.Signature?.ConsentFormFileName, result.Signature?.ConsentFormFileKey);
+			Add(result.Signature?.ConsentFormFileName, result.Signature?.ConsentFormFileKey, AtsDocumentTypes.ConsentForm);
 
-			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey);
+			Add(result.LatestReport?.ReportFileName, result.LatestReport?.ReportFileKey, AtsDocumentTypes.Report);
 		}
 
 		return documents;
@@ -583,23 +590,19 @@ public partial class ATSRepository
 				SchoolName = e.PhDSchoolName
 					?? e.MastersSchoolName
 					?? e.BachelorsSchoolName
-					?? e.CollegeSchoolName
 					?? e.SeniorHighSchoolName
 					?? e.HighSchoolName,
 				Degree = e.DoctorateDegree
 					?? e.MastersDegree
-					?? e.BachelorsDegree
-					?? e.CollegeDegree,
+					?? e.BachelorsDegree,
 				GraduationDate = (e.DoctorateGraduationDate
 					?? e.MastersGraduationDate
 					?? e.BachelorsGraduationDate
-					?? e.CollegeGraduationDate
 					?? e.SeniorHighSchoolGraduationDate
 					?? e.HighSchoolGraduationDate)?.ToString("MMMM dd, yyyy"),
 				DiplomaFileName = e.DoctorateDiplomaFileName
 					?? e.MastersDiplomaFileName
 					?? e.BachelorsDiplomaFileName
-					?? e.CollegeDiplomaFileName
 					?? e.SeniorHighSchoolDiplomaFileName
 					?? e.HighSchoolDiplomaFileName
 			};
@@ -619,7 +622,7 @@ public partial class ATSRepository
 		if (eir.ProfessionalExperiences is { } pe)
 		{
 			void AddEmployer(string? company, string? jobTitle, string? address, DateOnly? start, DateOnly? end,
-				string? currentlyEmployed, string? permissionToContact, string? reason, string? supName,
+				string? currentlyEmployed, string? permissionToContact, string? supName,
 				string? supContact, string? supEmail, string? coeFileName)
 			{
 				if (string.IsNullOrWhiteSpace(company))
@@ -634,22 +637,21 @@ public partial class ATSRepository
 					EndDate = end?.ToString("MMMM dd, yyyy"),
 					CurrentlyEmployed = currentlyEmployed,
 					PermissionToContact = permissionToContact,
-					ReasonForLeaving = reason,
 					SupervisorName = supName,
-					SupervisorContactNumber = supContact,
 					SupervisorEmail = supEmail,
+					SupervisorContactNumber = supContact,
 					CoeFileName = coeFileName
 				});
 			}
 
 			AddEmployer(pe.Emp1CompanyName, pe.Emp1JobTitle, pe.Emp1CompanyAddress, pe.Emp1StartDate, pe.Emp1EndDate,
-				pe.Emp1CurrentlyEmployed, pe.Emp1PermissionToContact, pe.Emp1ReasonForLeaving, pe.Emp1SupervisorName,
-				pe.Emp1SupervisorContactNumber, pe.Emp1SupervisorEmail, pe.Emp1COEUploadFileName ?? pe.COEUploadFileName);
+				pe.Emp1CurrentlyEmployed, pe.Emp1PermissionToContact, pe.Emp1SupervisorName,
+				pe.Emp1SupervisorContactNumber, pe.Emp1SupervisorEmail, pe.Emp1COEUploadFileName);
 			AddEmployer(pe.Emp2CompanyName, pe.Emp2JobTitle, pe.Emp2CompanyAddress, pe.Emp2StartDate, pe.Emp2EndDate,
-				pe.Emp2CurrentlyEmployed, pe.Emp2PermissionToContact, pe.Emp2ReasonForLeaving, pe.Emp2SupervisorName,
+				pe.Emp2CurrentlyEmployed, pe.Emp2PermissionToContact, pe.Emp2SupervisorName,
 				pe.Emp2SupervisorContactNumber, pe.Emp2SupervisorEmail, pe.Emp2COEUploadFileName);
 			AddEmployer(pe.Emp3CompanyName, pe.Emp3JobTitle, pe.Emp3CompanyAddress, pe.Emp3StartDate, pe.Emp3EndDate,
-				pe.Emp3CurrentlyEmployed, pe.Emp3PermissionToContact, pe.Emp3ReasonForLeaving, pe.Emp3SupervisorName,
+				pe.Emp3CurrentlyEmployed, pe.Emp3PermissionToContact, pe.Emp3SupervisorName,
 				pe.Emp3SupervisorContactNumber, pe.Emp3SupervisorEmail, pe.Emp3COEUploadFileName);
 		}
 

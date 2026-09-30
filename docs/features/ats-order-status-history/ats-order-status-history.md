@@ -1,0 +1,111 @@
+# ATS order status history
+
+ATS now keeps an append-only business lifecycle timeline in `ats.OrderStatusHistory`. This is transactional/business history for requestors, not Serilog application logging.
+
+## Lifecycle events
+
+| Successful action | Event | Previous status | New status |
+|---|---|---|---|
+| Single order created and invitation sent | `OrderCreated` | — | Pending Candidate Info |
+| Subject submits the form | `ApplicationFormSubmitted` | Pending Candidate Info | In Progress |
+| Subject cancels the form | `ApplicationFormWithdrawn` | Current status | Application Withdrawn |
+| Requestor resends a withdrawn form | `ApplicationFormResent` | Application Withdrawn | Pending Candidate Info |
+| Final report is uploaded | `ReportUploaded` | In Progress | Completed |
+| Completed report is disputed | `ReportDisputed` | Completed | Completed |
+
+Dispute is an event without an `OrderStatus` transition because ATS currently stores it in `DisputeCategory` and `DisputedAt`. Initial report uploads do not record completion; only an upload that actually moves the order to `Completed` does.
+
+## Notification events
+
+Some rows record that an email went out rather than that the order moved. They carry `null` on the previous side and the status the order is already in on the new side, so the timeline never implies movement that did not happen.
+
+| Trigger | Event | New status | Records |
+|---|---|---|---|
+| Package follow-up interval elapsed, form still pending | `ApplicationFormFollowUpSent` | Pending Candidate Info | the chaser requeued the reminder |
+| Subject withdrew and the requestor was emailed | `WithdrawalNoticeEmail` | Application Withdrawn | the **attempt** to send |
+| Report disputed and the filer was emailed | `DisputeAcknowledgementEmail` | Completed | the **attempt** to send |
+| Form completed and the requestor was emailed | `CompletionNoticeEmail` | In Progress | the **attempt** to send |
+
+Each of the last three sits beside a lifecycle event that already fired — a withdrawal produces an `ApplicationFormWithdrawn` row *and* a `WithdrawalNoticeEmail` row. That is deliberate: "the subject withdrew" and "we told the requestor" are different facts, and the second can fail while the first already happened.
+
+The three notice rows record the **attempt**, not the delivery. A row means the send was made; whether it landed is in the application log. Support reading the timeline can answer "did we try to tell them?" without leaving it. If a notice is skipped because there is nobody to address — no requestor id, or the requestor is no longer in the ATS directory — no row is written, because no send was attempted.
+
+## Architecture
+
+- Repositories must contain only database transaction and persistence logic. They must not contain business processes or business logic; that logic belongs in the service layer.
+- Entity and EF configuration live in the ATS module.
+- `IOrderHistoryFactory` creates history records consistently, including source, UTC timestamp, and the authenticated user when available.
+- Carter endpoint → MediatR query handler → order-history service → repository → `ATSDBContext`.
+- The endpoint is authorized and applies the same ATS client/requestor scope as report access.
+- The YARP module route is declared in `ATSPaths`.
+- The UI calls `GET /ats/getorderstatushistory?emailInvitationRequestId={id}`; the gateway forwards it to the API's static route while preserving the query string.
+- The migration is under `BackendAPI/API/APIs/Migrations/ATS`.
+- In Search Report, the existing status badge is a button that lazily opens the ATS-themed timeline dialog. The dialog includes loading, empty, failure/retry, withdrawn, resend, completed, and dispute presentations.
+
+## Resend is scope-checked
+
+`ResendApplicationFormAsync` takes a caller-supplied invitation id and is reachable from
+more than one screen (Withdrawn applications, and the Bulk Uploads subject drill-down).
+It resolves `IAtsAccessScopeResolver` and throws `NotFoundException` when the invitation's
+`ClientId`/`RequestorId` fall outside the caller's scope. Out-of-scope and non-existent
+are deliberately the same response, so a caller cannot probe which ids exist. Do not add
+a new entry point that bypasses that check.
+
+## Timeline tones
+
+Each row in `OrderStatusHistoryDialog` carries a tone, chosen by `GetTone` and painted by
+`OrderStatusHistoryDialog.razor.css`. A tone is the colour that status already carries elsewhere in
+the console — a withdrawal is the red of the Search Report badge, a completion its green — so the
+timeline and the board agree.
+
+| Tone | Colour | Used by |
+|---|---|---|
+| `is-success` | `--c-success` | `ReportUploaded`, `DisputeAcknowledgementEmail`, `InvitationEmailSent` |
+| `is-active` | `--c-blue-500` / `--c-blue-600` | `ApplicationFormSubmitted` |
+| `is-danger` | `--c-danger-strong` | `ApplicationFormWithdrawn` |
+| `is-dispute` | `--c-accent-orange` | `ReportDisputed` |
+| `is-warning` | `--c-warn` | `WithdrawalNoticeEmail`, `CompletionNoticeEmail`, `ApplicationFormFollowUpSent` |
+| `is-pending` | dashed `--c-border-strong`, `--c-fg-subtle` | `OrderCreated`, `ApplicationFormResent` |
+| `is-neutral` | `--c-neutral-fg` | `TicketRetryRequested` and the fallback |
+
+The five coloured tones paint the marker, the title, and the connector segment below the row. The two
+quiet tones paint the marker only.
+
+### Which tone an email event takes
+
+An email row is coloured by **what the message did**, not by which screen sent it. Two families,
+each readable straight down the timeline:
+
+- **Acknowledgements take `is-success`.** The message confirms something that already happened, so it
+  carries the same green as the event it confirms. `InvitationEmailSent` belongs here even though it
+  is not named an acknowledgement: it is the only email event written *after* the mail server accepted
+  the message rather than when it was queued, which makes it a delivery confirmation.
+- **Notices take `is-warning`.** The message announces a change the reader has to know about and may
+  have to act on. `ApplicationFormFollowUpSent` belongs here even though it is not named a notice — it
+  chases a subject whose form is still outstanding, which is exactly what the two notice rows do.
+
+`TicketRetryRequested` is neither. Nothing was sent and the order did not move, so there is nothing
+for a colour to say.
+
+Two colour choices are deliberate and easy to undo by accident:
+
+- `is-active` is **not** the amber the board gives "In progress". Amber means *a notice went out* in
+  this dialog, and giving it a second meaning would cost the notice family its legibility.
+- Dispute is orange rather than amber because `--c-accent-orange` is the accent the dispute screens
+  already use, and `theme.css` describes it as the one place the app treats orange as a primary.
+  Keeping them distinct matters here because one timeline can carry both.
+
+## Adding another lifecycle event
+
+1. Add its stable name to `OrderHistoryEventType`.
+2. At the successful business transition, call `IOrderHistoryService.RecordAsync` with the actual previous and new statuses.
+3. Add the user-facing title, description, icon, and tone in `OrderStatusHistoryDialog` — all four switch expressions, picking a tone from the table above.
+4. Keep technical errors and exception details in PlatformLogging; do not add them to business history.
+
+## Code formatting
+
+Keep ATS feature code vertically structured and easy to scan. Use one property or statement per line, split long method parameters and component attributes across lines, and follow the indentation already used by the ATS module. Do not compress Razor markup, DTO properties, switch expressions, or service logic into horizontal one-line blocks.
+
+Prefix ATS-owned CSS classes with `ats-` so styles remain module-specific and can be moved with the ATS UI when modules are separated.
+
+For Quartz jobs and other execution paths outside MediatR, explicitly set the ATS logging scope where technical logs are produced. Business lifecycle events should still be written through `IOrderHistoryService` with `OrderHistorySource.System` when the job itself causes the transition.

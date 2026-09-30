@@ -17,5 +17,11 @@ public record ReportListDTO
 	public string? SelectedPackage { get; set; }
 	public string? RushNormal { get; set; }
 	public string? HitStatus { get; set; }
+
+	// Follow-up reminders still to come, as of today. Null means the question does not apply
+	// (data screening, reminders switched off, or the form already answered or withdrawn),
+	// which the column renders as a dash; 0 means the schedule is spent.
+	public int? FollowUpEmailsRemaining { get; set; }
+
 	public bool Selected { get; set; }
 }

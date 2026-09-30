@@ -115,6 +115,17 @@ public partial class ATSRepository
 			.OrderBy(roleId => roleId)
 			.ToListAsync(cancellationToken);
 
+	// Distinct is load-bearing, not tidiness: UserDetails has one row per user PER MODULE, so
+	// without it an admin holding twelve modules is notified twelve times about one outage.
+	public async Task<IReadOnlyList<Guid>> GetAtsAdministratorUserIdsAsync(CancellationToken cancellationToken) =>
+		await _dbcontext.UserDetails.AsNoTracking()
+			.Where(user => user.IsActive
+				&& user.Role.IsActive
+				&& (user.RoleId == AtsRoleIds.PlatformManager || user.RoleId == AtsRoleIds.Admin))
+			.Select(user => user.UserId)
+			.Distinct()
+			.ToListAsync(cancellationToken);
+
 	public async Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
 		await _dbcontext.UserDetails.AsNoTracking().Where(user => user.UserId == userId && user.IsActive && user.Module.IsActive)
 			.Select(user => user.ModuleId).Distinct().OrderBy(moduleId => moduleId).ToListAsync(cancellationToken);

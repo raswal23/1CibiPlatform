@@ -24,6 +24,36 @@
     color: var(--c-fg-muted);
 }
 
+/* ---------- Screening type ---------- */
+
+/* Same geometry as .bulk-order-type: the two sit side by side and both classify the
+   file, so they must read as one pair rather than two unrelated widgets. */
+::deep .bulk-screening-type {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+::deep .bulk-screening-type.is-manual {
+    background: var(--c-info-bg);
+    color: var(--c-info);
+}
+
+::deep .bulk-screening-type.is-data {
+    background: var(--c-surface-sunken);
+    color: var(--c-fg-muted);
+}
+
+/* Dashed, like the "Not sent" subject badge: both mean "no value applies here",
+   and neither is a state the file will move out of on its own. */
+::deep .bulk-screening-type.is-unset {
+    background: transparent;
+    color: var(--c-fg-subtle);
+    border: 1px dashed var(--c-border);
+}
+
 ::deep .bulk-subject-count {
     color: var(--c-fg-strong);
     font-size: 13px;

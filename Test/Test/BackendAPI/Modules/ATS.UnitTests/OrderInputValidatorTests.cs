@@ -33,7 +33,8 @@ public class OrderInputValidatorTests
 			.Setup(service => service.GetPackagesAsync(
 				It.IsAny<KeysetPaginationRequest>(),
 				It.IsAny<CancellationToken>(),
-				It.IsAny<int?>()))
+				It.IsAny<int?>(),
+				It.IsAny<bool?>()))
 			.ReturnsAsync(new KeysetPaginatedResult<PackageDetailsDTO>(packages, null, packages.Length));
 
 	[Fact]
@@ -55,6 +56,22 @@ public class OrderInputValidatorTests
 		var result = await _validator.ValidateAsync(AssignedPackage, "Normal", CancellationToken.None);
 
 		result.PackageId.Should().Be(42);
+	}
+
+	// The screening type rides along so callers can cross-check the caller's choice
+	// against the package's own classification without another query.
+	[Theory]
+	[InlineData(true)]
+	[InlineData(false)]
+	[InlineData(null)]
+	public async Task ValidateAsync_ShouldReturnThePackagesScreeningType(bool? autoChasing)
+	{
+		GivenAssignedPackages(
+			new PackageDetailsDTO { PackageId = 7, PackageName = AssignedPackage, IsActive = true, AutoChasing = autoChasing });
+
+		var result = await _validator.ValidateAsync(AssignedPackage, "Normal", CancellationToken.None);
+
+		result.AutoChasing.Should().Be(autoChasing);
 	}
 
 	// The stored spelling is returned, not the caller's: OMS ticketing matches the
@@ -157,7 +174,8 @@ public class OrderInputValidatorTests
 			service => service.GetPackagesAsync(
 				It.IsAny<KeysetPaginationRequest>(),
 				It.IsAny<CancellationToken>(),
-				ClientId),
+				ClientId,
+				It.IsAny<bool?>()),
 			Times.Once);
 	}
 
@@ -173,7 +191,8 @@ public class OrderInputValidatorTests
 			service => service.GetPackagesAsync(
 				It.IsAny<KeysetPaginationRequest>(),
 				It.IsAny<CancellationToken>(),
-				It.IsAny<int?>()),
+				It.IsAny<int?>(),
+				It.IsAny<bool?>()),
 			Times.Never);
 	}
 }

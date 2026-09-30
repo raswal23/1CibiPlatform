@@ -28,6 +28,7 @@ public class GetDisputeOrdersEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Dispute Orders")
 		.WithDescription("Retrieves dispute-eligible orders: completed orders within last 5 days or orders with disputed status.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -11,6 +11,7 @@ public class ReportService : IReportService
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly IAtsNotificationService _notificationService;
+	private readonly IFilePdfService _filePdfService;
 
 	public ReportService(
 		ILogger<ReportService> logger,
@@ -20,7 +21,8 @@ public class ReportService : IReportService
 		IOrderHistoryService orderHistoryService,
 		IAtsAccessScopeResolver accessScopeResolver,
 		IUnitOfWork unitOfWork,
-		IAtsNotificationService notificationService)
+		IAtsNotificationService notificationService,
+		IFilePdfService filePdfService)
 	{
 		_logger = logger;
 		_atsRepository = atsRepository;
@@ -30,6 +32,7 @@ public class ReportService : IReportService
 		_accessScopeResolver = accessScopeResolver;
 		_unitOfWork = unitOfWork;
 		_notificationService = notificationService;
+		_filePdfService = filePdfService;
 		_folderName = _configuration.GetSection("ATS").GetValue<string>("ATSReportFileFolderName", "");
 	}
 
@@ -266,10 +269,82 @@ public class ReportService : IReportService
 			RushNormal = x.RushNormal,
 			Requestor = x.Requestor,
 			TicketNumber = x.TicketNumber,
-			HitStatus = x.HitStatus
+			HitStatus = x.HitStatus,
+			FollowUpEmailsRemaining = CalculateFollowUpEmailsRemaining(x)
 		}).ToList();
 
 		return new KeysetPaginatedResult<ReportListDTO>(items, nextCursor, totalCount);
+	}
+
+	/// <summary>
+	/// How many follow-up reminders an order will still receive, as of today.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Computed here rather than in SQL because the answer depends on today's date, and these
+	/// rows pass through a cache decorator - a number baked into the projection would be stale
+	/// by exactly as long as the entry lives.
+	/// </para>
+	/// <para>
+	/// Counted from reminders SENT, not days elapsed. FollowUpSentCount is incremented in the
+	/// same UPDATE that queues each reminder, so it is the record of what actually went out.
+	/// Deducting elapsed days instead assumed the schedule always runs, so an order placed
+	/// today read "2 left" and dropped to "1 left" the next morning while the candidate had
+	/// received nothing - only the day had passed, not the reminder.
+	/// </para>
+	/// <para>
+	/// This is the SAME subtraction ATSRepository.ReleaseDueFollowUpInvitationsAsync makes to
+	/// decide whether to send at all (FollowUpSentCount &lt; FollowUpEmail), against the same two
+	/// columns. That is deliberate: the board and the chaser cannot drift apart, because they
+	/// are reading one fact rather than two formulas that have to be kept in step. A wrong
+	/// number here is worse than no column, because an operator will act on it instead of
+	/// chasing the candidate themselves.
+	/// </para>
+	/// <para>
+	/// One caveat this cannot express: the release query also refuses orders past
+	/// FollowUpCatchUpGraceDays beyond their schedule, so a long-abandoned order can show a
+	/// non-zero count that will never be sent. Accepted - it only affects orders already far
+	/// outside their window, and encoding the grace period here would reintroduce exactly the
+	/// duplicated-formula drift this change removes.
+	/// </para>
+	/// <para>
+	/// Null means the question does not apply; 0 means the schedule is spent. The caller
+	/// renders those differently.
+	/// </para>
+	/// </remarks>
+	private static int? CalculateFollowUpEmailsRemaining(ReportRowDTO row)
+	{
+		// Data-screening orders have no candidate to email, and 0 is the package's off switch.
+		if (!row.ChasesCandidate || row.PackageFollowUpEmail <= 0)
+		{
+			return null;
+		}
+
+		// Nobody who already dealt with the form is chased about it, whatever the schedule
+		// says. Same rule as the release query's ApplicationFormStatus clause.
+		if (!string.Equals(row.ApplicationFormStatus, ApplicationFormStatus.Pending, StringComparison.OrdinalIgnoreCase))
+		{
+			return null;
+		}
+
+		// A legacy row with no creation timestamp can never satisfy the release window, so it
+		// is not "0 remaining" - the schedule simply cannot be evaluated for it.
+		if (row.OrderCreatedAt is null)
+		{
+			return null;
+		}
+
+		// The same subtraction the release query's stop condition makes, against the same two
+		// columns - which is what makes agreement structural rather than a pair of formulas
+		// that have to be kept in step.
+		//
+		// Clamped because neither end is guaranteed by the database: FollowUpEmail can be
+		// lowered on the package after reminders have already gone out, which would otherwise
+		// render a negative count.
+		return Math.Clamp(
+			row.PackageFollowUpEmail - row.FollowUpSentCount,
+			0,
+			row.PackageFollowUpEmail);
 	}
 
 	public async Task<SubjectNameDTO> EditSubjectNameAsync(EditSubjectNameDTO subjectName, CancellationToken cancellationToken)
@@ -555,8 +630,41 @@ public class ReportService : IReportService
 
 				using var output = new PdfDocument();
 
-				foreach (var file in files)
+				// The compiled record opens with the generated application form
+				// (the same QuestPDF render as the preview download), placed just
+				// before the consent form the applicant signed. Rendered fresh here
+				// rather than stored, so it always reflects the current answers.
+				var consentFormIndex = files.FindIndex(file =>
+					string.Equals(file.DocumentType, AtsDocumentTypes.ConsentForm, StringComparison.OrdinalIgnoreCase));
+				var formInsertIndex = consentFormIndex >= 0 ? consentFormIndex : files.Count;
+				var appended = false;
+
+				async Task AppendApplicationFormAsync()
 				{
+					var preview = await _atsRepository.GetApplicationFormPreviewAsync(
+						applicant.Key, scope.AuthorizedClientIds, scope.RequiredOwnerId, cancellationToken);
+
+					if (preview is null)
+						return;
+
+					await using var formPdf = await _filePdfService.GenerateApplicationFormPreviewPdfAsync(preview, cancellationToken);
+					using var formInput = PdfReader.Open(formPdf, PdfDocumentOpenMode.Import);
+
+					foreach (var page in formInput.Pages)
+					{
+						output.AddPage(page);
+					}
+				}
+
+				for (var index = 0; index < files.Count; index++)
+				{
+					if (index == formInsertIndex)
+					{
+						await AppendApplicationFormAsync();
+						appended = true;
+					}
+
+					var file = files[index];
 
 					await using var ossStream = await _objectStorageService.DownloadAsync(file.FileKey, cancellationToken);
 
@@ -572,6 +680,11 @@ public class ReportService : IReportService
 					{
 						output.AddPage(page);
 					}
+				}
+
+				if (!appended)
+				{
+					await AppendApplicationFormAsync();
 				}
 
 				using var mergedPdf = new MemoryStream();

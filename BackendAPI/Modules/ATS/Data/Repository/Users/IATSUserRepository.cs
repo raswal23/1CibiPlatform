@@ -14,4 +14,18 @@ public interface IATSUserRepository
 	Task<IReadOnlyList<int>> GetActiveUserRoleIdsAsync(Guid userId, CancellationToken cancellationToken);
 	Task<IReadOnlyList<int>> GetActiveUserModuleIdsAsync(Guid userId, CancellationToken cancellationToken);
 	Task<IReadOnlyList<UserDetails>> EditUserAsync(IReadOnlyCollection<EditUserDTO> userDTOs, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Everyone who should be told when something breaks system-wide, rather than when one
+	/// order of theirs changes.
+	/// </summary>
+	/// <remarks>
+	/// Selected by ROLE (Platform Manager and Admin), not by who holds the Email Accounts
+	/// module. Module grants are per user in <c>UserDetails</c>, and module 16 is in no seeded
+	/// role's grant list - so a module-based query returns nobody on a fresh database and the
+	/// "every sender account is down" notification would go unsent precisely when it matters
+	/// most. Roles 1 and 2 are the pair <c>AtsAccessScopeResolver</c> already treats as the
+	/// elevated tier.
+	/// </remarks>
+	Task<IReadOnlyList<Guid>> GetAtsAdministratorUserIdsAsync(CancellationToken cancellationToken);
 }

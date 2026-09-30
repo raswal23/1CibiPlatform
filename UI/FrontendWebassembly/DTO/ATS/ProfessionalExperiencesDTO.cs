@@ -5,7 +5,11 @@ public record ProfessionalExperiencesDTO
 	public Guid EmailInvitationID { get; set; }
 	public string? Emp1CompanyName { get; set; }
 	public bool Emp1CurrentlyEmployed { get; set; }
-	public bool Emp1PermissionToContact { get; set; }
+	// Employer 1 is always on the form, so its permission checkbox starts ticked.
+	// Employers 2 and 3 are hidden until the candidate adds them - they are opted
+	// in when that happens (OnAddEmployer2Changed / OnAddEmployer3Changed) rather
+	// than here, so a collapsed card never carries a permission it never showed.
+	public bool Emp1PermissionToContact { get; set; } = true;
 	public string? Emp1CompanyCity { get; set; }
 	public string? Emp1CompanyProvince { get; set; }
 	public string? Emp1CompanyCountry { get; set; }
@@ -15,6 +19,7 @@ public record ProfessionalExperiencesDTO
 	public DateOnly? Emp1DatePermittedToContact { get; set; }
 	public string? Emp1JobTitle { get; set; }
 	public string? Emp1SupervisorName { get; set; }
+	public string? Emp1SupervisorEmail { get; set; }
 	public string? Emp1SupervisorContactNumber { get; set; }
 	public byte[]? Emp1COEUploadFile { get; set; }
 	public string? Emp1COEUploadFileName { get; set; }
@@ -30,6 +35,7 @@ public record ProfessionalExperiencesDTO
 	public DateOnly? Emp2DatePermittedToContact { get; set; }
 	public string? Emp2JobTitle { get; set; }
 	public string? Emp2SupervisorName { get; set; }
+	public string? Emp2SupervisorEmail { get; set; }
 	public string? Emp2SupervisorContactNumber { get; set; }
 	public byte[]? Emp2COEUploadFile { get; set; }
 	public string? Emp2COEUploadFileName { get; set; }
@@ -45,6 +51,7 @@ public record ProfessionalExperiencesDTO
 	public DateOnly? Emp3DatePermittedToContact { get; set; }
 	public string? Emp3JobTitle { get; set; }
 	public string? Emp3SupervisorName { get; set; }
+	public string? Emp3SupervisorEmail { get; set; }
 	public string? Emp3SupervisorContactNumber { get; set; }
 	public byte[]? Emp3COEUploadFile { get; set; }
 	public string? Emp3COEUploadFileName { get; set; }

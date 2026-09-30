@@ -21,6 +21,12 @@ public class AddPackageCommandValidator : AbstractValidator<AddPackageCommand>
 				.MaximumLength(500).WithMessage("PackageDescription cannot exceed 500 characters.");
 			RuleFor(x => x.package.IsActive)
 				.NotNull().WithMessage("IsActive is required.");
+
+			// Days after the order that the follow-up reminder is sent; 0 turns it off.
+			// Bounded because the chaser fires on OrderCreatedAt + this interval, and a
+			// mistyped 900 is indistinguishable from "never" until three years from now.
+			RuleFor(x => x.package.FollowUpEmail)
+				.InclusiveBetween(0, 90).WithMessage("Follow-up must be between 0 and 90 days.");
 		});
 	}
 }

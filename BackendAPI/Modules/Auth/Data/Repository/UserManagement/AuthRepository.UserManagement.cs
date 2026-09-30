@@ -23,11 +23,14 @@ public partial class AuthRepository
 			return user!;
 		}
 
+	// Unfiltered on purpose: the User tab is the whole registry, and it is the only screen
+	// that can reactivate an account. Filtering on IsActive here would make a user vanish
+	// the moment they were deactivated, with no way back. Approval state is likewise shown
+	// rather than filtered - the Approval tab owns that decision, this tab reports it.
 	private IQueryable<Authusers> BuildUsersQuery(string? searchTerm)
 	{
 		var usersQuery = _dbcontext.AuthUsers
-			.AsNoTracking()
-			.Where(au => au.IsApproved == true && au.IsActive);
+			.AsNoTracking();
 
 		if (!string.IsNullOrEmpty(searchTerm))
 			usersQuery = usersQuery.Where(au =>
@@ -69,7 +72,8 @@ public partial class AuthRepository
 							au.FirstName,
 							au.MiddleName ?? "",
 							au.LastName,
-							au.IsApproved))
+							au.IsApproved,
+							au.IsActive))
 						.ToListAsync(cancellationToken);
 		}
 
@@ -77,6 +81,22 @@ public partial class AuthRepository
 		{
 			return await _dbcontext.AuthUsers
 						 .Where(au => au.Id == id && au.IsActive)
+						 .FirstOrDefaultAsync();
+		}
+
+	/// <summary>
+	/// Loads a user by id whatever their state, unlike <see cref="GetRawUserAsync"/>.
+	/// </summary>
+	/// <remarks>
+	/// Separate method rather than relaxing GetRawUserAsync, whose IsActive filter other
+	/// callers rely on - password reset must not resurrect a deactivated account. Status
+	/// editing needs the opposite: an inactive user is precisely the one being reactivated,
+	/// so filtering them out would make every reactivation a 404.
+	/// </remarks>
+	public async Task<Authusers> GetUserByIdAsync(Guid id)
+		{
+			return await _dbcontext.AuthUsers
+						 .Where(au => au.Id == id)
 						 .FirstOrDefaultAsync();
 		}
 

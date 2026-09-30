@@ -163,28 +163,119 @@
     font-size: 11px;
 }
 
-.active .ats-history-marker {
+/* ---------- Tones ----------
+
+   A row's tone is set by GetTone in the .razor and carries the colour its status
+   carries elsewhere in the console. The five loud tones below paint three things -
+   the marker, the title, and the connector segment running down to the next row -
+   so a withdrawal or a dispute is legible from the shape of the timeline rather
+   than only from the text.
+
+   The two quiet tones (is-pending, is-neutral) paint the marker only. A subtle-grey
+   title reads worse than the default, and tinting every rail would leave nothing for
+   the coloured ones to stand out against.
+
+   Selectors are .ats-history-item.is-* rather than bare .success / .active: scoped
+   CSS would contain them either way, but "active" is a class MudBlazor emits, and
+   is-* matches the vocabulary ats-notif-icon and ats-bulk-badge already use. */
+
+/* The rail is 2px of flat colour running the height of a row. At full saturation a
+   timeline of them competes with the markers, so every coloured rail is damped. */
+.ats-history-item.is-active:not(:last-child)::before,
+.ats-history-item.is-success:not(:last-child)::before,
+.ats-history-item.is-warning:not(:last-child)::before,
+.ats-history-item.is-dispute:not(:last-child)::before,
+.ats-history-item.is-danger:not(:last-child)::before {
+    opacity: .45;
+}
+
+.ats-history-item.is-active .ats-history-marker {
     border-color: var(--c-blue-500);
     background: var(--c-blue-tint);
     color: var(--c-blue-600);
 }
 
-.success .ats-history-marker {
+.ats-history-item.is-active .ats-history-title {
+    color: var(--c-blue-600);
+}
+
+.ats-history-item.is-active:not(:last-child)::before {
+    background: var(--c-blue-500);
+}
+
+.ats-history-item.is-success .ats-history-marker {
     border-color: var(--c-success);
     background: var(--c-success-bg);
     color: var(--c-success);
 }
 
-.warning .ats-history-marker {
+.ats-history-item.is-success .ats-history-title {
+    color: var(--c-success);
+}
+
+.ats-history-item.is-success:not(:last-child)::before {
+    background: var(--c-success);
+}
+
+/* The notice rows: a message announcing a change to someone who may have to act on it.
+   Amber rather than the dispute orange, so the two stay distinguishable in a timeline
+   that can carry both. */
+.ats-history-item.is-warning .ats-history-marker {
     border-color: var(--c-warn);
     background: var(--c-warn-bg);
     color: var(--c-warn);
 }
 
-.danger .ats-history-marker {
+.ats-history-item.is-warning .ats-history-title {
+    color: var(--c-warn);
+}
+
+.ats-history-item.is-warning:not(:last-child)::before {
+    background: var(--c-warn);
+}
+
+/* Dispute is orange, not amber - the accent the dispute screens use, and the one
+   place the app treats orange as a primary. */
+.ats-history-item.is-dispute .ats-history-marker {
+    border-color: var(--c-accent-orange);
+    background: var(--c-accent-orange-bg);
+    color: var(--c-accent-orange);
+}
+
+.ats-history-item.is-dispute .ats-history-title {
+    color: var(--c-accent-orange);
+}
+
+.ats-history-item.is-dispute:not(:last-child)::before {
+    background: var(--c-accent-orange);
+}
+
+.ats-history-item.is-danger .ats-history-marker {
     border-color: var(--c-danger-strong);
     background: var(--c-danger-bg);
     color: var(--c-danger-strong);
+}
+
+.ats-history-item.is-danger .ats-history-title {
+    color: var(--c-danger-strong);
+}
+
+.ats-history-item.is-danger:not(:last-child)::before {
+    background: var(--c-danger-strong);
+}
+
+/* Dashed, like the Pending badge on the Search Report board: the order is waiting on
+   the subject, and an outline says that better than a fill. */
+.ats-history-item.is-pending .ats-history-marker {
+    border: 1px dashed var(--c-border-strong);
+    background: var(--c-surface-sunken);
+    color: var(--c-fg-subtle);
+}
+
+.ats-history-item.is-neutral .ats-history-marker {
+    border-color: var(--c-border);
+    background: var(--c-neutral-bg);
+    color: var(--c-neutral-fg);
 }
 
 .ats-history-state,

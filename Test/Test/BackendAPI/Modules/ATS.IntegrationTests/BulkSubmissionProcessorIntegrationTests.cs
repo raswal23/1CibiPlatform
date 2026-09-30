@@ -17,7 +17,8 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		string fileName,
 		string packageType,
 		string orderType,
-		string? csvContent = null)
+		string? csvContent = null,
+		bool? autoChasing = true)
 	{
 		csvContent ??= """
         LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber
@@ -34,6 +35,7 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 			PackageId = DefaultPackageId,
 			PackageType = packageType,
 			OrderType = orderType,
+			AutoChasing = autoChasing,
 			UploadedByUserId = Guid.CreateVersion7(),
 			Status = "Pending",
 			DateCreated = DateTime.UtcNow
@@ -147,6 +149,75 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 		emailInvitations.Select(e => e.LastName).Should().BeEquivalentTo("Dela Cruz", "Santos");
 	}
 
+	[Fact]
+	public async Task ProcessAsync_WithDataScreeningFile_ShouldStoreTheIdentityColumns()
+	{
+		// A data candidate is never sent an application form, so the identity the form
+		// would have collected has to arrive in the CSV and be persisted on the order.
+		var csvContent = """
+		LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber,DateOfBirth,SSSNumber,TINNumber
+		Dela Cruz,Juan,S,juan-data@example.com,+639171234567,03/15/1990,1234567890,123456789012
+		""";
+
+		var bulkFile = await SeedBulkUploadFileAsync(
+			"data-screening.csv",
+			"Standard",
+			"Normal",
+			csvContent,
+			autoChasing: false);
+
+		// Act
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().ContainSingle();
+		emailInvitations[0].AutoChasing.Should().BeFalse();
+		emailInvitations[0].DateOfBirth.Should().Be(new DateOnly(1990, 3, 15));
+		emailInvitations[0].SSSNumber.Should().Be("1234567890");
+		emailInvitations[0].TINNumber.Should().Be("123456789012");
+
+		// Null, not "Pending": this row never joins the email queue, and Pending would
+		// count it as an invitation still on its way on every dashboard.
+		emailInvitations[0].EmailSentStatus.Should().BeNull();
+		emailInvitations[0].EmailSentAt.Should().BeNull();
+		emailInvitations[0].EmailClaimedAt.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithManualFile_ShouldLeaveTheIdentityColumnsNull()
+	{
+		// The manual template has no identity columns at all; the candidate supplies
+		// those values on the application form they are emailed.
+		var bulkFile = await SeedBulkUploadFileAsync(
+			"manual-screening.csv",
+			"Standard",
+			"Normal",
+			autoChasing: true);
+
+		// Act
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().HaveCount(3);
+		emailInvitations.Should().AllSatisfy(e =>
+		{
+			e.AutoChasing.Should().BeTrue();
+			e.DateOfBirth.Should().BeNull();
+			e.SSSNumber.Should().BeNull();
+			e.TINNumber.Should().BeNull();
+		});
+	}
+
 	#region Negative Path
 	[Fact]
 	public async Task ProcessAsync_WithEmptyCsvHeader_ShouldMarkFileAsPending()
@@ -249,6 +320,68 @@ public class BulkSubmissionProcessorIntegrationTests : BaseIntegrationTest
 			.ToListAsync();
 
 		emailInvitations.Should().BeEmpty();
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithDataScreeningFileMissingIdentityColumns_ShouldMarkFileAsPending()
+	{
+		// The manual template uploaded against a data package. Every row would fail the
+		// identity rules, so the file is rejected whole rather than importing nothing and
+		// reporting the same missing columns once per row.
+		var bulkFile = await SeedBulkUploadFileAsync(
+			"data-missing-identity.csv",
+			"Standard",
+			"Normal",
+			autoChasing: false);
+
+		// Act
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert
+		var fileAfterProcess = await _dbContext.BulkUploadFileDetails
+			.AsNoTracking()
+			.FirstOrDefaultAsync(f => f.FileID == bulkFile.FileID);
+
+		fileAfterProcess.Should().NotBeNull();
+		fileAfterProcess!.Status.Should().Be("Pending");
+
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().BeEmpty();
+	}
+
+	[Fact]
+	public async Task ProcessAsync_WithDataScreeningRowMissingIdentityValues_ShouldRejectOnlyThatRow()
+	{
+		// The columns are there but one row left them blank. A single unusable row must
+		// not cost the file its good rows.
+		var csvContent = """
+		LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber,DateOfBirth,SSSNumber,TINNumber
+		Dela Cruz,Juan,S,juan-partial@example.com,+639171234567,03/15/1990,1234567890,123456789012
+		Santos,Maria,A,maria-partial@example.com,+639178765432,,,
+		""";
+
+		var bulkFile = await SeedBulkUploadFileAsync(
+			"data-partial-identity.csv",
+			"Standard",
+			"Normal",
+			csvContent,
+			autoChasing: false);
+
+		// Act
+		await _bulkSubmissionProcessorService.ProcessAsync(CancellationToken.None);
+
+		// Assert - the complete row imported, the blank one did not
+		var emailInvitations = await _dbContext.EmailInvitationRequests
+			.AsNoTracking()
+			.Where(e => e.BulkFileID == bulkFile.FileID)
+			.ToListAsync();
+
+		emailInvitations.Should().ContainSingle();
+		emailInvitations[0].LastName.Should().Be("Dela Cruz");
 	}
 	#endregion
 

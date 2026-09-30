@@ -93,7 +93,12 @@
     background: transparent;
 }
 
-.ats-management-card .table-component-toolbar > .mud-typography {
+/* The heading variant applies when the board passes CountLabel (email accounts): TableComponent
+   then wraps the title in a .table-component-heading div alongside the subtitle, which the
+   plain ">" selector below does not reach - so without this the title falls back to the
+   unreadable .gradient-text (a gradient clipped to text, invisible on the dark card). */
+.ats-management-card .table-component-toolbar > .mud-typography,
+.ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
     width: auto !important;
     margin: 0 !important;
     background: none !important;
@@ -419,21 +424,28 @@
     width: 15%;
 }
 
+/* Screening type */
 .ats-package-card thead .mud-table-cell:nth-child(3) {
-    width: 17%;
-}
-
-.ats-package-card thead .mud-table-cell:nth-child(4) {
     width: 11%;
 }
 
-.ats-package-card thead .mud-table-cell:nth-child(5),
-.ats-package-card thead .mud-table-cell:nth-child(6) {
-    width: 16%;
+/* Follow up email */
+.ats-package-card thead .mud-table-cell:nth-child(4) {
+    width: 13%;
 }
 
-.ats-package-card thead .mud-table-cell:nth-child(7) {
+/* Status */
+.ats-package-card thead .mud-table-cell:nth-child(5) {
     width: 10%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(6),
+.ats-package-card thead .mud-table-cell:nth-child(7) {
+    width: 14%;
+}
+
+.ats-package-card thead .mud-table-cell:nth-child(8) {
+    width: 8%;
 }
 
 .ats-package-card tbody .mud-table-cell {
@@ -1350,9 +1362,42 @@
     outline-offset: 2px;
 }
 
+/* Raw inline <svg> icons (edit/delete/retry) have no intrinsic size of their own, unlike
+   MudIcon - without this they render oversized and throw off the button's alignment, as
+   opposed to .ats-management-edit-button's icon which this mirrors. */
+.ats-management-page .ats-cell-action svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Destructive variant of the same button. Lives here rather than in the one screen that
+   currently uses it, because the next board with a delete column needs the identical
+   treatment and a second copy is how two delete buttons end up looking different. */
+.ats-management-page .ats-cell-action.is-danger {
+    border-color: var(--c-danger-bg);
+    background: var(--c-danger-bg);
+    color: var(--c-danger-strong);
+}
+
+.ats-management-page .ats-cell-action.is-danger:hover:not(:disabled) {
+    border-color: var(--c-danger);
+    background: var(--c-danger-bg);
+}
+
+.ats-management-page .ats-cell-action.is-danger:focus-visible {
+    outline-color: rgba(214, 69, 69, .35);
+}
+
 /* ---------- Status pill ---------- */
 
-.ats-management-page .ats-status-pill {
+/* Deliberately NOT scoped to .ats-management-page. This is the one status badge for the
+   whole app - the ATS boards, the orders board's own .report-status, and the Auth user
+   console all want the identical chip, and the Auth page is not inside an
+   .ats-management-page wrapper. Scoping it there meant a second screen either nested
+   itself under an ATS class it is not, or copied the block and drifted.
+   Colours resolve from --c-* directly so the rules no longer depend on the
+   --management-* scope that .ats-management-page declares. */
+.ats-status-pill {
     display: inline-flex;
     align-self: flex-start;
     align-items: center;
@@ -1364,7 +1409,7 @@
     white-space: nowrap;
 }
 
-.ats-management-page .ats-status-pill::before {
+.ats-status-pill::before {
     content: '';
     width: 6px;
     height: 6px;
@@ -1372,33 +1417,33 @@
     background: currentColor;
 }
 
-.ats-management-page .ats-status-pill.pending {
+.ats-status-pill.pending {
     background: var(--c-surface-sunken);
     color: var(--c-fg-subtle);
-    border: 1px dashed var(--management-border-strong);
+    border: 1px dashed var(--c-border-strong);
 }
 
-.ats-management-page .ats-status-pill.processing {
+.ats-status-pill.processing {
     background: var(--c-warn-bg);
     color: var(--c-warn);
 }
 
 /* The only row state that is actively changing, so the dot breathes to say so. */
-.ats-management-page .ats-status-pill.processing::before {
+.ats-status-pill.processing::before {
     animation: ats-status-pulse 1.6s ease-in-out infinite;
 }
 
-.ats-management-page .ats-status-pill.done {
-    background: var(--management-green-tint);
-    color: var(--management-green);
+.ats-status-pill.done {
+    background: var(--c-success-bg);
+    color: var(--c-success);
 }
 
-.ats-management-page .ats-status-pill.error {
+.ats-status-pill.error {
     background: var(--c-danger-bg);
     color: var(--c-danger-strong);
 }
 
-.ats-management-page .ats-status-pill.unknown {
+.ats-status-pill.unknown {
     background: var(--c-neutral-bg);
     color: var(--c-fg-muted);
 }
@@ -1414,7 +1459,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ats-management-page .ats-status-pill.processing::before {
+    .ats-status-pill.processing::before {
         animation: none;
     }
 }
@@ -1501,7 +1546,8 @@
         border-radius: 14px;
     }
 
-    .ats-management-card .table-component-toolbar > .mud-typography {
+    .ats-management-card .table-component-toolbar > .mud-typography,
+    .ats-management-card .table-component-toolbar .table-component-heading > .mud-typography:first-child {
         font-size: 20px !important;
     }
 
@@ -1533,12 +1579,6 @@
         border: 0 !important;
     }
 
-.ats-component-boxshadow {
-    padding: 4px;
-    border-radius: 4px;
-    background: var(--c-brand-bar-gradient);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
 
 .small-checkbox-label .mud-typography {
     font-size: 11px;
@@ -1568,12 +1608,6 @@
     align-items: center;
 }
 
-.ats-signature-button {
-    margin-top: 8px;
-    width: 150px;
-    padding: 4px;
-    border-radius: 10px;
-}
 
 .ats-step-final .ats-consent-document {
     border: 1px solid var(--c-border);
@@ -1615,9 +1649,6 @@
 }
 
 
-.ats-step-final .ats-signature-meta-row .mud-item {
-    margin-bottom: 4px;
-}
 
 @media (max-width: 600px) {
     .ats-step-final .ats-consent-document {
@@ -1626,62 +1657,16 @@
     }
 }
 
-.ats-custom-tabs {
-    border: 1px solid var(--c-fg-muted) !important;
-    border-radius: 12px !important;
-    gap: 12px;
-    padding: 4px;
-}
 
-    .ats-custom-tabs .mud-button-root {
-        border-radius: 12px !important;
-        min-height: 42px;
-        padding: 8px 18px;
-        text-transform: none;
-    }
 
-.ats-success-application-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    width: 100%;
-}
 
-.ats-custom-tabs .mud-button-root:hover {
-    background-color: rgba(42,119,174,.08);
-}
 
-.ats-tab-active {
-    background: var(--c-brand-bar-gradient) !important;
-    color: var(--c-on-dark-fg) !important;
-    border-radius: 8px !important;
-}
 
-    .ats-tab-active * {
-        color: var(--c-on-dark-fg) !important;
-    }
 
-    .ats-tab-active svg {
-        fill: var(--c-on-dark-fg) !important;
-    }
 
-.ats-tab-inactive {
-    border-radius: 8px !important;
-}
 
-    .ats-tab-inactive:hover {
-        background-color: rgba(42,119,174,.08);
-    }
 
-.ats-menu-item {
-    border-radius: 8px;
-    margin: 2px 6px;
-}
 
-.ats-menu-paper {
-    border-radius: 8px;
-}
 
 /* 100vw includes the classic scrollbar gutter, so it is wider than the layout
    viewport and guaranteed a horizontal scrollbar; 100% is the correct full-width.
@@ -1699,15 +1684,7 @@
     background-repeat: no-repeat;
 }
 
-.ats-result-dialog {
-    background: var(--c-surface);
-}
 
-    .ats-result-dialog .mud-dialog-content {
-        padding: 24px !important;
-        max-height: 78vh;
-        overflow-y: auto;
-    }
 
 .ats-result-shell {
     color: var(--c-fg-strong);
@@ -1781,13 +1758,6 @@
     font-weight: 600;
 }
 
-.ats-result-upload-button {
-    border-radius: 10px !important;
-    border-color: var(--c-border-strong) !important;
-    color: var(--c-navy-900) !important;
-    text-transform: none !important;
-    font-size: 16px !important;
-}
 
 .ats-result-doc-list {
     display: flex;
@@ -2233,12 +2203,6 @@
     color: var(--c-fg-muted);
 }
 
-.ats-upload-report-card {
-    width: 100%;
-    border-radius: 0 0 20px 20px;
-    overflow: hidden;
-    border-top: 0;
-}
 
 .ats-upload-report-header {
     padding: 22px 26px 18px;
@@ -2248,22 +2212,8 @@
     gap: 12px;
 }
 
-.ats-upload-report-title {
-    margin: 0;
-    color: var(--c-navy-900);
-    font-weight: 700;
-}
 
-.ats-upload-report-subtitle {
-    margin-top: 2px;
-    color: var(--c-fg-muted);
-}
 
-.ats-upload-report-close {
-    background: var(--c-surface-sunken) !important;
-    border-radius: 12px !important;
-    color: var(--c-fg-subtle) !important;
-}
 
 .ats-upload-dropzone {
     border: 1.5px dashed var(--c-border-strong);
@@ -2328,10 +2278,6 @@
     font-size: 16px !important;
 }
 
-.ats-upload-report-back {
-    border-color: var(--c-border-strong) !important;
-    color: var(--c-navy-900) !important;
-}
 
 @media (max-width: 960px) {
     .ats-result-hero {
@@ -2363,8 +2309,7 @@
         font-size: 14px !important;
     }
 
-    .ats-upload-report-shell-header,
-    .ats-upload-report-card .pa-4 {
+    .ats-upload-report-shell-header {
         padding-left: 16px !important;
         padding-right: 16px !important;
     }
@@ -2474,44 +2419,28 @@
     }
 }
 
-.ats-logo-facets {
-    animation: ats-pulse-glow 2s ease-out infinite;
-}
-
 .ats-console-logo-mark {
     width: 80px;
     height: 70px;
-    border-radius: 10px;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
 }
 
+/* The CIBI hexagon, as the shipped PNG. object-fit keeps its 328:378 ratio inside
+   the box instead of stretching it to the box's own 80:70 - the lattice reads as
+   skewed the moment the aspect is off. No border-radius or overflow clipping any
+   more: the artwork has its own transparent margin, so there are no square corners
+   left to round off. The glow filters on the alpha channel, so it traces the
+   hexagon's edge rather than a rectangle. */
 .ats-logo-facets {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-}
-
-.ats-logo-text {
-    position: relative;
-    z-index: 1;
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: 0.1em;
-    color: var(--c-on-dark-fg);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.35);
-}
-
-button.ats-console-brand-text {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: inherit;
-    cursor: pointer;
+    object-fit: contain;
+    animation: ats-pulse-glow 2s ease-out infinite;
 }
 
 .ats-console-nav-text {
@@ -2563,7 +2492,9 @@ button.ats-console-brand-text {
     padding-right: 10px;
 }
 
-.ats-console-collapsed .ats-console-brand-text,
+/* .ats-console-brand-text is gone from this list: the sidebar logo no longer has
+   an "ATS" label to hide when collapsed. The mark itself stays visible at both
+   widths. */
 .ats-console-collapsed .ats-console-nav-text,
 .ats-console-collapsed .ats-console-nav-label {
     display: none;
@@ -2662,45 +2593,11 @@ button.ats-console-brand-text {
     width: 100%;
 }
 
-.ats-console-card {
-    background: var(--ats-card);
-    border: 1px solid var(--ats-border);
-    border-radius: 14px;
-    padding: 22px 24px 24px;
-    box-shadow: 0 8px 24px -18px rgba(11,31,58,.15);
-}
 
-    .ats-console-card + .ats-console-card {
-        margin-top: 18px;
-    }
 
-.ats-console-section-title {
-    margin: 0 0 16px;
-    color: var(--ats-navy-900);
-    font-size: 16px;
-    font-weight: 700;
-}
 
-.ats-console-placeholder {
-    min-height: 280px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    gap: 8px;
-}
 
-.ats-console-placeholder-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--ats-navy-900);
-}
 
-.ats-console-placeholder-sub {
-    font-size: 13px;
-    color: var(--ats-text-sub);
-}
 
 .ats-console-notice {
     background: var(--ats-warn-bg);
@@ -2970,48 +2867,12 @@ button.ats-console-brand-text {
     font-weight: 600 !important;
 }
 
-.ats-status-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.2;
-    white-space: nowrap;
-}
 
-.ats-status-success {
-    background: var(--c-success-bg);
-    color: var(--c-success);
-}
 
-.ats-status-warning {
-    background: var(--c-warn-bg);
-    color: var(--c-warn);
-}
 
-.ats-status-pending {
-    background: var(--c-surface-sunken);
-    color: var(--c-blue-500);
-}
 
-.ats-status-error {
-    background: var(--c-danger-bg);
-    color: var(--c-danger);
-}
 
-.ats-status-neutral {
-    background: var(--c-surface-sunken);
-    color: var(--c-fg-muted);
-}
 
-.ats-no-records-center {
-    width: 100%;
-    text-align: center;
-    color: var(--c-fg-muted);
-    padding: 10px 0;
-}
 
 .ats-console-sidebar-bottom {
     flex: 0 0 auto;
@@ -3185,17 +3046,7 @@ button.ats-console-brand-text {
     color: var(--c-navy-900);
 }
 
-.ats-idv-hero-title {
-    color: var(--c-navy-900);
-    font-size: 46px;
-    line-height: 1.1;
-}
 
-.ats-consent-card {
-    background: var(--c-blue-tint) !important;
-    border: 1px solid var(--c-border-strong);
-    border-radius: 16px !important;
-}
 
 .ats-step-one .ats-step-one-shell {
     padding: 18px;
@@ -3356,12 +3207,16 @@ button.ats-console-brand-text {
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -3401,6 +3256,12 @@ button.ats-console-brand-text {
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 
@@ -3522,10 +3383,6 @@ button.ats-console-brand-text {
     white-space: normal;
 }
 
-.ats-step-two-upload-btn-text-uppercase {
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-}
 
 .ats-step-two-upload-file-name {
     flex: 1;
@@ -3647,11 +3504,6 @@ button.ats-console-brand-text {
         box-shadow: 0 2px 8px rgba(11,31,58,.12) !important;
     }
 
-.ats-step-four .ats-add-employer-row {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
 .ats-step-four .ats-add-employer-card {
     width: 100%;
@@ -3795,122 +3647,19 @@ button.ats-console-brand-text {
             color: var(--c-on-dark-fg) !important;
         }
 
-.ats-dispute-dialog-content {
-    width: min(520px, 100%);
-    padding: 20px 18px 16px;
-}
 
-.ats-dispute-dialog-grid {
-    width: 100%;
-}
 
-.ats-dispute-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 4px;
-}
 
-.ats-dispute-header-logo-wrap {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    border: 1px solid var(--c-border);
-    background: var(--c-surface-sunken);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 18px -14px rgba(11,31,58,.28);
-}
 
-.ats-dispute-header-logo {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    object-fit: cover;
-}
 
-.ats-dispute-title {
-    color: var(--c-navy-900);
-    font-weight: 700;
-    text-align: center;
-}
 
-.ats-dispute-category-label {
-    color: var(--c-fg-muted);
-    font-weight: 600;
-    margin-bottom: 8px;
-}
 
-.ats-dispute-pill-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
 
-.ats-dispute-dialog .ats-reference-pill {
-    margin: 0 !important;
-    border: 1px solid var(--c-border);
-    background: var(--c-surface);
-    border-radius: 999px;
-    min-height: 36px;
-    padding: 0 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
 
-    .ats-dispute-dialog .ats-reference-pill .mud-button-root,
-    .ats-dispute-dialog .ats-reference-pill .mud-icon-button,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-icon,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-icons,
-    .ats-dispute-dialog .ats-reference-pill svg {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
 
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-label,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-content,
-    .ats-dispute-dialog .ats-reference-pill .mud-typography {
-        margin: 0 !important;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--c-fg-muted);
-        line-height: 1;
-        text-align: center;
-        width: 100%;
-    }
 
-    .ats-dispute-dialog .ats-reference-pill.selected,
-    .ats-dispute-dialog .ats-reference-pill.mud-checked,
-    .ats-dispute-dialog .ats-reference-pill.mud-radio-checked {
-        background: var(--c-navy-800);
-        border-color: var(--c-navy-800);
-    }
 
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-typography,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-typography,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-typography {
-            color: var(--c-on-dark-fg) !important;
-        }
 
-.ats-dispute-cancel-btn {
-    background: var(--c-surface) !important;
-    color: var(--c-fg-muted) !important;
-    border: 1px solid var(--c-border) !important;
-    box-shadow: none !important;
-}
 
 .ats-step-five .ats-reference-datetime-wrap {
     display: grid;
@@ -3929,12 +3678,6 @@ button.ats-console-brand-text {
     width: 100%;
 }
 
-.ats-step-five .ats-add-reference-row {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
 .ats-step-five .ats-add-reference-card {
     width: 100%;
@@ -4069,48 +3812,12 @@ button.ats-console-brand-text {
     font-weight: 600 !important;
 }
 
-.ats-status-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.2;
-    white-space: nowrap;
-}
 
-.ats-status-success {
-    background: var(--c-success-bg);
-    color: var(--c-success);
-}
 
-.ats-status-warning {
-    background: var(--c-warn-bg);
-    color: var(--c-warn);
-}
 
-.ats-status-pending {
-    background: var(--c-surface-sunken);
-    color: var(--c-blue-500);
-}
 
-.ats-status-error {
-    background: var(--c-danger-bg);
-    color: var(--c-danger);
-}
 
-.ats-status-neutral {
-    background: var(--c-surface-sunken);
-    color: var(--c-fg-muted);
-}
 
-.ats-no-records-center {
-    width: 100%;
-    text-align: center;
-    color: var(--c-fg-muted);
-    padding: 10px 0;
-}
 
 /* Re-pointed at the shared tokens; the same six names are declared identically in
    philsys.css for the same selector list. */
@@ -4258,17 +3965,7 @@ button.ats-console-brand-text {
     color: var(--c-navy-900);
 }
 
-.ats-idv-hero-title {
-    color: var(--c-navy-900);
-    font-size: 46px;
-    line-height: 1.1;
-}
 
-.ats-consent-card {
-    background: var(--c-blue-tint) !important;
-    border: 1px solid var(--c-border-strong);
-    border-radius: 16px !important;
-}
 
 .ats-step-one .ats-step-one-shell {
     padding: 18px;
@@ -4429,12 +4126,16 @@ button.ats-console-brand-text {
     margin-top: 4px;
 }
 
+/* Proceed sits in the row's last column - the slot Cancel held before it moved to
+   the step 1 action bar - so the primary action stays right-aligned and Skip keeps
+   its leading position instead of the two bunching up on the left. */
 .ats-step-one .ats-step-one-proceed {
     width: 100%;
     min-width: 0;
     border-radius: 14px;
     min-height: 42px;
     text-transform: none;
+    grid-column: 3;
 }
 
 .ats-step-one .ats-step-one-secondary-btn {
@@ -4474,6 +4175,12 @@ button.ats-console-brand-text {
     .ats-step-one .ats-step-one-button-row {
         grid-template-columns: 1fr;
         justify-items: stretch;
+    }
+
+    /* Single column - Proceed follows Skip in source order rather than holding a
+       third column that no longer exists. */
+    .ats-step-one .ats-step-one-proceed {
+        grid-column: auto;
     }
 }
 
@@ -4595,10 +4302,6 @@ button.ats-console-brand-text {
     white-space: normal;
 }
 
-.ats-step-two-upload-btn-text-uppercase {
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-}
 
 .ats-step-two-upload-file-name {
     flex: 1;
@@ -4720,11 +4423,6 @@ button.ats-console-brand-text {
         box-shadow: 0 2px 8px rgba(11,31,58,.12) !important;
     }
 
-.ats-step-four .ats-add-employer-row {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
 .ats-step-four .ats-add-employer-card {
     width: 100%;
@@ -4868,122 +4566,19 @@ button.ats-console-brand-text {
             color: var(--c-on-dark-fg) !important;
         }
 
-.ats-dispute-dialog-content {
-    width: min(520px, 100%);
-    padding: 20px 18px 16px;
-}
 
-.ats-dispute-dialog-grid {
-    width: 100%;
-}
 
-.ats-dispute-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 4px;
-}
 
-.ats-dispute-header-logo-wrap {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    border: 1px solid var(--c-border);
-    background: var(--c-surface-sunken);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 18px -14px rgba(11,31,58,.28);
-}
 
-.ats-dispute-header-logo {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    object-fit: cover;
-}
 
-.ats-dispute-title {
-    color: var(--c-navy-900);
-    font-weight: 700;
-    text-align: center;
-}
 
-.ats-dispute-category-label {
-    color: var(--c-fg-muted);
-    font-weight: 600;
-    margin-bottom: 8px;
-}
 
-.ats-dispute-pill-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
 
-.ats-dispute-dialog .ats-reference-pill {
-    margin: 0 !important;
-    border: 1px solid var(--c-border);
-    background: var(--c-surface);
-    border-radius: 999px;
-    min-height: 36px;
-    padding: 0 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
 
-    .ats-dispute-dialog .ats-reference-pill .mud-button-root,
-    .ats-dispute-dialog .ats-reference-pill .mud-icon-button,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-icon,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-icons,
-    .ats-dispute-dialog .ats-reference-pill svg {
-        display: none !important;
-        width: 0 !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
 
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-label,
-    .ats-dispute-dialog .ats-reference-pill .mud-radio-content,
-    .ats-dispute-dialog .ats-reference-pill .mud-typography {
-        margin: 0 !important;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--c-fg-muted);
-        line-height: 1;
-        text-align: center;
-        width: 100%;
-    }
 
-    .ats-dispute-dialog .ats-reference-pill.selected,
-    .ats-dispute-dialog .ats-reference-pill.mud-checked,
-    .ats-dispute-dialog .ats-reference-pill.mud-radio-checked {
-        background: var(--c-navy-800);
-        border-color: var(--c-navy-800);
-    }
 
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.selected .mud-typography,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.mud-checked .mud-typography,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-label,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-radio-content,
-        .ats-dispute-dialog .ats-reference-pill.mud-radio-checked .mud-typography {
-            color: var(--c-on-dark-fg) !important;
-        }
 
-.ats-dispute-cancel-btn {
-    background: var(--c-surface) !important;
-    color: var(--c-fg-muted) !important;
-    border: 1px solid var(--c-border) !important;
-    box-shadow: none !important;
-}
 
 .ats-step-five .ats-reference-datetime-wrap {
     display: grid;
@@ -5002,12 +4597,6 @@ button.ats-console-brand-text {
     width: 100%;
 }
 
-.ats-step-five .ats-add-reference-row {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 
 .ats-step-five .ats-add-reference-card {
     width: 100%;
@@ -5051,6 +4640,34 @@ button.ats-console-brand-text {
     min-height: 28px;
 }
 
+/* "Best time to contact" is a native <input type="time">, so its clock glyph is
+   browser shadow DOM (::-webkit-calendar-picker-indicator) that no CSS colour
+   property reaches - the UA paints it from `color-scheme`. MudBlazor sets that on
+   .mud-input from --mud-native-html-color-scheme, which its theme provider emits
+   at runtime; this page runs under GenericLayout's UNBOUND provider (kept unbound
+   so candidate token-link pages stay light for staff who picked dark), so the
+   value is frozen at `light` even while html.dark flips every --c-* token around
+   it. That left a black clock glyph on the dark field. Restoring the scheme on
+   just these inputs repaints the glyph and the native picker popup without
+   touching the provider. The sibling "Best Date" field is a MudDatePicker - a
+   real MudBlazor icon that is already themed - so it is deliberately excluded.
+
+   The Class lands on the outer .mud-input-control, while MudBlazor sets
+   color-scheme on the inner .mud-input - so the property has to be set on the
+   descendant (and on the <input> itself, which is what actually renders the
+   glyph), not on the wrapper, or .mud-input would simply override it again.
+
+   Declared here, after the second .ats-step-five block, because this sheet
+   defines that block twice and the later copy wins. */
+html.dark .ats-step-five .ats-reference-time,
+html.dark .ats-step-five .ats-reference-time .mud-input,
+html.dark .ats-step-five .ats-reference-time input[type="time"],
+html.dark-startup .ats-step-five .ats-reference-time,
+html.dark-startup .ats-step-five .ats-reference-time .mud-input,
+html.dark-startup .ats-step-five .ats-reference-time input[type="time"] {
+    color-scheme: dark;
+}
+
 .ats-appform-modern .ats-modern-card {
     box-shadow: 0 0 0 2px rgba(42, 119, 174, 0.25), 0 0 20px 6px rgba(42, 119, 174, 0.20), 0 0 40px 12px rgba(104, 192, 214, 0.15);
 }
@@ -5082,13 +4699,11 @@ button.ats-console-brand-text {
     font-size: 14px !important;
 }
 
-.ats-appform-modern-title,
 .philsys-modern-title {
     color: var(--modern-title);
     font-weight: 700;
 }
 
-.ats-appform-modern-sub,
 .philsys-modern-sub {
     color: var(--modern-sub);
 }
@@ -5134,7 +4749,7 @@ button.ats-console-brand-text {
         padding: 22px 14px;
     }
 
-    .ats-console-collapsed .ats-console-brand-text,
+    /* Mirrors the desktop rule above, which no longer hides a brand label. */
     .ats-console-collapsed .ats-console-nav-text,
     .ats-console-collapsed .ats-console-nav-label {
         display: block;
@@ -5536,6 +5151,11 @@ button.ats-console-brand-text {
             align-items: stretch;
         }
 
+/* The hero is a MudPaper: without an override it paints MudBlazor's
+   --mud-palette-surface, which stays white on this page (GenericLayout's unbound
+   theme provider), so under html.dark it sat as a white slab on the dark card.
+   Transparent lets the themed card surface show through in both modes - same
+   reasoning as .ats-consent-step .ats-consent-copy-section below. */
 .ats-application-card .ats-step-one .ats-step-one-hero {
     display: flex;
     width: 100%;
@@ -5545,6 +5165,7 @@ button.ats-console-brand-text {
     justify-content: center;
     padding: 12px 0 0;
     border-radius: 0 !important;
+    background: transparent;
 }
 
 .ats-application-card .ats-step-one .ats-step-one-hero-content {
@@ -6256,40 +5877,45 @@ button.ats-console-brand-text {
     color: var(--c-fg-subtle);
 }
 
-.ats-application-card .ats-step-action-bar:has(.ats-consent-save-button) {
-    padding: 0 !important;
+/* Date-picker calendar popups on pages whose MudThemeProvider is UNBOUND.
+   MudBlazor teleports the popup to the popover provider, outside the form's own
+   subtree, so no descendant selector reaches it - each affected picker tags its
+   popup with PopoverClass="oneplatform-unbound-picker-popover" instead.
+
+   The popup is a .mud-paper: it paints --mud-palette-surface / -text-primary, and
+   its days, weekday row and hover states read the other --mud-palette-* vars below.
+   Those come from the MudThemeProvider. GenericLayout deliberately leaves its
+   provider unbound so candidate token-link pages stay light for staff who picked
+   dark, which freezes the palette light while html.dark flips every --c-* token
+   around it - a white calendar with near-black days over the dark form.
+
+   Re-pointing the palette vars themselves, rather than restyling each part, is what
+   makes the whole popup - days, month/year lists, header, hover and disabled states -
+   land on the same surface, text and border colours the New Order calendar gets from
+   its bound provider under ConsoleLayout.
+
+   Applies to the ATS application form and to BasicInformationFormComponent, which
+   renders inside that form via PhilSysComponent. Pages under ConsoleLayout/MainLayout
+   have a bound provider and are deliberately NOT tagged - MudBlazor already themes
+   those popups, and overriding the palette there would diverge from its theme.
+   Named neutrally (not ats-*) because it is no longer ATS-only; it lives in ats.css
+   because that sheet is loaded globally from index.html. */
+.oneplatform-unbound-picker-popover .mud-paper,
+.oneplatform-unbound-picker-popover.mud-popover {
+    --mud-palette-surface: var(--c-surface);
+    --mud-palette-text-primary: var(--c-fg-strong);
+    --mud-palette-text-secondary: var(--c-fg-muted);
+    --mud-palette-text-disabled: var(--c-fg-subtle);
+    --mud-palette-action-default-hover: var(--c-surface-hover);
+    --mud-palette-lines-default: var(--c-border-soft);
+    background-color: var(--c-surface);
+    color: var(--c-fg-strong);
 }
 
-.ats-application-card .ats-consent-save-button {
-    height: 46px;
-    min-width: 0;
-    padding: 0 26px;
-    border: 0;
-    border-radius: 11px;
-    background: var(--c-primary-gradient);
-    box-shadow: 0 10px 22px -6px rgba(29, 95, 209, 0.50);
-    color: var(--c-on-dark-fg);
-    font-family: "Inter", sans-serif;
-    font-size: 14.5px;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: none;
-    transition: box-shadow 0.15s ease, transform 0.10s ease;
-}
 
-    .ats-application-card .ats-consent-save-button:hover {
-        box-shadow: 0 12px 26px -6px rgba(29, 95, 209, 0.65);
-    }
 
-    .ats-application-card .ats-consent-save-button:active {
-        transform: scale(0.97);
-    }
 
-    .ats-application-card .ats-consent-save-button .mud-icon-root {
-        width: 16px;
-        height: 16px;
-        font-size: 16px;
-    }
+
 
 @media (max-width: 700px) {
     .ats-appform-modern {
@@ -6333,13 +5959,7 @@ button.ats-console-brand-text {
         flex-direction: row;
     }
 
-    .ats-application-card .ats-step-action-bar:has(.ats-consent-save-button) {
-        justify-content: stretch !important;
-    }
 
-    .ats-application-card .ats-consent-save-button {
-        width: 100%;
-    }
 }
 
 @media (max-width: 600px) {
@@ -6358,8 +5978,7 @@ button.ats-console-brand-text {
 @media (prefers-reduced-motion: reduce) {
     .ats-consent-step .ats-signature-tab,
     .ats-consent-step .ats-signature-draw-surface,
-    .ats-consent-step .ats-signature-upload-zone,
-    .ats-application-card .ats-consent-save-button {
+    .ats-consent-step .ats-signature-upload-zone {
         transition: none;
     }
 }

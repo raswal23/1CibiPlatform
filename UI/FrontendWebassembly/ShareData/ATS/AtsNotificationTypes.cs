@@ -23,4 +23,13 @@ public static class AtsNotificationTypes
 	public const string OrderDisputed = "OrderDisputed";
 	public const string TicketingFailed = "TicketingFailed";
 	public const string InvitationEmailFailed = "InvitationEmailFailed";
+
+	// Every sender account is capped, cooling down or disabled, so the invitation pass
+	// stopped with rows still queued. The rows keep their attempt count, so this is a
+	// pause rather than a failure - and it is silent without the notification.
+	public const string EmailAccountsExhausted = "EmailAccountsExhausted";
+
+	// Separate from EmailAccountsExhausted because it does not clear itself: a daily cap
+	// lifts after 24 hours, a revoked app password never does.
+	public const string EmailAccountNeedsReverification = "EmailAccountNeedsReverification";
 }

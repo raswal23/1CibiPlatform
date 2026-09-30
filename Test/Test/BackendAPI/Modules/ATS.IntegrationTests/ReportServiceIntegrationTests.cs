@@ -209,6 +209,239 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		});
 	}
 
+	#region Follow-up reminders remaining
+
+	/// <summary>
+	/// The count an operator reads off the board has to agree with the schedule the chaser
+	/// actually runs, so these pin the arithmetic against real rows.
+	/// </summary>
+	/// <remarks>
+	/// The age of the order is varied deliberately alongside the count: it must not affect the
+	/// answer. Days elapsed used to be the whole formula, and that is the bug these pin.
+	/// </remarks>
+	[Theory]
+	// Ordered on day 0 with 3 reminders configured: all 3 still to come.
+	[InlineData(3, 0, 0, 3)]
+	// One day in, one reminder actually sent.
+	[InlineData(3, 1, 1, 2)]
+	// Two sent.
+	[InlineData(3, 2, 2, 1)]
+	// All three sent: the schedule is spent.
+	[InlineData(3, 3, 3, 0)]
+	// Long past the nominal schedule but fully sent - still 0, never negative.
+	[InlineData(3, 40, 3, 0)]
+	// The package was lowered to 2 after 3 had already gone out. Clamped, not negative.
+	[InlineData(2, 5, 3, 0)]
+	public async Task GetReportsAsync_ShouldReportRemainingFollowUps_ForAChasedOrder(
+		int followUpEmail,
+		int daysSinceOrder,
+		int remindersSent,
+		int expectedRemaining)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 11;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(followUpEmail);
+
+		var invitation = CreateInvitation("Chased", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(daysSinceOrder);
+		invitation.FollowUpSentCount = remindersSent;
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(expectedRemaining);
+	}
+
+	/// <summary>
+	/// A count of 0 means no reminder has ever been queued, so the full schedule is still to
+	/// come however old the order is. This is the reported bug: a package set to 2 showed
+	/// "2 left" on the day of the order and "1 left" the next day, while the candidate had
+	/// still received nothing.
+	/// </summary>
+	[Theory]
+	// The day after the order - the first reminder is due but has not been sent.
+	[InlineData(1)]
+	// Several days on and still nothing sent: still the whole schedule, not a smaller number.
+	[InlineData(2)]
+	// Even past the package's own reminder count, an unchased order has spent nothing.
+	[InlineData(5)]
+	public async Task GetReportsAsync_ShouldNotSpendFollowUps_WhenNoReminderHasBeenSent(
+		int daysSinceOrder)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 13;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(2);
+
+		var invitation = CreateInvitation("Unsent", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(daysSinceOrder);
+		invitation.FollowUpSentCount = 0;
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(2);
+	}
+
+	/// <summary>
+	/// Only sends count, so a day the chaser skipped is not deducted. An order three days old
+	/// that has been chased once still has the rest of its schedule to come - the reminders
+	/// that did not go out on the missed days have not been spent.
+	/// </summary>
+	[Fact]
+	public async Task GetReportsAsync_ShouldDeductOnlySends_WhenAChaseDayWasMissed()
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 14;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(3);
+
+		// Three days on, but only one reminder was ever sent. Two remain; the elapsed-days
+		// version reported 0 and the chaser stopped.
+		var invitation = CreateInvitation("Missed", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(3);
+		invitation.FollowUpSentCount = 1;
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().Be(2);
+	}
+
+	// Null, not 0. "Nothing is chasing this order" and "the chasing finished" are different
+	// facts, and the board renders them differently - a dash versus "Done".
+	[Theory]
+	// Data screening: nobody to email.
+	[InlineData(false, "Pending", 5)]
+	// Reminders switched off on the package.
+	[InlineData(true, "Pending", 0)]
+	// The candidate already answered, so the schedule stops mattering.
+	[InlineData(true, "Done", 5)]
+	// Withdrawn applications are not chased either.
+	[InlineData(true, "Withdrawn", 5)]
+	public async Task GetReportsAsync_ShouldReportNoRemainingFollowUps_WhenChasingDoesNotApply(
+		bool autoChasing,
+		string applicationFormStatus,
+		int followUpEmail)
+	{
+		var userId = Guid.CreateVersion7();
+		const int clientId = 12;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(followUpEmail);
+
+		var invitation = CreateInvitation("Unchased", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = autoChasing;
+		invitation.ApplicationFormStatus = applicationFormStatus;
+		invitation.OrderCreatedAt = ManilaDaysAgo(1);
+		await AddInvitationsAsync(invitation);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.Items.Single().FollowUpEmailsRemaining.Should().BeNull();
+	}
+
+	/// <summary>
+	/// Retuning a package's reminder count has to show up on the board immediately, even when
+	/// the package was not renamed.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// FollowUpEmail is read live off PackageDetails into the report row and baked into the
+	/// cached first page as "Follow-ups Left", so the package edit has to drop the report tag.
+	/// It used to drop only the package and client tags; the report tag came along solely via
+	/// the rename path, which <c>PackageManagementService</c> calls only when the name actually
+	/// changed. An admin who raised the count without renaming therefore left every cached page
+	/// reporting the old schedule.
+	/// </para>
+	/// <para>
+	/// That window is exactly the drift <c>CalculateFollowUpEmailsRemaining</c> exists to
+	/// prevent: the chaser joins PackageDetails directly, so it honours the new count on its
+	/// very next hourly pass while the board still promised the old one.
+	/// </para>
+	/// <para>
+	/// The first read is load-bearing - it is what populates the entry the edit must evict.
+	/// Without it the second read would be a cache miss and pass whether or not the fix exists.
+	/// </para>
+	/// </remarks>
+	[Fact]
+	public async Task GetReportsAsync_ShouldReportTheNewFollowUpCount_WhenThePackageIsRetunedWithoutBeingRenamed()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		const int clientId = 15;
+		SetAuthenticatedUser(userId, AtsRoleIds.User, clientId);
+
+		await SetPackageFollowUpAsync(3);
+
+		var invitation = CreateInvitation("Retuned", orderStatus: "Pending Candidate Info");
+		invitation.ClientId = clientId;
+		invitation.RequestorId = userId;
+		invitation.AutoChasing = true;
+		invitation.ApplicationFormStatus = "Pending";
+		invitation.OrderCreatedAt = ManilaDaysAgo(1);
+		invitation.FollowUpSentCount = 0;
+		await AddInvitationsAsync(invitation);
+
+		var beforeEdit = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+		beforeEdit.Items.Single().FollowUpEmailsRemaining.Should().Be(3);
+
+		var existing = await _dbContext.PackageDetails
+			.AsNoTracking()
+			.FirstAsync(package => package.PackageId == DefaultPackageId);
+		_dbContext.ChangeTracker.Clear();
+
+		// Act
+		// The same name, deliberately: this must invalidate on its own rather than riding on
+		// the rename path's invalidation.
+		await _packageManagementService.EditPackageAsync(new EditPackageDTO
+		{
+			PackageId = existing.PackageId,
+			PackageName = existing.PackageName,
+			PackageDescription = existing.PackageDescription,
+			IsActive = existing.IsActive,
+			FollowUpEmail = 5,
+			AutoChasing = existing.AutoChasing
+		}, CancellationToken.None);
+
+		// Assert
+		var afterEdit = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		afterEdit.Items.Single().FollowUpEmailsRemaining.Should().Be(5);
+	}
+
+	#endregion
+
 	[Theory]
 	[InlineData(AtsRoleIds.PlatformManager)]
 	[InlineData(AtsRoleIds.Admin)]
@@ -245,7 +478,6 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetReportsAsync_ShouldRequireOwnRequestorAndClientForRestrictedRoles(
 		int roleId)
 	{
@@ -269,6 +501,44 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 		result.TotalCount.Should().Be(1);
 		result.Items.Should().ContainSingle()
 			.Which.EmailInvitationRequestId.Should().Be(matching.EmailInvitationID);
+	}
+
+	// Service Delivery fulfils orders it did not raise and Client Experience reviews them
+	// across the platform, so neither is confined to a client or to its own requests - the
+	// restriction the theory above applies to an ordinary user.
+	[Theory]
+	[InlineData(AtsRoleIds.ServiceDelivery)]
+	[InlineData(AtsRoleIds.ClientExperience)]
+	public async Task GetReportsAsync_ShouldIncludeAllClientsAndRequesters_ForPlatformWideRoles(
+		int roleId)
+	{
+		var userId = Guid.CreateVersion7();
+		var ownRequest = CreateInvitation("Own Request", orderStatus: "Completed");
+		ownRequest.ClientId = 5;
+		ownRequest.RequestorId = userId;
+		var otherRequester = CreateInvitation("Other Requester", orderStatus: "Completed");
+		otherRequester.ClientId = 5;
+		otherRequester.RequestorId = Guid.CreateVersion7();
+		var otherClient = CreateInvitation("Other Client", orderStatus: "Completed");
+		otherClient.ClientId = 6;
+		otherClient.RequestorId = Guid.CreateVersion7();
+		await AddInvitationsAsync(ownRequest, otherRequester, otherClient);
+
+		// A claimed client id that matches none of the orders: it must not narrow the result.
+		SetAuthenticatedUser(userId, roleId, claimedClientId: 99);
+
+		var result = await _reportService.GetReportsAsync(
+			new KeysetPaginationRequest(Cursor: null, PageSize: 10),
+			CancellationToken.None);
+
+		result.TotalCount.Should().Be(3);
+		result.Items.Select(report => report.EmailInvitationRequestId)
+			.Should().BeEquivalentTo(new[]
+			{
+				ownRequest.EmailInvitationID,
+				otherRequester.EmailInvitationID,
+				otherClient.EmailInvitationID
+			});
 	}
 
 	[Fact]
@@ -556,7 +826,11 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 
 		mergedPdfStream.Position = 0;
 		using var mergedDocument = PdfReader.Open(mergedPdfStream, PdfDocumentOpenMode.Import);
-		mergedDocument.PageCount.Should().Be(2);
+
+		// The two stored documents plus the generated application form, which the
+		// compiled record now always carries (appended at the end here, since this
+		// order has no consent form to anchor it before).
+		mergedDocument.PageCount.Should().BeGreaterThan(2);
 	}
 
 	[Fact]
@@ -861,6 +1135,36 @@ public class ReportServiceIntegrationTests : BaseIntegrationTest
 			Headers = new HeaderDictionary(),
 			ContentType = "application/pdf"
 		};
+	}
+
+	// The reminder count is measured in Manila, so the seeding has to be too - see
+	// FollowUpSchedule. Anchored at 00:30 local rather than the current time of day so a test
+	// never sits on the day boundary.
+	private static readonly TimeZoneInfo ManilaZone =
+		TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila");
+
+	private static DateTime ManilaDaysAgo(int days)
+	{
+		var manilaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ManilaZone);
+		var localDate = manilaNow.Date.AddDays(-days).AddMinutes(30);
+
+		return TimeZoneInfo.ConvertTimeToUtc(
+			DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified),
+			ManilaZone);
+	}
+
+
+	/// <summary>
+	/// Sets the reminder count on the package every seeded invitation points at. The default
+	/// test package carries 0, which is the off switch.
+	/// </summary>
+	private async Task SetPackageFollowUpAsync(int followUpEmail)
+	{
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""UPDATE ats."PackageDetails" SET "FollowUpEmail" = {0} WHERE "PackageId" = {1};""",
+			followUpEmail, DefaultPackageId);
+
+		_dbContext.ChangeTracker.Clear();
 	}
 
 	private static EmailInvitationRequest CreateInvitation(

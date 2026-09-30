@@ -21,6 +21,7 @@ public class AddModuleEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add Module")
 		.WithDescription("Add a new ATS module.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -38,6 +38,7 @@ public class MarkAsDisputedEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.WithSummary("Mark As Disputed")
 		.WithDescription("Marks an order as disputed by setting IsDisputed to true and DisputedAt to current UTC time.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

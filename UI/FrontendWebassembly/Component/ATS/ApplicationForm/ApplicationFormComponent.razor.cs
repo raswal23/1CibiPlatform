@@ -11,6 +11,10 @@ public partial class ApplicationFormComponent
 	public int ActiveStep { get; set; } = 0;
 	[Parameter]
 	public string? HashToken { get; set; }
+	// Birth date the requestor supplied at order entry (data-screening orders);
+	// pre-fills the form so the candidate need not retype it.
+	[Parameter]
+	public DateOnly? OrderDateOfBirth { get; set; }
 	private string? FaceUrl;
 	private bool IsSuccess = false;
 	private bool hasProfessionalLicense = false;
@@ -146,9 +150,20 @@ public partial class ApplicationFormComponent
 			}
 		}
 
+		// A birth date captured at order entry pre-fills the picker. The PhilSys
+		// value (above) wins when both exist - it came from a verified identity,
+		// and the candidate can still correct the field either way.
+		if (DateOfBirth is null && OrderDateOfBirth is { } orderDob)
+		{
+			DateOfBirth = orderDob.ToDateTime(TimeOnly.MinValue);
+		}
+
 		SignatureDate = DateTime.UtcNow;
 
-		_activeStep = Math.Clamp(ActiveStep, 0, 5);
+		// Upper bound is the last step index: 4 while the PhilSys step is commented out
+		// of the stepper, 5 once it is restored.
+		// See docs/ats-application-form-hide-step2.md
+		_activeStep = Math.Clamp(ActiveStep, 0, 4);
 		_draftPersistenceEnabled = true;
 	}
 
@@ -169,6 +184,7 @@ public partial class ApplicationFormComponent
 		(professionalExperiences.Emp1CurrentlyEmployed || EndOfEmployment1.HasValue) &&
 		professionalExperiences.Emp1COEUploadFile is not null &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorEmail) &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp1SupervisorContactNumber);
 
 	private bool CanAddEmployer3 =>
@@ -183,6 +199,7 @@ public partial class ApplicationFormComponent
 		(professionalExperiences.Emp2CurrentlyEmployed || EndOfEmployment2.HasValue) &&
 		professionalExperiences.Emp2COEUploadFile is not null &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorName) &&
+		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorEmail) &&
 		!string.IsNullOrWhiteSpace(professionalExperiences.Emp2SupervisorContactNumber);
 
 	private async Task RemoveFileFromUploadsAsync(byte[] file)
@@ -253,7 +270,7 @@ public partial class ApplicationFormComponent
 	{
 		if (!value)
 		{
-			AddEmployer3 = false;
+			RemoveEmployer3();
 			return Task.CompletedTask;
 		}
 
@@ -263,6 +280,9 @@ public partial class ApplicationFormComponent
 			return Task.CompletedTask;
 		}
 
+		// Matches Employer 1's default. RemoveEmployer3 clears the flag along with the rest
+		// of the card, so revealing it again is what re-ticks the box.
+		professionalExperiences.Emp3PermissionToContact = true;
 		AddEmployer3 = true;
 		return Task.CompletedTask;
 	}
@@ -281,27 +301,123 @@ public partial class ApplicationFormComponent
 			return Task.CompletedTask;
 		}
 
+		// Matches Employer 1's default. RemoveEmployer2 clears the flag along with the rest
+		// of the card, so revealing it again is what re-ticks the box.
+		professionalExperiences.Emp2PermissionToContact = true;
 		AddEmployer2 = true;
 		return Task.CompletedTask;
 	}
 
+	// Removing an employer clears its fields, it does not just hide them. Collapsing the card
+	// while the DTO kept its values meant a candidate who added Employer 2, filled it in, then
+	// removed it still submitted that employer - invisibly, with no way to review or correct it
+	// on the form they were looking at. Same reasoning as ClearProfessionalExperienceDetails,
+	// which already does this for "no work experience".
+	//
+	// The paired date fields are separate because the pickers bind DateTime? while the DTO
+	// holds DateOnly?; leaving them set would repopulate the slot on the next SaveDraft.
 	private void RemoveEmployer2()
 	{
-		AddEmployer3 = false;
+		// Employer 3 goes first: the form only offers it once Employer 2 exists, so leaving a
+		// filled Employer 3 behind a removed Employer 2 would submit a record the candidate
+		// cannot see or reach.
+		RemoveEmployer3();
+
+		professionalExperiences.Emp2CompanyName = null;
+		professionalExperiences.Emp2CurrentlyEmployed = false;
+		professionalExperiences.Emp2PermissionToContact = false;
+		professionalExperiences.Emp2CompanyCity = null;
+		professionalExperiences.Emp2CompanyProvince = null;
+		professionalExperiences.Emp2CompanyCountry = null;
+		professionalExperiences.Emp2CompanyPostalCode = null;
+		professionalExperiences.Emp2StartDate = null;
+		professionalExperiences.Emp2EndDate = null;
+		professionalExperiences.Emp2DatePermittedToContact = null;
+		professionalExperiences.Emp2JobTitle = null;
+		professionalExperiences.Emp2SupervisorName = null;
+		professionalExperiences.Emp2SupervisorEmail = null;
+		professionalExperiences.Emp2SupervisorContactNumber = null;
+		professionalExperiences.Emp2COEUploadFile = null;
+		professionalExperiences.Emp2COEUploadFileName = null;
+
+		DatePermittedToContact2 = null;
+		StartOfEmployment2 = null;
+		EndOfEmployment2 = null;
+		_emp2Error = false;
+
 		AddEmployer2 = false;
 	}
 
+	private void RemoveEmployer3()
+	{
+		professionalExperiences.Emp3CompanyName = null;
+		professionalExperiences.Emp3CurrentlyEmployed = false;
+		professionalExperiences.Emp3PermissionToContact = false;
+		professionalExperiences.Emp3CompanyCity = null;
+		professionalExperiences.Emp3CompanyProvince = null;
+		professionalExperiences.Emp3CompanyCountry = null;
+		professionalExperiences.Emp3CompanyPostalCode = null;
+		professionalExperiences.Emp3StartDate = null;
+		professionalExperiences.Emp3EndDate = null;
+		professionalExperiences.Emp3DatePermittedToContact = null;
+		professionalExperiences.Emp3JobTitle = null;
+		professionalExperiences.Emp3SupervisorName = null;
+		professionalExperiences.Emp3SupervisorEmail = null;
+		professionalExperiences.Emp3SupervisorContactNumber = null;
+		professionalExperiences.Emp3COEUploadFile = null;
+		professionalExperiences.Emp3COEUploadFileName = null;
+
+		DatePermittedToContact3 = null;
+		StartOfEmployment3 = null;
+		EndOfEmployment3 = null;
+		_emp3Error = false;
+
+		AddEmployer3 = false;
+	}
+
+	// Reference 3 is the only removable reference - 1 and 2 are always required.
+	private void RemoveReference3()
+	{
+		referenceDetails.Ref3FullName = null;
+		referenceDetails.Ref3ProfessionalRelationship = null;
+		referenceDetails.Ref3AffiliatedCompany = null;
+		referenceDetails.Ref3Email = null;
+		referenceDetails.Ref3ContactNumber = null;
+		referenceDetails.Ref3ModeOfContact = null;
+		referenceDetails.Ref3BestTimeToContact = null;
+
+		Ref3BestDate = null;
+		Ref3BestTime = null;
+
+		AddAnotherReference = false;
+	}
+
+	private void OnAddReference3Changed(bool value)
+	{
+		if (!value)
+		{
+			RemoveReference3();
+			return;
+		}
+
+		AddAnotherReference = true;
+	}
+
+	// Case indices are one lower than the on-screen step numbers because the PhilSys
+	// step is commented out of the stepper. Personal info is index 1 (was 2), address
+	// & education 2 (was 3), credentials & experience 3 (was 4). Shift these back to
+	// 2/3/4 when re-enabling Step 2 - see docs/ats-application-form-hide-step2.md
 	private bool ValidateUploads()
 	{
 		return _activeStep switch
 		{
-			2 => !(
+			1 => !(
 				(_govtIdError = personalDetails.AdditionalGovtIDFile == null) |
 				(_resumeError = personalDetails.ResumeFile == null) |
 				(_nbiError = personalDetails.NBIClearanceFile == null)
 			),
 
-			3 => !(
+			2 => !(
 
 				(_diplomaError = educationalBackground.DiplomaFile == null
 								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
@@ -309,7 +425,7 @@ public partial class ApplicationFormComponent
 								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
 			),
 
-			4 => !(
+			3 => !(
 				(_licenseError = licensesDetails.LicenseUploadFile == null
 								&& hasProfessionalLicense) |
 				(_emp1Error = professionalExperiences.Emp1COEUploadFile == null
@@ -322,6 +438,9 @@ public partial class ApplicationFormComponent
 		}; ;
 	}
 
+	// Only the commented-out PhilSys step calls this - it is the "Skip" on that step's
+	// Skip/Proceed pair. Kept deliberately: deleting it means rewriting the step when it
+	// is re-enabled. See docs/ats-application-form-hide-step2.md
 	private async Task SkipStep()
 	{
 		if (_stepper is not null)
@@ -361,6 +480,10 @@ public partial class ApplicationFormComponent
 				"By clicking 'Withdraw', the application form will be withdrawn and you will not be able to submit it."
 			},
 			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)WithdrawApplicationFormAsync
+			},
+			{
 				nameof(YesNoDialogComponent.AvatarIcon),Icons.Material.Filled.WarningAmber
 			},
 			{
@@ -387,26 +510,40 @@ public partial class ApplicationFormComponent
 
 		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
-		var result = await dialog.Result;
+		await dialog.Result;
+	}
 
-		if (result!.Canceled)
-			return;
-
+	// The dialog owns the wait: it runs this on Withdraw, spins its confirm button for the
+	// duration, and only closes when this returns true. Returning false on a failed withdraw
+	// keeps the dialog open so the candidate can read the snackbar and retry, rather than
+	// dropping them back on a form that silently did nothing.
+	private async Task<bool> WithdrawApplicationFormAsync()
+	{
 		var withdrawResponse = await ATSService.WithdrawApplicationForm(HashToken!);
 
 		if (!withdrawResponse.IsSuccess)
 		{
 			Snackbar.Add(withdrawResponse.ErrorDetail, Severity.Error);
-			return;
+			return false;
 		}
 
 		if (!withdrawResponse.Data)
-			return;
+		{
+			Snackbar.Add("Failed to withdraw the application form.", Severity.Error);
+			return false;
+		}
 
 		await IsWithDrawn.InvokeAsync("Withdrawn");
 		await RemoveItemsAsync();
+
+		return true;
 	}
 
+	// Only the commented-out PhilSys step calls this - it is the "Proceed" on that step's
+	// Skip/Proceed pair, and the only in-form way to reach the PhilSys lookup. The
+	// showPhilSys branch it sets is still reachable via the ?philSysShow=true query
+	// parameter, so the PhilSys UI itself is not orphaned.
+	// See docs/ats-application-form-hide-step2.md
 	private async Task ProceedClicked()
 	{
 		showPhilSys = true;

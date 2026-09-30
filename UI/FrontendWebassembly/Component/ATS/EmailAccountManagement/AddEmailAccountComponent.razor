@@ -1,0 +1,220 @@
+@namespace FrontendWebassembly.Component.ATS
+<MudDialog Class="um-dialog ae-dialog ats-scroll-dialog" Style="padding: 0; width: min(560px, calc(100vw - 24px)); max-width: 560px;">
+    <DialogContent>
+        <div class="ae-shell ats-dialog-shell">
+            <header class="ae-header ats-dialog-header">
+                <div class="ae-header-row">
+                    <div class="ae-header-left">
+                        <div class="ae-icon-badge" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <rect x="3" y="5.5" width="18" height="13" rx="2.4" />
+                                <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="ae-header-text">
+                            <h1>Register sender email</h1>
+                            <p>Add a mailbox ATS can send invitations from</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="ae-close" aria-label="Close register sender dialog" @onclick="Cancel">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 6l12 12M18 6 6 18" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="ae-body ats-dialog-body">
+                <MudForm @ref="AddEmailAccountForm">
+                    <section class="ae-section" aria-labelledby="add-email-identity-heading">
+                        <div class="ae-section-head">
+                            <span class="ae-section-number">1</span>
+                            <h2 id="add-email-identity-heading">Mailbox</h2>
+                            <span class="ae-section-helper">Who candidates see it from</span>
+                        </div>
+
+                        <div class="ae-section-body">
+                            <div class="ae-field">
+                                <label for="ae-display-name">Display name <span class="ae-required">*</span></label>
+                                <div class="ae-input-wrap">
+                                    <MudTextField @bind-Value="Account.DisplayName"
+                                                  InputId="ae-display-name"
+                                                  Placeholder="e.g. CIBI Recruitment"
+                                                  Required="true"
+                                                  RequiredError="Display name is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="150"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Badge"
+                                                  Class="ae-control" />
+                                </div>
+                                <p class="ae-hint">Shown as the sender name on every invitation from this mailbox.</p>
+                            </div>
+
+                            <div class="ae-field">
+                                <label for="ae-email-address">Email address <span class="ae-required">*</span></label>
+                                <div class="ae-input-wrap">
+                                    <MudTextField @bind-Value="Account.EmailAddress"
+                                                  InputId="ae-email-address"
+                                                  Placeholder="name@cibi.com.ph"
+                                                  Required="true"
+                                                  RequiredError="Email address is required"
+                                                  Validation="@(new Func<string, string?>(ValidateEmail))"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="320"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.AlternateEmail"
+                                                  Class="ae-control" />
+                                </div>
+                            </div>
+
+                            <div class="ae-field">
+                                <label for="ae-app-password">App password <span class="ae-required">*</span></label>
+                                <div class="ae-input-wrap">
+                                    <MudTextField @bind-Value="Account.AppPassword"
+                                                  InputId="ae-app-password"
+                                                  Placeholder="16-character app password"
+                                                  Required="true"
+                                                  RequiredError="App password is required"
+                                                  InputType="@(showPassword ? InputType.Text : InputType.Password)"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentIcon="@(showPassword ? Icons.Material.Outlined.VisibilityOff : Icons.Material.Outlined.Visibility)"
+                                                  AdornmentAriaLabel="@(showPassword ? "Hide app password" : "Show app password")"
+                                                  OnAdornmentClick="TogglePasswordVisibility"
+                                                  Class="ae-control" />
+                                </div>
+                                <p class="ae-hint">
+                                    Not the mailbox's own password - generate an app password in the provider's
+                                    security settings. We send a code through these credentials before the account
+                                    is used, so a wrong one fails here rather than in the queue.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ae-section" aria-labelledby="add-email-server-heading">
+                        <div class="ae-section-head">
+                            <span class="ae-section-number">2</span>
+                            <h2 id="add-email-server-heading">SMTP server</h2>
+                            <span class="ae-section-helper">Defaults suit Gmail</span>
+                        </div>
+
+                        <div class="ae-section-body ae-section-body-split">
+                            <div class="ae-field">
+                                <label for="ae-smtp-host">Host <span class="ae-required">*</span></label>
+                                <div class="ae-input-wrap">
+                                    <MudTextField @bind-Value="Account.SmtpHost"
+                                                  InputId="ae-smtp-host"
+                                                  Required="true"
+                                                  RequiredError="SMTP host is required"
+                                                  Variant="Variant.Outlined"
+                                                  Margin="Margin.Dense"
+                                                  MaxLength="255"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Outlined.Dns"
+                                                  Class="ae-control" />
+                                </div>
+                            </div>
+
+                            <div class="ae-field">
+                                <label for="ae-smtp-port">Port <span class="ae-required">*</span></label>
+                                <div class="ae-input-wrap ae-numeric-wrap">
+                                    <MudNumericField T="int"
+                                                     @bind-Value="Account.SmtpPort"
+                                                     InputId="ae-smtp-port"
+                                                     Min="1"
+                                                     Max="65535"
+                                                     Variant="Variant.Outlined"
+                                                     Margin="Margin.Dense"
+                                                     Class="ae-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="ae-section" aria-labelledby="add-email-rotation-heading">
+                        <div class="ae-section-head">
+                            <span class="ae-section-number">3</span>
+                            <h2 id="add-email-rotation-heading">Rotation</h2>
+                            <span class="ae-section-helper">Order and daily ceiling</span>
+                        </div>
+
+                        <div class="ae-section-body">
+                            <div class="ae-split">
+                                <div class="ae-field">
+                                    <label for="ae-priority">Priority</label>
+                                    <div class="ae-input-wrap ae-numeric-wrap">
+                                        <MudNumericField T="int?"
+                                                         @bind-Value="Account.Priority"
+                                                         InputId="ae-priority"
+                                                         Min="1"
+                                                         Placeholder="Auto"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Class="ae-control" />
+                                    </div>
+                                    <p class="ae-hint">Lower goes first. Leave blank to place it last.</p>
+                                </div>
+
+                                <div class="ae-field">
+                                    <label for="ae-daily-limit">Daily send limit</label>
+                                    <div class="ae-input-wrap ae-numeric-wrap">
+                                        <MudNumericField T="int?"
+                                                         @bind-Value="Account.DailySendLimit"
+                                                         InputId="ae-daily-limit"
+                                                         Min="1"
+                                                         Max="100000"
+                                                         Placeholder="450"
+                                                         Variant="Variant.Outlined"
+                                                         Margin="Margin.Dense"
+                                                         Class="ae-control" />
+                                    </div>
+                                    <p class="ae-hint">Recipients per rolling 24 hours. Gmail caps around 500.</p>
+                                </div>
+                            </div>
+
+                            <div class="ae-field">
+                                <label>Status</label>
+                                <div class="ae-status-row">
+                                    <div class="ae-status-copy">
+                                        <p>Account @(Account.IsActive ? "active" : "inactive")</p>
+                                        <span>Joins the rotation once its code is verified</span>
+                                    </div>
+                                    <div class="ae-status-control">
+                                        <span class="ae-status-badge @(Account.IsActive ? string.Empty : "is-off")">
+                                            @(Account.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                        <button type="button"
+                                                class="ae-toggle @(Account.IsActive ? string.Empty : "is-off")"
+                                                role="switch"
+                                                aria-checked="@Account.IsActive.ToString().ToLowerInvariant()"
+                                                aria-label="Toggle account status"
+                                                @onclick="ToggleStatus">
+                                            <span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </MudForm>
+            </main>
+
+            <footer class="ae-footer ats-dialog-footer">
+                <button type="button" class="ae-button ae-button-cancel" @onclick="Cancel">Cancel</button>
+                <button type="button" class="ae-button ae-button-save" @onclick="Submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z" />
+                    </svg>
+                    Send verification code
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

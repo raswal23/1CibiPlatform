@@ -388,6 +388,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 					.NotEmpty()
 					.WithMessage("Supervisor Name #1 is required.");
 
+				RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorEmail)
+					.NotEmpty()
+					.WithMessage("Supervisor Email Contact Information #1 is required.")
+					.EmailAddress()
+					.WithMessage("Supervisor Email Contact Information #1 is invalid.");
+
 				RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorContactNumber)
 					.NotEmpty()
 					.WithMessage("Supervisor Contact Number #1 is required.");
@@ -451,6 +457,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 						.NotEmpty()
 						.WithMessage("Supervisor Name #2 is required.");
 
+					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorEmail)
+						.NotEmpty()
+						.WithMessage("Supervisor Email Contact Information #2 is required.")
+						.EmailAddress()
+						.WithMessage("Supervisor Email Contact Information #2 is invalid.");
+
 					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorContactNumber)
 						.NotEmpty()
 						.WithMessage("Supervisor Contact Number #2 is required.");
@@ -512,6 +524,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorName)
 					.NotEmpty()
 					.WithMessage("Supervisor Name #3 is required.");
+
+				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorEmail)
+					.NotEmpty()
+					.WithMessage("Supervisor Email Contact Information #3 is required.")
+					.EmailAddress()
+					.WithMessage("Supervisor Email Contact Information #3 is invalid.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorContactNumber)
 					.NotEmpty()

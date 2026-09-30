@@ -97,12 +97,12 @@ public class ConsentFormPdfDocument : IDocument
 		{
 			outer.Item().Row(row =>
 			{
+				// The real CIBI hexagon (embedded copy of images/generic/cibi-icon.png)
+				// rather than the placeholder ring glyph.
 				row.ConstantItem(38).AlignMiddle().Element(c => c
 					.Width(30).Height(30)
-					.CornerRadius(8)
-					.BackgroundLinearGradient(100, BrandGradient)
-					.Padding(7)
-					.Svg(PdfIcons.LogoRing));
+					.Image(PdfBrandAssets.CibiIcon)
+					.FitArea());
 
 				row.RelativeItem().AlignMiddle().Column(c =>
 				{

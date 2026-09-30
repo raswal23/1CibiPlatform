@@ -55,7 +55,6 @@ public class DashboardServiceIntegrationTests : BaseIntegrationTest
 
 	[Theory]
 	[InlineData(AtsRoleIds.User)]
-	[InlineData(AtsRoleIds.Uploader)]
 	public async Task GetDashboardAsync_ShouldRequireOwnRequestorAndClient_ForRestrictedRoles(
 		int roleId)
 	{

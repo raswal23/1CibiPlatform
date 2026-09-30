@@ -72,4 +72,13 @@ public partial class ATSCacheRepository
 		await _hybridCache.RemoveByTagAsync(CacheTags.User, cancellationToken);
 		return result;
 	}
+
+	// Cached: the admin roster changes when somebody is added or edited, and both of those
+	// already invalidate CacheTags.User. Read once per email pass rather than per message, but
+	// there is no reason to ask the database for a list that only changes on a user write.
+	public async Task<IReadOnlyList<Guid>> GetAtsAdministratorUserIdsAsync(CancellationToken cancellationToken) =>
+		await _hybridCache.GetOrCreateAsync<List<Guid>>(
+			"ats_administrator_user_ids",
+			async token => (await _atsRepository.GetAtsAdministratorUserIdsAsync(token)).ToList(),
+			tags: [CacheTags.User, CacheTags.Role], cancellationToken: cancellationToken);
 }

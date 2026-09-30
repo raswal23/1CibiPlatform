@@ -37,7 +37,31 @@ public sealed class AtsEmailDeliveryOptions
 	public int SendTimeoutSeconds { get; set; } = 60;
 
 	// Attempts within one pass, before the row goes back to the queue for a later tick.
+	//
+	// Read only by BulkEmailNotificationProcessorService, which owns its own attempt loop. A
+	// spent budget here is not the end of the road: the row is released and the next tick picks
+	// it up again, so this paces one pass rather than bounding a message's total attempts.
 	public int MaxAttemptsPerPass { get; set; } = 3;
+
+	// Attempts for ONE message by a caller sending it right now, before the sender gives up on it
+	// entirely. Each attempt is a full walk of the registered accounts, because account failover
+	// is the switcher's job and happens inside a single attempt - see
+	// ATSEmailService.SendATSEmailWithResultAsync.
+	//
+	// Separate from MaxAttemptsPerPass above because the two bound different things. A queued row
+	// that exhausts a pass is retried on the next one; an inline notice - a withdrawal, a
+	// completion, a dispute acknowledgement, a single-order invitation - is sent after its
+	// transaction has already committed and has no later tick at all. These attempts are the only
+	// ones it gets, so tuning a bulk pass's pacing must not quietly change a notice's only chance
+	// at delivery.
+	//
+	// Only a transient fault spends an attempt: a refused recipient, or a rotation where every
+	// account has already refused, is answered on the first one and never retried.
+	//
+	// Three is the same reasoning as ConsecutiveFailureThreshold below - one dropped socket is
+	// noise, three in a row is a pattern - and three attempts at the back-off below costs about six
+	// seconds, which the single-enrolment path pays inside its transaction.
+	public int MaxAttemptsPerMessage { get; set; } = 3;
 
 	// First retry waits this long, doubling per attempt (2s, 4s, 8s...). Fixed short delays
 	// re-knock on a door that is deliberately closed.
@@ -60,4 +84,31 @@ public sealed class AtsEmailDeliveryOptions
 	// a send throttle. Authentication limits are enforced over a longer window, so the
 	// ten-minute send back-off is not enough to clear one.
 	public int LoginThrottleBackoffSeconds { get; set; } = 1_800;
+
+	// How many CONSECUTIVE transient failures retire a sender account and move the queue to the
+	// next one. Three, because one is noise - a dropped socket happens - and waiting for ten
+	// would spend ten messages' worth of latency discovering what the third already told us.
+	//
+	// Only transient failures reach this counter. A 550 is about the candidate's address, not
+	// the account, and counting it would burn every registered account on one bad batch.
+	public int ConsecutiveFailureThreshold { get; set; } = 3;
+
+	// How long a tripped breaker keeps an account out of rotation. Fifteen minutes is long
+	// enough for a transient provider fault to clear and short enough that a two-account setup
+	// is not left on one sender for the rest of the day.
+	public int TransientFailureCooldownSeconds { get; set; } = 900;
+
+	// Applied to a newly registered account when the operator does not set one. Below Gmail's
+	// ~500/day on purpose: the account has to leave rotation BEFORE the provider refuses,
+	// because a refusal locks the mailbox for roughly 24 hours.
+	public int DefaultDailySendLimit { get; set; } = 450;
+
+	// The window the consumption figure is counted over. Twenty-four rolling hours, because
+	// that is how the provider enforces it - a send at 23:00 still counts at 22:00 the next
+	// day, so a counter reset at any fixed hour would overstate the headroom.
+	public int QuotaWindowHours { get; set; } = 24;
+
+	// How long a successful send's log row is kept. Nothing reads past QuotaWindowHours; the
+	// extra day exists so a clock skew or a paused sweep cannot erase a live window.
+	public int SendLogRetentionHours { get; set; } = 48;
 }

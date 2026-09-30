@@ -236,8 +236,10 @@
     line-height: 42px;
 }
 
+/* Reserves the width of .ap-unit-suffix, which is absolutely positioned over the field.
+   Without it a two-digit value runs underneath "daily reminders". */
 .ap-follow-up-wrap ::deep .mud-input-slot {
-    padding-right: 82px !important;
+    padding-right: 110px !important;
 }
 
 .ap-follow-up-wrap ::deep .mud-input-numeric-spin {
@@ -290,28 +292,6 @@
     font-size: 16px;
 }
 
-.ap-description-wrap ::deep .mud-input {
-    align-items: flex-start;
-    min-height: 88px;
-}
-
-.ap-description-wrap ::deep textarea.mud-input-slot {
-    min-height: 86px !important;
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
-    color: var(--ap-text-1);
-    font-family: "Inter", sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    resize: vertical;
-}
-
-.ap-description-wrap ::deep .mud-input-adornment-start {
-    align-self: flex-start;
-    height: 16px;
-    margin-top: 14px;
-}
-
 .ap-input-wrap ::deep .mud-input-error .mud-input-outlined-border {
     border-color: var(--c-danger);
 }
@@ -320,14 +300,6 @@
     margin-top: 4px;
     font-family: "Inter", sans-serif;
     font-size: 11px;
-}
-
-.ap-character-count {
-    margin-top: 4px;
-    color: var(--ap-text-3);
-    font-size: 11px;
-    line-height: 1;
-    text-align: right;
 }
 
 .ap-unit-suffix {

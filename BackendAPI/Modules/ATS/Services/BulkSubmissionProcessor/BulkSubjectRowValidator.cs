@@ -117,6 +117,56 @@ public static class BulkSubjectRowValidator
 			: null;
 	}
 
+	/// <summary>
+	/// Validates the identity columns a data-screening row must carry: the candidate
+	/// receives no application form, so the birth date, SSS and TIN cannot be
+	/// collected later. The rules mirror EmailInvitationRequestCommandValidator's
+	/// Data-mode block, so a CSV row is held to the same standard as the web form.
+	/// Only called for data-screening files; manual files never carry the columns.
+	/// </summary>
+	public static (string? Failure, DateOnly? DateOfBirth) ValidateIdentity(BulkUploadCsvRecord row)
+	{
+		if (string.IsNullOrWhiteSpace(row.DateOfBirth))
+		{
+			return ("Date of birth is required for data screening.", null);
+		}
+
+		// The template's date format, matching the web form's picker display.
+		if (!DateOnly.TryParseExact(row.DateOfBirth.Trim(), "MM/dd/yyyy", out var dateOfBirth))
+		{
+			return ("Date of birth must be in MM/dd/yyyy format.", null);
+		}
+
+		if (dateOfBirth >= DateOnly.FromDateTime(DateTime.UtcNow))
+		{
+			return ("Date of birth must be in the past.", null);
+		}
+
+		var sss = row.SSSNumber?.Trim();
+		if (string.IsNullOrEmpty(sss))
+		{
+			return ("SSS number is required for data screening.", null);
+		}
+
+		if (sss.Length != 10 || !sss.All(char.IsDigit))
+		{
+			return ("SSS number must be 10 digits.", null);
+		}
+
+		var tin = row.TINNumber?.Trim();
+		if (string.IsNullOrEmpty(tin))
+		{
+			return ("TIN number is required for data screening.", null);
+		}
+
+		if (tin.Length is < 9 or > 12 || !tin.All(char.IsDigit))
+		{
+			return ("TIN number must be 9 to 12 digits.", null);
+		}
+
+		return (null, dateOfBirth);
+	}
+
 	// MailAddress accepts the same shape FluentValidation's EmailAddress() rule does,
 	// without pulling the validator stack into the parsing job. Public because the
 	// upload-time BulkEmailValidation shares this rule, so the two tiers cannot drift.

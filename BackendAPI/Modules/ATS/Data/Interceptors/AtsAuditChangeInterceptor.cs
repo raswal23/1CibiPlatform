@@ -134,13 +134,22 @@ public sealed class AtsAuditChangeInterceptor : SaveChangesInterceptor
 
 		foreach (var property in entry.Properties)
 		{
+			var name = property.Metadata.Name;
+
+			// A sensitive column is still reported as having changed - that an SMTP password
+			// was replaced is exactly what an audit reader needs - but neither value is kept.
+			// The names come from AtsAuditRedactor so this and the command payloads mask the
+			// same set; a second list here would drift and leak without anything noticing.
+			var isSensitive = AtsAuditRedactor.IsSensitiveProperty(name);
+
 			switch (entry.State)
 			{
 				// A create has no before value; recording "null -> x" for every column
 				// would bury the few fields that matter, so only non-defaults are kept.
 				case EntityState.Added when property.CurrentValue is not null:
-					change.Changes[property.Metadata.Name] =
-						new AtsPropertyChangeDTO(null, Format(property.CurrentValue));
+					change.Changes[name] = new AtsPropertyChangeDTO(
+						null,
+						isSensitive ? AtsAuditRedactor.Mask : Format(property.CurrentValue));
 					break;
 
 				// Compared by value rather than trusting IsModified: a detached Update()
@@ -148,16 +157,19 @@ public sealed class AtsAuditChangeInterceptor : SaveChangesInterceptor
 				// changed once the originals above are loaded.
 				case EntityState.Modified
 					when !Equals(property.OriginalValue, property.CurrentValue):
-					change.Changes[property.Metadata.Name] = new AtsPropertyChangeDTO(
-						Format(property.OriginalValue),
-						Format(property.CurrentValue));
+					change.Changes[name] = isSensitive
+						? new AtsPropertyChangeDTO(AtsAuditRedactor.Mask, AtsAuditRedactor.Mask)
+						: new AtsPropertyChangeDTO(
+							Format(property.OriginalValue),
+							Format(property.CurrentValue));
 					break;
 
 				// A delete has no after value. The original is what is worth keeping -
 				// it is the only remaining record of the row.
 				case EntityState.Deleted when property.OriginalValue is not null:
-					change.Changes[property.Metadata.Name] =
-						new AtsPropertyChangeDTO(Format(property.OriginalValue), null);
+					change.Changes[name] = new AtsPropertyChangeDTO(
+						isSensitive ? AtsAuditRedactor.Mask : Format(property.OriginalValue),
+						null);
 					break;
 			}
 		}

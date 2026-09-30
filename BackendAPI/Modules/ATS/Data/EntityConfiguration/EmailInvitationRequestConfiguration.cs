@@ -68,15 +68,60 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 		builder.Property(e => e.RequestorId)
 			   .IsRequired(false);
 
+		// Screening type snapshot; null for legacy rows and unclassified packages.
+		builder.Property(e => e.AutoChasing)
+			   .IsRequired(false);
+
+		// Candidate identity for data-screening orders; other order sources leave
+		// them null, so all three stay optional at the schema level.
+		builder.Property(e => e.DateOfBirth)
+			   .IsRequired(false);
+
+		builder.Property(e => e.SSSNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
+		builder.Property(e => e.TINNumber)
+			   .HasMaxLength(255)
+			   .IsRequired(false);
+
 		builder.Property(e => e.HashTokenCreatedAt)
 			   .IsRequired(true);
 
+		// Nullable because the link no longer expires. The column is kept so existing
+		// rows keep their history, but nothing writes it any more - new rows are NULL.
 		builder.Property(e => e.HashTokenExpiration)
-			   .IsRequired(true);
+			   .IsRequired(false);
 
+		// "date", not a timestamp: this holds a Manila calendar date so the release query
+		// can ask "was one already queued today?" without a time component to reason about.
+		// Null means no reminder has ever been queued for the order.
+		//
+		// Deliberately not indexed: the release query already narrows on EmailSentStatus,
+		// which is indexed, and this table is write-hot enough that a redundant index is
+		// pure cost - the same reasoning as the BulkFileID note at the bottom of this file.
+		builder.Property(e => e.LastFollowUpSentDate)
+			   .HasColumnType("date")
+			   .IsRequired(false);
+
+		// NOT NULL defaulting to 0, so every pre-existing row reads "never chased" without a
+		// backfill - the same stance LastFollowUpSentDate takes, and for the same reason: a
+		// backfilled value here would be indistinguishable from a real send. Non-nullable
+		// because "no reminders sent" is 0, not unknown.
+		//
+		// Un-indexed, like the date above: the release query still narrows on EmailSentStatus,
+		// and this table is write-hot enough that a redundant index is pure cost.
+		builder.Property(e => e.FollowUpSentCount)
+			   .HasDefaultValue(0)
+			   .IsRequired();
+
+		// Nullable because a data-screening order is never emailed: there is no
+		// application form to send, so it has no place in the email queue at all.
+		// NULL is "not applicable", which is not the same as Pending - the worker
+		// would never advance a Pending data row, leaving it queued forever.
 		builder.Property(e => e.EmailSentStatus)
 			   .HasMaxLength(255)
-			   .IsRequired(true);
+			   .IsRequired(false);
 
 		builder.Property(e => e.ApplicationFormStatus)
 			   .HasMaxLength(255)
@@ -95,6 +140,16 @@ public class EmailInvitationRequestConfiguration : IEntityTypeConfiguration<Emai
 
 		builder.Property(e => e.ProjectionUpdatedAt)
 			   .IsRequired(false);
+
+		builder.Property(e => e.NeedsEmploymentVerification)
+			   .IsRequired(true)
+			   .HasDefaultValue(true);
+
+		// Filtered: the verification job only ever asks for unclaimed orders, so
+		// indexing the false rows would grow with the table while never being read.
+		// Same reasoning as the TicketStatus index below.
+		builder.HasIndex(e => e.NeedsEmploymentVerification)
+			   .HasFilter("\"NeedsEmploymentVerification\"");
 
 		builder.Property(e => e.DisputeCategory)
 			   .HasMaxLength(255)
