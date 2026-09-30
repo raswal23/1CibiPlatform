@@ -8,7 +8,10 @@ public partial class ATSApplicationForm
 	private string? _initError;
 	private string? Status;
 	private bool hasUnsavedChanges = true;
-	private readonly HashSet<int> allowedSteps = new() { 0, 1, 2, 3, 4, 5 };
+	// The stepper has 5 steps (0-4) while the PhilSys step is commented out of
+	// ApplicationFormComponent; add 5 back when re-enabling it.
+	// See docs/ats-application-form-hide-step2.md
+	private readonly HashSet<int> allowedSteps = new() { 0, 1, 2, 3, 4 };
 	[Parameter]
 	public string? HashToken { get; set; }
 	[Parameter]
@@ -58,9 +61,12 @@ public partial class ATSApplicationForm
 			_ => false
 		};
 
+		// Fallback was 1 - the PhilSys step - when that step was part of the stepper.
+		// Index 1 is now personal information, so an out-of-range query value starts
+		// the candidate at the consent step instead of skipping it.
 		_stepActive = allowedSteps.Contains(stepActive)
 			? stepActive
-			: 1;
+			: 0;
 	}
 
 	private async Task ConfirmNavigation(LocationChangingContext context)

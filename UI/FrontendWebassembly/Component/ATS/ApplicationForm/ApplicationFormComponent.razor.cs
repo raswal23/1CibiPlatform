@@ -160,7 +160,10 @@ public partial class ApplicationFormComponent
 
 		SignatureDate = DateTime.UtcNow;
 
-		_activeStep = Math.Clamp(ActiveStep, 0, 5);
+		// Upper bound is the last step index: 4 while the PhilSys step is commented out
+		// of the stepper, 5 once it is restored.
+		// See docs/ats-application-form-hide-step2.md
+		_activeStep = Math.Clamp(ActiveStep, 0, 4);
 		_draftPersistenceEnabled = true;
 	}
 
@@ -400,17 +403,21 @@ public partial class ApplicationFormComponent
 		AddAnotherReference = true;
 	}
 
+	// Case indices are one lower than the on-screen step numbers because the PhilSys
+	// step is commented out of the stepper. Personal info is index 1 (was 2), address
+	// & education 2 (was 3), credentials & experience 3 (was 4). Shift these back to
+	// 2/3/4 when re-enabling Step 2 - see docs/ats-application-form-hide-step2.md
 	private bool ValidateUploads()
 	{
 		return _activeStep switch
 		{
-			2 => !(
+			1 => !(
 				(_govtIdError = personalDetails.AdditionalGovtIDFile == null) |
 				(_resumeError = personalDetails.ResumeFile == null) |
 				(_nbiError = personalDetails.NBIClearanceFile == null)
 			),
 
-			3 => !(
+			2 => !(
 
 				(_diplomaError = educationalBackground.DiplomaFile == null
 								&& !string.IsNullOrEmpty(HighestEducationalAttainment)
@@ -418,7 +425,7 @@ public partial class ApplicationFormComponent
 								&& educationalBackground.HighestEducationalAttainment != "Elementary Graduate")
 			),
 
-			4 => !(
+			3 => !(
 				(_licenseError = licensesDetails.LicenseUploadFile == null
 								&& hasProfessionalLicense) |
 				(_emp1Error = professionalExperiences.Emp1COEUploadFile == null
@@ -431,6 +438,9 @@ public partial class ApplicationFormComponent
 		}; ;
 	}
 
+	// Only the commented-out PhilSys step calls this - it is the "Skip" on that step's
+	// Skip/Proceed pair. Kept deliberately: deleting it means rewriting the step when it
+	// is re-enabled. See docs/ats-application-form-hide-step2.md
 	private async Task SkipStep()
 	{
 		if (_stepper is not null)
@@ -529,6 +539,11 @@ public partial class ApplicationFormComponent
 		return true;
 	}
 
+	// Only the commented-out PhilSys step calls this - it is the "Proceed" on that step's
+	// Skip/Proceed pair, and the only in-form way to reach the PhilSys lookup. The
+	// showPhilSys branch it sets is still reachable via the ?philSysShow=true query
+	// parameter, so the PhilSys UI itself is not orphaned.
+	// See docs/ats-application-form-hide-step2.md
 	private async Task ProceedClicked()
 	{
 		showPhilSys = true;
