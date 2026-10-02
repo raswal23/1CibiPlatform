@@ -123,25 +123,71 @@
                     </div>
                 </dl>
 
-                <p class="ev-confirm-note">
-                    By confirming, you acknowledge that the employment information above is
-                    accurate to the best of your knowledge.
-                </p>
+                @if (_isDeclining)
+                {
+                    <div class="ev-confirm-decline">
+                        <label class="ev-confirm-decline-label" for="decline-reason">
+                            What is inaccurate about these details?
+                        </label>
+                        <p class="ev-confirm-decline-hint" id="decline-reason-hint">
+                            Your answer is recorded against this request so the CIBI team
+                            can follow up with the candidate.
+                        </p>
+                        <textarea id="decline-reason"
+                                  class="ev-confirm-decline-input"
+                                  rows="4"
+                                  maxlength="@DeclineReasonMaxLength"
+                                  placeholder="For example: the employment dates are wrong, or this person never held this position."
+                                  aria-describedby="decline-reason-hint"
+                                  aria-invalid="@(!string.IsNullOrEmpty(_declineError))"
+                                  @bind="_declineReason"
+                                  @bind:event="oninput"
+                                  disabled="@_isSubmitting"></textarea>
+                        <div class="ev-confirm-decline-meta">
+                            @if (!string.IsNullOrEmpty(_declineError))
+                            {
+                                <span class="ev-confirm-decline-error" role="alert">@_declineError</span>
+                            }
+                            <span class="ev-confirm-decline-count">@_declineReason.Length / @DeclineReasonMaxLength</span>
+                        </div>
+                        <div class="ev-confirm-actions">
+                            <button class="ev-confirm-reject"
+                                    type="button"
+                                    @onclick="CancelDecline"
+                                    disabled="@_isSubmitting">
+                                Back
+                            </button>
+                            <button class="ev-confirm-approve"
+                                    type="button"
+                                    @onclick="RejectAsync"
+                                    disabled="@(!CanSubmitDecline)">
+                                @(_isSubmitting ? "Saving…" : "Submit")
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="ev-confirm-note">
+                        By confirming, you acknowledge that the employment information above is
+                        accurate to the best of your knowledge.
+                    </p>
 
-                <div class="ev-confirm-actions">
-                    <button class="ev-confirm-reject"
-                            type="button"
-                            @onclick="RejectAsync"
-                            disabled="@_isSubmitting">
-                        This is not accurate
-                    </button>
-                    <button class="ev-confirm-approve"
-                            type="button"
-                            @onclick="VerifyAsync"
-                            disabled="@_isSubmitting">
-                        @(_isSubmitting ? "Saving…" : "Confirm employment")
-                    </button>
-                </div>
+                    <div class="ev-confirm-actions">
+                        <button class="ev-confirm-reject"
+                                type="button"
+                                @onclick="BeginDecline"
+                                disabled="@_isSubmitting">
+                            This is not accurate
+                        </button>
+                        <button class="ev-confirm-approve"
+                                type="button"
+                                @onclick="VerifyAsync"
+                                disabled="@_isSubmitting">
+                            @(_isSubmitting ? "Saving…" : "Confirm employment")
+                        </button>
+                    </div>
+                }
 
                 <p class="ev-confirm-expiry">
                     This link expires on @_request.TokenExpiresAt.ToLocalTime().ToString("dd MMM yyyy, h:mm tt").

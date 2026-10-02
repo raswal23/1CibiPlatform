@@ -155,7 +155,11 @@ public partial class PhilSysLiveness
 
 			await LocalStorageService.SetItemAsync($"ats:applicationForm:profilePicture", photoUrl ?? string.Empty);
 
-			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=2", false);
+			// stepActive lands the candidate on the application form's personal-information
+			// step, which PhilSys has just pre-filled. It is index 1 while the form's own
+			// PhilSys step is commented out of the stepper; set it back to 2 when that step
+			// is re-enabled - see docs/ats-application-form-hide-step2.md
+			Navigation.NavigateTo($"{applicationFormPath}/{atsSession}?showAppForm=true&philSysShow=false&stepActive=1", false);
 
 			return;
 		}

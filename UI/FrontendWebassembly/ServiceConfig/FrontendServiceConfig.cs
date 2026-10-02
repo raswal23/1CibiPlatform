@@ -75,6 +75,7 @@ public static class FrontendServiceConfig
 		services.AddScoped<IDialogWorkflowService, DialogWorkflowService>();
 		services.AddScoped<IApplicationFormService, ApplicationFormService>();
 		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IEmploymentVerificationService, FrontendWebassembly.Services.EmploymentVerification.Implementation.EmploymentVerificationService>();
+		services.AddScoped<FrontendWebassembly.Services.EmploymentVerification.Interface.IContactDirectoryService, FrontendWebassembly.Services.EmploymentVerification.Implementation.ContactDirectoryService>();
 		services.AddScoped<IApplicationFormStateService, ApplicationFormStateService>();
 		services.AddScoped<IEndorsementSubmissionService, EndorsementSubmissionService>();
 		services.AddScoped<INotificationService, NotificationService>();
@@ -86,6 +87,8 @@ public static class FrontendServiceConfig
 		services.AddScoped<IAuditTrailService, AuditTrailService>();
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IPackageManagementService, PackageManagementService>();
+		services.AddScoped<IAtsEmailAccountService, AtsEmailAccountService>();
+		services.AddScoped<IEmailProcessManagementService, EmailProcessManagementService>();
 		services.AddScoped<IClientManagementService, ClientManagementService>();
 		services.AddScoped<IRoleManagementService, RoleManagementService>();
 		services.AddScoped<IModuleManagementService, ModuleManagementService>();

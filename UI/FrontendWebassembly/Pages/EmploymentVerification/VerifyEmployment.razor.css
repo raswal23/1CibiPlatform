@@ -11,7 +11,7 @@
     overflow: hidden;
     border-radius: 24px;
     background: var(--c-surface);
-    box-shadow: 0 22px 60px rgba(125, 41, 113, .18);
+    box-shadow: 0 22px 60px var(--c-ev-shadow);
 }
 
 .ev-confirm-header {
@@ -96,6 +96,59 @@
 .ev-confirm-actions button { flex: 1; padding: .85rem 1rem; border: 0; border-radius: 999px; font-weight: 700; cursor: pointer; }
 .ev-confirm-approve { color: var(--c-on-dark-fg); background: linear-gradient(120deg, var(--c-ev-accent-strong), var(--c-ev-accent)); }
 .ev-confirm-reject { color: var(--c-ev-accent-strong); background: var(--c-ev-tint-2); }
+
+/* Decline reason panel. Builds on .ev-confirm-actions for the button row and on the
+   .ev-confirm-reject / .ev-confirm-approve colours above, so only the box, the
+   textarea and its counter are declared here - no colour or radius is re-declared. */
+.ev-confirm-decline { padding: 0 2.5rem 2rem; }
+.ev-confirm-decline .ev-confirm-actions { padding: 0; }
+
+.ev-confirm-decline-label {
+    display: block;
+    color: var(--c-ev-fg);
+    font-size: .95rem;
+    font-weight: 700;
+}
+
+.ev-confirm-decline-hint {
+    margin: .4rem 0 .9rem;
+    color: var(--c-ev-fg-muted);
+    font-size: .82rem;
+    line-height: 1.55;
+}
+
+.ev-confirm-decline-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: .8rem .9rem;
+    border: 1px solid var(--c-ev-border);
+    border-radius: 14px;
+    background: var(--c-ev-tint-2);
+    color: var(--c-ev-fg);
+    font-family: inherit;
+    font-size: .92rem;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+    .ev-confirm-decline-input:focus {
+        border-color: var(--c-ev-accent);
+        outline: 2px solid var(--c-ev-accent);
+        outline-offset: 2px;
+    }
+
+    .ev-confirm-decline-input:disabled { opacity: .6; cursor: not-allowed; }
+
+.ev-confirm-decline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: baseline;
+    margin: .6rem 0 1.1rem;
+}
+
+.ev-confirm-decline-error { color: var(--c-danger-strong); font-size: .8rem; font-weight: 600; }
+.ev-confirm-decline-count { margin-left: auto; color: var(--c-ev-fg-muted); font-size: .75rem; }
 .ev-confirm-success, .ev-confirm-error { margin: 2rem 2.5rem; padding: 1rem 1.1rem; display: grid; gap: .35rem; border-radius: 14px; line-height: 1.5; }
 .ev-confirm-success { color: var(--c-success); background: var(--c-success-bg); }
 .ev-confirm-error { color: var(--c-danger-strong); background: var(--c-danger-bg); }
@@ -105,6 +158,7 @@
     .ev-confirm-header, .ev-confirm-details, .ev-confirm-body { padding-left: 1.35rem; padding-right: 1.35rem; }
     .ev-confirm-actions { padding-left: 1.35rem; padding-right: 1.35rem; flex-direction: column; }
     .ev-confirm-note { padding-left: 1.35rem; padding-right: 1.35rem; }
+    .ev-confirm-decline { padding-left: 1.35rem; padding-right: 1.35rem; }
     .ev-confirm-expiry { padding-left: 1.35rem; padding-right: 1.35rem; }
     .ev-confirm-footer { padding-left: 1.35rem; padding-right: 1.35rem; }
 }

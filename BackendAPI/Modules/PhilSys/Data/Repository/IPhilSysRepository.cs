@@ -14,4 +14,6 @@ public interface IPhilSysRepository
 	Task<bool> DeleteTransactionDataAsync(PhilSysTransaction HashToken);
 	Task<bool> AddTransactionResultDataAsync(PhilSysTransactionResult PhilSysTransactionResult);
 
+	Task<List<PhilSysTransaction>> GetExpiredUntransactedTransactionsAsync(DateTime cutoffUtc);
+
 }

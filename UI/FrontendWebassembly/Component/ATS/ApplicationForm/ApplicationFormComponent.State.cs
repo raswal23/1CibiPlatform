@@ -109,6 +109,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			},
 			ProfessionalExperiences = new ProfessionalExperiencesState
 			{
+				HasWorkExperience = hasWorkExperience,
 				AddEmployer2 = AddEmployer2,
 				AddEmployer3 = AddEmployer3,
 				Employer1 = CreateEmployerState(1),
@@ -149,6 +150,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment1,
 			EndDate = EndOfEmployment1,
 			SupervisorName = professionalExperiences.Emp1SupervisorName,
+			SupervisorEmail = professionalExperiences.Emp1SupervisorEmail,
 			SupervisorContactNumber = professionalExperiences.Emp1SupervisorContactNumber
 		},
 		2 => new EmployerState
@@ -165,6 +167,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment2,
 			EndDate = EndOfEmployment2,
 			SupervisorName = professionalExperiences.Emp2SupervisorName,
+			SupervisorEmail = professionalExperiences.Emp2SupervisorEmail,
 			SupervisorContactNumber = professionalExperiences.Emp2SupervisorContactNumber
 		},
 		3 => new EmployerState
@@ -181,6 +184,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 			StartDate = StartOfEmployment3,
 			EndDate = EndOfEmployment3,
 			SupervisorName = professionalExperiences.Emp3SupervisorName,
+			SupervisorEmail = professionalExperiences.Emp3SupervisorEmail,
 			SupervisorContactNumber = professionalExperiences.Emp3SupervisorContactNumber
 		},
 		_ => throw new ArgumentOutOfRangeException(nameof(employerNumber))
@@ -316,6 +320,17 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 
 	private void RestoreProfessionalExperiences(ProfessionalExperiencesState state)
 	{
+		// Drafts saved before the work-experience toggle existed have no flag but may
+		// carry employer data - infer "yes" from it instead of discarding the entries.
+		hasWorkExperience = state.HasWorkExperience ||
+			!string.IsNullOrWhiteSpace(state.Employer1.CompanyName);
+
+		if (!hasWorkExperience)
+		{
+			ClearProfessionalExperienceDetails();
+			return;
+		}
+
 		AddEmployer2 = state.AddEmployer2;
 		AddEmployer3 = state.AddEmployer3;
 		RestoreEmployerState(1, state.Employer1);
@@ -337,6 +352,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp1CompanyPostalCode = state.CompanyPostalCode;
 				professionalExperiences.Emp1JobTitle = state.JobTitle;
 				professionalExperiences.Emp1SupervisorName = state.SupervisorName;
+				professionalExperiences.Emp1SupervisorEmail = state.SupervisorEmail;
 				professionalExperiences.Emp1SupervisorContactNumber = state.SupervisorContactNumber;
 				DatePermittedToContact1 = state.DatePermittedToContact;
 				StartOfEmployment1 = state.StartDate;
@@ -352,6 +368,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp2CompanyPostalCode = state.CompanyPostalCode;
 				professionalExperiences.Emp2JobTitle = state.JobTitle;
 				professionalExperiences.Emp2SupervisorName = state.SupervisorName;
+				professionalExperiences.Emp2SupervisorEmail = state.SupervisorEmail;
 				professionalExperiences.Emp2SupervisorContactNumber = state.SupervisorContactNumber;
 				DatePermittedToContact2 = state.DatePermittedToContact;
 				StartOfEmployment2 = state.StartDate;
@@ -367,6 +384,7 @@ public partial class ApplicationFormComponent : IAsyncDisposable
 				professionalExperiences.Emp3CompanyPostalCode = state.CompanyPostalCode;
 				professionalExperiences.Emp3JobTitle = state.JobTitle;
 				professionalExperiences.Emp3SupervisorName = state.SupervisorName;
+				professionalExperiences.Emp3SupervisorEmail = state.SupervisorEmail;
 				professionalExperiences.Emp3SupervisorContactNumber = state.SupervisorContactNumber;
 				DatePermittedToContact3 = state.DatePermittedToContact;
 				StartOfEmployment3 = state.StartDate;

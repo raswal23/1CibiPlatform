@@ -122,11 +122,12 @@
                     </section>
                 }
 
-                @if (Preview?.License is not null || Preview?.Employers is { Count: > 0 })
-                {
-                    sectionNumber++;
-                    <section class="ats-appform-preview-section">
-                        @SectionHeading(sectionNumber, "Professional Background", "Credentials, licenses and employment history")
+                @* Always shown: a missing license or employment history is itself an
+                   answer ("none declared"), unlike the other sections where absent
+                   data means the applicant never reached that step. *@
+                @{ sectionNumber++; }
+                <section class="ats-appform-preview-section">
+                    @SectionHeading(sectionNumber, "Professional Background", "Credentials, licenses and employment history")
 
                         <MudText Typo="Typo.subtitle2" Class="ats-appform-preview-group-title">Credentials & Licenses</MudText>
                         <div class="ats-appform-preview-license-card">
@@ -151,9 +152,9 @@
                             }
                         </div>
 
+                        <MudText Typo="Typo.subtitle2" Class="ats-appform-preview-group-title">Employment Timeline</MudText>
                         @if (Preview?.Employers is { Count: > 0 } employers)
                         {
-                            <MudText Typo="Typo.subtitle2" Class="ats-appform-preview-group-title">Employment Timeline</MudText>
                             <div class="ats-appform-preview-timeline">
                                 @foreach (var employer in employers)
                                 {
@@ -171,10 +172,9 @@
                                                 @PreviewField("Company name", employer.CompanyName)
                                                 @PreviewField("Job title", employer.JobTitle)
                                                 @PreviewField("Company address", employer.CompanyAddress)
-                                                @PreviewField("Reason for leaving", employer.ReasonForLeaving)
                                                 @PreviewField("Supervisor name", employer.SupervisorName)
-                                                @PreviewField("Supervisor contact number", employer.SupervisorContactNumber)
                                                 @PreviewField("Supervisor email", employer.SupervisorEmail)
+                                                @PreviewField("Supervisor contact number", employer.SupervisorContactNumber)
                                             </dl>
                                             @if (!string.IsNullOrWhiteSpace(employer.CoeFileName))
                                             {
@@ -187,8 +187,13 @@
                                 }
                             </div>
                         }
+                        else
+                        {
+                            <div class="ats-appform-preview-license-card">
+                                <span class="ats-appform-preview-pill ats-appform-preview-pill-warn">NO WORK EXPERIENCE DECLARED</span>
+                            </div>
+                        }
                     </section>
-                }
 
                 @if (Preview?.References is { Count: > 0 } references)
                 {
@@ -236,6 +241,23 @@
                     </section>
                 }
             </main>
+
+            <footer class="ats-download-actions ats-dialog-footer">
+                <MudButton Class="ats-send-button"
+                           Disabled="@isDownloading"
+                           StartIcon="@(isDownloading ? null : Icons.Material.Outlined.Download)"
+                           OnClick="DownloadPdfAsync">
+                    @if (isDownloading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                        <span>Preparing...</span>
+                    }
+                    else
+                    {
+                        <span>Download PDF</span>
+                    }
+                </MudButton>
+            </footer>
         </div>
     </DialogContent>
 </MudDialog>

@@ -16,6 +16,9 @@ public partial class AuditTrailComponent
 	// the screen explains why older actions are not here.
 	private const int RetentionDays = 30;
 
+	private const string ExcelContentType =
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
 	private readonly CursorTableLoader<AuditTrailListDTO> _auditLoader = new();
 
 	private TableComponent<AuditTrailListDTO>? _auditTable;
@@ -24,6 +27,7 @@ public partial class AuditTrailComponent
 	private string? _activeOutcome;
 	private string? _searchString;
 	private bool _isLoadingCounts;
+	private bool _isExporting;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -69,6 +73,57 @@ public partial class AuditTrailComponent
 		await RefreshCountsAsync();
 
 		return tableData;
+	}
+
+	/// <summary>
+	/// Downloads the trail as a styled Excel workbook, honouring every active filter.
+	/// </summary>
+	/// <remarks>
+	/// Filtered on purpose, unlike the bulk subject export: that file is named after one
+	/// upload and always means the whole of it, whereas this screen IS its filters - a
+	/// workbook that silently ignored the active outcome chip and date range would not be
+	/// the thing the user is looking at.
+	/// </remarks>
+	private async Task ExportAuditTrailAsync()
+	{
+		if (_isExporting)
+		{
+			return;
+		}
+
+		_isExporting = true;
+
+		try
+		{
+			var response = await AuditTrailService.ExportAuditTrailAsync(
+				_activeOutcome,
+				action: null,
+				area: null,
+				_searchString,
+				_dateRange?.Start,
+				_dateRange?.End);
+
+			if (!response.IsSuccess || response.Data is null)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+				return;
+			}
+
+			var fileBytes = await response.Data.Content.ReadAsByteArrayAsync();
+
+			var fileName =
+				response.Data.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+				?? "ats-audit-trail.xlsx";
+
+			await JS.InvokeVoidAsync("downloadFile", fileName, ExcelContentType, fileBytes);
+
+			Snackbar.Add("Audit trail exported.", Severity.Success);
+		}
+		finally
+		{
+			_isExporting = false;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private async Task SetOutcomeAsync(string? outcome)

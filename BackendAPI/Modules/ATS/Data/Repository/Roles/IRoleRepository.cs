@@ -7,4 +7,5 @@ public interface IRoleRepository
 	Task<bool> AddRoleAsync(AddRoleDTO roleDTO);
 	Task<RoleDetails?> GetRoleAsync(int roleId);
 	Task<RoleDetails> EditRoleAsync(RoleDetails roleDetails);
+	Task<int> CountActiveUsersInRoleAsync(int roleId, CancellationToken cancellationToken);
 }

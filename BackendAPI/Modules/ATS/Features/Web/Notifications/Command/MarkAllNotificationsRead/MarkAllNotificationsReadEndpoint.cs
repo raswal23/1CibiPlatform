@@ -27,6 +27,7 @@ public class MarkAllNotificationsReadEndpoint : ICarterModule
 			"Marks every unread notification belonging to the authenticated caller as "
 			+ "read and returns how many changed. Scoped to the caller's own inbox; there "
 			+ "is no parameter that can widen it.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

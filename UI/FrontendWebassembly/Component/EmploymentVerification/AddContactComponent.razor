@@ -1,0 +1,58 @@
+@namespace FrontendWebassembly.Component.EmploymentVerification
+
+@* um-dialog is not decorative: it zeroes MudBlazor's default .mud-dialog-content
+   padding. Without it that wrapper keeps its own overflow and you get a second
+   scrollbar outside the one on .ats-dialog-body. Every ATS dialog carries the same
+   three classes - um-dialog, its own prefix, ats-scroll-dialog. *@
+<MudDialog Class="um-dialog evc-dialog ats-scroll-dialog"
+           Style="padding: 0; width: min(540px, calc(100vw - 24px)); max-width: 540px;">
+    <DialogContent>
+        @* No <DialogActions>: the scroll shell needs header, body and footer as flex
+           siblings inside DialogContent, which is why every ATS dialog puts its footer
+           here too. *@
+        <div class="evc-shell ats-dialog-shell">
+            <header class="ats-dialog-headline ats-dialog-header">
+                <div class="ats-dialog-headline-content">
+                    <div class="ats-dialog-headline-icon" aria-hidden="true">
+                        <MudIcon Icon="@Icons.Material.Outlined.ContactMail" />
+                    </div>
+                    <div class="ats-dialog-headline-text">
+                        <h2>Add contact</h2>
+                        <p>List an HR mailbox for a company</p>
+                    </div>
+                </div>
+
+                @* MudIcon, not a bare <svg>: .ats-dialog-headline-close in ats.css sizes
+                   .mud-icon-root and nothing else, so an inline svg carrying only a
+                   viewBox collapses to zero and the button renders empty. *@
+                <button type="button"
+                        class="ats-dialog-headline-close"
+                        aria-label="Close add contact dialog"
+                        @onclick="Cancel">
+                    <MudIcon Icon="@Icons.Material.Outlined.Close" Size="Size.Small" />
+                </button>
+            </header>
+
+            <main class="evc-body ats-dialog-body">
+                <MudForm @ref="_form">
+                    <ContactDialogFields IdPrefix="add-contact"
+                                         @bind-CompanyName="_companyName"
+                                         @bind-EmailAddress="_emailAddress"
+                                         @bind-IsActive="_isActive" />
+                </MudForm>
+            </main>
+
+            <footer class="evc-footer ats-dialog-footer">
+                <button type="button" class="evc-button evc-button-cancel" @onclick="Cancel">
+                    Cancel
+                </button>
+                <button type="button" class="evc-button evc-button-save" @onclick="SubmitAsync">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Save
+                </button>
+            </footer>
+        </div>
+    </DialogContent>
+</MudDialog>

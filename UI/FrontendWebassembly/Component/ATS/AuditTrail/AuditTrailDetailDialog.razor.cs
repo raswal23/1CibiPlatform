@@ -118,6 +118,12 @@ public partial class AuditTrailDetailDialog
 
 	// Re-indented for reading. A payload that is not valid JSON - the "omitted" markers
 	// are, but a future one might not be - is shown verbatim rather than swallowed.
+	// Matched on the action rather than by sniffing the payload's shape: the writer sets
+	// this name in AtsAssistantService.RecordAudit, and a JSON probe would misfire on any
+	// future command that happens to carry a "Question" field.
+	private bool IsAssistantTranscript =>
+		string.Equals(Entry.Action, "AskAtsAssistant", StringComparison.OrdinalIgnoreCase);
+
 	private string FormattedPayload
 	{
 		get

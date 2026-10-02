@@ -1,0 +1,112 @@
+@page "/employmentverification/requests"
+@layout EVLayout
+@inherits CrudPageBase
+@attribute [RequirePermission(8, 9)]
+@inject IEmploymentVerificationService VerificationService
+
+<PageTitle>Employment Verification - Queue</PageTitle>
+
+<div class="ev-management-page">
+    <div class="ev-page-head">
+        <div>
+            <span class="ev-eyebrow">ATS connected</span>
+            <h1>Verification queue</h1>
+            <p>
+                Employment records awaiting an automatic verification email, and the
+                ones being skipped.
+            </p>
+        </div>
+    </div>
+
+    @* Read-only by design. Sending is a scheduled job now, so this screen answers
+       "why has this employer not been contacted?" rather than offering a button.
+       One row per employer slot: a candidate with three former employers appears
+       three times, because each is verified separately. *@
+    <div class="ev-notice" role="note">
+        Requests send automatically every few minutes, but only to supervisor addresses
+        listed under <strong>Contacts</strong>. Rows here are waiting for the next pass or
+        skipped for the reason shown &mdash; add an address to Contacts to let it send.
+    </div>
+
+    <TableComponent TItem="ATSInProgressEmploymentRecordDTO"
+                    @ref="_candidatesTable"
+                    Title="Awaiting verification"
+                    CountLabel="employment records"
+                    Items="FilteredCandidates"
+                    EnableReload="true"
+                    OnReloadClicked="ReloadAsync"
+                    ContainerClass="ats-management-card"
+                    EnableSearch="true"
+                    SearchLabel=""
+                    SearchPlaceholder="Search candidate, employer or email"
+                    SearchImmediate="true"
+                    ColumnCount="6"
+                    RowsPerPage="10"
+                    SearchString="@_searchString"
+                    SearchStringChanged="@((string value) => _searchString = value)">
+
+        <HeaderTemplate>
+            <MudTh>Candidate</MudTh>
+            <MudTh Class="ats-table-cell-center">Employer no.</MudTh>
+            <MudTh>Previous employer</MudTh>
+            <MudTh>Employment period</MudTh>
+            <MudTh>Supervisor email</MudTh>
+            <MudTh Class="ats-table-cell-center">Status</MudTh>
+        </HeaderTemplate>
+
+        <RowTemplate Context="candidate">
+            <MudTd Class="ats-management-primary" DataLabel="Candidate">
+                <div class="ats-management-client-cell">
+                    <span class="ats-management-client-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="3.5" />
+                            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+                        </svg>
+                    </span>
+                    <span class="ev-stacked-cell">
+                        <strong>@candidate.CandidateName</strong>
+                        <small>
+                            @(string.IsNullOrWhiteSpace(candidate.Position)
+                                ? "Not provided"
+                                : candidate.Position)
+                        </small>
+                    </span>
+                </div>
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Employer no.">
+                @candidate.EmploymentSegment
+            </MudTd>
+
+            <MudTd DataLabel="Previous employer">@candidate.Employer</MudTd>
+
+            <MudTd Class="ats-management-date" DataLabel="Employment period">
+                @EmploymentVerificationDisplay.GetEmploymentPeriod(candidate.StartDate, candidate.EndDate)
+            </MudTd>
+
+            <MudTd Class="ev-email-cell" DataLabel="Supervisor email">
+                @(string.IsNullOrWhiteSpace(candidate.SupervisorEmail)
+                    ? "Not provided"
+                    : candidate.SupervisorEmail)
+            </MudTd>
+
+            <MudTd Class="ats-table-cell-center" DataLabel="Status">
+                <span class="@GetQueueStatusCssClass(candidate)">
+                    @GetQueueStatus(candidate)
+                </span>
+            </MudTd>
+        </RowTemplate>
+
+        <NoRecordsTemplate>
+            <div class="ats-management-empty">
+                <MudIcon Icon="@Icons.Material.Filled.TaskAlt" />
+                <strong>@(HasSearch ? "No matching records" : "Nothing waiting")</strong>
+                <span>
+                    @(HasSearch
+                        ? "Try a different name, employer or email."
+                        : "Every in-progress employment record has already been sent for verification.")
+                </span>
+            </div>
+        </NoRecordsTemplate>
+    </TableComponent>
+</div>

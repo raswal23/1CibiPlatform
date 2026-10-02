@@ -63,34 +63,10 @@ public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionServic
 		if (result!.InquiryType!.Equals("name_dob", StringComparison.CurrentCultureIgnoreCase))
 		{
 			responseBody = await _philSysService.PostBasicInformationAsync(result.FirstName!, result.MiddleName!, result.LastName!, result.Suffix!, result.BirthDate!, accessToken, FaceLivenessSessionId);
-		
+
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
 
-			await _unitOfWork.BeginTransactionAsync();
-
-			try
-			{
-				await UpdateTransactionStatus(HashToken);
-
-				await AddConvertedResponseToDbAsync(convertedResponse);
-
-				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
-
-				await _unitOfWork.SaveChangesAsync();
-
-				await _unitOfWork.CommitAsync();
-
-				_logger.LogInformation("Successfully updated the session status and added the result in table for {HashToken}: {@Context}", HashToken, logContext);
-
-			}
-			catch (Exception ex)
-			{
-				await _unitOfWork.RollbackAsync();
-				_logger.LogError("Failed to update the session status and failed to add the result in table for {HashToken}: {@Context}", HashToken, logContext);
-				throw new InternalServerException($"Failed to add transaction. {ex.Message}");
-			}
-
-			return convertedResponse!;
+			return await FinalizeInquiryAsync(HashToken, result.WebHookUrl!, convertedResponse, logContext);
 		}
 
 		if (result.InquiryType.Equals("pcn", StringComparison.OrdinalIgnoreCase))
@@ -99,35 +75,42 @@ public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionServic
 
 			var convertedResponse = ConvertVerificationResponseDTO(result.Tid, responseBody!);
 
-			await _unitOfWork.BeginTransactionAsync();
-
-			try
-			{
-				await AddConvertedResponseToDbAsync(convertedResponse);
-
-				await SendToClientWebHookAsync(result.WebHookUrl!, convertedResponse);
-
-				await _unitOfWork.SaveChangesAsync();
-
-				await _unitOfWork.CommitAsync();
-
-				_logger.LogInformation("Successfully updated the session status and added the result in table for {HashToken}: {@Context}", HashToken, logContext);
-
-			}
-			catch (Exception ex)
-			{
-				await _unitOfWork.RollbackAsync();
-				_logger.LogError("Failed to update the session status and failed to add the result in table for {HashToken}: {@Context}", HashToken, logContext);
-				throw new InternalServerException($"Failed to add transaction. {ex.Message}");
-			}
-
-			return convertedResponse!;
+			return await FinalizeInquiryAsync(HashToken, result.WebHookUrl!, convertedResponse, logContext);
 		}
 
 		return new VerificationResponseDTO { };
 	}
 
-	private async Task<bool> UpdateTransactionStatus(string HashToken)
+	private async Task<VerificationResponseDTO> FinalizeInquiryAsync(string HashToken, string WebHookUrl, VerificationResponseDTO convertedResponse, object logContext)
+	{
+		await _unitOfWork.BeginTransactionAsync();
+
+		try
+		{
+			await AddConvertedResponseToDbAsync(convertedResponse);
+
+			await SendToClientWebHookAsync(WebHookUrl, convertedResponse);
+
+			await UpdateTransactionStatus(HashToken);
+
+			await _unitOfWork.SaveChangesAsync();
+
+			await _unitOfWork.CommitAsync();
+
+			_logger.LogInformation("Successfully updated the session status and added the result in table for {HashToken}: {@Context}", HashToken, logContext);
+
+		}
+		catch (Exception ex)
+		{
+			await _unitOfWork.RollbackAsync();
+			_logger.LogError("Failed to update the session status and failed to add the result in table for {HashToken}: {@Context}", HashToken, logContext);
+			throw new InternalServerException($"Failed to add transaction. {ex.Message}");
+		}
+
+		return convertedResponse!;
+	}
+
+	private async Task UpdateTransactionStatus(string HashToken)
 	{
 		var logContext = new
 		{
@@ -152,11 +135,10 @@ public class UpdateFaceLivenessSessionService : IUpdateFaceLivenessSessionServic
 		if (updateStatus == null)
 		{
 			_logger.LogError("Update Status Failed: Failed to Update the Transaction Status for {HashToken}: {@Context}", HashToken, logContext);
-			return false;
+			throw new InternalServerException("Failed to Update the Transaction Status for this transaction.");
 		}
 
 		_logger.LogInformation("Successfully Updated the Transaction Status: {@Context}", logContext);
-		return true;
 	}
 
 	private async Task SendToClientWebHookAsync (string WebHook, VerificationResponseDTO VerificationResponseDTO)

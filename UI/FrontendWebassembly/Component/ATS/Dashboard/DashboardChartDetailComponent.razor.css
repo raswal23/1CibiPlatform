@@ -124,7 +124,11 @@
 ::deep .ats-chart-detail-chip-label {
     display: block;
     width: 100%;
-    color: var(--c-blue-500);
+    /* Fixed light blue, not --c-blue-500: the chip sits on the header's fixed
+       dark stops, and in light theme that token is a mid blue (#2e7ce0) that
+       nearly vanishes against the navy. This is the token's dark-theme value,
+       pinned so it stays readable in both themes. */
+    color: #8dbaff;
     font-size: 9.5px;
     font-weight: 600;
     letter-spacing: 0.1em;

@@ -23,7 +23,6 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
 		builder.Property(p => p.Emp1StartDate).HasColumnType("date");
 		builder.Property(p => p.Emp1EndDate).HasColumnType("date");
 		builder.Property(p => p.Emp1JobTitle).HasMaxLength(255);
-		builder.Property(p => p.Emp1ReasonForLeaving).HasMaxLength(255);
 		builder.Property(p => p.Emp1SupervisorName).HasMaxLength(255);
 		builder.Property(p => p.Emp1SupervisorContactNumber).HasMaxLength(255);
 		builder.Property(p => p.Emp1SupervisorEmail).HasMaxLength(255);
@@ -37,7 +36,6 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
 		builder.Property(p => p.Emp2StartDate).HasColumnType("date");
 		builder.Property(p => p.Emp2EndDate).HasColumnType("date");
 		builder.Property(p => p.Emp2JobTitle).HasMaxLength(255);
-		builder.Property(p => p.Emp2ReasonForLeaving).HasMaxLength(255);
 		builder.Property(p => p.Emp2SupervisorName).HasMaxLength(255);
 		builder.Property(p => p.Emp2SupervisorContactNumber).HasMaxLength(255);
 		builder.Property(p => p.Emp2SupervisorEmail).HasMaxLength(255);
@@ -51,13 +49,11 @@ public class ProfessionalExperiencesConfiguration : IEntityTypeConfiguration<Pro
 		builder.Property(p => p.Emp3StartDate).HasColumnType("date");
 		builder.Property(p => p.Emp3EndDate).HasColumnType("date");
 		builder.Property(p => p.Emp3JobTitle).HasMaxLength(255);
-		builder.Property(p => p.Emp3ReasonForLeaving).HasMaxLength(255);
 		builder.Property(p => p.Emp3SupervisorName).HasMaxLength(255);
 		builder.Property(p => p.Emp3SupervisorContactNumber).HasMaxLength(255);
 		builder.Property(p => p.Emp3SupervisorEmail).HasMaxLength(255);
 		builder.Property(p => p.Emp3COEUploadFileKey).HasMaxLength(255);
 
-		builder.Property(p => p.COEUploadFileKey).HasMaxLength(255);
 		builder.Property(p => p.CreatedDate).IsRequired(true);
 
 		// Relationship to EmailInvitationRequest

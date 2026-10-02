@@ -17,11 +17,14 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\DataSeed\IntouchEmailInvitationInitialData.json" />
+    <EmbeddedResource Include="Services\FilePDFService\cibi-icon.png" />
   </ItemGroup>
 
   <ItemGroup>
       <PackageReference Include="Carter" Version="10.0.0" />
+      <PackageReference Include="ClosedXML" Version="0.105.0" />
       <PackageReference Include="CsvHelper" Version="33.1.0" />
+      <PackageReference Include="MailKit" Version="4.17.0" />
 	  <PackageReference Include="Mapster" Version="10.0.7" />
 	  <PackageReference Include="MediatR" Version="12.2.0" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.8" />

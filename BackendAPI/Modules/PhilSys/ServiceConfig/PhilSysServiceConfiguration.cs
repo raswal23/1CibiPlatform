@@ -55,7 +55,10 @@ public static class PhilSysServiceConfiguration
 		services.AddScoped<IPhilSysRepository, PhilSysRepository>();
 		services.AddScoped<IATSRepository, ATSRepository>();
 		services.AddScoped<IUnitOfWork, UnitOfWork>();
+		services.AddScoped<ITransactionCleanupService, TransactionCleanupService>();
 		services.Decorate<IPhilSysRepository, PhilSysCacheRepository>();
+
+		services.ConfigureOptions<PhilSysTransactionCleanupJobSetup>();
 
 		return services;
 	}

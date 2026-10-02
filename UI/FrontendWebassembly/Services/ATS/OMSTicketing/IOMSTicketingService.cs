@@ -18,4 +18,11 @@ public interface IOMSTicketingService
 	// Returns a 404 detail when the order is unknown or outside the caller's scope, and
 	// a 409 detail when it is no longer awaiting a retry; both reach the snackbar.
 	Task<ServiceResponse<bool>> RetryTicketAsync(Guid emailInvitationId);
+
+	/// <summary>
+	/// Retries many orders at once. The result carries requested versus actually requeued,
+	/// because a stale selection is skipped rather than failed.
+	/// </summary>
+	Task<ServiceResponse<BulkRetryResultDTO>> RetryTicketsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds);
 }

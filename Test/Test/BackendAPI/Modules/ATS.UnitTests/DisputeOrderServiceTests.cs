@@ -6,14 +6,13 @@ using ATS.Data.Repository;
 using ATS.Data.UnitOfWork;
 using ATS.DTO;
 using ATS.Services.DisputeOrder;
+using ATS.Services.EmailService;
 using ATS.Services.OrderHistory;
 using Auth.Shared.Contracts;
 using BuildingBlocks.Exceptions;
 using BuildingBlocks.Pagination;
-using BuildingBlocks.SharedServices.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -21,32 +20,27 @@ namespace Test.BackendAPI.Modules.ATS.UnitTests;
 
 public class DisputeOrderServiceTests
 {
-	private const string DisputeRecipient = "disputes@cibi.test";
 	private const string RequestorEmail = "requestor@cibi.test";
 	private const string CompanyName = "Analytical Engines Ltd.";
-	private const string EmailBody = "dispute-email-body";
 	private static readonly Guid AuthenticatedUserId = Guid.CreateVersion7();
 
 	private readonly Mock<ILogger<DisputeOrderService>> _logger = new();
-	private readonly Mock<IEmailService> _emailService = new();
 	private readonly Mock<IATSRepository> _repository = new();
 	private readonly Mock<IUserClientRepository> _userClientRepository = new();
 	private readonly Mock<IOrderHistoryService> _orderHistoryService = new();
 	private readonly Mock<ICurrentUser> _currentUser = new();
 	private readonly Mock<IAtsAccessScopeResolver> _accessScopeResolver = new();
 	private readonly Mock<IUnitOfWork> _unitOfWork = new();
+
+	// The requestor-facing acknowledgement. Mocked because these tests are about the service's
+	// orchestration - when the notice is sent, and when it must not be. Its own behaviour,
+	// including that it swallows delivery failures, is covered in DisputeEmailNotificationTests.
+	private readonly Mock<IDisputeEmailNotification> _disputeEmailNotification = new();
 	private readonly HttpContextAccessor _httpContextAccessor;
 	private readonly DisputeOrderService _service;
 
 	public DisputeOrderServiceTests()
 	{
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
-			{
-				["ATS:DisputeOrderEmailRecipient"] = DisputeRecipient
-			})
-			.Build();
-
 		_httpContextAccessor = new HttpContextAccessor
 		{
 			HttpContext = CreateHttpContext(new Claim(ClaimTypes.Email, RequestorEmail))
@@ -54,15 +48,14 @@ public class DisputeOrderServiceTests
 
 		_service = new DisputeOrderService(
 			_logger.Object,
-			_emailService.Object,
-			configuration,
 			_repository.Object,
 			_userClientRepository.Object,
 			_httpContextAccessor,
 			_orderHistoryService.Object,
 			_currentUser.Object,
 			_accessScopeResolver.Object,
-			_unitOfWork.Object);
+			_unitOfWork.Object,
+			_disputeEmailNotification.Object);
 	}
 
 	/// <summary>
@@ -197,13 +190,12 @@ public class DisputeOrderServiceTests
 	}
 
 	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldSendNotificationUpdateRepositoryAndReturnTrue()
+	public async Task MarkAsDisputedAsync_ShouldMarkTheOrderDisputedAndReturnTrue()
 	{
 		// Arrange
 		var request = CreateDisputeRequest();
 		var cancellationToken = new CancellationTokenSource().Token;
-		var order = SetupResolvedDisputeContext(request, cancellationToken);
-		SetupSuccessfulEmail();
+		SetupResolvedDisputeContext(request, cancellationToken);
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, cancellationToken))
 			.ReturnsAsync(true);
@@ -213,32 +205,22 @@ public class DisputeOrderServiceTests
 
 		// Assert
 		result.Should().BeTrue();
-		_emailService.Verify(emailService => emailService.SendEmailForDispute(
-			DisputeRecipient,
-			CompanyName,
-			request.DisputeReason!,
-			order.OrderCreatedAt,
-			RequestorEmail,
-			$"{order.FirstName} {order.LastName}"), Times.Once);
-		_emailService.Verify(emailService => emailService.SendATSEmailAsync(
-			DisputeRecipient,
-			"CIBI | Dispute Order Notification",
-			EmailBody), Times.Once);
 		_repository.Verify(
 			repository => repository.MarkAsDisputedAsync(request, cancellationToken),
 			Times.Once);
+		_unitOfWork.Verify(uow => uow.CommitAsync(cancellationToken), Times.Once);
 	}
 
 	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldUseFallbackEmailClaim_WhenStandardEmailClaimIsMissing()
+	public async Task MarkAsDisputedAsync_ShouldAcknowledgeTheFallbackEmailClaim_WhenStandardEmailClaimIsMissing()
 	{
-		// Arrange
+		// Arrange: some tokens carry only the short "email" claim rather than ClaimTypes.Email. The
+		// acknowledgement still has to reach the filer, so the fallback address is what it goes to.
 		const string fallbackEmail = "fallback@cibi.test";
 		_httpContextAccessor.HttpContext = CreateHttpContext(new Claim("email", fallbackEmail));
 
 		var request = CreateDisputeRequest();
-		var order = SetupResolvedDisputeContext(request, CancellationToken.None);
-		SetupSuccessfulEmail();
+		SetupResolvedDisputeContext(request, CancellationToken.None);
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
 			.ReturnsAsync(true);
@@ -248,13 +230,11 @@ public class DisputeOrderServiceTests
 
 		// Assert
 		result.Should().BeTrue();
-		_emailService.Verify(emailService => emailService.SendEmailForDispute(
-			DisputeRecipient,
-			CompanyName,
-			request.DisputeReason!,
-			order.OrderCreatedAt,
-			fallbackEmail,
-			$"{order.FirstName} {order.LastName}"), Times.Once);
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.Is<DisputeEmailDetails>(details => details.RequestorEmail == fallbackEmail),
+				CancellationToken.None),
+			Times.Once);
 	}
 
 	#endregion
@@ -282,12 +262,7 @@ public class DisputeOrderServiceTests
 		await act.Should()
 			.ThrowAsync<NotFoundException>()
 			.WithMessage("Email invitation request not found.");
-		_emailService.Verify(
-			emailService => emailService.SendATSEmailAsync(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()),
-			Times.Never);
+		VerifyNotAcknowledged();
 		_repository.Verify(
 			repository => repository.MarkAsDisputedAsync(
 				It.IsAny<DisputeOrderRequestDTO>(),
@@ -322,12 +297,7 @@ public class DisputeOrderServiceTests
 		await act.Should()
 			.ThrowAsync<BadRequestException>()
 			.WithMessage("The authenticated user does not have a valid client assignment.");
-		_emailService.Verify(
-			emailService => emailService.SendATSEmailAsync(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()),
-			Times.Never);
+		VerifyNotAcknowledged();
 		_repository.Verify(
 			repository => repository.MarkAsDisputedAsync(
 				It.IsAny<DisputeOrderRequestDTO>(),
@@ -336,48 +306,11 @@ public class DisputeOrderServiceTests
 	}
 
 	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldThrowAndSkipRepository_WhenEmailReturnsFalse()
+	public async Task MarkAsDisputedAsync_ShouldWrapRepositoryFailure_AndNotAcknowledgeTheFiler()
 	{
 		// Arrange
 		var request = CreateDisputeRequest();
 		SetupResolvedDisputeContext(request, CancellationToken.None);
-		_emailService
-			.Setup(emailService => emailService.SendEmailForDispute(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<DateTime?>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.Returns(EmailBody);
-		_emailService
-			.Setup(emailService => emailService.SendATSEmailAsync(
-				DisputeRecipient,
-				"CIBI | Dispute Order Notification",
-				EmailBody))
-			.ReturnsAsync(false);
-
-		// Act
-		Func<Task> act = () => _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
-
-		// Assert
-		await act.Should()
-			.ThrowAsync<InternalServerException>()
-			.WithMessage("Failed to send dispute order notification email.");
-		_repository.Verify(
-			repository => repository.MarkAsDisputedAsync(
-				It.IsAny<DisputeOrderRequestDTO>(),
-				It.IsAny<CancellationToken>()),
-			Times.Never);
-	}
-
-	[Fact]
-	public async Task MarkAsDisputedAsync_ShouldWrapRepositoryFailure_AfterEmailIsSent()
-	{
-		// Arrange
-		var request = CreateDisputeRequest();
-		SetupResolvedDisputeContext(request, CancellationToken.None);
-		SetupSuccessfulEmail();
 		_repository
 			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
 			.ThrowsAsync(new InvalidOperationException("Database unavailable."));
@@ -385,17 +318,133 @@ public class DisputeOrderServiceTests
 		// Act
 		Func<Task> act = () => _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
 
-		// Assert
+		// Assert: the failure is wrapped and the transaction rolled back, and nothing is
+		// acknowledged - confirming a dispute that was never recorded would leave the filer waiting
+		// on something that does not exist.
 		await act.Should()
 			.ThrowAsync<InternalServerException>()
 			.WithMessage("Failed to mark order as disputed.");
-		_emailService.Verify(emailService => emailService.SendATSEmailAsync(
-			DisputeRecipient,
-			"CIBI | Dispute Order Notification",
-			EmailBody), Times.Once);
 		_repository.Verify(
 			repository => repository.MarkAsDisputedAsync(request, CancellationToken.None),
 			Times.Once);
+		_unitOfWork.Verify(uow => uow.RollbackAsync(CancellationToken.None), Times.Once);
+		VerifyNotAcknowledged();
+	}
+
+	#endregion
+
+	#region Requestor Acknowledgement
+
+	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldAcknowledgeTheFilerAfterTheCommit()
+	{
+		// Arrange
+		var request = CreateDisputeRequest();
+		SetupResolvedDisputeContext(request, CancellationToken.None);
+		_currentUser.SetupGet(user => user.FullName).Returns("Ana Reyes");
+		_repository
+			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
+			.ReturnsAsync(true);
+
+		// Act
+		var result = await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
+
+		// Assert: the acknowledgement goes to whoever FILED the dispute, named from the token, and
+		// carries the candidate the dispute is about plus the order it belongs to - the id is what
+		// the notice records itself against in that order's history. It is a separate message from
+		// the operations notification asserted in the happy-path tests above.
+		result.Should().BeTrue();
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.Is<DisputeEmailDetails>(details =>
+					details.EmailInvitationId == request.EmailInvitationId
+					&& details.RequestorEmail == RequestorEmail
+					&& details.RequestorName == "Ana Reyes"
+					&& details.CandidateName == "Ada Lovelace"
+					&& details.DisputeCategory == "Report"
+					&& details.DisputeReason == "The employment dates on the report are wrong."),
+				CancellationToken.None),
+			Times.Once);
+		_unitOfWork.Verify(uow => uow.CommitAsync(CancellationToken.None), Times.Once);
+	}
+
+	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldPassCategoryAndReasonThroughUnmangled()
+	{
+		// Arrange: the console sends the label as the category and the typed description as the
+		// reason, for every category. Deciding how the two become body lines is the notifier's job,
+		// not this service's, so both have to arrive here unchanged.
+		var request = new DisputeOrderRequestDTO
+		{
+			EmailInvitationId = Guid.CreateVersion7(),
+			DisputeCategory = "Others",
+			DisputeReason = "The report lists an employer I never worked for."
+		};
+		SetupResolvedDisputeContext(request, CancellationToken.None);
+		_repository
+			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
+			.ReturnsAsync(true);
+
+		// Act
+		await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
+
+		// Assert
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.Is<DisputeEmailDetails>(details =>
+					details.DisputeCategory == "Others"
+					&& details.DisputeReason == "The report lists an employer I never worked for."),
+				CancellationToken.None),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldFallBackToTheCandidateAddress_WhenTheOrderHasNoName()
+	{
+		// Arrange: the copy reads "A dispute has been submitted for <candidate>", so an order whose
+		// name parts were never filled in still has to identify someone.
+		var request = CreateDisputeRequest();
+		var order = SetupResolvedDisputeContext(request, CancellationToken.None);
+		order.FirstName = null;
+		order.LastName = null;
+		order.EmailAddress = "candidate@example.test";
+		_repository
+			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
+			.ReturnsAsync(true);
+
+		// Act
+		await _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
+
+		// Assert
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.Is<DisputeEmailDetails>(details => details.CandidateName == "candidate@example.test"),
+				CancellationToken.None),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task MarkAsDisputedAsync_ShouldNotAcknowledgeTheFiler_WhenTheDisputeWriteFails()
+	{
+		// Arrange
+		var request = CreateDisputeRequest();
+		SetupResolvedDisputeContext(request, CancellationToken.None);
+		_repository
+			.Setup(repository => repository.MarkAsDisputedAsync(request, CancellationToken.None))
+			.ThrowsAsync(new InvalidOperationException("Database unavailable."));
+
+		// Act
+		Func<Task> act = () => _service.MarkAsDisputedAsync(request, AuthenticatedUserId, CancellationToken.None);
+
+		// Assert: the acknowledgement is strictly after the commit, so nothing is confirmed for a
+		// dispute that was rolled back.
+		await act.Should().ThrowAsync<InternalServerException>();
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.IsAny<DisputeEmailDetails>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
+		_unitOfWork.Verify(uow => uow.RollbackAsync(CancellationToken.None), Times.Once);
 	}
 
 	#endregion
@@ -440,24 +489,16 @@ public class DisputeOrderServiceTests
 			It.IsAny<CancellationToken>()), Times.Never);
 	}
 
-	private void SetupSuccessfulEmail()
-	{
-		_emailService
-			.Setup(emailService => emailService.SendEmailForDispute(
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<string>(),
-				It.IsAny<DateTime?>(),
-				It.IsAny<string>(),
-				It.IsAny<string>()))
-			.Returns(EmailBody);
-		_emailService
-			.Setup(emailService => emailService.SendATSEmailAsync(
-				DisputeRecipient,
-				"CIBI | Dispute Order Notification",
-				EmailBody))
-			.ReturnsAsync(true);
-	}
+	/// <summary>
+	/// Asserts no acknowledgement reached the filer. Every path that must not confirm a dispute uses
+	/// it: a missing order, a user with no client assignment, and a write that rolled back.
+	/// </summary>
+	private void VerifyNotAcknowledged() =>
+		_disputeEmailNotification.Verify(
+			notifier => notifier.SendAsync(
+				It.IsAny<DisputeEmailDetails>(),
+				It.IsAny<CancellationToken>()),
+			Times.Never);
 
 	private EmailInvitationRequest SetupResolvedDisputeContext(
 		DisputeOrderRequestDTO request,
@@ -507,7 +548,11 @@ public class DisputeOrderServiceTests
 	private static DisputeOrderRequestDTO CreateDisputeRequest() => new()
 	{
 		EmailInvitationId = Guid.CreateVersion7(),
-		DisputeReason = "Report"
+
+		// What the console sends for any dispute: the selected label, plus the description every
+		// category now requires.
+		DisputeCategory = "Report",
+		DisputeReason = "The employment dates on the report are wrong."
 	};
 
 	private static List<DisputeOrderListDTO> CreateDisputeOrders() =>

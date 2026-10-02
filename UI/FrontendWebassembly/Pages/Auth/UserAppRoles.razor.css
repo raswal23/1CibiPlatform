@@ -228,8 +228,10 @@
 }
 
 .user-app-roles-page ::deep .user-management-panel .table-component-search .mud-input-adornment-start {
-    margin-left: 11px;
+    margin-left: 0;
     margin-right: 7px;
+    margin-inline-start: unset;
+    margin-inline-end: 7px;
     color: var(--um-text-400);
 }
 
@@ -358,6 +360,11 @@
     text-align: right !important;
     white-space: nowrap !important;
 }
+
+/* The Approved and Active columns use the shared .ats-status-pill from
+   wwwroot/css/ats.css - global, so nothing is re-declared here. It was un-scoped from
+   .ats-management-page in the same change that added these columns, precisely so this
+   screen could use it instead of keeping a near-identical copy. */
 
 .user-app-roles-page ::deep .user-management-panel .um-icon-action.mud-icon-button {
     width: 30px;

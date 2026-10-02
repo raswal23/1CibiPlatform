@@ -30,6 +30,7 @@ public class GetReportsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get Reports")
 		.WithDescription("Retrieves paginated report results with latest hit status per invitation request.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

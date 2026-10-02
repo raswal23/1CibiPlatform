@@ -12,6 +12,13 @@ public partial class Login
 	private bool isRegisterMode;
 	private bool isForgotPasswordMode;
 	private bool hasSwitchedMode;
+
+	private const int SecretClickTarget = 11;
+	private static readonly TimeSpan SecretClickWindow = TimeSpan.FromSeconds(2);
+	private int secretClickCount;
+	private DateTime lastSecretClickTime;
+	private bool isSecretMode;
+	private bool isSecretClosing;
 	private MudForm? forgotPasswordForm;
 	private bool forgotPasswordFormValid;
 	private bool isForgotPasswordLoading;
@@ -47,6 +54,7 @@ public partial class Login
 	private bool isConfirmPasswordVisible;
 	private InputType confirmPasswordInput = InputType.Password;
 	private string confirmPasswordIcon = Icons.Material.Filled.VisibilityOff;
+	private MudTextField<string>? confirmPasswordField;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -92,14 +100,89 @@ public partial class Login
 
 	private string GetAuthCardClass()
 	{
+		string baseClass;
+
 		if (isRegisterMode)
-			return string.IsNullOrEmpty(registerPassword)
+			baseClass = string.IsNullOrEmpty(registerPassword)
 				? "auth-card active"
 				: "auth-card active meter-open";
-		if (isForgotPasswordMode)
-			return "auth-card forgot";
+		else if (isForgotPasswordMode)
+			baseClass = "auth-card forgot";
+		else
+			baseClass = hasSwitchedMode ? "auth-card close" : "auth-card";
 
-		return hasSwitchedMode ? "auth-card close" : "auth-card";
+		if (isSecretMode)
+			return $"{baseClass} secret";
+
+		return isSecretClosing ? $"{baseClass} secret-closing" : baseClass;
+	}
+
+	private void HandleSecretClick()
+	{
+		// The book ritual is authored for the login spread, so the counter only runs
+		// there - and not while the book is still reopening.
+		if (isSecretMode || isSecretClosing || isRegisterMode || isForgotPasswordMode)
+			return;
+
+		var now = DateTime.UtcNow;
+		secretClickCount = now - lastSecretClickTime <= SecretClickWindow
+			? secretClickCount + 1
+			: 1;
+		lastSecretClickTime = now;
+
+		if (secretClickCount < SecretClickTarget)
+			return;
+
+		secretClickCount = 0;
+		// A lingering "close" class keeps its forwards-filled page-turn animation alive
+		// on the same panels the secret turn animates, so drop it first.
+		hasSwitchedMode = false;
+		isSecretMode = true;
+	}
+
+	// Scatter for the cover's floating embers. Derived from the index instead of
+	// Random so the layout is stable across renders - Blazor re-renders must not
+	// reshuffle embers mid-flight.
+	private static string GetEmberStyle(int index)
+	{
+		var size = 0.8 + ((index * 37) % 13) / 10.0;
+		var left = (index * 53) % 100;
+		var bottom = (index * 29) % 40;
+		var duration = 2.5 + ((index * 41) % 30) / 10.0;
+		var delay = ((index * 71) % 40) / 10.0;
+
+		return FormattableString.Invariant(
+			$"width:{size:0.#}px;height:{size:0.#}px;left:{left}%;bottom:{bottom}px;animation-duration:{duration:0.#}s;animation-delay:{delay:0.#}s;");
+	}
+
+	// The cover is a focusable role="button", so Enter and Space must flip the
+	// book back the same as a click.
+	private async Task HandleCoverKeyDown(KeyboardEventArgs e)
+	{
+		if (e.Key is "Enter" or " " or "Spacebar")
+			await CloseSecretPage();
+	}
+
+	private async Task CloseSecretPage()
+	{
+		// Re-entry guard: the whole cover is clickable now, and a second click
+		// mid-reopen must not restart the 1.3s unfold hold.
+		if (!isSecretMode)
+			return;
+
+		isSecretMode = false;
+		secretClickCount = 0;
+		// No "close" page-turn here: its forwards-filled animations would override
+		// the transitions that swing both pages back out from the spine.
+		hasSwitchedMode = false;
+
+		// The reopen ritual (card widens, then the cover unfolds off the login) needs
+		// the swinging cover held visible and on top until its base-state hide kicks
+		// in at 1.1s - so it rides on a transient class held just past that moment.
+		isSecretClosing = true;
+		StateHasChanged();
+		await Task.Delay(1300);
+		isSecretClosing = false;
 	}
 
 	private void ShowRegister()
@@ -112,9 +195,12 @@ public partial class Login
 
 	private void ShowLogin()
 	{
-		hasSwitchedMode = isRegisterMode;
+		// Turning back from the secret credits page uses the same "close" page-turn
+		// as returning from the register spread.
+		hasSwitchedMode = isRegisterMode || isSecretMode;
 		isRegisterMode = false;
 		isForgotPasswordMode = false;
+		isSecretMode = false;
 		Navigation.NavigateTo("/login", replace: true);
 	}
 
@@ -189,6 +275,17 @@ public partial class Login
 			return "Passwords do not match";
 
 		return null;
+	}
+
+	// Confirm password is validated against registerPassword, but MudBlazor only re-runs a
+	// field's validator when that field itself changes. Without this the match error stays
+	// stale while the user edits the password field.
+	private async Task RevalidateConfirmPassword()
+	{
+		if (confirmPasswordField is null || string.IsNullOrEmpty(confirmPassword))
+			return;
+
+		await confirmPasswordField.ValidateAsync();
 	}
 
 	private async Task HandleLogin()

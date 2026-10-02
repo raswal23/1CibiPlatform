@@ -34,6 +34,7 @@ public class GetBulkUploadStatusCountsEndpoint : ICarterModule
 			"Returns how many of the caller's bulk upload files are Pending, Processing "
 			+ "and Done. Honours the search and date filters but never the selected status, "
 			+ "so every bucket keeps reporting its own size.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

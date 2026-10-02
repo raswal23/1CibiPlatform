@@ -409,3 +409,9 @@ FodyWeavers.xsd
 BackendAPI/API/.env
 .env
 /docs/monitoring
+ApiGateways/YarpApiGateway/Dockerfile.original
+BackendAPI/API/APIs/Dockerfile
+docker-compose.dcproj
+docker/postgres/Dockerfile
+docs/ats-bulk-upload-validation.md
+ApiGateways/YarpApiGateway/Dockerfile

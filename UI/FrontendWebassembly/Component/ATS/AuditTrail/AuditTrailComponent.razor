@@ -5,6 +5,7 @@
 @attribute [RequireATSModule(15)]
 @inherits CrudPageBase
 @inject IAuditTrailService AuditTrailService
+@inject IJSRuntime JS
 
 <PageTitle>ATS - Audit Trail</PageTitle>
 
@@ -28,25 +29,40 @@
         </div>
     </div>
 
-    <div class="ats-segmented ats-status-board-segmented"
-         role="group"
-         aria-label="Filter actions by outcome">
+    @* The export sits beside the chips rather than in the table toolbar: that row's
+       controls are pinned to a fixed height for alignment, and a button added to it
+       either breaks that or is pushed onto the table header. *@
+    <div class="ats-audit-filter-row">
+        <div class="ats-segmented ats-status-board-segmented"
+             role="group"
+             aria-label="Filter actions by outcome">
 
-        @foreach (var segment in OutcomeSegments)
-        {
-            <button type="button"
-                    class="@GetSegmentClass(segment.Value)"
-                    aria-pressed="@(_activeOutcome == segment.Value)"
-                    disabled="@_isLoadingCounts"
-                    @onclick="@(() => SetOutcomeAsync(segment.Value))">
+            @foreach (var segment in OutcomeSegments)
+            {
+                <button type="button"
+                        class="@GetSegmentClass(segment.Value)"
+                        aria-pressed="@(_activeOutcome == segment.Value)"
+                        disabled="@_isLoadingCounts"
+                        @onclick="@(() => SetOutcomeAsync(segment.Value))">
 
-                <span class="ats-status-dot @segment.Modifier" aria-hidden="true"></span>
+                    <span class="ats-status-dot @segment.Modifier" aria-hidden="true"></span>
 
-                @segment.Label
+                    @segment.Label
 
-                <span class="ats-segment-count ats-status-board-count">@CountFor(segment.Value)</span>
-            </button>
-        }
+                    <span class="ats-segment-count ats-status-board-count">@CountFor(segment.Value)</span>
+                </button>
+            }
+        </div>
+
+        <button type="button"
+                class="ats-management-button ats-audit-export"
+                disabled="@(_isExporting || _counts.Total == 0)"
+                @onclick="ExportAuditTrailAsync">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16" />
+            </svg>
+            @(_isExporting ? "Exporting..." : "Export to Excel")
+        </button>
     </div>
 
     <TableComponent TItem="AuditTrailListDTO"

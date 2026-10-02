@@ -18,6 +18,19 @@ public class EmailInvitationRequest
 	public string? HashToken { get; set; }
 	public int? ClientId { get; set; }
 	public Guid? RequestorId { get; set; }
+
+	// Screening type snapshotted from the package at order time (true = manual,
+	// false = data, null = unknown/legacy). Stored on the order because the
+	// package's own classification can be edited later.
+	public bool? AutoChasing { get; set; }
+
+	// Candidate identity captured at order entry. Required for data-screening web
+	// orders (no application form is sent, so the candidate cannot supply them);
+	// null for manual orders, bulk rows and public API orders.
+	public DateOnly? DateOfBirth { get; set; }
+	public string? SSSNumber { get; set; }
+	public string? TINNumber { get; set; }
+
 	public string? ApplicationFormStatus { get; set; }
 	public DateTime? FormCompletedAt { get; set; }
 	public string? EmailSentStatus { get; set; }
@@ -27,12 +40,50 @@ public class EmailInvitationRequest
 	// Null means the invitation came from a single inquiry rather than a bulk upload.
 	public Guid? BulkFileID { get; set; }
 	public DateTime? HashTokenCreatedAt { get; set; }
+	// Retained for history only. The application form link no longer expires, so
+	// nothing reads or writes this after the expiry removal; rows created before it
+	// keep the value they were stamped with.
 	public DateTime? HashTokenExpiration { get; set; }
+	// The Manila calendar date of the last reminder queued for this order. Two jobs at once:
+	//
+	//   1. The once-per-day guarantee. The chaser runs hourly, so a due row would otherwise be
+	//      released on all 24 passes; "<> today" collapses those to the first pass of the day.
+	//   2. Paired with a null EmailSentAt, it tells the sender to use reminder copy rather
+	//      than first-invitation copy.
+	//
+	// DateOnly rather than a timestamp because the rule is calendar-shaped - one per day, not
+	// one per 24 hours. Compared in Asia/Manila; see ReleaseDueFollowUpInvitationsAsync.
+	public DateOnly? LastFollowUpSentDate { get; set; }
+
+	// How many reminders have actually been queued for this order, incremented in the same
+	// UPDATE that stamps LastFollowUpSentDate above.
+	//
+	// This is the stop condition - the schedule ends after FollowUpEmail SENDS, not after
+	// FollowUpEmail days. The two are not the same: a reminder is only released for a row that
+	// satisfies every rule in the release query, so a day can pass with nothing sent (the first
+	// invitation still queued behind the send quota, or failed). Counting days ended the
+	// schedule early for exactly the candidates who had received the least.
+	//
+	// A count rather than deriving it from LastFollowUpSentDate - OrderCreatedAt: that gap only
+	// equals the number sent while every reminder lands on its own day, and overcounts the
+	// moment a missed one goes out late.
+	public int FollowUpSentCount { get; set; }
 	public string? OrderStatus { get; set; }
 	public DateTime? OrderCreatedAt { get; set; }
 	public DateTime? OrderCompletedAt { get; set; }
 	public bool NeedsProjection { get; set; } = true;
 	public DateTime? ProjectionUpdatedAt { get; set; }
+
+	// Employment verification hand-off, the same shape as NeedsProjection above: ATS
+	// says "this order still needs giving to EV", and EV clears it once it has taken
+	// every employment slot the order offers.
+	//
+	// A marker, not a status. What happened to each request - sent, confirmed,
+	// declined, expired - belongs to EmploymentVerificationRequests and is none of
+	// ATS's business. This exists only so the provider query can find the handful of
+	// unclaimed orders in SQL instead of loading every in-progress order and
+	// discarding most of them in memory on every pass.
+	public bool NeedsEmploymentVerification { get; set; } = true;
 	public string? DisputeCategory { get; set; }
 	public DateTime? DisputedAt { get; set; }
 
@@ -56,7 +107,6 @@ public class EmailInvitationRequest
 	public ProfessionalExperiences? ProfessionalExperiences { get; set; }
 	public ReferenceDetails? ReferenceDetails { get; set; }
 	public SignatureDetails? SignatureDetails { get; set; }
-	public ICollection<DocumentDetails>? Documents { get; set; }
 	public ICollection<ReportDetails>? ReportDetails { get; set; }
 	public ICollection<ArchiveReport>? ArchiveReports { get; set; }
 	public ICollection<OrderStatusHistory>? OrderStatusHistories { get; set; }

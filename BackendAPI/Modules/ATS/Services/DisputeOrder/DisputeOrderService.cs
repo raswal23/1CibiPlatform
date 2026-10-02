@@ -6,37 +6,32 @@ public class DisputeOrderService : IDisputeOrderService
 	private readonly IATSRepository _atsRepository;
 	private readonly IUserClientRepository _userClientRepository;
 	private readonly IHttpContextAccessor _httpContextAccessor;
-	private readonly IEmailService _emailService;
-	private readonly IConfiguration _configuration;
-	private readonly string _disputeOrderEmailRecipient;
 	private readonly IOrderHistoryService _orderHistoryService;
 	private readonly ICurrentUser _currentUser;
 	private readonly IAtsAccessScopeResolver _accessScopeResolver;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly IDisputeEmailNotification _disputeEmailNotification;
 
 	public DisputeOrderService(
 		ILogger<DisputeOrderService> logger,
-		[FromKeyedServices("ats")] IEmailService emailService,
-		IConfiguration configuration,
 		IATSRepository atsRepository,
 		IUserClientRepository userClientRepository,
 		IHttpContextAccessor httpContextAccessor,
 		IOrderHistoryService orderHistoryService,
 		ICurrentUser currentUser,
 		IAtsAccessScopeResolver accessScopeResolver,
-		IUnitOfWork unitOfWork)
+		IUnitOfWork unitOfWork,
+		IDisputeEmailNotification disputeEmailNotification)
 	{
 		_accessScopeResolver = accessScopeResolver;
 		_logger = logger;
-		_emailService = emailService;
-		_configuration = configuration;
-		_disputeOrderEmailRecipient = _configuration.GetSection("ATS").GetValue<string>("DisputeOrderEmailRecipient", "");
 		_atsRepository = atsRepository;
 		_userClientRepository = userClientRepository;
 		_httpContextAccessor = httpContextAccessor;
 		_orderHistoryService = orderHistoryService;
 		_currentUser = currentUser;
 		_unitOfWork = unitOfWork;
+		_disputeEmailNotification = disputeEmailNotification;
 	}
 
 	public async Task<KeysetPaginatedResult<DisputeOrderListDTO>> GetDisputeOrdersAsync(KeysetPaginationRequest paginationRequest, CancellationToken cancellationToken)
@@ -131,26 +126,6 @@ public class DisputeOrderService : IDisputeOrderService
 
 		_logger.LogInformation("Marking order as disputed: {@Context}", logContext);
 
-		try
-		{
-			await SendDisputeOrderEmailAsync(
-				_disputeOrderEmailRecipient,
-				assignment.ClientName,
-				disputeRequest.DisputeReason!,
-				order.OrderCreatedAt,
-				requestor!,
-				subjectName);
-		}
-		catch (Exception ex)
-		{
-			_logger.LogError(
-				ex,
-				"Failed to send dispute order notification email. {@Context}",
-				logContext);
-
-			throw new InternalServerException("Failed to send dispute order notification email.");
-		}
-
 		await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
 		try
@@ -165,6 +140,34 @@ public class DisputeOrderService : IDisputeOrderService
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 
 			await _unitOfWork.CommitAsync(cancellationToken);
+
+			// After the commit, and it cannot throw - DisputeEmailNotification guards itself, the
+			// same contract WithdrawnEmailNotification keeps. The dispute is durable by now, so a
+			// dead mailbox must not turn a filed dispute into a 500 that invites the filer to
+			// submit the same dispute a second time.
+			//
+			// This is the only email a dispute produces. The internal operations alert that used to
+			// run BEFORE the write - and throw, so an SMTP outage blocked dispute filing entirely -
+			// has been removed. CIBI now sees disputes through the copied address on this message,
+			// which is what makes the acknowledgement being best-effort acceptable: losing it costs
+			// a courtesy receipt, not the only evidence that a dispute was filed. The filing itself
+			// is already committed and already on the order's history.
+			//
+			// The filer's own address is reused rather than re-read, so the message names whoever
+			// actually pressed the button even on a token that only carries the short "email" claim.
+			var candidateName = string.IsNullOrWhiteSpace(subjectName)
+				? order.EmailAddress ?? "this order"
+				: subjectName;
+
+			await _disputeEmailNotification.SendAsync(
+				new DisputeEmailDetails(
+					order.EmailInvitationID,
+					requestor,
+					_currentUser.FullName,
+					candidateName,
+					disputeRequest.DisputeCategory,
+					disputeRequest.DisputeReason!),
+				cancellationToken);
 		}
 		catch (Exception ex)
 		{
@@ -179,46 +182,5 @@ public class DisputeOrderService : IDisputeOrderService
 		}
 
 		return true;
-	}
-
-	private async Task<bool> SendDisputeOrderEmailAsync(
-		string gmail,
-		string company,
-		string disputeReason,
-		DateTime? orderCreatedAt,
-		string requestor,
-		string subjectName)
-	{
-		var logContext = new
-		{
-			Action = "SendDisputeOrderEmail",
-			Step = "SendEmail",
-			Email = gmail,
-			Timestamp = DateTime.UtcNow
-		};
-
-		_logger.LogInformation("Sending dispute order notification for email: {@Context}", logContext);
-
-		var otpBody = _emailService.SendEmailForDispute(
-			gmail,
-			company,
-			disputeReason,
-			orderCreatedAt,
-			requestor,
-			subjectName);
-
-		var isSent = await _emailService.SendATSEmailAsync(
-			toEmail: gmail!,
-			subject: "CIBI | Dispute Order Notification",
-			body: otpBody
-		);
-
-		if (!isSent)
-		{
-			_logger.LogError("Failed to send dispute order notification email to: {@Context}", logContext);
-			throw new InternalServerException("Failed to send dispute order notification email.");
-		}
-
-		return isSent;
 	}
 }

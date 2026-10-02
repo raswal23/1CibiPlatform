@@ -2,7 +2,7 @@ namespace EmploymentVerification.Features.VerificationRequests.Command.CreateReq
 
 public sealed record CreateRequestCommand(
 	CreateEmploymentVerificationRequest Request)
-	: ICommand<EmploymentVerificationRequest>;
+	: ICommand<SentVerificationRequestDTO>;
 
 public sealed class CreateRequestCommandValidator
 	: AbstractValidator<CreateRequestCommand>
@@ -44,10 +44,19 @@ public sealed class CreateRequestCommandValidator
 
 public sealed class CreateRequestHandler(
 	IEmploymentVerificationService service)
-	: ICommandHandler<CreateRequestCommand, EmploymentVerificationRequest>
+	: ICommandHandler<CreateRequestCommand, SentVerificationRequestDTO>
 {
-	public Task<EmploymentVerificationRequest> Handle(
+	// Projected rather than returned raw: the entity carries VerificationTokenHash, which
+	// is the credential embedded in the emailed link. The caller needs the tracking fields
+	// only, so the same safe projection the list endpoints use is returned here.
+	public async Task<SentVerificationRequestDTO> Handle(
 		CreateRequestCommand request,
-		CancellationToken cancellationToken) =>
-		service.CreateAndSendAsync(request.Request, cancellationToken);
+		CancellationToken cancellationToken)
+	{
+		var created = await service.CreateAndSendAsync(
+			request.Request,
+			cancellationToken);
+
+		return SentVerificationRequestDTO.FromEntity(created);
+	}
 }

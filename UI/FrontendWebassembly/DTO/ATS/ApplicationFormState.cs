@@ -63,6 +63,7 @@ public sealed class LicensesDetailsState
 
 public sealed class ProfessionalExperiencesState
 {
+	public bool HasWorkExperience { get; set; }
 	public bool AddEmployer2 { get; set; }
 	public bool AddEmployer3 { get; set; }
 	public EmployerState Employer1 { get; set; } = new();
@@ -84,6 +85,7 @@ public sealed class EmployerState
 	public DateTime? StartDate { get; set; }
 	public DateTime? EndDate { get; set; }
 	public string? SupervisorName { get; set; }
+	public string? SupervisorEmail { get; set; }
 	public string? SupervisorContactNumber { get; set; }
 }
 

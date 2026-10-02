@@ -165,6 +165,17 @@
                     <code>@Mask</code> and were never written to this table.
                 </p>
 
+                @* The masking above works by PROPERTY NAME, which cannot help with free
+                   prose. An assistant transcript is stored exactly as typed, so the note
+                   above would be misleading on these rows if left to stand alone. *@
+                @if (IsAssistantTranscript)
+                {
+                    <p class="audit-section-note">
+                        This row is a chat transcript. The question and answer are stored
+                        exactly as written, so they may contain anything the user typed.
+                    </p>
+                }
+
                 <div class="audit-code-block"><pre>@FormattedPayload</pre></div>
             </div>
         </div>

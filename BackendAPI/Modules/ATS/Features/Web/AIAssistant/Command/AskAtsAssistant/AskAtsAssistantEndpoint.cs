@@ -27,6 +27,7 @@ public class AskAtsAssistantEndpoint : ICarterModule
 		.WithSummary("Ask the ATS assistant")
 		.WithDescription("Sends a question to the ATS assistant, which can look up orders by "
 			+ "candidate name and stage a new order for confirmation.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

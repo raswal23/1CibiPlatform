@@ -95,10 +95,9 @@ public record EmployerPreviewDTO
 	public string? EndDate { get; set; }
 	public string? CurrentlyEmployed { get; set; }
 	public string? PermissionToContact { get; set; }
-	public string? ReasonForLeaving { get; set; }
 	public string? SupervisorName { get; set; }
-	public string? SupervisorContactNumber { get; set; }
 	public string? SupervisorEmail { get; set; }
+	public string? SupervisorContactNumber { get; set; }
 	public string? CoeFileName { get; set; }
 }
 

@@ -18,6 +18,7 @@ public class GetMyAccessEndpoint : ICarterModule
 		.Produces<GetMyAccessResponse>()
 		.ProducesProblem(StatusCodes.Status403Forbidden)
 		.WithSummary("Get the authenticated user's ATS role and client access")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

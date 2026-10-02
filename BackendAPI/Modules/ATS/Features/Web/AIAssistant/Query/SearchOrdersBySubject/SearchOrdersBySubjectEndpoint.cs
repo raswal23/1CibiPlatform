@@ -26,6 +26,7 @@ public class SearchOrdersBySubjectEndpoint : ICarterModule
 		.WithSummary("Search orders by subject name")
 		.WithDescription("Retrieves the orders whose candidate name matches the search term, "
 			+ "scoped to the current user's ATS access.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -48,16 +48,53 @@
         }
     </div>
 
+    @* Its own band between the filters and the table, rather than a control inside the
+       table toolbar. Sharing that row meant the button had to align with the search box
+       and reload, and it pushed them out of shape as soon as it appeared. Here it can
+       grow with the selection without disturbing anything, and the table simply moves
+       down while it is open.
+
+       aria-live so a keyboard or screen-reader user hears the count change as they
+       select, since the bar appears and updates without any navigation. *@
+    @if (_selectedInvitationIds.Count > 0)
+    {
+        <div class="ats-status-board-selection-bar" role="region" aria-live="polite">
+            <span class="ats-status-board-selection-count">
+                @_selectedInvitationIds.Count selected
+            </span>
+
+            <div class="ats-status-board-selection-actions">
+                <button type="button"
+                        class="ats-status-board-selection-clear"
+                        disabled="@_isBulkRetrying"
+                        @onclick="ClearSelection">
+                    Clear
+                </button>
+
+                <button type="button"
+                        class="ats-management-button ats-status-board-requeue"
+                        disabled="@_isBulkRetrying"
+                        @onclick="ConfirmBulkRetryAsync">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 11A8 8 0 1 0 12 20M20 5v6h-6" />
+                    </svg>
+                    @(_isBulkRetrying ? "Queueing..." : "Retry selected")
+                </button>
+            </div>
+        </div>
+    }
+
     <TableComponent TItem="TicketedOrderListDTO"
                     @ref="_ordersTable"
                     Title="Ticketing status"
                     EnableReload="true"
+                    OnReloadClicked="ReloadTableAsync"
                     TitleId="ats-ticketing-heading"
                     ContainerClass="ats-management-card ats-status-board-card"
                     EnableSearch="true"
                     SearchLabel=""
                     SearchPlaceholder="Search subject, requestor, package or ticket no."
-                    ColumnCount="7"
+                    ColumnCount="8"
                     RowsPerPage="10"
                     LoadServerData="LoadOrdersAsync"
                     CursorPagerState="_ordersLoader"
@@ -79,9 +116,20 @@
                                     PlaceholderStart="Start Date"
                                     PlaceholderEnd="End Date" />
             </div>
+
         </ToolBarLeft>
 
         <HeaderTemplate>
+            <MudTh Class="ats-status-board-select-header">
+                @* Selects only the retryable rows on this page - checking a row the server
+                   would refuse just produces a confusing "0 of N" result. *@
+                <MudCheckBox T="bool"
+                             Value="@AreAllSelectablesSelected"
+                             ValueChanged="@((bool value) => ToggleSelectAll(value))"
+                             Size="Size.Small"
+                             Disabled="@(!HasSelectableOrders)"
+                             aria-label="Select all retryable orders on this page" />
+            </MudTh>
             <MudTh>Subject</MudTh>
             <MudTh>Requestor</MudTh>
             <MudTh>Package</MudTh>
@@ -92,6 +140,17 @@
         </HeaderTemplate>
 
         <RowTemplate Context="order">
+            <MudTd DataLabel="Select" Class="ats-status-board-select-cell">
+                @if (CanRetry(order))
+                {
+                    <MudCheckBox T="bool"
+                                 Value="@_selectedInvitationIds.Contains(order.EmailInvitationID)"
+                                 ValueChanged="@((bool value) => ToggleSelection(order.EmailInvitationID, value))"
+                                 Size="Size.Small"
+                                 aria-label="@($"Select {FullName(order)} for retrying")" />
+                }
+            </MudTd>
+
             <MudTd DataLabel="Subject">
                 <div class="ats-cell-lead">
                     <span class="ats-cell-lead-icon" aria-hidden="true">

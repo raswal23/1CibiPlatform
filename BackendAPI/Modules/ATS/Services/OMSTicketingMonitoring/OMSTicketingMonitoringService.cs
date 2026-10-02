@@ -2,6 +2,11 @@ namespace ATS.Services.OMSTicketingMonitoring;
 
 public sealed class OMSTicketingMonitoringService : IOMSTicketingMonitoringService
 {
+	// A bulk retry is bounded because each requeued order becomes an OMS round trip on the
+	// ticketing job's next passes. Releasing thousands at once would monopolise that job
+	// and block every other client behind one operator's click.
+	public const int MaxBulkRetrySize = 500;
+
 	private readonly ILogger<OMSTicketingMonitoringService> _logger;
 	private readonly IOMSTicketingRepository _ticketingRepository;
 	private readonly IAtsAccessScopeResolver _scopeResolver;
@@ -185,6 +190,88 @@ public sealed class OMSTicketingMonitoringService : IOMSTicketingMonitoringServi
 		_logger.LogInformation("Order requeued for OMS ticketing: {@Context}", logContext);
 
 		return true;
+	}
+
+	public async Task<BulkRetryResultDTO> RetryTicketsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		var logContext = new
+		{
+			Action = "RetryTickets",
+			Step = "RequeueExhaustedOrders",
+			RequestedCount = emailInvitationIds.Count,
+			Timestamp = DateTime.UtcNow
+		};
+
+		_logger.LogInformation("Retrying OMS ticketing for {Count} order(s): {@Context}", emailInvitationIds.Count, logContext);
+
+		if (await _scopeResolver.ResolveAsync(cancellationToken) is not { } accessScope)
+		{
+			throw new ForbiddenException("The current user does not have ATS access.");
+		}
+
+		// Distinct because a selection can repeat an id, and a duplicate would otherwise be
+		// counted twice in the total reported back.
+		var requestedIds = emailInvitationIds.Distinct().ToList();
+
+		if (requestedIds.Count > MaxBulkRetrySize)
+		{
+			throw new BadRequestException(
+				$"A bulk retry is limited to {MaxBulkRetrySize} orders at a time. Narrow the selection and try again.");
+		}
+
+		var targets = await _ticketingRepository.GetRetryTargetsAsync(requestedIds, cancellationToken);
+
+		// Scope is enforced per row, not once for the request: without this, a caller could
+		// touch another client's orders simply by posting their ids alongside their own.
+		// Out-of-scope ids are dropped silently rather than reported, for the same reason
+		// the single retry answers 404 - naming them would confirm the orders exist.
+		var inScopeIds = targets
+			.Where(target => IsWithinScope(target, accessScope))
+			.Select(target => target.EmailInvitationID)
+			.ToList();
+
+		if (inScopeIds.Count == 0)
+		{
+			throw new NotFoundException("None of the selected orders are available to retry.");
+		}
+
+		// Claimed before the update so the set is known: ExecuteUpdate returns a count, not
+		// the rows it touched. Anything already requeued or re-claimed by the job simply
+		// does not match the predicate.
+		var eligibleIds = await _ticketingRepository.GetExhaustedTicketIdsAsync(
+			inScopeIds,
+			cancellationToken);
+
+		var requeued = await _ticketingRepository.RequeueExhaustedTicketsAsync(
+			eligibleIds,
+			cancellationToken);
+
+		// Recorded only for orders that were eligible, so a stale id in the selection never
+		// produces a history entry claiming a retry that did not happen. The order's own
+		// status is unchanged - this is a ticketing action, not a lifecycle step.
+		if (eligibleIds.Count > 0)
+		{
+			await _orderHistoryService.RecordManyAsync(
+				eligibleIds,
+				OrderHistoryEventType.TicketRetryRequested,
+				null,
+				string.Empty,
+				cancellationToken);
+		}
+
+		_logger.LogInformation(
+			"Requeued {RequeuedCount} of {RequestedCount} order(s) for OMS ticketing: {@Context}",
+			requeued,
+			requestedIds.Count,
+			logContext);
+
+		return new BulkRetryResultDTO
+		{
+			RequestedCount = requestedIds.Count,
+			RequeuedCount = requeued
+		};
 	}
 
 	// Mirrors the read path's scope rule: a null client set means unrestricted (super

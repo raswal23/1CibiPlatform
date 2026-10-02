@@ -3,7 +3,9 @@
 public interface IEmailService
 {
 	Task<bool> SendEmailAsync(string toEmail, string subject, string body, bool isHtml = true);
+
 	Task<bool> SendATSEmailAsync(string toEmail, string subject, string body);
+
 	string SendOtpBody(string name, string otpCode);
 
 	string SendPasswordResetBody(string name, string resetLink, int expireMins);
@@ -13,7 +15,4 @@ public interface IEmailService
 	string SendApprovalNotificationBody(string gmail);
 
 	string SendAppplicationFormNotification(string gmail, string name, string applicationFormLink, string? requestor, string? clientName);
-
-	string SendEmailForDispute(string gmail, string company, string disputeReason, DateTime? orderedAt, string requestor, string subjectName);
-
 }

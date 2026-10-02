@@ -21,6 +21,7 @@ public class DownloadBulkTemplateEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Download Bulk Template")
 		.WithDescription("Downloads the bulk template for inserting multiple subject entries.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

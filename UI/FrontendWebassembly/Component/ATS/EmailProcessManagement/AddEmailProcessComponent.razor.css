@@ -1,0 +1,446 @@
+/* The Add Email Process dialog's own design: shell, numbered sections, labelled fields, the
+   status toggle and the footer buttons.
+
+   This file is deliberately identical to EditEmailProcessComponent.razor.css. Scoped CSS cannot
+   be shared between two components, and these two dialogs are one design, so the two sheets are
+   the same rules under the same `epm-` prefix - change both together or they drift apart, which
+   is how the console ended up with fifteen near-copies of this design under .ee-/.ap-/.ep-/.ar-/
+   .er-/.au-/.eu-/.am-/.em-/.ac-/.ec-/.dd-/.eo-/.eca-.
+
+   NOT re-declared here, because a shared class already sets it:
+     .um-dialog / .ats-scroll-dialog  - dialog chrome and the max-height + scroll behaviour
+     .ats-dialog-shell / -header / -body / -footer - the flex column that pins header and footer
+     .ats-dialog-headline and its -content/-icon/-text/-close children - the gradient header
+   Colours come from the --c-* tokens in theme.css, so this goes dark for free. No new literals.
+
+   `epm-` is feature-owned. This family was first added to wwwroot/css/ats.css as `.ats-form-*`,
+   which collided with NewOrderComponent's own scoped `.ats-form-section` and gave seven of its
+   sections a border and background they never asked for. Scoped CSS makes that impossible by
+   construction, which is the point of moving it here.
+
+   ::deep only where a rule has to reach into MudSelect/MudTextField markup this component does
+   not render. Everything else is a plain element of this dialog and needs no ::deep. */
+
+.epm-shell,
+.epm-shell *,
+.epm-shell *::before,
+.epm-shell *::after {
+    box-sizing: border-box;
+}
+
+.epm-body {
+    padding: 28px 32px 8px;
+    background: var(--c-surface);
+}
+
+.epm-notice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+    padding: 11px 14px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 10px;
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+/* Sized for both ways a notice can carry its icon: as a flex sibling of the text (the Edit
+   dialog), or inline at the start of the text span (the Add dialog). `flex` is inert on an inline
+   box and `vertical-align` is inert on a flex item, so one rule serves both without either
+   needing a modifier class. */
+.epm-notice ::deep .mud-icon-root {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    font-size: 16px;
+    vertical-align: -3px;
+}
+
+.epm-section {
+    overflow: hidden;
+    margin-bottom: 18px;
+    border: 1px solid var(--c-border);
+    border-radius: 14px;
+    background: var(--c-surface-sunken);
+}
+
+.epm-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    min-height: 51px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--c-border);
+    background: var(--c-blue-tint);
+}
+
+.epm-section-number {
+    display: grid;
+    place-items: center;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--c-chip-solid-bg);
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.epm-section-head h2 {
+    margin: 0;
+    color: var(--c-fg-strong);
+    font-family: "Poppins", sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+}
+
+.epm-section-helper {
+    margin-left: auto;
+    color: var(--c-fg-subtle);
+    font-size: 11.5px;
+    font-weight: 500;
+    text-align: right;
+}
+
+.epm-section-body {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+}
+
+.epm-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.epm-field {
+    position: relative;
+    min-width: 0;
+}
+
+.epm-field > label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--c-fg-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .2px;
+}
+
+.epm-required {
+    margin-left: 2px;
+    color: var(--c-danger);
+}
+
+.epm-hint {
+    margin: 5px 0 0;
+    color: var(--c-fg-subtle);
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+/* A hint reporting a blocked save rather than explaining a field, so it takes the danger colour
+   and the weight that goes with being the reason a button did nothing. */
+.epm-hint-error {
+    color: var(--c-danger);
+    font-weight: 500;
+}
+
+/* MudSelect / MudTextField overrides. ::deep throughout: these elements belong to MudBlazor, not
+   to this component, so a scoped rule without it matches nothing. */
+.epm-control ::deep .mud-input-control {
+    margin-top: 0;
+}
+
+.epm-control ::deep .mud-input {
+    min-height: 42px;
+    border-radius: 10px;
+    background: var(--c-surface);
+    color: var(--c-fg-strong);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+/* The only field in these dialogs is a MudSelect, and a select's DOM is not a text field's: the
+   chosen value renders in a DIV carrying .mud-input-slot, nested inside .mud-select-input, so the
+   height + line-height trick that vertically centres an <input> leaves the text riding high in
+   the box. Flex-centring both levels instead - the same fix NewOrderComponent uses for its
+   selects, which is where this came from. Colour and font inherit from the .mud-input rule above. */
+.epm-control ::deep .mud-select-input {
+    display: flex;
+    align-items: center;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box;
+}
+
+.epm-control ::deep .mud-select-input > .mud-input-slot {
+    display: flex;
+    align-items: center;
+    height: auto !important;
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: normal;
+    box-sizing: border-box;
+}
+
+/* Without this the start adornment keeps MudBlazor's dense-margin offset and sits above centre
+   even though the text beside it is now centred. */
+.epm-control ::deep .mud-select-input > .mud-input-adornment {
+    height: auto;
+    max-height: none;
+    margin-top: 0;
+    align-items: center;
+    align-self: center;
+}
+
+.epm-control ::deep .mud-input-outlined-border {
+    border-width: 1.5px;
+    border-color: var(--c-border-strong);
+    border-radius: 10px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.epm-control ::deep .mud-input:focus-within .mud-input-outlined-border {
+    border-color: var(--c-blue-500);
+    box-shadow: 0 0 0 3px var(--c-focus-ring);
+}
+
+.epm-control ::deep .mud-input-error .mud-input-outlined-border {
+    border-color: var(--c-danger);
+}
+
+.epm-control ::deep .mud-input-helper-text {
+    margin-top: 4px;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+}
+
+.epm-control ::deep .mud-input-adornment {
+    color: var(--c-fg-subtle);
+}
+
+.epm-control ::deep .mud-input-adornment-start {
+    margin-left: 0;
+    margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
+}
+
+.epm-control ::deep .mud-input-adornment-start .mud-icon-root,
+.epm-control ::deep .mud-input-adornment-end .mud-icon-root {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+.epm-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1.5px solid var(--c-border-strong);
+    border-radius: 10px;
+    background: var(--c-surface);
+}
+
+.epm-status-copy p {
+    margin: 0;
+    color: var(--c-fg-strong);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.epm-status-copy span {
+    display: block;
+    margin-top: 2px;
+    color: var(--c-fg-subtle);
+    font-size: 11.5px;
+}
+
+.epm-status-control {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.epm-status-badge {
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--c-success-bg);
+    color: var(--c-success);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .3px;
+}
+
+.epm-status-badge.is-off {
+    background: var(--c-neutral-bg);
+    color: var(--c-fg-muted);
+}
+
+.epm-toggle {
+    position: relative;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: var(--c-success);
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+.epm-toggle span {
+    position: absolute;
+    top: 3px;
+    left: 21px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--c-surface);
+    box-shadow: var(--c-shadow-raised);
+    transition: left .15s ease;
+}
+
+.epm-toggle.is-off {
+    background: var(--c-border-strong);
+}
+
+.epm-toggle.is-off span {
+    left: 3px;
+}
+
+.epm-toggle:focus-visible {
+    outline: 3px solid var(--c-focus-ring);
+    outline-offset: 2px;
+}
+
+.epm-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 20px 32px 26px;
+    border-top: 1px solid var(--c-border);
+    background: var(--c-surface);
+}
+
+.epm-button {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 42px;
+    padding: 0 20px;
+    border-radius: 10px;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .1s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.epm-button:active {
+    transform: scale(.97);
+}
+
+.epm-button:disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+.epm-button:focus-visible {
+    outline: 3px solid var(--c-focus-ring);
+    outline-offset: 2px;
+}
+
+.epm-button ::deep .mud-icon-root,
+.epm-button svg {
+    width: 15px;
+    height: 15px;
+    font-size: 15px;
+}
+
+.epm-button-cancel {
+    border: 1.5px solid var(--c-border-strong);
+    background: var(--c-surface);
+    color: var(--c-fg-muted);
+}
+
+.epm-button-cancel:hover:not(:disabled) {
+    background: var(--c-surface-sunken);
+}
+
+.epm-button-save {
+    border: 0;
+    background: var(--c-primary-gradient);
+    box-shadow: var(--c-shadow-raised);
+    color: var(--c-on-dark-fg);
+}
+
+@media (max-width: 600px) {
+    .epm-body {
+        padding: 20px 16px 4px;
+    }
+
+    .epm-section-head,
+    .epm-section-body {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .epm-section-helper {
+        display: none;
+    }
+
+    .epm-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .epm-status-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .epm-status-control {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .epm-footer {
+        padding: 16px 16px 20px;
+    }
+}
+
+@media (max-width: 420px) {
+    .epm-button {
+        flex: 1;
+        justify-content: center;
+        padding: 0 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .epm-button,
+    .epm-toggle,
+    .epm-control ::deep .mud-input-outlined-border {
+        transition-duration: .01ms !important;
+    }
+}

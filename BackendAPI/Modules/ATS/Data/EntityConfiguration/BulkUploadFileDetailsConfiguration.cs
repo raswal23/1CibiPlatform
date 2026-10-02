@@ -46,6 +46,10 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 			   .IsRequired()
 			   .HasMaxLength(50);
 
+		// Screening type snapshot; null for legacy files.
+		builder.Property(a => a.AutoChasing)
+			   .IsRequired(false);
+
 		builder.Property(e => e.ClientId);
 
 		builder.Property(a => a.Status)
@@ -74,6 +78,11 @@ public class BulkUploadFileDetailsConfiguration : IEntityTypeConfiguration<BulkU
 		// many bad rows must still record all of them, and this is read only on demand.
 		builder.Property(a => a.RejectedRows)
 			   .IsRequired(false);
+
+		// Flag to track if the file key has been deleted from object storage
+		builder.Property(a => a.IsFileKeyDeleted)
+			   .IsRequired()
+			   .HasDefaultValue(false);
 
 		// Drives the bulk submission job's claim query and the stale-claim sweeper.
 		builder.HasIndex(a => a.Status);

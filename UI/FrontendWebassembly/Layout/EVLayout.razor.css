@@ -1,0 +1,184 @@
+/* Employment Verification console shell.
+
+   Colours come from the shared --c-* tokens in wwwroot/css/theme.css; no literals
+   here. The topbar carries --c-sidebar-gradient - the same always-dark navy the ATS
+   sidebar uses - because in this application the topbar IS the identity surface that
+   the sidebar is in ATS. Teal appears only as the accent on the active tab. */
+
+.ev-console {
+    display: flex;
+    min-height: 100dvh;
+    flex-direction: column;
+    background: var(--c-page-bg);
+    font-family: "Inter", sans-serif;
+}
+
+/* ---- Topbar ---- */
+
+.ev-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 64px;
+    padding: 10px 24px;
+    background: var(--c-sidebar-gradient);
+    box-shadow: 0 2px 14px -4px var(--c-overlay);
+    color: var(--c-on-dark-fg);
+    box-sizing: border-box;
+}
+
+.ev-topbar-brand {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 11px;
+    flex-shrink: 0;
+}
+
+.ev-topbar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 11px;
+    background: var(--c-on-dark-hover);
+}
+
+.ev-topbar-logo img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.ev-topbar-brand-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.ev-topbar-brand-text small {
+    color: var(--c-on-dark-fg-muted);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ev-topbar-brand-text strong {
+    overflow: hidden;
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Tabs ----
+
+   .ev-nav-item, .ev-nav-ic and .ev-topbar-nav live in wwwroot/css/ev.css, NOT here.
+
+   They have to be global for the same reason .ats-console-nav-item is. Blazor does
+   not apply a scope attribute to a CHILD COMPONENT's markup, and these tabs are
+   <NavLink> components - the generated code passes class="ev-nav-item" with no
+   b-* attribute, so a scoped rule compiled to .ev-nav-item[b-xxxxx] never matches.
+   The anchor then fell through to app.css's global `a { color: var(--c-blue-600) }`,
+   which in light mode is dark navy on the dark navbar: invisible. */
+
+/* ---- Right cluster ---- */
+
+.ev-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* .ats-console-icon-btn is global in wwwroot/css/ats.css and is styled for a light
+   surface. Reusing the class keeps the size, radius and focus ring in one place;
+   these two properties re-skin it for the dark topbar. */
+.ev-topbar-right .ats-console-icon-btn {
+    border-color: var(--c-on-dark-border);
+    background: var(--c-on-dark-hover);
+    color: var(--c-on-dark-fg);
+}
+
+.ev-topbar-right .ats-console-icon-btn:hover {
+    background: var(--c-on-dark-border);
+}
+
+.ev-topbar-divider {
+    width: 1px;
+    height: 26px;
+    margin: 0 4px;
+    flex-shrink: 0;
+    background: var(--c-on-dark-border);
+}
+
+.ev-topbar-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border: 2px solid var(--c-on-dark-border);
+    border-radius: 50%;
+    background: var(--c-avatar-gradient);
+    color: var(--c-on-dark-fg);
+    font-family: "Poppins", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-sizing: border-box;
+}
+
+/* ---- Content ---- */
+
+.ev-console-content {
+    width: 100%;
+    padding: 30px 34px 60px;
+    box-sizing: border-box;
+}
+
+/* ---- Responsive ----
+   960px is the platform breakpoint (MudTable Breakpoint.Sm card mode). Below it the
+   tabs become a horizontal scroll strip rather than an off-canvas drawer: three items
+   fit a 390px strip, and a hamburger for three items is worse than the scroll. */
+
+@media (max-width: 960px) {
+    .ev-topbar {
+        flex-wrap: wrap;
+        padding: 10px 16px;
+    }
+
+    .ev-console-content {
+        padding: 20px 18px 40px;
+    }
+}
+
+@media (max-width: 600px) {
+    .ev-topbar-brand-text small {
+        display: none;
+    }
+
+    .ev-topbar-brand-text strong {
+        font-size: 14px;
+    }
+
+    .ev-topbar-right {
+        gap: 7px;
+    }
+
+    .ev-topbar-divider {
+        display: none;
+    }
+}
+
+/* The responsive .ev-topbar-nav / .ev-nav-item rules are in wwwroot/css/ev.css with
+   the rest of the tab styling, for the child-component scoping reason above. */

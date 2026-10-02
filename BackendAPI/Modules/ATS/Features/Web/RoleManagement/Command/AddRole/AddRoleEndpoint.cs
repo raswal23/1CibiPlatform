@@ -21,6 +21,7 @@ public class AddRoleEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Add Role")
 		.WithDescription("Add a new ATS role.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

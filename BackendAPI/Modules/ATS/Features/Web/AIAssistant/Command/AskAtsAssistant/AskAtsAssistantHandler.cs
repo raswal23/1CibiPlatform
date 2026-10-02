@@ -1,8 +1,11 @@
 namespace ATS.Features.Web.AIAssistant.Command.AskAtsAssistant;
 
-// Not audited: this is a conversational turn, not a state change. The question text would
-// bury the trail in noise. The one assistant action that does change state -
-// ConfirmOrderDraftCommand, which creates a real order - is audited like any other write.
+// Still skipped by the PIPELINE, but no longer unaudited: AtsAssistantService writes its
+// own entry instead.
+//
+// The pipeline only ever serializes the request, so an entry written here would record the
+// question and lose the answer - and half a conversation is not a record of it. The service
+// has both sides, so it records the exchange itself. See AtsAssistantService.RecordAudit.
 [SkipAudit]
 public record AskAtsAssistantCommand(string Question) : ICommand<AskAtsAssistantResult>;
 

@@ -1,0 +1,179 @@
+/* Scoped to the copy-list chip input, which is the one part of the Email Management dialogs that
+   has no equivalent elsewhere in the console. Everything around it - the dialog shell, header,
+   sections, fields, footer and buttons - comes from the .ats-epm-* family in
+   wwwroot/css/ats.css, plus the shared .ats-dialog-headline header and .ats-scroll-dialog scroll
+   behaviour. None of that is re-declared here.
+
+   `ecl` is this component's own prefix and the rules below are scoped, so they cannot reach
+   another screen. Colours are all --c-* tokens from theme.css, so the chip field goes dark with
+   the rest of the dialog. No table is involved, so the "no min-width on a table root" rule does
+   not apply here; the chip row wraps instead of scrolling, which is what keeps it usable at
+   390px. */
+
+.ecl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    padding: 7px 10px;
+    border: 1.5px solid var(--c-border-strong);
+    border-radius: 10px;
+    background: var(--c-surface-input);
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ecl:focus-within {
+    border-color: var(--c-blue-500);
+    box-shadow: 0 0 0 3px var(--c-focus-ring);
+}
+
+.ecl.is-invalid {
+    border-color: var(--c-danger);
+}
+
+.ecl.is-invalid:focus-within {
+    border-color: var(--c-danger);
+}
+
+.ecl.is-disabled {
+    background: var(--c-surface-sunken);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.ecl-chips {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+}
+
+.ecl-chip {
+    display: inline-flex;
+    flex: 0 1 auto;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    padding: 4px 6px 4px 9px;
+    border: 1px solid var(--c-border-strong);
+    border-radius: 20px;
+    background: var(--c-blue-tint);
+    color: var(--c-fg-strong);
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.ecl-chip > svg {
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
+    color: var(--c-fg-subtle);
+}
+
+/* The address is the long user input in this component, so it gets the treatment the theming doc
+   asks for rather than pushing the chip wider than the dialog. */
+.ecl-chip-text {
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+}
+
+.ecl-chip-remove {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--c-fg-subtle);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ecl-chip-remove:hover:not(:disabled) {
+    background: var(--c-danger-bg);
+    color: var(--c-danger);
+}
+
+.ecl-chip-remove:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.ecl-chip-remove:focus-visible {
+    outline: 2px solid var(--c-blue-500);
+    outline-offset: 1px;
+}
+
+.ecl-chip-remove svg {
+    width: 10px;
+    height: 10px;
+}
+
+/* A bare input rather than a MudTextField: the chip row IS the field, and a Mud input would bring
+   its own outlined border and helper-text slot inside it. */
+.ecl-input {
+    flex: 1 1 160px;
+    min-width: 0;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--c-fg-strong);
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+}
+
+.ecl-input::placeholder {
+    color: var(--c-fg-subtle);
+    opacity: 1;
+}
+
+.ecl-input:focus {
+    outline: none;
+}
+
+.ecl-input:disabled {
+    cursor: not-allowed;
+}
+
+.ecl-message {
+    margin: 5px 0 0;
+    font-family: "Inter", sans-serif;
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.ecl-message-hint {
+    color: var(--c-fg-subtle);
+}
+
+.ecl-message-error {
+    color: var(--c-danger);
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .ecl-input {
+        flex-basis: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ecl,
+    .ecl-chip-remove {
+        transition-duration: 0.01ms !important;
+    }
+}

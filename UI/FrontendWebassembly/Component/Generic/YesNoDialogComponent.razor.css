@@ -12,6 +12,9 @@
     --yes-no-amber-border: var(--c-warn-bg);
     --yes-no-orange-600: var(--c-accent-orange);
     --yes-no-orange-500: var(--c-accent-orange-500);
+    --yes-no-red: var(--c-danger);
+    --yes-no-red-strong: var(--c-danger-strong);
+    --yes-no-red-border: var(--c-danger-bg);
     width: 100%;
     padding: 32px 30px 28px;
     background: var(--c-surface);
@@ -37,6 +40,11 @@
 .yes-no-dialog-shell.is-warning .yes-no-dialog-icon-badge {
     background: linear-gradient(135deg, var(--yes-no-orange-500), var(--yes-no-orange-600));
     box-shadow: 0 10px 22px -8px rgba(211, 84, 14, 0.5);
+}
+
+.yes-no-dialog-shell.is-danger .yes-no-dialog-icon-badge {
+    background: linear-gradient(135deg, var(--yes-no-red), var(--yes-no-red-strong));
+    box-shadow: 0 10px 22px -8px rgba(214, 69, 69, 0.5);
 }
 
 .yes-no-dialog-icon-badge ::deep .mud-icon-root {
@@ -80,6 +88,11 @@
     border-left-color: var(--yes-no-amber);
 }
 
+.yes-no-dialog-shell.is-danger .yes-no-dialog-info-banner {
+    border-color: var(--yes-no-red-border);
+    border-left-color: var(--yes-no-red);
+}
+
 .yes-no-dialog-info-banner ::deep .yes-no-dialog-info-icon {
     width: 16px;
     height: 16px;
@@ -93,6 +106,10 @@
     color: var(--yes-no-amber) !important;
 }
 
+.yes-no-dialog-shell.is-danger .yes-no-dialog-info-banner ::deep .yes-no-dialog-info-icon {
+    color: var(--yes-no-red) !important;
+}
+
 .yes-no-dialog-info-message {
     margin: 0;
     color: var(--c-fg-muted);
@@ -102,6 +119,10 @@
 
 .yes-no-dialog-shell.is-warning .yes-no-dialog-info-message {
     color: var(--c-warn);
+}
+
+.yes-no-dialog-shell.is-danger .yes-no-dialog-info-message {
+    color: var(--yes-no-red-strong);
 }
 
 .yes-no-dialog-info-message strong {
@@ -153,12 +174,25 @@
     box-shadow: 0 8px 20px -6px rgba(211, 84, 14, 0.55) !important;
 }
 
+/* Outranks .theme-button-delete's flat background from app.css: that class sets
+   `background: var(--c-danger) !important` and this needs the gradient to win. It does,
+   on specificity - two classes plus ::deep beats one - so the caller can keep passing
+   theme-button-delete for the tone without the flat fill coming through. */
+.yes-no-dialog-shell.is-danger .yes-no-dialog-footer ::deep .yes-no-dialog-confirm {
+    background: linear-gradient(120deg, var(--yes-no-red-strong), var(--yes-no-red)) !important;
+    box-shadow: 0 8px 20px -6px rgba(214, 69, 69, 0.55) !important;
+}
+
 .yes-no-dialog-footer ::deep .yes-no-dialog-confirm:hover {
     box-shadow: 0 10px 24px -6px rgba(29, 95, 209, 0.7) !important;
 }
 
 .yes-no-dialog-shell.is-warning .yes-no-dialog-footer ::deep .yes-no-dialog-confirm:hover {
     box-shadow: 0 10px 24px -6px rgba(211, 84, 14, 0.7) !important;
+}
+
+.yes-no-dialog-shell.is-danger .yes-no-dialog-footer ::deep .yes-no-dialog-confirm:hover {
+    box-shadow: 0 10px 24px -6px rgba(214, 69, 69, 0.7) !important;
 }
 
 .yes-no-dialog-footer ::deep .yes-no-dialog-confirm .mud-icon-root {

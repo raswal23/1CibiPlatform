@@ -28,6 +28,10 @@ public partial class BulkUploadsComponent
 	[SupplyParameterFromQuery(Name = "search")]
 	private string? SearchFromQuery { get; set; }
 
+	// The ?search= value this board has already acted on. Only a change to it counts as a
+	// new deep link - see OnParametersSetAsync.
+	private string? _appliedSearchFromQuery;
+
 	protected override async Task OnInitializedAsync()
 	{
 		// Before the first await: base.OnInitializedAsync yields, Blazor renders, and
@@ -38,6 +42,10 @@ public partial class BulkUploadsComponent
 			_searchString = SearchFromQuery;
 		}
 
+		// Claimed here so the OnParametersSetAsync pass that follows this first render does
+		// not treat the value it just seeded as an arriving deep link.
+		_appliedSearchFromQuery = SearchFromQuery;
+
 		await base.OnInitializedAsync();
 
 		// Without this guard the RequirePermission/RequireATSModule attributes are inert.
@@ -47,6 +55,47 @@ public partial class BulkUploadsComponent
 		}
 
 		await RefreshCountsAsync();
+	}
+
+	/// <summary>
+	/// Applies a ?search= that arrives while this board is already on screen.
+	/// </summary>
+	/// <remarks>
+	/// OnInitializedAsync only runs when the notification is clicked from another page,
+	/// because that builds the component. Clicking one while already here just rewrites the
+	/// URL and re-supplies the query parameter, so this is the only place the new file name
+	/// is seen. See TicketingStatusComponent for the full note.
+	/// </remarks>
+	protected override async Task OnParametersSetAsync()
+	{
+		await base.OnParametersSetAsync();
+
+		if (!IsPageAuthorized || SearchFromQuery == _appliedSearchFromQuery)
+		{
+			return;
+		}
+
+		_appliedSearchFromQuery = SearchFromQuery;
+
+		// A link with no ?search= leaves the current filter alone rather than silently
+		// clearing what the user typed.
+		if (string.IsNullOrWhiteSpace(SearchFromQuery))
+		{
+			return;
+		}
+
+		_searchString = SearchFromQuery;
+
+		// The notification points at one file; a status filter left on from earlier would
+		// hide it.
+		_activeStatus = null;
+
+		if (_uploadsTable?.TableRef is not null)
+		{
+			_uploadsTable.TableRef.CurrentPage = 0;
+		}
+
+		await ReloadTableAsync();
 	}
 
 	private async Task<TableData<BulkUploadListDTO>> LoadUploadsAsync(
@@ -210,6 +259,11 @@ public partial class BulkUploadsComponent
 
 	private static bool HasSubjects(BulkUploadListDTO upload) => upload.SubjectCount > 0;
 
+	// The email progress bar only means something for a file that sends invitations.
+	// A data file never does, so its permanent 0/N would read as a stalled queue.
+	private static bool SendsInvitations(BulkUploadListDTO upload) =>
+		HasSubjects(upload) && upload.AutoChasing != false;
+
 	private static int SentPercent(BulkUploadListDTO upload) =>
 		upload.SubjectCount == 0
 			? 0
@@ -224,6 +278,31 @@ public partial class BulkUploadsComponent
 	};
 
 	private static string GetOrderTypeClass(string? orderType) => OrderTypeDisplay.GetClass(orderType);
+
+	// Same vocabulary as package management, so a file and the package it was placed
+	// under read identically. Null is "Not set" rather than defaulting to either type:
+	// an unclassified file is a genuine gap, not a quiet Manual.
+	private static string GetScreeningTypeLabel(bool? autoChasing) => autoChasing switch
+	{
+		true => "Manual",
+		false => "Data",
+		_ => "Not set"
+	};
+
+	private static string GetScreeningTypeClass(bool? autoChasing) => autoChasing switch
+	{
+		true => "is-manual",
+		false => "is-data",
+		_ => "is-unset"
+	};
+
+	// The column answers "why is the Emails cell empty?", so the tooltip says it outright.
+	private static string GetScreeningTypeHint(bool? autoChasing) => autoChasing switch
+	{
+		true => "Manual screening: an application form is emailed to every candidate in this file",
+		false => "Data screening: no application form is emailed to these candidates",
+		_ => "This file predates screening types, or was uploaded without one"
+	};
 
 	private static string FormatAbsolute(DateTime dateCreated) =>
 		dateCreated.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt");

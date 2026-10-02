@@ -336,59 +336,77 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 
 		When(x => x.ProfessionalExperiences != null, () =>
 		{
-			//employer 1
-			RuleFor(x => x.ProfessionalExperiences.Emp1CompanyName)
-				.NotEmpty()
-				.WithMessage("Company Name #1 is required.");
+			// Employer 1 is only required when the applicant said they have work
+			// experience. Like the license section, that answer is inferred from any
+			// Employer 1 field being filled - an entirely blank Employer 1 means
+			// "no work experience" and passes.
+			When(x =>
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp1CompanyName) ||
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp1CompanyCity) ||
+				!string.IsNullOrWhiteSpace(x.ProfessionalExperiences.Emp1JobTitle) ||
+				x.ProfessionalExperiences.Emp1StartDate.HasValue ||
+				x.ProfessionalExperiences.Emp1COEUploadFile != null,
+			() =>
+			{
+				RuleFor(x => x.ProfessionalExperiences.Emp1CompanyName)
+					.NotEmpty()
+					.WithMessage("Company Name #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1CompanyCity)
-				.NotEmpty()
-				.WithMessage("Company City / Address #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1CompanyCity)
+					.NotEmpty()
+					.WithMessage("Company City / Address #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1CompanyProvince)
-				.NotEmpty()
-				.WithMessage("State / Province / Region #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1CompanyProvince)
+					.NotEmpty()
+					.WithMessage("State / Province / Region #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1CompanyCountry)
-				.NotEmpty()
-				.WithMessage("Country #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1CompanyCountry)
+					.NotEmpty()
+					.WithMessage("Country #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1CompanyPostalCode)
-				.NotEmpty()
-				.WithMessage("Zip Code #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1CompanyPostalCode)
+					.NotEmpty()
+					.WithMessage("Zip Code #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1DatePermittedToContact)
-				.NotNull()
-				.WithMessage("Date permitted to contact #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1DatePermittedToContact)
+					.NotNull()
+					.WithMessage("Date permitted to contact #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1JobTitle)
-				.NotEmpty()
-				.WithMessage("Job Title #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1JobTitle)
+					.NotEmpty()
+					.WithMessage("Job Title #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1StartDate)
-				.NotNull()
-				.WithMessage("Start Date of Employment #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1StartDate)
+					.NotNull()
+					.WithMessage("Start Date of Employment #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1EndDate)
-				.NotNull()
-				.WithMessage("End Date of Employment #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1EndDate)
+					.NotNull()
+					.WithMessage("End Date of Employment #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorName)
-				.NotEmpty()
-				.WithMessage("Supervisor Name #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorName)
+					.NotEmpty()
+					.WithMessage("Supervisor Name #1 is required.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorContactNumber)
-				.NotEmpty()
-				.WithMessage("Supervisor Contact Number #1 is required.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorEmail)
+					.NotEmpty()
+					.WithMessage("Supervisor Email Contact Information #1 is required.")
+					.EmailAddress()
+					.WithMessage("Supervisor Email Contact Information #1 is invalid.");
 
-			RuleFor(x => x.ProfessionalExperiences.Emp1COEUploadFile)
-				.NotNull()
-				.WithMessage("COE/ID #1 is required.")
-				.Must(file => file != null &&
-				 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
-				.WithMessage("Only .pdf files are allowed.")
-				.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
-				.WithMessage("File size exceeds the 25 MB limit.");
+				RuleFor(x => x.ProfessionalExperiences.Emp1SupervisorContactNumber)
+					.NotEmpty()
+					.WithMessage("Supervisor Contact Number #1 is required.");
+
+				RuleFor(x => x.ProfessionalExperiences.Emp1COEUploadFile)
+					.NotNull()
+					.WithMessage("COE/ID #1 is required.")
+					.Must(file => file != null &&
+					 string.Equals(System.IO.Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+					.WithMessage("Only .pdf files are allowed.")
+					.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
+					.WithMessage("File size exceeds the 25 MB limit.");
+			});
 
 			//employer 2
 			When(x =>
@@ -438,6 +456,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorName)
 						.NotEmpty()
 						.WithMessage("Supervisor Name #2 is required.");
+
+					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorEmail)
+						.NotEmpty()
+						.WithMessage("Supervisor Email Contact Information #2 is required.")
+						.EmailAddress()
+						.WithMessage("Supervisor Email Contact Information #2 is invalid.");
 
 					RuleFor(x => x.ProfessionalExperiences.Emp2SupervisorContactNumber)
 						.NotEmpty()
@@ -500,6 +524,12 @@ public class AddApplicationFormDataCommandValidator : AbstractValidator<AddAppli
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorName)
 					.NotEmpty()
 					.WithMessage("Supervisor Name #3 is required.");
+
+				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorEmail)
+					.NotEmpty()
+					.WithMessage("Supervisor Email Contact Information #3 is required.")
+					.EmailAddress()
+					.WithMessage("Supervisor Email Contact Information #3 is invalid.");
 
 				RuleFor(x => x.ProfessionalExperiences.Emp3SupervisorContactNumber)
 					.NotEmpty()

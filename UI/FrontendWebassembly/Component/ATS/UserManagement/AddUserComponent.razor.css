@@ -360,6 +360,19 @@
     line-height: 1;
 }
 
+/* A module still selected that the chosen role does not allow. Kept rather than dropped so
+   saving never strips access silently; muted so the admin can see it no longer belongs. */
+.au-chip.is-outside-role {
+    border-style: dashed;
+    border-color: var(--au-border);
+    background: var(--c-surface-sunken);
+    color: var(--au-text-3);
+}
+
+.au-chip.is-outside-role button {
+    color: var(--au-text-3);
+}
+
 .au-chip button {
     display: flex;
     align-items: center;

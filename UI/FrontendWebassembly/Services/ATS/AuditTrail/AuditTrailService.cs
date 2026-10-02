@@ -150,4 +150,58 @@ public class AuditTrailService : IAuditTrailService
 				$"Unable to reach the server. {ex.Message}");
 		}
 	}
+
+	// Returns the raw response so the caller can read both the bytes and the server-chosen
+	// Content-Disposition filename, matching BulkUploadService.ExportSubjectsAsync.
+	public async Task<ServiceResponse<HttpResponseMessage>> ExportAuditTrailAsync(
+		string? outcome = null,
+		string? action = null,
+		string? area = null,
+		string? searchTerm = null,
+		DateTime? startDate = null,
+		DateTime? endDate = null,
+		CancellationToken cancellationToken = default)
+	{
+		var query = "ats/exportaudittrail";
+		var separator = '?';
+
+		void Append(string name, string? value)
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				return;
+			}
+
+			query += $"{separator}{name}={Uri.EscapeDataString(value)}";
+			separator = '&';
+		}
+
+		Append("outcome", outcome);
+		Append("action", action);
+		Append("area", area);
+		Append("searchTerm", searchTerm);
+		Append("startDate", startDate?.ToString("yyyy-MM-dd"));
+		Append("endDate", endDate?.ToString("yyyy-MM-dd"));
+
+		try
+		{
+			var response = await _httpClient.GetAsync(query, cancellationToken);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				// Carries the server's detail through, so a 403 explains that the trail is
+				// admin-only rather than showing a generic failure.
+				return ServiceResponse<HttpResponseMessage>.Failure(
+					await response.ReadErrorDetailAsync(cancellationToken));
+			}
+
+			return ServiceResponse<HttpResponseMessage>.Success(response);
+		}
+		catch (OperationCanceledException) { throw; }
+		catch (Exception ex) when (ex is HttpRequestException or JsonException or NotSupportedException)
+		{
+			return ServiceResponse<HttpResponseMessage>.Failure(
+				$"Unable to reach the server. {ex.Message}");
+		}
+	}
 }

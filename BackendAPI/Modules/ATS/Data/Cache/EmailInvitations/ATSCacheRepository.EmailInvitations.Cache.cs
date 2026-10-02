@@ -22,6 +22,11 @@ public partial class ATSCacheRepository
 		return await _atsRepository.ReleaseStaleEmailInvitationClaimsAsync(staleAfter);
 	}
 
+	public async Task<int> ReleaseEmailInvitationClaimsAsync(List<EmailInvitationRequest> emailInvitationRequests)
+	{
+		return await _atsRepository.ReleaseEmailInvitationClaimsAsync(emailInvitationRequests);
+	}
+
 	public async Task<bool> AddBulkEmailInvitationRequestAsync(List<EmailInvitationRequest> emailInvitationRequests)
 	{
 		var result = await _atsRepository.AddBulkEmailInvitationRequestAsync(emailInvitationRequests);
@@ -80,13 +85,64 @@ public partial class ATSCacheRepository
 		return result;
 	}
 
-	public async Task<bool> ResendApplicationFormAsync(Guid emailInvitationId, string hashToken, DateTime hashTokenExpiration, CancellationToken cancellationToken)
+	// A requeue moves the row's email status, which the bulk dashboard rollups and the
+	// report lists both render - so both are invalidated rather than only the withdrawn tag.
+	public async Task<bool> RequeueEmailInvitationAsync(
+		Guid emailInvitationId,
+		string hashToken,
+		CancellationToken cancellationToken)
 	{
-		var result = await _atsRepository.ResendApplicationFormAsync(emailInvitationId, hashToken, hashTokenExpiration, cancellationToken);
+		var result = await _atsRepository.RequeueEmailInvitationAsync(
+			emailInvitationId,
+			hashToken,
+			cancellationToken);
 
 		if (result)
-			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication);
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
 
 		return result;
+	}
+
+	// Same reasoning as the requeue above: the released rows go back to Pending, which
+	// both the bulk rollups and the report lists render.
+	public async Task<List<EmailInvitationRequest>> ReleaseDueFollowUpInvitationsAsync(CancellationToken cancellationToken)
+	{
+		var released = await _atsRepository.ReleaseDueFollowUpInvitationsAsync(cancellationToken);
+
+		if (released.Count > 0)
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
+
+		return released;
+	}
+
+	public async Task<int> RequeueEmailInvitationsAsync(
+		IReadOnlyCollection<EmailInvitationRequeueDTO> requeues,
+		CancellationToken cancellationToken)
+	{
+		var requeued = await _atsRepository.RequeueEmailInvitationsAsync(requeues, cancellationToken);
+
+		if (requeued > 0)
+		{
+			await _hybridCache.RemoveByTagAsync(CacheTags.Report, cancellationToken);
+			await _hybridCache.RemoveByTagAsync(CacheTags.WithdrawnApplication, cancellationToken);
+		}
+
+		return requeued;
+	}
+
+	// Scope identity read on the way into a write - not worth a cache entry, and stale
+	// scope data here would be a correctness problem. Same reasoning as the single-row
+	// GetEmailInvitationOwnerAsync above.
+	public async Task<List<EmailInvitationOwnerDTO>> GetEmailInvitationOwnersAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken)
+	{
+		return await _atsRepository.GetEmailInvitationOwnersAsync(emailInvitationIds, cancellationToken);
 	}
 }

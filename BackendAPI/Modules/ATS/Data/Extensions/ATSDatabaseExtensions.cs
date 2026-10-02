@@ -69,10 +69,112 @@ public static class ATSDatabaseExtensions
 				initData.GetATSUsers(userIdsByEmail));
 		}
 
+		// The sender the queue used before accounts became rows. Seeded so the migration is
+		// deployable on its own: an empty table means the selector finds nothing sendable and
+		// every invitation defers until somebody registers an account by hand.
+		//
+		// Guarded on emptiness rather than on the address, so an operator who deliberately
+		// deletes this account does not get it back on the next restart.
+		if (!await context.EmailAccounts.AsNoTracking().AnyAsync())
+		{
+			var primaryAccount = initData.GetPrimaryEmailAccount();
+
+			if (primaryAccount is not null)
+			{
+				await context.EmailAccounts.AddAsync(primaryAccount);
+			}
+		}
+
+		// One copy list per notice, matched on the process rather than guarded on an empty
+		// table: a process added to AtsEmailProcess later would otherwise reach new databases
+		// only, and every existing environment would be missing it. Idempotent, and it never
+		// touches a process that is already present - so an operator's edited list, and a
+		// notice they deliberately emptied, both survive a restart rather than being reset to
+		// the seeded addresses on the next boot.
+		var existingProcesses = await context.EmailProcessDetails
+			.AsNoTracking()
+			.Select(row => row.EmailProcess)
+			.ToListAsync();
+
+		await context.EmailProcessDetails.AddRangeAsync(
+			ATSInitialData.GetEmailProcesses()
+				.Where(row => !existingProcesses.Contains(row.EmailProcess)));
+
 		await context.SaveChangesAsync();
 
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.BulkUploads);
 		await BackfillModuleGrantedWithNewOrderAsync(context, initData, AtsModuleIds.TicketingStatus);
+		await BackfillRoleAsync(context, initData, AtsRoleIds.ClientExperience);
+
+		// Last, because the backfills above insert RoleDetails and ModuleDetails rows with
+		// explicit ids too. Syncing before them would leave the sequence stranded again.
+		await SyncIdentitySequencesAsync(context);
+	}
+
+	/// <summary>
+	/// Advances the identity sequences of the tables this seed fills with explicit ids,
+	/// so the next admin-created row does not collide with a seeded one.
+	/// </summary>
+	/// <remarks>
+	/// RoleDetails and ModuleDetails are seeded with explicit ids (RoleId 1-4, the
+	/// AtsModuleIds constants), and an explicit id does not advance the identity
+	/// sequence behind the column. The sequence therefore still points at 1, so the
+	/// first role or module added through the admin screens is handed an id that is
+	/// already taken and the insert dies on the primary key - which the UI reports as
+	/// the generic "error saving entity". Mirrors AuthDatabaseExtensions, which hit
+	/// this first. Runs unconditionally, not only when the seed inserted something:
+	/// databases seeded before this existed are already wrong and heal on next start.
+	/// Public so the integration tests can reproduce a seeded database, which they
+	/// otherwise never see - they truncate with RESTART IDENTITY.
+	/// </remarks>
+	public static async Task SyncIdentitySequencesAsync(ATSDBContext context)
+	{
+		// GREATEST guards an empty table, where MAX is NULL and setval would fail.
+		// TRUE marks the value as used, so the next id is MAX + 1.
+		await context.Database.ExecuteSqlRawAsync(
+			"""
+			SELECT setval(
+				pg_get_serial_sequence('ats."RoleDetails"', 'RoleId'),
+				GREATEST((SELECT MAX("RoleId") FROM ats."RoleDetails"), 1),
+				TRUE);
+
+			SELECT setval(
+				pg_get_serial_sequence('ats."ModuleDetails"', 'ModuleId'),
+				GREATEST((SELECT MAX("ModuleId") FROM ats."ModuleDetails"), 1),
+				TRUE);
+			""");
+	}
+
+	/// <summary>
+	/// Inserts one seeded role into a database whose RoleDetails table is already populated.
+	/// </summary>
+	/// <remarks>
+	/// The role seed above is guarded on an empty table, so a role added after the first
+	/// deployment reaches new databases only - every existing environment would be missing
+	/// it, and any user assigned to it would fail the FK on UserDetails. Matched on RoleId
+	/// rather than name so an operator who renamed the row does not get a duplicate, and
+	/// idempotent for the same reason: a second run adds nothing.
+	/// </remarks>
+	private static async Task BackfillRoleAsync(
+		ATSDBContext context,
+		ATSInitialData initData,
+		int roleId)
+	{
+		if (await context.RoleDetails.AnyAsync(role => role.RoleId == roleId))
+		{
+			return;
+		}
+
+		var seededRole = initData.GetATSRoles()
+			.FirstOrDefault(candidate => candidate.RoleId == roleId);
+
+		if (seededRole is null)
+		{
+			return;
+		}
+
+		await context.RoleDetails.AddAsync(seededRole);
+		await context.SaveChangesAsync();
 	}
 
 	// The seed blocks above only run on an empty table, so a module added after the

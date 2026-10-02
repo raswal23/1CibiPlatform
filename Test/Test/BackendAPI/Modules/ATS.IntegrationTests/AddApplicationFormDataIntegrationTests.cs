@@ -85,8 +85,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 
 	private async Task SeedEmailInvitationRequestData(
 		string hashToken = SeededHashToken,
-		string applicationFormStatus = "Pending",
-		DateTime? hashTokenExpiration = null)
+		string applicationFormStatus = "Pending")
 	{
 		var emailInvitationRequest = new EmailInvitationRequest
 		{
@@ -103,8 +102,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			ApplicationFormStatus = applicationFormStatus,
 			EmailSentStatus = "Pending",
 			OrderStatus = "Pending Candidate Info",
-			HashTokenCreatedAt = DateTime.UtcNow,
-			HashTokenExpiration = hashTokenExpiration ?? DateTime.UtcNow.AddDays(7)
+			HashTokenCreatedAt = DateTime.UtcNow
 		};
 
 		await _dbContext.EmailInvitationRequests.AddAsync(emailInvitationRequest);
@@ -188,6 +186,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1StartDate = _sampleDate,
 			Emp1EndDate = _sampleDate,
 			Emp1SupervisorName = "Maria Cruz",
+			Emp1SupervisorEmail = "maria.cruz@cibi.com.ph",
 			Emp1SupervisorContactNumber = "09171234567",
 			Emp1COEUploadFile = CreateFakeFormFile(pdfContent, _emp1COEFileName, "application/pdf"),
 			Emp1COEUploadFileName = _emp1COEFileName,
@@ -327,6 +326,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1EndDate = _sampleDate,
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
+			Emp1SupervisorEmail = "maria.santos@accenture.com",
 			Emp1SupervisorContactNumber = "09171234567",
 			Emp1COEUploadFile = CreateFakeFormFile(pdfContent, _emp1COEFileName, "application/pdf"),
 			Emp1COEUploadFileName = _emp1COEFileName,
@@ -342,6 +342,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2EndDate = _sampleDate,
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
+			Emp2SupervisorEmail = "carlos.reyes@globe.com.ph",
 			Emp2SupervisorContactNumber = "09171234567",
 			Emp2COEUploadFile = CreateFakeFormFile(pdfContent, _emp2COEFileName, "application/pdf"),
 			Emp2COEUploadFileName = _emp2COEFileName,
@@ -357,6 +358,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3EndDate = _sampleDate,
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
+			Emp3SupervisorEmail = "ana.lopez@techinnovators.com",
 			Emp3SupervisorContactNumber = "09171234567",
 			Emp3COEUploadFile = CreateFakeFormFile(pdfContent, _emp3COEFileName, "application/pdf"),
 			Emp3COEUploadFileName = _emp3COEFileName,
@@ -407,6 +409,15 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		// Assert
 		result.Should().NotBeNull();
 		result.IsAdded.Should().BeTrue();
+
+		// The supervisor email rides the same Mapster adapt as the rest of the
+		// employer block, so it is asserted here rather than in its own test.
+		var persistedExperiences = _dbContext.ProfessionalExperiences
+			.First(e => e.EmailInvitationID == EmailId);
+
+		persistedExperiences.Emp1SupervisorEmail.Should().Be("maria.santos@accenture.com");
+		persistedExperiences.Emp2SupervisorEmail.Should().Be("carlos.reyes@globe.com.ph");
+		persistedExperiences.Emp3SupervisorEmail.Should().Be("ana.lopez@techinnovators.com");
 
 		if (result.IsAdded == true)
 		{
@@ -537,6 +548,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp1EndDate = sampleDate,
 			Emp1JobTitle = "Software Engineer",
 			Emp1SupervisorName = "Maria Santos",
+			Emp1SupervisorEmail = "maria.santos@accenture.com",
 			Emp1SupervisorContactNumber = "09171234567",
 			Emp1COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp1COEUploadFileName = "coe.txt",
@@ -551,6 +563,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp2EndDate = sampleDate,
 			Emp2JobTitle = "Senior Backend Developer",
 			Emp2SupervisorName = "Carlos Reyes",
+			Emp2SupervisorEmail = "carlos.reyes@globe.com.ph",
 			Emp2SupervisorContactNumber = "09171234567",
 			Emp2COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp2COEUploadFileName = "coe.txt",
@@ -565,6 +578,7 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 			Emp3EndDate = sampleDate,
 			Emp3JobTitle = "Lead .NET Developer",
 			Emp3SupervisorName = "Ana Lopez",
+			Emp3SupervisorEmail = "ana.lopez@techinnovators.com",
 			Emp3SupervisorContactNumber = "09171234567",
 			Emp3COEUploadFile = CreateFakeFormFile(sampleFileContent, "coe.txt"),
 			Emp3COEUploadFileName = "coe.txt",
@@ -614,6 +628,27 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		await Assert.ThrowsAsync<ValidationException>(() =>
 			_sender.Send(command));
 	}
+
+	// The supervisor email is required for any employer the candidate filled in, and
+	// must be a real address - the same contract the character references already had.
+	[Theory]
+	[InlineData(null)]
+	[InlineData("")]
+	[InlineData("not-an-email")]
+	public async Task AddApplicationFormData_WithMissingOrInvalidSupervisorEmail_ShouldThrowValidation(string? supervisorEmail)
+	{
+		await SeedEmailInvitationRequestData();
+
+		var command = BuildValidCommand(SeededHashToken);
+		command.ProfessionalExperiences.Emp1SupervisorEmail = supervisorEmail;
+
+		await Assert.ThrowsAsync<ValidationException>(() => _sender.Send(command));
+
+		// A rejected payload may not leave an employer record behind.
+		_dbContext.ProfessionalExperiences
+			.Any(e => e.EmailInvitationID == EmailId)
+			.Should().BeFalse();
+	}
 	#endregion
 
 	#region Hash Token Authorization
@@ -646,20 +681,9 @@ public class AddApplicationFormDataIntegrationTests : BaseIntegrationTest
 		await Assert.ThrowsAsync<ValidationException>(() => _sender.Send(command));
 	}
 
-	[Fact]
-	public async Task AddApplicationFormData_WithExpiredHashToken_ShouldThrowBadRequest()
-	{
-		await SeedEmailInvitationRequestData(
-			hashTokenExpiration: DateTime.UtcNow.AddDays(-1));
-
-		var command = BuildValidCommand(SeededHashToken);
-
-		await Assert.ThrowsAsync<BadRequestException>(() => _sender.Send(command));
-
-		_dbContext.PersonalDetails
-			.Any(p => p.EmailInvitationID == EmailId)
-			.Should().BeFalse();
-	}
+	// There is no expired-link test any more. A link now stops working when the form stops being
+	// answerable, not when a clock runs out - the case below, "already submitted", is what
+	// replaced it. See docs/ats-application-form-link-expiry-removal.md.
 
 	[Fact]
 	public async Task AddApplicationFormData_WhenFormAlreadySubmitted_ShouldThrowConflict()

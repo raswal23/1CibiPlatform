@@ -27,6 +27,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 		public Mock<ILogger<PartnerSystemService>> MockPartnerSystemLogger { get; private set; }
 		public Mock<ILogger<UpdateFaceLivenessSessionService>> MockUpdateFaceLivenessSessionLogger { get; private set; }
 		public Mock<ILogger<PhilSysService>> MockPhilSysServiceLogger { get; private set; }
+		public Mock<ILogger<TransactionCleanupService>> MockTransactionCleanupLogger { get; private set; }
 
 		// Configuration
 		public IConfiguration Configuration { get; private set; }
@@ -38,6 +39,7 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 		public PartnerSystemService PartnerSystemService { get; private set; }
 		public UpdateFaceLivenessSessionService UpdateFaceLivenessSessionService { get; private set; }
 		public PhilSysService PhilSysService { get; private set; }
+		public TransactionCleanupService TransactionCleanupService { get; private set; }
 
 		public PhilSysServiceFixture()
 		{
@@ -56,12 +58,14 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 			MockPartnerSystemLogger = new Mock<ILogger<PartnerSystemService>>();
 			MockUpdateFaceLivenessSessionLogger = new Mock<ILogger<UpdateFaceLivenessSessionService>>();
 			MockPhilSysServiceLogger = new Mock<ILogger<PhilSysService>>();
+			MockTransactionCleanupLogger = new Mock<ILogger<TransactionCleanupService>>();
 
 			// configuration values required by several services
 			Configuration = new ConfigurationBuilder()
 				.AddInMemoryCollection(new[]
 				{
 					new KeyValuePair<string,string>("PhilSys:LivenessSessionExpiryInMinutes","5"),
+					new KeyValuePair<string,string>("PhilSys:TransactionCleanupAgeInMinutes","6"),
 					new KeyValuePair<string,string>("PhilSys:LivenessBaseUrl","http://localhost:5134"),
 					new KeyValuePair<string,string>("PhilSys:ClientID","client-id"),
 					new KeyValuePair<string,string>("PhilSys:ClientSecret","client-secret"),
@@ -108,6 +112,12 @@ namespace Test.BackendAPI.Modules.PhilSys.UnitTests.Fixture
 				MockUpdateFaceLivenessSessionLogger.Object,
 				MockPhilSysService.Object,
 				MockUnitOfWork.Object,
+				Configuration
+			);
+
+			TransactionCleanupService = new TransactionCleanupService(
+				MockPhilSysRepository.Object,
+				MockTransactionCleanupLogger.Object,
 				Configuration
 			);
 		}

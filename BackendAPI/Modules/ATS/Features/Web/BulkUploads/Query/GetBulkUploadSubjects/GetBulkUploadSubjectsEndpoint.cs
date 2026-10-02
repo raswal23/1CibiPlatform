@@ -45,6 +45,7 @@ public class GetBulkUploadSubjectsEndpoint : ICarterModule
 			"Retrieves the subjects a single bulk upload file produced, with keyset "
 			+ "pagination and an optional email-status filter. Returns 404 when the file "
 			+ "is unknown or outside the caller's client/requestor scope.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

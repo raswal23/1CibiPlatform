@@ -1,4 +1,5 @@
 ﻿namespace BackendAPI.Modules.ATS;
 
-public static class ATSMarker {
+public static class ATSMarker
+{
 }

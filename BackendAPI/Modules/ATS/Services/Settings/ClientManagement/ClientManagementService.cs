@@ -98,6 +98,17 @@ public class ClientManagementService : IClientManagementService
 		if (existing.Count == 0)
 			throw new NotFoundException($"Client with ID {client.ClientId} was not found.");
 
+		// Check-then-write: acceptable for an admin screen; a racing assignment merely
+		// produces a client disabled a moment too late.
+		if (existing[0].IsActive && !client.IsActive)
+		{
+			var activeUsers = await _clientRepository.CountActiveUsersAssignedToClientAsync(client.ClientId, cancellationToken);
+			if (activeUsers > 0)
+				throw new ConflictException(activeUsers == 1
+					? "Cannot disable this client: 1 active user is assigned to it."
+					: $"Cannot disable this client: {activeUsers} active users are assigned to it.");
+		}
+
 		var clientName = client.ClientName.Trim();
 		if (await _clientRepository.ClientNameExistsAsync(clientName, client.ClientId, cancellationToken))
 			throw new BadRequestException($"Client '{clientName}' already exists.");

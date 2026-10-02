@@ -33,9 +33,36 @@ public partial class TicketingStatusComponent
 	[SupplyParameterFromQuery(Name = "search")]
 	private string? SearchFromQuery { get; set; }
 
+	// The ?search= value this board has already acted on. Only a change to it counts as a
+	// new deep link - see OnParametersSetAsync.
+	private string? _appliedSearchFromQuery;
+
 	// Disables the row's button while its retry is in flight, so a double-click cannot
 	// queue the same order twice.
 	private Guid? _retryingOrderId;
+
+	// Ids rather than rows, so a selection survives the list reloading underneath it. It is
+	// pruned to what is on screen whenever the table reloads, because a selection the user
+	// can no longer see is one they cannot reason about.
+	private readonly HashSet<Guid> _selectedInvitationIds = [];
+
+	private bool _isBulkRetrying;
+
+	// The rows on the page right now. Held here because CursorTableLoader tracks cursors
+	// and counts, not the items themselves, and the select-all checkbox has to know what
+	// "all" currently means.
+	private IReadOnlyList<TicketedOrderListDTO> _pageOrders = [];
+
+	// The rows currently rendered that a retry actually applies to. Selecting a row the
+	// server would refuse only produces a confusing "0 of N" outcome.
+	private IEnumerable<TicketedOrderListDTO> SelectableOrders =>
+		_pageOrders.Where(CanRetry);
+
+	private bool HasSelectableOrders => SelectableOrders.Any();
+
+	private bool AreAllSelectablesSelected =>
+		HasSelectableOrders
+		&& SelectableOrders.All(order => _selectedInvitationIds.Contains(order.EmailInvitationID));
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -51,6 +78,11 @@ public partial class TicketingStatusComponent
 			_searchString = SearchFromQuery;
 		}
 
+		// Claimed here so the OnParametersSetAsync pass that follows this first render does
+		// not treat the value it just seeded as an arriving deep link and reload on top of
+		// the table's own first load.
+		_appliedSearchFromQuery = SearchFromQuery;
+
 		await base.OnInitializedAsync();
 
 		// Without this guard the RequirePermission/RequireATSModule attributes are inert.
@@ -60,6 +92,49 @@ public partial class TicketingStatusComponent
 		}
 
 		await RefreshCountsAsync();
+	}
+
+	/// <summary>
+	/// Applies a ?search= that arrives while this board is already on screen.
+	/// </summary>
+	/// <remarks>
+	/// OnInitializedAsync only covers the case where the notification is clicked from
+	/// somewhere else, because that builds the component. Clicking one while already here
+	/// only rewrites the URL - Blazor reuses the component and re-supplies its query
+	/// parameters, so this is the only place the new term is seen. Without it the term
+	/// showed up in the address bar and the search box while the table below still listed
+	/// every order.
+	/// </remarks>
+	protected override async Task OnParametersSetAsync()
+	{
+		await base.OnParametersSetAsync();
+
+		if (!IsPageAuthorized || SearchFromQuery == _appliedSearchFromQuery)
+		{
+			return;
+		}
+
+		_appliedSearchFromQuery = SearchFromQuery;
+
+		// A link with no ?search= (the fallback when the notification has no name to pass)
+		// leaves the current filter alone rather than silently clearing what the user typed.
+		if (string.IsNullOrWhiteSpace(SearchFromQuery))
+		{
+			return;
+		}
+
+		_searchString = SearchFromQuery;
+
+		// The notification points at one order; a status filter left on from earlier would
+		// hide it. Clearing it here is why this does not call SetStatusAsync.
+		_activeStatus = null;
+
+		if (_ordersTable?.TableRef is not null)
+		{
+			_ordersTable.TableRef.CurrentPage = 0;
+		}
+
+		await ReloadTableAsync();
 	}
 
 	private async Task<TableData<TicketedOrderListDTO>> LoadOrdersAsync(
@@ -85,6 +160,22 @@ public partial class TicketingStatusComponent
 				_searchString,
 				_dateRange?.Start,
 				_dateRange?.End));
+
+		// Recorded so the select-all checkbox knows what is on screen, and so a selection
+		// can be pruned to it below.
+		_pageOrders = tableData.Items?.ToList() ?? [];
+
+		// A row that left the page - filtered out, paged past, or no longer retryable after
+		// a reload - drops out of the selection. Keeping it would let an operator submit
+		// ids they can no longer see.
+		if (_selectedInvitationIds.Count > 0)
+		{
+			var stillSelectable = SelectableOrders
+				.Select(order => order.EmailInvitationID)
+				.ToHashSet();
+
+			_selectedInvitationIds.RemoveWhere(id => !stillSelectable.Contains(id));
+		}
 
 		// The chips track the same search/date filters as the table, so they refresh
 		// with it rather than drifting out of step.
@@ -242,6 +333,153 @@ public partial class TicketingStatusComponent
 		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
 
 		await dialog.Result;
+	}
+
+	private void ToggleSelection(Guid emailInvitationId, bool isSelected)
+	{
+		if (isSelected)
+		{
+			_selectedInvitationIds.Add(emailInvitationId);
+		}
+		else
+		{
+			_selectedInvitationIds.Remove(emailInvitationId);
+		}
+	}
+
+	// Scoped to the current page on purpose. Selecting rows the operator has not seen -
+	// across pages or the whole filter - is how a click ends up retrying far more than
+	// intended.
+	private void ToggleSelectAll(bool isSelected)
+	{
+		foreach (var order in SelectableOrders)
+		{
+			ToggleSelection(order.EmailInvitationID, isSelected);
+		}
+	}
+
+	// The selection bar's own escape hatch. Unchecking rows one at a time is the only
+	// other way out, which is tedious once a whole page is selected.
+	private void ClearSelection() => _selectedInvitationIds.Clear();
+
+	private async Task ConfirmBulkRetryAsync()
+	{
+		var selectedCount = _selectedInvitationIds.Count;
+
+		if (selectedCount == 0)
+		{
+			return;
+		}
+
+		var confirmParam = new DialogParameters
+		{
+			{
+				nameof(YesNoDialogComponent.Title),
+				"Retry Ticketing"
+			},
+			{
+				nameof(YesNoDialogComponent.Message),
+				$"This will queue {selectedCount} order(s) to be sent to OMS again."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmText),
+				"Retry"
+			},
+			{
+				nameof(YesNoDialogComponent.InformationMessage),
+				"Automatic retries have already been used up for these orders. Make sure "
+					+ "the cause has been fixed, otherwise they will fail again."
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmIcon), Icons.Material.Outlined.Refresh
+			},
+			{
+				nameof(YesNoDialogComponent.ConfirmActionAsync),
+				(Func<Task<bool>>)BulkRetryAsync
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarIcon), Icons.Material.Filled.WarningAmber
+			},
+			{
+				nameof(YesNoDialogComponent.AvatarColor), Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoColor), Color.Warning
+			},
+			{
+				nameof(YesNoDialogComponent.InfoBGColor), "var(--c-warn-bg)"
+			},
+			{
+				nameof(YesNoDialogComponent.ThemeButtonColor), "theme-button-warning"
+			}
+		};
+
+		var options = new DialogOptions
+		{
+			NoHeader = true,
+			MaxWidth = MaxWidth.ExtraSmall,
+			FullWidth = true
+		};
+
+		var dialog = await DialogService.ShowAsync<YesNoDialogComponent>(null, confirmParam, options);
+
+		await dialog.Result;
+	}
+
+	private async Task<bool> BulkRetryAsync()
+	{
+		_isBulkRetrying = true;
+		await InvokeAsync(StateHasChanged);
+
+		try
+		{
+			// Copied before the call: the list is pruned when the table reloads, and the
+			// response has to be compared against what was actually submitted.
+			var requestedIds = _selectedInvitationIds.ToList();
+
+			var response = await OMSTicketingService.RetryTicketsAsync(requestedIds);
+
+			if (!response.IsSuccess || response.Data is null)
+			{
+				Snackbar.Add(response.ErrorDetail, Severity.Error);
+
+				// The list is refreshed either way: a rejection usually means the rows moved
+				// on since the page was loaded.
+				await ReloadTableAsync();
+
+				return false;
+			}
+
+			var result = response.Data;
+
+			_selectedInvitationIds.Clear();
+
+			await ReloadTableAsync();
+
+			// A shortfall is normal rather than an error: the ticketing job may have picked
+			// up some of the selection between rendering and clicking. Saying so is more use
+			// than a flat "done".
+			if (result.IsComplete)
+			{
+				Snackbar.Add(
+					$"{result.RequeuedCount} order(s) queued for ticketing.",
+					Severity.Success);
+			}
+			else
+			{
+				Snackbar.Add(
+					$"{result.RequeuedCount} of {result.RequestedCount} order(s) queued. "
+						+ "The rest were already back in the queue.",
+					Severity.Info);
+			}
+
+			return true;
+		}
+		finally
+		{
+			_isBulkRetrying = false;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private async Task<bool> RetryTicketAsync(Guid emailInvitationId)

@@ -1,5 +1,4 @@
 @layout GenericLayout
-@inject LocalStorageService LocalStorageService
 @inject IApplicationFormService ATSService
 @inject IJSRuntime JSRuntime
 @page "/s&i/ats/applicationform/{HashToken}"
@@ -21,10 +20,6 @@
     else if (string.Equals(Status, "Withdrawn", StringComparison.OrdinalIgnoreCase))
     {
         <WithdrawnComponent />
-    }
-    else if (IsExpired)
-    {
-        <ExpiredComponent />
     }
     else if (IsInstructionsVisible)
     {
@@ -57,16 +52,17 @@
                             <h2 id="ats-document-title">Prepare &amp; upload documents</h2>
                         </div>
                         <p class="ats-application-section-copy">
-                            Please ensure you have clear digital copies (PDF) of the following required documents ready for upload:
+                            Please ensure you have clear digital copies of the following required documents ready for upload.
+                            <strong>Every file must be in PDF format</strong> &mdash; the form does not accept any other file type,
+                            so please convert or scan your documents to PDF before you begin.
                         </p>
 
                         <ol class="ats-application-document-list">
                             <li><span class="ats-application-document-index">1</span><span>All, or any in case of unavailability: Transcript of Records (TOR), Diploma, or Certificate of Graduation</span></li>
                             <li><span class="ats-application-document-index">2</span><span>Birth certificate</span></li>
-                            <li><span class="ats-application-document-index">3</span><span>Two (2) valid government-issued IDs</span></li>
+                            <li><span class="ats-application-document-index">3</span><span>One (1) valid government-issued ID</span></li>
                             <li><span class="ats-application-document-index">4</span><span>Certificate of Employment (COE) covering all previous employment within the past 5 years (if applicable)</span></li>
                             <li><span class="ats-application-document-index">5</span><span>Upload CV in the TOR / Diploma / School Credentials portion of the form</span></li>
-                            <li class="is-optional"><span class="ats-application-document-index">6</span><span>Optional documents: NBI clearance, Police clearance, BR 2316, SSS E1 forms, or TIN verification slip</span></li>
                         </ol>
                     </section>
 
@@ -81,33 +77,39 @@
                             <h2 id="ats-reminder-title">Reminders in answering the form</h2>
                         </div>
 
+                        @* This page is now the ONLY place the candidate is told how to fill the form in.
+                           The invitation and follow-up emails used to carry the same list; they no longer
+                           do - they just link here - so anything a candidate must know before starting
+                           has to be stated on this page. *@
+                        <div class="ats-application-reminder-block">
+                            <h3>Uploading your documents</h3>
+                            <ul class="ats-application-reminder-list">
+                                <li><strong>All documents you upload must be in PDF format.</strong> The form only accepts PDF files, so please convert or scan your documents before uploading them.</li>
+                                <li>Make sure every page is clear and readable, and that the whole document is captured in the file.</li>
+                                <li>Upload your CV in the TOR / Diploma / School Credentials portion of the form.</li>
+                            </ul>
+                        </div>
+
                         <div class="ats-application-reminder-block">
                             <h3>Application form</h3>
                             <ul class="ats-application-reminder-list">
                                 <li>Provide all information requested and affix signatures where needed.</li>
-                                <li>Answer every field, even if it is non-mandatory. If you do not have an SSS or TIN number, kindly input random digits from 0 to 9 to proceed with the application.</li>
-                                <li>
-                                    Please download the corresponding Letter of Authorization (LOA) for your university through
-                                    <a href="https://drive.google.com/drive/folders/10XFr-wbKnItVi1ErutyaB5fm8ESvxWyN?usp=sharing"
-                                       target="_blank"
-                                       rel="noopener noreferrer">this link</a>.
-                                    If your university does not have a specific LOA in the folder, please use the
-                                    “Standard School LOA” file.
-                                </li>
+                                <li>Answer every field, even if it is non-mandatory.</li>
+                                <li>If the form asks for the email address of an HR point of contact, kindly input your HR person of contact at the company you are applying to.</li>
                                 <li>Enter details for your references. You must provide three (3) references (not relatives). They should be colleagues, former superiors, or friends.</li>
                                 <li>Inform each reference in advance that you have shared their information and that they will be contacted by CIBI.</li>
-                                <li>Double-check your answers to ensure accuracy (dates, names, employer details, etc.).</li>
+                                <li>Double-check your answers to ensure accuracy (dates, names, employer details, etc.) before submitting.</li>
                             </ul>
                         </div>
                     </section>
 
-                    <aside class="ats-application-notice" aria-label="Important response deadline">
+                    <aside class="ats-application-notice" aria-label="Important response information">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M10.3 3.9 2.8 17.1a1.8 1.8 0 0 0 1.6 2.7h15.2a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0Z" />
                             <path d="M12 9v4m0 4h.01" />
                         </svg>
                         <p>
-                            Your prompt response to this request within the next <strong>24 hours</strong> is critical to the success of your job application. Rest assured that all information you provide will be kept confidential in compliance with Philippine laws, including the Data Privacy Act, and will only be used for processing your application. For questions or concerns, reach out via our support chat, or call us at <a href="tel:+639230878757">+63 923 087 8757</a> (Sun) or <a href="tel:+639176320486">+63 917 632 0486</a> (Globe).
+                            Your prompt response to this request is critical to the success of your job application. Rest assured that all information you provide will be kept confidential in compliance with Philippine laws, including the Data Privacy Act, and will only be used for processing your application. For questions or concerns, reach out via our support chat, or call us at <a href="tel:+639230878757">+63 923 087 8757</a> (Sun) or <a href="tel:+639176320486">+63 917 632 0486</a> (Globe).
                         </p>
                     </aside>
 
@@ -130,6 +132,7 @@
                                   EmailId="@EmailId"
                                   ActiveStep="@_stepActive"
                                   ShowsPhilSys="@_showPhilsys"
-                                  HashToken="@HashToken" />
+                                  HashToken="@HashToken"
+                                  OrderDateOfBirth="@_orderDateOfBirth" />
     }
 </div>

@@ -259,9 +259,13 @@
     color: var(--dd-text-3);
 }
 
+/* Same as the application-form inputs: no extra start margin, the outlined
+   input's own padding is what seats the icon at the field's left edge. */
 .dd-input-wrap ::deep .mud-input-adornment-start {
-    margin-left: 12px;
+    margin-left: 0;
     margin-right: 8px;
+    margin-inline-start: unset;
+    margin-inline-end: 8px;
 }
 
 .dd-input-wrap ::deep .mud-input-adornment-start .mud-icon-root {
@@ -272,6 +276,63 @@
 
 .dd-input-wrap ::deep .mud-input-error .mud-input-outlined-border {
     border-color: var(--c-danger);
+}
+
+/* Locked (category is not "Others"): the wrapper owns the click - a disabled input
+   never raises one - so the field's own hit-testing is turned off underneath it. */
+.dd-input-wrap.is-locked {
+    cursor: not-allowed;
+}
+
+.dd-input-wrap.is-locked ::deep .mud-input-control {
+    pointer-events: none;
+}
+
+.dd-input-wrap.is-locked ::deep .mud-input {
+    background: var(--c-surface-sunken);
+}
+
+.dd-input-wrap.is-locked ::deep .mud-input-slot::placeholder {
+    opacity: 0.55;
+}
+
+.dd-field-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 6px 0 0;
+    color: var(--dd-text-3);
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+
+.dd-field-note svg {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+}
+
+.dd-field-note strong {
+    font-weight: 600;
+}
+
+/* Three quick flashes when the locked field is clicked; the amber matches the
+   dialog's warning note so "needs your attention" reads the same everywhere. */
+.dd-field-note.is-blinking {
+    animation: dd-note-blink 0.5s ease-in-out 3;
+    color: var(--dd-amber);
+}
+
+@keyframes dd-note-blink {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.15;
+    }
 }
 
 .dd-input-wrap ::deep .mud-input-helper-text {
@@ -480,5 +541,10 @@
     .dd-shell *::before,
     .dd-shell *::after {
         transition-duration: 0.01ms !important;
+    }
+
+    /* No flashing; the amber color shift alone carries the "locked" cue. */
+    .dd-field-note.is-blinking {
+        animation: none;
     }
 }

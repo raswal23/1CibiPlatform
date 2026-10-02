@@ -1,16 +1,20 @@
-﻿using ATS.Data.Context;
+﻿using ATS.Constants;
+using ATS.Data.Context;
 using ATS.Data.Entities;
 using ATS.Data.Repository;
+using ATS.Services.AccessScope;
 using ATS.Services.AIAssistant;
+using ATS.Services.EmailAccounts;
 using ATS.Services.ApplicantSearchProjections;
 using ATS.Services.BulkSubmissionProcessor;
 using ATS.Services.BulkUploadMonitoring;
 using ATS.Services.Dashboard;
-using ATS.Services.EmailNotificationProcessor;
+using ATS.Services.BulkEmailNotificationProcessor;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.Report;
 using ATS.Services.Settings.ClientAssignment;
 using ATS.Services.Settings.ClientManagement;
+using ATS.Services.Settings.EmailProcessManagement;
 using ATS.Services.Settings.ModuleManagement;
 using ATS.Services.Settings.PackageManagement;
 using ATS.Services.Settings.RoleManagement;
@@ -53,9 +57,10 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly ISecureToken _generateToken;
 	protected readonly IObjectStorageService _objectStorageService;
 	protected readonly IEndorsementSubmissionService _endorsementSubmissionService;
-	protected readonly IEmailNotificationProcessorService _emailNotificationProcessorService;
+	protected readonly IBulkEmailNotificationProcessorService _bulkEmailNotificationProcessorService;
 	protected readonly IBulkSubmissionProcessorService _bulkSubmissionProcessorService;
 	protected readonly IPackageManagementService _packageManagementService;
+	protected readonly IEmailProcessManagementService _emailProcessManagementService;
 	protected readonly IRoleManagementService _roleManagementService;
 	protected readonly IModuleManagementService _moduleManagementService;
 	protected readonly IClientManagementService _clientManagementService;
@@ -68,6 +73,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	protected readonly IDashboardService _dashboardService;
 	protected readonly IATSRepository _atsRepository;
 	protected readonly IBulkUploadMonitoringService _bulkUploadMonitoringService;
+	protected readonly IAtsActiveUserGuard _atsActiveUserGuard;
 	protected readonly HybridCache _hybridCache;
 
 	protected BaseIntegrationTest(IntegrationTestWebAppFactory factory)
@@ -83,9 +89,10 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
 		_objectStorageService = _scope.ServiceProvider.GetRequiredService<IObjectStorageService>();
 		_endorsementSubmissionService = _scope.ServiceProvider.GetRequiredService<IEndorsementSubmissionService>();
-		_emailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IEmailNotificationProcessorService>();
+		_bulkEmailNotificationProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkEmailNotificationProcessorService>();
 		_bulkSubmissionProcessorService = _scope.ServiceProvider.GetRequiredService<IBulkSubmissionProcessorService>();
 		_packageManagementService = _scope.ServiceProvider.GetRequiredService<IPackageManagementService>();
+		_emailProcessManagementService = _scope.ServiceProvider.GetRequiredService<IEmailProcessManagementService>();
 		_roleManagementService = _scope.ServiceProvider.GetRequiredService<IRoleManagementService>();
 		_moduleManagementService = _scope.ServiceProvider.GetRequiredService<IModuleManagementService>();
 		_clientManagementService = _scope.ServiceProvider.GetRequiredService<IClientManagementService>();
@@ -98,6 +105,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		_dashboardService = _scope.ServiceProvider.GetRequiredService<IDashboardService>();
 		_atsRepository = _scope.ServiceProvider.GetRequiredService<IATSRepository>();
 		_bulkUploadMonitoringService = _scope.ServiceProvider.GetRequiredService<IBulkUploadMonitoringService>();
+		_atsActiveUserGuard = _scope.ServiceProvider.GetRequiredService<IAtsActiveUserGuard>();
 	}
 
 
@@ -107,11 +115,21 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 		{
 			if (_dbContext is not null)
 			{
-				// Table is in the ats schema
-				var sql = @"TRUNCATE TABLE 
-								ats.""AddressDetails"", 
-								ats.""DocumentDetails"", 
-								ats.""EducationalBackground"", 
+				// Table is in the ats schema.
+				//
+				// EmailProcessDetails is in the list even though nothing below seeds it: the
+				// table has a UNIQUE index on EmailProcess, so one test registering a copy list
+				// for "Withdrawn" would make every later test that registers the same one fail
+				// on the constraint rather than on its own assertion. The production seed never
+				// runs here - AppConfiguration skips IntializeDatabaseAsync in the Testing
+				// environment - so a test that needs a row arranges it itself.
+				var sql = @"TRUNCATE TABLE
+								ats.""EmailAccountOtp"",
+								ats.""EmailSendLog"",
+								ats.""EmailAccounts"",
+								ats.""EmailProcessDetails"",
+								ats.""AddressDetails"",
+								ats.""EducationalBackground"",
 								ats.""ReportDetails"",
 								ats.""ArchiveReport"",
 								ats.""EmailInvitationRequest"", 
@@ -148,6 +166,12 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 					VALUES ({0}, '182', TRUE, 0, NOW(), NOW());
 					""",
 					DefaultPackageName);
+
+				// One verified sender account, because the email pass now asks "is there
+				// anywhere to send" before it claims a single row. Without this every email
+				// test would exercise the exhausted-accounts path instead of the send path
+				// it means to test.
+				await SeedPrimaryEmailAccountAsync();
 			}
 
 			if (_authDbContext is not null)
@@ -174,6 +198,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 			await _hybridCache.RemoveByTagAsync("module");
 			await _hybridCache.RemoveByTagAsync("client");
 			await _hybridCache.RemoveByTagAsync("package");
+			await _hybridCache.RemoveByTagAsync("emailprocess");
 
 			if (_objectStorageService is MockObjectStorageService mockObjectStorage)
 				mockObjectStorage.Clear();
@@ -185,6 +210,40 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	}
 
 	/// <summary>
+	/// Inserts the one verified sender account every email test needs to exist.
+	/// </summary>
+	/// <remarks>
+	/// The password is protected with the configured key rather than written as plaintext,
+	/// because the registry decrypts it while building the account's pool and a raw value
+	/// throws before the test reaches what it is actually asserting. It never has to
+	/// authenticate: IEmailService is faked in IntegrationTestWebAppFactory, so no SMTP session
+	/// is ever opened.
+	/// </remarks>
+	private async Task SeedPrimaryEmailAccountAsync()
+	{
+		var protector = _scope.ServiceProvider.GetRequiredService<ISecretProtector>();
+
+		const string emailAddress = "ats-integration@example.com";
+
+		var encryptedPassword = protector.Protect(
+			"integration-test-app-password",
+			AtsEmailAccountSecrets.PasswordContext(emailAddress));
+
+		await _dbContext.Database.ExecuteSqlRawAsync(
+			"""
+			INSERT INTO ats."EmailAccounts"
+				("DisplayName", "EmailAddress", "SmtpHost", "SmtpPort", "EncryptedPassword",
+				 "Priority", "IsActive", "DailySendLimit", "VerificationStatus", "VerifiedAt",
+				 "ConsecutiveFailureCount", "CreatedAt", "UpdatedAt")
+			VALUES ('Applicant Tracking System', {0}, 'smtp.example.com', 587, {1},
+				 1, TRUE, 450, {2}, NOW(), 0, NOW(), NOW());
+			""",
+			emailAddress,
+			encryptedPassword,
+			AtsEmailAccountStatus.Verified);
+	}
+
+	/// <summary>
 	/// Creates a package and assigns it to the caller's client, so an order can be
 	/// placed against it. Orders now validate the package against the client's
 	/// assignments, so any test that creates one has to seed this first.
@@ -192,12 +251,14 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 	/// </summary>
 	protected async Task<string> SeedAssignedPackageAsync(
 		string packageName = DefaultPackageName,
-		int clientId = TestClientId)
+		int clientId = TestClientId,
+		bool? autoChasing = null)
 	{
 		var now = DateTime.UtcNow;
 
 		// InitializeAsync already created DefaultPackageName, so reuse it rather than
-		// tripping the unique index on PackageName.
+		// tripping the unique index on PackageName. A test that needs a specific
+		// screening type should use a distinct package name.
 		var package = await _dbContext.PackageDetails
 			.FirstOrDefaultAsync(existing => existing.PackageName == packageName);
 
@@ -209,6 +270,7 @@ public class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, 
 				PackageDescription = "182",
 				IsActive = true,
 				FollowUpEmail = 0,
+				AutoChasing = autoChasing,
 				CreatedAt = now,
 				UpdatedAt = now
 			};

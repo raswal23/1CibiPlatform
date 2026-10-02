@@ -22,6 +22,7 @@ public class GetMyModulesEndpoint : ICarterModule
 		.Produces<IReadOnlyList<int>>()
 		.Produces(StatusCodes.Status401Unauthorized)
 		.WithSummary("Get the authenticated ATS user's active modules")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

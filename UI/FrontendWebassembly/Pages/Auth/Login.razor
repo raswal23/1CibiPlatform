@@ -9,11 +9,11 @@
 
 @if (!_isLoading)
 {
-    <main class="auth-page">
+    <main class="auth-page" @onclick="HandleSecretClick">
         <div class="@GetAuthCardClass()">
             <section class="auth-panel auth-login-panel"
-                     aria-hidden="@(isRegisterMode || isForgotPasswordMode)"
-                     inert="@(isRegisterMode || isForgotPasswordMode ? string.Empty : null)">
+                     aria-hidden="@(isRegisterMode || isForgotPasswordMode || isSecretMode)"
+                     inert="@(isRegisterMode || isForgotPasswordMode || isSecretMode ? string.Empty : null)">
                 <div class="auth-content">
                     <div class="auth-icon-badge" aria-hidden="true">
                         <svg viewBox="0 0 24 24"
@@ -54,7 +54,7 @@
                                     <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                                 <MudTextField @bind-Value="loginEmail"
-                                              Placeholder="admin@cibi.com"
+                                              Placeholder="juandelacruz@cibi.com.ph"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -102,29 +102,31 @@
                                          Color="Color.Primary"
                                          Dense="true"
                                          Class="auth-remember" />
-                            <button type="button" class="auth-link auth-link-button" @onclick="ShowForgotPassword">
+                            <button type="button" class="auth-link auth-link-button" @onclick="ShowForgotPassword" @onclick:stopPropagation="true">
                                 Forgot password?
                             </button>
                         </div>
 
-                        <ButtonComponent ButtonType="ButtonType.Submit"
-                                         OnClick="HandleLogin"
-                                         Disabled="@(!loginFormValid || isLoginLoading)"
-                                         Class="auth-submit">
-                            @if (isLoginLoading)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                            }
-                            else
-                            {
-                                <span>Sign In</span>
-                            }
-                        </ButtonComponent>
+                        <div @onclick:stopPropagation="true">
+                            <ButtonComponent ButtonType="ButtonType.Submit"
+                                             OnClick="HandleLogin"
+                                             Disabled="@(!loginFormValid || isLoginLoading)"
+                                             Class="auth-submit">
+                                @if (isLoginLoading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <span>Sign In</span>
+                                }
+                            </ButtonComponent>
+                        </div>
                     </MudForm>
 
                     <p class="auth-footer-line">
                         Don't have an account?
-                        <button type="button" class="auth-inline-link" @onclick="ShowRegister">Sign up</button>
+                        <button type="button" class="auth-inline-link" @onclick="ShowRegister" @onclick:stopPropagation="true">Sign up</button>
                     </p>
                 </div>
             </section>
@@ -184,7 +186,7 @@
                                     <path d="M4 7l8 6 8-6" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
                                 <MudTextField @bind-Value="forgotPasswordEmail"
-                                              Placeholder="admin@cibi.com"
+                                              Placeholder="juandelacruz@cibi.com.ph"
                                               Variant="Variant.Outlined"
                                               Margin="Margin.Dense"
                                               Required="true"
@@ -196,6 +198,7 @@
                             </div>
                         </div>
 
+                        <div @onclick:stopPropagation="true">
                         <ButtonComponent ButtonType="ButtonType.Submit"
                                          OnClick="HandleForgotPassword"
                                          Disabled="@(!forgotPasswordFormValid || isForgotPasswordLoading)"
@@ -220,11 +223,12 @@
                                 <span>Send reset link</span>
                             }
                         </ButtonComponent>
+                        </div>
                     </MudForm>
 
                     <p class="auth-footer-line">
                         Remembered your password?
-                        <button type="button" class="auth-inline-link" @onclick="ShowLogin">Sign in</button>
+                        <button type="button" class="auth-inline-link" @onclick="ShowLogin" @onclick:stopPropagation="true">Sign in</button>
                     </p>
                 </div>
             </section>
@@ -367,6 +371,7 @@
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                                     </svg>
                                     <MudTextField @bind-Value="registerPassword"
+                                                  @bind-Value:after="RevalidateConfirmPassword"
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
@@ -397,10 +402,12 @@
                                         <rect x="4" y="10" width="16" height="10" rx="2" />
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
                                     </svg>
-                                    <MudTextField @bind-Value="confirmPassword"
+                                    <MudTextField @ref="confirmPasswordField"
+                                                  @bind-Value="confirmPassword"
                                                   Placeholder="••••••••"
                                                   Variant="Variant.Outlined"
                                                   Margin="Margin.Dense"
+                                                  Immediate="true"
                                                   Required="true"
                                                   RequiredError="Please confirm your password"
                                                   InputType="@confirmPasswordInput"
@@ -423,31 +430,33 @@
                             </div>
                         }
 
-                        <ButtonComponent ButtonType="ButtonType.Submit"
-                                         OnClick="HandleRegister"
-                                         Disabled="@(!registerFormValid || isRegisterLoading)"
-                                         Class="auth-submit auth-register-submit">
-                            @if (isRegisterLoading)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                            }
-                            else
-                            {
-                                <span>Create Account</span>
-                            }
-                        </ButtonComponent>
+                        <div @onclick:stopPropagation="true">
+                            <ButtonComponent ButtonType="ButtonType.Submit"
+                                             OnClick="HandleRegister"
+                                             Disabled="@(!registerFormValid || isRegisterLoading)"
+                                             Class="auth-submit auth-register-submit">
+                                @if (isRegisterLoading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <span>Create Account</span>
+                                }
+                            </ButtonComponent>
+                        </div>
                     </MudForm>
 
                     <p class="auth-footer-line">
                         Already have an account?
-                        <button type="button" class="auth-inline-link" @onclick="ShowLogin">Sign in</button>
+                        <button type="button" class="auth-inline-link" @onclick="ShowLogin" @onclick:stopPropagation="true">Sign in</button>
                     </p>
                 </div>
             </section>
 
             <section class="auth-panel auth-page-panel auth-front"
-                     aria-hidden="@isRegisterMode"
-                     inert="@(isRegisterMode ? string.Empty : null)">
+                     aria-hidden="@(isRegisterMode || isSecretMode)"
+                     inert="@(isRegisterMode || isSecretMode ? string.Empty : null)">
                 <div class="auth-content">
                     @if (isForgotPasswordMode)
                     {
@@ -462,7 +471,7 @@
                         </div>
                         <h1>Welcome Back!</h1>
                         <p>Remembered your password? Return to sign in and continue to One Platform.</p>
-                        <button type="button" class="auth-ghost-button" @onclick="ShowLogin">Sign In</button>
+                        <button type="button" class="auth-ghost-button" @onclick="ShowLogin" @onclick:stopPropagation="true">Sign In</button>
                     }
                     else
                     {
@@ -478,14 +487,14 @@
                         </div>
                         <h1>Hello, Friend!</h1>
                         <p>Enter your personal details and start your journey with One Platform.</p>
-                        <button type="button" class="auth-ghost-button" @onclick="ShowRegister">Sign Up</button>
+                        <button type="button" class="auth-ghost-button" @onclick="ShowRegister" @onclick:stopPropagation="true">Sign Up</button>
                     }
                 </div>
             </section>
 
             <section class="auth-panel auth-page-panel auth-back"
-                     aria-hidden="@(!isRegisterMode)"
-                     inert="@(!isRegisterMode ? string.Empty : null)">
+                     aria-hidden="@(!isRegisterMode && !isSecretMode)"
+                     inert="@(!isRegisterMode && !isSecretMode ? string.Empty : null)">
                 <div class="auth-content">
                     <div class="auth-icon-badge ghost" aria-hidden="true">
                         <svg viewBox="0 0 24 24"
@@ -498,8 +507,57 @@
                     </div>
                     <h1>Welcome Back!</h1>
                     <p>To keep connected with us, please sign in with your personal info.</p>
-                    <button type="button" class="auth-ghost-button" @onclick="ShowLogin">Sign In</button>
+                    <button type="button" class="auth-ghost-button" @onclick="ShowLogin" @onclick:stopPropagation="true">Sign In</button>
                 </div>
+            </section>
+
+            @* The closed book's leather front cover (easter egg) - and the credits page
+               in one: the author names burn in gold-framed leather once the pages have
+               clapped shut around it. The whole cover is the way back: any click (or
+               Enter/Space, it stands in for the old Flip Back button) unfolds the book
+               and returns to the login. *@
+            <section class="auth-cover-panel"
+                     role="button"
+                     tabindex="@(isSecretMode ? 0 : -1)"
+                     aria-label="Flip the book back open to return to sign in"
+                     aria-hidden="@(!isSecretMode)"
+                     inert="@(!isSecretMode ? string.Empty : null)"
+                     @onclick="CloseSecretPage"
+                     @onclick:stopPropagation="true"
+                     @onkeydown="HandleCoverKeyDown">
+                <div class="auth-secret-embers" aria-hidden="true">
+                    @for (var i = 0; i < 120; i++)
+                    {
+                        <span style="@GetEmberStyle(i)"></span>
+                    }
+                </div>
+                <div class="auth-cover-frame">
+                    <div class="auth-cover-emblem" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.5 2.5c-4.6.4-8.4 2-11 4.6-2.1 2.1-3.4 4.8-3.9 7.9l-1.9 5.6c-.1.4 0 .8.3 1.1.3.3.7.4 1.1.3l3.3-1.1.9.9 1.4-1.4-.9-.9.7-2.1c.2.1.5.1.8.1 2.5 0 4.9-1.1 7-3.2 2.6-2.6 4.2-6.4 4.6-11 0-.3-.1-.5-.3-.7-.2-.2-.4-.3-.7-.3l-1.4.2zm-2 3.9c-.4 2.9-1.5 5.3-3.2 7-1.6 1.6-3.3 2.4-5 2.4h-.2l6.2-6.2-1.4-1.4-6.2 6.2c.3-1.9 1.2-3.7 2.6-5.1 1.7-1.7 4.1-2.8 7-3.2l.2.3z" />
+                        </svg>
+                    </div>
+                    <h2 class="auth-cover-title">Crafted By</h2>
+                    <ul class="auth-secret-authors">
+                        <li>
+                            <span class="auth-secret-author-name">Russel Gutierrez</span>
+                            <span class="auth-secret-author-role">Lead Developer</span>
+                        </li>
+                        <li>
+                            <span class="auth-secret-author-name">Renzy Gutierrez</span>
+                            <span class="auth-secret-author-role">Software Developer</span>
+                        </li>
+                        <li>
+                            <span class="auth-secret-author-name">Siegmund Valdemoro</span>
+                            <span class="auth-secret-author-role">Software Developer</span>
+                        </li>
+                        <li>
+                            <span class="auth-secret-author-name">Christian Lorenzo Evangelista</span>
+                            <span class="auth-secret-author-role">Project Manager</span>
+                        </li>
+                    </ul>
+                </div>
+                <span class="auth-cover-spine" aria-hidden="true"></span>
             </section>
         </div>
     </main>

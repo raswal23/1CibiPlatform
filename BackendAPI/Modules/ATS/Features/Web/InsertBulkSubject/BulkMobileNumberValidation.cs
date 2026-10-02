@@ -17,7 +17,8 @@ public static class BulkMobileNumberValidation
 		CancellationToken ct = default)
 	{
 		await using var stream = file.OpenReadStream();
-		using var reader = new StreamReader(stream);
+		var csvContent = await CsvTextDecoder.DecodeAsync(stream, ct);
+		using var reader = new StringReader(csvContent);
 		using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
 		if (!await csv.ReadAsync() || !csv.ReadHeader())

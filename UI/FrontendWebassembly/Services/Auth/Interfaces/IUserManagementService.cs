@@ -22,6 +22,12 @@ public interface IUserManagementService
 	Task<ServiceResponse<bool>> AddAppSubRoleAsync(AddAppSubRoleDTO addAppSubRoleDTO);
 
 	Task<ServiceResponse<EditUserDTO>> EditUserAsync(UnApprovedUsersDTO editUserDTO);
+
+	/// <summary>Activates or deactivates a user, changing nothing else about them.</summary>
+	Task<ServiceResponse<EditUserStatusDTO>> EditUserStatusAsync(EditUserStatusDTO editUserStatusDTO);
+
+	/// <summary>Rejects a user awaiting approval, taking them off the approval queue.</summary>
+	Task<ServiceResponse<bool>> RejectUserAsync(Guid userId);
 	Task<ServiceResponse<EditApplicationDTO>> EditApplicationAsync(ApplicationsDTO editApplicationDTO);
 	Task<ServiceResponse<EditSubMenuDTO>> EditSubMenuAsync(SubMenusDTO editSubMenuDTO);
 	Task<ServiceResponse<EditRoleDTO>> EditRoleAsync(RolesDTO editRoleDTO);

@@ -28,10 +28,15 @@
 
                 <div class="philsys-field philsys-suffix-field">
                     <label>Suffix</label>
+                    @* Adornment.None drops MudBlazor's dropdown caret, matching the Suffix
+                       and Sex selects on the application form (and New Order's package
+                       select). The value is still centred in the 44px band by the
+                       .philsys-suffix-field rules in this component's stylesheet. *@
                     <MudSelect @bind-Value="identityData!.suffix"
                                FullWidth="true"
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
+                               Adornment="Adornment.None"
                                Class="philsys-basic-input">
                         <MudSelectItem Value=@("")>None</MudSelectItem>
                         <MudSelectItem Value=@("Jr.")>Jr.</MudSelectItem>
@@ -80,7 +85,13 @@
                 <label>Birth date <span class="philsys-required">*</span></label>
                 <div class="philsys-date-input-wrap">
                     <MudIcon Icon="@Icons.Material.Outlined.CalendarToday" Class="philsys-date-leading-icon" />
+                    @* Tagged for the same reason as the application form's pickers: this
+                       component also renders inside ApplicationFormComponent (via
+                       PhilSysComponent), which runs under GenericLayout's unbound theme
+                       provider, so the teleported calendar popup would not follow dark
+                       mode. Harmless on /philsys, which is on MainLayout and themed. *@
                     <MudDatePicker @bind-Date="BirthDate"
+                                   PopoverClass="oneplatform-unbound-picker-popover"
                                    Adornment="Adornment.End"
                                    Placeholder="dd/mm/yyyy"
                                    Required="true"

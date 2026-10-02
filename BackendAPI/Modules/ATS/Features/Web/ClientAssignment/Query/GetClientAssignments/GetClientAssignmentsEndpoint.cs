@@ -24,6 +24,7 @@ public sealed class GetClientAssignmentsEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get ATS client assignments")
 		.WithDescription("Returns active ATS users and their current client assignment using server-side search and pagination.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

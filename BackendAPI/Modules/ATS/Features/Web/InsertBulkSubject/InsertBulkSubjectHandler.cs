@@ -18,7 +18,9 @@ public class InsertBulkSubjectCommandValidator : AbstractValidator<InsertBulkSub
 			.WithMessage("Only .csv files are allowed.")
 			.Must(file => file != null && file.Length <= 25 * 1024 * 1024)
 			.WithMessage("File size exceeds the 25 MB limit.")
-			.CustomAsync(BulkMobileNumberValidation.ValidateMobileNumbersAsync);
+			.CustomAsync(BulkMobileNumberValidation.ValidateMobileNumbersAsync)
+			.CustomAsync(BulkEmailValidation.ValidateEmailAddressesAsync)
+			.CustomAsync(BulkIdentityFieldsValidation.ValidateIdentityFieldsAsync);
 	}
 }
 

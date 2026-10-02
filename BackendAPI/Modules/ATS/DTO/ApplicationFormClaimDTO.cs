@@ -9,10 +9,7 @@ public record ApplicationFormClaimDTO
 {
 	public Guid EmailInvitationID { get; init; }
 
-	public DateTime? HashTokenExpiration { get; init; }
-
+	// The link itself no longer expires, so the form's own status is the whole
+	// authorization decision: only a Pending form may be opened or written to.
 	public string? ApplicationFormStatus { get; init; }
-
-	public bool IsExpired => !HashTokenExpiration.HasValue
-		|| HashTokenExpiration.Value <= DateTime.UtcNow;
 }

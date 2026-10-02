@@ -45,4 +45,15 @@ public class FilePdfService : IFilePdfService
 		stream.Position = 0;
 		return Task.FromResult(stream);
 	}
+
+	public Task<MemoryStream> GenerateApplicationFormPreviewPdfAsync(ApplicationFormPreviewDTO preview, CancellationToken cancellationToken = default)
+	{
+		QuestPDF.Settings.License = LicenseType.Professional;
+
+		var stream = new MemoryStream();
+		var document = new ApplicationFormPreviewPdfDocument(preview);
+		document.GeneratePdf(stream);
+		stream.Position = 0;
+		return Task.FromResult(stream);
+	}
 }

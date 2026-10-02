@@ -78,4 +78,11 @@ public class PhilSysRepository : IPhilSysRepository
 		await _dbcontext.PhilSysTransactionResults.AddAsync(philSysTransactionResult);
 		return true;
 	}
+
+	public async Task<List<PhilSysTransaction>> GetExpiredUntransactedTransactionsAsync(DateTime cutoffUtc)
+	{
+		return await _dbcontext.PhilSysTransactions
+			.Where(t => !t.IsTransacted && t.CreatedAt <= cutoffUtc)
+			.ToListAsync();
+	}
 }

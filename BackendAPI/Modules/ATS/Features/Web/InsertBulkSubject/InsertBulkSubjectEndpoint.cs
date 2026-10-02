@@ -21,6 +21,7 @@ public class InsertBulkSubjectEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Insert Bulk Subject")
 		.WithDescription("Uploads a file and inserts its metadata to the database in a transactional manner.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

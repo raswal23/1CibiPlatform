@@ -347,7 +347,8 @@ public sealed class BulkUploadRepository : IBulkUploadDashboardRepository
 			OrderType = file.OrderType,
 			Status = file.Status,
 			DateCreated = file.DateCreated,
-			ClaimedAt = file.ClaimedAt
+			ClaimedAt = file.ClaimedAt,
+			AutoChasing = file.AutoChasing
 		});
 	}
 

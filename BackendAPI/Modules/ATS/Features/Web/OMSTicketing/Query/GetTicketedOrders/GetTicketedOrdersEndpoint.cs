@@ -40,6 +40,7 @@ public class GetTicketedOrdersEndpoint : ICarterModule
 			"Retrieves the caller's orders queued for OMS auto-ticketing with keyset "
 			+ "pagination, optionally filtered by ticket status, including the OMS "
 			+ "ticket number and delivery date once a ticket has been raised.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

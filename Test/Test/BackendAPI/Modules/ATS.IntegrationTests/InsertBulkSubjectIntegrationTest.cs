@@ -72,6 +72,43 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		}
 	}
 
+	[Fact]
+	public async Task InsertBulkSubject_ShouldAcceptFile_WhenEmailIsBlank()
+	{
+		// A blank email is a per-row concern for the background parser, which rejects
+		// only that row. It must not fail the whole file at upload time.
+		var package = await SeedAssignedPackageAsync("Air BnB");
+
+		var blankEmailCsv = System.Text.Encoding.UTF8.GetBytes(
+			"LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nDela Cruz,Juan,S,,09171234567");
+		var blankEmailFileName = $"{Guid.CreateVersion7()}-bulkfile.csv";
+
+		var dto = new BulkUploadFileDetailsDTO
+		{
+			BulkFile = CreateFakeFormFile(blankEmailCsv, blankEmailFileName),
+			FileName = blankEmailFileName,
+			Status = "Pending",
+			OrderType = "Rush",
+			PackageId = DefaultPackageId,
+			PackageType = package
+		};
+
+		var command = new InsertBulkSubjectCommand(dto);
+
+		var result = await _sender.Send(command);
+
+		result.isAdded.Should().BeTrue();
+
+		var storedFileKey = _dbContext.BulkUploadFileDetails
+			.Where(file => file.FileName == blankEmailFileName)
+			.Select(file => file.FileKey)
+			.FirstOrDefault();
+		if (!string.IsNullOrWhiteSpace(storedFileKey))
+		{
+			await _objectStorageService.DeleteAsync(storedFileKey);
+		}
+	}
+
 	#endregion
 
 	#region Negative Path
@@ -157,6 +194,37 @@ public class InsertBulkSubjectIntegrationTest : BaseIntegrationTest
 		exception.Which.Errors.Should().Contain(e =>
 			e.PropertyName.Contains("BulkFile")
 			&& e.ErrorMessage == "Mobile number must be no more than 11 digits in row(s): 2.");
+	}
+
+	[Fact]
+	public async Task InsertBulkSubject_ShouldThrowValidationException_WhenEmailIsMalformed()
+	{
+		// Arrange
+		var invalidCsv = System.Text.Encoding.UTF8.GetBytes(
+			"LastName,FirstName,MiddleInitial,EmailAddress,MobileNumber\nDela Cruz,Juan,S,not-an-email,09171234567");
+
+		var dto = new BulkUploadFileDetailsDTO
+		{
+			BulkFile = CreateFakeFormFile(invalidCsv, bulkFileName),
+			FileName = bulkFileName,
+			Status = "Pending",
+			OrderType = "Rush",
+			PackageId = DefaultPackageId,
+			PackageType = "Air BnB"
+		};
+
+		var command = new InsertBulkSubjectCommand(dto);
+
+		// Act
+		Func<Task> act = async () => await _sender.Send(command);
+
+		// Assert
+		var exception = await act.Should()
+			.ThrowAsync<ValidationException>();
+
+		exception.Which.Errors.Should().Contain(e =>
+			e.PropertyName.Contains("BulkFile")
+			&& e.ErrorMessage == "Email address is not a valid email in row(s): 2.");
 	}
 
 	[Fact]

@@ -74,6 +74,23 @@ public interface IOMSTicketingRepository
 		Guid emailInvitationId,
 		CancellationToken cancellationToken);
 
+	/// <summary>
+	/// Reads the scope identity of many orders at once, so a bulk retry can enforce the
+	/// caller's scope per row. Ids that do not exist are simply absent from the result.
+	/// </summary>
+	Task<List<TicketRetryTargetDTO>> GetRetryTargetsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken);
+
+	/// <summary>
+	/// The set form of <see cref="RequeueExhaustedTicketAsync"/>. Returns how many rows
+	/// actually moved: ids that are no longer exhausted do not match the predicate, so a
+	/// partly-stale selection requeues the rest rather than failing outright.
+	/// </summary>
+	Task<int> RequeueExhaustedTicketsAsync(
+		IReadOnlyCollection<Guid> emailInvitationIds,
+		CancellationToken cancellationToken);
+
 	Task<List<TicketedOrderListDTO>> GetTicketedOrdersPageAsync(
 		DateTime? afterOrderCreatedAt,
 		Guid? afterInvitationId,

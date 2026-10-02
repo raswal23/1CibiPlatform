@@ -50,10 +50,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("CurrentStayFrom")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("CurrentTypeOfOwnership")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -78,10 +74,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("PermanentProvince")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("PermanentTypeOfOwnership")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -431,6 +423,158 @@ namespace APIs.Migrations.ATS
                     b.ToTable("AuditTrail", "ats");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccount", b =>
+                {
+                    b.Property<int>("AtsEmailAccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AtsEmailAccountId"));
+
+                    b.Property<int>("ConsecutiveFailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CoolingDownUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DailySendLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EncryptedPassword")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LastFailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("LastSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SmtpHost")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("SmtpPort")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailAccountId");
+
+                    b.HasIndex("EmailAddress")
+                        .IsUnique();
+
+                    b.HasIndex("Priority")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "VerificationStatus", "Priority");
+
+                    b.ToTable("EmailAccounts", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccountOtp", b =>
+                {
+                    b.Property<long>("AtsEmailAccountOtpId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("AtsEmailAccountOtpId"));
+
+                    b.Property<int>("AtsEmailAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OtpCodeHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PendingChangesJson")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailAccountOtpId");
+
+                    b.HasIndex("AtsEmailAccountId", "Purpose", "IsUsed", "CreatedAt")
+                        .IsDescending(false, false, false, true);
+
+                    b.ToTable("EmailAccountOtp", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailSendLog", b =>
+                {
+                    b.Property<long>("AtsEmailSendLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("AtsEmailSendLogId"));
+
+                    b.Property<int>("AtsEmailAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("AtsEmailSendLogId");
+
+                    b.HasIndex("AtsEmailAccountId", "SentAt");
+
+                    b.ToTable("EmailSendLog", "ats");
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.AtsNotification", b =>
                 {
                     b.Property<Guid>("NotificationId")
@@ -492,6 +636,9 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("ClaimedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -510,6 +657,11 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsFileKeyDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("OrderType")
                         .IsRequired()
@@ -602,40 +754,10 @@ namespace APIs.Migrations.ATS
                     b.ToTable("ClientDetails", "ats");
                 });
 
-            modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
-                {
-                    b.Property<Guid>("DocumentDetailsID")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DocumentName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("DocumentValue")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<Guid>("EmailInvitationID")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("DocumentDetailsID");
-
-                    b.HasIndex("EmailInvitationID");
-
-                    b.ToTable("DocumentDetails", "ats");
-                });
-
             modelBuilder.Entity("ATS.Data.Entities.EducationalBackground", b =>
                 {
                     b.Property<Guid>("EducationalBackgroundID")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("BachelorsAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("BachelorsDegree")
                         .HasMaxLength(255)
@@ -651,46 +773,12 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("BachelorsGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("BachelorsMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("BachelorsSchoolName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeDegree")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeDiplomaFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeDiplomaFileName")
-                        .HasColumnType("text");
-
-                    b.Property<DateOnly?>("CollegeGraduationDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("CollegeMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("CollegeSchoolName")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DoctorateAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("DoctorateDegree")
                         .HasMaxLength(255)
@@ -706,16 +794,8 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("DoctorateGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("DoctorateMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<Guid>("EmailInvitationID")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("HighSchoolAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("HighSchoolDiplomaFileKey")
                         .HasMaxLength(255)
@@ -735,10 +815,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("MastersAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("MastersDegree")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -753,23 +829,11 @@ namespace APIs.Migrations.ATS
                     b.Property<DateOnly?>("MastersGraduationDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("MastersMajor")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<string>("MastersSchoolName")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("PhDSchoolName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("SchoolSpecificLOAFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("SeniorHighSchoolAddress")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -805,11 +869,17 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid?>("BulkFileID")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("ClientId")
                         .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("DisputeCategory")
                         .HasMaxLength(255)
@@ -835,7 +905,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EmailSentStatus")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -843,6 +912,11 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<int>("FollowUpSentCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<DateTime?>("FormCompletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -855,13 +929,16 @@ namespace APIs.Migrations.ATS
                     b.Property<DateTime>("HashTokenCreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("HashTokenExpiration")
+                    b.Property<DateTime?>("HashTokenExpiration")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsTicketed")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<DateOnly?>("LastFollowUpSentDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -876,6 +953,11 @@ namespace APIs.Migrations.ATS
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("NeedsEmploymentVerification")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("NeedsProjection")
                         .ValueGeneratedOnAdd()
@@ -911,8 +993,16 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("SSSNumber")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("SelectPackage")
                         .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TINNumber")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -943,6 +1033,9 @@ namespace APIs.Migrations.ATS
 
                     b.HasIndex("EmailSentStatus");
 
+                    b.HasIndex("NeedsEmploymentVerification")
+                        .HasFilter("\"NeedsEmploymentVerification\"");
+
                     b.HasIndex("PackageId");
 
                     b.HasIndex("TicketStatus");
@@ -960,6 +1053,38 @@ namespace APIs.Migrations.ATS
                     b.HasIndex("FirstName", "LastName", "EmailInvitationID");
 
                     b.ToTable("EmailInvitationRequest", "ats");
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.EmailProcessDetails", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CCEmail")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmailProcess")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailProcess")
+                        .IsUnique();
+
+                    b.ToTable("EmailProcessDetails", "ats");
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.LicensesDetails", b =>
@@ -1081,6 +1206,9 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PackageId"));
+
+                    b.Property<bool?>("AutoChasing")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1222,13 +1350,6 @@ namespace APIs.Migrations.ATS
                     b.Property<Guid>("ProfessionalExperiencesID")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("COEUploadFileKey")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("COEUploadFileName")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -1262,10 +1383,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("Emp1PermissionToContact")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Emp1ReasonForLeaving")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1314,10 +1431,6 @@ namespace APIs.Migrations.ATS
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Emp2ReasonForLeaving")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<DateOnly?>("Emp2StartDate")
                         .HasColumnType("date");
 
@@ -1360,10 +1473,6 @@ namespace APIs.Migrations.ATS
                         .HasColumnType("character varying(255)");
 
                     b.Property<string>("Emp3PermissionToContact")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Emp3ReasonForLeaving")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -1706,6 +1815,24 @@ namespace APIs.Migrations.ATS
                     b.Navigation("EmailInvitationRequest");
                 });
 
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailAccountOtp", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.AtsEmailAccount", null)
+                        .WithMany()
+                        .HasForeignKey("AtsEmailAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ATS.Data.Entities.AtsEmailSendLog", b =>
+                {
+                    b.HasOne("ATS.Data.Entities.AtsEmailAccount", null)
+                        .WithMany()
+                        .HasForeignKey("AtsEmailAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ATS.Data.Entities.BulkUploadFileDetails", b =>
                 {
                     b.HasOne("ATS.Data.Entities.PackageDetails", null)
@@ -1724,15 +1851,6 @@ namespace APIs.Migrations.ATS
                         .IsRequired();
 
                     b.Navigation("Package");
-                });
-
-            modelBuilder.Entity("ATS.Data.Entities.DocumentDetails", b =>
-                {
-                    b.HasOne("ATS.Data.Entities.EmailInvitationRequest", null)
-                        .WithMany("Documents")
-                        .HasForeignKey("EmailInvitationID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("ATS.Data.Entities.EducationalBackground", b =>
@@ -1846,8 +1964,6 @@ namespace APIs.Migrations.ATS
                     b.Navigation("ApplicantSearchProjection");
 
                     b.Navigation("ArchiveReports");
-
-                    b.Navigation("Documents");
 
                     b.Navigation("EducationalBackground");
 

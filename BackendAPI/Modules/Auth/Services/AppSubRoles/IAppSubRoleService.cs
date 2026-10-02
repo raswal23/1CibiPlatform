@@ -8,8 +8,8 @@ public interface IAppSubRoleService
 
 	Task<bool> DeleteAppSubRoleAsync(int AppSubRoleId);
 
-	Task<AppSubRoleDTO> EditAppSubRoleAsync(EditAppSubRoleDTO appSubRoleDTO);
-	Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole);
+	Task<AppSubRoleDTO> EditAppSubRoleAsync(EditAppSubRoleDTO appSubRoleDTO, CancellationToken cancellationToken);
+	Task<bool> AddAppSubRoleAsync(AddAppSubRoleDTO appSubRole, CancellationToken cancellationToken);
 
 	Task<bool> SendToUserEmailAsync(AccountNotificationDTO accountNotificationDTO);
 }

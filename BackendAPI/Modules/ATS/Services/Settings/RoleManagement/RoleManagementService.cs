@@ -57,7 +57,7 @@ public class RoleManagementService : IRoleManagementService
 		return await _roleRepository.AddRoleAsync(roleDTO);
 	}
 
-	public async Task<RoleDetailsDTO> EditRoleAsync(EditRoleDTO roleDTO)
+	public async Task<RoleDetailsDTO> EditRoleAsync(EditRoleDTO roleDTO, CancellationToken cancellationToken)
 	{
 		var logContext = new
 		{
@@ -72,6 +72,17 @@ public class RoleManagementService : IRoleManagementService
 		{
 			_logger.LogError("{RoleId} was not found during update operation: {@Context}", roleDTO.RoleId, logContext);
 			throw new NotFoundException($"Role with ID {roleDTO.RoleId} was not found.");
+		}
+
+		// Check-then-write: acceptable for an admin screen; a racing assignment merely
+		// produces a role disabled a moment too late.
+		if (existingRole.IsActive && !roleDTO.IsActive)
+		{
+			var activeUsers = await _roleRepository.CountActiveUsersInRoleAsync(roleDTO.RoleId, cancellationToken);
+			if (activeUsers > 0)
+				throw new ConflictException(activeUsers == 1
+					? "Cannot disable this role: 1 active user currently holds it."
+					: $"Cannot disable this role: {activeUsers} active users currently hold it.");
 		}
 
 		existingRole.RoleName = roleDTO.RoleName!;

@@ -25,6 +25,7 @@ public class GetDashboardEndpoint : ICarterModule
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.WithSummary("Get ATS dashboard data")
 		.WithDescription("Retrieves ATS dashboard metrics, optionally filtered by requester.")
-		.RequireAuthorization();
+		.RequireAuthorization()
+		.RequireActiveAtsUser();
 	}
 }

@@ -91,10 +91,55 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 			.ReturnsAsync(true);
 
 		// Act
-		var result = await _fixture.AppSubRoleService.AddAppSubRoleAsync(appSubRole);
+		var result = await _fixture.AppSubRoleService.AddAppSubRoleAsync(appSubRole, CancellationToken.None);
 
 		// Assert
 		result.Should().BeTrue();
+	}
+
+	// One assignment per user per application per submenu. A second row leaves which role
+	// applies undefined, and the list cannot tell the duplicates apart.
+	[Fact]
+	public async Task AddAppSubRoleAsync_ShouldThrow_WhenTheAssignmentAlreadyExists()
+	{
+		// Arrange
+		var appSubRole = new AddAppSubRoleDTO { UserId = Guid.CreateVersion7(), AppId = 1, SubMenuId = 1, RoleId = 1, AssignedBy = Guid.CreateVersion7() };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.AppSubRoleExistsAsync(appSubRole.UserId, appSubRole.AppId, appSubRole.SubMenuId, null, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(true);
+
+		// Act
+		Func<Task> act = async () => await _fixture.AppSubRoleService.AddAppSubRoleAsync(appSubRole, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ConflictException>();
+
+		// The write must not be attempted at all - the check is a gate, not a cleanup. Matched
+		// on THIS dto rather than It.IsAny: the fixture is an IClassFixture, so the mock's
+		// invocations accumulate across every test in the class and a broad matcher would
+		// count another test's successful add.
+		_fixture.MockAuthRepository.Verify(x => x.AddAppSubRoleAsync(appSubRole), Times.Never);
+	}
+
+	// The role is deliberately not part of the key: granting the same person a SECOND role on
+	// the same submenu is exactly the duplicate this rejects.
+	[Fact]
+	public async Task AddAppSubRoleAsync_ShouldThrow_WhenOnlyTheRoleDiffers()
+	{
+		// Arrange
+		var userId = Guid.CreateVersion7();
+		var appSubRole = new AddAppSubRoleDTO { UserId = userId, AppId = 1, SubMenuId = 1, RoleId = 9, AssignedBy = Guid.CreateVersion7() };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.AppSubRoleExistsAsync(userId, 1, 1, null, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(true);
+
+		// Act
+		Func<Task> act = async () => await _fixture.AppSubRoleService.AddAppSubRoleAsync(appSubRole, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ConflictException>();
 	}
 
 	[Fact]
@@ -108,11 +153,39 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 			.ReturnsAsync((AuthUserAppRole?)null);
 
 		// Act
-		Func<Task> act = async () => await _fixture.AppSubRoleService.EditAppSubRoleAsync(editDto);
+		Func<Task> act = async () => await _fixture.AppSubRoleService.EditAppSubRoleAsync(editDto, CancellationToken.None);
 
 		// Assert
 		await act.Should().ThrowAsync<NotFoundException>()
 			.WithMessage($"AppSubRole with ID {editDto.AppSubRoleId} was not found.");
+	}
+
+	// An edit can land on an existing combination just as easily as an add, so it is guarded
+	// too - otherwise the rule has a back door.
+	[Fact]
+	public async Task EditAppSubRoleAsync_ShouldThrow_WhenItWouldDuplicateAnotherAssignment()
+	{
+		// Arrange
+		var editDto = new EditAppSubRoleDTO { AppSubRoleId = 1, UserId = Guid.CreateVersion7(), AppId = 2, SubMenuId = 2, RoleId = 2 };
+		var existingAppSubRole = new AuthUserAppRole { AppRoleId = 1, UserId = editDto.UserId, AppId = 1, Submenu = 1, RoleId = 1 };
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.GetAppSubRoleAsync(editDto.AppSubRoleId))
+			.ReturnsAsync(existingAppSubRole);
+
+		_fixture.MockAuthRepository
+			.Setup(x => x.AppSubRoleExistsAsync(editDto.UserId, editDto.AppId, editDto.SubMenuId, editDto.AppSubRoleId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(true);
+
+		// Act
+		Func<Task> act = async () => await _fixture.AppSubRoleService.EditAppSubRoleAsync(editDto, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<ConflictException>();
+
+		// Matched on this specific row, not It.IsAny - the mock is shared across the class
+		// (IClassFixture), so a broad matcher would see another test's successful edit.
+		_fixture.MockAuthRepository.Verify(x => x.EditAppSubRoleAsync(existingAppSubRole), Times.Never);
 	}
 
 	[Fact]
@@ -131,8 +204,14 @@ public class AppSubRoleServiceTests : IClassFixture<AuthServiceFixture>
 			.Setup(x => x.EditAppSubRoleAsync(existingAppSubRole))
 			.ReturnsAsync(updatedAppSubRole);
 
+		// No collision: excluding this row is what lets an operator change the role on an
+		// existing assignment without it colliding with itself.
+		_fixture.MockAuthRepository
+			.Setup(x => x.AppSubRoleExistsAsync(editDto.UserId, editDto.AppId, editDto.SubMenuId, editDto.AppSubRoleId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(false);
+
 		// Act
-		var result = await _fixture.AppSubRoleService.EditAppSubRoleAsync(editDto);
+		var result = await _fixture.AppSubRoleService.EditAppSubRoleAsync(editDto, CancellationToken.None);
 
 		// Assert
 		result.Should().NotBeNull();

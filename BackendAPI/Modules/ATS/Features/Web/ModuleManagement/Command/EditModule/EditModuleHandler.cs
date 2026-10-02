@@ -36,7 +36,7 @@ public class EditModuleHandler : ICommandHandler<EditModuleCommand, EditModuleRe
 
 	public async Task<EditModuleResult> Handle(EditModuleCommand request, CancellationToken cancellationToken)
 	{
-		var editedModule = await _moduleManagementService.EditModuleAsync(request.editModule);
+		var editedModule = await _moduleManagementService.EditModuleAsync(request.editModule, cancellationToken);
 		return new EditModuleResult(editedModule);
 	}
 }

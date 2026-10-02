@@ -30,11 +30,16 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		await _repository.ListAsync(cancellationToken);
 
 	/// <summary>
-	/// Lists the in-progress ATS candidates that still need a verification email.
-	/// A candidate is withheld while a request is awaiting a response or has been
-	/// confirmed; rejected and lapsed requests release the candidate so a fresh
-	/// request can be sent.
+	/// Lists the employment segments of in-progress ATS orders that still need a
+	/// verification email. A segment is withheld while its request is awaiting a
+	/// response or has been confirmed; rejected and lapsed requests release it so a
+	/// fresh request can be sent.
 	/// </summary>
+	/// <remarks>
+	/// Filtered per (subject, segment), not per subject: the three employers of one
+	/// order share an AtsSubjectId, so filtering by subject alone would let a request
+	/// raised for the first employer suppress the candidate's other two.
+	/// </remarks>
 	public async Task<IReadOnlyList<ATSInProgressEmploymentRecord>> GetAvailableATSRecordsAsync(
 		CancellationToken cancellationToken)
 	{
@@ -45,20 +50,42 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 			return atsRecords;
 		}
 
-		var blockedSubjectIds = await _repository.ListBlockedAtsSubjectIdsAsync(
+		var blockedSegments = await _repository.ListBlockedSegmentsAsync(
 			DateTime.UtcNow,
 			cancellationToken);
 
-		if (blockedSubjectIds.Count == 0)
+		if (blockedSegments.Count == 0)
 		{
 			return atsRecords;
 		}
 
-		var blocked = blockedSubjectIds.ToHashSet();
+		var blocked = blockedSegments.ToHashSet();
 
 		return atsRecords
-			.Where(record => !blocked.Contains(record.SubjectId))
+			.Where(record => !blocked.Contains(
+				new BlockedEmploymentSegment(record.SubjectId, record.EmploymentSegment)))
 			.ToList();
+	}
+
+	public Task ReleaseFinishedOrdersAsync(
+		IReadOnlyCollection<Guid> subjectIds,
+		CancellationToken cancellationToken) =>
+		_atsProvider.ReleaseOrdersAsync(subjectIds, cancellationToken);
+
+	public async Task ReinstateLapsedOrdersAsync(CancellationToken cancellationToken)
+	{
+		var lapsed = await _repository.ListSubjectsWithLapsedRequestsAsync(
+			DateTime.UtcNow,
+			cancellationToken);
+
+		if (lapsed.Count == 0)
+		{
+			return;
+		}
+
+		// Unconditional: the provider only writes rows whose flag actually differs, so
+		// re-reinstating an order that is already queued costs nothing.
+		await _atsProvider.ReinstateOrdersAsync(lapsed, cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<SentVerificationRequestDTO>> ListSentRequestsAsync(
@@ -92,10 +119,12 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		{
 			Id = Guid.NewGuid(),
 			AtsSubjectId = request.AtsSubjectId,
+			EmploymentSegment = request.EmploymentSegment,
 			CandidateName = request.CandidateName,
 			PreviousEmployer = request.PreviousEmployer,
 			Position = request.Position,
 			HrEmail = request.HrEmail,
+			RecipientSource = request.RecipientSource,
 			EmploymentStartDate = ToUtc(request.EmploymentStartDate),
 			EmploymentEndDate = ToUtc(request.EmploymentEndDate),
 			RequestedAt = now,
@@ -106,12 +135,22 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		await _repository.AddAsync(entity, cancellationToken);
 
 		var verificationLink = $"{_applicationformBaseUrl}/{hashToken}";
+
+		// Palette is the module's teal, hardcoded rather than read from theme.css:
+		// email clients resolve no CSS custom properties, and Outlook resolves no
+		// stylesheet at all, so every value has to be inline. theme.css stays the
+		// source of truth - the --c-ev-* tokens below are what these hex values mirror,
+		// and a retheme there has to be replayed here by hand.
+		//   header gradient  --c-ev-accent-strong / --c-ev-accent / --c-ev-accent-soft
+		//   body text        --c-ev-fg              muted text  --c-ev-fg-muted
+		//   tinted surfaces  --c-ev-tint / -tint-2  borders     --c-ev-border
+		//   card shadow      --c-ev-shadow
 		var body = $"""
 			<!DOCTYPE html>
 			<html lang='en'>
-			<body style='margin:0;background:#fff5fb;font-family:Arial,sans-serif;color:#321b35'>
-			  <div style='max-width:640px;margin:32px auto;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(169,54,119,.14)'>
-				<div style='padding:34px 36px;background:linear-gradient(120deg,#8d2f91 0%,#d945a0 52%,#ff8fb8 100%);color:#ffffff'>
+			<body style='margin:0;background:#f6fdff;font-family:Arial,sans-serif;color:#0b4a5e'>
+			  <div style='max-width:640px;margin:32px auto;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(11,74,94,.14)'>
+				<div style='padding:34px 36px;background:linear-gradient(120deg,#0c5f78 0%,#0e7490 52%,#0891b2 100%);color:#ffffff'>
 				  <div style='font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.86'>CIBI · Employment Verification</div>
 				  <h1 style='margin:14px 0 8px;font-size:28px;line-height:1.2'>Please confirm employment</h1>
 				  <p style='margin:0;font-size:15px;line-height:1.6'>A former employee listed you as an HR contact.</p>
@@ -119,17 +158,17 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 				<div style='padding:34px 36px'>
 				  <p style='font-size:16px;line-height:1.7'>Hello,</p>
 				  <p style='font-size:16px;line-height:1.7'>Please confirm whether the following employment information is accurate.</p>
-				  <table role='presentation' style='width:100%;border-collapse:collapse;margin:24px 0;background:#fff8fc;border:1px solid #f3d8e8;border-radius:12px'>
-					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Applicant</td><td style='padding:12px 16px;font-weight:bold'>{entity.CandidateName}</td></tr>
-					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Previous employer</td><td style='padding:12px 16px;font-weight:bold'>{entity.PreviousEmployer}</td></tr>
-					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Position</td><td style='padding:12px 16px;font-weight:bold'>{entity.Position}</td></tr>
-					<tr><td style='padding:12px 16px;color:#8a6483;font-size:13px'>Employment period</td><td style='padding:12px 16px;font-weight:bold'>{entity.EmploymentStartDate:MMM yyyy} – {entity.EmploymentEndDate:MMM yyyy}</td></tr>
+				  <table role='presentation' style='width:100%;border-collapse:collapse;margin:24px 0;background:#ecfaff;border:1px solid #c9e6f0;border-radius:12px'>
+					<tr><td style='padding:12px 16px;color:#5a7d8a;font-size:13px'>Applicant</td><td style='padding:12px 16px;font-weight:bold'>{entity.CandidateName}</td></tr>
+					<tr><td style='padding:12px 16px;color:#5a7d8a;font-size:13px'>Previous employer</td><td style='padding:12px 16px;font-weight:bold'>{entity.PreviousEmployer}</td></tr>
+					<tr><td style='padding:12px 16px;color:#5a7d8a;font-size:13px'>Position</td><td style='padding:12px 16px;font-weight:bold'>{entity.Position}</td></tr>
+					<tr><td style='padding:12px 16px;color:#5a7d8a;font-size:13px'>Employment period</td><td style='padding:12px 16px;font-weight:bold'>{entity.EmploymentStartDate:MMM yyyy} – {entity.EmploymentEndDate:MMM yyyy}</td></tr>
 				  </table>
-				  <p style='font-size:15px;line-height:1.6'>Choose one response below. This secure link can be used once and expires in 72 hours.</p>
-				  <p style='margin:28px 0;text-align:center'><a href='{verificationLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(120deg,#a52d91,#e3489f);color:#ffffff;text-decoration:none;font-weight:bold'>Confirm employment details</a></p>
-				  <p style='font-size:12px;line-height:1.6;color:#8a7186;text-align:center'>If you cannot confirm this information, open the link and choose the rejection option.</p>
+				  <p style='font-size:15px;line-height:1.6'>Choose one response below. This secure link can be used once and expires in {_tokenExpiryHours} hours.</p>
+				  <p style='margin:28px 0;text-align:center'><a href='{verificationLink}' style='display:inline-block;padding:14px 26px;border-radius:999px;background:linear-gradient(120deg,#0e7490,#0891b2);color:#ffffff;text-decoration:none;font-weight:bold'>Confirm employment details</a></p>
+				  <p style='font-size:12px;line-height:1.6;color:#5a7d8a;text-align:center'>If these details are wrong, open the link and tell us what is inaccurate.</p>
 				</div>
-				<div style='padding:20px 36px;background:#fff8fc;color:#95758f;font-size:12px;line-height:1.6'>This is an automated request from CIBI. If you did not receive this request in your HR capacity, you may disregard this message.</div>
+				<div style='padding:20px 36px;background:#ecfaff;color:#5a7d8a;font-size:12px;line-height:1.6'>This is an automated request from CIBI. If you did not receive this request in your HR capacity, you may disregard this message.</div>
 			  </div>
 			</body>
 			</html>
@@ -141,6 +180,23 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 				body,
 				true))
 		{
+			// The row is already committed - AddAsync above saves - and Pending blocks
+			// its segment permanently, with no expiry and no sweeper. A failed send
+			// would therefore leave the segment unreachable forever, which was tolerable
+			// while a human clicked Send and could see it fail, but accumulates silently
+			// now that a job does.
+			//
+			// Expired, not Rejected: Rejected means the employer answered no and blocks
+			// the segment for good, so reusing it here would both hide a delivery failure
+			// as a decline and permanently strand the segment. Expired was declared and
+			// never assigned; this is what it is for.
+			await _repository.MarkRespondedAsync(
+				entity.Id,
+				VerificationRequestStatus.Expired,
+				DateTime.UtcNow,
+				responseNotes: null,
+				cancellationToken);
+
 			throw new InvalidOperationException("The verification email could not be sent.");
 		}
 
@@ -156,6 +212,7 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 	public async Task<EmploymentVerificationCompletionResult> VerifyAsync(
 		string token,
 		bool reject,
+		string? reason,
 		CancellationToken cancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(token))
@@ -192,6 +249,13 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 			? VerificationRequestStatus.Rejected
 			: VerificationRequestStatus.Verified;
 
+		// A reason belongs to the rejection it was typed against, so a confirmation
+		// stores null. Normalised to null rather than "" so the tracking view's
+		// em-dash-for-no-reason test has one shape to handle.
+		var responseNotes = reject && !string.IsNullOrWhiteSpace(reason)
+			? reason.Trim()
+			: null;
+
 		// The update only matches a row that is still awaiting a response, so two
 		// simultaneous clicks cannot both be recorded. Losing that race is the
 		// same outcome as the status check above: already answered.
@@ -199,6 +263,7 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 				entity.Id,
 				status,
 				respondedAt,
+				responseNotes,
 				cancellationToken))
 		{
 			return EmploymentVerificationCompletionResult.AlreadyCompleted(
@@ -208,6 +273,7 @@ public sealed class EmploymentVerificationService : IEmploymentVerificationServi
 		entity.Status = status;
 		entity.VerifiedAt = reject ? null : respondedAt;
 		entity.RejectedAt = reject ? respondedAt : null;
+		entity.ResponseNotes = responseNotes;
 
 		return EmploymentVerificationCompletionResult.Completed(
 			EmploymentVerificationPreviewDTO.FromEntity(entity));

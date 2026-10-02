@@ -1,7 +1,12 @@
-﻿using ATS.Data.Repository;
+﻿using ATS.Configuration;
+using ATS.Constants;
+using ATS.Data.Repository;
+using ATS.Data.UnitOfWork;
 using ATS.Hubs;
 using ATS.Services.BulkSubmissionProcessor;
-using ATS.Services.EmailNotificationProcessor;
+using ATS.Services.EmailAccounts;
+using ATS.Services.BulkEmailNotificationProcessor;
+using ATS.Services.EmailService;
 using ATS.Services.EndorsementSubmission;
 using ATS.Services.Notifications;
 using ATS.Services.OrderHistory;
@@ -11,6 +16,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace Test.BackendAPI.Modules.ATS.UnitTests.Fixture;
@@ -31,16 +37,30 @@ public class ATSServiceFixture : IDisposable
 	public Mock<IOrderHistoryService> MockOrderHistoryService { get; private set; }
 	public Mock<IAtsNotificationService> MockNotificationService { get; private set; }
 
+	// Loose: TransactionRunner drives the four ITransactionScope members and a default mock
+	// returns a completed Task for each, so the work delegate runs and the assertions see its
+	// effects. A strict mock here would fail on Begin/Commit without adding any coverage -
+	// what matters is what happened INSIDE the transaction, not that Moq saw the ceremony.
+	public Mock<IUnitOfWork> MockUnitOfWork { get; private set; }
+
 	// Loggers
 	public Mock<ILogger<BulkSubmissionProcessorService>> MockBulkSubmissionProcessorServiceLogger { get; private set; }
-	public Mock<ILogger<EmailNotificationProcessorService>> EmailNotificationProcessoServiceLogger { get; private set; }
+	public Mock<ILogger<BulkEmailNotificationProcessorService>> BulkEmailNotificationProcessorServiceLogger { get; private set; }
 
 	// Configuration
 	public IConfiguration Configuration { get; private set; }
+	public AtsEmailDeliveryOptions EmailDeliveryOptions { get; private set; }
+
+	/// <summary>
+	/// Stands in for the per-account pools. Defaults to one healthy account, so a test that
+	/// does not care about failover behaves as it did when there was a single hard-coded
+	/// sender; tests that do care re-Setup GetNextSendableAccountAsync themselves.
+	/// </summary>
+	public Mock<ISmtpAccountPoolRegistry> MockPoolRegistry { get; private set; }
 
 	// Service instances
 	public BulkSubmissionProcessorService BulkSubmissionProcessorService { get; private set; }
-	public EmailNotificationProcessorService EmailNotificationProcessorService { get; private set; }
+	public BulkEmailNotificationProcessorService BulkEmailNotificationProcessorService { get; private set; }
 
 	public ATSServiceFixture()
 	{
@@ -57,15 +77,15 @@ public class ATSServiceFixture : IDisposable
 		MockCurrentUser = new Mock<ICurrentUser>();
 		MockOrderHistoryService = new Mock<IOrderHistoryService>();
 		MockNotificationService = new Mock<IAtsNotificationService>();
+		MockUnitOfWork = new Mock<IUnitOfWork>();
 
 		MockBulkSubmissionProcessorServiceLogger = new();
-		EmailNotificationProcessoServiceLogger = new();
+		BulkEmailNotificationProcessorServiceLogger = new();
 
 		// configuration values required by several services
 		Configuration = new ConfigurationBuilder()
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
-				{ "ATS:ATSApplicationFormExpiryInHours", "24" },
 				{ "ATS:ApplicationFormBaseUrl", "https://example.com/form" }
 			})
 			.Build();
@@ -87,21 +107,78 @@ public class ATSServiceFixture : IDisposable
 			MockSecureToken.Object,
 			MockHashService.Object,
 			MockHubContext.Object,
-			MockBulkSubmissionProcessorServiceLogger.Object,
-			Configuration);
+			MockBulkSubmissionProcessorServiceLogger.Object);
 
-		EmailNotificationProcessorService = new EmailNotificationProcessorService(
-			EmailNotificationProcessoServiceLogger.Object,
-			MockEndorsementSubmissionService.Object,
+		// Fast on purpose. The production defaults pace sends at 0.9/s to stay under the
+		// provider's limit; a test asserting on three rows must not wait three seconds for
+		// them, and the limiter's behaviour is covered directly by its own tests.
+		EmailDeliveryOptions = new AtsEmailDeliveryOptions
+		{
+			MaxSendsPerSecond = 10_000,
+			MaxAttemptsPerPass = 3,
+			MaxAttemptsPerMessage = 3,
+			RetryBaseDelaySeconds = 0,
+			ThrottleBackoffSeconds = 600
+		};
+
+		// Somebody to address the "every sender account is down" notification to. Without this
+		// the mock returns null, the processor's guard swallows the NullReferenceException, and
+		// the outage notification silently never fires - which is the exact bug the
+		// notification exists to prevent, hidden inside a green test.
+		MockRepository
+			.Setup(x => x.GetAtsAdministratorUserIdsAsync(It.IsAny<CancellationToken>()))
+			.ReturnsAsync(new List<Guid> { AdministratorUserId });
+
+		MockPoolRegistry = new Mock<ISmtpAccountPoolRegistry>();
+
+		// One healthy account available by default. The processor now asks before claiming a
+		// slice of rows, so without this every pass would short-circuit as "no account
+		// available" and the existing tests would assert against a pass that never ran.
+		MockPoolRegistry
+			.Setup(x => x.GetNextSendableAccountAsync(
+				It.IsAny<IReadOnlyCollection<int>>(),
+				It.IsAny<CancellationToken>()))
+			.ReturnsAsync(HealthyAccount);
+
+		// IEndorsementSubmissionService is no longer injected: each send resolves its own
+		// from a scope, because it reaches a DbContext and the sends now run concurrently.
+		// MockEndorsementSubmissionService is registered on the scope factory instead.
+		BulkEmailNotificationProcessorService = new BulkEmailNotificationProcessorService(
+			BulkEmailNotificationProcessorServiceLogger.Object,
 			MockRepository.Object,
 			MockNotificationService.Object,
-			Configuration
+			MockOrderHistoryService.Object,
+			MockUnitOfWork.Object,
+			MockServiceScopeFactory.Object,
+			Configuration,
+			MockPoolRegistry.Object,
+			Options.Create(EmailDeliveryOptions)
 			);
 	}
 
+	/// <summary>The admin the exhausted-accounts notification is addressed to.</summary>
+	public static Guid AdministratorUserId { get; } = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+	/// <summary>A verified, active, uncapped account, for tests that do not exercise failover.</summary>
+	public static AtsEmailAccountSnapshot HealthyAccount { get; } = new(
+		AtsEmailAccountId: 1,
+		DisplayName: "Applicant Tracking System",
+		EmailAddress: "ats@example.com",
+		SmtpHost: "smtp.example.com",
+		SmtpPort: 587,
+		Priority: 1,
+		IsActive: true,
+		DailySendLimit: 450,
+		VerificationStatus: AtsEmailAccountStatus.Verified,
+		VerifiedAt: DateTime.UtcNow.AddDays(-1),
+		ConsecutiveFailureCount: 0,
+		CoolingDownUntil: null,
+		LastFailureReason: null,
+		LastSentAt: null,
+		ConsumedInWindow: 0);
+
 	public void Dispose()
 	{
-		// nothing to dispose currently
 	}
 
 	private void SetupServiceScopeFactory()
@@ -125,6 +202,12 @@ public class ATSServiceFixture : IDisposable
 		mockServiceProvider
 			.Setup(x => x.GetService(typeof(IAtsNotificationService)))
 			.Returns(MockNotificationService.Object);
+
+		// The email processor resolves one of these per invitation rather than sharing the
+		// injected instance, because the sends run concurrently and it reaches a DbContext.
+		mockServiceProvider
+			.Setup(x => x.GetService(typeof(IEndorsementSubmissionService)))
+			.Returns(MockEndorsementSubmissionService.Object);
 
 		mockServiceScope
 			.Setup(x => x.ServiceProvider)
